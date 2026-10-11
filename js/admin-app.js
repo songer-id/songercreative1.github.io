@@ -3774,6 +3774,7 @@ const AdminApp = (() => {
       : (settings.hero_banner_image ? [settings.hero_banner_image] : ['assets/images/banner1.jpg']);
 
     function getActiveBannersList() {
+      if (!Array.isArray(currentHeroBanners)) return [];
       return currentHeroBanners.filter(Boolean);
     }
 
@@ -4074,6 +4075,7 @@ const AdminApp = (() => {
 
       // Rule untuk Dropdown Animasi Slider:
       // Tampilkan HANYA jika total banner > 1 dan bukan Model 1 (Teks Saja)
+      const activeBanners = (typeof getActiveBannersList === 'function' ? getActiveBannersList() : []) || [];
       if (animContainer) {
         if (selectedModel !== 'model_1' && activeBanners.length > 1) {
           animContainer.classList.remove('hidden');

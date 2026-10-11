@@ -233,9 +233,9 @@ const BuyerStore = (() => {
     // --------------------------------------------------------------------------
     let heroSectionHtml = '';
     const heroBannerImg = settings.hero_banner_image || 'assets/images/banner-printing-hero.jpg';
-    const heroBanners = (settings.hero_banners && settings.hero_banners.length > 0)
-      ? settings.hero_banners
-      : [heroBannerImg];
+    const heroBanners = (Array.isArray(settings.hero_banners) && settings.hero_banners.length > 0)
+      ? settings.hero_banners.filter(Boolean)
+      : (heroBannerImg ? [heroBannerImg] : []);
 
     let heroModel = settings.hero_model;
     if (!heroModel) {
