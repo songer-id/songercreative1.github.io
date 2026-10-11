@@ -310,14 +310,6 @@ body {
   transform: none !important;
 }
 
-/* Icon Swipe Manual Floating Badge */
-.hero-swipe-manual-badge {
-  animation: pulseSubtle 3s infinite ease-in-out;
-  user-select: none;
-}
-.hero-swipe-manual-badge:hover {
-  transform: scale(1.05);
-}
 
 /* --------------------------------------------------------------------------
    THERMAL RECEIPT PRINT STYLES (58MM & 80MM)
@@ -594,10 +586,10 @@ body {
   }
 }
 
-/* Pastikan pembungkus preview memiliki tinggi terkontrol */
+/* Pastikan pembungkus preview memiliki tinggi terkontrol & stabil (Framing Navbar + Hero) */
 .preview-viewport-wrapper, 
 #hero-preview-iframe {
-  height: 580px !important; /* Gunakan fixed height atau aspect-ratio */
+  height: 520px !important;
   max-height: 80vh;
-  overflow-y: auto;          /* Biarkan scroll di dalam jika konten melebihi area */
+  overflow: hidden;
 }

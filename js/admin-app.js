@@ -3023,7 +3023,7 @@ const AdminApp = (() => {
               <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
               <span class="ml-2 font-bold text-xs text-white flex items-center gap-2">
                 <i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i>
-                <span>Live Preview Hero Banner</span>
+                <span>Live Preview Toko: Navbar & Hero Banner</span>
               </span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 Isolasi Komponen
@@ -3676,11 +3676,7 @@ const AdminApp = (() => {
                   <option value="fade_5s" ${heroAnimation === 'fade_5s' ? 'selected' : ''}>Fade Otomatis 5s (Transisi Memudar Halus)</option>
                   <option value="fade_3s" ${heroAnimation === 'fade_3s' ? 'selected' : ''}>Fade Otomatis 3s (Transisi Memudar Cepat)</option>
                   <option value="manual" ${heroAnimation === 'manual' ? 'selected' : ''}>Manual Panah & Dots (Navigasi Tombol Saja)</option>
-                </select>
-                <div id="hero-swipe-badge-hint" class="flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-200 mt-1">
-                  <i data-lucide="hand" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
-                  <span>Aksi <strong>Icon Swipe Manual</strong> & gestur sentuh aktif saat banner > 1 di etalase toko.</span>
-                </div>
+
 
                 <!-- TOGGLE TOMBOL PANAH NAVIGASI (< dan >) -->
                 <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between">
@@ -3764,77 +3760,6 @@ const AdminApp = (() => {
               </label>
             </div>
 
-          </div>
-
-          <!-- BAGIAN 4: 3 PILIHAN MODEL KARTU PRODUK ETALASE -->
-          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-sm shrink-0">
-                  4
-                </div>
-                <div>
-                  <h3 class="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2 flex-wrap">
-                    <span>3 Model Tampilan Kartu Produk Etalase</span>
-                    <span id="badge-active-admin-card-version" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      Aktif: Versi ${cardProductVersion === 'v3' ? '3 (Pendek Lanskap 4:3 + Footer)' : cardProductVersion === 'v2' ? '2 (Teks Besar Ringkas)' : '1 (Standar Persegi)'}
-                    </span>
-                  </h3>
-                  <p class="text-xs text-slate-500">Pilih model tampilan kartu produk untuk etalase publik toko Anda. Tersimpan instan saat dipilih.</p>
-                </div>
-              </div>
-              <button type="button" id="btn-quick-apply-card-version" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition shrink-0 cursor-pointer">
-                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
-                <span>Terapkan Model Ini</span>
-              </button>
-            </div>
-
-            <!-- GRID 3 PILIHAN MODEL KARTU PRODUK -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-              
-              <!-- [1] Versi 1: Standar Persegi (Judul 2 Baris + Ikon Tiket Harga) -->
-              <label class="card-version-choice-card p-4 rounded-2xl border ${cardProductVersion === 'v1' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-2 block" data-card-version="v1">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-900 flex items-center gap-2">
-                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
-                    Versi 1: Standar Persegi
-                  </span>
-                  <input type="radio" name="card_product_version_radio" value="v1" ${cardProductVersion === 'v1' ? 'checked' : ''} class="text-emerald-600" />
-                </div>
-                <p class="text-slate-500 text-[11px] leading-relaxed">
-                  Foto 1:1, judul 2 baris terpotong rapi, badge diskon gambar, rating, label khusus & ikon tiket cek samping harga.
-                </p>
-              </label>
-
-              <!-- [2] Versi 2: Teks Besar (Judul 1 Baris Tebal + Ringkas) -->
-              <label class="card-version-choice-card p-4 rounded-2xl border ${cardProductVersion === 'v2' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-2 block" data-card-version="v2">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-900 flex items-center gap-2">
-                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">2</span>
-                    Versi 2: Teks Besar
-                  </span>
-                  <input type="radio" name="card_product_version_radio" value="v2" ${cardProductVersion === 'v2' ? 'checked' : ''} class="text-emerald-600" />
-                </div>
-                <p class="text-slate-500 text-[11px] leading-relaxed">
-                  Foto 1:1, judul wajib 1 baris teks besar tebal ringkas, rating & label khusus bersanding, serta ikon tiket cek harga.
-                </p>
-              </label>
-
-              <!-- [3] Versi 3: Pendek Lanskap 4:3 (Tanpa Ikon Tiket + Footer Strip Tambahan) -->
-              <label class="card-version-choice-card p-4 rounded-2xl border ${cardProductVersion === 'v3' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-2 block" data-card-version="v3">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-900 flex items-center gap-2">
-                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">3</span>
-                    Versi 3: Pendek Lanskap 4:3
-                  </span>
-                  <input type="radio" name="card_product_version_radio" value="v3" ${cardProductVersion === 'v3' ? 'checked' : ''} class="text-emerald-600" />
-                </div>
-                <p class="text-slate-500 text-[11px] leading-relaxed">
-                  Foto 4:3 lebih pendek, tanpa ikon tiket pada harga, dan dilengkapi strip horizontal footer proses cepat di bagian bawah.
-                </p>
-              </label>
-
-            </div>
           </div>
 
         </form>
@@ -4149,19 +4074,9 @@ const AdminApp = (() => {
 
       // Rule untuk Dropdown Animasi Slider:
       // Tampilkan HANYA jika total banner > 1 dan bukan Model 1 (Teks Saja)
-      const activeBanners = getActiveBannersList();
-      const animSelect = document.getElementById('hero-slider-animation-select');
-      const swipeBadgeHint = document.getElementById('hero-swipe-badge-hint');
       if (animContainer) {
         if (selectedModel !== 'model_1' && activeBanners.length > 1) {
           animContainer.classList.remove('hidden');
-          if (swipeBadgeHint) {
-            if (animSelect && animSelect.value === 'manual') {
-              swipeBadgeHint.classList.add('hidden');
-            } else {
-              swipeBadgeHint.classList.remove('hidden');
-            }
-          }
         } else {
           animContainer.classList.add('hidden');
         }
@@ -4176,6 +4091,10 @@ const AdminApp = (() => {
 
       const bodyBg = document.getElementById('ctrl-hex-body-bg')?.value || '#f8fafc';
       const primColor = document.getElementById('ctrl-hex-primary')?.value || '#33b589';
+      const navbarBg = document.getElementById('ctrl-hex-navbar-bg')?.value || '#ffffff';
+      const navbarText = document.getElementById('ctrl-hex-navbar-text')?.value || '#0f172a';
+      const webLogo = document.getElementById('store-logo-url-input')?.value || settings.web_logo || 'assets/images/logo-songer-creative.png';
+      const storeTagline = document.getElementById('store-tagline-input')?.value || settings.store_tagline || 'Digital Printing & Percetakan Terpadu';
 
       const storeName = document.getElementById('store-name-input')?.value || 'Songer Creative';
       const selectedModel = document.querySelector('input[name="hero_model_radio"]:checked')?.value || 'model_2';
@@ -4217,7 +4136,6 @@ const AdminApp = (() => {
       const firstBanner = banners[0] || 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80';
       const animType = document.getElementById('hero-slider-animation-select')?.value || 'slide_3s';
       const showArrows = (document.getElementById('hero-show-arrows-toggle')?.checked !== false) && (banners.length > 1);
-      const showSwipeManual = animType !== 'manual' && banners.length > 1;
 
       // Generate background CSS style
       let heroBgCss = '';
@@ -4229,20 +4147,20 @@ const AdminApp = (() => {
         heroBgCss = `background: linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%);`;
       }
 
-      // Dual CTA buttons preview
+      // Responsive CTA buttons preview (1 CTA & 2 CTA: full width & stacked on mobile, row on tablet/desktop)
       let dualCtaHtml = '';
       if (ctaMode === 'dual' || ctaMode === 'catalog_only') {
         dualCtaHtml += `
-          <a href="#katalog-section" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition" style="background-color: ${cta1Bg}; color: ${cta1TextCol};">
+          <a href="#katalog-section" class="w-full sm:w-auto justify-center px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition text-center whitespace-normal" style="background-color: ${cta1Bg}; color: ${cta1TextCol};">
             <span>${escapeHtml(cta1Text)}</span>
-            <i data-lucide="arrow-down" class="w-3.5 h-3.5" style="color: ${cta1IconCol};"></i>
+            <i data-lucide="arrow-down" class="w-3.5 h-3.5 shrink-0" style="color: ${cta1IconCol};"></i>
           </a>
         `;
       }
       if (ctaMode === 'dual' || ctaMode === 'consultation_only') {
         dualCtaHtml += `
-          <a href="#" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition" style="background-color: ${cta2Bg}; color: ${cta2TextCol};">
-            <i class="bi bi-whatsapp text-sm" style="color: ${cta2IconCol};"></i>
+          <a href="#" class="w-full sm:w-auto justify-center px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition text-center whitespace-normal" style="background-color: ${cta2Bg}; color: ${cta2TextCol};">
+            <i class="bi bi-whatsapp text-sm shrink-0" style="color: ${cta2IconCol};"></i>
             <span>${escapeHtml(cta2Text)}</span>
           </a>
         `;
@@ -4251,8 +4169,8 @@ const AdminApp = (() => {
       let timerHtml = '';
       if (showTimer) {
         timerHtml = `
-          <div class="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl border border-white/10 text-[11px] sm:text-xs text-white">
-            <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400"></i>
+          <div class="flex items-center justify-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl border border-white/10 text-[11px] sm:text-xs text-white w-full sm:w-auto">
+            <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0"></i>
             <span class="font-medium text-slate-200">Promo Berakhir:</span>
             <span class="font-mono font-bold text-emerald-400">23j : 59m : 59d</span>
           </div>
@@ -4280,7 +4198,7 @@ const AdminApp = (() => {
         </div>
       `).join('');
 
-      // Helper untuk Controls HTML (Arrows, Dots, Swipe Badge)
+      // Helper untuk Controls HTML (Arrows, Dots) - Tanpa Icon Swipe Manual floating badge
       let controlsHtml = '';
       if (banners.length > 1) {
         controlsHtml = `
@@ -4291,12 +4209,6 @@ const AdminApp = (() => {
             <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-30 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
             <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-30 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
           ` : ''}
-          ${showSwipeManual ? `
-            <button type="button" id="btn-hero-manual-swipe" class="hero-swipe-manual-badge absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/65 hover:bg-slate-900/90 text-white backdrop-blur-md text-xs font-semibold shadow-md cursor-pointer transition select-none group border border-white/20 pointer-events-auto active:scale-95" title="Icon Swipe Manual - Geser banner secara manual">
-              <i data-lucide="hand" class="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform"></i>
-              <span>Icon Swipe Manual</span>
-            </button>
-          ` : ''}
         `;
       }
 
@@ -4304,22 +4216,24 @@ const AdminApp = (() => {
       if (selectedModel === 'model_1') {
         // [1] Model Teks Headline Saja + CTA (Tanpa Gambar Banner)
         heroBannerHtml = `
-          <div class="relative overflow-hidden rounded-3xl p-6 sm:p-12 shadow-2xl border border-white/10" style="${heroBgCss}" id="hero-slider-container">
+          <div class="relative overflow-hidden rounded-3xl p-5 sm:p-12 shadow-2xl border border-white/10" style="${heroBgCss}" id="hero-slider-container">
             <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
-            <div class="relative z-10 max-w-2xl space-y-4">
+            <div class="relative z-10 max-w-2xl space-y-3.5 sm:space-y-4">
               ${customGreetingBadge}
-              <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight" style="color: ${titleColor};">
+              <h1 class="text-xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-snug sm:leading-tight" style="color: ${titleColor};">
                 ${escapeHtml(headline)}
               </h1>
               <p class="text-xs sm:text-sm leading-relaxed" style="color: ${subtitleColor};">
                 ${escapeHtml(subheadline)}
               </p>
-              <div class="pt-2 flex flex-wrap items-center gap-3">
-                ${dualCtaHtml}
+              <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                  ${dualCtaHtml}
+                </div>
                 ${timerHtml}
-                <div class="flex items-center gap-1.5 text-xs text-white/80">
-                  <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
-                  Kualitas CMYK Tajam & Garansi Cetak
+                <div class="flex items-center gap-1.5 text-xs text-white/80 pt-1 sm:pt-0">
+                  <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                  <span>Kualitas CMYK Tajam & Garansi Cetak</span>
                 </div>
               </div>
             </div>
@@ -4348,24 +4262,27 @@ const AdminApp = (() => {
         `;
       } else if (selectedModel === 'model_3') {
         // [3] Model Gambar & Teks Overlay (Full-Width atau Boxed Container)
+        // Gunakan min-h-[380px] pada mobile agar teks dan tombol CTA 1 & 2 bernapas lega dan tidak terpotong
         heroBannerHtml = `
           <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'rounded-3xl border border-white/10'} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" id="hero-slider-container" data-anim="${animType}" data-count="${banners.length}">
-            <div class="aspect-[18/9] sm:aspect-[21/9] md:aspect-[24/9] w-full relative bg-slate-950 overflow-hidden ${isFullWidth ? 'rounded-none' : 'rounded-3xl'} flex items-center">
+            <div class="min-h-[380px] sm:min-h-0 sm:aspect-[21/9] md:aspect-[24/9] w-full relative bg-slate-950 overflow-hidden ${isFullWidth ? 'rounded-none' : 'rounded-3xl'} flex items-center">
               <div class="hero-slider-track absolute inset-0 w-full h-full">
                 ${slidesHtml}
               </div>
-              <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-slate-950/30 z-10 pointer-events-none"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/40 z-10 pointer-events-none"></div>
               
-              <div class="relative z-20 p-6 sm:p-10 md:p-12 max-w-2xl space-y-3.5 text-white">
+              <div class="relative z-20 p-5 sm:p-10 md:p-12 max-w-2xl space-y-3 sm:space-y-3.5 text-white w-full">
                 ${customGreetingBadge}
-                <h1 class="text-xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight" style="color: ${titleColor};">
+                <h1 class="text-lg sm:text-3xl md:text-4xl font-black tracking-tight leading-snug sm:leading-tight" style="color: ${titleColor};">
                   ${escapeHtml(headline)}
                 </h1>
                 <p class="text-xs sm:text-sm leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-3" style="color: ${subtitleColor};">
                   ${escapeHtml(subheadline)}
                 </p>
-                <div class="pt-2 flex flex-wrap items-center gap-3">
-                  ${dualCtaHtml}
+                <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
+                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                    ${dualCtaHtml}
+                  </div>
                   ${timerHtml}
                 </div>
               </div>
@@ -4376,18 +4293,20 @@ const AdminApp = (() => {
       } else {
         // [4] Model Split 2 Kolom Berdampingan
         heroBannerHtml = `
-          <div class="relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl border border-white/10 ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${heroBgCss}" id="hero-slider-container" data-anim="${animType}" data-count="${banners.length}">
+          <div class="relative overflow-hidden rounded-3xl p-5 sm:p-8 lg:p-10 shadow-xl border border-white/10 ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${heroBgCss}" id="hero-slider-container" data-anim="${animType}" data-count="${banners.length}">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-              <div class="lg:col-span-7 space-y-4">
+              <div class="lg:col-span-7 space-y-3.5 sm:space-y-4">
                 ${customGreetingBadge}
-                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight" style="color: ${titleColor};">
+                <h1 class="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-snug sm:leading-tight" style="color: ${titleColor};">
                   ${escapeHtml(headline)}
                 </h1>
                 <p class="text-xs sm:text-sm leading-relaxed max-w-xl" style="color: ${subtitleColor};">
                   ${escapeHtml(subheadline)}
                 </p>
-                <div class="pt-2 flex flex-wrap items-center gap-3">
-                  ${dualCtaHtml}
+                <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
+                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                    ${dualCtaHtml}
+                  </div>
                   ${timerHtml}
                 </div>
               </div>
@@ -4510,15 +4429,7 @@ const AdminApp = (() => {
             });
           }
 
-          const swipeManualBtn = sliderContainer.querySelector('#btn-hero-manual-swipe');
-          if (swipeManualBtn) {
-            swipeManualBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              if (slideInterval) clearInterval(slideInterval);
-              goToSlide(currentIndex + 1, 1);
-              startTimer();
-            });
-          }
+
 
           // Touch gesture swipe support
           let touchStartX = 0, touchStartY = 0;
@@ -4555,7 +4466,7 @@ const AdminApp = (() => {
         })();
       `;
 
-      // Rakit dokumen HTML lengkap untuk srcdoc iframe
+      // Rakit dokumen HTML lengkap untuk srcdoc iframe (Framing Presisi: Navbar + Hero Banner)
       const docHtml = `
         <!DOCTYPE html>
         <html lang="id">
@@ -4565,31 +4476,56 @@ const AdminApp = (() => {
           <script src="https://cdn.tailwindcss.com"></script>
           <script src="https://unpkg.com/lucide@latest"></script>
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-          <link rel="stylesheet" href="css/style.css?v=3.1">
+          <link rel="stylesheet" href="css/style.css?v=3.2">
           <style>
             body {
               background-color: ${bodyBg};
               margin: 0;
-              padding: ${isFullWidth ? '0' : '16px'};
+              padding: 0;
               overflow-x: hidden;
+              overflow-y: auto;
               font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             }
           </style>
         </head>
-        <body>
-          <div class="w-full">
+        <body class="flex flex-col min-h-full">
+          <!-- FRAMED MINI NAVBAR TOKO PREVIEW -->
+          <header class="border-b shadow-xs transition-colors px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 select-none shrink-0" style="background-color: ${navbarBg}; color: ${navbarText}; border-color: rgba(148, 163, 184, 0.25);">
+            <!-- Left: Logo & Nama Toko -->
+            <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <img src="${escapeHtml(webLogo)}" alt="Logo" class="h-6 sm:h-8 w-auto max-w-[120px] object-contain" onerror="this.src='assets/images/logo-songer-creative.png'" />
+              <div class="border-l pl-2 sm:pl-3 hidden sm:flex flex-col justify-center" style="border-color: rgba(148, 163, 184, 0.35);">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-extrabold text-xs sm:text-sm tracking-tight" style="color: ${navbarText};">${escapeHtml(storeName)}</span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                </div>
+                <span class="text-[10px] text-slate-400 block truncate max-w-[160px]">${escapeHtml(storeTagline)}</span>
+              </div>
+            </div>
+
+            <!-- Center: Dummy Search Bar -->
+            <div class="flex-1 max-w-xs sm:max-w-sm mx-1 sm:mx-2">
+              <div class="relative w-full">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <div class="w-full bg-slate-100/90 text-slate-400 text-[11px] pl-8 pr-3 py-1.5 rounded-xl border border-slate-200/80 truncate">Cari produk cetak...</div>
+              </div>
+            </div>
+
+            <!-- Right: Dummy Keranjang & Akun -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div class="px-2.5 py-1.5 rounded-xl border border-slate-200/80 bg-white/90 text-slate-700 text-xs flex items-center gap-1.5 shadow-2xs font-semibold">
+                <i data-lucide="shopping-cart" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span class="text-[10px] font-bold px-1 rounded-full bg-emerald-100 text-emerald-800">0</span>
+              </div>
+            </div>
+          </header>
+
+          <!-- FRAMED HERO BANNER -->
+          <div class="w-full ${isFullWidth ? '' : 'p-3 sm:p-5'}">
             ${heroBannerHtml}
           </div>
-          <script>
-            function sendHeight() {
-              const h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, 260);
-              window.parent.postMessage({ type: 'hero_preview_height', height: h }, '*');
-            }
-            window.addEventListener('load', sendHeight);
-            window.addEventListener('resize', sendHeight);
-            setTimeout(sendHeight, 120);
-            setTimeout(sendHeight, 500);
 
+          <script>
             ${iframeScript}
           </script>
         </body>
@@ -4598,16 +4534,6 @@ const AdminApp = (() => {
 
       iframe.srcdoc = docHtml;
     }
-
-    // Listener otomatis resize tinggi iframe dari isi body
-    window.addEventListener('message', (e) => {
-      if (e.data && e.data.type === 'hero_preview_height') {
-        const iframe = document.getElementById('hero-preview-iframe');
-        if (iframe && typeof e.data.height === 'number') {
-          iframe.style.height = Math.max(260, e.data.height + 15) + 'px';
-        }
-      }
-    });
 
     // --------------------------------------------------------------------------
     // EVENT LISTENERS & TWO-WAY COLOR BINDING
@@ -4673,45 +4599,7 @@ const AdminApp = (() => {
       r.addEventListener('change', updateStorefrontLivePreview);
     });
 
-    // Radio Card Product Version Change: Auto-save immediately & update styling
-    const applyCardProductVersion = (val) => {
-      // 1. Update visual choice card classes
-      document.querySelectorAll('.card-version-choice-card').forEach(card => {
-        const cv = card.getAttribute('data-card-version');
-        if (cv === val) {
-          card.className = 'card-version-choice-card p-4 rounded-2xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition space-y-2 block';
-        } else {
-          card.className = 'card-version-choice-card p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition space-y-2 block';
-        }
-      });
-      // 2. Update status badge
-      const badge = document.getElementById('badge-active-admin-card-version');
-      if (badge) {
-        const labelMap = { 'v1': 'Versi 1 (Standar Persegi)', 'v2': 'Versi 2 (Teks Besar Ringkas)', 'v3': 'Versi 3 (Pendek Lanskap 4:3 + Footer)' };
-        badge.textContent = `Aktif: ${labelMap[val] || val}`;
-      }
-      // 3. Immediately persist to DB!
-      DB.updateSettings({ card_product_version: val });
-      // 4. Update live storefront preview
-      updateStorefrontLivePreview();
-      // 5. Toast notification
-      const labelMap = { 'v1': 'Versi 1: Standar Persegi', 'v2': 'Versi 2: Teks Besar Ringkas', 'v3': 'Versi 3: Pendek Lanskap 4:3 (Dengan Footer)' };
-      App.showToast(`Model Kartu Produk etalase berhasil disimpan: ${labelMap[val] || val}`, 'success');
-    };
 
-    document.querySelectorAll('input[name="card_product_version_radio"]').forEach(r => {
-      r.addEventListener('change', (e) => {
-        applyCardProductVersion(e.target.value);
-      });
-    });
-
-    const btnQuickApplyCard = document.getElementById('btn-quick-apply-card-version');
-    if (btnQuickApplyCard) {
-      btnQuickApplyCard.addEventListener('click', () => {
-        const checkedVal = document.querySelector('input[name="card_product_version_radio"]:checked')?.value || 'v1';
-        applyCardProductVersion(checkedVal);
-      });
-    }
 
     // Radio Hero Model Change
     document.querySelectorAll('input[name="hero_model_radio"]').forEach(r => {
@@ -4917,8 +4805,8 @@ const AdminApp = (() => {
         const showHeaderStoreNameVal = document.getElementById('ctrl-toggle-show-header-store-name')?.checked !== false;
         const headerMobileDisplayVal = document.querySelector('input[name="ctrl_header_mobile_display"]:checked')?.value || 'logo';
 
-        // Card Product Version
-        const cardProductVersionVal = document.querySelector('input[name="card_product_version_radio"]:checked')?.value || 'v1';
+        // Card Product Version (Pertahankan nilai yang ada)
+        const cardProductVersionVal = settings.card_product_version || 'v1';
 
         const sliderAnimation = document.getElementById('hero-slider-animation-select')?.value || 'slide_3s';
         const enableGreeting = document.getElementById('ctrl-toggle-greeting')?.checked !== false;

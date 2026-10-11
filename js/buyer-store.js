@@ -285,16 +285,16 @@ const BuyerStore = (() => {
     let heroDualCtaHtml = '';
     if (heroCtaMode === 'dual' || heroCtaMode === 'catalog_only') {
       heroDualCtaHtml += `
-        <a href="#katalog-section" class="px-5 py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition active:scale-95" style="background-color: ${heroCta1Bg}; color: ${heroCta1TextColor};">
+        <a href="#katalog-section" class="w-full sm:w-auto justify-center px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition active:scale-95 text-center whitespace-normal" style="background-color: ${heroCta1Bg}; color: ${heroCta1TextColor};">
           <span>${escapeHtml(heroCta1Text)}</span>
-          <i data-lucide="arrow-down" class="w-3.5 h-3.5" style="color: ${heroCta1IconColor};"></i>
+          <i data-lucide="arrow-down" class="w-3.5 h-3.5 shrink-0" style="color: ${heroCta1IconColor};"></i>
         </a>
       `;
     }
     if (heroCtaMode === 'dual' || heroCtaMode === 'consultation_only') {
       heroDualCtaHtml += `
-        <a href="${heroWaUrl}" target="_blank" class="px-5 py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition active:scale-95" style="background-color: ${heroCta2Bg}; color: ${heroCta2TextColor};">
-          <i class="bi bi-whatsapp text-sm" style="color: ${heroCta2IconColor};"></i>
+        <a href="${heroWaUrl}" target="_blank" class="w-full sm:w-auto justify-center px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-2xl text-xs font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition active:scale-95 text-center whitespace-normal" style="background-color: ${heroCta2Bg}; color: ${heroCta2TextColor};">
+          <i class="bi bi-whatsapp text-sm shrink-0" style="color: ${heroCta2IconColor};"></i>
           <span>${escapeHtml(heroCta2Text)}</span>
         </a>
       `;
@@ -303,8 +303,8 @@ const BuyerStore = (() => {
     let heroTimerHtml = '';
     if (heroShowTimer) {
       heroTimerHtml = `
-        <div class="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/10 text-xs text-white">
-          <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
+        <div class="flex items-center justify-center gap-2 bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/10 text-xs text-white w-full sm:w-auto">
+          <i data-lucide="clock" class="w-4 h-4 text-emerald-400 shrink-0"></i>
           <span class="font-medium text-slate-200">Promo Berakhir:</span>
           <span id="store-countdown" class="font-mono font-bold text-emerald-400 text-xs sm:text-sm">23j : 59m : 59d</span>
         </div>
@@ -322,10 +322,8 @@ const BuyerStore = (() => {
       </div>
     `).join('');
 
-    // Helper: generate controls HTML
     let controlsHtml = '';
     if (heroBanners.length > 1) {
-      const showSwipeManual = animType !== 'manual';
       controlsHtml = `
         <div class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20 pointer-events-auto">
           ${heroBanners.map((_, i) => `<button type="button" class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-emerald-500 scale-125' : 'bg-white/60 hover:bg-white'} transition-all hero-slide-dot" data-index="${i}"></button>`).join('')}
@@ -333,12 +331,6 @@ const BuyerStore = (() => {
         ${heroShowArrows ? `
           <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
           <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
-        ` : ''}
-        ${showSwipeManual ? `
-          <button type="button" id="btn-hero-manual-swipe" class="hero-swipe-manual-badge absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/65 hover:bg-slate-900/90 text-white backdrop-blur-md text-xs font-semibold shadow-md cursor-pointer transition select-none group border border-white/20 pointer-events-auto active:scale-95" title="Icon Swipe Manual - Geser banner secara manual">
-            <i data-lucide="hand" class="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform"></i>
-            <span>Icon Swipe Manual</span>
-          </button>
         ` : ''}
       `;
     }
@@ -404,12 +396,14 @@ const BuyerStore = (() => {
             <p class="text-xs sm:text-sm leading-relaxed" style="color: ${heroSubtitleColor};">
               ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
             </p>
-            <div class="pt-2 flex flex-wrap items-center gap-3">
-              ${heroDualCtaHtml}
+            <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                ${heroDualCtaHtml}
+              </div>
               ${heroTimerHtml}
-              <div class="flex items-center gap-1.5 text-xs text-white/80">
-                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
-                Kualitas CMYK Tajam & Garansi Cetak
+              <div class="flex items-center gap-1.5 text-xs text-white/80 pt-1 sm:pt-0">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                <span>Kualitas CMYK Tajam & Garansi Cetak</span>
               </div>
             </div>
           </div>
@@ -441,22 +435,24 @@ const BuyerStore = (() => {
       heroSectionHtml = `
         <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
           <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'rounded-3xl border border-white/10'} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-            <div class="aspect-[18/9] sm:aspect-[21/9] md:aspect-[24/9] w-full relative bg-slate-950 overflow-hidden ${isFullWidth ? 'rounded-none' : 'rounded-3xl'} flex items-center">
+            <div class="min-h-[380px] sm:min-h-0 sm:aspect-[21/9] md:aspect-[24/9] w-full relative bg-slate-950 overflow-hidden ${isFullWidth ? 'rounded-none' : 'rounded-3xl'} flex items-center">
               <div class="hero-slider-track absolute inset-0 w-full h-full">
                 ${slidesHtml}
               </div>
-              <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-slate-950/30 z-10 pointer-events-none"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/40 z-10 pointer-events-none"></div>
               
-              <div class="relative z-20 p-6 sm:p-10 md:p-12 max-w-2xl space-y-3.5 text-white">
+              <div class="relative z-20 p-5 sm:p-10 md:p-12 max-w-2xl space-y-3 sm:space-y-3.5 text-white w-full">
                 ${heroGreetingBadgeHtml}
-                <h1 class="text-xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight" style="color: ${heroTitleColor};">
+                <h1 class="text-lg sm:text-3xl md:text-4xl font-black tracking-tight leading-snug sm:leading-tight" style="color: ${heroTitleColor};">
                   ${escapeHtml(settings.hero_headline || 'Cetak Banner, Desain & Souvenir Harga Instan')}
                 </h1>
                 <p class="text-xs sm:text-sm leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-3" style="color: ${heroSubtitleColor};">
                   ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
                 </p>
-                <div class="pt-2 flex flex-wrap items-center gap-3">
-                  ${heroDualCtaHtml}
+                <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
+                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                    ${heroDualCtaHtml}
+                  </div>
                   ${heroTimerHtml}
                 </div>
               </div>
@@ -472,14 +468,16 @@ const BuyerStore = (() => {
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
             <div class="lg:col-span-7 space-y-4">
               ${heroGreetingBadgeHtml}
-              <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight" style="color: ${heroTitleColor};">
+              <h1 class="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-snug sm:leading-tight" style="color: ${heroTitleColor};">
                 ${escapeHtml(settings.hero_headline || 'Cetak Banner, Desain & Souvenir Harga Instan')}
               </h1>
               <p class="text-xs sm:text-sm leading-relaxed max-w-xl" style="color: ${heroSubtitleColor};">
                 ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
               </p>
-              <div class="pt-2 flex flex-wrap items-center gap-3">
-                ${heroDualCtaHtml}
+              <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                  ${heroDualCtaHtml}
+                </div>
                 ${heroTimerHtml}
               </div>
             </div>
@@ -2690,16 +2688,7 @@ const BuyerStore = (() => {
       });
     }
 
-    // Aksi "Icon Swipe Manual"
-    const swipeManualBtn = sliderContainer.querySelector('#btn-hero-manual-swipe');
-    if (swipeManualBtn) {
-      swipeManualBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (slideInterval) clearInterval(slideInterval);
-        goToSlide(currentIndex + 1, 1);
-        startTimer();
-      });
-    }
+
 
     // Touch Swipe Manual Gesture Support (Mobile / Tablet)
     let touchStartX = 0;
