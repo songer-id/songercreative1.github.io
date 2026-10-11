@@ -190,19 +190,27 @@ const AdminApp = (() => {
     // Sinkronisasi Visibilitas Logo & Nama Toko di Top Header Admin
     const adminLogoContainer = document.getElementById('admin-header-logo-container');
     const adminStoreInfoBox = document.getElementById('admin-header-store-info-box');
-    const useLogo = settings.header_use_logo !== false && !!settings.web_logo;
+    const brandingMode = settings.navbar_branding_mode || (settings.header_use_logo === false ? 'text_only' : 'logo_landscape');
     const showHeaderStoreName = settings.show_header_store_name !== false;
 
     if (adminLogoContainer) {
-      if (useLogo) {
-        adminLogoContainer.className = 'h-10 flex items-center';
-      } else {
+      if (brandingMode === 'text_only') {
         adminLogoContainer.className = 'hidden';
+      } else {
+        adminLogoContainer.className = 'h-10 flex items-center shrink-0';
+        const adminLogoImg = adminLogoContainer.querySelector('img');
+        if (adminLogoImg) {
+          if (brandingMode === 'logo_square') {
+            adminLogoImg.className = 'h-8 w-8 sm:h-9 sm:w-9 aspect-square object-contain rounded-lg';
+          } else {
+            adminLogoImg.className = 'h-8 sm:h-9 w-auto max-w-[130px] sm:max-w-[150px] object-contain';
+          }
+        }
       }
     }
 
     if (adminStoreInfoBox) {
-      if (!useLogo) {
+      if (brandingMode === 'text_only') {
         adminStoreInfoBox.className = 'border-l-0 pl-0 block';
       } else if (showHeaderStoreName) {
         adminStoreInfoBox.className = 'border-l border-slate-200 pl-3 hidden md:block';
@@ -2990,6 +2998,11 @@ const AdminApp = (() => {
     const heroShowArrows = settings.hero_show_arrows !== false;
     const cardProductVersion = settings.card_product_version || 'v1';
 
+    // Navbar Branding Mode & Custom Text Colors
+    const navbarBrandingMode = settings.navbar_branding_mode || (settings.header_use_logo === false ? 'text_only' : 'logo_landscape');
+    const navbarStoreNameColor = settings.navbar_store_name_color || navbarTextColor;
+    const navbarTaglineColor = settings.navbar_tagline_color || '#64748b';
+
     const heroBanners = (settings.hero_banners && settings.hero_banners.length > 0)
       ? settings.hero_banners
       : (settings.hero_banner_image ? [settings.hero_banner_image] : ['assets/images/banner1.jpg']);
@@ -3234,73 +3247,117 @@ const AdminApp = (() => {
                   <textarea id="store-address-input" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 leading-relaxed font-medium" placeholder="Alamat lengkap workshop percetakan">${escapeHtml(settings.store_address || 'Jl. Raya Percetakan Kreatif No. 88, Kota Anda')}</textarea>
                 </div>
 
-                <!-- KONFIGURASI HEADER BRANDING NAVBAR (DESKTOP & MOBILE RULES) -->
-                <div class="pt-4 border-t border-slate-100 space-y-3">
-                  <div class="flex items-center justify-between pb-1">
+                <!-- KONFIGURASI HEADER BRANDING NAVBAR (3 OPSI MODEL BRANDING) -->
+                <div class="pt-4 border-t border-slate-100 space-y-4">
+                  <div class="flex items-center justify-between pb-1 border-b border-slate-100">
                     <div>
-                      <h4 class="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
+                      <h4 class="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
                         <i data-lucide="layout-template" class="w-4 h-4 text-emerald-600"></i>
-                        <span>Konfigurasi Header Navbar Toko</span>
+                        <span>Format Tampilan Identitas Navbar Toko</span>
                       </h4>
-                      <p class="text-[11px] text-slate-500">Atur tampilan branding di header navbar untuk versi Desktop dan Layar HP (Mobile).</p>
+                      <p class="text-[11px] text-slate-500">Pilih bagaimana logo atau nama toko ditampilkan pada bar navigasi atas etalase.</p>
                     </div>
                   </div>
 
-                  <!-- 1. TOGGLE GUNAKAN LOGO DI HEADER -->
-                  <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+                  <!-- 3 PILIHAN MODEL BRANDING NAVBAR SESUAI WIREFRAME -->
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    
+                    <!-- [1] Logo Persegi / Icon -->
+                    <label class="navbar-branding-choice-card p-3.5 rounded-2xl border ${navbarBrandingMode === 'logo_square' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col justify-between gap-2.5" data-mode="logo_square">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
+                          <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
+                          <span>Logo Persegi / Icon</span>
+                        </span>
+                        <input type="radio" name="navbar_branding_mode_radio" value="logo_square" ${navbarBrandingMode === 'logo_square' ? 'checked' : ''} class="text-emerald-600" />
+                      </div>
+                      <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto my-1">
+                        <i data-lucide="square" class="w-5 h-5 text-slate-500"></i>
+                      </div>
+                      <p class="text-slate-500 text-[10px] leading-relaxed">
+                        Kotak persegi (1:1) di sisi kiri navbar, minimalis dan modern.
+                      </p>
+                    </label>
+
+                    <!-- [2] Logo Landscape -->
+                    <label class="navbar-branding-choice-card p-3.5 rounded-2xl border ${navbarBrandingMode === 'logo_landscape' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col justify-between gap-2.5" data-mode="logo_landscape">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
+                          <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">2</span>
+                          <span>Logo Landscape</span>
+                        </span>
+                        <input type="radio" name="navbar_branding_mode_radio" value="logo_landscape" ${navbarBrandingMode === 'logo_landscape' ? 'checked' : ''} class="text-emerald-600" />
+                      </div>
+                      <div class="w-20 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto my-2">
+                        <i data-lucide="rectangle-horizontal" class="w-5 h-5 text-slate-500"></i>
+                      </div>
+                      <p class="text-slate-500 text-[10px] leading-relaxed">
+                        Memanjang horizontal di sisi kiri navbar, pas untuk logo teks/wide.
+                      </p>
+                    </label>
+
+                    <!-- [3] Hanya Teks (Nama Toko & Tagline) -->
+                    <label class="navbar-branding-choice-card p-3.5 rounded-2xl border ${navbarBrandingMode === 'text_only' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col justify-between gap-2.5" data-mode="text_only">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
+                          <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">3</span>
+                          <span>Hanya Teks</span>
+                        </span>
+                        <input type="radio" name="navbar_branding_mode_radio" value="text_only" ${navbarBrandingMode === 'text_only' ? 'checked' : ''} class="text-emerald-600" />
+                      </div>
+                      <div class="py-1 px-2 text-center my-auto">
+                        <span class="block font-black text-slate-900 text-xs tracking-tight truncate leading-tight">NAMA TOKO</span>
+                        <span class="block text-slate-400 text-[9px] truncate leading-tight">Tagline percetakan</span>
+                      </div>
+                      <p class="text-slate-500 text-[10px] leading-relaxed">
+                        Tanpa logo gambar. Nama toko & slogan tersusun rapi 2 baris.
+                      </p>
+                    </label>
+
+                  </div>
+
+                  <!-- INPUT WARNA KONDISIONAL (HANYA MUNCUL PADA MODE HANYA TEKS) -->
+                  <div id="navbar-text-only-colors-container" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 ${navbarBrandingMode === 'text_only' ? '' : 'hidden'} transition-all">
+                    <div class="flex items-center gap-2 pb-1 border-b border-slate-200/60">
+                      <i data-lucide="palette" class="w-4 h-4 text-emerald-600"></i>
+                      <span class="font-bold text-slate-800 text-xs">Pengaturan Warna Teks Branding Navbar:</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <!-- 1. Warna Nama Toko -->
+                      <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-700 text-xs">1. Warna Nama Toko:</label>
+                        <div class="flex items-center gap-2.5">
+                          <input type="color" id="ctrl-color-navbar-store-name" value="${navbarStoreNameColor}" class="w-9 h-9 rounded-xl border border-slate-300 cursor-pointer p-0.5 bg-white shadow-xs shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-store-name" value="${navbarStoreNameColor}" maxlength="7" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs uppercase font-semibold text-slate-800 outline-none focus:border-emerald-500 bg-white" placeholder="#0F172A" />
+                        </div>
+                        <p class="text-[10px] text-slate-400">Default: gelap (#0F172A) atau sesuai tema navbar.</p>
+                      </div>
+
+                      <!-- 2. Warna Tagline Toko -->
+                      <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-700 text-xs">2. Warna Tagline Toko:</label>
+                        <div class="flex items-center gap-2.5">
+                          <input type="color" id="ctrl-color-navbar-tagline" value="${navbarTaglineColor}" class="w-9 h-9 rounded-xl border border-slate-300 cursor-pointer p-0.5 bg-white shadow-xs shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-tagline" value="${navbarTaglineColor}" maxlength="7" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs uppercase font-semibold text-slate-800 outline-none focus:border-emerald-500 bg-white" placeholder="#64748B" />
+                        </div>
+                        <p class="text-[10px] text-slate-400">Default: abu-abu (#64748B).</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- TOGGLE OPSIONAL DESKTOP (JIKA LOGO PERSEGI ATAU LANDSCAPE AKTIF) -->
+                  <div id="navbar-logo-desktop-name-toggle-container" class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 ${navbarBrandingMode === 'text_only' ? 'hidden' : ''}">
                     <div>
-                      <label class="block font-bold text-slate-800 text-xs">Gunakan Logo Toko di Header:</label>
-                      <p class="text-[11px] text-slate-500">Jika OFF (Tanpa Logo), header di Desktop & Mobile otomatis hanya menampilkan Nama Toko secara rapi tanpa logo.</p>
+                      <div class="flex items-center gap-1.5">
+                        <span class="px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 font-bold text-[10px]">💻 Layar Desktop</span>
+                        <label class="block font-bold text-slate-800 text-xs">Tampilkan Nama & Slogan Toko di Samping Logo (Desktop):</label>
+                      </div>
+                      <p class="text-[11px] text-slate-500 mt-0.5">Jika aktif, layar desktop menampilkan <strong>[Logo] | [Nama & Slogan]</strong>. Jika nonaktif, desktop murni menampilkan logo saja (sesuai wireframe).</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input type="checkbox" id="ctrl-toggle-header-use-logo" ${settings.header_use_logo !== false ? 'checked' : ''} class="sr-only peer" />
+                      <input type="checkbox" id="ctrl-toggle-show-header-store-name" ${settings.show_header_store_name !== false ? 'checked' : ''} class="sr-only peer" />
                       <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                     </label>
-                  </div>
-
-                  <!-- CONTAINER SETTING LOGO-DEPENDENT (TAMPIL JIKA LOGO AKTIF) -->
-                  <div id="header-logo-dependent-settings" class="space-y-3 ${settings.header_use_logo === false ? 'hidden' : ''}">
-                    <!-- 2. TOGGLE DESKTOP: TAMPILKAN NAMA & SLOGAN DI DESKTOP -->
-                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
-                      <div>
-                        <div class="flex items-center gap-1.5">
-                          <span class="px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 font-bold text-[10px]">💻 Layar Desktop</span>
-                          <label class="block font-bold text-slate-800 text-xs">Tampilkan Nama & Slogan Toko di Header Desktop:</label>
-                        </div>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Jika ON, header desktop menampilkan <strong>[Logo] | [Nama & Slogan]</strong>. Jika OFF, hanya menampilkan logo saja tanpa garis pemisah.</p>
-                      </div>
-                      <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input type="checkbox" id="ctrl-toggle-show-header-store-name" ${settings.show_header_store_name !== false ? 'checked' : ''} class="sr-only peer" />
-                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                      </label>
-                    </div>
-
-                    <!-- 3. PILIHAN VERSI MOBILE: HANYA SALAH SATU (LOGO SAJA ATAU NAMA SAJA) -->
-                    <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2">
-                      <div class="flex items-center gap-1.5">
-                        <span class="px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-800 font-bold text-[10px]">📱 Khusus Layar HP (Mobile)</span>
-                        <label class="block font-bold text-slate-800 text-xs">Aturan Branding di Versi Mobile (Hanya Salah Satu):</label>
-                      </div>
-                      <p class="text-[11px] text-slate-600">
-                        Versi mobile <strong>hanya dapat menggunakan salah satu</strong> (Logo saja atau Nama saja) agar navbar tidak sesak dan kolom pencarian tetap lapang.
-                      </p>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                        <label class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${settings.header_mobile_display !== 'name' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}">
-                          <input type="radio" name="ctrl_header_mobile_display" value="logo" ${settings.header_mobile_display !== 'name' ? 'checked' : ''} class="text-emerald-600 focus:ring-emerald-500" />
-                          <div class="text-xs">
-                            <span class="font-bold">Logo Toko Saja</span>
-                            <span class="block text-[10px] text-slate-500 font-normal">Hanya logo, teks nama toko disembunyikan</span>
-                          </div>
-                        </label>
-                        <label class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${settings.header_mobile_display === 'name' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}">
-                          <input type="radio" name="ctrl_header_mobile_display" value="name" ${settings.header_mobile_display === 'name' ? 'checked' : ''} class="text-emerald-600 focus:ring-emerald-500" />
-                          <div class="text-xs">
-                            <span class="font-bold">Nama Toko Saja</span>
-                            <span class="block text-[10px] text-slate-500 font-normal">Hanya teks nama, logo disembunyikan</span>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -4468,6 +4525,50 @@ const AdminApp = (() => {
         })();
       `;
 
+      // Format Tampilan Branding Navbar Preview (Logo Persegi / Landscape / Hanya Teks)
+      const brandingMode = document.querySelector('input[name="navbar_branding_mode_radio"]:checked')?.value || settings.navbar_branding_mode || 'logo_landscape';
+      const storeNameColor = document.getElementById('ctrl-hex-navbar-store-name')?.value || settings.navbar_store_name_color || navbarText;
+      const taglineColor = document.getElementById('ctrl-hex-navbar-tagline')?.value || settings.navbar_tagline_color || '#64748b';
+      const showDesktopName = document.getElementById('ctrl-toggle-show-header-store-name')?.checked !== false;
+
+      let previewBrandHtml = '';
+      if (brandingMode === 'text_only') {
+        previewBrandHtml = `
+          <div class="flex flex-col justify-center shrink-0 min-w-0 max-w-[130px] sm:max-w-[220px]">
+            <span class="font-bold sm:font-extrabold text-xs sm:text-sm tracking-tight truncate leading-tight block" style="color: ${storeNameColor};">
+              ${escapeHtml(storeName)}
+            </span>
+            <span class="text-[9px] sm:text-[10px] block truncate font-medium leading-tight mt-0.5" style="color: ${taglineColor};">
+              ${escapeHtml(storeTagline)}
+            </span>
+          </div>
+        `;
+      } else if (brandingMode === 'logo_square') {
+        previewBrandHtml = `
+          <div class="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+            <img src="${escapeHtml(webLogo)}" alt="Logo" class="h-8 w-8 sm:h-9 sm:w-9 max-w-[38px] max-h-[38px] aspect-square object-contain rounded-lg shrink-0" onerror="this.src='assets/images/logo-songer-creative.png'" />
+            ${showDesktopName ? `
+              <div class="border-l pl-2 sm:pl-3 hidden sm:flex flex-col justify-center min-w-0" style="border-color: rgba(148, 163, 184, 0.35);">
+                <span class="font-extrabold text-xs sm:text-sm tracking-tight truncate max-w-[160px] leading-tight block" style="color: ${navbarText};">${escapeHtml(storeName)}</span>
+                <span class="text-[9px] sm:text-[10px] text-slate-400 block truncate max-w-[160px] leading-tight mt-0.5">${escapeHtml(storeTagline)}</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      } else {
+        previewBrandHtml = `
+          <div class="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+            <img src="${escapeHtml(webLogo)}" alt="Logo" class="h-7 sm:h-8 w-auto max-w-[110px] sm:max-w-[160px] object-contain shrink-0" onerror="this.src='assets/images/logo-songer-creative.png'" />
+            ${showDesktopName ? `
+              <div class="border-l pl-2 sm:pl-3 hidden sm:flex flex-col justify-center min-w-0" style="border-color: rgba(148, 163, 184, 0.35);">
+                <span class="font-extrabold text-xs sm:text-sm tracking-tight truncate max-w-[160px] leading-tight block" style="color: ${navbarText};">${escapeHtml(storeName)}</span>
+                <span class="text-[9px] sm:text-[10px] text-slate-400 block truncate max-w-[160px] leading-tight mt-0.5">${escapeHtml(storeTagline)}</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
       // Rakit dokumen HTML lengkap untuk srcdoc iframe (Framing Presisi: Navbar + Hero Banner)
       const docHtml = `
         <!DOCTYPE html>
@@ -4478,7 +4579,7 @@ const AdminApp = (() => {
           <script src="https://cdn.tailwindcss.com"></script>
           <script src="https://unpkg.com/lucide@latest"></script>
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-          <link rel="stylesheet" href="css/style.css?v=3.2">
+          <link rel="stylesheet" href="css/style.css?v=3.3">
           <style>
             body {
               background-color: ${bodyBg};
@@ -4493,17 +4594,8 @@ const AdminApp = (() => {
         <body class="flex flex-col min-h-full">
           <!-- FRAMED MINI NAVBAR TOKO PREVIEW -->
           <header class="border-b shadow-xs transition-colors px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 select-none shrink-0" style="background-color: ${navbarBg}; color: ${navbarText}; border-color: rgba(148, 163, 184, 0.25);">
-            <!-- Left: Logo & Nama Toko -->
-            <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
-              <img src="${escapeHtml(webLogo)}" alt="Logo" class="h-6 sm:h-8 w-auto max-w-[120px] object-contain" onerror="this.src='assets/images/logo-songer-creative.png'" />
-              <div class="border-l pl-2 sm:pl-3 hidden sm:flex flex-col justify-center" style="border-color: rgba(148, 163, 184, 0.35);">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-extrabold text-xs sm:text-sm tracking-tight" style="color: ${navbarText};">${escapeHtml(storeName)}</span>
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                </div>
-                <span class="text-[10px] text-slate-400 block truncate max-w-[160px]">${escapeHtml(storeTagline)}</span>
-              </div>
-            </div>
+            <!-- Left: Identitas Toko (Logo Square / Landscape / Text Only) -->
+            ${previewBrandHtml}
 
             <!-- Center: Dummy Search Bar -->
             <div class="flex-1 max-w-xs sm:max-w-sm mx-1 sm:mx-2">
@@ -4585,8 +4677,12 @@ const AdminApp = (() => {
     bindColorPair('hero-greeting-bg-color-picker', 'hero-greeting-bg-color-hex');
     bindColorPair('hero-greeting-border-color-picker', 'hero-greeting-border-color-hex');
 
+    // Navbar Text-Only Color Pair Bindings
+    bindColorPair('ctrl-color-navbar-store-name', 'ctrl-hex-navbar-store-name');
+    bindColorPair('ctrl-color-navbar-tagline', 'ctrl-hex-navbar-tagline');
+
     // Live typing on text inputs
-    ['store-name-input', 'store-logo-url-input', 'hero-headline-input', 'hero-subheadline-input', 'hero-bg-angle-input', 'hero-cta1-text-input', 'hero-cta2-text-input', 'hero-greeting-text-input'].forEach(id => {
+    ['store-name-input', 'store-tagline-input', 'store-logo-url-input', 'hero-headline-input', 'hero-subheadline-input', 'hero-bg-angle-input', 'hero-cta1-text-input', 'hero-cta2-text-input', 'hero-greeting-text-input', 'ctrl-hex-navbar-store-name', 'ctrl-hex-navbar-tagline'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', updateStorefrontLivePreview);
     });
@@ -4657,36 +4753,44 @@ const AdminApp = (() => {
     initHeroBannerUploader();
     initHeroPreviewDragHandle();
 
-    // Auto-Save & Live Sync Helper untuk Pengaturan Header Branding (Desktop & Mobile)
+    // Auto-Save & Live Sync Helper untuk Pengaturan Format Branding Navbar (3 Model: Persegi, Landscape, Hanya Teks)
     function autoSaveHeaderBrandingSettings(showToastNotify = true) {
-      const useLogo = document.getElementById('ctrl-toggle-header-use-logo')?.checked !== false;
+      const brandingMode = document.querySelector('input[name="navbar_branding_mode_radio"]:checked')?.value || 'logo_landscape';
+      const storeNameColor = document.getElementById('ctrl-hex-navbar-store-name')?.value.trim() || '#0f172a';
+      const taglineColor = document.getElementById('ctrl-hex-navbar-tagline')?.value.trim() || '#64748b';
       const showHeaderStoreName = document.getElementById('ctrl-toggle-show-header-store-name')?.checked !== false;
-      const mobileDisplay = document.querySelector('input[name="ctrl_header_mobile_display"]:checked')?.value || 'logo';
 
-      // Update visibilitas kontainer pengaturan bergantung logo
-      const depContainer = document.getElementById('header-logo-dependent-settings');
-      if (depContainer) {
-        if (useLogo) depContainer.classList.remove('hidden');
-        else depContainer.classList.add('hidden');
-      }
-
-      // Update visual highlight pada radio box mobile
-      document.querySelectorAll('input[name="ctrl_header_mobile_display"]').forEach(r => {
-        const parentLabel = r.closest('label');
-        if (parentLabel) {
-          if (r.checked) {
-            parentLabel.className = 'flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition bg-emerald-50 border-emerald-500 text-emerald-900 font-bold';
-          } else {
-            parentLabel.className = 'flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition bg-white border-slate-200 text-slate-700 hover:bg-slate-50';
-          }
+      // Update styling highlight cards
+      document.querySelectorAll('.navbar-branding-choice-card').forEach(card => {
+        const mode = card.getAttribute('data-mode');
+        if (mode === brandingMode) {
+          card.className = 'navbar-branding-choice-card p-3.5 rounded-2xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex flex-col justify-between gap-2.5';
+        } else {
+          card.className = 'navbar-branding-choice-card p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex flex-col justify-between gap-2.5';
         }
       });
 
+      // Tampilkan input warna hanya jika mode 'text_only'
+      const colorsContainer = document.getElementById('navbar-text-only-colors-container');
+      if (colorsContainer) {
+        if (brandingMode === 'text_only') colorsContainer.classList.remove('hidden');
+        else colorsContainer.classList.add('hidden');
+      }
+
+      // Sembunyikan toggle nama desktop jika 'text_only' (karena teks selalu tampil)
+      const desktopToggleContainer = document.getElementById('navbar-logo-desktop-name-toggle-container');
+      if (desktopToggleContainer) {
+        if (brandingMode === 'text_only') desktopToggleContainer.classList.add('hidden');
+        else desktopToggleContainer.classList.remove('hidden');
+      }
+
       // Simpan langsung ke database/localStorage
       DB.updateSettings({
-        header_use_logo: useLogo,
-        show_header_store_name: showHeaderStoreName,
-        header_mobile_display: mobileDisplay
+        navbar_branding_mode: brandingMode,
+        navbar_store_name_color: storeNameColor,
+        navbar_tagline_color: taglineColor,
+        header_use_logo: brandingMode !== 'text_only',
+        show_header_store_name: showHeaderStoreName
       });
 
       // Sinkronisasi live preview & admin top bar
@@ -4694,23 +4798,18 @@ const AdminApp = (() => {
       updateStorefrontLivePreview();
 
       if (showToastNotify) {
-        showToast('Pengaturan tampilan header navbar berhasil disimpan!', 'success');
+        showToast('Pengaturan format identitas navbar toko berhasil disimpan!', 'success');
       }
     }
 
-    const toggleHeaderLogo = document.getElementById('ctrl-toggle-header-use-logo');
-    if (toggleHeaderLogo) {
-      toggleHeaderLogo.addEventListener('change', () => autoSaveHeaderBrandingSettings(true));
-    }
+    document.querySelectorAll('input[name="navbar_branding_mode_radio"]').forEach(r => {
+      r.addEventListener('change', () => autoSaveHeaderBrandingSettings(false));
+    });
 
     const toggleHeaderName = document.getElementById('ctrl-toggle-show-header-store-name');
     if (toggleHeaderName) {
-      toggleHeaderName.addEventListener('change', () => autoSaveHeaderBrandingSettings(true));
+      toggleHeaderName.addEventListener('change', () => autoSaveHeaderBrandingSettings(false));
     }
-
-    document.querySelectorAll('input[name="ctrl_header_mobile_display"]').forEach(r => {
-      r.addEventListener('change', () => autoSaveHeaderBrandingSettings(true));
-    });
 
     // Hero Live Preview 3 Preset Buttons (Desktop, Tab, Mobile)
     const btnPresetDesk = document.getElementById('btn-hero-preset-desktop');
@@ -4803,9 +4902,10 @@ const AdminApp = (() => {
         const heroGreetingRadiusVal = document.getElementById('hero-greeting-radius-select')?.value || '9999px';
 
         // Navbar Header Branding Rules
-        const headerUseLogoVal = document.getElementById('ctrl-toggle-header-use-logo')?.checked !== false;
+        const navbarBrandingModeVal = document.querySelector('input[name="navbar_branding_mode_radio"]:checked')?.value || settings.navbar_branding_mode || 'logo_landscape';
+        const navbarStoreNameColorVal = document.getElementById('ctrl-hex-navbar-store-name')?.value.trim() || settings.navbar_store_name_color || '#0f172a';
+        const navbarTaglineColorVal = document.getElementById('ctrl-hex-navbar-tagline')?.value.trim() || settings.navbar_tagline_color || '#64748b';
         const showHeaderStoreNameVal = document.getElementById('ctrl-toggle-show-header-store-name')?.checked !== false;
-        const headerMobileDisplayVal = document.querySelector('input[name="ctrl_header_mobile_display"]:checked')?.value || 'logo';
 
         // Card Product Version (Pertahankan nilai yang ada)
         const cardProductVersionVal = settings.card_product_version || 'v1';
@@ -4864,9 +4964,11 @@ const AdminApp = (() => {
           hero_greeting_border_color: heroGreetingBorderColVal,
           hero_greeting_radius: heroGreetingRadiusVal,
           // Header Navbar Branding Rules
-          header_use_logo: headerUseLogoVal,
+          navbar_branding_mode: navbarBrandingModeVal,
+          navbar_store_name_color: navbarStoreNameColorVal,
+          navbar_tagline_color: navbarTaglineColorVal,
+          header_use_logo: navbarBrandingModeVal !== 'text_only',
           show_header_store_name: showHeaderStoreNameVal,
-          header_mobile_display: headerMobileDisplayVal,
           hero_banner_image: bannerImg,
           hero_banners: heroBanners,
           hero_slider_animation: sliderAnimation,

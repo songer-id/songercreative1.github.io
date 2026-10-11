@@ -666,6 +666,9 @@ const DB = (() => {
     hero_show_arrows: true, // true: tampilkan panah < dan >, false: sembunyikan panah
     enable_customer_greeting: true,
     header_use_logo: true,
+    navbar_branding_mode: 'logo_landscape', // 'logo_square' | 'logo_landscape' | 'text_only'
+    navbar_store_name_color: '#0f172a',
+    navbar_tagline_color: '#64748b',
     show_header_store_name: true,
     header_mobile_display: 'logo', // 'logo' | 'name' (Aturan mobile: hanya salah satu dari logo saja atau nama toko saja)
     hero_greeting_enabled: true,

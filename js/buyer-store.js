@@ -51,59 +51,95 @@ const BuyerStore = (() => {
     const storeNameEl = document.getElementById('header-store-name');
     const storeTaglineEl = document.getElementById('header-store-tagline');
 
-    if (storeNameEl) storeNameEl.textContent = settings.store_name || 'Songer Creative';
-    if (storeTaglineEl) storeTaglineEl.textContent = settings.store_tagline || 'Digital Printing & Percetakan Terpadu';
-    if (navLogo && settings.web_logo) navLogo.src = settings.web_logo;
+    const storeName = settings?.store_name || 'Songer Creative';
+    const storeTagline = settings?.store_tagline || 'Digital Printing & Percetakan Terpadu';
+    const webLogo = settings?.web_logo || 'assets/images/logo-songer-creative.png';
+
+    if (storeNameEl) storeNameEl.textContent = storeName;
+    if (storeTaglineEl) storeTaglineEl.textContent = storeTagline;
+    if (navLogo && webLogo) navLogo.src = webLogo;
+
+    // Hapus dot hijau jika masih ada di DOM
+    const pulseDot = document.querySelector('#nav-brand-logo-btn .animate-pulse');
+    if (pulseDot) pulseDot.remove();
 
     if (!logoContainer && !storeInfoBox) return;
 
-    const useLogo = settings.header_use_logo !== false && !!settings.web_logo;
-    const showDesktopName = settings.show_header_store_name !== false;
-    const mobileDisplay = settings.header_mobile_display || 'logo'; // 'logo' | 'name'
+    // Tentukan mode branding: 'logo_square' | 'logo_landscape' | 'text_only'
+    let mode = settings?.navbar_branding_mode;
+    if (!mode) {
+      mode = settings?.header_use_logo === false ? 'text_only' : 'logo_landscape';
+    }
 
-    if (!useLogo) {
-      // 1. MODE TANPA LOGO: Baik Mobile maupun Desktop HANYA menampilkan Nama Toko secara rapi tanpa logo
+    const storeNameColor = settings?.navbar_store_name_color || settings?.navbar_text_color || '#0f172a';
+    const taglineColor = settings?.navbar_tagline_color || '#64748b';
+    const showDesktopName = settings?.show_header_store_name !== false;
+
+    if (mode === 'text_only') {
+      // 1. OPSI 3: HANYA TEKS (Nama Toko & Tagline)
+      // Sembunyikan logo gambar sepenuhnya
       if (logoContainer) {
         logoContainer.className = 'hidden';
       }
+      // Posisikan kontainer teks tepat di slot posisi logo sebelumnya (sisi kiri navbar)
       if (storeInfoBox) {
-        storeInfoBox.className = 'flex flex-col justify-center border-l-0 pl-0';
+        storeInfoBox.className = 'flex flex-col justify-center border-l-0 pl-0 shrink-0 min-w-0 max-w-[130px] sm:max-w-[220px]';
+      }
+      // Baris 1: Nama Toko (Font tegas / semi-bold, proporsional, warna dinamis)
+      if (storeNameEl) {
+        storeNameEl.style.color = storeNameColor;
+        storeNameEl.className = 'font-bold sm:font-extrabold text-xs sm:text-base tracking-tight truncate leading-tight block';
+      }
+      // Baris 2: Tagline Toko (Font lebih kecil / regular di bawah nama toko, warna dinamis)
+      if (storeTaglineEl) {
+        storeTaglineEl.style.color = taglineColor;
+        storeTaglineEl.className = 'text-[9px] sm:text-[11px] block truncate font-medium leading-tight mt-0.5 max-w-[130px] sm:max-w-[220px]';
+      }
+    } else if (mode === 'logo_square') {
+      // 2. OPSI 1: LOGO PERSEGI / ICON (Kotak 1:1 di sisi kiri)
+      if (logoContainer) {
+        logoContainer.className = 'h-10 flex items-center shrink-0';
+      }
+      if (navLogo) {
+        navLogo.className = 'h-9 w-9 sm:h-10 sm:w-10 max-w-[42px] max-h-[42px] aspect-square object-contain rounded-xl transition group-hover:opacity-90';
+      }
+      if (storeInfoBox) {
+        if (showDesktopName) {
+          storeInfoBox.className = 'border-l border-slate-200/80 pl-2.5 sm:pl-3 hidden sm:flex flex-col justify-center min-w-0 max-w-[200px]';
+        } else {
+          storeInfoBox.className = 'hidden';
+        }
+      }
+      if (storeNameEl) {
+        storeNameEl.style.color = '';
+        storeNameEl.className = 'font-extrabold text-sm sm:text-base text-slate-900 tracking-tight truncate leading-tight block';
       }
       if (storeTaglineEl) {
-        storeTaglineEl.className = 'text-[11px] text-slate-500 block truncate max-w-[200px] hidden sm:block';
+        storeTaglineEl.style.color = '';
+        storeTaglineEl.className = 'text-[11px] text-slate-500 block truncate max-w-[200px] leading-tight mt-0.5';
       }
     } else {
-      // 2. MODE MENGGUNAKAN LOGO:
-      // Aturan Versi Mobile (< sm): HANYA BOLEH salah satu (Logo saja ATAU Nama saja)
-      // Aturan Versi Desktop (>= sm): Bisa Logo saja ATAU Logo + Nama Toko
-      if (mobileDisplay === 'name') {
-        // Mobile: Nama Toko Saja (Logo sembunyi di HP)
-        if (logoContainer) {
-          logoContainer.className = 'h-10 hidden sm:flex items-center';
+      // 3. OPSI 2: LOGO LANDSCAPE (Memanjang horizontal di sisi kiri)
+      if (logoContainer) {
+        logoContainer.className = 'h-10 flex items-center shrink-0';
+      }
+      if (navLogo) {
+        navLogo.className = 'h-8 sm:h-9 w-auto max-w-[115px] sm:max-w-[165px] object-contain transition group-hover:opacity-90';
+      }
+      if (storeInfoBox) {
+        if (showDesktopName) {
+          storeInfoBox.className = 'border-l border-slate-200/80 pl-2.5 sm:pl-3 hidden sm:flex flex-col justify-center min-w-0 max-w-[200px]';
+        } else {
+          storeInfoBox.className = 'hidden';
         }
-        if (storeInfoBox) {
-          if (showDesktopName) {
-            // Desktop: Logo + Nama Toko. Mobile: Nama Toko Saja (tanpa border di mobile)
-            storeInfoBox.className = 'flex flex-col justify-center border-l-0 pl-0 sm:border-l sm:border-slate-200 sm:pl-3';
-          } else {
-            // Desktop: Logo Saja. Mobile: Nama Toko Saja.
-            storeInfoBox.className = 'flex flex-col justify-center border-l-0 pl-0 sm:hidden';
-          }
-        }
-      } else {
-        // Mobile: Logo Saja (Default) (Nama Toko sembunyi di HP)
-        if (logoContainer) {
-          logoContainer.className = 'h-10 flex items-center';
-        }
-        if (storeInfoBox) {
-          if (showDesktopName) {
-            // Desktop: Logo + Nama Toko. Mobile: Nama Toko sembunyi
-            storeInfoBox.className = 'border-l border-slate-200 pl-3 hidden sm:flex flex-col justify-center';
-          } else {
-            // Desktop: Logo Saja. Mobile: Logo Saja. Teks nama toko tidak tampil sama sekali!
-            storeInfoBox.className = 'hidden';
-          }
-        }
+      }
+      if (storeNameEl) {
+        storeNameEl.style.color = '';
+        storeNameEl.className = 'font-extrabold text-sm sm:text-base text-slate-900 tracking-tight truncate leading-tight block';
+      }
+      if (storeTaglineEl) {
+        storeTaglineEl.style.color = '';
+        storeTaglineEl.className = 'text-[11px] text-slate-500 block truncate max-w-[200px] leading-tight mt-0.5';
       }
     }
   }
