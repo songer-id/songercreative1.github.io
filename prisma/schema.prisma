@@ -1,0 +1,497 @@
+// ==============================================================================
+// POS BY SONGER CREATIVE - PRISMA DATABASE SCHEMA (STAGE 2)
+// Multi-Tenant Ready | PostgreSQL & Supabase Compliant | Shared-Counter Invoice
+// ==============================================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ------------------------------------------------------------------------------
+// 1. ENUMS (STATUS PRODUKSI, PEMBAYARAN, CHANNEL, LISENSI SAAS)
+// ------------------------------------------------------------------------------
+
+enum SaaSTier {
+  PAKET_A_BASIC            // Produk simpel & retail
+  PAKET_B_PRO_CALCULATOR   // Kalkulator custom meter, finishing berjenjang, WhatsApp API
+  ENTERPRISE_CUSTOM
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+  EXPIRED
+}
+
+enum UserRole {
+  SUPERADMIN
+  STORE_OWNER
+  CASHIER
+  DESIGNER
+  OPERATOR_PRINT
+  BUYER
+}
+
+enum OrderChannel {
+  A_WEB     // Kode 'A' untuk Pesanan Masuk via Web Storefront
+  B_POS     // Kode 'B' untuk Transaksi Kasir Walk-in / POS Offline
+}
+
+enum ProductionStatus {
+  ANTREAN_DESAIN
+  PROSES_CETAK
+  FINISHING
+  SELESAI
+  DIBATALKAN
+}
+
+enum PaymentStatus {
+  BELUM_BAYAR   // Selesai tapi belum lunas (Piutang / COD saat ambil)
+  DP            // Uang Muka
+  LUNAS         // Telah Lunas
+}
+
+enum DiscountType {
+  PERCENT       // Persentase (%)
+  NOMINAL       // Potongan tetap (Rp)
+  FIXED_PRICE   // Harga khusus per pcs (Rp)
+}
+
+// ------------------------------------------------------------------------------
+// 2. MULTI-TENANT & STORE BRANDING
+// ------------------------------------------------------------------------------
+
+model Tenant {
+  id              String         @id @default(uuid()) @db.Uuid
+  slug            String         @unique @db.VarChar(100) // Subdomain / URL identifier
+  name            String         @db.VarChar(200)
+  plan            SaaSTier       @default(PAKET_B_PRO_CALCULATOR)
+  status          TenantStatus   @default(ACTIVE)
+  expiresAt       DateTime?      @map("expires_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  // Relasi Data Tenant
+  settings        TenantSettings?
+  users           User[]
+  categories      Category[]
+  subCategories   SubCategory[]
+  orderLabels     OrderLabel[]
+  products        Product[]
+  discountRules   OrderDiscountRule[]
+  orders          Order[]
+  reviews         Review[]
+  syncQueues      SyncQueue[]
+  invoiceSequences InvoiceSequence[]
+
+  @@map("tenants")
+}
+
+model TenantSettings {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tenantId           String    @unique @map("tenant_id") @db.Uuid
+  storeName          String    @default("Songer Creative") @map("store_name") @db.VarChar(200)
+  storeTagline       String    @default("Digital Printing & Percetakan Terpadu") @map("store_tagline") @db.VarChar(255)
+  // Kustomisasi Warna Identitas Toko (Default: #33b589 - Dapat diubah dinamis oleh seller)
+  primaryColor       String    @default("#33b589") @map("primary_color") @db.VarChar(20)
+  primaryHoverColor  String    @default("#28916d") @map("primary_hover_color") @db.VarChar(20)
+  secondaryColor     String    @default("#1e293b") @map("secondary_color") @db.VarChar(20)
+  faviconUrl         String?   @map("favicon_url") @db.Text
+  webLogoUrl         String?   @map("web_logo_url") @db.Text
+  phone              String?   @db.VarChar(50)
+  address            String?   @db.Text
+
+  // Konfigurasi Pembayaran & Kasir
+  allowCod           Boolean   @default(true) @map("allow_cod")
+  invoiceNumberMode  String    @default("custom") @map("invoice_number_mode") @db.VarChar(20) // 'custom' | 'manual'
+  defaultOrderLabel  String    @default("DnC") @map("default_order_label") @db.VarChar(20)
+  invoiceCounter     Int       @default(1) @map("invoice_counter")
+  printerType        String    @default("thermal_58mm") @map("printer_type") @db.VarChar(30) // 'thermal_58mm' | 'thermal_80mm'
+  printerName        String    @default("POS-58") @map("printer_name") @db.VarChar(100)
+
+  // Integrasi WhatsApp Gateway API
+  waApiUrl           String?   @map("wa_api_url") @db.Text
+  waApiKey           String?   @map("wa_api_key") @db.Text
+  waAutoSendOnDone   Boolean   @default(true) @map("wa_auto_send_on_done") // Auto WA saat status Selesai
+
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_settings")
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  username      String    @db.VarChar(100)
+  email         String?   @db.VarChar(200)
+  passwordHash  String?   @map("password_hash") @db.Text
+  role          UserRole  @default(CASHIER)
+  fullName      String    @map("full_name") @db.VarChar(200)
+  phone         String?   @db.VarChar(50)
+  googleId      String?   @map("google_id") @db.VarChar(150)
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders        Order[]   @relation("CashierOrders")
+
+  @@unique([tenantId, username])
+  @@index([tenantId, role])
+  @@map("users")
+}
+
+// ------------------------------------------------------------------------------
+// 3. KATEGORI & LABEL ORDER (PREFIX INVOICE DINAMIS)
+// ------------------------------------------------------------------------------
+
+model OrderLabel {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  code        String   @db.VarChar(20) // Contoh: 'DnC', 'CtK', 'DsN', 'SpL', 'PRINT', 'ADV'
+  name        String   @db.VarChar(100)
+  isDefault   Boolean  @default(false) @map("is_default")
+  sortOrder   Int      @default(1) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("order_labels")
+}
+
+model Category {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @map("tenant_id") @db.Uuid
+  name          String        @db.VarChar(150)
+  slug          String        @db.VarChar(150)
+  icon          String        @default("layers") @db.VarChar(50)
+  description   String?       @db.Text
+  sortOrder     Int           @default(1) @map("sort_order")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subCategories SubCategory[]
+  products      Product[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("categories")
+}
+
+model SubCategory {
+  id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  categoryId          String    @map("category_id") @db.Uuid
+  name                String    @db.VarChar(150)
+  slug                String    @db.VarChar(150)
+  defaultCardVariant  String    @default("A") @map("default_card_variant") @db.VarChar(5) // 'A' | 'B' | 'C'
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category            Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products            Product[]
+
+  @@unique([tenantId, categoryId, slug])
+  @@index([tenantId, categoryId])
+  @@map("sub_categories")
+}
+
+// ------------------------------------------------------------------------------
+// 4. KATALOG PRODUK, MATERIAL, FINISHING & TIER DISKON
+// ------------------------------------------------------------------------------
+
+model Product {
+  id                  String                @id @default(uuid()) @db.Uuid
+  tenantId            String                @map("tenant_id") @db.Uuid
+  name                String                @db.VarChar(255)
+  slug                String                @db.VarChar(255)
+  categoryId          String?               @map("category_id") @db.Uuid
+  subCategoryId       String?               @map("sub_category_id") @db.Uuid
+
+  // Label Faktur Kasir (Pilihan dinamis: 'DnC', 'CtK', atau 'manual' untuk 00001)
+  orderLabelCode      String                @default("manual") @map("order_label_code") @db.VarChar(20)
+
+  // Variasi Tampilan Card Grid: 'A' (Cetak Kustom), 'B' (Jasa Desain), 'C' (Retail/Shopee)
+  cardVariant         String                @default("A") @map("card_variant") @db.VarChar(5)
+
+  // Tipe Rumus Harga: 1: Meter, 2: KombF, 4: Paket, 5: Kg, 6: Lt, 7: KombStep (3: Fixed dinonaktifkan)
+  priceType           Int                   @map("price_type")
+  stepQuantity        Int                   @default(1) @map("step_quantity") // Khusus KombStep (wajib kelipatan)
+
+  // Stok & Visibilitas
+  stock               Int?
+  isUnlimitedStock    Boolean               @default(true) @map("is_unlimited_stock")
+  minOrder            Int                   @default(1) @map("min_order")
+  maxOrder            Int?                  @map("max_order")
+  hasMonthlyDiscount  Boolean               @default(false) @map("has_monthly_discount")
+  discountType        DiscountType?         @map("discount_type")
+  discountValue       Decimal               @default(0.00) @map("discount_value") @db.Decimal(12, 2)
+  imageUrl            String?               @map("image_url") @db.Text
+  description         String?               @db.Text
+  isActive            Boolean               @default(true) @map("is_active") // On/Off etalase web
+
+  // Metrik Penjualan & Ulasan
+  salesCount          Int                   @default(0) @map("sales_count")
+  ratingAvg           Decimal               @default(5.00) @map("rating_avg") @db.Decimal(3, 2)
+  reviewCount         Int                   @default(0) @map("review_count")
+  createdAt           DateTime              @default(now()) @map("created_at")
+  updatedAt           DateTime              @updatedAt @map("updated_at")
+
+  tenant              Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category            Category?             @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subCategory         SubCategory?          @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  materials           ProductMaterial[]
+  finishings          ProductFinishing[]
+  discountTiers       ProductDiscountTier[]
+  orderItems          OrderItem[]
+  reviews             Review[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, categoryId])
+  @@index([tenantId, subCategoryId])
+  @@index([tenantId, isActive])
+  @@map("products")
+}
+
+model ProductMaterial {
+  id             String    @id @default(uuid()) @db.Uuid
+  productId      String    @map("product_id") @db.Uuid
+  name           String    @db.VarChar(150)
+  price          Decimal   @default(0.00) @db.Decimal(12, 2) // Harga Jual
+  costPrice      Decimal   @default(0.00) @map("cost_price") @db.Decimal(12, 2) // Harga Modal / HPP
+  stepMultiplier Int       @default(1) @map("step_multiplier")
+  isDefault      Boolean   @default(false) @map("is_default")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_materials")
+}
+
+model ProductFinishing {
+  id             String    @id @default(uuid()) @db.Uuid
+  productId      String    @map("product_id") @db.Uuid
+  tier           String    @default("main") @db.VarChar(20) // 'main', 'extra_1', 'extra_2', 'extra_3'
+  name           String    @db.VarChar(150)
+  price          Decimal   @default(0.00) @db.Decimal(12, 2) // Biaya Tambahan Jual (+Rp)
+  costPrice      Decimal   @default(0.00) @map("cost_price") @db.Decimal(12, 2) // Biaya Modal / HPP
+  isIncluded     Boolean   @default(false) @map("is_included") // Khusus Paket B4 (apakah gratis/termasuk)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, tier])
+  @@map("product_finishings")
+}
+
+// Diskon Bertingkat berdasarkan Qty Produk (contoh: qty > 10 harga jadi Rp 9.000/pcs)
+model ProductDiscountTier {
+  id             String        @id @default(uuid()) @db.Uuid
+  productId      String        @map("product_id") @db.Uuid
+  minQty         Int           @map("min_qty")
+  discountType   DiscountType  @default(FIXED_PRICE) @map("discount_type")
+  discountValue  Decimal       @map("discount_value") @db.Decimal(12, 2)
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  product        Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, minQty])
+  @@map("product_discount_tiers")
+}
+
+// Diskon Akumulasi Order / Keranjang (contoh: belanja >= 100k diskon 5k atau total qty >= 20 diskon 10k)
+model OrderDiscountRule {
+  id             String        @id @default(uuid()) @db.Uuid
+  tenantId       String        @map("tenant_id") @db.Uuid
+  name           String        @db.VarChar(150)
+  ruleType       String        @map("rule_type") @db.VarChar(30) // 'MIN_AMOUNT' | 'MIN_TOTAL_QTY'
+  thresholdValue Decimal       @map("threshold_value") @db.Decimal(12, 2) // 100000 atau 20
+  discountType   DiscountType  @default(NOMINAL) @map("discount_type")
+  discountValue  Decimal       @map("discount_value") @db.Decimal(12, 2) // 5000 atau 10000
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, isActive])
+  @@map("order_discount_rules")
+}
+
+// ------------------------------------------------------------------------------
+// 5. TRANSAKSI ORDER, ITEM DETAIL & HPP FINANSIAL
+// ------------------------------------------------------------------------------
+
+model Order {
+  id                    String            @id @default(uuid()) @db.Uuid
+  tenantId              String            @map("tenant_id") @db.Uuid
+
+  // Format Nomor Faktur: [A/B]-[Prefix]-[Counter 5 Digit]-[MMYY] (misal: B-DnC-00001-1026)
+  invoiceNumber         String            @unique @map("invoice_number") @db.VarChar(50)
+  invoiceSequence       Int               @map("invoice_sequence") // Nomor counter global integer
+
+  channel               OrderChannel      @default(B_POS) // A_WEB (Online) atau B_POS (Kasir Walk-in)
+  cashierId             String?           @map("cashier_id") @db.Uuid
+  cashierName           String?           @map("cashier_name") @db.VarChar(100) // "Kasir 1 - Budi", dll
+  terminalId            String?           @map("terminal_id") @db.VarChar(50) // "POS-01", "TABLET-KASIR"
+
+  // Data Pembeli
+  customerName          String            @map("customer_name") @db.VarChar(150)
+  customerPhone         String            @map("customer_phone") @db.VarChar(50) // WhatsApp aktif
+  customerEmail         String?           @map("customer_email") @db.VarChar(200)
+  deliveryAddress       String?           @map("delivery_address") @db.Text
+
+  // Status Independen (Selesai != Lunas)
+  productionStatus      ProductionStatus  @default(ANTREAN_DESAIN) @map("production_status")
+  paymentStatus         PaymentStatus     @default(BELUM_BAYAR) @map("payment_status")
+  paymentMethod         String?           @map("payment_method") @db.VarChar(50) // 'CASH', 'TRANSFER', 'QRIS', 'COD'
+  downPaymentAmount     Decimal           @default(0.00) @map("down_payment_amount") @db.Decimal(12, 2)
+  remainingAmount       Decimal           @default(0.00) @map("remaining_amount") @db.Decimal(12, 2) // Sisa bayar
+
+  // Nilai Finansial & HPP
+  subtotal              Decimal           @default(0.00) @db.Decimal(12, 2)
+  totalDiscount         Decimal           @default(0.00) @map("total_discount") @db.Decimal(12, 2)
+  grandTotal            Decimal           @default(0.00) @map("grand_total") @db.Decimal(12, 2)
+  totalCostHpp          Decimal           @default(0.00) @map("total_cost_hpp") @db.Decimal(12, 2) // Akumulasi HPP
+  grossProfit           Decimal           @default(0.00) @map("gross_profit") @db.Decimal(12, 2) // Grand Total - HPP
+
+  // Notifikasi Otomatis WhatsApp
+  waNotificationSent    Boolean           @default(false) @map("wa_notification_sent")
+  waNotificationSentAt  DateTime?         @map("wa_notification_sent_at")
+
+  notes                 String?           @db.Text
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  tenant                Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cashier               User?             @relation("CashierOrders", fields: [cashierId], references: [id], onDelete: SetNull)
+  items                 OrderItem[]
+
+  @@index([tenantId, invoiceNumber])
+  @@index([tenantId, channel])
+  @@index([tenantId, productionStatus])
+  @@index([tenantId, paymentStatus])
+  @@index([tenantId, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                  String    @id @default(uuid()) @db.Uuid
+  orderId             String    @map("order_id") @db.Uuid
+  productId           String    @map("product_id") @db.Uuid
+  productName         String    @map("product_name") @db.VarChar(255)
+  priceType           Int       @map("price_type")
+
+  // Parameter Khusus Cetak (Dimensi PxL Meter)
+  lengthCm            Decimal?  @map("length_cm") @db.Decimal(8, 2)
+  widthCm             Decimal?  @map("width_cm") @db.Decimal(8, 2)
+  billedAreaM2        Decimal?  @map("billed_area_m2") @db.Decimal(8, 3) // Luas m² ditagih
+
+  // Bahan Terpilih & HPP
+  materialName        String?   @map("material_name") @db.VarChar(150)
+  materialPrice       Decimal   @default(0.00) @map("material_price") @db.Decimal(12, 2)
+  materialCostPrice   Decimal   @default(0.00) @map("material_cost_price") @db.Decimal(12, 2)
+
+  // Finishing Utama & Ekstra
+  mainFinishingName   String?   @map("main_finishing_name") @db.VarChar(150)
+  mainFinishingPrice  Decimal   @default(0.00) @map("main_finishing_price") @db.Decimal(12, 2)
+  extraFinishingsJson Json?     @map("extra_finishings_json") // Rincian finishing ekstra
+
+  // Kuantitas & Kalkulasi
+  qty                 Int       @default(1)
+  unitPrice           Decimal   @default(0.00) @map("unit_price") @db.Decimal(12, 2)
+  subtotal            Decimal   @default(0.00) @db.Decimal(12, 2)
+  itemCostHpp         Decimal   @default(0.00) @map("item_cost_hpp") @db.Decimal(12, 2)
+  itemGrossProfit     Decimal   @default(0.00) @map("item_gross_profit") @db.Decimal(12, 2)
+
+  // File Cetak & Catatan Desain
+  designDriveLink     String?   @map("design_drive_link") @db.Text
+  designNotes         String?   @map("design_notes") @db.Text
+
+  order               Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ------------------------------------------------------------------------------
+// 6. ULASAN PELANGGAN DENGAN MODERASI SELLER
+// ------------------------------------------------------------------------------
+
+model Review {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  productId     String    @map("product_id") @db.Uuid
+  customerName  String    @map("customer_name") @db.VarChar(150)
+  rating        Int       @default(5) // 1 s/d 5
+  comment       String    @db.Text
+  imageUrl      String?   @map("image_url") @db.Text
+  isApproved    Boolean   @default(false) @map("is_approved") // Moderasi seller
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, productId, isApproved])
+  @@map("reviews")
+}
+
+// ------------------------------------------------------------------------------
+// 7. SYNC QUEUE ANTREAN TRANSAKSI OFFLINE KASIR
+// ------------------------------------------------------------------------------
+
+model SyncQueue {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  terminalId    String    @map("terminal_id") @db.VarChar(50)
+  entityType    String    @map("entity_type") @db.VarChar(50) // 'order', 'product', 'inventory'
+  entityId      String    @map("entity_id") @db.VarChar(100)
+  operation     String    @db.VarChar(20) // 'CREATE', 'UPDATE', 'DELETE'
+  payload       Json
+  syncStatus    String    @default("PENDING") @map("sync_status") @db.VarChar(20) // 'PENDING', 'SYNCED', 'FAILED'
+  errorMessage  String?   @map("error_message") @db.Text
+  syncedAt      DateTime? @map("synced_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, syncStatus])
+  @@index([terminalId, syncStatus])
+  @@map("sync_queues")
+}
+
+// ------------------------------------------------------------------------------
+// 8. GLOBAL SHARED INVOICE SEQUENCE COUNTER (RACE-CONDITION FREE)
+// ------------------------------------------------------------------------------
+
+model InvoiceSequence {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  period    String   @db.VarChar(10) // Format: 'MMYY' (misal: '1026') atau 'GLOBAL'
+  counter   Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, period])
+  @@index([tenantId])
+  @@map("invoice_sequences")
+}
+

@@ -1,0 +1,603 @@
+/* ==========================================================================
+   POS BY SONGER CREATIVE - DUAL-COLOR BRANDING & DESIGN SYSTEM (STAGE 3)
+   Primary Brand:   #33b589 (Emerald Mint Teal - Default Toko)
+   Secondary/Accent:#f59e0b (Amber Orange / Gold Highlight - Default Aksen)
+   Base Background: #f8fafc
+   ========================================================================== */
+
+:root {
+  /* 1. Warna Utama (Primary): Navbar, Header, Border Aktif, Tombol Primer */
+  --color-primary: #33b589;
+  --color-primary-hover: #28916d;
+  --color-primary-subtle: rgba(51, 181, 137, 0.12);
+
+  /* 2. Warna Kedua (Secondary / Accent): Tombol CTA "Beli Sekarang", Diskon/Promo, Bintang, Highlight Harga */
+  --color-secondary: #f59e0b;
+  --color-secondary-hover: #d97706;
+  --color-secondary-subtle: rgba(245, 158, 11, 0.14);
+
+  --color-base: #f8fafc;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-base);
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --------------------------------------------------------------------------
+   BRAND THEME BUTTONS
+   -------------------------------------------------------------------------- */
+
+/* Tombol Brand Primer */
+.btn-primary-brand {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary-brand:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-primary-brand:active {
+  transform: scale(0.98);
+}
+
+/* Tombol Brand Sekunder / Aksen CTA "Beli Sekarang" */
+.btn-secondary-accent {
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-secondary-accent:hover {
+  background-color: var(--color-secondary-hover);
+}
+
+.btn-secondary-accent:active {
+  transform: scale(0.98);
+}
+
+/* Outline Brand Buttons */
+.btn-outline-primary {
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-primary-subtle);
+}
+
+.btn-outline-secondary {
+  border: 1.5px solid var(--color-secondary);
+  color: var(--color-secondary);
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--color-secondary-subtle);
+}
+
+/* --------------------------------------------------------------------------
+   THEME COLOR UTILITIES
+   -------------------------------------------------------------------------- */
+.text-primary-brand {
+  color: var(--color-primary);
+}
+
+.text-secondary-accent {
+  color: var(--color-secondary);
+}
+
+.bg-primary-brand {
+  background-color: var(--color-primary);
+}
+
+.bg-secondary-accent {
+  background-color: var(--color-secondary);
+}
+
+.bg-primary-subtle {
+  background-color: var(--color-primary-subtle);
+}
+
+.bg-secondary-subtle {
+  background-color: var(--color-secondary-subtle);
+}
+
+.border-primary-brand {
+  border-color: var(--color-primary);
+}
+
+.border-secondary-accent {
+  border-color: var(--color-secondary);
+}
+
+/* Badge Promo & Diskon */
+.badge-promo-accent {
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Bintang Rating */
+.star-rating-accent {
+  color: var(--color-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   PDP & GALLERY STYLES
+   -------------------------------------------------------------------------- */
+.pdp-thumbnail-active {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-primary-subtle);
+}
+
+.configurator-pill-active {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+  font-weight: 700;
+}
+
+/* Sticky Mobile Bottom Bar */
+.sticky-mobile-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 16px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Custom Scrollbar for Repeaters & Code viewers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s ease-out forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.2s ease-out forwards;
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2s infinite ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   HERO SLIDER HORIZONTAL SEAMLESS TRANSITIONS
+   Slide lama meluncur ke kiri (-100%), slide baru meluncur ke tengah (0%)
+   -------------------------------------------------------------------------- */
+.hero-slider-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hero-slide-smooth {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.hero-slide-smooth.is-active {
+  transform: translateX(0);
+  z-index: 10;
+  visibility: visible;
+}
+
+.hero-slide-smooth.is-prev {
+  transform: translateX(-100%);
+  z-index: 5;
+  visibility: visible;
+}
+
+.hero-slide-smooth.is-next {
+  transform: translateX(100%);
+  z-index: 5;
+  visibility: visible;
+}
+
+.hero-slide-smooth.is-hidden {
+  transform: translateX(100%);
+  z-index: 0;
+  visibility: hidden;
+  transition: none !important;
+}
+
+/* Hero Slider Fade Transition */
+.hero-anim-fade .hero-slide-smooth {
+  transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transform: none !important;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-active {
+  opacity: 1;
+  visibility: visible;
+  z-index: 10;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-fading-out {
+  opacity: 0;
+  visibility: visible;
+  z-index: 8;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-fading-out-top {
+  opacity: 0;
+  visibility: visible;
+  z-index: 12;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-prev,
+.hero-anim-fade .hero-slide-smooth.is-next {
+  opacity: 0;
+  visibility: hidden;
+  z-index: 5;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  z-index: 0;
+  transform: none !important;
+}
+
+/* Icon Swipe Manual Floating Badge */
+.hero-swipe-manual-badge {
+  animation: pulseSubtle 3s infinite ease-in-out;
+  user-select: none;
+}
+.hero-swipe-manual-badge:hover {
+  transform: scale(1.05);
+}
+
+/* --------------------------------------------------------------------------
+   THERMAL RECEIPT PRINT STYLES (58MM & 80MM)
+   Sembunyikan seluruh UI web dan cetak murni container thermal monospace
+   -------------------------------------------------------------------------- */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  
+  #thermal-print-container,
+  #thermal-print-container * {
+    visibility: visible !important;
+  }
+  
+  #thermal-print-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 2mm !important;
+    display: block !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+  
+  @page {
+    margin: 0;
+    size: auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   STATIC COLLAPSIBLE ADMIN SIDEBAR & ICON-ONLY HIGHLIGHT (STAGE 5 OVERHAUL)
+   -------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .admin-sidebar-hover-expand {
+    width: 5rem; /* w-20 default static collapsed */
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    overflow: visible !important;
+    position: relative !important;
+  }
+  
+  /* Sidebar expands ONLY via click / .is-expanded, NEVER on hover */
+  .admin-sidebar-hover-expand.is-expanded {
+    width: 16rem; /* w-64 */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Floating Sidebar Edge Collapse Button (<) at Middle-Right Edge */
+  .sidebar-edge-toggle {
+    position: absolute;
+    right: -13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 50;
+  }
+  .sidebar-edge-toggle:hover {
+    background-color: #f8fafc;
+    color: #0f172a;
+    border-color: #94a3b8;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.16);
+  }
+  /* Show close button (<) when expanded; hide when collapsed */
+  .admin-sidebar-hover-expand.is-expanded .sidebar-edge-toggle {
+    display: flex !important;
+  }
+  .admin-sidebar-hover-expand:not(.is-expanded) .sidebar-edge-toggle {
+    display: none !important;
+  }
+
+  /* Text label hide/reveal transition */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-label-text,
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group-chevron,
+  .admin-sidebar-hover-expand:not(.is-expanded) .sidebar-footer-text,
+  .admin-sidebar-hover-expand:not(.is-expanded) .sidebar-section-title,
+  .admin-sidebar-hover-expand:not(.is-expanded) .sidebar-badge {
+    display: none !important;
+    opacity: 0 !important;
+    max-width: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .admin-sidebar-hover-expand.is-expanded .nav-label-text,
+  .admin-sidebar-hover-expand.is-expanded .nav-group-chevron,
+  .admin-sidebar-hover-expand.is-expanded .sidebar-footer-text,
+  .admin-sidebar-hover-expand.is-expanded .sidebar-section-title,
+  .admin-sidebar-hover-expand.is-expanded .sidebar-badge {
+    opacity: 1;
+    max-width: 200px;
+    display: inline-block;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* WHEN COLLAPSED: Button background is transparent; zero gap; perfectly centered column */
+  .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item,
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group-header {
+    gap: 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-icon {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 0.875rem !important;
+    border: 1px solid transparent !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Hover when collapsed: border and background ONLY around icon */
+  .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item:hover .nav-icon,
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group-header:hover .nav-icon {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  /* Active when collapsed: border and background ONLY around icon */
+  .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item.is-active-light .nav-icon {
+    background-color: #ecfdf5 !important;
+    border-color: #6ee7b7 !important;
+    color: #047857 !important;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15) !important;
+  }
+
+  .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item.is-active-dark .nav-icon {
+    background-color: rgba(5, 150, 105, 0.25) !important;
+    border-color: #059669 !important;
+    color: #34d399 !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2) !important;
+  }
+
+  /* Submenus accordion behavior */
+  .admin-sidebar-hover-expand .nav-submenu {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  }
+
+  .admin-sidebar-hover-expand.is-expanded .nav-submenu.is-expanded {
+    max-height: 400px;
+    opacity: 1;
+  }
+}
+
+/* Horizontal Desktop Scrollbar (Quick Filter & Storefront) */
+.desktop-scrollbar-visible {
+  overflow-x: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+}
+.desktop-scrollbar-visible::-webkit-scrollbar {
+  height: 6px !important;
+  display: block !important;
+}
+.desktop-scrollbar-visible::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.desktop-scrollbar-visible::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+  border-radius: 9999px !important;
+}
+.desktop-scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8 !important;
+}
+
+/* Mobile: Drawer Behavior */
+@media (max-width: 1023px) {
+  .admin-sidebar-hover-expand {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 50 !important;
+    width: 16rem;
+    height: 100% !important;
+  }
+  .admin-sidebar-hover-expand .nav-label-text,
+  .admin-sidebar-hover-expand .nav-group-chevron,
+  .admin-sidebar-hover-expand .sidebar-footer-text,
+  .admin-sidebar-hover-expand .sidebar-section-title,
+  .admin-sidebar-hover-expand .sidebar-badge {
+    opacity: 1;
+    max-width: none;
+    overflow: visible;
+  }
+  .admin-sidebar-hover-expand .nav-submenu {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  }
+  .admin-sidebar-hover-expand .nav-submenu.is-expanded {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+/* Auto-Contrast Navigation Active Styles (Border-Free, Clean & Rounded-2xl) */
+.admin-nav-item.is-active-light {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  font-weight: 700;
+}
+.admin-nav-item.is-active-light .nav-icon {
+  color: #047857 !important;
+}
+
+.admin-nav-item.is-active-dark {
+  background-color: rgba(5, 150, 105, 0.2) !important;
+  color: #34d399 !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  font-weight: 700;
+}
+.admin-nav-item.is-active-dark .nav-icon {
+  color: #34d399 !important;
+}
+
+/* Aspect Ratio 3:4 Utility for Promo & Sponsor Cards */
+.aspect-3-4 {
+  aspect-ratio: 3 / 4;
+}
+
+/* Medium Pulse Shimmer Skeleton Loading */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+  border-radius: 1rem;
+}
+
+@keyframes skeletonPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Pastikan pembungkus preview memiliki tinggi terkontrol */
+.preview-viewport-wrapper, 
+#hero-preview-iframe {
+  height: 580px !important; /* Gunakan fixed height atau aspect-ratio */
+  max-height: 80vh;
+  overflow-y: auto;          /* Biarkan scroll di dalam jika konten melebihi area */
+}

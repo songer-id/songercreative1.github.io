@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan Toko & Identitas Brand - Songer Creative</title>
+  <link rel="icon" id="app-favicon" href="assets/images/songer-logo.png" type="image/png" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white pb-28">
+
+  <!-- ========================================================================
+       TOP HEADER NAVIGATION
+       ======================================================================== -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 max-w-5xl mx-auto w-full">
+      
+      <!-- Brand & Page Title -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-2.5 group" title="Kembali ke Beranda">
+          <img id="header-brand-logo" src="assets/images/logo-songer-creative.png" alt="Songer Creative" class="h-9 w-auto object-contain transition group-hover:opacity-90" />
+        </a>
+        <div class="border-l border-slate-200 pl-3 hidden sm:block">
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-sm sm:text-base text-slate-900 tracking-tight">Pengaturan Toko</h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wide">
+              Branding & POS
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Kustomisasi identitas, logo, warna, dan format struk kasir</p>
+        </div>
+      </div>
+
+      <!-- Action: Kembali ke Dashboard / Toko -->
+      <a href="index.html" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-semibold shadow-xs transition">
+        <i data-lucide="arrow-left" class="w-4 h-4 text-emerald-600"></i>
+        <span>Kembali ke Toko</span>
+      </a>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN SETTINGS CONTAINER
+       ======================================================================== -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+
+    <!-- PAGE HERO BANNER -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white p-6 sm:p-8 shadow-xl border border-slate-700/50">
+      <div class="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+      <div class="relative z-10 max-w-2xl space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-bold uppercase tracking-wider">
+          <i data-lucide="sliders" class="w-3.5 h-3.5 text-emerald-400"></i>
+          Konfigurasi Mandiri Toko
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+          Identitas & Penampilan Brand Toko
+        </h2>
+        <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+          Atur informasi resmi percetakan, warna tema utama & aksen, logo website, hingga format ukuran kertas pencetakan struk kasir thermal tanpa popup macet.
+        </p>
+      </div>
+    </div>
+
+    <!-- SETTINGS FORM SECTIONS -->
+    <form id="form-settings" class="space-y-8" onsubmit="event.preventDefault();">
+
+      <!-- ====================================================================
+           BAGIAN 1: IDENTITAS TOKO
+           ==================================================================== -->
+      <section class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <i data-lucide="store" class="w-5 h-5 text-emerald-600"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Bagian 1: Identitas & Kontak Toko</h3>
+            <p class="text-xs text-slate-500">Nama toko, slogan, dan saluran kontak resmi untuk pelanggan dan nota</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Nama Toko Web -->
+          <div class="space-y-1.5">
+            <label for="settings-store-name" class="block text-xs font-bold text-slate-700">
+              Nama Toko Web <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="settings-store-name" 
+              name="store_name"
+              required 
+              placeholder="Contoh: Songer Creative" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition" 
+            />
+            <p class="text-[11px] text-slate-400">Ditampilkan pada navbar, title tab browser, dan kop faktur.</p>
+          </div>
+
+          <!-- Tagline Toko -->
+          <div class="space-y-1.5">
+            <label for="settings-store-tagline" class="block text-xs font-bold text-slate-700">
+              Tagline / Slogan Usaha
+            </label>
+            <input 
+              type="text" 
+              id="settings-store-tagline" 
+              name="store_tagline"
+              placeholder="Contoh: Digital Printing & Percetakan Terpadu" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition" 
+            />
+            <p class="text-[11px] text-slate-400">Deskripsi singkat di bawah nama toko pada header website.</p>
+          </div>
+
+          <!-- Alamat Fisik Toko -->
+          <div class="space-y-1.5">
+            <label for="settings-store-address" class="block text-xs font-bold text-slate-700">
+              Alamat Lengkap Toko / Workshop
+            </label>
+            <input 
+              type="text" 
+              id="settings-store-address" 
+              name="store_address"
+              placeholder="Jl. Percetakan Raya No. 88, Kota Anda" 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition" 
+            />
+            <p class="text-[11px] text-slate-400">Dicetak pada header struk kasir thermal dan faktur invoice.</p>
+          </div>
+
+          <!-- No WhatsApp Toko -->
+          <div class="space-y-1.5">
+            <label for="settings-store-phone" class="block text-xs font-bold text-slate-700">
+              No. WhatsApp Resmi Toko <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <i data-lucide="phone" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input 
+                type="text" 
+                id="settings-store-phone" 
+                name="store_phone"
+                required 
+                placeholder="Contoh: 0888-5844-380" 
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition" 
+              />
+            </div>
+            <p class="text-[11px] text-slate-400">Tujuan otomatis tombol Checkout WhatsApp dan pesan order kilat.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           BAGIAN 2: SISTEM DUA (2) WARNA IDENTITAS TOKO
+           ==================================================================== -->
+      <section class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 flex-wrap gap-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center font-bold">
+              <i data-lucide="palette" class="w-5 h-5 text-amber-500"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Bagian 2: Sistem 2 Warna Identitas Toko (Dual-Color Theme)</h3>
+              <p class="text-xs text-slate-500">Kombinasi warna utama website dan warna aksen penegas tombol CTA/promo</p>
+            </div>
+          </div>
+          <button type="button" id="btn-reset-color-default" class="text-xs text-emerald-600 hover:text-emerald-700 hover:underline font-semibold flex items-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Kembalikan ke Mint + Amber</span>
+          </button>
+        </div>
+
+        <!-- LIVE COLOR PREVIEW CARD -->
+        <div class="p-5 rounded-2xl bg-slate-900 text-white border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-2">
+            <span class="font-bold flex items-center gap-1.5 text-slate-200">
+              <i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-400"></i>
+              Pratinjau Langsung Tema (Live Preview)
+            </span>
+            <span>Realtime CSS Variable Sync</span>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
+            <!-- Simulated Navbar Element (Primary Color) -->
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <div id="preview-box-primary" class="px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md transition flex items-center gap-2" style="background-color: #33b589;">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                <span id="preview-text-primary">Warna Utama (Navbar & Header)</span>
+              </div>
+            </div>
+
+            <!-- Simulated CTA Button & Rating Badge (Secondary Color) -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div id="preview-badge-secondary" class="px-2.5 py-1 rounded-lg text-white font-black text-[11px] shadow-sm uppercase flex items-center gap-1 transition" style="background-color: #f59e0b;">
+                <span>★ 5.0 Promo 20% OFF</span>
+              </div>
+              <button type="button" id="preview-btn-secondary" class="px-4 py-2 rounded-xl text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5" style="background-color: #f59e0b;">
+                <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+                <span>Beli Sekarang</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 COLOR PICKERS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- 1. Warna Utama (Primary) -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <label for="settings-primary-color" class="block text-xs font-bold text-slate-900">
+                  1. Warna Utama (Primary Brand)
+                </label>
+                <p class="text-[11px] text-slate-500">Mendominasi Navbar, tombol sekunder, judul & garis tepi aktif.</p>
+              </div>
+              <span class="w-3 h-3 rounded-full" id="indicator-primary" style="background-color: #33b589;"></span>
+            </div>
+            
+            <div class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+              <input 
+                type="color" 
+                id="settings-primary-color" 
+                value="#33b589" 
+                class="w-10 h-10 rounded-lg cursor-pointer border border-slate-300 p-0.5 bg-white shrink-0" 
+              />
+              <div class="flex-1">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Kode HEX:</span>
+                <input 
+                  type="text" 
+                  id="settings-primary-color-text" 
+                  value="#33b589" 
+                  maxlength="7" 
+                  class="w-full text-xs font-mono font-bold uppercase outline-none text-slate-800" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Warna Kedua (Secondary / Accent) -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <label for="settings-secondary-color" class="block text-xs font-bold text-slate-900">
+                  2. Warna Kedua (Secondary / Accent)
+                </label>
+                <p class="text-[11px] text-slate-500">Aksen penegas tombol CTA "Beli Sekarang", badge promo & bintang.</p>
+              </div>
+              <span class="w-3 h-3 rounded-full" id="indicator-secondary" style="background-color: #f59e0b;"></span>
+            </div>
+            
+            <div class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+              <input 
+                type="color" 
+                id="settings-secondary-color" 
+                value="#f59e0b" 
+                class="w-10 h-10 rounded-lg cursor-pointer border border-slate-300 p-0.5 bg-white shrink-0" 
+              />
+              <div class="flex-1">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Kode HEX:</span>
+                <input 
+                  type="text" 
+                  id="settings-secondary-color-text" 
+                  value="#f59e0b" 
+                  maxlength="7" 
+                  class="w-full text-xs font-mono font-bold uppercase outline-none text-slate-800" 
+                />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 6 PRESET WARNA SIAP PAKAI -->
+        <div class="space-y-3 pt-2">
+          <label class="block text-xs font-bold text-slate-700">
+            6 Pilihan Kombinasi Pasangan Warna Siap Pakai:
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            
+            <button type="button" class="btn-dual-preset flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-500 hover:shadow-md transition text-left group" data-primary="#33b589" data-secondary="#f59e0b">
+              <div class="flex items-center -space-x-1.5">
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #33b589;"></span>
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #f59e0b;"></span>
+              </div>
+              <div>
+                <span class="text-[11px] font-bold text-slate-800 block truncate group-hover:text-emerald-700">Mint + Amber</span>
+                <span class="text-[9px] text-slate-400">Default Bawaan</span>
+              </div>
+            </button>
+
+            <button type="button" class="btn-dual-preset flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:shadow-md transition text-left group" data-primary="#2563eb" data-secondary="#ea580c">
+              <div class="flex items-center -space-x-1.5">
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #2563eb;"></span>
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #ea580c;"></span>
+              </div>
+              <div>
+                <span class="text-[11px] font-bold text-slate-800 block truncate group-hover:text-blue-700">Royal + Sunset</span>
+                <span class="text-[9px] text-slate-400">Biru & Oranye</span>
+              </div>
+            </button>
+
+            <button type="button" class="btn-dual-preset flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-800 hover:shadow-md transition text-left group" data-primary="#0f172a" data-secondary="#10b981">
+              <div class="flex items-center -space-x-1.5">
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #0f172a;"></span>
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #10b981;"></span>
+              </div>
+              <div>
+                <span class="text-[11px] font-bold text-slate-800 block truncate group-hover:text-slate-900">Dark + Emerald</span>
+                <span class="text-[9px] text-slate-400">Hitam Modern</span>
+              </div>
+            </button>
+
+            <button type="button" class="btn-dual-preset flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-purple-500 hover:shadow-md transition text-left group" data-primary="#7c3aed" data-secondary="#f43f5e">
+              <div class="flex items-center -space-x-1.5">
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #7c3aed;"></span>
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #f43f5e;"></span>
+              </div>
+              <div>
+                <span class="text-[11px] font-bold text-slate-800 block truncate group-hover:text-purple-700">Purple + Coral</span>
+                <span class="text-[9px] text-slate-400">Ungu Kreatif</span>
+              </div>
+            </button>
+
+            <button type="button" class="btn-dual-preset flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-teal-500 hover:shadow-md transition text-left group" data-primary="#0f766e" data-secondary="#d97706">
+              <div class="flex items-center -space-x-1.5">
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #0f766e;"></span>
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #d97706;"></span>
+              </div>
+              <div>
+                <span class="text-[11px] font-bold text-slate-800 block truncate group-hover:text-teal-700">Teal + Gold</span>
+                <span class="text-[9px] text-slate-400">Elegan Mewah</span>
+              </div>
+            </button>
+
+            <button type="button" class="btn-dual-preset flex flex-col gap-2 p-2.5 rounded-xl border border-slate-200 bg-white hover:border-red-500 hover:shadow-md transition text-left group" data-primary="#b91c1c" data-secondary="#eab308">
+              <div class="flex items-center -space-x-1.5">
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #b91c1c;"></span>
+                <span class="w-6 h-6 rounded-full border-2 border-white shadow-xs" style="background-color: #eab308;"></span>
+              </div>
+              <div>
+                <span class="text-[11px] font-bold text-slate-800 block truncate group-hover:text-red-700">Crimson + Gold</span>
+                <span class="text-[9px] text-slate-400">Merah Berani</span>
+              </div>
+            </button>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           BAGIAN 3: BRANDING VISUAL (LOGO WEBSITE & FAVICON)
+           ==================================================================== -->
+      <section class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+            <i data-lucide="image" class="w-5 h-5 text-indigo-600"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Bagian 3: Branding Visual (Logo Website & Favicon Browser)</h3>
+            <p class="text-xs text-slate-500">Unggah file logo resmi untuk ditampilkan pada website dan tab browser</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- 1. Logo Website (Header Utama) -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-900">
+                Logo Website (Header Navbar)
+              </label>
+              <button type="button" id="btn-reset-weblogo-default" class="text-[11px] text-emerald-600 hover:text-emerald-700 hover:underline font-semibold">
+                Pakai Bawaan (logo-songer)
+              </button>
+            </div>
+
+            <!-- Preview Box -->
+            <div class="h-20 bg-white rounded-xl border border-slate-200 p-2 flex items-center justify-center overflow-hidden shadow-xs">
+              <img id="preview-settings-weblogo" src="assets/images/logo-songer-creative.png" alt="Pratinjau Logo Website" class="h-12 max-w-full object-contain" />
+            </div>
+
+            <!-- File Input -->
+            <div class="space-y-1">
+              <input 
+                type="file" 
+                id="input-settings-weblogo" 
+                accept="image/*" 
+                class="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 cursor-pointer text-slate-500" 
+              />
+              <p class="text-[10px] text-slate-400">Rekomendasi: Gambar landscape horizontal dengan teks (PNG transparan).</p>
+            </div>
+          </div>
+
+          <!-- 2. Logo Browser (Favicon Tab) -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-900">
+                Logo Browser (Favicon Tab)
+              </label>
+              <button type="button" id="btn-reset-favicon-default" class="text-[11px] text-emerald-600 hover:text-emerald-700 hover:underline font-semibold">
+                Pakai Bawaan (songer-logo)
+              </button>
+            </div>
+
+            <!-- Preview Box -->
+            <div class="h-20 bg-white rounded-xl border border-slate-200 p-2 flex items-center justify-center overflow-hidden shadow-xs">
+              <img id="preview-settings-favicon" src="assets/images/songer-logo.png" alt="Pratinjau Favicon" class="h-14 w-14 object-contain" />
+            </div>
+
+            <!-- File Input -->
+            <div class="space-y-1">
+              <input 
+                type="file" 
+                id="input-settings-favicon" 
+                accept="image/*" 
+                class="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 cursor-pointer text-slate-500" 
+              />
+              <p class="text-[10px] text-slate-400">Rekomendasi: Ikon rasio 1:1 persegi/bulat (PNG / ICO / WEBP).</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           BAGIAN 4: PENGATURAN STRUK THERMAL (KASIR POS)
+           ==================================================================== -->
+      <section class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+          <div class="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-100 text-teal-700 flex items-center justify-center font-bold">
+            <i data-lucide="printer" class="w-5 h-5 text-teal-600"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Bagian 4: Pengaturan Format Struk Kasir Thermal (POS)</h3>
+            <p class="text-xs text-slate-500">Konfigurasi lebar kertas printer kasir bluetooth/desktop dan catatan kaki struk</p>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Pilihan Lebar Kertas Struk -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700">
+              Pilihan Lebar Kertas Struk Kasir:
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              <!-- 58mm Option -->
+              <label class="label-printer-width relative p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 cursor-pointer transition flex items-start gap-3 bg-white" data-val="58mm">
+                <input type="radio" name="printer_paper_width" value="58mm" class="mt-1 text-emerald-600 focus:ring-emerald-500" checked />
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-extrabold text-sm text-slate-900">58mm (Mini Portable / Bluetooth)</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Populer</span>
+                  </div>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    Format ringkas untuk printer kasir saku, printer bluetooth mobile, dan struk hemat kertas.
+                  </p>
+                </div>
+              </label>
+
+              <!-- 80mm Option -->
+              <label class="label-printer-width relative p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 cursor-pointer transition flex items-start gap-3 bg-white" data-val="80mm">
+                <input type="radio" name="printer_paper_width" value="80mm" class="mt-1 text-emerald-600 focus:ring-emerald-500" />
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-extrabold text-sm text-slate-900">80mm (Standar Kasir Desktop)</span>
+                  </div>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    Format lebar untuk printer kasir meja POS kasir USB/LAN, dengan rincian cetak lebih lapang.
+                  </p>
+                </div>
+              </label>
+
+            </div>
+          </div>
+
+          <!-- Catatan Kaki Struk Thermal -->
+          <div class="space-y-1.5">
+            <label for="settings-receipt-footer" class="block text-xs font-bold text-slate-700">
+              Catatan Kaki Struk (Receipt Footer Notes):
+            </label>
+            <textarea 
+              id="settings-receipt-footer" 
+              name="receipt_footer"
+              rows="3" 
+              placeholder="Contoh: Terima kasih atas pesanan Anda! Barang yang sudah dicetak tidak dapat ditukar/dikembalikan." 
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition resize-none leading-relaxed"
+            ></textarea>
+            <p class="text-[11px] text-slate-400">Pesan penutup, syarat retur/komplain, atau akun media sosial di bagian bawah struk.</p>
+          </div>
+        </div>
+      </section>
+
+    </form>
+
+  </main>
+
+  <!-- ========================================================================
+       STICKY BOTTOM SAVE BAR (ALWAYS VISIBLE & NEVER CUT OFF)
+       ======================================================================== -->
+  <div class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3.5 px-4 sm:px-6 shadow-2xl">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Reset Button -->
+      <button 
+        type="button" 
+        id="btn-reset-all-settings" 
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 text-xs font-bold transition shadow-xs"
+      >
+        <i data-lucide="rotate-ccw" class="w-4 h-4 text-slate-400 hover:text-red-600"></i>
+        <span>Reset Default Bawaan</span>
+      </button>
+
+      <!-- Save Button -->
+      <div class="flex items-center gap-3">
+        <a 
+          href="index.html" 
+          class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+        >
+          Batal
+        </a>
+        <button 
+          type="button" 
+          id="btn-save-settings" 
+          class="btn-primary-brand inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold text-white shadow-lg transition active:scale-95"
+        >
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span>Simpan Perubahan</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- SCRIPTS -->
+  <script src="js/db.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+
+</html>

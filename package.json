@@ -1,0 +1,32 @@
+{
+  "name": "pos-by-songer-creative",
+  "version": "1.0.0",
+  "description": "Fullstack E-Commerce & POS Printing System for Songer Creative",
+  "main": "src/services/app.js",
+  "scripts": {
+    "dev": "node src/services/app.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "pos",
+    "printing",
+    "ecommerce",
+    "songer-creative",
+    "prisma",
+    "postgresql",
+    "multi-tenant"
+  ],
+  "author": "Songer Creative",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "prisma": "^5.20.0"
+  }
+}
