@@ -52,7 +52,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <!-- Custom Stylesheet (Relative Path) -->
-  <link rel="stylesheet" href="css/style.css?v=2.4">
+  <link rel="stylesheet" href="css/style.css?v=3.5">
 </head>
 
 <body
@@ -78,15 +78,34 @@
   </div>
 
   <!-- ========================================================================
+       TOP GREETING BAR & PROMO COUNTDOWN (NON-STICKY)
+       Posisi statis/relatif biasa - otomatis hilang tergulung saat halaman di-scroll
+       ======================================================================== -->
+  <div id="top-greeting-bar" class="w-full text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 relative z-30 transition-colors border-b" style="background-color: var(--topbar-bg, #0f172a); color: var(--topbar-text, #f8fafc); border-color: rgba(255, 255, 255, 0.08);">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <!-- Sisi Kiri: Sapaan Dinamis (Tanpa Dot Hijau) -->
+      <div class="flex items-center gap-2 min-w-0">
+        <span id="top-greeting-text" class="font-medium truncate tracking-tight">Selamat datang di Songer Creative</span>
+      </div>
+
+      <!-- Sisi Kanan: Hitung Mundur Promo Dinamis (Format Hari / Jam / Menit) -->
+      <div id="top-promo-countdown-container" class="flex items-center gap-1.5 text-[10px] sm:text-[11px] shrink-0 font-medium">
+        <i class="bi bi-stopwatch text-emerald-400 shrink-0"></i>
+        <span id="top-promo-countdown-text" class="truncate font-semibold">Promo Kilat Berakhir Dalam: 02 Hari Lagi</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
        TOP PUBLIC NAVIGATION BAR (BERSIH MURNI PEMBELI)
-       Hanya memuat: Logo & Nama Toko, Input Pencarian Cerdas, Akun Google, dan Ikon Keranjang Belanja
+       Hanya memuat: Logo & Nama Toko, Input Pencarian Cerdas, Tombol Login, dan Ikon Keranjang Belanja
        ======================================================================== -->
   <header id="main-storefront-header"
     class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-xs transition-colors">
-    <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-6 max-w-7xl mx-auto w-full">
+    <div class="px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2.5 sm:gap-6 max-w-7xl mx-auto w-full">
 
       <!-- Left: Logo & Nama Toko (Dynamic Tenant Branding: Logo Square / Landscape / Text Only) -->
-      <a href="index.html" id="nav-brand-logo-btn" class="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0 group transition"
+      <a href="index.html" id="nav-brand-logo-btn" class="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0 group transition"
         title="Beranda Toko">
         <div id="header-logo-container" class="h-10 flex items-center shrink-0">
           <img id="header-brand-logo" src="assets/images/logo-songer-creative.png" alt="Logo Toko"
@@ -100,87 +119,48 @@
         </div>
       </a>
 
-      <!-- Center: Input Pencarian Cerdas dengan Dropdown Autocomplete -->
-      <div class="flex-1 min-w-0 max-w-lg mx-1 sm:mx-4 relative" id="navbar-search-container">
+      <!-- Center: Input Pencarian Cerdas Desktop (sm ke atas) -->
+      <div class="hidden sm:flex flex-1 min-w-0 max-w-lg mx-2 sm:mx-4 relative" id="navbar-search-desktop-container">
         <div class="relative w-full">
           <i data-lucide="search"
-            class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none navbar-search-icon-el"></i>
           <input type="text" id="navbar-search-input" autocomplete="off" placeholder="Cari banner, stiker, logo..."
-            class="w-full bg-slate-100 hover:bg-slate-100/90 focus:bg-white text-xs pl-10 pr-4 py-2 sm:py-2.5 rounded-2xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition shadow-inner font-medium text-slate-800 placeholder:text-slate-400" />
+            class="navbar-search-input-el w-full bg-slate-100 hover:bg-slate-100/90 focus:bg-white text-xs pl-10 pr-4 py-2 sm:py-2.5 rounded-2xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition shadow-inner font-medium text-slate-800 placeholder:text-slate-400" />
         </div>
 
-        <!-- Mobile Search Backdrop Overlay (< sm) -->
-        <div id="navbar-search-backdrop"
-          class="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs z-40 hidden sm:hidden transition-opacity"></div>
-
-        <!-- Autocomplete Suggestions Dropdown (Responsive: Full-width pada Mobile, Absolute pada Desktop) -->
+        <!-- Autocomplete Suggestions Dropdown Desktop -->
         <div id="navbar-search-suggestions"
-          class="fixed left-3 right-3 top-[68px] sm:absolute sm:left-0 sm:right-0 sm:top-full mt-1 bg-white rounded-2xl border border-slate-200/90 shadow-2xl p-2 z-50 hidden max-h-96 sm:max-h-80 overflow-y-auto space-y-1 animate-fade-in">
+          class="absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl border border-slate-200/90 shadow-2xl p-2 z-50 hidden max-h-80 overflow-y-auto space-y-1 animate-fade-in">
           <!-- Populated dynamically via buyer-store.js -->
         </div>
       </div>
 
-      <!-- Right: Akun Google Pembeli & Ikon Keranjang Belanja -->
-      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <!-- Right: Mobile Search Toggle Button, Login Button, & Keranjang Belanja -->
+      <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
-        <!-- Google Auth Container -->
+        <!-- Mobile Search Toggle Button (Tampil hanya di layar HP < sm) -->
+        <button type="button" id="btn-mobile-search-toggle"
+          class="sm:hidden p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center justify-center shrink-0 border border-slate-200"
+          title="Cari Produk">
+          <i class="bi bi-search text-xs navbar-search-icon-el"></i>
+        </button>
+
+        <!-- Login Container (Format Baru: bi-person-fill & Text Login) -->
         <div id="auth-container" class="flex items-center">
-          <!-- Button Login Google (State: Belum Login) -->
-          <button type="button" id="btn-google-login"
-            class="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-200 shadow-xs transition"
-            title="Masuk dengan Akun Google">
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-              <path fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-            </svg>
-            <span class="hidden sm:inline">Masuk</span>
+          <button type="button" id="btn-navbar-login"
+            class="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-2xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-bold border border-slate-200 shadow-xs transition shrink-0"
+            title="Masuk Akun">
+            <i class="bi bi-person-fill text-sm navbar-login-icon-el"></i>
+            <span class="hidden sm:inline font-bold navbar-login-text-el">Login</span>
           </button>
-
-          <!-- User Profile Dropdown (State: Sudah Login) -->
-          <div id="user-profile-menu" class="hidden relative">
-            <button type="button" id="btn-toggle-user-dropdown"
-              class="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition">
-              <img id="user-avatar-img"
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80"
-                alt="Avatar" class="w-7 h-7 rounded-full object-cover border border-emerald-400" />
-              <span id="user-name-label"
-                class="text-xs font-bold text-slate-800 hidden sm:inline max-w-[100px] truncate">Pelanggan</span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
-            </button>
-            <div id="user-dropdown-panel"
-              class="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-2xl p-3 z-50 hidden space-y-2 text-xs">
-              <div class="pb-2 border-b border-slate-100">
-                <span class="text-[10px] text-slate-400 block font-medium">Masuk sebagai</span>
-                <span id="user-dropdown-name" class="font-bold text-slate-900 block truncate">Pelanggan</span>
-                <span id="user-dropdown-email"
-                  class="text-[11px] text-slate-500 font-mono block truncate">user@gmail.com</span>
-              </div>
-              <div class="py-1">
-                <div class="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-1 rounded-lg">
-                  Profil Pembeli Terdaftar
-                </div>
-              </div>
-              <button type="button" id="btn-customer-logout"
-                class="w-full text-left py-2 px-2.5 rounded-xl hover:bg-rose-50 text-rose-600 font-bold transition flex items-center gap-2">
-                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-                <span>Keluar Akun</span>
-              </button>
-            </div>
-          </div>
         </div>
 
-        <!-- Ikon Keranjang Belanja Bersih (Hanya Ikon Shopping Cart & Badge Melayang) -->
+        <!-- Ikon Keranjang Belanja Bersih -->
         <button type="button" id="btn-open-cart-drawer"
-          class="relative p-2.5 rounded-2xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition flex items-center justify-center border border-slate-200/80 shadow-xs group"
+          class="relative p-2 sm:p-2.5 rounded-2xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition flex items-center justify-center border border-slate-200/80 shadow-xs group shrink-0"
           title="Buka Keranjang Belanja">
           <div class="relative flex items-center justify-center">
-            <i data-lucide="shopping-cart" class="w-5 h-5 text-slate-700 group-hover:text-emerald-600 transition"></i>
+            <i data-lucide="shopping-cart" class="w-5 h-5 text-slate-700 group-hover:text-emerald-600 transition navbar-cart-icon-el"></i>
             <!-- Badge Counter Melayang -->
             <span id="cart-badge-count"
               class="cart-badge-count absolute -top-2.5 -right-2.5 bg-rose-500 text-white font-black text-[10px] min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center shadow-md animate-scale-up hidden border-2 border-white">
@@ -191,6 +171,27 @@
 
       </div>
 
+    </div>
+
+    <!-- Mobile Search Dynamic Overlay (Slide-down saat ikon cari diklik di HP) -->
+    <div id="mobile-search-overlay" class="sm:hidden fixed inset-x-0 top-0 bg-white/98 backdrop-blur-md z-50 p-3 border-b border-slate-200 shadow-xl hidden transition-all animate-fade-in">
+      <div class="flex items-center gap-2 max-w-md mx-auto">
+        <div class="relative flex-1">
+          <i class="bi bi-search text-slate-400 text-xs absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none navbar-search-icon-el"></i>
+          <input type="text" id="navbar-search-input-mobile" placeholder="Cari banner, stiker, logo..."
+            class="navbar-search-input-el w-full bg-slate-100 text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-emerald-500 font-medium text-slate-800 placeholder:text-slate-400" />
+        </div>
+        <button type="button" id="btn-close-mobile-search"
+          class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition shrink-0"
+          title="Tutup Pencarian">
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Autocomplete Dropdown Mobile -->
+      <div id="navbar-search-suggestions-mobile"
+        class="mt-2 bg-white rounded-2xl border border-slate-200/90 shadow-2xl p-2 max-h-72 overflow-y-auto space-y-1 hidden">
+      </div>
     </div>
   </header>
 
@@ -269,107 +270,7 @@
     </div>
   </div>
 
-  <!-- ========================================================================
-       MODAL: SIMULASI LOGIN GOOGLE OAUTH PEMBELI
-       ======================================================================== -->
-  <div id="modal-google-auth"
-    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-scale-up">
-
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-2.5">
-          <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24">
-            <path fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-            <path fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-            <path fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-            <path fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-          </svg>
-          <div>
-            <h3 class="font-extrabold text-sm text-slate-900">Masuk dengan Akun Google</h3>
-            <span class="text-[11px] text-slate-400">Pilih akun untuk melanjutkan belanja</span>
-          </div>
-        </div>
-        <button type="button" id="btn-close-google-modal"
-          class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <!-- Quick Demo Accounts -->
-      <div class="space-y-2">
-        <label class="block text-xs font-bold text-slate-700">Pilih Akun Demo Terdaftar:</label>
-        <div class="space-y-2">
-
-          <!-- Account 1 -->
-          <button type="button"
-            class="btn-select-google-account w-full p-2.5 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 flex items-center gap-3 text-left transition group"
-            data-name="Ahmad Fauzi" data-email="ahmad.fauzi@gmail.com"
-            data-avatar="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80"
-              alt="Ahmad" class="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0" />
-            <div class="flex-1 min-w-0">
-              <span class="block font-bold text-xs text-slate-900 group-hover:text-emerald-700 truncate">Ahmad
-                Fauzi</span>
-              <span class="block text-[11px] text-slate-500 font-mono truncate">ahmad.fauzi@gmail.com</span>
-            </div>
-            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0"></i>
-          </button>
-
-          <!-- Account 2 -->
-          <button type="button"
-            class="btn-select-google-account w-full p-2.5 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 flex items-center gap-3 text-left transition group"
-            data-name="Siti Nurhaliza" data-email="siti.nurhaliza@gmail.com"
-            data-avatar="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80">
-            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80"
-              alt="Siti" class="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0" />
-            <div class="flex-1 min-w-0">
-              <span class="block font-bold text-xs text-slate-900 group-hover:text-emerald-700 truncate">Siti
-                Nurhaliza</span>
-              <span class="block text-[11px] text-slate-500 font-mono truncate">siti.nurhaliza@gmail.com</span>
-            </div>
-            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0"></i>
-          </button>
-
-          <!-- Account 3 -->
-          <button type="button"
-            class="btn-select-google-account w-full p-2.5 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 flex items-center gap-3 text-left transition group"
-            data-name="Budi Santoso" data-email="budi.santoso@gmail.com"
-            data-avatar="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80">
-            <img src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80"
-              alt="Budi" class="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0" />
-            <div class="flex-1 min-w-0">
-              <span class="block font-bold text-xs text-slate-900 group-hover:text-emerald-700 truncate">Budi
-                Santoso</span>
-              <span class="block text-[11px] text-slate-500 font-mono truncate">budi.santoso@gmail.com</span>
-            </div>
-            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0"></i>
-          </button>
-
-        </div>
-      </div>
-
-      <!-- Custom Account Form -->
-      <div class="pt-3 border-t border-slate-100 space-y-2.5">
-        <label class="block text-xs font-bold text-slate-700">Atau Masukkan Akun Google Baru:</label>
-        <div class="space-y-2 text-xs">
-          <input type="text" id="custom-google-name" placeholder="Nama Lengkap Anda"
-            class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 font-medium" />
-          <input type="email" id="custom-google-email" placeholder="nama.anda@gmail.com"
-            class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 font-medium" />
-          <button type="button" id="btn-custom-google-submit"
-            class="w-full py-2.5 rounded-xl btn-primary-brand text-white font-bold transition shadow-xs">
-            Masuk dengan Akun Baru
-          </button>
-        </div>
-      </div>
-
-    </div>
-  </div>
+  <!-- MODAL GOOGLE AUTH TELAH DIHAPUS SESUAI SPESIFIKASI (EVENT LOGIN DIKOSONGKAN SEMENTARA) -->
 
   <!-- ========================================================================
        WIDGET FLOATING BUTTON VOUCHER & KLAIM INTERAKTIF
@@ -427,9 +328,9 @@
   </div>
 
   <!-- APPLICATION SCRIPTS (MURNI MODUL STOREFRONT PEMBELI) -->
-  <script src="js/db.js?v=2.4"></script>
-  <script src="js/pricing-calculator.js?v=2.4"></script>
-  <script src="js/buyer-store.js?v=2.4"></script>
+  <script src="js/db.js?v=3.5"></script>
+  <script src="js/pricing-calculator.js?v=3.5"></script>
+  <script src="js/buyer-store.js?v=3.5"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       BuyerStore.init();

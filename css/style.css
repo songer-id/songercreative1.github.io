@@ -17,6 +17,26 @@
   --color-secondary-subtle: rgba(245, 158, 11, 0.14);
 
   --color-base: #f8fafc;
+
+  /* 3. Kustomisasi Elemen Navbar Toko */
+  --navbar-cart-icon-color: #334155;
+  --navbar-cart-badge-bg: #f43f5e;
+  --navbar-cart-badge-text: #ffffff;
+  --navbar-search-icon-color: #94a3b8;
+  --navbar-search-input-bg: #f1f5f9;
+  --navbar-search-border-color: #e2e8f0;
+  --navbar-search-placeholder-color: #94a3b8;
+  --navbar-login-icon-color: #334155;
+  --navbar-login-text-color: #334155;
+
+  /* 4. Top Bar Sapaan Dinamis & Promo Countdown */
+  --topbar-bg: #0f172a;
+  --topbar-text: #f8fafc;
+}
+
+.navbar-search-input-el::placeholder {
+  color: var(--navbar-search-placeholder-color, #94a3b8) !important;
+  opacity: 1;
 }
 
 body {
@@ -593,3 +613,96 @@ body {
   max-height: 80vh;
   overflow: hidden;
 }
+
+/* ==========================================================================
+   E-COMMERCE CATEGORY NAVIGATION & PEEKING EFFECT UTILITY
+   ========================================================================== */
+.cat-scroll-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.cat-scroll-track::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile (< 640px): 5 item penuh + item ke-6 intip 50% (5.5) */
+.cat-item-peek {
+  --cat-gap: 8px;
+  flex: 0 0 calc((100% - (5 * var(--cat-gap))) / 5.5);
+  width: calc((100% - (5 * var(--cat-gap))) / 5.5);
+  min-width: calc((100% - (5 * var(--cat-gap))) / 5.5);
+}
+
+/* Tablet (>= 640px dan < 1024px): 7 item penuh + item ke-8 intip 50% (7.5) */
+@media (min-width: 640px) {
+  .cat-item-peek {
+    --cat-gap: 10px;
+    flex: 0 0 calc((100% - (7 * var(--cat-gap))) / 7.5);
+    width: calc((100% - (7 * var(--cat-gap))) / 7.5);
+    min-width: calc((100% - (7 * var(--cat-gap))) / 7.5);
+  }
+}
+
+/* Desktop (>= 1024px): 10 item penuh + item ke-11 intip 50% (10.5) */
+@media (min-width: 1024px) {
+  .cat-item-peek {
+    --cat-gap: 12px;
+    flex: 0 0 calc((100% - (10 * var(--cat-gap))) / 10.5);
+    width: calc((100% - (10 * var(--cat-gap))) / 10.5);
+    min-width: calc((100% - (10 * var(--cat-gap))) / 10.5);
+  }
+  .cat-scroll-track.justify-center {
+    overflow-x: visible;
+  }
+}
+
+/* Standarisasi Rasio Hero Banner Split & Non-Split */
+.hero-ratio-9-2, .aspect-9-2 {
+  aspect-ratio: 9 / 2 !important;
+  width: 100% !important;
+}
+@media (max-width: 767px) {
+  .hero-ratio-9-2, .aspect-9-2 {
+    aspect-ratio: 9 / 2 !important;
+    width: 100% !important;
+  }
+}
+.hero-ratio-4-3, .aspect-4-3 {
+  aspect-ratio: 4 / 3 !important;
+  width: 100% !important;
+}
+.hero-ratio-2-1, .aspect-2-1 {
+  aspect-ratio: 2 / 1 !important;
+  width: 100% !important;
+}
+.hero-ratio-1-2, .aspect-1-2 {
+  aspect-ratio: 1 / 2 !important;
+  width: 100% !important;
+}
+
+/* Hero Adaptif (Desktop 4.5:1 / 9:2 & Mobile 2:1) */
+@media (max-width: 767px) {
+  .hero-adaptive-aspect {
+    aspect-ratio: 2 / 1 !important;
+    width: 100% !important;
+  }
+}
+@media (min-width: 768px) {
+  .hero-adaptive-aspect {
+    aspect-ratio: 9 / 2 !important;
+    width: 100% !important;
+  }
+}
+

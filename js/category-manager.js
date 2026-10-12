@@ -40,6 +40,9 @@ const CategoryManager = (() => {
           </div>
         </div>
 
+        <!-- Pintasan Cepat (Quick Setting Bar) di Halaman Kategori -->
+        ${renderQuickSettingBar()}
+
         <!-- Panel Konfigurasi Label Kategori Order & Penomoran Faktur Kasir -->
         ${renderOrderLabelConfig()}
 
@@ -65,15 +68,15 @@ const CategoryManager = (() => {
 
       </div>
 
-      <!-- MODAL TAMBAH / EDIT KATEGORI UTAMA (DILENGKAPI UPLOAD GAMBAR 3:2 & PICKER IKON VISUAL) -->
+      <!-- MODAL TAMBAH / EDIT KATEGORI UTAMA (DILENGKAPI PICKER IKON, UPLOAD GAMBAR & TOGGLE QUICK ACTION) -->
       <div id="modal-category" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-up my-auto">
           <!-- Modal Header (Fixed at top) -->
           <div class="flex items-center justify-between p-5 pb-3 border-b border-slate-200 shrink-0">
             <div>
               <h3 class="font-black text-slate-900 text-sm" id="modal-category-title">Tambah Kategori Utama</h3>
-              <span id="cat-modal-mode-badge" class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Mode Filter: Ikon & Teks
+              <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Katalog & Quick Action Etalase
               </span>
             </div>
             <button type="button" class="btn-close-cat-modal text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
@@ -82,7 +85,7 @@ const CategoryManager = (() => {
           </div>
 
           <!-- Modal Scrollable Body -->
-          <div class="p-5 overflow-y-auto space-y-3.5 text-xs flex-1">
+          <div class="p-5 overflow-y-auto space-y-4 text-xs flex-1">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Nama Kategori Utama <span class="text-red-500">*</span></label>
               <input type="text" id="cat-input-name" placeholder="Contoh: Digital Printing / Souvenir Merchandise" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 font-semibold" />
@@ -93,85 +96,71 @@ const CategoryManager = (() => {
               <textarea id="cat-input-desc" rows="2" placeholder="Keterangan singkat kelompok produk ini..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 resize-none font-medium"></textarea>
             </div>
 
-            <!-- Pemilih Format Tampilan Kategori (Saling Mengunci) -->
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <label class="block font-bold text-slate-800">Format Tampilan Kategori:</label>
-                <span class="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                  Saran: Opsi 1 (3:2 Landscape) | Opsi 3 (1:1 Persegi)
-                </span>
+            <!-- 1. Pemilihan Ikon Kategori (Input teks/class picker dengan live preview kecil) -->
+            <div id="cat-form-icon-section" class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <label class="block font-bold text-slate-800 text-xs">1. Pemilihan Ikon Kategori (Mode Ikon):</label>
+                <span class="text-[10px] text-slate-400">Bootstrap / Lucide Icons</span>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-[11px]">
-                <label class="modal-cat-type-label p-2 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-1.5 hover:bg-slate-50 transition" data-model="only_image">
-                  <input type="radio" name="modal_cat_type" value="only_image" class="text-emerald-600">
-                  <span class="font-bold">1. Gambar</span>
-                </label>
-                <label class="modal-cat-type-label p-2 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-1.5 hover:bg-slate-50 transition" data-model="only_icon">
-                  <input type="radio" name="modal_cat_type" value="only_icon" class="text-emerald-600">
-                  <span class="font-bold">2. Ikon</span>
-                </label>
-                <label class="modal-cat-type-label p-2 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-1.5 hover:bg-slate-50 transition" data-model="image_text">
-                  <input type="radio" name="modal_cat_type" value="image_text" class="text-emerald-600">
-                  <span class="font-bold">3. Gbr + Teks</span>
-                </label>
-                <label class="modal-cat-type-label p-2 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-1.5 hover:bg-slate-50 transition" data-model="icon_text">
-                  <input type="radio" name="modal_cat_type" value="icon_text" class="text-emerald-600">
-                  <span class="font-bold">4. Ikon + Teks</span>
-                </label>
-                <label class="modal-cat-type-label p-2 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-1.5 hover:bg-slate-50 transition" data-model="only_text">
-                  <input type="radio" name="modal_cat_type" value="only_text" class="text-emerald-600">
-                  <span class="font-bold">5. Teks Saja</span>
-                </label>
+
+              <!-- Baris Preview Terpilih & Input Manual -->
+              <div class="flex items-center gap-2.5 pb-1 border-b border-slate-200">
+                <div id="cat-icon-selected-preview" class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-lg shrink-0 shadow-xs" title="Live Preview Ikon">
+                  <i class="bi bi-grid-fill"></i>
+                </div>
+                <div class="flex-1">
+                  <input type="text" id="cat-input-icon" value="bi-grid" placeholder="contoh: bi-grid, bi-printer, bi-palette..." class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
+                </div>
+              </div>
+
+              <!-- Saran Cepat Class Icon Populer -->
+              <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <span class="text-[10px] text-slate-400 font-bold">Pilih Cepat:</span>
+                <button type="button" class="btn-quick-icon-chip px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-mono text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition" data-icon="bi-grid">bi-grid</button>
+                <button type="button" class="btn-quick-icon-chip px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-mono text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition" data-icon="bi-printer">bi-printer</button>
+                <button type="button" class="btn-quick-icon-chip px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-mono text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition" data-icon="bi-palette">bi-palette</button>
+                <button type="button" class="btn-quick-icon-chip px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-mono text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition" data-icon="bi-gift">bi-gift</button>
+                <button type="button" class="btn-quick-icon-chip px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-mono text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition" data-icon="bi-box-seam">bi-box-seam</button>
+                <button type="button" class="btn-quick-icon-chip px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-mono text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition" data-icon="bi-shop">bi-shop</button>
+              </div>
+
+              <!-- Grid Picker Ikon Visual Komprehensif -->
+              <div id="cat-icon-picker-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-white rounded-xl border border-slate-200">
+                <!-- Di-generate otomatis oleh renderIconGrid() -->
               </div>
             </div>
 
-            <!-- Upload Berkas Gambar (Hanya Tampil Pada Opsi 1 & Opsi 3) -->
+            <!-- 2. Upload / URL Gambar Kategori (Thumbnail) -->
             <div id="cat-form-image-section" class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
               <div class="flex items-center justify-between">
-                <label class="block font-bold text-slate-800">Upload Berkas & URL Gambar Kategori (Opsi 1 & 3):</label>
-                <span class="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">Saran: Opsi 1 (3:2) | Opsi 3 (1:1)</span>
+                <label class="block font-bold text-slate-800 text-xs">2. Upload / URL Gambar Kategori (Mode Gambar):</label>
+                <span class="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">Rasio 1:1 Persegi</span>
               </div>
               <div class="flex items-center gap-3">
-                <div class="w-16 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-inner">
+                <div class="w-16 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-inner">
                   <img id="cat-img-preview" src="assets/images/logo-songer-creative.png" class="w-full h-full object-contain" alt="Preview" onerror="this.src='assets/images/logo-songer-creative.png'" />
                 </div>
                 <div class="flex-1 space-y-1.5">
-                  <input type="text" id="cat-input-image-url" placeholder="URL gambar atau unggah berkas..." class="w-full px-3 py-1.5 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500" />
+                  <input type="text" id="cat-input-image-url" placeholder="Masukkan URL tautan gambar atau unggah berkas..." class="w-full px-3 py-1.5 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500" />
                   <label class="w-full py-1.5 px-3 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-[11px] cursor-pointer border border-slate-300 transition flex items-center justify-center gap-1.5 shadow-2xs">
                     <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                    <span>Unggah Gambar (Maks 500 KB)</span>
+                    <span>Unggah Berkas Gambar (Maks 500 KB)</span>
                     <input type="file" id="cat-input-image-file" accept="image/png, image/webp, image/jpeg" class="hidden" />
                   </label>
                 </div>
               </div>
-              <p class="text-[10px] text-slate-500 leading-relaxed bg-white/70 p-2 rounded-xl border border-slate-200">
-                💡 <strong>Saran Skala Gambar:</strong><br/>
-                • <strong>Opsi 1 (Hanya Gambar):</strong> Gunakan rasio <strong>3:2 Landscape</strong> (misal 600×400 px) agar tombol kategori proporsional.<br/>
-                • <strong>Opsi 3 (Gambar & Teks):</strong> Gunakan rasio <strong>1:1 Persegi / Square</strong> (misal 400×400 px atau 48×48 px) agar foto thumbnail berdampingan rapi dengan teks nama kategori.
-              </p>
             </div>
 
-            <!-- Dropdown / Grid Picker Ikon Visual Komprehensif (Hanya Tampil Pada Opsi 2 & Opsi 4) -->
-            <div id="cat-form-icon-section" class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
-              <div class="flex items-center justify-between">
-                <label class="block font-bold text-slate-800">Pilih Ikon Visual Kategori (Opsi 2 & 4):</label>
-                <span class="text-[10px] text-slate-400">Grafis Visual Bootstrap Icons</span>
+            <!-- 3. Toggle Tampilkan di Quick Action -->
+            <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+              <div class="space-y-0.5 pr-3">
+                <label for="cat-input-show-quick-nav" class="block font-bold text-slate-800 text-xs cursor-pointer">3. Tampilkan di Quick Action Etalase</label>
+                <span class="text-[11px] text-slate-500 block">Aktifkan untuk memunculkan kategori ini pada barisan quick filter toko depan (show_in_quick_nav).</span>
               </div>
-
-              <!-- Baris Preview Terpilih & Input Manual -->
-              <div class="flex items-center gap-2 pb-1 border-b border-slate-200">
-                <div id="cat-icon-selected-preview" class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-lg shrink-0 shadow-xs">
-                  <i class="bi bi-layers-fill"></i>
-                </div>
-                <div class="flex-1">
-                  <input type="text" id="cat-input-icon" value="layers" placeholder="nama ikon..." class="w-full px-3 py-1.5 rounded-xl border border-slate-300 font-mono text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
-                </div>
-              </div>
-
-              <!-- Grid Picker Ikon Visual Komprehensif -->
-              <div id="cat-icon-picker-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 max-h-40 overflow-y-auto p-1.5 bg-white rounded-xl border border-slate-200">
-                <!-- Di-generate otomatis oleh renderIconGrid() -->
-              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="cat-input-show-quick-nav" class="sr-only peer" checked />
+                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
             </div>
 
           </div>
@@ -576,8 +565,140 @@ const CategoryManager = (() => {
     `;
   }
 
+  // --------------------------------------------------------------------------
+  // PINTASAN CEPAT (QUICK SETTING BAR) DI HALAMAN KATEGORI
+  // --------------------------------------------------------------------------
+  function renderQuickSettingBar() {
+    const settings = DB.getSettings();
+    const modeDesktop = settings.category_nav_mode_desktop || 'icon_image';
+    const modeMobile = settings.category_nav_mode_mobile || 'icon_image';
+    const qfConfig = settings.quick_filter_config || {};
+    const model = qfConfig.category_filter_model || 'icon_text';
+
+    // Identifikasi mode aktif
+    let activeKey = 'icon';
+    let activeLabel = 'Mode Icon (Ikon & Teks)';
+    let activeIcon = 'bi-grid-fill';
+
+    if (modeDesktop === 'dropdown') {
+      activeKey = 'dropdown';
+      activeLabel = 'Mode Dropdown (Kompak)';
+      activeIcon = 'bi-menu-button-wide';
+    } else if (modeDesktop === 'pills_text') {
+      activeKey = 'pill';
+      activeLabel = 'Mode Pill (Kapsul Teks)';
+      activeIcon = 'bi-capsule';
+    } else if (model === 'image_text' || model === 'only_image') {
+      activeKey = 'gambar';
+      activeLabel = 'Mode Gambar (Thumbnail)';
+      activeIcon = 'bi-image-fill';
+    } else {
+      activeKey = 'icon';
+      activeLabel = 'Mode Icon (Ikon & Teks)';
+      activeIcon = 'bi-grid-fill';
+    }
+
+    return `
+      <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-slate-50 to-white border border-emerald-200/80 shadow-xs space-y-3.5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2.5 border-b border-slate-200/80">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+              <i class="bi bi-sliders2-vertical text-base"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-black text-xs sm:text-sm text-slate-900 tracking-tight">Pintasan Mode Quick Filter Etalase</h3>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">1-Klik Beralih</span>
+              </div>
+              <p class="text-[11px] text-slate-500">Ubah model quick filter etalase toko secara instan tanpa harus membuka menu Tema & Branding.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-[11px] font-bold text-slate-500">Status Aktif:</span>
+            <span class="px-3 py-1 rounded-full text-xs font-black bg-white text-emerald-800 border border-emerald-300 shadow-2xs flex items-center gap-1.5">
+              <i class="bi ${activeIcon} text-emerald-600"></i>
+              <span>${activeLabel}</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+          <!-- 1. Mode Icon -->
+          <button type="button" class="btn-quick-switch-mode p-3 rounded-2xl border text-left flex flex-col justify-between transition cursor-pointer select-none ${activeKey === 'icon' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/25 shadow-sm text-emerald-950 font-bold' : 'border-slate-200 bg-white/90 hover:bg-white text-slate-700 font-medium'}" data-mode="icon" title="Beralih ke Mode Icon (Ikon & Teks)">
+            <div class="flex items-center justify-between w-full mb-1">
+              <div class="w-7 h-7 rounded-xl ${activeKey === 'icon' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-sm shadow-2xs">
+                <i class="bi bi-grid-fill"></i>
+              </div>
+              ${activeKey === 'icon' ? '<span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Aktif</span>' : '<span class="text-[10px] text-slate-400">Pilih</span>'}
+            </div>
+            <div>
+              <span class="font-bold text-xs block text-slate-900">1. Mode Icon</span>
+              <span class="text-[10px] text-slate-500 leading-tight block mt-0.5">Ikon vektor + teks kartu vertikal</span>
+            </div>
+          </button>
+
+          <!-- 2. Mode Gambar -->
+          <button type="button" class="btn-quick-switch-mode p-3 rounded-2xl border text-left flex flex-col justify-between transition cursor-pointer select-none ${activeKey === 'gambar' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/25 shadow-sm text-emerald-950 font-bold' : 'border-slate-200 bg-white/90 hover:bg-white text-slate-700 font-medium'}" data-mode="gambar" title="Beralih ke Mode Gambar (Thumbnail Foto)">
+            <div class="flex items-center justify-between w-full mb-1">
+              <div class="w-7 h-7 rounded-xl ${activeKey === 'gambar' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-sm shadow-2xs">
+                <i class="bi bi-image-fill"></i>
+              </div>
+              ${activeKey === 'gambar' ? '<span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Aktif</span>' : '<span class="text-[10px] text-slate-400">Pilih</span>'}
+            </div>
+            <div>
+              <span class="font-bold text-xs block text-slate-900">2. Mode Gambar</span>
+              <span class="text-[10px] text-slate-500 leading-tight block mt-0.5">Thumbnail foto kategori + teks</span>
+            </div>
+          </button>
+
+          <!-- 3. Mode Pill -->
+          <button type="button" class="btn-quick-switch-mode p-3 rounded-2xl border text-left flex flex-col justify-between transition cursor-pointer select-none ${activeKey === 'pill' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/25 shadow-sm text-emerald-950 font-bold' : 'border-slate-200 bg-white/90 hover:bg-white text-slate-700 font-medium'}" data-mode="pill" title="Beralih ke Mode Pill (Kapsul Teks)">
+            <div class="flex items-center justify-between w-full mb-1">
+              <div class="w-7 h-7 rounded-xl ${activeKey === 'pill' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-sm shadow-2xs">
+                <i class="bi bi-capsule"></i>
+              </div>
+              ${activeKey === 'pill' ? '<span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Aktif</span>' : '<span class="text-[10px] text-slate-400">Pilih</span>'}
+            </div>
+            <div>
+              <span class="font-bold text-xs block text-slate-900">3. Mode Pill</span>
+              <span class="text-[10px] text-slate-500 leading-tight block mt-0.5">Kapsul horizontal teks ringkas</span>
+            </div>
+          </button>
+
+          <!-- 4. Mode Dropdown -->
+          <button type="button" class="btn-quick-switch-mode p-3 rounded-2xl border text-left flex flex-col justify-between transition cursor-pointer select-none ${activeKey === 'dropdown' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/25 shadow-sm text-emerald-950 font-bold' : 'border-slate-200 bg-white/90 hover:bg-white text-slate-700 font-medium'}" data-mode="dropdown" title="Beralih ke Mode Dropdown (Select Menu)">
+            <div class="flex items-center justify-between w-full mb-1">
+              <div class="w-7 h-7 rounded-xl ${activeKey === 'dropdown' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-sm shadow-2xs">
+                <i class="bi bi-menu-button-wide"></i>
+              </div>
+              ${activeKey === 'dropdown' ? '<span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Aktif</span>' : '<span class="text-[10px] text-slate-400">Pilih</span>'}
+            </div>
+            <div>
+              <span class="font-bold text-xs block text-slate-900">4. Mode Dropdown</span>
+              <span class="text-[10px] text-slate-500 leading-tight block mt-0.5">Select menu kompak & hemat ruang</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
   function renderCategoryCard(cat) {
     const subs = cat.sub_categories || [];
+    const isQuickNav = (cat.show_in_quick_nav !== false);
+
+    let iconHtml = '';
+    if (cat.image) {
+      iconHtml = `<img src="${cat.image}" class="w-10 h-10 rounded-xl object-contain shrink-0 border border-slate-200 p-1 bg-slate-50" alt="${escapeHtml(cat.name)}" onerror="this.src='assets/images/logo-songer-creative.png'" />`;
+    } else {
+      const iconStr = cat.icon || 'bi-grid';
+      if (iconStr.startsWith('bi-') || iconStr.startsWith('bi ')) {
+        const biClass = iconStr.replace(/^bi\s+/, '');
+        iconHtml = `<div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 text-lg"><i class="bi ${biClass}"></i></div>`;
+      } else {
+        iconHtml = `<div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100"><i data-lucide="${iconStr}" class="w-5 h-5"></i></div>`;
+      }
+    }
 
     return `
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
@@ -585,16 +706,16 @@ const CategoryManager = (() => {
           <!-- Header Card -->
           <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
             <div class="flex items-center gap-3">
-              ${cat.image ? `
-                <img src="${cat.image}" class="w-10 h-10 rounded-xl object-contain shrink-0 border border-slate-200 p-1 bg-slate-50" alt="${escapeHtml(cat.name)}" onerror="this.src='assets/images/logo-songer-creative.png'" />
-              ` : `
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
-                  <i data-lucide="${cat.icon || 'layers'}" class="w-5 h-5"></i>
-                </div>
-              `}
+              ${iconHtml}
               <div>
                 <h3 class="font-bold text-slate-900 text-sm">${escapeHtml(cat.name)}</h3>
-                <span class="text-[11px] text-slate-400 font-mono">${cat.slug} • ${cat.products_count} Produk</span>
+                <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                  <span class="text-[11px] text-slate-400 font-mono">${cat.slug} • ${cat.products_count} Produk</span>
+                  ${isQuickNav
+                    ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Quick Nav: Tampil</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Quick Nav: Sembunyi</span>`
+                  }
+                </div>
               </div>
             </div>
             <div class="flex items-center gap-1">
@@ -801,71 +922,18 @@ const CategoryManager = (() => {
   function updateSelectedIconPreview(iconId) {
     const prev = document.getElementById('cat-icon-selected-preview');
     if (!prev) return;
-    const found = CATEGORY_ICON_LIST.find(i => i.id === iconId);
-    const biClass = found ? found.bi : (iconId && iconId.startsWith('bi-') ? iconId : `bi-${iconId || 'layers-fill'}`);
-    prev.innerHTML = `<i class="bi ${biClass}"></i>`;
+    let cleanId = (iconId || 'bi-grid').trim();
+    if (cleanId.startsWith('bi ')) cleanId = cleanId.replace(/^bi\s+/, '');
+    const found = CATEGORY_ICON_LIST.find(i => i.id === cleanId || i.bi === cleanId || i.bi === `bi-${cleanId}`);
+    const biClass = found ? found.bi : (cleanId.startsWith('bi-') ? cleanId : `bi-${cleanId}`);
+    prev.innerHTML = `<i class="bi ${biClass} text-lg"></i>`;
   }
 
-  // MUTUAL EXCLUSIVITY: Saling mengunci form secara ketat berdasarkan event radio change
-  function syncCategoryModalFields(forcedModel) {
-    const settings = DB.getSettings();
-    const modalRadio = document.querySelector('input[name="modal_cat_type"]:checked')?.value;
-    const qfRadio = document.querySelector('input[name="qf_model_radio"]:checked')?.value;
-    const currentModel = forcedModel || modalRadio || qfRadio || settings.quick_filter_config?.model || 'icon_text';
-    
-    // Sinkronkan radio pilihan di modal
-    const targetModalRadio = document.querySelector(`input[name="modal_cat_type"][value="${currentModel}"]`);
-    if (targetModalRadio) targetModalRadio.checked = true;
-    
-    document.querySelectorAll('.modal-cat-type-label').forEach(lbl => {
-      const m = lbl.getAttribute('data-model');
-      if (m === currentModel) {
-        lbl.className = 'modal-cat-type-label p-2 rounded-xl border border-emerald-500 bg-emerald-50 text-emerald-800 font-bold cursor-pointer flex items-center gap-1.5 shadow-xs';
-      } else {
-        lbl.className = 'modal-cat-type-label p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer flex items-center gap-1.5';
-      }
-    });
-
+  function syncCategoryModalFields() {
     const imgSection = document.getElementById('cat-form-image-section');
     const iconSection = document.getElementById('cat-form-icon-section');
-    const modeBadge = document.getElementById('cat-modal-mode-badge');
-
-    const modelLabels = {
-      only_image: 'Mode 1: Hanya Gambar',
-      only_icon: 'Mode 2: Hanya Ikon',
-      image_text: 'Mode 3: Gambar & Teks',
-      icon_text: 'Mode 4: Ikon & Teks',
-      only_text: 'Mode 5: Hanya Teks'
-    };
-
-    if (modeBadge) {
-      modeBadge.textContent = modelLabels[currentModel] || 'Mode 4: Ikon & Teks';
-    }
-
-    if (currentModel === 'only_image' || currentModel === 'image_text') {
-      // Opsi 1 (Hanya Gambar) & Opsi 3 (Gambar & Teks):
-      // Munculkan wadah Upload Berkas Gambar & Input URL Gambar
-      // SEMBUNYIKAN TOTAL wadah dropdown/picker ikon (classList.add('hidden'))
-      if (imgSection) imgSection.classList.remove('hidden');
-      if (iconSection) iconSection.classList.add('hidden');
-    } else if (currentModel === 'only_icon' || currentModel === 'icon_text') {
-      // Opsi 2 (Hanya Ikon) & Opsi 4 (Ikon & Teks):
-      // Munculkan wadah Dropdown / Grid Picker Ikon
-      // SEMBUNYIKAN TOTAL wadah upload gambar (classList.add('hidden'))
-      // Dropdown / Picker Ikon WAJIB merender grafis visual ikon Bootstrap/Lucide secara fisik pada tiap pilihan opsi
-      if (imgSection) imgSection.classList.add('hidden');
-      if (iconSection) {
-        iconSection.classList.remove('hidden');
-        const curIcon = document.getElementById('cat-input-icon')?.value.trim() || 'layers';
-        renderIconGrid(curIcon);
-        updateSelectedIconPreview(curIcon);
-      }
-    } else if (currentModel === 'only_text') {
-      // Opsi 5 (Hanya Teks):
-      // SEMBUNYIKAN TOTAL wadah upload gambar DAN wadah picker ikon (classList.add('hidden'))
-      if (imgSection) imgSection.classList.add('hidden');
-      if (iconSection) iconSection.classList.add('hidden');
-    }
+    if (imgSection) imgSection.classList.remove('hidden');
+    if (iconSection) iconSection.classList.remove('hidden');
   }
 
   // --------------------------------------------------------------------------
@@ -1251,11 +1319,71 @@ const CategoryManager = (() => {
     const catIconText = document.getElementById('cat-input-icon');
     if (catIconText) {
       catIconText.addEventListener('input', e => {
-        const val = e.target.value.trim() || 'layers';
+        const val = e.target.value.trim() || 'bi-grid';
         updateSelectedIconPreview(val);
         renderIconGrid(val);
       });
     }
+
+    // Quick Icon Chips
+    document.querySelectorAll('.btn-quick-icon-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        const val = chip.getAttribute('data-icon');
+        if (catIconText) {
+          catIconText.value = val;
+          updateSelectedIconPreview(val);
+          renderIconGrid(val);
+        }
+      });
+    });
+
+    // Quick Setting Bar Mode Switcher
+    document.querySelectorAll('.btn-quick-switch-mode').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-mode');
+        const settings = DB.getSettings();
+        const qf = settings.quick_filter_config || {};
+        let updates = {};
+        let modeName = '';
+
+        if (mode === 'icon') {
+          updates = {
+            category_nav_mode_desktop: 'icon_image',
+            category_nav_mode_mobile: 'icon_image',
+            quick_filter_config: { ...qf, category_filter_model: 'icon_text', model: 'icon_text' }
+          };
+          modeName = 'Mode Icon (Ikon & Teks)';
+        } else if (mode === 'gambar') {
+          updates = {
+            category_nav_mode_desktop: 'icon_image',
+            category_nav_mode_mobile: 'icon_image',
+            quick_filter_config: { ...qf, category_filter_model: 'image_text', model: 'image_text' }
+          };
+          modeName = 'Mode Gambar (Thumbnail)';
+        } else if (mode === 'pill') {
+          updates = {
+            category_nav_mode_desktop: 'pills_text',
+            category_nav_mode_mobile: 'pills_text',
+            quick_filter_config: { ...qf, category_filter_model: 'only_text', model: 'only_text' }
+          };
+          modeName = 'Mode Pill (Kapsul Teks)';
+        } else if (mode === 'dropdown') {
+          updates = {
+            category_nav_mode_desktop: 'dropdown',
+            category_nav_mode_mobile: 'dropdown'
+          };
+          modeName = 'Mode Dropdown (Kompak)';
+        }
+
+        DB.updateSettings(updates);
+        if (window.App && typeof App.showToast === 'function') {
+          App.showToast(`Mode Quick Filter etalase berhasil diubah ke: ${modeName}!`, 'success');
+        }
+        render();
+        bindEvents();
+      });
+    });
 
     // Add Category
     const btnAddCat = document.getElementById('btn-add-category');
@@ -1265,12 +1393,14 @@ const CategoryManager = (() => {
         document.getElementById('modal-category-title').textContent = 'Tambah Kategori Utama';
         document.getElementById('cat-input-name').value = '';
         document.getElementById('cat-input-desc').value = '';
-        if (catIconText) catIconText.value = 'layers';
+        if (catIconText) catIconText.value = 'bi-grid';
         if (catUrlIn) catUrlIn.value = '';
         if (catImgPrev) catImgPrev.src = 'assets/images/logo-songer-creative.png';
+        const quickNavIn = document.getElementById('cat-input-show-quick-nav');
+        if (quickNavIn) quickNavIn.checked = true;
         syncCategoryModalFields();
-        renderIconGrid('layers');
-        updateSelectedIconPreview('layers');
+        renderIconGrid('bi-grid');
+        updateSelectedIconPreview('bi-grid');
         document.getElementById('modal-category').classList.remove('hidden');
       });
     }
@@ -1319,8 +1449,9 @@ const CategoryManager = (() => {
       btnSaveCat.addEventListener('click', () => {
         const name = document.getElementById('cat-input-name').value.trim();
         const desc = document.getElementById('cat-input-desc').value.trim();
-        const icon = document.getElementById('cat-input-icon').value.trim() || 'layers';
+        const icon = document.getElementById('cat-input-icon')?.value.trim() || 'bi-grid';
         const image = document.getElementById('cat-input-image-url')?.value.trim() || '';
+        const show_in_quick_nav = document.getElementById('cat-input-show-quick-nav')?.checked !== false;
 
         if (!name) {
           alert('Nama kategori tidak boleh kosong!');
@@ -1328,10 +1459,10 @@ const CategoryManager = (() => {
         }
 
         if (editingCategoryId) {
-          DB.updateCategory(editingCategoryId, { name, description: desc, icon, image });
+          DB.updateCategory(editingCategoryId, { name, description: desc, icon, image, show_in_quick_nav });
           App.showToast('Kategori utama berhasil diperbarui!', 'success');
         } else {
-          DB.createCategory({ name, description: desc, icon, image });
+          DB.createCategory({ name, description: desc, icon, image, show_in_quick_nav });
           App.showToast('Kategori utama baru berhasil ditambahkan!', 'success');
         }
 
@@ -1379,10 +1510,12 @@ const CategoryManager = (() => {
         document.getElementById('modal-category-title').textContent = 'Edit Kategori Utama';
         document.getElementById('cat-input-name').value = cat.name;
         document.getElementById('cat-input-desc').value = cat.description || '';
-        const curIcon = cat.icon || 'layers';
+        const curIcon = cat.icon || 'bi-grid';
         if (catIconText) catIconText.value = curIcon;
         if (catUrlIn) catUrlIn.value = cat.image || '';
         if (catImgPrev) catImgPrev.src = cat.image || 'assets/images/logo-songer-creative.png';
+        const quickNavIn = document.getElementById('cat-input-show-quick-nav');
+        if (quickNavIn) quickNavIn.checked = cat.show_in_quick_nav !== false;
         syncCategoryModalFields();
         renderIconGrid(curIcon);
         updateSelectedIconPreview(curIcon);

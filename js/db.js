@@ -652,7 +652,8 @@ const DB = (() => {
     navbar_text_color: '#0f172a',
     body_bg_color: '#f8fafc',
     hero_type: 'banner', // 'banner' | 'text' (legacy compatibility)
-    hero_model: 'model_2', // 'model_1' | 'model_2' | 'model_3' | 'model_4'
+    hero_model: 'non_split', // 'non_split' (Gambar Penuh) | 'split' (Teks Kiri + Gambar Kanan)
+    hero_mobile_ratio: 'adaptive', // 'adaptive' (Desktop 4.5:1 & Mobile 2:1) | 'strict' (4.5:1 di semua layar)
     hero_headline: 'Cetak Banner, Desain & Souvenir Harga Instan',
     hero_subheadline: 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.',
     hero_cta_text: 'Lihat Semua Katalog',
@@ -669,14 +670,23 @@ const DB = (() => {
     navbar_branding_mode: 'logo_landscape', // 'logo_square' | 'logo_landscape' | 'text_only'
     navbar_store_name_color: '#0f172a',
     navbar_tagline_color: '#64748b',
+    // Kustomisasi Warna Elemen Navbar (Cart, Badge, Search, Login)
+    navbar_cart_icon_color: '#334155',
+    navbar_cart_badge_bg: '#f43f5e',
+    navbar_cart_badge_text: '#ffffff',
+    navbar_search_icon_color: '#94a3b8',
+    navbar_search_input_bg: '#f1f5f9',
+    navbar_search_border_color: '#e2e8f0',
+    navbar_search_placeholder_color: '#94a3b8',
+    navbar_login_icon_color: '#334155',
+    navbar_login_text_color: '#334155',
     show_header_store_name: true,
-    header_mobile_display: 'logo', // 'logo' | 'name' (Aturan mobile: hanya salah satu dari logo saja atau nama toko saja)
-    hero_greeting_enabled: true,
-    hero_greeting_text: 'Selamat Datang di Songer Creative',
-    hero_greeting_text_color: '#ffffff',
-    hero_greeting_bg_color: 'rgba(255, 255, 255, 0.15)',
-    hero_greeting_border_color: 'rgba(255, 255, 255, 0.20)',
-    hero_greeting_radius: '9999px',
+    header_mobile_display: 'logo',
+    // Top Bar Sapaan Dinamis & Promo Countdown Styling
+    top_bar_bg_color: '#0f172a',
+    top_bar_text_color: '#f8fafc',
+    promo_countdown_title: 'Promo Kilat',
+    hero_timer_end: '2026-10-31T23:59',
     // Hero Background & Styling Tokens
     hero_bg_type: 'linear_gradient', // 'solid' | 'linear_gradient' | 'radial_gradient'
     hero_bg_color1: '#0f172a',
@@ -684,19 +694,16 @@ const DB = (() => {
     hero_bg_angle: 135,
     hero_title_color: '#ffffff',
     hero_subtitle_color: '#cbd5e1',
-    hero_show_timer: true,
-    hero_timer_end: '2026-10-31T23:59',
-    // Dual CTA Tokens (Hero & Cards)
-    hero_cta_mode: 'dual', // 'dual' | 'catalog_only' | 'consultation_only'
+    // Hero Single CTA Tokens (1 Tombol Utama Saja)
     hero_cta1_text: 'Lihat Semua Katalog',
     hero_cta1_bg: '#33b589',
     hero_cta1_text_color: '#ffffff',
     hero_cta1_icon_color: '#ffffff',
-    hero_cta2_text: 'Konsultasi Desain & Cetak',
-    hero_cta2_bg: '#25d366',
-    hero_cta2_text_color: '#ffffff',
-    hero_cta2_icon_color: '#ffffff',
+    hero_cta1_link: '#katalog-section',
     hero_cta_use_theme_default: false,
+    // Varian Tampilan Navigasi Kategori (E-Commerce Quick Filter)
+    category_nav_mode_mobile: 'icon_image', // 'icon_image' | 'pills_text' | 'dropdown'
+    category_nav_mode_desktop: 'icon_image', // 'icon_image' | 'pills_text' | 'dropdown'
     quick_filter_container_bg: 'transparent',
     quick_filter_config: {
       model: 'icon_text', // 'image_only' | 'icon_only' | 'image_text' | 'icon_text' | 'text_only'
@@ -960,10 +967,10 @@ const DB = (() => {
     const now = new Date().toISOString();
 
     // 1. Initial Categories (Kategori Utama Etalase)
-    const catPrinting = { id: 'c1000000-0000-0000-0000-000000000001', name: 'Digital Printing & Banner', slug: 'digital-printing', icon: 'printer', description: 'Cetak spanduk outdoor, baliho, stiker lembaran dan poster tahan cuaca.', sort_order: 1, created_at: now, updated_at: now };
-    const catDesign = { id: 'c2000000-0000-0000-0000-000000000002', name: 'Graphic Design & Branding', slug: 'graphic-design', icon: 'palette', description: 'Jasa pembuatan logo, identitas brand, feed media sosial dan company profile.', sort_order: 2, created_at: now, updated_at: now };
-    const catSouvenir = { id: 'c3000000-0000-0000-0000-000000000003', name: 'Souvenir & Merchandise', slug: 'souvenir-merchandise', icon: 'gift', description: 'Gantungan kunci akrilik, pin peniti, mug custom, dan merchandise acara.', sort_order: 3, created_at: now, updated_at: now };
-    const catOffice = { id: 'c4000000-0000-0000-0000-000000000004', name: 'Percetakan Usaha & Kantor', slug: 'percetakan-usaha', icon: 'briefcase', description: 'Nota NCR carbonless, kwitansi, surat jalan, dan amplop kop surat.', sort_order: 4, created_at: now, updated_at: now };
+    const catPrinting = { id: 'c1000000-0000-0000-0000-000000000001', name: 'Digital Printing & Banner', slug: 'digital-printing', icon: 'printer', image: '', show_in_quick_nav: true, description: 'Cetak spanduk outdoor, baliho, stiker lembaran dan poster tahan cuaca.', sort_order: 1, created_at: now, updated_at: now };
+    const catDesign = { id: 'c2000000-0000-0000-0000-000000000002', name: 'Graphic Design & Branding', slug: 'graphic-design', icon: 'palette', image: '', show_in_quick_nav: true, description: 'Jasa pembuatan logo, identitas brand, feed media sosial dan company profile.', sort_order: 2, created_at: now, updated_at: now };
+    const catSouvenir = { id: 'c3000000-0000-0000-0000-000000000003', name: 'Souvenir & Merchandise', slug: 'souvenir-merchandise', icon: 'gift', image: '', show_in_quick_nav: true, description: 'Gantungan kunci akrilik, pin peniti, mug custom, dan merchandise acara.', sort_order: 3, created_at: now, updated_at: now };
+    const catOffice = { id: 'c4000000-0000-0000-0000-000000000004', name: 'Percetakan Usaha & Kantor', slug: 'percetakan-usaha', icon: 'briefcase', image: '', show_in_quick_nav: true, description: 'Nota NCR carbonless, kwitansi, surat jalan, dan amplop kop surat.', sort_order: 4, created_at: now, updated_at: now };
 
     const categories = [catPrinting, catDesign, catSouvenir, catOffice];
 
@@ -1762,6 +1769,12 @@ const DB = (() => {
       if (!s.header_mobile_display) {
         s.header_mobile_display = 'logo';
       }
+      if (!s.hero_model) {
+        s.hero_model = 'non_split';
+      }
+      if (!s.hero_mobile_ratio) {
+        s.hero_mobile_ratio = 'adaptive';
+      }
       return s;
     },
     saveSettings(newSettings) {
@@ -1847,6 +1860,7 @@ const DB = (() => {
         const prodCount = prods.filter(p => p.category_id === c.id).length;
         return {
           ...c,
+          show_in_quick_nav: c.show_in_quick_nav !== undefined ? Boolean(c.show_in_quick_nav) : true,
           sub_categories: children,
           sub_categories_count: children.length,
           products_count: prodCount
@@ -1856,7 +1870,20 @@ const DB = (() => {
 
     getCategoryById(id) {
       const cats = getTable(STORAGE_KEYS.CATEGORIES) || [];
-      return cats.find(c => c.id === id) || null;
+      const found = cats.find(c => c.id === id);
+      if (!found) return null;
+      return {
+        ...found,
+        show_in_quick_nav: found.show_in_quick_nav !== undefined ? Boolean(found.show_in_quick_nav) : true
+      };
+    },
+
+    saveCategories(categories) {
+      if (Array.isArray(categories)) {
+        setTable(STORAGE_KEYS.CATEGORIES, categories);
+        return categories;
+      }
+      return [];
     },
 
     createCategory(data) {
@@ -1866,8 +1893,9 @@ const DB = (() => {
         id: generateUUID(),
         name: data.name.trim(),
         slug: (data.slug || data.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-        icon: data.icon || 'layers',
+        icon: data.icon ? data.icon.trim() : 'bi-grid',
         image: data.image ? data.image.trim() : '',
+        show_in_quick_nav: data.show_in_quick_nav !== undefined ? Boolean(data.show_in_quick_nav) : true,
         description: data.description ? data.description.trim() : '',
         sort_order: parseInt(data.sort_order) || (cats.length + 1),
         created_at: now,
@@ -1885,11 +1913,12 @@ const DB = (() => {
 
       cats[idx] = {
         ...cats[idx],
-        name: data.name.trim(),
-        slug: (data.slug || data.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-        icon: data.icon || cats[idx].icon,
+        name: data.name !== undefined ? data.name.trim() : cats[idx].name,
+        slug: data.slug !== undefined ? data.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : (data.name !== undefined ? data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : cats[idx].slug),
+        icon: data.icon !== undefined ? data.icon.trim() : (cats[idx].icon || 'bi-grid'),
         image: data.image !== undefined ? data.image.trim() : (cats[idx].image || ''),
-        description: data.description ? data.description.trim() : '',
+        show_in_quick_nav: data.show_in_quick_nav !== undefined ? Boolean(data.show_in_quick_nav) : (cats[idx].show_in_quick_nav !== undefined ? Boolean(cats[idx].show_in_quick_nav) : true),
+        description: data.description !== undefined ? data.description.trim() : (cats[idx].description || ''),
         sort_order: data.sort_order !== undefined ? parseInt(data.sort_order) : cats[idx].sort_order,
         updated_at: new Date().toISOString()
       };
