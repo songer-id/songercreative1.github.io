@@ -668,13 +668,21 @@ body {
   }
 }
 
-/* Standarisasi Rasio Hero Banner Split & Non-Split */
-.hero-ratio-9-2, .aspect-9-2 {
+/* Standarisasi Rasio Hero Banner 16:5 (Mobile) & 9:2 (Desktop) */
+.hero-ratio-16-5, .aspect-16-5, .aspect-\[16\/5\] {
+  aspect-ratio: 16 / 5 !important;
+  width: 100% !important;
+}
+.hero-ratio-9-2, .aspect-9-2, .aspect-\[9\/2\] {
   aspect-ratio: 9 / 2 !important;
   width: 100% !important;
 }
-@media (max-width: 767px) {
-  .hero-ratio-9-2, .aspect-9-2 {
+.hero-non-split-container, .hero-responsive-aspect {
+  aspect-ratio: 16 / 5 !important;
+  width: 100% !important;
+}
+@media (min-width: 768px) {
+  .hero-non-split-container, .hero-responsive-aspect {
     aspect-ratio: 9 / 2 !important;
     width: 100% !important;
   }
@@ -692,17 +700,17 @@ body {
   width: 100% !important;
 }
 
-/* Hero Adaptif (Desktop 4.5:1 / 9:2 & Mobile 2:1) */
-@media (max-width: 767px) {
-  .hero-adaptive-aspect {
-    aspect-ratio: 2 / 1 !important;
-    width: 100% !important;
-  }
+/* Preset Box Shadow Utility untuk Hero & CTA */
+.hero-shadow-none { box-shadow: none !important; }
+.hero-shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
+.hero-shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important; }
+.hero-shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important; }
+.hero-shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important; }
+
+/* Gambar Split Otomatis Terpotong Kiri-Kanan Seimbang */
+.hero-split-image-cover {
+  object-fit: cover !important;
+  object-position: center !important;
 }
-@media (min-width: 768px) {
-  .hero-adaptive-aspect {
-    aspect-ratio: 9 / 2 !important;
-    width: 100% !important;
-  }
-}
+
 

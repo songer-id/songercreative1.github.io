@@ -501,8 +501,6 @@ const BuyerStore = (() => {
     const heroBgColor1 = settings.hero_bg_color1 || '#0f172a';
     const heroBgColor2 = settings.hero_bg_color2 || '#064e3b';
     const heroBgAngle = settings.hero_bg_angle !== undefined ? settings.hero_bg_angle : 135;
-    const heroTitleColor = settings.hero_title_color || '#ffffff';
-    const heroSubtitleColor = settings.hero_subtitle_color || '#cbd5e1';
     const heroShowTimer = settings.hero_show_timer !== false;
 
     let heroBgCss = '';
@@ -514,63 +512,65 @@ const BuyerStore = (() => {
       heroBgCss = `background: linear-gradient(${heroBgAngle}deg, ${heroBgColor1} 0%, ${heroBgColor2} 100%);`;
     }
 
-    // Helper: render Dual CTA Buttons in storefront
-    // Helper: render Single CTA Button in storefront (Penyederhanaan 1 CTA Sesuai Spesifikasi)
+    // Token Konfigurasi Hero Banner Baru
+    const heroContainerRadius = settings.hero_container_radius || '16px';
+    const heroContainerShadow = settings.hero_container_shadow || 'sm';
+    const heroTitleColor = settings.hero_title_color || '#0f172a';
+    const heroDescColor = settings.hero_desc_color || '#475569';
+    const heroImageRadius = settings.hero_image_radius || '12px';
+    const heroImageShadow = settings.hero_image_shadow || 'sm';
+    const heroSplitImage = (settings.hero_split_image || '').trim();
+    const heroDotsActiveColor = settings.hero_dots_active_color || '#10b981';
+    const heroDotsInactiveColor = settings.hero_dots_inactive_color || '#cbd5e1';
+
+    // Helper: render Single CTA Button (Aktif di Mode Split & Mode Teks Saja)
     const heroUseTheme = settings.hero_cta_use_theme_default;
     const heroPrimColor = settings.primary_color || '#33b589';
 
-    const heroCtaText = settings.hero_cta1_text || settings.hero_cta_text || 'Lihat Semua Katalog';
-    const heroCtaBg = heroUseTheme ? heroPrimColor : (settings.hero_cta1_bg || heroPrimColor);
-    const heroCtaTextColor = heroUseTheme ? '#ffffff' : (settings.hero_cta1_text_color || '#ffffff');
-    const heroCtaIconColor = heroUseTheme ? '#ffffff' : (settings.hero_cta1_icon_color || '#ffffff');
-    const heroCtaLink = settings.hero_cta1_link || '#katalog-section';
+    const ctaConfig = settings.hero_cta_config || {};
+    const heroCtaText = ctaConfig.text || settings.hero_cta1_text || settings.hero_cta_text || 'Lihat Semua Katalog';
+    const heroCtaLink = ctaConfig.url || settings.hero_cta1_link || '#katalog-section';
+    const heroCtaTextColor = ctaConfig.text_color || (heroUseTheme ? '#ffffff' : (settings.hero_cta1_text_color || '#ffffff'));
+    const heroCtaBg = ctaConfig.bg_color || (heroUseTheme ? heroPrimColor : (settings.hero_cta1_bg || heroPrimColor));
+    const heroCtaRadius = ctaConfig.radius || '12px';
+    const heroCtaShadow = ctaConfig.shadow || 'sm';
 
     const heroCtaHtml = `
-      <a href="${escapeHtml(heroCtaLink)}" class="w-full sm:w-auto justify-center px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold shadow-lg inline-flex items-center gap-2 hover:brightness-105 transition active:scale-95 text-center whitespace-normal" style="background-color: ${heroCtaBg}; color: ${heroCtaTextColor};">
+      <a href="${escapeHtml(heroCtaLink)}" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold transition hover:brightness-105 active:scale-95 hero-shadow-${heroCtaShadow}" style="background-color: ${heroCtaBg}; color: ${heroCtaTextColor}; border-radius: ${heroCtaRadius};">
         <span>${escapeHtml(heroCtaText)}</span>
-        <i data-lucide="arrow-down" class="w-3.5 h-3.5 shrink-0" style="color: ${heroCtaIconColor};"></i>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5 shrink-0"></i>
       </a>
     `;
 
-    // PENGATURAN RASIO BANNER HERO: STRICT (4.5:1 / 9:2 SEMUA LAYAR) VS ADAPTIF (DESKTOP 4.5:1 & MOBILE 2:1)
-    const rawMobileRatio = String(settings.hero_mobile_ratio || 'adaptive').toLowerCase().trim();
-    const isStrictRatio = (rawMobileRatio === 'strict' || rawMobileRatio === '4.5:1' || rawMobileRatio === '4.5 / 1' || rawMobileRatio === '9:2');
-
-    let nonSplitAspectClass = '';
-    let nonSplitAspectStyle = '';
-
-    if (isStrictRatio) {
-      // JIKA STRICT (4.5:1 / 9:2):
-      // Pasang kelas rasio murni 9:2 di SEMUA ukuran layar tanpa kelas aspect-[2/1]
-      // Disertai style inline aspect-ratio: 9 / 2; width: 100%; agar banner mobile benar-benar pipih/ceper (4.5:1)
-      nonSplitAspectClass = 'aspect-[9/2] w-full hero-ratio-9-2';
-      nonSplitAspectStyle = 'aspect-ratio: 9 / 2 !important; width: 100% !important;';
-    } else {
-      // JIKA ADAPTIF:
-      // Gunakan responsive class: aspect-[2/1] md:aspect-[9/2] w-full
-      nonSplitAspectClass = 'aspect-[2/1] md:aspect-[9/2] w-full hero-adaptive-aspect';
-      nonSplitAspectStyle = '';
-    }
+    // STANDARISASI ASPEK RASIO BANNER HERO:
+    // Desktop: Kunci rasio 9 : 2 (4.5 : 1) dengan aspect-[9/2] w-full object-cover
+    // Mobile: Kunci rasio 16 : 5 (3.2 : 1) dengan aspect-[16/5] w-full object-cover
+    const nonSplitAspectClass = 'aspect-[16/5] md:aspect-[9/2] w-full hero-responsive-aspect object-cover';
+    const nonSplitAspectStyle = 'aspect-ratio: 16 / 5; width: 100%;';
 
     const heroWidthLayout = settings.hero_width_layout || 'boxed';
     const isFullWidth = (heroModel === 'non_split' || heroModel === 'model_2' || heroModel === 'model_3') && (heroWidthLayout === 'full');
     const heroShowArrows = shouldShowNavArrows(animType, settings.hero_show_arrows !== false);
 
-    // Helper: generate slides HTML with .hero-slide-smooth & Bootstrap Icons Fallback
+    // Helper: generate slides HTML Non-Split
     const slidesHtml = heroBanners.map((b, i) => `
       <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}">
-        <img src="${b}" alt="Hero Banner ${i + 1}" class="w-full h-full object-cover ${isFullWidth ? 'rounded-none' : 'rounded-2xl sm:rounded-3xl'}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-3xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
+        <img src="${b}" alt="Hero Banner ${i + 1}" class="w-full h-full object-cover ${isFullWidth ? 'rounded-none' : ''}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-3xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
       </div>
     `).join('');
 
-    const splitSlidesHtml = heroBanners.map((b, i) => `
-      <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}">
-        <img src="${b}" alt="Hero Banner ${i + 1}" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
-      </div>
-    `).join('');
+    // Helper: generate slides HTML Split (Gambar khusus split atau fallback cover center)
+    const splitSlidesHtml = heroBanners.map((b, i) => {
+      const imgSrc = heroSplitImage ? heroSplitImage : b;
+      return `
+        <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}">
+          <img src="${imgSrc}" alt="Hero Banner ${i + 1}" class="w-full h-full hero-split-image-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
+        </div>
+      `;
+    }).join('');
 
     if (heroModel === 'model_1') {
-      // [1] Model Teks Headline Saja + 1 CTA (Tanpa Gambar Banner)
+      // [1] Model Teks Headline Saja + CTA (Tanpa Gambar Banner)
       heroSectionHtml = `
         <div class="relative overflow-hidden rounded-3xl p-6 sm:p-12 shadow-2xl border border-white/10" style="${heroBgCss}" id="hero-slider-container">
           <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
@@ -578,7 +578,7 @@ const BuyerStore = (() => {
             <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight" style="color: ${heroTitleColor};">
               ${escapeHtml(settings.hero_headline || 'Cetak Banner, Desain & Souvenir Harga Instan')}
             </h1>
-            <p class="text-xs sm:text-sm leading-relaxed" style="color: ${heroSubtitleColor};">
+            <p class="text-xs sm:text-sm leading-relaxed" style="color: ${heroDescColor};">
               ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
             </p>
             <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
@@ -594,53 +594,59 @@ const BuyerStore = (() => {
         </div>
       `;
     } else if (heroModel === 'split' || heroModel === 'model_4') {
-      // [2] VARIAN HERO SPLIT (TEKS KIRI ~55-60% + GAMBAR KANAN ~40-45%)
-      // Wajib side-by-side baik di desktop maupun mobile, judul & deskripsi maksimal 2 baris (line-clamp-2)
-      // Indikator slider titik (...) khusus mode split di mobile diletakkan tepat di bawah kotak gambar kolom kanan
-      heroSectionHtml = `
-        <div class="rounded-2xl border p-4 md:p-6 bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-          <div class="flex flex-row items-center gap-3 md:gap-6 w-full">
-            <!-- Kolom Kiri: Area Teks ~55% - 60% -->
-            <div class="w-[58%] md:w-[60%] flex flex-col justify-center min-w-0 pr-1 sm:pr-2">
-              <h1 class="line-clamp-2 font-bold text-sm sm:text-base md:text-xl lg:text-2xl text-slate-900 dark:text-white leading-snug tracking-tight" style="${heroTitleColor !== '#ffffff' ? `color: ${heroTitleColor};` : ''}">
-                ${escapeHtml(settings.hero_headline || settings.store_name || 'Cetak Banner, Desain & Souvenir')}
-              </h1>
-              <p class="line-clamp-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed" style="${heroSubtitleColor !== '#cbd5e1' ? `color: ${heroSubtitleColor};` : ''}">
-                ${escapeHtml(settings.hero_subheadline || settings.store_tagline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, dan souvenir retail.')}
-              </p>
-              <div class="mt-2 sm:mt-3 flex items-center gap-2">
-                ${heroCtaHtml}
-              </div>
-            </div>
+      // [2] VARIAN HERO SPLIT (TEKS KIRI 55% - 60% + WADAH GAMBAR KANAN 40% - 45%)
+      // Tinggi total konsisten mengikuti banner utama (desktop 9:2, mobile 16:5)
+      // Tombol CTA aktif, sudut lengkung kontainer & gambar serta efek bayangan dapat disesuaikan
+      const splitBoxRadiusStyle = `border-radius: ${heroImageRadius};`;
+      const splitBoxShadowClass = `hero-shadow-${heroImageShadow}`;
 
-            <!-- Kolom Kanan: Area Gambar Hero ~40% - 45% -->
-            <div class="w-[42%] md:w-[40%] flex flex-col items-center shrink-0">
-              <!-- Wadah gambar terisolasi dengan sudut membulat aspect-[4/3] w-full -->
-              <div class="rounded-xl overflow-hidden aspect-[4/3] hero-ratio-4-3 w-full relative bg-slate-100 dark:bg-slate-800 shadow-xs border border-slate-200/60 dark:border-slate-700/60">
-                <div class="hero-slider-track w-full h-full relative">
-                  ${splitSlidesHtml}
+      heroSectionHtml = `
+        <div class="relative overflow-hidden ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none' : 'border border-slate-200 dark:border-slate-800 hero-shadow-' + heroContainerShadow}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + ';'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+          <div class="${nonSplitAspectClass} flex items-center p-3 sm:p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40" style="${nonSplitAspectStyle}">
+            <div class="flex flex-row items-center gap-3 sm:gap-4 md:gap-6 w-full h-full">
+              
+              <!-- Kolom Kiri: Area Teks & CTA (~55% - 60%) -->
+              <div class="w-[58%] md:w-[60%] flex flex-col justify-center min-w-0 pr-1 sm:pr-2 h-full">
+                <h1 class="line-clamp-2 font-bold text-xs sm:text-base md:text-xl lg:text-2xl leading-snug tracking-tight" style="color: ${heroTitleColor};">
+                  ${escapeHtml(settings.hero_headline || settings.store_name || 'Cetak Banner, Desain & Souvenir')}
+                </h1>
+                <p class="line-clamp-2 text-[10px] sm:text-xs md:text-sm mt-1 leading-relaxed" style="color: ${heroDescColor};">
+                  ${escapeHtml(settings.hero_subheadline || settings.store_tagline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, dan souvenir retail.')}
+                </p>
+                <div class="mt-2 sm:mt-3 flex items-center gap-2">
+                  ${heroCtaHtml}
                 </div>
-                ${heroShowArrows ? `
-                  <button type="button" class="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
-                  <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
+              </div>
+
+              <!-- Kolom Kanan: Kotak Gambar Hero (~40% - 45%) -->
+              <div class="w-[42%] md:w-[40%] flex flex-col items-center justify-center shrink-0 h-full">
+                <div class="overflow-hidden w-full h-full relative bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass} border border-slate-200/60 dark:border-slate-700/60" style="${splitBoxRadiusStyle}">
+                  <div class="hero-slider-track w-full h-full relative">
+                    ${splitSlidesHtml}
+                  </div>
+                  ${heroShowArrows ? `
+                    <button type="button" class="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
+                    <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
+                  ` : ''}
+                </div>
+                <!-- Indikator Slider (...): Khusus mode Split di mobile, letakkan di bawah kotak gambar kolom kanan -->
+                ${heroBanners.length > 1 ? `
+                  <div class="flex items-center justify-center gap-1.5 mt-1.5 w-full">
+                    ${heroBanners.map((_, i) => `<button type="button" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all hero-slide-dot" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
+                  </div>
                 ` : ''}
               </div>
-              <!-- Indikator Slider (...): Khusus mode Split di mobile, letakkan tepat di bawah kotak gambar kolom kanan -->
-              ${heroBanners.length > 1 ? `
-                <div class="flex items-center justify-center gap-1.5 mt-2 w-full">
-                  ${heroBanners.map((_, i) => `<button type="button" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${i === 0 ? 'bg-emerald-500 scale-125' : 'bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'} transition-all hero-slide-dot" data-index="${i}"></button>`).join('')}
-                </div>
-              ` : ''}
+
             </div>
           </div>
         </div>
       `;
     } else if (heroModel === 'model_3') {
-      // [3] Model Gambar DENGAN Teks & CTA Overlay (Desktop 9:2 / Mobile Adaptif atau Strict)
+      // [3] Model Gambar DENGAN Teks & CTA Overlay
       heroSectionHtml = `
         <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
-          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'rounded-2xl sm:rounded-3xl border border-white/10'} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-            <div class="${nonSplitAspectClass} relative bg-slate-950 overflow-hidden ${isFullWidth ? 'rounded-none' : 'rounded-2xl sm:rounded-3xl'} flex items-center" style="${nonSplitAspectStyle}">
+          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'border border-white/10 hero-shadow-' + heroContainerShadow} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + ';'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+            <div class="${nonSplitAspectClass} relative bg-slate-950 overflow-hidden flex items-center" style="${nonSplitAspectStyle}">
               <div class="hero-slider-track absolute inset-0 w-full h-full">
                 ${slidesHtml}
               </div>
@@ -650,7 +656,7 @@ const BuyerStore = (() => {
                 <h1 class="text-lg sm:text-3xl md:text-4xl font-black tracking-tight leading-snug sm:leading-tight" style="color: ${heroTitleColor};">
                   ${escapeHtml(settings.hero_headline || 'Cetak Banner, Desain & Souvenir Harga Instan')}
                 </h1>
-                <p class="text-xs sm:text-sm leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-3" style="color: ${heroSubtitleColor};">
+                <p class="text-xs sm:text-sm leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-3" style="color: ${heroDescColor};">
                   ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
                 </p>
                 <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
@@ -667,7 +673,7 @@ const BuyerStore = (() => {
             <!-- Indikator Slider (...): Posisikan tepat di tengah horizontal (justify-center mx-auto) di bawah banner -->
             ${heroBanners.length > 1 ? `
               <div class="flex items-center justify-center mx-auto gap-2 py-2.5">
-                ${heroBanners.map((_, i) => `<button type="button" class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-emerald-500 scale-125' : 'bg-white/60 hover:bg-white'} transition-all hero-slide-dot" data-index="${i}"></button>`).join('')}
+                ${heroBanners.map((_, i) => `<button type="button" class="w-2.5 h-2.5 rounded-full transition-all hero-slide-dot" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
               </div>
             ` : ''}
           </div>
@@ -675,13 +681,14 @@ const BuyerStore = (() => {
       `;
     } else {
       // [4] VARIAN HERO NON-SPLIT (GAMBAR PENUH) - DEFAULT & UTAMA
-      // Desktop: Rasio 9 : 2 (4.5 : 1)
-      // Mobile: Mengikuti Rasio Mobile (Strict 9:2 vs Adaptif 2:1)
+      // Desktop: Kunci rasio 9 : 2 (4.5 : 1)
+      // Mobile: Kunci rasio 16 : 5 (3.2 : 1)
+      // Mode Non-Split: Sembunyikan elemen tombol CTA di etalase!
       // Indikator Slider (...): Posisikan tepat di tengah horizontal (justify-center mx-auto) di bawah banner
       heroSectionHtml = `
         <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
-          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800'} shadow-md group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-            <div class="${nonSplitAspectClass} relative bg-slate-900 overflow-hidden ${isFullWidth ? 'rounded-none' : 'rounded-2xl sm:rounded-3xl'}" style="${nonSplitAspectStyle}">
+          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'border border-slate-200/80 dark:border-slate-800 hero-shadow-' + heroContainerShadow} group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + ';'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+            <div class="${nonSplitAspectClass} relative bg-slate-900 overflow-hidden" style="${nonSplitAspectStyle}">
               <div class="hero-slider-track w-full h-full relative">
                 ${slidesHtml}
               </div>
@@ -693,7 +700,7 @@ const BuyerStore = (() => {
             <!-- Indikator Slider (...): Posisikan tepat di tengah horizontal (justify-center mx-auto) di bawah banner -->
             ${heroBanners.length > 1 ? `
               <div class="flex items-center justify-center mx-auto gap-2 py-2.5">
-                ${heroBanners.map((_, i) => `<button type="button" class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-emerald-500 scale-125' : 'bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'} transition-all hero-slide-dot" data-index="${i}"></button>`).join('')}
+                ${heroBanners.map((_, i) => `<button type="button" class="w-2.5 h-2.5 rounded-full transition-all hero-slide-dot" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
               </div>
             ` : ''}
           </div>
@@ -3107,17 +3114,15 @@ const BuyerStore = (() => {
       }
 
       // Update dots indicator
+      const activeDotColor = settings.hero_dots_active_color || '#10b981';
+      const inactiveDotColor = settings.hero_dots_inactive_color || '#cbd5e1';
       dots.forEach((dot, idx) => {
         if (idx === normalizedTarget) {
-          dot.classList.add('bg-emerald-500', 'scale-125');
-          dot.classList.remove('bg-white/60', 'bg-white/50', 'bg-slate-300', 'dark:bg-slate-600');
+          dot.style.backgroundColor = activeDotColor;
+          dot.style.transform = 'scale(1.25)';
         } else {
-          dot.classList.remove('bg-emerald-500', 'scale-125');
-          if (dot.classList.contains('bg-white/60') || dot.classList.contains('bg-white/50')) {
-            dot.classList.add('bg-white/60');
-          } else {
-            dot.classList.add('bg-slate-300');
-          }
+          dot.style.backgroundColor = inactiveDotColor;
+          dot.style.transform = 'scale(1)';
         }
       });
 
@@ -3753,6 +3758,7 @@ const BuyerStore = (() => {
 
   return {
     init,
+    renderStorefront,
     openCartDrawer,
     closeCartDrawer,
     updateCartBadge,
@@ -3765,6 +3771,8 @@ const BuyerStore = (() => {
     renderProductCardV3: renderCardVariantC
   };
 })();
+
+window.BuyerStore = BuyerStore;
 
 
 

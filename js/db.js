@@ -653,10 +653,30 @@ const DB = (() => {
     body_bg_color: '#f8fafc',
     hero_type: 'banner', // 'banner' | 'text' (legacy compatibility)
     hero_model: 'non_split', // 'non_split' (Gambar Penuh) | 'split' (Teks Kiri + Gambar Kanan)
-    hero_mobile_ratio: 'adaptive', // 'adaptive' (Desktop 4.5:1 & Mobile 2:1) | 'strict' (4.5:1 di semua layar)
+    hero_mobile_ratio: '16:5', // '16:5' (Mobile 3.2:1) & Desktop 9:2 (4.5:1)
+    hero_container_radius: '16px', // 0px - 32px (0px, 8px, 16px, 24px, 32px)
+    hero_container_shadow: 'sm', // none | sm | md | lg | xl
+    hero_title_color: '#0f172a',
+    hero_desc_color: '#475569',
+    hero_image_radius: '12px', // 0px - 24px
+    hero_image_shadow: 'sm', // none | sm | md | lg
+    hero_split_image: '', // optional dedicated split image URL/base64
+    hero_dots_active_color: '#10b981',
+    hero_dots_inactive_color: '#cbd5e1',
+    hero_cta_radius: '12px',
+    hero_cta_shadow: 'md',
+    hero_cta_config: {
+      text: 'Lihat Semua Katalog',
+      link: '#katalog-section',
+      text_color: '#ffffff',
+      bg_color: '#33b589',
+      radius: '12px',
+      shadow: 'md'
+    },
     hero_headline: 'Cetak Banner, Desain & Souvenir Harga Instan',
     hero_subheadline: 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.',
     hero_cta_text: 'Lihat Semua Katalog',
+    hero_cta1_link: '#katalog-section',
     hero_banner_image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
     hero_banners: [
       'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
@@ -1773,7 +1793,47 @@ const DB = (() => {
         s.hero_model = 'non_split';
       }
       if (!s.hero_mobile_ratio) {
-        s.hero_mobile_ratio = 'adaptive';
+        s.hero_mobile_ratio = '16:5';
+      }
+      if (!s.hero_container_radius) {
+        s.hero_container_radius = '16px';
+      }
+      if (!s.hero_container_shadow) {
+        s.hero_container_shadow = 'sm';
+      }
+      if (!s.hero_title_color) {
+        s.hero_title_color = '#0f172a';
+      }
+      if (!s.hero_desc_color) {
+        s.hero_desc_color = s.hero_subtitle_color || '#475569';
+      }
+      if (!s.hero_image_radius) {
+        s.hero_image_radius = '12px';
+      }
+      if (!s.hero_image_shadow) {
+        s.hero_image_shadow = 'sm';
+      }
+      if (!s.hero_dots_active_color) {
+        s.hero_dots_active_color = '#10b981';
+      }
+      if (!s.hero_dots_inactive_color) {
+        s.hero_dots_inactive_color = '#cbd5e1';
+      }
+      if (!s.hero_cta_radius) {
+        s.hero_cta_radius = '12px';
+      }
+      if (!s.hero_cta_shadow) {
+        s.hero_cta_shadow = 'md';
+      }
+      if (!s.hero_cta_config) {
+        s.hero_cta_config = {
+          text: s.hero_cta1_text || s.hero_cta_text || 'Lihat Semua Katalog',
+          link: s.hero_cta1_link || '#katalog-section',
+          text_color: s.hero_cta1_text_color || '#ffffff',
+          bg_color: s.hero_cta1_bg || s.primary_color || '#33b589',
+          radius: s.hero_cta_radius || '12px',
+          shadow: s.hero_cta_shadow || 'md'
+        };
       }
       return s;
     },
