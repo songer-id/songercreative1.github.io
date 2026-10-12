@@ -22,8 +22,8 @@ const ProductList = (() => {
   let productToDelete = null;
 
   function formatIDR(num) {
-    if (isNaN(num) || num === null || num === undefined) return 'Rp 0';
-    return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+    if (isNaN(num) || num === null || num === undefined) return 'Rp0';
+    return 'Rp' + Math.round(num).toLocaleString('id-ID');
   }
 
   function getBadgeClass(priceType) {

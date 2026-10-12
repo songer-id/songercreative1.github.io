@@ -53,6 +53,39 @@ const ProductForm = (() => {
     extra_3: []
   };
 
+  function getLastProductFooterConfig() {
+    try {
+      const allProds = (typeof DB !== 'undefined' && DB.getProducts) ? DB.getProducts() : [];
+      if (!Array.isArray(allProds) || allProds.length === 0) return null;
+      // Sort by created_at descending (latest created product first)
+      const sortedProds = [...allProds].sort((a, b) => {
+        const timeA = new Date(a.created_at || 0).getTime();
+        const timeB = new Date(b.created_at || 0).getTime();
+        return timeB - timeA;
+      });
+      for (const p of sortedProds) {
+        if (p.custom_footer_1 || p.custom_footer_2 || p.card_footer_text || p.footer_bg_color) {
+          const f1 = p.custom_footer_1 ? { ...p.custom_footer_1 } : {
+            text: p.card_footer_text || 'Proses Hanya Dalam 1Jam',
+            icon: p.footer_badge_icon || 'truck',
+            bg_color: p.footer_bg_color || '#059669',
+            text_color: p.footer_text_color || '#ffffff'
+          };
+          const f2 = p.custom_footer_2 ? { ...p.custom_footer_2 } : {
+            text: p.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
+            icon: p.footer_2_badge_icon || 'minus',
+            bg_color: p.footer_2_bg_color || '#047857',
+            text_color: p.footer_2_text_color || '#ffffff'
+          };
+          return { f1, f2 };
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching last product footer config:', e);
+    }
+    return null;
+  }
+
   function resetFormState() {
     formMode = 'create';
     currentEditingId = null;
@@ -62,6 +95,20 @@ const ProductForm = (() => {
     const allSubs = defaultCatId ? DB.getSubCategories(defaultCatId) : [];
     const defaultSubId = allSubs.length > 0 ? allSubs[0].id : null;
 
+    const inheritedFooter = getLastProductFooterConfig();
+    const f1Default = inheritedFooter?.f1 || {
+      text: 'Proses Hanya Dalam 1Jam',
+      icon: 'truck',
+      bg_color: '#059669',
+      text_color: '#ffffff'
+    };
+    const f2Default = inheritedFooter?.f2 || {
+      text: 'Variasi Paket Tersedia/tidak tersedia',
+      icon: 'minus',
+      bg_color: '#047857',
+      text_color: '#ffffff'
+    };
+
     primaryState = {
       name: '',
       order_category: 'Ctk',
@@ -70,14 +117,16 @@ const ProductForm = (() => {
       card_variant: 'A',
       card_variant_override: true,
       custom_labels: [],
-      card_footer_text: 'Proses Hanya Dalam 1Jam',
-      footer_badge_icon: 'truck',
-      footer_bg_color: '#059669',
-      footer_text_color: '#ffffff',
-      card_footer_2_text: 'Variasi Paket Tersedia/tidak tersedia',
-      footer_2_badge_icon: 'minus',
-      footer_2_bg_color: '#047857',
-      footer_2_text_color: '#ffffff',
+      custom_footer_1: { ...f1Default },
+      custom_footer_2: { ...f2Default },
+      card_footer_text: f1Default.text,
+      footer_badge_icon: f1Default.icon,
+      footer_bg_color: f1Default.bg_color,
+      footer_text_color: f1Default.text_color,
+      card_footer_2_text: f2Default.text,
+      footer_2_badge_icon: f2Default.icon,
+      footer_2_bg_color: f2Default.bg_color,
+      footer_2_text_color: f2Default.text_color,
       enable_countdown: true,
       countdown_bg_color: '#059669',
       countdown_text_color: '#ffffff',
@@ -125,6 +174,35 @@ const ProductForm = (() => {
       ? [...prod.images] 
       : (prod.image_url ? [prod.image_url] : []);
 
+    const inheritedFooter = getLastProductFooterConfig();
+    const f1Prod = prod.custom_footer_1 ? { ...prod.custom_footer_1 } : (
+      (prod.card_footer_text || prod.footer_bg_color) ? {
+        text: prod.card_footer_text || 'Proses Hanya Dalam 1Jam',
+        icon: prod.footer_badge_icon || 'truck',
+        bg_color: prod.footer_bg_color || '#059669',
+        text_color: prod.footer_text_color || '#ffffff'
+      } : (inheritedFooter?.f1 || {
+        text: 'Proses Hanya Dalam 1Jam',
+        icon: 'truck',
+        bg_color: '#059669',
+        text_color: '#ffffff'
+      })
+    );
+
+    const f2Prod = prod.custom_footer_2 ? { ...prod.custom_footer_2 } : (
+      (prod.card_footer_2_text || prod.footer_2_bg_color) ? {
+        text: prod.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
+        icon: prod.footer_2_badge_icon || 'minus',
+        bg_color: prod.footer_2_bg_color || '#047857',
+        text_color: prod.footer_2_text_color || '#ffffff'
+      } : (inheritedFooter?.f2 || {
+        text: 'Variasi Paket Tersedia/tidak tersedia',
+        icon: 'minus',
+        bg_color: '#047857',
+        text_color: '#ffffff'
+      })
+    );
+
     primaryState = {
       name: prod.name,
       order_category: prod.order_category || 'Ctk',
@@ -133,14 +211,16 @@ const ProductForm = (() => {
       card_variant: prod.card_variant || 'A',
       card_variant_override: prod.card_variant_override !== undefined ? prod.card_variant_override : true,
       custom_labels: Array.isArray(prod.custom_labels) ? [...prod.custom_labels] : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : []),
-      card_footer_text: prod.card_footer_text || 'Proses Hanya Dalam 1Jam',
-      footer_badge_icon: prod.footer_badge_icon || 'truck',
-      footer_bg_color: prod.footer_bg_color || '#059669',
-      footer_text_color: prod.footer_text_color || '#ffffff',
-      card_footer_2_text: prod.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
-      footer_2_badge_icon: prod.footer_2_badge_icon || 'minus',
-      footer_2_bg_color: prod.footer_2_bg_color || '#047857',
-      footer_2_text_color: prod.footer_2_text_color || '#ffffff',
+      custom_footer_1: f1Prod,
+      custom_footer_2: f2Prod,
+      card_footer_text: f1Prod.text,
+      footer_badge_icon: f1Prod.icon,
+      footer_bg_color: f1Prod.bg_color,
+      footer_text_color: f1Prod.text_color,
+      card_footer_2_text: f2Prod.text,
+      footer_2_badge_icon: f2Prod.icon,
+      footer_2_bg_color: f2Prod.bg_color,
+      footer_2_text_color: f2Prod.text_color,
       enable_countdown: prod.enable_countdown !== undefined ? prod.enable_countdown : true,
       countdown_bg_color: prod.countdown_bg_color || '#059669',
       countdown_text_color: prod.countdown_text_color || '#ffffff',
@@ -631,11 +711,36 @@ const ProductForm = (() => {
               
               <!-- Left: Controls -->
               <div class="lg:col-span-8 space-y-4">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                    <i data-lucide="sliders" class="w-4 h-4 text-emerald-600"></i>
-                    Kustomisasi Visual Kartu <span id="label-active-card-cfg" class="text-emerald-700">(${primaryState.card_variant || 'A'})</span>
-                  </h3>
+                <!-- PILIHAN DESAIN DEFAULT ATAU BUAT DESAIN BARU -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <div>
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                      <i data-lucide="palette" class="w-4 h-4 text-emerald-600"></i>
+                      <span>Kustomisasi Visual Kartu</span> <span id="label-active-card-cfg" class="text-emerald-700">(${primaryState.card_variant || 'A'})</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Pilih template default bawaan atau buat desain baru kustom manual.</p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" id="btn-card-use-default" class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-600 text-white shadow-xs">
+                      <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                      <span>Gunakan Desain Default</span>
+                    </button>
+                    <button type="button" id="btn-card-custom-design" class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-slate-100">
+                      <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                      <span>Buat Desain Baru</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- TOGGLE SWITCH: SIMPAN SEBAGAI DESAIN DEFAULT UNTUK MODEL INI -->
+                <div class="flex items-center justify-between p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl">
+                  <div class="space-y-0.5">
+                    <label for="cfg-save-as-default-toggle" class="text-xs font-bold text-emerald-950 flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="cfg-save-as-default-toggle" class="w-4 h-4 text-emerald-600 rounded cursor-pointer" />
+                      <span>Simpan Sebagai Desain Default untuk Model Ini</span>
+                    </label>
+                    <p class="text-[10px] text-emerald-700">Jika dicentang, token styling (Rating, Terjual, Coret, Badge Foto Diskon, Tiket, &amp; Countdown) disimpan sebagai template default model ini.</p>
+                  </div>
                 </div>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -925,30 +1030,9 @@ const ProductForm = (() => {
                   </div>
                 </div>
 
-                <!-- Input Aksi Tambah Label Baru dengan Dropdown Riwayat -->
-                <div class="flex items-center gap-2">
-                  <div class="relative flex-1">
-                    <input 
-                      type="text" 
-                      id="input-new-custom-label" 
-                      list="custom-labels-history-list"
-                      placeholder="Ketik atau pilih label riwayat (misal: Free Ongkir, Best Seller)..." 
-                      class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none bg-white font-medium"
-                    />
-                  </div>
-                  <button 
-                    type="button" 
-                    id="btn-add-custom-label" 
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shrink-0 shadow-xs cursor-pointer"
-                  >
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <span>+ Tambah Label</span>
-                  </button>
-                </div>
-
-                <!-- Tombol Preset Label Populer (1-Klik Tambah) -->
+                <!-- Tombol Preset Label Populer (1-Klik untuk Mengisi Slot 1 atau Slot 2) -->
                 <div class="space-y-1.5 pt-1">
-                  <span class="text-[11px] font-semibold text-slate-500">Pilih Preset Label Populer (1-Klik untuk Menambahkan):</span>
+                  <span class="text-[11px] font-semibold text-slate-500">Pilih Preset Label Populer (1-Klik untuk Mengisi Slot 1 atau 2):</span>
                   <div class="flex flex-wrap gap-1.5">
                     <button type="button" class="btn-preset-label px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Free Ongkir">+ Free Ongkir</button>
                     <button type="button" class="btn-preset-label px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Best Seller">+ Best Seller</button>
@@ -958,19 +1042,6 @@ const ProductForm = (() => {
                     <button type="button" class="btn-preset-label px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Free Sticker">+ Free Sticker</button>
                     <button type="button" class="btn-preset-label px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Free Potong">+ Free Potong</button>
                     <button type="button" class="btn-preset-label px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Diskon Spesial">+ Diskon Spesial</button>
-                  </div>
-                </div>
-
-                <!-- Wadah Daftar Label Terpasang (Chips Manager) -->
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="font-bold text-slate-700 flex items-center gap-1.5">
-                      <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
-                      <span>Label Khusus yang Terpasang (Aktif di Live Preview):</span>
-                    </span>
-                  </div>
-                  <div id="active-custom-labels-list" class="flex flex-wrap gap-2 min-h-[32px] items-center">
-                    <!-- Diisi dinamis oleh renderCustomLabelsChips() -->
                   </div>
                 </div>
 
@@ -1203,15 +1274,73 @@ const ProductForm = (() => {
   }
 
   function formatIDR(num) {
-    if (isNaN(num) || num === null || num === undefined) return 'Rp 0';
-    return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+    if (isNaN(num) || num === null || num === undefined) return 'Rp0';
+    return 'Rp' + Math.round(num).toLocaleString('id-ID');
   }
 
-  function loadCardConfigInputs(variantCode) {
+  function updateDesignChoiceButtonsState() {
+    const btnUseDef = document.getElementById('btn-card-use-default');
+    const btnCustom = document.getElementById('btn-card-custom-design');
+    const isDef = primaryState.use_default_card_design !== false;
+    if (btnUseDef) {
+      btnUseDef.className = isDef
+        ? 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-600 text-white shadow-xs'
+        : 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-slate-100';
+    }
+    if (btnCustom) {
+      btnCustom.className = !isDef
+        ? 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-600 text-white shadow-xs'
+        : 'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-slate-100';
+    }
+  }
+
+  function getCardConfigFromDOM() {
+    const badgeMain = document.getElementById('cfg-show-badge');
+    const badgeBlokA = document.getElementById('cfg-show-badge-blok-a');
+    const showBadgeVal = badgeMain ? badgeMain.checked : (badgeBlokA ? badgeBlokA.checked : true);
+    const enableCountdownVal = document.getElementById('cfg-enable-countdown')?.checked !== false;
+
+    return {
+      bg_color: document.getElementById('cfg-bg-color')?.value || '#ffffff',
+      border_color: document.getElementById('cfg-border-color')?.value || '#e2e8f0',
+      border_radius: document.getElementById('cfg-border-radius')?.value || '16px',
+      title_color: document.getElementById('cfg-title-color')?.value || '#0f172a',
+      price_color: document.getElementById('cfg-price-color')?.value || '#059669',
+      btn_color: document.getElementById('cfg-btn-color')?.value || '#059669',
+      show_rating: document.getElementById('cfg-show-rating')?.checked !== false,
+      show_sales_count: document.getElementById('cfg-show-sales')?.checked !== false,
+      show_strikethrough_price: document.getElementById('cfg-show-strike')?.checked !== false,
+      show_discount_badge: document.getElementById('cfg-show-discount-badge')?.checked !== false,
+      show_ticket_icon: document.getElementById('cfg-show-ticket-icon')?.checked !== false,
+      show_badge: showBadgeVal,
+      show_category_badge: showBadgeVal,
+      discount_badge_radius: document.getElementById('cfg-discount-badge-radius')?.value || '8px',
+      discount_badge_text_color: document.getElementById('cfg-discount-badge-text-color')?.value || '#ffffff',
+      discount_badge_bg_color: document.getElementById('cfg-discount-badge-bg-color')?.value || '#059669',
+      discount_badge_border_color: document.getElementById('cfg-discount-badge-border-color')?.value || '#059669',
+      badge_radius: document.getElementById('cfg-badge-radius')?.value || '6px',
+      badge_text_color: document.getElementById('cfg-badge-text-color')?.value || '#047857',
+      badge_bg_color: document.getElementById('cfg-badge-bg-color')?.value || '#ecfdf5',
+      badge_border_color: document.getElementById('cfg-badge-border-color')?.value || '#a7f3d0',
+      enable_countdown: enableCountdownVal,
+      countdown_radius: document.getElementById('cfg-countdown-radius')?.value || '9999px',
+      countdown_bg_color: document.getElementById('cfg-countdown-bg-color')?.value || '#059669',
+      countdown_text_color: document.getElementById('cfg-countdown-text-color')?.value || '#ffffff',
+      countdown_icon_color: document.getElementById('cfg-countdown-icon-color')?.value || '#ffffff',
+      countdown_border_color: document.getElementById('cfg-countdown-border-color')?.value || '#059669'
+    };
+  }
+
+  function loadCardConfigInputs(variantCode, forceDefault = false) {
     const sets = DB.getSettings();
     const configGroup = sets.card_variants_config || {};
     const key = variantCode === 'A' ? 'variant_a' : variantCode === 'B' ? 'variant_b' : 'variant_c';
-    const cfg = configGroup[key] || {};
+    
+    const useDefault = forceDefault || primaryState.use_default_card_design !== false;
+    primaryState.use_default_card_design = useDefault;
+
+    const defaultCfg = configGroup[key] || {};
+    const cfg = (!useDefault && primaryState.card_config) ? primaryState.card_config : defaultCfg;
     
     const setVal = (id, val) => {
       const el = document.getElementById(id);
@@ -1297,69 +1426,34 @@ const ProductForm = (() => {
     setVal('cfg-footer-2-bg-hex', f2Bg);
     setVal('cfg-footer-2-text-color', f2Txt);
     setVal('cfg-footer-2-text-hex', f2Txt);
+
+    setChk('cfg-save-as-default-toggle', false);
+    updateDesignChoiceButtonsState();
   }
 
-  function saveCardConfigInputs() {
+  function saveCardConfigInputs(forceSaveAsDefault = false) {
     const variantCode = primaryState.card_variant || 'A';
     const key = variantCode === 'A' ? 'variant_a' : variantCode === 'B' ? 'variant_b' : 'variant_c';
     const sets = DB.getSettings();
     if (!sets.card_variants_config) sets.card_variants_config = {};
     if (!sets.card_variants_config[key]) sets.card_variants_config[key] = {};
-    
-    const badgeMain = document.getElementById('cfg-show-badge');
-    const badgeBlokA = document.getElementById('cfg-show-badge-blok-a');
-    const showBadgeVal = badgeMain ? badgeMain.checked : (badgeBlokA ? badgeBlokA.checked : true);
-    const enableCountdownVal = document.getElementById('cfg-enable-countdown')?.checked !== false;
 
-    sets.card_variants_config[key] = {
-      bg_color: document.getElementById('cfg-bg-color')?.value || '#ffffff',
-      border_color: document.getElementById('cfg-border-color')?.value || '#e2e8f0',
-      border_radius: document.getElementById('cfg-border-radius')?.value || '16px',
-      title_color: document.getElementById('cfg-title-color')?.value || '#0f172a',
-      price_color: document.getElementById('cfg-price-color')?.value || '#059669',
-      btn_color: document.getElementById('cfg-btn-color')?.value || '#059669',
-      show_rating: document.getElementById('cfg-show-rating')?.checked !== false,
-      show_sales_count: document.getElementById('cfg-show-sales')?.checked !== false,
-      show_strikethrough_price: document.getElementById('cfg-show-strike')?.checked !== false,
-      show_discount_badge: document.getElementById('cfg-show-discount-badge')?.checked !== false,
-      show_ticket_icon: document.getElementById('cfg-show-ticket-icon')?.checked !== false,
-      show_badge: showBadgeVal,
-      show_category_badge: showBadgeVal,
-      discount_badge_radius: document.getElementById('cfg-discount-badge-radius')?.value || '8px',
-      discount_badge_text_color: document.getElementById('cfg-discount-badge-text-color')?.value || '#ffffff',
-      discount_badge_bg_color: document.getElementById('cfg-discount-badge-bg-color')?.value || '#059669',
-      discount_badge_border_color: document.getElementById('cfg-discount-badge-border-color')?.value || '#059669',
-      badge_radius: document.getElementById('cfg-badge-radius')?.value || '6px',
-      badge_text_color: document.getElementById('cfg-badge-text-color')?.value || '#047857',
-      badge_bg_color: document.getElementById('cfg-badge-bg-color')?.value || '#ecfdf5',
-      badge_border_color: document.getElementById('cfg-badge-border-color')?.value || '#a7f3d0',
-      enable_countdown: enableCountdownVal,
-      countdown_radius: document.getElementById('cfg-countdown-radius')?.value || '9999px',
-      countdown_bg_color: document.getElementById('cfg-countdown-bg-color')?.value || '#059669',
-      countdown_text_color: document.getElementById('cfg-countdown-text-color')?.value || '#ffffff',
-      countdown_icon_color: document.getElementById('cfg-countdown-icon-color')?.value || '#ffffff',
-      countdown_border_color: document.getElementById('cfg-countdown-border-color')?.value || '#059669',
-      footer_bg_color: document.getElementById('cfg-footer-bg-color')?.value || '#059669',
-      footer_text_color: document.getElementById('cfg-footer-text-color')?.value || '#ffffff',
-      footer_2_bg_color: document.getElementById('cfg-footer-2-bg-color')?.value || '#047857',
-      footer_2_text_color: document.getElementById('cfg-footer-2-text-color')?.value || '#ffffff'
-    };
-    
-    primaryState.enable_countdown = enableCountdownVal;
-    primaryState.countdown_radius = document.getElementById('cfg-countdown-radius')?.value || '9999px';
-    primaryState.countdown_bg_color = document.getElementById('cfg-countdown-bg-color')?.value || '#059669';
-    primaryState.countdown_text_color = document.getElementById('cfg-countdown-text-color')?.value || '#ffffff';
-    primaryState.countdown_icon_color = document.getElementById('cfg-countdown-icon-color')?.value || '#ffffff';
-    primaryState.countdown_border_color = document.getElementById('cfg-countdown-border-color')?.value || '#059669';
+    const cfg = getCardConfigFromDOM();
 
-    if (variantCode === 'C') {
-      primaryState.footer_bg_color = document.getElementById('cfg-footer-bg-color')?.value || '#059669';
-      primaryState.footer_text_color = document.getElementById('cfg-footer-text-color')?.value || '#ffffff';
-      primaryState.footer_2_bg_color = document.getElementById('cfg-footer-2-bg-color')?.value || '#047857';
-      primaryState.footer_2_text_color = document.getElementById('cfg-footer-2-text-color')?.value || '#ffffff';
+    if (primaryState.use_default_card_design === false) {
+      primaryState.card_config = { ...cfg };
+    } else {
+      delete primaryState.card_config;
     }
 
-    DB.saveSettings(sets);
+    const shouldSaveDefault = forceSaveAsDefault || (document.getElementById('cfg-save-as-default-toggle')?.checked === true);
+    if (shouldSaveDefault) {
+      sets.card_variants_config[key] = {
+        ...sets.card_variants_config[key],
+        ...cfg
+      };
+      DB.saveSettings(sets);
+    }
   }
 
   function updateProductCardLivePreview() {
@@ -1607,10 +1701,10 @@ const ProductForm = (() => {
               ${cfg.show_sales ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                    • 1RB+ Terjual
+                    1RB+ terjual
                   </span>
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                    • 1RB+
+                    ${(effHasDiscount && cfg.show_ticket_icon && (effFinalPrice >= 1000000 || origStrikePrice >= 1000000)) ? '1RB+ ter' : '1RB+ terjual'}
                   </span>
                 </div>
               ` : ''}
@@ -1672,10 +1766,10 @@ const ProductForm = (() => {
               ${cfg.show_sales ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                    • 1RB+ Terjual
+                    1RB+ terjual
                   </span>
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                    • 1RB+
+                    1RB+ terjual
                   </span>
                 </div>
               ` : ''}
@@ -1736,7 +1830,7 @@ const ProductForm = (() => {
                 ` : ''}
                 ${isCountdownActive ? `
                   <span class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 leading-none shrink-0 shadow-2xs" style="${countdownStyle}">
-                    <i data-lucide="ticket-percent" class="w-3 h-3 shrink-0" style="color: ${countdownIconColor};"></i>
+                    <i data-lucide="ticket-percent" class="w-3.5 h-3.5 shrink-0" style="color: ${countdownIconColor};"></i>
                     <span>Diskon Rp1,700RB b.... 1Hari</span>
                   </span>
                 ` : (cfg.show_badge ? customBadges.map(b => `
@@ -1767,10 +1861,10 @@ const ProductForm = (() => {
               ${cfg.show_sales ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                    • 1RB+ Terjual
+                    1RB+ terjual
                   </span>
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                    • 1RB+
+                    ${(effHasDiscount && cfg.show_ticket_icon && (effFinalPrice >= 1000000 || origStrikePrice >= 1000000)) ? '1RB+ ter' : '1RB+ terjual'}
                   </span>
                 </div>
               ` : ''}
@@ -1779,6 +1873,7 @@ const ProductForm = (() => {
         </div>
       `;
     }
+
 
     previewContainer.innerHTML = cardHtml;
     if (window.lucide) window.lucide.createIcons();
@@ -2230,6 +2325,41 @@ const ProductForm = (() => {
       }
     });
 
+    // Pilihan Mode Desain Kartu (Gunakan Default vs Buat Desain Baru)
+    const btnUseDef = document.getElementById('btn-card-use-default');
+    if (btnUseDef) {
+      btnUseDef.addEventListener('click', () => {
+        primaryState.use_default_card_design = true;
+        delete primaryState.card_config;
+        loadCardConfigInputs(primaryState.card_variant || 'A', true);
+        updateDesignChoiceButtonsState();
+        updateProductCardLivePreview();
+        if (typeof App !== 'undefined' && App.showToast) App.showToast('Menggunakan template default kartu.', 'info');
+      });
+    }
+
+    const btnCustomDesign = document.getElementById('btn-card-custom-design');
+    if (btnCustomDesign) {
+      btnCustomDesign.addEventListener('click', () => {
+        primaryState.use_default_card_design = false;
+        primaryState.card_config = getCardConfigFromDOM();
+        updateDesignChoiceButtonsState();
+        updateProductCardLivePreview();
+        if (typeof App !== 'undefined' && App.showToast) App.showToast('Mode kustom desain aktif untuk produk ini.', 'success');
+      });
+    }
+
+    // Toggle Simpan Sebagai Template Default
+    const toggleSaveDef = document.getElementById('cfg-save-as-default-toggle');
+    if (toggleSaveDef) {
+      toggleSaveDef.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          saveCardConfigInputs(true);
+          if (typeof App !== 'undefined' && App.showToast) App.showToast('Styling kartu disimpan sebagai default untuk model kartu.', 'success');
+        }
+      });
+    }
+
     // Countdown Toggle & Simulasi Live Preview
     const enableCdCheckbox = document.getElementById('cfg-enable-countdown');
     if (enableCdCheckbox) {
@@ -2336,26 +2466,41 @@ const ProductForm = (() => {
       });
     }
 
-    // Aksi Klik Preset Label Populer (1-Klik Tambah)
+    // Aksi Klik Preset Label Populer (1-Klik untuk Mengisi Slot 1 atau Slot 2)
     document.querySelectorAll('.btn-preset-label').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const lbl = e.currentTarget.getAttribute('data-label');
         if (!lbl) return;
         if (!Array.isArray(primaryState.custom_labels)) primaryState.custom_labels = [];
-        if (primaryState.custom_labels.includes(lbl)) {
-          if (typeof App !== 'undefined' && App.showToast) App.showToast(`Label "${lbl}" sudah ada!`, 'warning');
+
+        const inp1 = document.getElementById('input-custom-label-1');
+        const inp2 = document.getElementById('input-custom-label-2');
+        const val1 = (inp1 ? inp1.value : (primaryState.custom_labels[0] || '')).trim();
+        const val2 = (inp2 ? inp2.value : (primaryState.custom_labels[1] || '')).trim();
+
+        if (val1 === lbl || val2 === lbl) {
+          if (typeof App !== 'undefined' && App.showToast) App.showToast(`Label "${lbl}" sudah terpasang!`, 'warning');
           return;
         }
-        if (primaryState.custom_labels.length >= 2) {
-          if (typeof App !== 'undefined' && App.showToast) App.showToast('Maksimal 2 label khusus! Hapus salah satu terlebih dahulu.', 'warning');
-          else alert('Maksimal 2 label khusus! Hapus salah satu terlebih dahulu.');
-          return;
+
+        if (!val1) {
+          if (inp1) inp1.value = lbl;
+          primaryState.custom_labels[0] = lbl;
+          if (val2) primaryState.custom_labels[1] = val2;
+        } else if (!val2) {
+          if (inp2) inp2.value = lbl;
+          primaryState.custom_labels[0] = val1;
+          primaryState.custom_labels[1] = lbl;
+        } else {
+          // Jika dua-duanya terisi, perbarui Slot 2
+          if (inp2) inp2.value = lbl;
+          primaryState.custom_labels[0] = val1;
+          primaryState.custom_labels[1] = lbl;
         }
-        primaryState.custom_labels.push(lbl);
-        syncCustomLabelInputs();
+        primaryState.custom_labels = primaryState.custom_labels.filter(Boolean);
         renderCustomLabelsChips();
         updateProductCardLivePreview();
-        if (typeof App !== 'undefined' && App.showToast) App.showToast(`Label "${lbl}" ditambahkan!`, 'success');
+        if (typeof App !== 'undefined' && App.showToast) App.showToast(`Label "${lbl}" dimasukkan ke slot!`, 'success');
       });
     });
 
@@ -2580,11 +2725,11 @@ const ProductForm = (() => {
 
       if (type === 'percent') {
         const nominalEquiv = Math.round((firstMatPrice * val) / 100);
-        infoText.textContent = `Diskon ${val}% setara potongan Rp ${nominalEquiv.toLocaleString('id-ID')}/unit (Harga dasar: Rp ${firstMatPrice.toLocaleString('id-ID')})`;
+        infoText.textContent = `Diskon ${val}% setara potongan Rp${nominalEquiv.toLocaleString('id-ID')}/unit (Harga dasar: Rp${firstMatPrice.toLocaleString('id-ID')})`;
         infoBadge.textContent = `${Math.min(99, Math.round(val))}% OFF`;
       } else {
         const percentEquiv = Math.min(99, Math.round((val / firstMatPrice) * 100));
-        infoText.textContent = `Potongan Rp ${Math.round(val).toLocaleString('id-ID')} setara diskon ${percentEquiv}% (Harga dasar: Rp ${firstMatPrice.toLocaleString('id-ID')})`;
+        infoText.textContent = `Potongan Rp${Math.round(val).toLocaleString('id-ID')} setara diskon ${percentEquiv}% (Harga dasar: Rp${firstMatPrice.toLocaleString('id-ID')})`;
         infoBadge.textContent = `${percentEquiv}% OFF`;
       }
     }
@@ -2932,6 +3077,18 @@ const ProductForm = (() => {
       errors.push('Poin 5: Maksimal pesanan tidak boleh lebih kecil dari minimal pesanan.');
     }
 
+    // Validasi Label Khusus: jika "Tampilkan di Kartu" dicentang, wajibkan minimal 1 slot terisi
+    const isBadgeChecked = (document.getElementById('cfg-show-badge')?.checked === true) || 
+                           (document.getElementById('cfg-show-badge-blok-a')?.checked === true) ||
+                           (primaryState.show_badge === true && primaryState.show_custom_labels !== false);
+    if (isBadgeChecked) {
+      const slot1 = (document.getElementById('input-custom-label-1')?.value || primaryState.custom_labels?.[0] || '').trim();
+      const slot2 = (document.getElementById('input-custom-label-2')?.value || primaryState.custom_labels?.[1] || '').trim();
+      if (!slot1 && !slot2) {
+        errors.push('Label Khusus: Opsi "Tampilkan di Kartu" dicentang, minimal 1 Slot Label (Slot 1 atau Slot 2) wajib diisi.');
+      }
+    }
+
     return errors;
   }
 
@@ -2977,17 +3134,37 @@ const ProductForm = (() => {
     }
 
     // Sync Footer Colors & Texts for Card Variant C
-    if (primaryState.card_variant === 'C') {
-      const footerBgInput = document.getElementById('cfg-footer-bg-color');
-      const footerTextInput = document.getElementById('cfg-footer-text-color');
-      if (footerBgInput) primaryState.footer_bg_color = footerBgInput.value;
-      if (footerTextInput) primaryState.footer_text_color = footerTextInput.value;
+    const footer1Val = (document.getElementById('input-card-footer-text')?.value || primaryState.custom_footer_1?.text || primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam').trim();
+    const footer1IconVal = document.getElementById('select-card-footer-icon')?.value || primaryState.custom_footer_1?.icon || primaryState.footer_badge_icon || 'truck';
+    const footer1BgVal = document.getElementById('cfg-footer-bg-color')?.value || primaryState.custom_footer_1?.bg_color || primaryState.footer_bg_color || '#059669';
+    const footer1TextColVal = document.getElementById('cfg-footer-text-color')?.value || primaryState.custom_footer_1?.text_color || primaryState.footer_text_color || '#ffffff';
 
-      const footer2BgInput = document.getElementById('cfg-footer-2-bg-color');
-      const footer2TextInput = document.getElementById('cfg-footer-2-text-color');
-      if (footer2BgInput) primaryState.footer_2_bg_color = footer2BgInput.value;
-      if (footer2TextInput) primaryState.footer_2_text_color = footer2TextInput.value;
-    }
+    const footer2Val = (document.getElementById('input-card-footer-2-text')?.value || primaryState.custom_footer_2?.text || primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia').trim();
+    const footer2IconVal = document.getElementById('select-card-footer-2-icon')?.value || primaryState.custom_footer_2?.icon || primaryState.footer_2_badge_icon || 'minus';
+    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || '#047857';
+    const footer2TextColVal = document.getElementById('cfg-footer-2-text-color')?.value || primaryState.custom_footer_2?.text_color || primaryState.footer_2_text_color || '#ffffff';
+
+    primaryState.custom_footer_1 = {
+      text: footer1Val,
+      icon: footer1IconVal,
+      bg_color: footer1BgVal,
+      text_color: footer1TextColVal
+    };
+    primaryState.card_footer_text = footer1Val;
+    primaryState.footer_badge_icon = footer1IconVal;
+    primaryState.footer_bg_color = footer1BgVal;
+    primaryState.footer_text_color = footer1TextColVal;
+
+    primaryState.custom_footer_2 = {
+      text: footer2Val,
+      icon: footer2IconVal,
+      bg_color: footer2BgVal,
+      text_color: footer2TextColVal
+    };
+    primaryState.card_footer_2_text = footer2Val;
+    primaryState.footer_2_badge_icon = footer2IconVal;
+    primaryState.footer_2_bg_color = footer2BgVal;
+    primaryState.footer_2_text_color = footer2TextColVal;
 
     // Save labels & footers to persistent history dropdown
     if (Array.isArray(primaryState.custom_labels)) {
@@ -3053,7 +3230,10 @@ const ProductForm = (() => {
       return loadProductForEdit(id);
     },
     updateLiveCardPreview: updateProductCardLivePreview,
-    updateProductCardLivePreview
+    updateProductCardLivePreview,
+    getLastProductFooterConfig,
+    validateForm,
+    getPrimaryState: () => primaryState
   };
 })();
 

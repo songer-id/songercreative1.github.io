@@ -2481,10 +2481,13 @@ const DB = (() => {
       return enriched;
     },
 
-    createProduct(productData, materialsList, finishingsList) {
+    createProduct(productData, materialsList = [], finishingsList = []) {
       const products = getTable(STORAGE_KEYS.PRODUCTS) || [];
       const materials = getTable(STORAGE_KEYS.MATERIALS) || [];
       const finishings = getTable(STORAGE_KEYS.FINISHINGS) || [];
+
+      if (!Array.isArray(materialsList)) materialsList = [];
+      if (!Array.isArray(finishingsList)) finishingsList = [];
 
       const newId = generateUUID();
       const now = new Date().toISOString();
@@ -2514,6 +2517,18 @@ const DB = (() => {
         images: images,
         description: productData.description ? productData.description.trim() : null,
         custom_labels: Array.isArray(productData.custom_labels) ? productData.custom_labels.filter(Boolean) : (typeof productData.custom_labels === 'string' && productData.custom_labels.trim() ? productData.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : []),
+        custom_footer_1: productData.custom_footer_1 || {
+          text: productData.card_footer_text ? productData.card_footer_text.trim() : 'Proses Hanya Dalam 1Jam',
+          icon: productData.footer_badge_icon ? productData.footer_badge_icon.trim() : 'truck',
+          bg_color: productData.footer_bg_color || null,
+          text_color: productData.footer_text_color || null
+        },
+        custom_footer_2: productData.custom_footer_2 || {
+          text: productData.card_footer_2_text ? productData.card_footer_2_text.trim() : 'Variasi Paket Tersedia/tidak tersedia',
+          icon: productData.footer_2_badge_icon ? productData.footer_2_badge_icon.trim() : 'minus',
+          bg_color: productData.footer_2_bg_color || null,
+          text_color: productData.footer_2_text_color || null
+        },
         card_footer_text: productData.card_footer_text ? productData.card_footer_text.trim() : 'Proses Hanya Dalam 1Jam',
         footer_badge_icon: productData.footer_badge_icon ? productData.footer_badge_icon.trim() : 'truck',
         footer_bg_color: productData.footer_bg_color || null,
@@ -2572,10 +2587,13 @@ const DB = (() => {
       return newProduct;
     },
 
-    updateProduct(id, productData, materialsList, finishingsList) {
+    updateProduct(id, productData, materialsList = [], finishingsList = []) {
       let products = getTable(STORAGE_KEYS.PRODUCTS) || [];
       let materials = getTable(STORAGE_KEYS.MATERIALS) || [];
       let finishings = getTable(STORAGE_KEYS.FINISHINGS) || [];
+
+      if (!Array.isArray(materialsList)) materialsList = [];
+      if (!Array.isArray(finishingsList)) finishingsList = [];
 
       const index = products.findIndex(p => p.id === id);
       if (index === -1) throw new Error('Produk tidak ditemukan!');
@@ -2606,6 +2624,18 @@ const DB = (() => {
         images: images,
         description: productData.description ? productData.description.trim() : null,
         custom_labels: productData.custom_labels !== undefined ? (Array.isArray(productData.custom_labels) ? productData.custom_labels.filter(Boolean) : (typeof productData.custom_labels === 'string' && productData.custom_labels.trim() ? productData.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])) : (products[index].custom_labels || []),
+        custom_footer_1: productData.custom_footer_1 !== undefined ? productData.custom_footer_1 : (products[index].custom_footer_1 || {
+          text: products[index].card_footer_text || 'Proses Hanya Dalam 1Jam',
+          icon: products[index].footer_badge_icon || 'truck',
+          bg_color: products[index].footer_bg_color || null,
+          text_color: products[index].footer_text_color || null
+        }),
+        custom_footer_2: productData.custom_footer_2 !== undefined ? productData.custom_footer_2 : (products[index].custom_footer_2 || {
+          text: products[index].card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
+          icon: products[index].footer_2_badge_icon || 'minus',
+          bg_color: products[index].footer_2_bg_color || null,
+          text_color: products[index].footer_2_text_color || null
+        }),
         card_footer_text: productData.card_footer_text !== undefined ? productData.card_footer_text.trim() : (products[index].card_footer_text || 'Proses Hanya Dalam 1Jam'),
         footer_badge_icon: productData.footer_badge_icon !== undefined ? productData.footer_badge_icon.trim() : (products[index].footer_badge_icon || 'truck'),
         footer_bg_color: productData.footer_bg_color !== undefined ? productData.footer_bg_color : (products[index].footer_bg_color || null),

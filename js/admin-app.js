@@ -1685,13 +1685,13 @@ const AdminApp = (() => {
     const changeEl = document.getElementById('pos-change-display');
     if (changeEl) {
       if (cashVal === 0) {
-        changeEl.textContent = 'Rp 0';
+        changeEl.textContent = 'Rp0';
         changeEl.className = 'font-mono font-black text-slate-700 text-sm';
       } else if (change >= 0) {
-        changeEl.textContent = `Rp ${change.toLocaleString('id-ID')}`;
+        changeEl.textContent = `Rp${change.toLocaleString('id-ID')}`;
         changeEl.className = 'font-mono font-black text-emerald-700 text-sm';
       } else {
-        changeEl.textContent = `Kurang Rp ${Math.abs(change).toLocaleString('id-ID')}`;
+        changeEl.textContent = `Kurang Rp${Math.abs(change).toLocaleString('id-ID')}`;
         changeEl.className = 'font-mono font-black text-red-600 text-sm';
       }
     }
@@ -2221,7 +2221,7 @@ const AdminApp = (() => {
     if (!container) return;
 
     const metrics = DB.getDashboardMetrics();
-    const formatIDR = (num) => 'Rp ' + Math.round(num || 0).toLocaleString('id-ID');
+    const formatIDR = (num) => 'Rp' + Math.round(num || 0).toLocaleString('id-ID');
 
     // 6-Month historical chart calculation
     const trends = metrics.monthlyTrends || [];
@@ -2512,7 +2512,7 @@ const AdminApp = (() => {
     const isWeb = ord.channel === 'WEB_WA';
     const d = new Date(ord.created_at);
     const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    const formatIDR = (num) => 'Rp ' + Math.round(num || 0).toLocaleString('id-ID');
+    const formatIDR = (num) => 'Rp' + Math.round(num || 0).toLocaleString('id-ID');
 
     let statusBadge = '';
     const st = (ord.status || 'PENDING').toUpperCase();
@@ -2654,7 +2654,7 @@ const AdminApp = (() => {
     if (!container) return;
 
     const allOrders = DB.getOrders();
-    const formatIDR = (num) => 'Rp ' + Math.round(num || 0).toLocaleString('id-ID');
+    const formatIDR = (num) => 'Rp' + Math.round(num || 0).toLocaleString('id-ID');
 
     // Filter by search query
     let filteredOrders = [...allOrders];
@@ -2813,7 +2813,7 @@ const AdminApp = (() => {
     if (titleEl) titleEl.textContent = `Faktur Pesanan - ${order.customer_name || 'Pelanggan'}`;
     if (invoiceIdEl) invoiceIdEl.textContent = `#${order.invoice_number}`;
 
-    const formatIDR = (num) => 'Rp ' + Math.round(num || 0).toLocaleString('id-ID');
+    const formatIDR = (num) => 'Rp' + Math.round(num || 0).toLocaleString('id-ID');
     const d = new Date(order.created_at);
     const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
@@ -3036,7 +3036,10 @@ const AdminApp = (() => {
     if (heroModel === 'model_4') heroModel = 'split';
     const heroMobileRatio = settings.hero_mobile_ratio || '16:5';
     const heroWidthLayout = settings.hero_width_layout || 'boxed';
+    const heroSplitMobile = settings.hero_split_mobile || 'image_top';
     const heroShowArrows = settings.hero_show_arrows !== false;
+    const heroEnabled = settings.hero_enabled !== false && settings.enable_hero !== false;
+    const heroSplitDesktopPos = settings.hero_split_desktop_pos || 'text_left';
     const cardProductVersion = settings.card_product_version || 'v1';
 
     // Navbar Branding Mode & Custom Text Colors
@@ -3536,51 +3539,195 @@ const AdminApp = (() => {
 
           <!-- BAGIAN 3: VARIAN MODEL HERO, ASPEK RASIO & PANEL KUSTOMISASI LENGKAP -->
           <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-6">
-            <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-sm">
-                3
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-sm">
+                  3
+                </div>
+                <div>
+                  <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Hero Banner: Model Split, Text-Only &amp; Non-Split</h3>
+                  <p class="text-xs text-slate-500">Pilih antara Mode Normal (Gambar Penuh), Mode Split (Teks 40% &amp; Gambar 60%), atau Mode Hanya Teks (Text-Only), dan sesuaikan tampilan kartu secara menyeluruh.</p>
+                </div>
               </div>
-              <div>
-                <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Hero Banner: Aspek Rasio, Variabel Split &amp; Kustomisasi Lengkap</h3>
-                <p class="text-xs text-slate-500">Pilih antara Mode Normal (Gambar Penuh) atau Mode Split (Teks Kiri + Wadah Gambar Kanan), dan sesuaikan sudut lengkung, bayangan, tipografi, serta CTA.</p>
+              <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl shrink-0">
+                <label for="hero-enable-toggle" class="text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer">
+                  <span>Hero Banner Toggle [On / Off]</span>
+                  <input type="checkbox" id="hero-enable-toggle" class="w-4 h-4 text-emerald-600 rounded cursor-pointer" ${heroEnabled ? 'checked' : ''} />
+                </label>
               </div>
             </div>
 
-            <!-- PILIHAN UTAMA: MODE NORMAL (NON-SPLIT) VS MODE SPLIT -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <!-- CONTAINER KONFIGURASI HERO BANNER -->
+            <div id="hero-configuration-body" class="${heroEnabled ? 'space-y-6' : 'hidden space-y-6'}">
+
+            <!-- PILIHAN UTAMA: 3 MODEL HERO BANNER SESUAI SPESIFIKASI -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               
               <!-- [1] Mode Normal / Non-Split (Gambar Penuh) -->
-              <label class="hero-model-card p-4 rounded-2xl border ${(heroModel === 'non_split' || heroModel === 'model_2' || !heroModel) ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-2 block" data-model="non_split">
+              <label class="hero-model-card p-4 rounded-2xl border ${(heroModel === 'non_split' || heroModel === 'model_2' || (!heroModel && heroModel !== 'split' && heroModel !== 'model_1')) ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-2 block" data-model="non_split">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-slate-900 flex items-center gap-2">
                     <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
-                    Mode Normal / Non-Split (Gambar Penuh)
+                    Mode Normal (Gambar Penuh)
                   </span>
-                  <input type="radio" name="hero_model_radio" value="non_split" ${(heroModel === 'non_split' || heroModel === 'model_2' || !heroModel) ? 'checked' : ''} class="text-emerald-600" />
+                  <input type="radio" name="hero_model_radio" value="non_split" ${(heroModel === 'non_split' || heroModel === 'model_2' || (!heroModel && heroModel !== 'split' && heroModel !== 'model_1')) ? 'checked' : ''} class="text-emerald-600" />
                 </div>
                 <p class="text-slate-500 text-[11px] leading-relaxed">
-                  Gambar banner memenuhi kontainer secara penuh (Desktop 9:2 / 4.5:1 &amp; Mobile 16:5 / 3.2:1). Tombol CTA otomatis disembunyikan.
+                  Gambar banner memenuhi kontainer secara penuh (Desktop 9:2 / 4.5:1 &amp; Mobile 16:5 / 3.2:1).
                 </p>
               </label>
 
-              <!-- [2] Mode Split (Teks Kiri + Wadah Gambar Kanan) -->
+              <!-- [2] Mode Split (Teks Kiri 40% + Wadah Gambar Kanan 60%) -->
               <label class="hero-model-card p-4 rounded-2xl border ${(heroModel === 'split' || heroModel === 'model_4') ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-2 block" data-model="split">
                 <div class="flex items-center justify-between">
                   <span class="font-bold text-slate-900 flex items-center gap-2">
                     <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">2</span>
-                    Mode Split (Teks Kiri + Wadah Gambar Kanan)
+                    Mode Split (Teks &amp; Gambar)
                   </span>
                   <input type="radio" name="hero_model_radio" value="split" ${(heroModel === 'split' || heroModel === 'model_4') ? 'checked' : ''} class="text-emerald-600" />
                 </div>
                 <p class="text-slate-500 text-[11px] leading-relaxed">
-                  Tata letak Side-by-Side: Teks &amp; CTA di kolom kiri (55% – 60%) dan kotak gambar di kolom kanan (40% – 45%). Tinggi total konsisten mengikuti banner utama.
+                  Desktop: Teks 40% di kiri dan Gambar 60% di kanan. Mobile: susunan fleksibel atas/bawah.
+                </p>
+              </label>
+
+              <!-- [3] Mode Hanya Teks (Text-Only) -->
+              <label class="hero-model-card p-4 rounded-2xl border ${(heroModel === 'model_1') ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-2 block" data-model="model_1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-900 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">3</span>
+                    Mode Hanya Teks (Text-Only)
+                  </span>
+                  <input type="radio" name="hero_model_radio" value="model_1" ${(heroModel === 'model_1') ? 'checked' : ''} class="text-emerald-600" />
+                </div>
+                <p class="text-slate-500 text-[11px] leading-relaxed">
+                  Kartu headline promo elegan tanpa gambar. Warna solid / gradien, sudut &amp; bayangan dapat diatur.
                 </p>
               </label>
 
             </div>
 
+            <!-- PENGATURAN TATA LETAK HERO SPLIT DI MOBILE (< 768px) -->
+            <div id="hero-split-mobile-layout-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 ${(heroModel === 'split' || heroModel === 'model_4') ? '' : 'hidden'}">
+              <div class="flex items-center gap-2">
+                <i data-lucide="smartphone" class="w-4 h-4 text-emerald-600"></i>
+                <h4 class="font-extrabold text-xs sm:text-sm text-slate-900">Tata Letak Hero Split di Layar Ponsel / Mobile (&lt; 768px):</h4>
+              </div>
+              <p class="text-[11px] text-slate-500">Pilih susunan vertikal kolom pada smartphone agar tampilan etalase proporsional dan mudah dibaca:</p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <!-- Opsi 1: Gambar di Atas Teks (flex flex-col) -->
+                <label class="hero-split-mobile-choice-card p-3.5 rounded-xl border ${heroSplitMobile === 'image_top' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1.5" data-split-mobile="image_top">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
+                      <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
+                      <span>Gambar di Atas Teks (flex flex-col)</span>
+                    </span>
+                    <input type="radio" name="hero_split_mobile_radio" value="image_top" ${heroSplitMobile === 'image_top' ? 'checked' : ''} class="text-emerald-600" />
+                  </div>
+                  <p class="text-slate-500 text-[11px] leading-relaxed">
+                    Gambar tampil di bagian atas memenuhi lebar layar secara proporsional, diikuti teks judul &amp; deskripsi di bawahnya.
+                  </p>
+                </label>
+
+                <!-- Opsi 2: Gambar di Bawah Teks (flex flex-col-reverse) -->
+                <label class="hero-split-mobile-choice-card p-3.5 rounded-xl border ${heroSplitMobile === 'image_bottom' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1.5" data-split-mobile="image_bottom">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
+                      <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">2</span>
+                      <span>Gambar di Bawah Teks (flex flex-col-reverse)</span>
+                    </span>
+                    <input type="radio" name="hero_split_mobile_radio" value="image_bottom" ${heroSplitMobile === 'image_bottom' ? 'checked' : ''} class="text-emerald-600" />
+                  </div>
+                  <p class="text-slate-500 text-[11px] leading-relaxed">
+                    Teks judul promosi &amp; deskripsi tampil lebih dulu di atas, lalu kotak gambar membentang di bagian bawahnya.
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            <!-- PENGATURAN POSISI HERO SPLIT DI DESKTOP (>= 768px) -->
+            <div id="hero-split-desktop-layout-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 ${(heroModel === 'split' || heroModel === 'model_4') ? '' : 'hidden'}">
+              <div class="flex items-center gap-2">
+                <i data-lucide="monitor" class="w-4 h-4 text-emerald-600"></i>
+                <h4 class="font-extrabold text-xs sm:text-sm text-slate-900">Posisi Hero Split di Layar Desktop (≥ 768px):</h4>
+              </div>
+              <p class="text-[11px] text-slate-500">Teks 40% dan Gambar 60%, tentukan posisi tata letak horizontal di layar desktop:</p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <!-- Opsi 1: Teks di Kiri (40%) & Gambar di Kanan (60%) -->
+                <label class="hero-split-desktop-choice-card p-3.5 rounded-xl border ${heroSplitDesktopPos === 'text_left' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1.5" data-split-desktop="text_left">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
+                      <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
+                      <span>Teks di Kiri (40%) &amp; Gambar di Kanan (60%)</span>
+                    </span>
+                    <input type="radio" name="hero_split_desktop_pos_radio" value="text_left" ${heroSplitDesktopPos === 'text_left' ? 'checked' : ''} class="text-emerald-600" />
+                  </div>
+                  <p class="text-slate-500 text-[11px] leading-relaxed">
+                    Kolom teks judul promosi berada di sebelah kiri dan wadah slider gambar membentang di sebelah kanan.
+                  </p>
+                </label>
+
+                <!-- Opsi 2: Gambar di Kiri (60%) & Teks di Kanan (40%) -->
+                <label class="hero-split-desktop-choice-card p-3.5 rounded-xl border ${heroSplitDesktopPos === 'image_left' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1.5" data-split-desktop="image_left">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
+                      <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">2</span>
+                      <span>Gambar di Kiri (60%) &amp; Teks di Kanan (40%)</span>
+                    </span>
+                    <input type="radio" name="hero_split_desktop_pos_radio" value="image_left" ${heroSplitDesktopPos === 'image_left' ? 'checked' : ''} class="text-emerald-600" />
+                  </div>
+                  <p class="text-slate-500 text-[11px] leading-relaxed">
+                    Wadah slider gambar berada di sebelah kiri dan kolom teks judul promosi berada di sebelah kanan.
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            <!-- PANEL KUSTOMISASI LATAR BELAKANG KARTU (Khusus Mode Hanya Teks / Text-Only) -->
+            <div id="hero-text-background-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 ${heroModel === 'model_1' ? '' : 'hidden'}">
+              <div class="flex items-center gap-2 text-slate-800 font-bold text-xs sm:text-sm">
+                <i data-lucide="paint-bucket" class="w-4 h-4 text-emerald-600"></i>
+                <span>Warna Latar Kartu Hero (Mode Hanya Teks)</span>
+              </div>
+              <p class="text-[11px] text-slate-500">Pilih warna solid atau kombinasi gradien untuk kartu teks promosi etalase toko:</p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <!-- Tipe Background -->
+                <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+                  <label class="block font-bold text-slate-700">Tipe Latar Belakang:</label>
+                  <select id="hero-bg-type-select" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold outline-none focus:border-emerald-500 bg-white text-xs">
+                    <option value="solid" ${heroBgType === 'solid' ? 'selected' : ''}>Warna Solid Tunggal</option>
+                    <option value="linear_gradient" ${heroBgType === 'linear_gradient' ? 'selected' : ''}>Gradien Linear (Linear)</option>
+                    <option value="radial_gradient" ${heroBgType === 'radial_gradient' ? 'selected' : ''}>Gradien Radial (Radial)</option>
+                  </select>
+                </div>
+
+                <!-- Warna 1 -->
+                <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+                  <label class="block font-bold text-slate-700">Warna Utama (Warna 1):</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" id="hero-bg-color1-picker" value="${heroBgColor1}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                    <input type="text" id="hero-bg-color1-hex" value="${heroBgColor1}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
+                  </div>
+                </div>
+
+                <!-- Warna 2 (Untuk Gradien) -->
+                <div id="hero-gradient-extra-col" class="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5 shadow-2xs ${heroBgType === 'solid' ? 'hidden' : ''}">
+                  <label class="block font-bold text-slate-700">Warna Kedua &amp; Sudut:</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" id="hero-bg-color2-picker" value="${heroBgColor2}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                    <input type="text" id="hero-bg-color2-hex" value="${heroBgColor2}" maxlength="7" class="w-20 px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
+                    <input type="number" id="hero-bg-angle-input" min="0" max="360" value="${heroBgAngle}" class="w-14 px-1.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs text-right font-bold" title="Sudut Gradien (°)" />
+                    <span class="text-slate-400 font-mono text-xs">°</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- STANDARISASI ASPEK RASIO BANNER HERO -->
-            <div id="hero-mobile-ratio-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+            <div id="hero-mobile-ratio-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5 ${heroModel === 'model_1' ? 'hidden' : ''}">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <i data-lucide="scan-line" class="w-4 h-4 text-emerald-600"></i>
@@ -3610,7 +3757,7 @@ const AdminApp = (() => {
             </div>
 
             <!-- PILIHAN VARIAN LEBAR LAYOUT HERO -->
-            <div id="hero-layout-width-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <div id="hero-layout-width-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 ${(heroModel === 'split' || heroModel === 'model_4' || heroModel === 'model_1') ? 'hidden' : ''}">
               <div class="flex items-center gap-2">
                 <i data-lucide="layout" class="w-4 h-4 text-emerald-600"></i>
                 <h4 class="font-extrabold text-xs sm:text-sm text-slate-900">Pilih Varian Lebar Layout Hero:</h4>
@@ -3648,13 +3795,13 @@ const AdminApp = (() => {
               </div>
             </div>
 
-            <!-- PANEL 1: KUSTOMISASI KONTAINER HERO (Khusus Varian Boxed / Standar) -->
-            <div id="hero-container-customization-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 ${heroWidthLayout === 'full' ? 'hidden' : ''}">
+            <!-- PANEL 1: KUSTOMISASI KONTAINER HERO (Khusus Varian Boxed / Standar & Mode Teks) -->
+            <div id="hero-container-customization-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 ${(heroWidthLayout === 'full' && (heroModel === 'non_split' || heroModel === 'model_2')) ? 'hidden' : ''}">
               <div class="flex items-center gap-2 text-slate-800 font-bold text-xs sm:text-sm">
                 <i data-lucide="square" class="w-4 h-4 text-emerald-600"></i>
-                <span>1. Kontainer Hero (Khusus Varian Boxed / Standar)</span>
+                <span>1. Kontainer &amp; Sudut Hero (Border Radius &amp; Shadow)</span>
               </div>
-              <p class="text-[11px] text-slate-500">Atur kelengkungan sudut kontainer dan efek bayangan luar untuk varian lebar standar:</p>
+              <p class="text-[11px] text-slate-500">Atur kelengkungan sudut kontainer (0–32px) dan efek bayangan luar untuk varian standar atau mode teks:</p>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <!-- Sudut Lengkung Kontainer (0px - 32px) -->
@@ -3734,7 +3881,7 @@ const AdminApp = (() => {
                 <i data-lucide="image" class="w-4 h-4 text-emerald-600"></i>
                 <span>3. Kotak Gambar Hero (Mode Split)</span>
               </div>
-              <p class="text-[11px] text-slate-500">Wadah gambar terisolasi di sisi kanan (~40% - 45% lebar total). Jika gambar khusus tidak diunggah, gambar banner utama otomatis dipotong rapi secara seimbang di sisi kiri dan kanan (cover &amp; center).</p>
+              <p class="text-[11px] text-slate-500">Wadah gambar terisolasi di sisi kanan (~60% lebar desktop). Jika gambar khusus tidak diunggah, gambar banner utama otomatis dipotong rapi secara seimbang di sisi kiri dan kanan (cover &amp; center).</p>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <!-- Sudut Lengkung Gambar (0px - 24px) -->
@@ -3800,83 +3947,7 @@ const AdminApp = (() => {
               </div>
             </div>
 
-            <!-- PANEL 4: KUSTOMISASI TOMBOL CALL TO ACTION (CTA) (Mode Split & Text-Only) -->
-            <div id="hero-cta-section" class="p-4 sm:p-5 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-4 ${(heroModel === 'non_split' || heroModel === 'model_2') ? 'hidden' : ''}">
-              <div class="flex items-center justify-between border-b border-emerald-200/80 pb-2">
-                <span class="font-bold text-emerald-950 flex items-center gap-1.5 text-xs sm:text-sm">
-                  <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-emerald-700"></i>
-                  4. Kustomisasi Tombol Call to Action (CTA)
-                </span>
-                <span class="text-[10px] text-emerald-800 font-semibold bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  Aktif di Mode Split &amp; Mode Teks
-                </span>
-              </div>
-
-              <!-- Form Lengkap 6 Parameter CTA Sesuai Spesifikasi -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 text-xs">
-                <!-- 1. Teks Tombol CTA -->
-                <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1 shadow-2xs">
-                  <label class="block text-[11px] font-bold text-slate-700">1. Teks Tombol CTA:</label>
-                  <input type="text" id="hero-cta1-text-input" value="${escapeHtml(heroCta1Text)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold text-xs outline-none focus:border-emerald-500" placeholder="Contoh: Lihat Semua Katalog" />
-                </div>
-
-                <!-- 2. URL / Tautan Tujuan -->
-                <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1 shadow-2xs">
-                  <label class="block text-[11px] font-bold text-slate-700">2. URL / Tautan Tujuan:</label>
-                  <input type="text" id="hero-cta1-link-input" value="${escapeHtml(heroCta1Link)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs outline-none focus:border-emerald-500" placeholder="#katalog-section atau https://..." />
-                </div>
-
-                <!-- 3. Warna Teks CTA -->
-                <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1 shadow-2xs">
-                  <label class="block text-[11px] font-bold text-slate-700">3. Warna Teks CTA:</label>
-                  <div class="flex items-center gap-2">
-                    <input type="color" id="hero-cta1-text-picker" value="${heroCta1TextColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                    <input type="text" id="hero-cta1-text-hex" value="${heroCta1TextColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                  </div>
-                </div>
-
-                <!-- 4. Warna Latar Tombol CTA -->
-                <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1 shadow-2xs">
-                  <label class="block text-[11px] font-bold text-slate-700">4. Warna Latar Tombol CTA:</label>
-                  <div class="flex items-center gap-2">
-                    <input type="color" id="hero-cta1-bg-picker" value="${heroCta1Bg}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                    <input type="text" id="hero-cta1-bg-hex" value="${heroCta1Bg}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                  </div>
-                </div>
-
-                <!-- 5. Sudut Lengkung (Border Radius) Tombol CTA -->
-                <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1.5 shadow-2xs">
-                  <div class="flex items-center justify-between">
-                    <label class="text-[11px] font-bold text-slate-700">5. Sudut Lengkung CTA:</label>
-                    <div class="flex items-center gap-1">
-                      <input type="number" id="hero-cta-radius-number" min="0" max="24" value="${heroCtaRadiusNum}" class="w-12 px-1.5 py-0.5 rounded border border-slate-300 font-mono text-[11px] text-right font-bold" />
-                      <span class="text-slate-400 font-mono text-[10px]">px</span>
-                    </div>
-                  </div>
-                  <input type="range" id="hero-cta-radius-slider" min="0" max="24" value="${heroCtaRadiusNum}" class="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-emerald-600" />
-                  <div class="flex flex-wrap items-center gap-1">
-                    <button type="button" class="hero-cta-radius-preset px-1.5 py-0.2 rounded text-[9px] font-bold ${heroCtaRadiusNum === 0 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'} cursor-pointer" data-radius="0">0px</button>
-                    <button type="button" class="hero-cta-radius-preset px-1.5 py-0.2 rounded text-[9px] font-bold ${heroCtaRadiusNum === 6 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'} cursor-pointer" data-radius="6">6px</button>
-                    <button type="button" class="hero-cta-radius-preset px-1.5 py-0.2 rounded text-[9px] font-bold ${heroCtaRadiusNum === 12 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'} cursor-pointer" data-radius="12">12px</button>
-                    <button type="button" class="hero-cta-radius-preset px-1.5 py-0.2 rounded text-[9px] font-bold ${heroCtaRadiusNum === 16 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'} cursor-pointer" data-radius="16">16px</button>
-                    <button type="button" class="hero-cta-radius-preset px-1.5 py-0.2 rounded text-[9px] font-bold ${heroCtaRadiusNum === 24 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'} cursor-pointer" data-radius="24">24px</button>
-                  </div>
-                </div>
-
-                <!-- 6. Efek Bayangan (Box Shadow) Tombol CTA -->
-                <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1 shadow-2xs">
-                  <label class="block text-[11px] font-bold text-slate-700">6. Efek Bayangan CTA:</label>
-                  <select id="hero-cta-shadow-select" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold outline-none focus:border-emerald-500 bg-white text-xs">
-                    <option value="none" ${heroCtaShadow === 'none' ? 'selected' : ''}>none (Tanpa Bayangan)</option>
-                    <option value="sm" ${heroCtaShadow === 'sm' ? 'selected' : ''}>sm (Tipis)</option>
-                    <option value="md" ${heroCtaShadow === 'md' ? 'selected' : ''}>md (Sedang - Standar)</option>
-                    <option value="lg" ${heroCtaShadow === 'lg' ? 'selected' : ''}>lg (Tebal Menonjol)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- PANEL 5: NAVIGASI INDIKATOR TITIK (DOTS) & SLIDER BANNER -->
+            <!-- PANEL 4: NAVIGASI INDIKATOR TITIK (DOTS) & SLIDER BANNER -->
             <div id="hero-banner-controls-section" class="space-y-4 pt-4 border-t border-slate-100 text-xs ${heroModel === 'model_1' ? 'hidden' : ''}">
               <div class="flex items-center gap-2 text-slate-700 font-bold">
                 <i data-lucide="images" class="w-4 h-4 text-emerald-600"></i>
@@ -3999,6 +4070,7 @@ const AdminApp = (() => {
               </label>
             </div>
 
+            </div>
           </div>
 
           <!-- BAGIAN 4: FORMAT & VARIAN NAVIGASI KATEGORI (QUICK FILTER) -->
@@ -4396,6 +4468,14 @@ const AdminApp = (() => {
     }
 
     function syncHeroFormVisibility() {
+      const heroEnableToggle = document.getElementById('hero-enable-toggle');
+      const isHeroEnabled = heroEnableToggle ? heroEnableToggle.checked : true;
+      const heroConfigWrapper = document.getElementById('hero-configuration-body');
+      if (heroConfigWrapper) {
+        if (!isHeroEnabled) heroConfigWrapper.classList.add('hidden');
+        else heroConfigWrapper.classList.remove('hidden');
+      }
+
       const selectedModel = document.querySelector('input[name="hero_model_radio"]:checked')?.value || 'non_split';
       
       // Update radio cards active styles
@@ -4412,6 +4492,7 @@ const AdminApp = (() => {
       });
 
       const widthSection = document.getElementById('hero-layout-width-section');
+      const ratioSection = document.getElementById('hero-mobile-ratio-section');
       const unselectedMsg = document.getElementById('hero-layout-unselected-msg');
       const selectedWidth = document.querySelector('input[name="hero_width_layout_radio"]:checked')?.value || 'boxed';
 
@@ -4425,25 +4506,78 @@ const AdminApp = (() => {
         }
       });
 
+      // Update styling highlight pada radio card hero split mobile
+      const selectedSplitMobile = document.querySelector('input[name="hero_split_mobile_radio"]:checked')?.value || 'image_top';
+      document.querySelectorAll('.hero-split-mobile-choice-card').forEach(card => {
+        const sm = card.getAttribute('data-split-mobile');
+        if (sm === selectedSplitMobile) {
+          card.className = 'hero-split-mobile-choice-card p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex flex-col gap-1.5';
+        } else {
+          card.className = 'hero-split-mobile-choice-card p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex flex-col gap-1.5';
+        }
+      });
+
+      // Update styling highlight pada radio card hero split desktop
+      const selectedSplitDesktop = document.querySelector('input[name="hero_split_desktop_pos_radio"]:checked')?.value || 'text_left';
+      document.querySelectorAll('.hero-split-desktop-choice-card').forEach(card => {
+        const sd = card.getAttribute('data-split-desktop');
+        if (sd === selectedSplitDesktop) {
+          card.className = 'hero-split-desktop-choice-card p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex flex-col gap-1.5';
+        } else {
+          card.className = 'hero-split-desktop-choice-card p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex flex-col gap-1.5';
+        }
+      });
+
       const isModelWithLayoutOption = (selectedModel === 'non_split' || selectedModel === 'model_2' || selectedModel === 'model_3');
 
       // GATING ALUR FORM:
-      // Hanya model Non-Split / Gambar yang membutuhkan penentuan varian layout (full/boxed)
+      // Hanya model Non-Split / Gambar yang membutuhkan penentuan varian layout (full/boxed) & aspek rasio
       if (isModelWithLayoutOption) {
         if (widthSection) widthSection.classList.remove('hidden');
+        if (ratioSection) ratioSection.classList.remove('hidden');
         if (!selectedWidth) {
           if (unselectedMsg) unselectedMsg.classList.remove('hidden');
         } else {
           if (unselectedMsg) unselectedMsg.classList.add('hidden');
         }
       } else {
-        // Model Split ("split" / "model_4") & Model 1 ("Teks Saja"): Kotak standar
         if (widthSection) widthSection.classList.add('hidden');
+        if (ratioSection) ratioSection.classList.add('hidden');
         if (unselectedMsg) unselectedMsg.classList.add('hidden');
       }
 
-      // [1] Kontainer Hero Section (Khusus Varian Boxed / Standar)
-      // Jika seller memilih varian Lebar Penuh (full), sembunyikan atau kunci kontrol radius dan shadow kontainer
+      // [1] Hero Split Mobile Section (Khusus Mode Split)
+      const splitMobileSection = document.getElementById('hero-split-mobile-layout-section');
+      if (splitMobileSection) {
+        if (selectedModel === 'split' || selectedModel === 'model_4') {
+          splitMobileSection.classList.remove('hidden');
+        } else {
+          splitMobileSection.classList.add('hidden');
+        }
+      }
+
+      // [1b] Hero Split Desktop Section (Khusus Mode Split)
+      const splitDesktopSection = document.getElementById('hero-split-desktop-layout-section');
+      if (splitDesktopSection) {
+        if (selectedModel === 'split' || selectedModel === 'model_4') {
+          splitDesktopSection.classList.remove('hidden');
+        } else {
+          splitDesktopSection.classList.add('hidden');
+        }
+      }
+
+      // [2] Hero Text Background Section (Khusus Mode Text-Only / model_1)
+      const textBgSection = document.getElementById('hero-text-background-section');
+      if (textBgSection) {
+        if (selectedModel === 'model_1') {
+          textBgSection.classList.remove('hidden');
+        } else {
+          textBgSection.classList.add('hidden');
+        }
+      }
+
+      // [3] Kontainer Hero Section (Border Radius & Shadow)
+      // Tampil pada Mode Text-Only, Mode Split, atau Mode Non-Split yang bertipe Boxed
       const containerCustomSection = document.getElementById('hero-container-customization-section');
       if (containerCustomSection) {
         if (selectedWidth === 'full' && isModelWithLayoutOption) {
@@ -4453,7 +4587,7 @@ const AdminApp = (() => {
         }
       }
 
-      // [2] Tipografi & Teks Hero (Mode Split, Model 1, Model 3; Non-Split murni disembunyikan)
+      // [4] Tipografi & Teks Hero (Mode Split & Text-Only; Non-Split murni disembunyikan)
       const typographySection = document.getElementById('hero-typography-section');
       if (typographySection) {
         if (selectedModel === 'non_split' || selectedModel === 'model_2') {
@@ -4463,7 +4597,7 @@ const AdminApp = (() => {
         }
       }
 
-      // [3] Kotak Gambar Hero (Mode Split saja)
+      // [5] Kotak Gambar Hero (Mode Split saja)
       const splitImageSection = document.getElementById('hero-split-image-section');
       if (splitImageSection) {
         if (selectedModel === 'split' || selectedModel === 'model_4') {
@@ -4473,17 +4607,7 @@ const AdminApp = (() => {
         }
       }
 
-      // [4] CTA Section: Non-Split disembunyikan, Split & Text-Only diaktifkan
-      const ctaSection = document.getElementById('hero-cta-section');
-      if (ctaSection) {
-        if (selectedModel === 'non_split' || selectedModel === 'model_2') {
-          ctaSection.classList.add('hidden');
-        } else {
-          ctaSection.classList.remove('hidden');
-        }
-      }
-
-      // [5] Multi-Banner Controls & Dropdown Animasi Slider
+      // [6] Multi-Banner Controls & Dropdown Animasi Slider (Disembunyikan pada model_1)
       const bannerControls = document.getElementById('hero-banner-controls-section');
       const animContainer = document.getElementById('hero-animation-dropdown-container');
       if (bannerControls) {
@@ -4628,11 +4752,14 @@ const AdminApp = (() => {
       const isContainerShadowNone = containerShadowVal === 'none' || !containerShadowVal;
       const containerBorderClass = isContainerShadowNone ? 'border-0 shadow-none hero-shadow-none' : 'border border-slate-200/80 dark:border-slate-800 hero-shadow-' + containerShadowVal;
 
+      const heroEnabled = document.getElementById('hero-enable-toggle') ? document.getElementById('hero-enable-toggle').checked : (settings.hero_enabled !== false && settings.enable_hero !== false);
       let heroBannerHtml = '';
-      if (selectedModel === 'model_1') {
-        // [1] Model Teks Headline Saja + CTA (Tanpa Gambar Banner)
+      if (!heroEnabled) {
+        heroBannerHtml = '';
+      } else if (selectedModel === 'model_1') {
+        // [1] Model Teks Headline Saja (Tanpa Gambar Banner & Tanpa CTA)
         heroBannerHtml = `
-          <div class="relative overflow-hidden rounded-3xl p-5 sm:p-12 shadow-2xl border border-white/10" style="${heroBgCss}" id="hero-slider-container">
+          <div class="relative overflow-hidden p-6 sm:p-12 ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${heroBgCss} ${isFullWidth ? '' : 'border-radius: ' + containerRadiusVal + ';'}" id="hero-slider-container">
             <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
             <div class="relative z-10 max-w-2xl space-y-3.5 sm:space-y-4">
               <h1 class="text-xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-snug sm:leading-tight" style="color: ${heroTitleColorVal};">
@@ -4641,46 +4768,27 @@ const AdminApp = (() => {
               <p class="text-xs sm:text-sm leading-relaxed" style="color: ${heroDescColorVal};">
                 ${escapeHtml(heroSubheadlineVal)}
               </p>
-              <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-                  ${heroCustomCtaHtml}
-                </div>
-                <div class="flex items-center gap-1.5 text-xs text-white/80 pt-1 sm:pt-0">
-                  <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-                  <span>Kualitas CMYK Tajam & Garansi Cetak</span>
-                </div>
-              </div>
             </div>
           </div>
         `;
       } else if (selectedModel === 'split' || selectedModel === 'model_4') {
-        // [2] VARIAN HERO SPLIT (TEKS KIRI 55-60% + KOTAK GAMBAR KANAN 40-45%)
-        // Tinggi total kontainer hero tetap konsisten dengan rasio banner utama (desktop 9:2, mobile 16:5)
-        // Tombol CTA aktif, sudut lengkung kontainer & gambar serta efek bayangan dapat disesuaikan
+        // [2] VARIAN HERO SPLIT (Desktop: Teks 40% & Gambar 60% dengan opsi orientasi desktop; Mobile: Susunan Fleksibel 16:5)
         const isImageShadowNone = heroImageShadowVal === 'none' || !heroImageShadowVal;
         const splitBoxShadowClass = isImageShadowNone ? 'border-0 shadow-none hero-shadow-none' : 'hero-shadow-' + heroImageShadowVal + ' border border-slate-200/60 dark:border-slate-700/60';
         const splitBoxRadiusStyle = `border-radius: ${heroImageRadiusVal};`;
+        const selectedSplitMobile = document.querySelector('input[name="hero_split_mobile_radio"]:checked')?.value || 'image_top';
+        const mobileFlexClass = selectedSplitMobile === 'image_bottom' ? 'flex flex-col-reverse md:flex-row' : 'flex flex-col md:flex-row';
+        const selectedSplitDesktop = document.querySelector('input[name="hero_split_desktop_pos_radio"]:checked')?.value || 'text_left';
+        const imgDesktopOrder = selectedSplitDesktop === 'image_left' ? 'md:order-1' : 'md:order-2';
+        const textDesktopOrder = selectedSplitDesktop === 'image_left' ? 'md:order-2' : 'md:order-1';
 
         heroBannerHtml = `
           <div class="relative overflow-hidden ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${isFullWidth ? '' : 'border-radius: ' + containerRadiusVal + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${banners.length}">
-            <div class="${nonSplitAspectClass} flex items-center p-3 sm:p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40" style="${nonSplitAspectStyle}; border-radius: inherit;">
-              <div class="flex flex-row items-center gap-3 sm:gap-4 md:gap-6 w-full h-full">
+            <div class="w-full md:aspect-[9/2] flex items-center p-3 sm:p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40" style="border-radius: inherit;">
+              <div class="${mobileFlexClass} items-stretch md:items-center gap-3 sm:gap-4 md:gap-6 w-full h-full">
                 
-                <!-- Kolom Kiri: Area Teks & CTA (55% – 60%) -->
-                <div class="w-[58%] md:w-[60%] flex flex-col justify-center min-w-0 pr-1 sm:pr-2 h-full">
-                  <h1 class="line-clamp-2 font-bold text-xs sm:text-base md:text-xl lg:text-2xl leading-snug tracking-tight" style="color: ${heroTitleColorVal};">
-                    ${escapeHtml(heroHeadlineVal)}
-                  </h1>
-                  <p class="line-clamp-2 text-[10px] sm:text-xs md:text-sm mt-1 leading-relaxed" style="color: ${heroDescColorVal};">
-                    ${escapeHtml(heroSubheadlineVal)}
-                  </p>
-                  <div class="mt-2 sm:mt-3 flex items-center gap-2">
-                    ${heroCustomCtaHtml}
-                  </div>
-                </div>
-
-                <!-- Kolom Kanan: Kotak Gambar Split (40% – 45%) -->
-                <div class="w-[42%] md:w-[40%] flex flex-col items-center justify-center shrink-0 h-full">
+                <!-- Kolom Gambar: Desktop 60% (order adaptif), Mobile Membentang Penuh Proporsional 16:5 -->
+                <div class="w-full md:w-[60%] ${imgDesktopOrder} flex flex-col items-center justify-center shrink-0 min-w-0 aspect-[16/5] md:aspect-auto md:h-full hero-split-mobile-image">
                   <div class="overflow-hidden w-full h-full relative bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass}" style="${splitBoxRadiusStyle}; overflow: hidden;">
                     <div class="hero-slider-track w-full h-full relative" style="border-radius: inherit;">
                       ${splitSlidesHtml}
@@ -4698,12 +4806,22 @@ const AdminApp = (() => {
                   </div>
                 </div>
 
+                <!-- Kolom Teks: Desktop 40% (order adaptif), Mobile Membentang Penuh -->
+                <div class="w-full md:w-[40%] ${textDesktopOrder} flex flex-col justify-center min-w-0 pr-0 md:pr-4 h-auto md:h-full py-2 md:py-0">
+                  <h1 class="line-clamp-2 font-bold text-xs sm:text-base md:text-xl lg:text-2xl leading-snug tracking-tight" style="color: ${heroTitleColorVal};">
+                    ${escapeHtml(heroHeadlineVal)}
+                  </h1>
+                  <p class="line-clamp-2 sm:line-clamp-3 text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-1.5 leading-relaxed" style="color: ${heroDescColorVal};">
+                    ${escapeHtml(heroSubheadlineVal)}
+                  </p>
+                </div>
+
               </div>
             </div>
           </div>
         `;
       } else if (selectedModel === 'model_3') {
-        // [3] Model Gambar & Teks Overlay
+        // [3] Model Gambar & Teks Overlay (Tanpa CTA)
         heroBannerHtml = `
           <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
             <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + containerRadiusVal + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${banners.length}">
@@ -4720,11 +4838,6 @@ const AdminApp = (() => {
                   <p class="text-xs sm:text-sm leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-3" style="color: ${heroDescColorVal};">
                     ${escapeHtml(heroSubheadlineVal)}
                   </p>
-                  <div class="pt-2 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-                      ${heroCustomCtaHtml}
-                    </div>
-                  </div>
                 </div>
                 ${showArrows ? `
                   <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-30 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
@@ -5506,6 +5619,75 @@ const AdminApp = (() => {
       r.addEventListener('change', syncHeroFormVisibility);
     });
 
+    // Click handler pada kartu pilihan Hero Model
+    document.querySelectorAll('.hero-model-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const mVal = card.getAttribute('data-model');
+        if (mVal) {
+          const radio = document.querySelector(`input[name="hero_model_radio"][value="${mVal}"]`);
+          if (radio && !radio.checked) {
+            radio.checked = true;
+            syncHeroFormVisibility();
+          }
+        }
+      });
+    });
+
+    // Toggle Hero Enable/Disable
+    const heroEnableToggleEl = document.getElementById('hero-enable-toggle');
+    if (heroEnableToggleEl) {
+      heroEnableToggleEl.addEventListener('change', () => {
+        syncHeroFormVisibility();
+        updateStorefrontLivePreview();
+      });
+    }
+
+    // Radio Hero Split Desktop Position Change
+    document.querySelectorAll('input[name="hero_split_desktop_pos_radio"]').forEach(r => {
+      r.addEventListener('change', () => {
+        syncHeroFormVisibility();
+        updateStorefrontLivePreview();
+      });
+    });
+
+    // Click handler pada kartu pilihan tata letak hero split desktop
+    document.querySelectorAll('.hero-split-desktop-choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const sdVal = card.getAttribute('data-split-desktop');
+        if (sdVal) {
+          const radio = document.querySelector(`input[name="hero_split_desktop_pos_radio"][value="${sdVal}"]`);
+          if (radio && !radio.checked) {
+            radio.checked = true;
+            syncHeroFormVisibility();
+            updateStorefrontLivePreview();
+          }
+        }
+      });
+    });
+
+    // Radio Hero Split Mobile Direction Change
+    document.querySelectorAll('input[name="hero_split_mobile_radio"]').forEach(r => {
+      r.addEventListener('change', () => {
+        syncHeroFormVisibility();
+        updateStorefrontLivePreview();
+      });
+    });
+
+    // Click handler pada kartu pilihan tata letak hero split mobile
+    document.querySelectorAll('.hero-split-mobile-choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const smVal = card.getAttribute('data-split-mobile');
+        if (smVal) {
+          const radio = document.querySelector(`input[name="hero_split_mobile_radio"][value="${smVal}"]`);
+          if (radio && !radio.checked) {
+            radio.checked = true;
+            syncHeroFormVisibility();
+            updateStorefrontLivePreview();
+          }
+        }
+      });
+    });
+
     // Radio Hero Mobile Ratio Change
     document.querySelectorAll('input[name="hero_mobile_ratio_radio"]').forEach(r => {
       r.addEventListener('change', (e) => {
@@ -5717,7 +5899,10 @@ const AdminApp = (() => {
         const secColor = document.getElementById('ctrl-hex-secondary')?.value.trim() || '#f59e0b';
 
         const selectedHeroModel = document.querySelector('input[name="hero_model_radio"]:checked')?.value || 'non_split';
+        const heroEnabledVal = document.getElementById('hero-enable-toggle')?.checked !== false;
         const selectedHeroWidthLayout = document.querySelector('input[name="hero_width_layout_radio"]:checked')?.value || 'boxed';
+        const selectedHeroSplitMobile = document.querySelector('input[name="hero_split_mobile_radio"]:checked')?.value || 'image_top';
+        const selectedHeroSplitDesktop = document.querySelector('input[name="hero_split_desktop_pos_radio"]:checked')?.value || 'text_left';
         const heroShowArrowsVal = document.getElementById('hero-show-arrows-toggle')?.checked !== false;
 
         const headline = document.getElementById('hero-headline-input')?.value.trim() || '';
@@ -5796,9 +5981,13 @@ const AdminApp = (() => {
           primary_color: primColor,
           secondary_color: secColor,
           card_product_version: cardProductVersionVal,
+          hero_enabled: heroEnabledVal,
+          enable_hero: heroEnabledVal,
           hero_model: selectedHeroModel,
           hero_mobile_ratio: '16:5',
           hero_width_layout: selectedHeroWidthLayout,
+          hero_split_mobile: selectedHeroSplitMobile,
+          hero_split_desktop_pos: selectedHeroSplitDesktop,
           hero_show_arrows: heroShowArrowsVal,
           hero_type: selectedHeroModel === 'model_1' ? 'text' : 'banner', // backward compat
           hero_headline: headline,

@@ -206,6 +206,7 @@ body {
     opacity: 0;
     transform: translateY(-12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -217,6 +218,7 @@ body {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -224,8 +226,15 @@ body {
 }
 
 @keyframes pulseSubtle {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
 }
 
 .animate-slide-in {
@@ -339,12 +348,12 @@ body {
   body * {
     visibility: hidden !important;
   }
-  
+
   #thermal-print-container,
   #thermal-print-container * {
     visibility: visible !important;
   }
-  
+
   #thermal-print-container {
     position: absolute !important;
     left: 0 !important;
@@ -359,7 +368,7 @@ body {
     font-size: 11px !important;
     line-height: 1.15 !important;
   }
-  
+
   @page {
     margin: 0;
     size: auto;
@@ -371,15 +380,17 @@ body {
    -------------------------------------------------------------------------- */
 @media (min-width: 1024px) {
   .admin-sidebar-hover-expand {
-    width: 5rem; /* w-20 default static collapsed */
+    width: 5rem;
+    /* w-20 default static collapsed */
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
     overflow: visible !important;
     position: relative !important;
   }
-  
+
   /* Sidebar expands ONLY via click / .is-expanded, NEVER on hover */
   .admin-sidebar-hover-expand.is-expanded {
-    width: 16rem; /* w-64 */
+    width: 16rem;
+    /* w-64 */
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
   }
 
@@ -400,6 +411,7 @@ body {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 50;
   }
+
   .sidebar-edge-toggle:hover {
     background-color: #f8fafc;
     color: #0f172a;
@@ -407,10 +419,12 @@ body {
     transform: translateY(-50%) scale(1.1);
     box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.16);
   }
+
   /* Show close button (<) when expanded; hide when collapsed */
   .admin-sidebar-hover-expand.is-expanded .sidebar-edge-toggle {
     display: flex !important;
   }
+
   .admin-sidebar-hover-expand:not(.is-expanded) .sidebar-edge-toggle {
     display: none !important;
   }
@@ -513,17 +527,21 @@ body {
   scrollbar-width: thin !important;
   scrollbar-color: #cbd5e1 transparent !important;
 }
+
 .desktop-scrollbar-visible::-webkit-scrollbar {
   height: 6px !important;
   display: block !important;
 }
+
 .desktop-scrollbar-visible::-webkit-scrollbar-track {
   background: transparent !important;
 }
+
 .desktop-scrollbar-visible::-webkit-scrollbar-thumb {
   background-color: #cbd5e1 !important;
   border-radius: 9999px !important;
 }
+
 .desktop-scrollbar-visible::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8 !important;
 }
@@ -539,6 +557,7 @@ body {
     width: 16rem;
     height: 100% !important;
   }
+
   .admin-sidebar-hover-expand .nav-label-text,
   .admin-sidebar-hover-expand .nav-group-chevron,
   .admin-sidebar-hover-expand .sidebar-footer-text,
@@ -548,12 +567,14 @@ body {
     max-width: none;
     overflow: visible;
   }
+
   .admin-sidebar-hover-expand .nav-submenu {
     max-height: 0;
     opacity: 0;
     overflow: hidden;
     transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
   }
+
   .admin-sidebar-hover-expand .nav-submenu.is-expanded {
     max-height: 500px;
     opacity: 1;
@@ -569,6 +590,7 @@ body {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   font-weight: 700;
 }
+
 .admin-nav-item.is-active-light .nav-icon {
   color: #047857 !important;
 }
@@ -580,6 +602,7 @@ body {
   border-radius: 1rem !important;
   font-weight: 700;
 }
+
 .admin-nav-item.is-active-dark .nav-icon {
   color: #34d399 !important;
 }
@@ -601,13 +624,14 @@ body {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
 }
 
 /* Pastikan pembungkus preview memiliki tinggi terkontrol & stabil (Framing Navbar + Hero) */
-.preview-viewport-wrapper, 
+.preview-viewport-wrapper,
 #hero-preview-iframe {
   height: 520px !important;
   max-height: 80vh;
@@ -622,17 +646,22 @@ body {
   overflow-x: auto;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  -ms-overflow-style: none; /* IE & Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE & Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .cat-scroll-track::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
@@ -663,88 +692,180 @@ body {
     width: calc((100% - (10 * var(--cat-gap))) / 10.5);
     min-width: calc((100% - (10 * var(--cat-gap))) / 10.5);
   }
+
   .cat-scroll-track.justify-center {
     overflow-x: visible;
   }
 }
 
 /* Standarisasi Rasio Hero Banner 16:5 (Mobile) & 9:2 (Desktop) */
-.hero-ratio-16-5, .aspect-16-5, .aspect-\[16\/5\] {
+.hero-ratio-16-5,
+.aspect-16-5 {
   aspect-ratio: 16 / 5 !important;
-  width: 100% !important;
 }
-.hero-ratio-9-2, .aspect-9-2, .aspect-\[9\/2\] {
+
+.hero-ratio-9-2,
+.aspect-9-2,
+.aspect-\[9\/2\] {
   aspect-ratio: 9 / 2 !important;
   width: 100% !important;
 }
-.hero-non-split-container, .hero-responsive-aspect {
+
+.hero-non-split-container,
+.hero-responsive-aspect {
   aspect-ratio: 16 / 5 !important;
   width: 100% !important;
 }
+
 @media (min-width: 768px) {
-  .hero-non-split-container, .hero-responsive-aspect {
+
+  .hero-non-split-container,
+  .hero-responsive-aspect {
     aspect-ratio: 9 / 2 !important;
     width: 100% !important;
   }
 }
-.hero-ratio-4-3, .aspect-4-3 {
+
+.hero-ratio-4-3,
+.aspect-4-3 {
   aspect-ratio: 4 / 3 !important;
   width: 100% !important;
 }
-.hero-ratio-2-1, .aspect-2-1 {
+
+.hero-ratio-2-1,
+.aspect-2-1 {
   aspect-ratio: 2 / 1 !important;
   width: 100% !important;
 }
-.hero-ratio-1-2, .aspect-1-2 {
+
+.hero-ratio-1-2,
+.aspect-1-2 {
   aspect-ratio: 1 / 2 !important;
   width: 100% !important;
 }
 
 /* Preset Box Shadow Utility untuk Hero & CTA */
-.hero-shadow-none { box-shadow: none !important; }
-.hero-shadow-none.border, .hero-shadow-none[class*="border-"] { border-color: transparent !important; }
-#hero-slider-container.hero-shadow-none { box-shadow: none !important; border: 0 !important; }
-.hero-shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
-.hero-shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important; }
-.hero-shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important; }
-.hero-shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important; }
+.hero-shadow-none {
+  box-shadow: none !important;
+}
 
-/* Gambar Split Otomatis Terpotong Kiri-Kanan Seimbang */
+.hero-shadow-none.border,
+.hero-shadow-none[class*="border-"] {
+  border-color: transparent !important;
+}
+
+#hero-slider-container.hero-shadow-none {
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.hero-shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.hero-shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hero-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hero-shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Gambar Split Otomatis Terpotong Kiri-Kanan Seimbang & Proporsional Mobile */
 .hero-split-image-cover {
   object-fit: cover !important;
   object-position: center !important;
 }
 
+@media (max-width: 767px) {
+  .hero-split-mobile-image {
+    width: 100% !important;
+    aspect-ratio: 16 / 5 !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-split-mobile-image {
+    width: 60% !important;
+    aspect-ratio: auto !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+}
+
 /* Card Sponsor Utilities & Entry Animations */
 @keyframes sponsorFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
+
 @keyframes sponsorSlideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes sponsorSmoothZoom {
-  from { opacity: 0; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
+
 .sponsor-anim-fade {
   animation: sponsorFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
 .sponsor-anim-slide {
   animation: sponsorSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
 .sponsor-anim-zoom {
   animation: sponsorSmoothZoom 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.sponsor-shadow-none { box-shadow: none !important; }
-.sponsor-shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
-.sponsor-shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important; }
-.sponsor-shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important; }
-.sponsor-shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important; }
 
-.aspect-3-4, .aspect-\[3\/4\] {
-  aspect-ratio: 3 / 4 !important;
+.sponsor-shadow-none {
+  box-shadow: none !important;
 }
 
+.sponsor-shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
 
+.sponsor-shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sponsor-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sponsor-shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.aspect-3-4,
+.aspect-\[3\/4\] {
+  aspect-ratio: 3 / 4 !important;
+}
