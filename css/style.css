@@ -715,4 +715,36 @@ body {
   object-position: center !important;
 }
 
+/* Card Sponsor Utilities & Entry Animations */
+@keyframes sponsorFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sponsorSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes sponsorSmoothZoom {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+.sponsor-anim-fade {
+  animation: sponsorFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.sponsor-anim-slide {
+  animation: sponsorSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.sponsor-anim-zoom {
+  animation: sponsorSmoothZoom 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.sponsor-shadow-none { box-shadow: none !important; }
+.sponsor-shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
+.sponsor-shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important; }
+.sponsor-shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important; }
+.sponsor-shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important; }
+
+.aspect-3-4, .aspect-\[3\/4\] {
+  aspect-ratio: 3 / 4 !important;
+}
+
 

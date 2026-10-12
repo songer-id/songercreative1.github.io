@@ -1651,9 +1651,15 @@ const DB = (() => {
         localStorage.setItem(`pos_categories_${tKey}`, JSON.stringify(seeds.categories));
         localStorage.setItem(`pos_sub_categories_${tKey}`, JSON.stringify(seeds.sub_categories));
         localStorage.setItem(`pos_reviews_${tKey}`, JSON.stringify(seeds.reviews));
-        localStorage.setItem(`pos_promos_${tKey}`, JSON.stringify(DEFAULT_PROMOS));
-        localStorage.setItem(`pos_vouchers_${tKey}`, JSON.stringify(DEFAULT_VOUCHERS));
-        localStorage.setItem(`pos_settings_${tKey}`, JSON.stringify(DEFAULT_SETTINGS));
+        if (localStorage.getItem(`pos_promos_${tKey}`) === null && localStorage.getItem('pos_promotions') === null) {
+          localStorage.setItem(`pos_promos_${tKey}`, JSON.stringify(DEFAULT_PROMOS));
+        }
+        if (localStorage.getItem(`pos_vouchers_${tKey}`) === null) {
+          localStorage.setItem(`pos_vouchers_${tKey}`, JSON.stringify(DEFAULT_VOUCHERS));
+        }
+        if (localStorage.getItem(`pos_settings_${tKey}`) === null) {
+          localStorage.setItem(`pos_settings_${tKey}`, JSON.stringify(DEFAULT_SETTINGS));
+        }
       } catch (e) {
         console.error('[DB] forceResetDemoData localStorage error:', e);
       }
@@ -1665,9 +1671,15 @@ const DB = (() => {
     setTable(STORAGE_KEYS.CATEGORIES, seeds.categories);
     setTable(STORAGE_KEYS.SUB_CATEGORIES, seeds.sub_categories);
     setTable(STORAGE_KEYS.REVIEWS, seeds.reviews);
-    setTable(STORAGE_KEYS.PROMOS, DEFAULT_PROMOS);
-    setTable(STORAGE_KEYS.VOUCHERS, DEFAULT_VOUCHERS);
-    setTable(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+    if (getTable(STORAGE_KEYS.PROMOS) === null && localStorage.getItem('pos_promotions') === null) {
+      setTable(STORAGE_KEYS.PROMOS, DEFAULT_PROMOS);
+    }
+    if (getTable(STORAGE_KEYS.VOUCHERS) === null) {
+      setTable(STORAGE_KEYS.VOUCHERS, DEFAULT_VOUCHERS);
+    }
+    if (getTable(STORAGE_KEYS.SETTINGS) === null) {
+      setTable(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+    }
 
     console.log(`[DB] forceResetDemoData completed for [${currentTenant.store_slug}], total products seeded:`, seeds.products.length);
     return seeds.products;
@@ -1707,13 +1719,13 @@ const DB = (() => {
         setTable(`pos_reviews_${tKey}`, seeds.reviews);
       }
 
-      // 4. Ensure Promos & Sponsor Ads (2 active sponsor ads & promos)
+      // 4. Ensure Promos & Sponsor Ads (hanya inisialisasi default jika belum pernah dibuat / null)
       let promos = getTable(`pos_promos_${tKey}`);
-      if (!promos || !promos.sponsor_ads || promos.sponsor_ads.length < 2) {
+      if (promos === null && localStorage.getItem('pos_promotions') === null) {
         setTable(`pos_promos_${tKey}`, DEFAULT_PROMOS);
       }
       let vouchers = getTable(`pos_vouchers_${tKey}`);
-      if (!vouchers || vouchers.length === 0) {
+      if (vouchers === null) {
         setTable(`pos_vouchers_${tKey}`, DEFAULT_VOUCHERS);
       }
 
@@ -2748,11 +2760,49 @@ const DB = (() => {
 
     getPromos() {
       let promos = getTable(STORAGE_KEYS.PROMOS);
-      if (!promos) promos = { ...DEFAULT_PROMOS };
-      if (!promos.sponsor_ads || !Array.isArray(promos.sponsor_ads) || promos.sponsor_ads.length === 0) {
+      if (!promos) {
+        // Cek fallback jika tersimpan di pos_promotions atau pos_sponsors
+        const hasStoredPromos = localStorage.getItem('pos_promotions') !== null;
+        const hasStoredSponsors = localStorage.getItem('pos_sponsors') !== null;
+        if (hasStoredPromos || hasStoredSponsors) {
+          let pList = [];
+          let sList = [];
+          try {
+            if (hasStoredPromos) pList = JSON.parse(localStorage.getItem('pos_promotions')) || [];
+            if (hasStoredSponsors) sList = JSON.parse(localStorage.getItem('pos_sponsors')) || [];
+          } catch (e) {}
+          promos = {
+            ...DEFAULT_PROMOS,
+            promo_list: pList,
+            sponsor_list: sList
+          };
+          setTable(STORAGE_KEYS.PROMOS, promos);
+        } else {
+          promos = { ...DEFAULT_PROMOS };
+        }
+      }
+      if (!Array.isArray(promos.promo_list)) {
+        try {
+          const sp = localStorage.getItem('pos_promotions');
+          if (sp !== null) {
+            promos.promo_list = JSON.parse(sp);
+          } else {
+            promos.promo_list = [];
+          }
+        } catch (e) {
+          promos.promo_list = [];
+        }
+      }
+      if (!Array.isArray(promos.sponsor_list)) {
+        try {
+          const ss = localStorage.getItem('pos_sponsors');
+          if (ss !== null) {
+            promos.sponsor_list = JSON.parse(ss);
+          }
+        } catch (e) {}
+      }
+      if (!Array.isArray(promos.sponsor_ads)) {
         promos.sponsor_ads = [...DEFAULT_PROMOS.sponsor_ads];
-      } else if (promos.sponsor_ads.length === 1) {
-        promos.sponsor_ads.push({ ...DEFAULT_PROMOS.sponsor_ads[1] });
       }
       if (!promos.ad_banner) {
         promos.ad_banner = promos.sponsor_ads[0];
@@ -2772,61 +2822,380 @@ const DB = (() => {
       const current = this.getPromos();
       const updated = { ...current, ...newPromos };
       setTable(STORAGE_KEYS.PROMOS, updated);
+      if (Array.isArray(updated.promo_list)) {
+        try {
+          localStorage.setItem('pos_promotions', JSON.stringify(updated.promo_list));
+        } catch (e) {}
+      }
+      if (Array.isArray(updated.sponsor_list)) {
+        try {
+          localStorage.setItem('pos_sponsors', JSON.stringify(updated.sponsor_list));
+        } catch (e) {}
+      }
       return updated;
+    },
+
+    savePromotions(promoList) {
+      const list = Array.isArray(promoList) ? promoList : [];
+      try {
+        localStorage.setItem('pos_promotions', JSON.stringify(list));
+      } catch (e) {
+        console.error('[DB] savePromotions localStorage error:', e);
+      }
+      const promos = this.getPromos();
+      promos.promo_list = list;
+      this.updatePromos({ promo_list: list });
+      return list;
+    },
+
+    saveSponsors(sponsorList) {
+      const list = Array.isArray(sponsorList) ? sponsorList : [];
+      try {
+        localStorage.setItem('pos_sponsors', JSON.stringify(list));
+      } catch (e) {
+        console.error('[DB] saveSponsors localStorage error:', e);
+      }
+      const promos = this.getPromos();
+      promos.sponsor_list = list;
+      this.syncLegacySponsors(promos, list);
+      this.updatePromos({ sponsor_list: list });
+      return list;
     },
 
     resetPromos() {
       setTable(STORAGE_KEYS.PROMOS, DEFAULT_PROMOS);
+      try {
+        localStorage.removeItem('pos_promotions');
+        localStorage.removeItem('pos_sponsors');
+      } catch (e) {}
       return DEFAULT_PROMOS;
     },
 
     getPromoList() {
-      const promos = this.getPromos();
-      const list = Array.isArray(promos.promo_list) ? promos.promo_list : [];
+      // Cek localStorage pos_promotions terlebih dahulu
+      let list = null;
+      try {
+        const raw = localStorage.getItem('pos_promotions');
+        if (raw !== null) {
+          list = JSON.parse(raw);
+        }
+      } catch (e) {}
+
+      if (!Array.isArray(list)) {
+        const promos = this.getPromos();
+        list = Array.isArray(promos.promo_list) ? promos.promo_list : [];
+      }
+
       return list.map(p => ({
         ...p,
+        id: String(p.id),
         is_active: p.active !== false && p.is_active !== false
       }));
     },
 
+    getPromotions() {
+      return this.getPromoList();
+    },
+
     getSponsorList() {
       const promos = this.getPromos();
-      const sponsors = [];
+      
+      let storedList = null;
+      try {
+        const raw = localStorage.getItem('pos_sponsors');
+        if (raw !== null) {
+          storedList = JSON.parse(raw);
+        }
+      } catch (e) {}
 
-      // 1. Static Ad (ad1)
-      const ad1 = (promos.sponsor_ads && promos.sponsor_ads[0]) || promos.ad_banner;
-      if (ad1) {
-        const isActive = ad1.active !== false && ad1.is_active !== false;
-        sponsors.push({
-          ...ad1,
-          type: 'ad1',
-          active: isActive,
-          is_active: isActive
-        });
+      if (Array.isArray(storedList)) {
+        promos.sponsor_list = storedList;
       }
 
-      // 2. Carousel
-      if (promos.sponsor_carousel) {
-        const isActive = promos.sponsor_carousel.active === true || promos.sponsor_carousel.is_active === true;
-        sponsors.push({
-          ...promos.sponsor_carousel,
-          type: 'carousel',
-          active: isActive,
-          is_active: isActive
+      // Inisialisasi default sponsor_list HANYA saat data belum pernah ada (bukan array / undefined)
+      // JANGAN timpa jika sponsor_list adalah array kosong [] buatan seller!
+      if (!Array.isArray(promos.sponsor_list) && storedList === null) {
+        const migratedList = [];
+        const ad1 = (promos.sponsor_ads && promos.sponsor_ads[0]) || promos.ad_banner;
+        if (ad1) {
+          const isActive = ad1.active !== false && ad1.is_active !== false;
+          migratedList.push({
+            id: ad1.id ? String(ad1.id) : 'sp-ad1-default',
+            type: 'ad1',
+            title: ad1.title || 'Layanan Mitra & Desain Prioritas',
+            subtitle: ad1.subtitle || 'Solusi Cetak Cepat untuk Bisnis & UMKM',
+            image_url: ad1.image_url || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80',
+            active: isActive,
+            is_active: isActive,
+            display_quota: 1,
+            mobile_only_ready: false,
+            is_always_active: true,
+            start_datetime: '',
+            end_datetime: '',
+            cta_type: ad1.cta_type || 'whatsapp',
+            cta_label: ad1.cta_label || 'Tanyakan via WhatsApp',
+            cta_target: ad1.cta_target || '',
+            border_radius: '16px',
+            border_color: '#e2e8f0',
+            border_width: '1px',
+            shadow: 'sm',
+            bg_color: 'transparent',
+            animation: 'none'
+          });
+        }
+        if (promos.sponsor_carousel) {
+          const isActive = promos.sponsor_carousel.active === true || promos.sponsor_carousel.is_active === true;
+          migratedList.push({
+            id: 'sp-carousel-default',
+            type: 'carousel',
+            title: 'Sponsor Slider Carousel',
+            active: isActive,
+            is_active: isActive,
+            display_quota: 1,
+            mobile_only_ready: false,
+            is_always_active: true,
+            start_datetime: '',
+            end_datetime: '',
+            auto_slide_interval: promos.sponsor_carousel.auto_slide_interval || 3500,
+            animation_type: promos.sponsor_carousel.animation_type || 'slide',
+            slides: Array.isArray(promos.sponsor_carousel.slides) ? promos.sponsor_carousel.slides : [],
+            border_radius: '16px',
+            border_color: '#e2e8f0',
+            border_width: '1px',
+            shadow: 'sm',
+            bg_color: 'transparent',
+            animation: 'none'
+          });
+        }
+        const internal = promos.sponsor_internal || { active: true, is_active: true, title: 'Koleksi Rekomendasi Toko', product_ids: [] };
+        const isInternalActive = internal.active !== false && internal.is_active !== false;
+        migratedList.push({
+          id: 'sp-internal-default',
+          type: 'internal',
+          title: internal.title || promos.internal_promo_title || 'Koleksi Rekomendasi Toko',
+          active: isInternalActive,
+          is_active: isInternalActive,
+          display_quota: 1,
+          mobile_only_ready: false,
+          linked_promo_ids: [],
+          product_ids: Array.isArray(internal.product_ids) ? internal.product_ids : [],
+          border_radius: '16px',
+          border_color: '#e2e8f0',
+          border_width: '1px',
+          shadow: 'sm',
+          bg_color: '#ffffff',
+          animation: 'none'
         });
+
+        promos.sponsor_list = migratedList;
+        this.saveSponsors(migratedList);
       }
 
-      // 3. Internal Products (Grid 2x2)
-      const internal = promos.sponsor_internal || { active: true, is_active: true, title: 'Koleksi Rekomendasi Toko', product_ids: [] };
-      const isInternalActive = internal.active !== false && internal.is_active !== false;
-      sponsors.push({
-        ...internal,
-        type: 'internal',
-        active: isInternalActive,
-        is_active: isInternalActive
+      // Pastikan membersihkan orphaned promo links hanya jika data promo list sudah dimuat dan tidak kosong
+      if (Array.isArray(promos.promo_list) && promos.promo_list.length > 0) {
+        this.cleanOrphanedPromoLinks(promos);
+      }
+
+      return (promos.sponsor_list || []).map(s => {
+        const isCurrentActive = this.isSponsorActive(s);
+        return {
+          ...s,
+          id: String(s.id),
+          is_active: isCurrentActive
+        };
+      });
+    },
+
+    getSponsors() {
+      return this.getSponsorList();
+    },
+
+    getSponsorById(id) {
+      const sponsors = this.getSponsorList();
+      return sponsors.find(s => String(s.id) === String(id)) || null;
+    },
+
+    addSponsor(sponsorData) {
+      const promos = this.getPromos();
+      let list = Array.isArray(promos.sponsor_list) ? [...promos.sponsor_list] : [];
+      const newId = 'sp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+      const newSponsor = {
+        id: String(newId),
+        type: sponsorData.type || 'ad1',
+        title: sponsorData.title || (sponsorData.type === 'carousel' ? 'Sponsor Slider Carousel' : (sponsorData.type === 'internal' ? 'Produk Rekomendasi' : 'Sponsor Baru')),
+        subtitle: sponsorData.subtitle || '',
+        active: sponsorData.active !== false,
+        is_active: sponsorData.active !== false,
+        display_quota: parseInt(sponsorData.display_quota, 10) || 1,
+        mobile_only_ready: sponsorData.mobile_only_ready === true,
+        // Schedule:
+        is_always_active: sponsorData.is_always_active !== false,
+        start_datetime: sponsorData.start_datetime || '',
+        end_datetime: sponsorData.end_datetime || '',
+        linked_promo_ids: Array.isArray(sponsorData.linked_promo_ids) ? sponsorData.linked_promo_ids.map(id => String(id)) : [],
+        // Styling:
+        border_radius: sponsorData.border_radius || '16px',
+        border_color: sponsorData.border_color || '#e2e8f0',
+        border_width: sponsorData.border_width || '1px',
+        shadow: sponsorData.shadow || 'sm',
+        bg_color: sponsorData.bg_color || (sponsorData.type === 'internal' ? '#ffffff' : 'transparent'),
+        animation: sponsorData.animation || 'none',
+        // Type specifics:
+        image_url: sponsorData.image_url || '',
+        cta_type: sponsorData.cta_type || 'whatsapp',
+        cta_label: sponsorData.cta_label || 'Tanyakan via WhatsApp',
+        cta_target: sponsorData.cta_target || '',
+        slides: Array.isArray(sponsorData.slides) ? sponsorData.slides : [],
+        auto_slide_interval: parseInt(sponsorData.auto_slide_interval, 10) || 3500,
+        animation_type: sponsorData.animation_type || 'slide',
+        product_ids: Array.isArray(sponsorData.product_ids) ? sponsorData.product_ids : []
+      };
+      list.push(newSponsor);
+      promos.sponsor_list = list;
+      this.syncLegacySponsors(promos, list);
+      this.saveSponsors(list);
+      return newSponsor;
+    },
+
+    updateSponsor(id, updateData) {
+      const promos = this.getPromos();
+      let list = Array.isArray(promos.sponsor_list) ? [...promos.sponsor_list] : [];
+      const idx = list.findIndex(s => String(s.id) === String(id));
+      if (idx !== -1) {
+        const cleanUpdate = { ...updateData };
+        if (Array.isArray(cleanUpdate.linked_promo_ids)) {
+          cleanUpdate.linked_promo_ids = cleanUpdate.linked_promo_ids.map(lid => String(lid));
+        }
+        list[idx] = {
+          ...list[idx],
+          ...cleanUpdate,
+          id: String(id)
+        };
+        promos.sponsor_list = list;
+        this.syncLegacySponsors(promos, list);
+        this.saveSponsors(list);
+        return list[idx];
+      }
+      return null;
+    },
+
+    deleteSponsor(id) {
+      const promos = this.getPromos();
+      let list = Array.isArray(promos.sponsor_list) ? [...promos.sponsor_list] : [];
+      list = list.filter(s => String(s.id) !== String(id));
+      promos.sponsor_list = list;
+      this.syncLegacySponsors(promos, list);
+      this.saveSponsors(list);
+      return true;
+    },
+
+    syncLegacySponsors(promos, list) {
+      const firstAd1 = list.find(s => s.type === 'ad1');
+      if (firstAd1) {
+        promos.sponsor_ads = [firstAd1];
+        promos.ad_banner = firstAd1;
+      }
+      const firstCarousel = list.find(s => s.type === 'carousel');
+      if (firstCarousel) {
+        promos.sponsor_carousel = {
+          ...firstCarousel,
+          active: firstCarousel.active,
+          is_active: firstCarousel.active
+        };
+      }
+      const firstInternal = list.find(s => s.type === 'internal');
+      if (firstInternal) {
+        promos.sponsor_internal = {
+          ...firstInternal,
+          active: firstInternal.active,
+          is_active: firstInternal.active
+        };
+        promos.internal_promo_title = firstInternal.title;
+      }
+    },
+
+    cleanOrphanedPromoLinks(promos) {
+      if (!promos) promos = this.getPromos();
+      // Pengecekan aman: jika data promosi belum dimuat atau kosong saat inisialisasi awal, jangan jalankan proses pembersihan otomatis
+      if (!promos || !Array.isArray(promos.promo_list) || promos.promo_list.length === 0) {
+        return;
+      }
+      if (!Array.isArray(promos.sponsor_list) || promos.sponsor_list.length === 0) {
+        return;
+      }
+
+      const validPromoIds = promos.promo_list.map(p => String(p.id));
+      let changed = false;
+
+      promos.sponsor_list.forEach(s => {
+        if (s.type === 'internal' && Array.isArray(s.linked_promo_ids)) {
+          const originalLen = s.linked_promo_ids.length;
+          // Normalisasi tipe data String(id)
+          s.linked_promo_ids = s.linked_promo_ids.filter(id => validPromoIds.includes(String(id)));
+          if (s.linked_promo_ids.length !== originalLen) {
+            changed = true;
+          }
+        }
       });
 
-      return sponsors;
+      if (changed) {
+        // HANYA update atribut sponsor_list / saveSponsors, JANGAN mereset atau menimpa array utama promosi
+        this.saveSponsors(promos.sponsor_list);
+      }
+    },
+
+    isSponsorActive(sponsor, now = new Date()) {
+      if (!sponsor) return false;
+      if (sponsor.active === false) return false;
+
+      // 1. Khusus Sponsor Internal Toko (Mini Grid 2x2)
+      if (sponsor.type === 'internal') {
+        if (Array.isArray(sponsor.linked_promo_ids) && sponsor.linked_promo_ids.length > 0) {
+          const promos = this.getPromos();
+          const allPromoList = Array.isArray(promos.promo_list) ? promos.promo_list : [];
+          // Normalisasi kecocokan ID: String(lid) === String(p.id)
+          const linkedPromos = allPromoList.filter(p => sponsor.linked_promo_ids.some(lid => String(lid) === String(p.id)));
+          
+          if (linkedPromos.length === 0) {
+            // Seluruh promo yang ditautkan telah dihapus/tidak ditemukan
+            return false;
+          }
+
+          // Aktif jika MINIMAL SALAH SATU promo yang dicentang sedang aktif berdasarkan jam sistem
+          const hasAnyActivePromo = linkedPromos.some(p => {
+            if (p.active === false) return false;
+            if (p.start_datetime && p.end_datetime) {
+              const start = new Date(p.start_datetime);
+              const end = new Date(p.end_datetime);
+              return now >= start && now <= end;
+            }
+            if (p.monthly_start_day && p.monthly_end_day) {
+              const d = now.getDate();
+              return d >= p.monthly_start_day && d <= p.monthly_end_day;
+            }
+            return true;
+          });
+
+          return hasAnyActivePromo;
+        }
+        // Jika tanpa centang promo (Manual / Selalu Aktif)
+        return true;
+      }
+
+      // 2. Khusus Card Versi Carousel / Slide & Versi Statis Potret (3:4)
+      if (sponsor.is_always_active === false) {
+        if (sponsor.start_datetime && sponsor.end_datetime) {
+          const start = new Date(sponsor.start_datetime);
+          const end = new Date(sponsor.end_datetime);
+          return now >= start && now <= end;
+        } else if (sponsor.start_datetime) {
+          return now >= new Date(sponsor.start_datetime);
+        } else if (sponsor.end_datetime) {
+          return now <= new Date(sponsor.end_datetime);
+        }
+      }
+
+      return true;
     },
 
     isTwinDateToday() {

@@ -516,9 +516,6 @@ const AdminApp = (() => {
       const listContainer = document.getElementById('list-container');
       if (listContainer && (!listContainer.innerHTML || listContainer.innerHTML.trim() === '')) {
         console.warn('[AdminApp] #list-container kosong setelah render, memicu fallback rendering...');
-        if (window.DB && typeof DB.forceResetDemoData === 'function') {
-          DB.forceResetDemoData();
-        }
         if (window.ProductList && typeof ProductList.render === 'function') {
           ProductList.render();
         }

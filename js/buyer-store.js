@@ -1085,9 +1085,15 @@ const BuyerStore = (() => {
       ...(promoSponsorStyle.enabled ? promoSponsorStyle : {})
     };
 
-    // Saring antrean secara ketat dari database (Hapus total pemanggilan fallback/dummy statis lama)
+    // Saring antrean secara ketat dari database dengan validasi masa aktif
     const activePromos = (typeof DB !== 'undefined' && DB.getPromoList) ? (DB.getPromoList() || []).filter(p => p.is_active === true) : [];
-    const activeSponsors = (typeof DB !== 'undefined' && DB.getSponsorList) ? (DB.getSponsorList() || []).filter(s => s.is_active === true) : [];
+    const allSponsors = (typeof DB !== 'undefined' && DB.getSponsorList) ? (DB.getSponsorList() || []) : [];
+    const activeSponsors = allSponsors.filter(s => {
+      if (typeof DB !== 'undefined' && DB.isSponsorActive) {
+        return DB.isSponsorActive(s);
+      }
+      return s.active !== false && s.is_active !== false;
+    });
 
     const promoGenerators = activePromos.map(p => {
       if (p.card_model === 'variant_2') {
@@ -1096,32 +1102,54 @@ const BuyerStore = (() => {
       return () => renderPromoCardVariation1(p, promo1);
     });
 
-    const sponsorGenerators = activeSponsors.map(s => {
-      if (s.type === 'carousel') {
-        return () => renderSponsorCarouselCard(s, sponsor1);
-      } else if (s.type === 'internal') {
-        return () => renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, sponsor2);
-      } else {
-        return () => renderSponsorAdCard(s, sponsor1);
+    // Generator Sponsor Mobile (semua sponsor aktif sesuai kuota masing-masing)
+    const sponsorGeneratorsMobile = [];
+    activeSponsors.forEach(s => {
+      const quota = Math.max(1, parseInt(s.display_quota, 10) || 1);
+      for (let q = 0; q < quota; q++) {
+        if (s.type === 'carousel') {
+          sponsorGeneratorsMobile.push(() => renderSponsorCarouselCard(s, s));
+        } else if (s.type === 'internal') {
+          sponsorGeneratorsMobile.push(() => renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, s));
+        } else {
+          sponsorGeneratorsMobile.push(() => renderSponsorAdCard(s, s));
+        }
       }
     });
 
-    // Aturan Penempatan Banner di Slot Grid:
-    // 1. JIKA activePromos KOSONG dan activeSponsors ADA: Banner slot WAJIB merender item dari activeSponsors (contoh: Sponsor Produk Sendiri Grid 2x2).
-    // 2. JIKA KEDUANYA KOSONG: JANGAN render banner kartu apa pun di grid etalase (hanya tampilkan kartu produk riil).
-    // 3. JIKA KEDUANYA ADA: Sisipkan berselang-seling (Promo -> Sponsor -> Promo, dst.).
-    let bannerGenerators = [];
-    if (promoGenerators.length === 0 && sponsorGenerators.length > 0) {
-      bannerGenerators = sponsorGenerators;
-    } else if (promoGenerators.length > 0 && sponsorGenerators.length === 0) {
-      bannerGenerators = promoGenerators;
-    } else if (promoGenerators.length > 0 && sponsorGenerators.length > 0) {
-      const maxLen = Math.max(promoGenerators.length, sponsorGenerators.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (i < promoGenerators.length) bannerGenerators.push(promoGenerators[i]);
-        if (i < sponsorGenerators.length) bannerGenerators.push(sponsorGenerators[i]);
+    // Generator Sponsor Desktop (hanya sponsor yang memenuhi syarat desktop / bukan mobile_only_ready)
+    const sponsorGeneratorsDesktop = [];
+    activeSponsors.filter(s => !s.mobile_only_ready).forEach(s => {
+      const quota = Math.max(1, parseInt(s.display_quota, 10) || 1);
+      for (let q = 0; q < quota; q++) {
+        if (s.type === 'carousel') {
+          sponsorGeneratorsDesktop.push(() => renderSponsorCarouselCard(s, s));
+        } else if (s.type === 'internal') {
+          sponsorGeneratorsDesktop.push(() => renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, s));
+        } else {
+          sponsorGeneratorsDesktop.push(() => renderSponsorAdCard(s, s));
+        }
       }
+    });
+
+    // Aturan Penempatan Banner Berselang-seling (Promo -> Sponsor -> Promo, dst.)
+    function buildInterspersedGenerators(promosList, sponsorsList) {
+      if (promosList.length === 0 && sponsorsList.length > 0) return sponsorsList;
+      if (promosList.length > 0 && sponsorsList.length === 0) return promosList;
+      if (promosList.length > 0 && sponsorsList.length > 0) {
+        const combined = [];
+        const maxLen = Math.max(promosList.length, sponsorsList.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (i < promosList.length) combined.push(promosList[i]);
+          if (i < sponsorsList.length) combined.push(sponsorsList[i]);
+        }
+        return combined;
+      }
+      return [];
     }
+
+    const bannerGeneratorsMobile = buildInterspersedGenerators(promoGenerators, sponsorGeneratorsMobile);
+    const bannerGeneratorsDesktop = buildInterspersedGenerators(promoGenerators, sponsorGeneratorsDesktop);
 
     let bannerMobileIndex = 0;
     let bannerDesktopIndex = 0;
@@ -1153,20 +1181,18 @@ const BuyerStore = (() => {
       }
 
       // STRICT EDGE PLACEMENT (Hanya jika terdapat banner aktif):
-      if (bannerGenerators.length > 0) {
-        // Mobile (2 Kolom): Banner PERTAMA muncul di Posisi ke-6 (Row 3, Kolom 2). Banner berikutnya berjarak 3 produk.
-        if ((idx + 1) >= 5 && ((idx + 1) - 5) % 3 === 0) {
-          const renderBanner = bannerGenerators[bannerMobileIndex % bannerGenerators.length];
-          html += `<div class="block lg:hidden w-full h-full">${renderBanner()}</div>`;
-          bannerMobileIndex++;
-        }
+      // Mobile (2 Kolom): Banner PERTAMA muncul di Posisi ke-6 (Row 3, Kolom 2). Banner berikutnya berjarak 3 produk.
+      if (bannerGeneratorsMobile.length > 0 && (idx + 1) >= 5 && ((idx + 1) - 5) % 3 === 0) {
+        const renderBanner = bannerGeneratorsMobile[bannerMobileIndex % bannerGeneratorsMobile.length];
+        html += `<div class="block lg:hidden w-full h-full">${renderBanner()}</div>`;
+        bannerMobileIndex++;
+      }
 
-        // Desktop (6 Kolom): Banner PERTAMA muncul di Posisi ke-12 (Row 2, Kolom 6 - setelah 11 produk).
-        if ((idx + 1) >= 11 && ((idx + 1) - 11) % 11 === 0) {
-          const renderBanner = bannerGenerators[bannerDesktopIndex % bannerGenerators.length];
-          html += `<div class="hidden lg:block w-full h-full">${renderBanner()}</div>`;
-          bannerDesktopIndex++;
-        }
+      // Desktop (6 Kolom): Banner PERTAMA muncul di Posisi ke-12 (Row 2, Kolom 6 - setelah 11 produk).
+      if (bannerGeneratorsDesktop.length > 0 && (idx + 1) >= 11 && ((idx + 1) - 11) % 11 === 0) {
+        const renderBanner = bannerGeneratorsDesktop[bannerDesktopIndex % bannerGeneratorsDesktop.length];
+        html += `<div class="hidden lg:block w-full h-full">${renderBanner()}</div>`;
+        bannerDesktopIndex++;
       }
     });
 
@@ -1900,30 +1926,36 @@ const BuyerStore = (() => {
   //    Gambar rasio 3:4 Portrait (tinggi ~75% card sponsor) dengan badge SPONSOR.
   //    Di bagian bawah: 2 tombol aksi stacked [(Icon External Link) "Lihat Tawaran"] dan [(Icon WA) "Pasang Iklan"].
   function renderSponsorAdCard(ad = {}, config = {}) {
-    const bgColor = (config.bg_color !== undefined && config.bg_color !== '') ? config.bg_color : 'transparent';
-    const borderColor = (config.border_color !== undefined && config.border_color !== '') ? config.border_color : '#e2e8f0';
-    const borderRadius = config.border_radius || '16px';
-    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+    const bgColor = (ad.bg_color !== undefined && ad.bg_color !== '') ? ad.bg_color : ((config.bg_color !== undefined && config.bg_color !== '') ? config.bg_color : 'transparent');
+    const borderColor = ad.border_color || config.border_color || '#e2e8f0';
+    const borderWidth = ad.border_width || config.border_width || '1px';
+    const borderRadius = ad.border_radius || config.border_radius || '16px';
+    const shadowPreset = ad.shadow || config.shadow || 'sm';
+    const shadowClass = shadowPreset === 'none' ? 'sponsor-shadow-none' : `sponsor-shadow-${shadowPreset}`;
+    const shadowStyle = shadowPreset === 'none' ? 'box-shadow: none !important;' : '';
+    const animType = ad.animation || config.animation || 'none';
+    const animClass = animType === 'fade' ? 'sponsor-anim-fade' : (animType === 'slide' ? 'sponsor-anim-slide' : (animType === 'zoom' ? 'sponsor-anim-zoom' : ''));
 
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
     const targetUrl = ad.cta_target || ad.link_url || 'https://songercreative.com';
     const phone = (settings.store_phone || '0888-5844-380').replace(/[^0-9]/g, '');
     const cleanPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
     const sponsorWaUrl = `https://wa.me/${cleanPhone || '628885844380'}?text=${encodeURIComponent('Halo Admin Songer Creative, saya ingin pasang iklan sponsor di etalase toko.')}`;
 
     const imgContainer = ad.image_url ? `
-      <img src="${ad.image_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Iklan Sponsor" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 text-center p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-bold text-slate-400\\'>SPACE IKLAN AVAILABLE</span></div>';" />
+      <img src="${ad.image_url}" class="aspect-[3/4] w-full h-full object-cover rounded-[inherit] group-hover:scale-105 transition duration-500" alt="Iklan Sponsor" onerror="this.onerror=null; this.outerHTML='<div class=\\'aspect-[3/4] w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 text-center p-3 rounded-[inherit]\\'><i class=\\'bi bi-badge-ad text-3xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-bold text-slate-400\\'>SPACE IKLAN AVAILABLE</span></div>';" />
     ` : `
-      <div class="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 text-center p-3">
+      <div class="aspect-[3/4] w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 text-center p-3 rounded-[inherit]">
         <i class="bi bi-badge-ad text-3xl mb-1 text-slate-300"></i>
         <span class="text-[10px] font-bold text-slate-400">SPACE IKLAN AVAILABLE</span>
       </div>
     `;
 
     return `
-      <!-- CARD SPONSOR VERSI 1 GAMBAR DENGAN 2 CTA (WIREFRAME GAMBAR 1 & 2) -->
-      <div class="h-full flex flex-col justify-between overflow-hidden rounded-2xl border shadow-xs hover:shadow-xl transition-all duration-300 group relative" style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: ${borderRadius};" data-id="${ad.id || 'sponsor'}">
-        <!-- Area Gambar Rasio 4:3 Identik dengan Kartu Produk Etalase Mobile -->
-        <a href="${escapeHtml(targetUrl)}" target="_blank" class="relative w-full aspect-[4/3] bg-slate-100 overflow-hidden block shrink-0 cursor-pointer" title="Buka Tawaran Sponsor">
+      <!-- CARD SPONSOR VERSI 1 GAMBAR DENGAN 2 CTA (RASIO 3:4 PORTRAIT MURNI) -->
+      <div class="h-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="background-color: ${bgColor}; border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-id="${ad.id || 'sponsor'}">
+        <!-- Area Gambar Rasio 3:4 Portrait Murni -->
+        <a href="${escapeHtml(targetUrl)}" target="_blank" class="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden block shrink-0 cursor-pointer" style="border-top-left-radius: inherit; border-top-right-radius: inherit;" title="Buka Tawaran Sponsor">
           ${imgContainer}
           <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition duration-300 pointer-events-none"></div>
           <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
@@ -1931,7 +1963,7 @@ const BuyerStore = (() => {
           </span>
         </a>
 
-        <!-- Bagian Bawah: 2 Tombol Aksi Stacked Vertikal Sesuai Wireframe Gambar 1 & 2 (~25% Tinggi Card) -->
+        <!-- Bagian Bawah: 2 Tombol Aksi Stacked Vertikal Sesuai Wireframe -->
         <div class="p-2 sm:p-2.5 flex-1 flex flex-col justify-end gap-1.5 mt-auto">
           <!-- Tombol 1: (Icon External Link) Lihat Tawaran -->
           <a href="${escapeHtml(targetUrl)}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs hover:brightness-110">
@@ -1948,14 +1980,20 @@ const BuyerStore = (() => {
     `;
   }
 
-  // 2. Sponsor Carousel Multi-Image (Maksimal 5 Foto - Wireframe Gambar 1 #2):
+  // 2. Sponsor Carousel Multi-Image (Maksimal 5 Foto):
   //    FULL IMG tanpa judul & deskripsi, TANPA TOMBOL CTA DI BAWAH.
   //    Tinggi serasi dan proporsional dengan kartu produk dalam baris yang sama.
   //    Dilengkapi dots navigasi dinamis: 1 slide = tanpa dots, 2-5 slide = 2-5 dots.
   function renderSponsorCarouselCard(carousel = {}, config = {}) {
-    const bgColor = (config.bg_color !== undefined && config.bg_color !== '') ? config.bg_color : 'transparent';
-    const borderColor = (config.border_color !== undefined && config.border_color !== '') ? config.border_color : '#e2e8f0';
-    const borderRadius = config.border_radius || '16px';
+    const borderColor = carousel.border_color || config.border_color || '#e2e8f0';
+    const borderWidth = carousel.border_width || config.border_width || '1px';
+    const borderRadius = carousel.border_radius || config.border_radius || '16px';
+    const shadowPreset = carousel.shadow || config.shadow || 'sm';
+    const shadowClass = shadowPreset === 'none' ? 'sponsor-shadow-none' : `sponsor-shadow-${shadowPreset}`;
+    const shadowStyle = shadowPreset === 'none' ? 'box-shadow: none !important;' : '';
+    const animTypeCard = carousel.animation || config.animation || 'none';
+    const animClass = animTypeCard === 'fade' ? 'sponsor-anim-fade' : (animTypeCard === 'slide' ? 'sponsor-anim-slide' : (animTypeCard === 'zoom' ? 'sponsor-anim-zoom' : ''));
+
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
     const slides = Array.isArray(carousel.slides) ? carousel.slides.slice(0, 5) : [];
     const animType = carousel.animation_type || 'slide';
@@ -1969,9 +2007,9 @@ const BuyerStore = (() => {
 
     if (slides.length === 0) {
       return `
-        <div class="h-full w-full flex flex-col justify-between overflow-hidden rounded-2xl border shadow-xs hover:shadow-xl transition-all duration-300 group relative" style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: ${borderRadius};">
-          <!-- Area Placeholder Penuh Sesuai Wireframe (FULL IMG TANPA CTA) -->
-          <a href="${sponsorWaUrl}" target="_blank" class="relative w-full h-full flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white cursor-pointer group">
+        <div class="h-full w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
+          <!-- Area Placeholder Penuh (FULL IMG TANPA CTA) -->
+          <a href="${sponsorWaUrl}" target="_blank" class="relative w-full h-full flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white cursor-pointer group" style="border-radius: inherit;">
             <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
               SPONSOR
             </span>
@@ -1989,28 +2027,27 @@ const BuyerStore = (() => {
     }
 
     const slideCount = slides.length;
-    // Dynamic Dots: jika 1 tidak ada dots, jika 2 hanya ada 2 dots, jika 3 maka 3, jika 4 maka 4, jika 5 maka 5
     const showDots = slideCount > 1;
 
     let slidesHtml = '';
     if (animType === 'fade' || animType === 'scale') {
       slidesHtml = slides.map((slide, idx) => `
-        <div class="carousel-slide-item absolute inset-0 w-full h-full transition-all duration-700 ease-in-out ${idx === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}" data-slide="${idx}">
-          <a href="${escapeHtml(slide.target_url || sponsorWaUrl)}" ${slide.target_url ? 'target="_blank"' : ''} class="w-full h-full block relative" title="Sponsor ${idx + 1}">
-            <img src="${escapeHtml(slide.image_url)}" alt="Sponsor ${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-[10px] font-bold\\'>SPACE IKLAN AVAILABLE</span></div>';" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 group-hover:opacity-60 transition duration-300"></div>
+        <div class="carousel-slide-item absolute inset-0 w-full h-full transition-all duration-700 ease-in-out ${idx === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}" data-slide="${idx}" style="border-radius: inherit;">
+          <a href="${escapeHtml(slide.target_url || sponsorWaUrl)}" ${slide.target_url ? 'target="_blank"' : ''} class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
+            <img src="${escapeHtml(slide.image_url)}" alt="Sponsor ${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-[10px] font-bold\\'>SPACE IKLAN AVAILABLE</span></div>';" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 group-hover:opacity-60 transition duration-300" style="border-radius: inherit;"></div>
           </a>
         </div>
       `).join('');
     } else {
       // Default: 'slide' horizontal
       slidesHtml = `
-        <div class="slides-track flex w-full h-full transition-transform duration-500 ease-in-out">
+        <div class="slides-track flex w-full h-full transition-transform duration-500 ease-in-out" style="border-radius: inherit;">
           ${slides.map((slide, idx) => `
-            <div class="w-full h-full shrink-0 relative block" style="width: 100%; height: 100%;">
-              <a href="${escapeHtml(slide.target_url || sponsorWaUrl)}" ${slide.target_url ? 'target="_blank"' : ''} class="w-full h-full block relative" title="Sponsor ${idx + 1}">
-                <img src="${escapeHtml(slide.image_url)}" alt="Sponsor ${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-[10px] font-bold\\'>SPACE IKLAN AVAILABLE</span></div>';" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 group-hover:opacity-60 transition duration-300"></div>
+            <div class="w-full h-full shrink-0 relative block" style="width: 100%; height: 100%; border-radius: inherit;">
+              <a href="${escapeHtml(slide.target_url || sponsorWaUrl)}" ${slide.target_url ? 'target="_blank"' : ''} class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
+                <img src="${escapeHtml(slide.image_url)}" alt="Sponsor ${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-[10px] font-bold\\'>SPACE IKLAN AVAILABLE</span></div>';" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 group-hover:opacity-60 transition duration-300" style="border-radius: inherit;"></div>
               </a>
             </div>
           `).join('')}
@@ -2023,10 +2060,10 @@ const BuyerStore = (() => {
     `).join('') : '';
 
     return `
-      <!-- CARD SPONSOR VERSI MAX 5 GAMBAR CAROUSEL TANPA CTA (WIREFRAME GAMBAR 1 & 2) -->
-      <div id="${sliderId}" class="sponsor-carousel-container h-full w-full flex flex-col justify-between overflow-hidden rounded-2xl border shadow-xs hover:shadow-xl transition-all duration-300 group relative" style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: ${borderRadius};" data-anim="${animType}" data-interval="${intervalTime}" data-total="${slideCount}">
+      <!-- CARD SPONSOR VERSI MAX 5 GAMBAR CAROUSEL TANPA CTA -->
+      <div id="${sliderId}" class="sponsor-carousel-container h-full w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-anim="${animType}" data-interval="${intervalTime}" data-total="${slideCount}">
         <!-- Area Gambar Penuh (FULL IMG) Mengisi Penuh Kartu Mengikuti Baris Grid & Proporsional -->
-        <div class="relative w-full h-full flex-1 min-h-0 aspect-[4/3] sm:aspect-auto overflow-hidden bg-slate-900">
+        <div class="relative w-full h-full flex-1 min-h-0 aspect-[3/4] sm:aspect-auto overflow-hidden bg-slate-900" style="border-radius: inherit;">
           ${slidesHtml}
           
           <!-- Badge SPONSOR di Sudut Kiri Atas -->
@@ -2045,22 +2082,28 @@ const BuyerStore = (() => {
     `;
   }
 
-  // 3. Sponsor Internal Toko ("Untuk Produk Sendiri" - Wireframe Gambar 1 #3):
-  //    Menampilkan Judul Promo kustom di header (misal: "FLASH SALE 11.11").
-  //    Di dalamnya terdapat grid 2x2 mini-card produk internal (4 mini card produk per batch slide).
-  //    Dilengkapi dots dinamis: 1 batch = tanpa dots, 2-5 batch = 2-5 dots.
-  //    Tinggi serasi dan proporsional dengan kartu produk dalam baris grid.
+  // 3. Sponsor Internal Toko ("Untuk Produk Sendiri"):
+  //    Header bersih: tanpa dot hijau, tanpa badge promo, tanpa border-b divider.
+  //    Tinggi terkunci h-full flex flex-col justify-between serasi dengan kartu produk standar di mobile.
+  //    Grid 2x2 mini card memiliki thumbnail aspect-square dan padding rapat agar tinggi kartu tidak melar melebihi kartu produk di smartphone.
   function renderSponsorInternalProductsCard(promos, config = {}) {
-    if (promos?.sponsor_internal && promos.sponsor_internal.active === false) return '';
+    const s = promos?.sponsor_internal || promos || {};
+    if (s.active === false && s.is_active === false) return '';
     const allProducts = (typeof DB !== 'undefined' && DB.getProducts) ? DB.getProducts().filter(p => p.is_active !== false) : [];
     if (allProducts.length === 0) return '';
 
-    const bgColor = (config.bg_color !== undefined && config.bg_color !== '') ? config.bg_color : 'transparent';
-    const borderColor = (config.border_color !== undefined && config.border_color !== '') ? config.border_color : '#e2e8f0';
-    const borderRadius = config.border_radius || '16px';
+    const bgColor = (s.bg_color !== undefined && s.bg_color !== '') ? s.bg_color : ((config.bg_color !== undefined && config.bg_color !== '') ? config.bg_color : '#ffffff');
+    const borderColor = s.border_color || config.border_color || '#e2e8f0';
+    const borderWidth = s.border_width || config.border_width || '1px';
+    const borderRadius = s.border_radius || config.border_radius || '16px';
+    const shadowPreset = s.shadow || config.shadow || 'sm';
+    const shadowClass = shadowPreset === 'none' ? 'sponsor-shadow-none' : `sponsor-shadow-${shadowPreset}`;
+    const shadowStyle = shadowPreset === 'none' ? 'box-shadow: none !important;' : '';
+    const animTypeCard = s.animation || config.animation || 'none';
+    const animClass = animTypeCard === 'fade' ? 'sponsor-anim-fade' : (animTypeCard === 'slide' ? 'sponsor-anim-slide' : (animTypeCard === 'zoom' ? 'sponsor-anim-zoom' : ''));
 
     // Prioritaskan produk pilihan seller dari admin panel jika ada
-    const selectedIds = promos?.sponsor_internal?.product_ids || [];
+    const selectedIds = s.product_ids || [];
     let displayProds = [];
     if (Array.isArray(selectedIds) && selectedIds.length > 0) {
       displayProds = selectedIds.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
@@ -2082,7 +2125,7 @@ const BuyerStore = (() => {
     const showDots = totalBatches > 1;
 
     const cardId = 'sponsor-internal-' + Math.random().toString(36).substring(2, 9);
-    const title = promos?.sponsor_internal?.title || promos?.internal_promo_title || config.title || 'FLASH SALE 11.11';
+    const title = s.title || promos?.internal_promo_title || config.title || 'FLASH SALE 11.11';
 
     function renderMiniGrid(batchList) {
       return batchList.map(prod => {
@@ -2092,18 +2135,18 @@ const BuyerStore = (() => {
         const imgSrc = (Array.isArray(prod.images) && prod.images.length > 0) ? prod.images[0] : (prod.image_url || 'assets/images/logo-songer-creative.png');
 
         return `
-          <a href="product.html?id=${prod.id}" class="group/mini block p-1.5 rounded-xl border border-slate-200/90 hover:border-emerald-500 bg-white hover:shadow-md transition flex flex-col justify-between">
-            <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 shrink-0 mb-1">
+          <a href="product.html?id=${prod.id}" class="group/mini block p-1 sm:p-1.5 rounded-xl border border-slate-200/90 hover:border-emerald-500 bg-white hover:shadow-md transition flex flex-col justify-between">
+            <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 shrink-0 mb-0.5 sm:mb-1">
               <img src="${imgSrc}" class="w-full h-full object-cover group-hover/mini:scale-105 transition duration-300" alt="${escapeHtml(prod.name)}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-xs\\'><i class=\\'bi bi-image\\'></i></div>';" />
               ${effDiscount.has_discount ? `
-                <span class="absolute top-1 right-1 bg-rose-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-xs">
+                <span class="absolute top-1 right-1 bg-rose-600 text-white text-[8px] font-black px-1 py-0.2 rounded shadow-xs">
                   ${effDiscount.percent}%
                 </span>
               ` : ''}
             </div>
             <div>
-              <p class="text-[10px] sm:text-[11px] font-bold text-slate-800 line-clamp-1 group-hover/mini:text-emerald-700 transition leading-tight" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</p>
-              <p class="text-[10px] sm:text-[11px] font-black text-emerald-600 mt-0.5">${formatIDR(finalPrice)}</p>
+              <p class="text-[9px] sm:text-[11px] font-bold text-slate-800 line-clamp-1 group-hover/mini:text-emerald-700 transition leading-tight" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</p>
+              <p class="text-[9px] sm:text-[11px] font-black text-emerald-600 mt-0.5">${formatIDR(finalPrice)}</p>
             </div>
           </a>
         `;
@@ -2111,7 +2154,7 @@ const BuyerStore = (() => {
     }
 
     const dotsHtml = showDots ? `
-      <div class="flex items-center justify-center gap-1.5 py-1.5 mt-auto">
+      <div class="flex items-center justify-center gap-1.5 py-1 mt-auto">
         ${batches.map((_, idx) => `
           <button type="button" class="internal-batch-dot w-2 h-2 rounded-full ${idx === 0 ? 'bg-emerald-600 scale-125' : 'bg-slate-300 hover:bg-slate-400'} transition-all cursor-pointer" data-target="${cardId}" data-batch="${idx + 1}" aria-label="Batch ${idx + 1}"></button>
         `).join('')}
@@ -2119,27 +2162,23 @@ const BuyerStore = (() => {
     ` : '';
 
     return `
-      <!-- CARD SPONSOR UNTUK PRODUK SENDIRI (WIREFRAME GAMBAR 1 & 2) -->
-      <div id="${cardId}" class="h-full flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl border shadow-xs hover:shadow-xl transition-all duration-300 group relative" style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: ${borderRadius};">
-        <!-- Header Judul Promo Sesuai Wireframe Gambar 1 (#3) -->
-        <div class="flex items-center justify-between pb-2 border-b border-slate-200/80">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
-            <h4 class="font-black text-xs sm:text-sm text-slate-900 tracking-tight uppercase truncate" title="${escapeHtml(title)}">${escapeHtml(title)}</h4>
-          </div>
-          <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 uppercase tracking-wider shrink-0">PROMO</span>
+      <!-- CARD SPONSOR UNTUK PRODUK SENDIRI (HEADER BERSIH TANPA DOT, BADGE, & DIVIDER) -->
+      <div id="${cardId}" class="h-full flex flex-col justify-between p-2.5 sm:p-3.5 transition-all duration-300 group relative ${shadowClass} ${animClass}" style="background-color: ${bgColor}; border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
+        <!-- Header Judul Sponsor Bersih -->
+        <div class="flex items-center justify-start pb-1 min-w-0">
+          <h4 class="font-black text-xs sm:text-sm text-slate-900 tracking-tight uppercase truncate" title="${escapeHtml(title)}">${escapeHtml(title)}</h4>
         </div>
 
         <!-- Grid 2x2 Mini-Card Produk Internal (Batch Slides) -->
-        <div class="relative flex-1 min-h-0 flex flex-col justify-center my-auto py-1.5">
+        <div class="relative flex-1 min-h-0 flex flex-col justify-center my-auto py-1">
           ${batches.map((batchList, idx) => `
-            <div class="internal-batch-view batch-${idx + 1} grid grid-cols-2 gap-2 ${idx === 0 ? '' : 'hidden'} transition-all duration-300">
+            <div class="internal-batch-view batch-${idx + 1} grid grid-cols-2 gap-1.5 sm:gap-2 ${idx === 0 ? '' : 'hidden'} transition-all duration-300">
               ${renderMiniGrid(batchList)}
             </div>
           `).join('')}
         </div>
 
-        <!-- Dynamic Dots Navigasi Slide Sesuai Jumlah Batch (1 batch = tanpa dots, 2-5 batch = 2-5 dots) -->
+        <!-- Dynamic Dots Navigasi Slide -->
         ${dotsHtml}
       </div>
     `;

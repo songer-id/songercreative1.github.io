@@ -11,10 +11,13 @@ const PromoManager = (() => {
   let activeSponsorType = 'ad1'; // 'ad1' | 'carousel' | 'internal'
   let currentEditingPromoId = null;
   let currentEditingSponsorId = null;
+  let currentEditingSponsorMobileOnly = false;
   let currentPromoImages = [];
   let currentSponsorAdImages = [];
   let currentCarouselSlides = [];
   let currentInternalProductIds = [];
+  let currentPromotions = [];
+  let currentSponsors = [];
   let sponsorCarouselPreviewTimer = null;
 
   function clearSponsorPreviewTimer() {
@@ -328,6 +331,9 @@ const PromoManager = (() => {
   }
 
   function init(initialTab = null) {
+    currentPromotions = (typeof DB !== 'undefined' && DB.getPromotions) ? DB.getPromotions() : [];
+    currentSponsors = (typeof DB !== 'undefined' && DB.getSponsors) ? DB.getSponsors() : [];
+
     if (initialTab) {
       if (['promos', 'promo', 'twin', 'monthly', 'special'].includes(initialTab)) {
         activeTab = 'promos';
@@ -346,6 +352,9 @@ const PromoManager = (() => {
     clearSponsorPreviewTimer();
     const container = document.getElementById('promo-manager-container');
     if (!container) return;
+
+    currentPromotions = (typeof DB !== 'undefined' && DB.getPromotions) ? DB.getPromotions() : [];
+    currentSponsors = (typeof DB !== 'undefined' && DB.getSponsors) ? DB.getSponsors() : [];
 
     const promos = DB.getPromos();
     const vouchers = DB.getVouchers();
@@ -434,7 +443,9 @@ const PromoManager = (() => {
   // SUBMENU 1: PROMO TOKO (STATUS TABLE + 5-STEP EDIT FORM + LIVE CARD PREVIEW)
   // ============================================================================
   function renderPromoTokoTab(promos, categories, products) {
-    const promoList = Array.isArray(promos.promo_list) ? promos.promo_list : [];
+    const promoList = (Array.isArray(promos.promo_list) && promos.promo_list.length > 0)
+      ? promos.promo_list
+      : (Array.isArray(currentPromotions) ? currentPromotions : []);
 
     let current = null;
     if (activePromoId === 'new') {
@@ -474,7 +485,7 @@ const PromoManager = (() => {
         image_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80'
       };
     } else if (activePromoId) {
-      current = promoList.find(p => p.id === activePromoId);
+      current = promoList.find(p => String(p.id) === String(activePromoId));
     }
 
     if (!current && promoList.length > 0) {
@@ -1406,29 +1417,93 @@ const PromoManager = (() => {
 
   // ============================================================================
   // SUBMENU 3: IKLAN SPONSOR (3 MODEL: STATIS, CAROUSEL MAKS 5 & INTERNAL 2X2)
+  // =======================================================================  // Helper: Modal Validasi Bertingkat Pembuatan Sponsor Baru
+  function showSponsorValidationModal({ type, title, message, productCount, onConfirm }) {
+    const existing = document.getElementById('sponsor-validation-modal');
+    if (existing) existing.remove();
+
+    const isBlocked = type === 'blocked';
+    const modalHtml = `
+      <div id="sponsor-validation-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-center space-y-4">
+          <div class="w-14 h-14 rounded-2xl ${isBlocked ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-700'} flex items-center justify-center mx-auto shadow-inner">
+            <i data-lucide="${isBlocked ? 'alert-triangle' : 'info'}" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">${escapeHtml(title)}</h3>
+            <p class="text-xs text-slate-600 mt-2 leading-relaxed">${escapeHtml(message)}</p>
+            <div class="mt-3 inline-block px-3 py-1 rounded-xl bg-slate-100 text-[11px] font-bold text-slate-700">
+              Total Produk Aktif Saat Ini: <strong class="text-emerald-700">${productCount} Produk</strong>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-center gap-3">
+            ${isBlocked ? `
+              <button type="button" id="btn-close-val-modal" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer">
+                Mengerti & Tutup
+              </button>
+            ` : `
+              <button type="button" id="btn-cancel-val-modal" class="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer">
+                Batal
+              </button>
+              <button type="button" id="btn-proceed-val-modal" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                Lanjutkan (Mobile Only)
+              </button>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    if (window.lucide) window.lucide.createIcons();
+
+    const modalEl = document.getElementById('sponsor-validation-modal');
+    const closeBtn = document.getElementById('btn-close-val-modal');
+    const cancelBtn = document.getElementById('btn-cancel-val-modal');
+    const proceedBtn = document.getElementById('btn-proceed-val-modal');
+
+    if (closeBtn) closeBtn.onclick = () => modalEl.remove();
+    if (cancelBtn) cancelBtn.onclick = () => modalEl.remove();
+    if (proceedBtn) {
+      proceedBtn.onclick = () => {
+        modalEl.remove();
+        if (typeof onConfirm === 'function') onConfirm();
+      };
+    }
+  }
+
+  // ============================================================================
+  // SUBMENU 3: IKLAN SPONSOR (UNLIMITED CARDS, KUOTA, JADWAL & STYLE INDIVIDUAL)
   // ============================================================================
   function renderSponsorsTab(promos) {
-    const sponsorType = (typeof activeSponsorType !== 'undefined' && activeSponsorType) ? activeSponsorType : 'ad1';
-    const ads = promos.sponsor_ads || [];
-    const ad1 = ads[0] || {};
-    const carousel = promos.sponsor_carousel || { is_active: false, active: false, slides: [] };
-    const internal = promos.sponsor_internal || { active: true, title: promos.internal_promo_title || 'Sedang Promo', product_ids: [] };
-    const carouselSlideCount = Array.isArray(carousel.slides) ? carousel.slides.length : 0;
-    const internalProdCount = Array.isArray(internal.product_ids) ? internal.product_ids.length : 0;
+    const sponsorList = (typeof DB !== 'undefined' && DB.getSponsorList) ? DB.getSponsorList() : [];
+    if (!currentEditingSponsorId && sponsorList.length > 0) {
+      currentEditingSponsorId = sponsorList[0].id;
+    }
+    const currentSponsor = (currentEditingSponsorId && currentEditingSponsorId !== 'new')
+      ? sponsorList.find(s => String(s.id) === String(currentEditingSponsorId))
+      : null;
+    if (currentSponsor && !activeSponsorType) {
+      activeSponsorType = currentSponsor.type || 'ad1';
+    }
 
     return `
       <div class="space-y-6">
         
-        <!-- 1. TABEL DAFTAR SPONSOR (3 MODEL LENGKAP) -->
+        <!-- 1. TABEL DAFTAR SPONSOR (UNLIMITED SLOTS & KUOTA INPUT) -->
         <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
               <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
                 <i data-lucide="image" class="w-5 h-5 text-emerald-600"></i>
-                <span>Daftar Slot Iklan Sponsor (3 Model Pilihan)</span>
+                <span>Daftar Slot Iklan Sponsor (${sponsorList.length} Kartu Terdaftar)</span>
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">Kelola banner sponsor statis, slider carousel foto, dan mini katalog produk internal toko 2x2.</p>
+              <p class="text-xs text-slate-500 mt-0.5">Kelola banner sponsor statis 3:4, slider carousel foto, dan mini katalog produk internal toko 2x2 tanpa batasan kuantitas.</p>
             </div>
+            <button type="button" id="btn-add-new-sponsor" class="btn-primary-brand px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-md flex items-center gap-1.5 transition hover:brightness-105 cursor-pointer shrink-0">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i>
+              <span>Tambah Card Sponsor Baru</span>
+            </button>
           </div>
 
           <div class="overflow-x-auto border border-slate-100 rounded-2xl">
@@ -1438,108 +1513,117 @@ const PromoManager = (() => {
                   <th class="p-3.5 w-16">Preview</th>
                   <th class="p-3.5">Judul / Label Sponsor</th>
                   <th class="p-3.5">Model Kartu</th>
+                  <th class="p-3.5 text-center">Kuota Tampil</th>
                   <th class="p-3.5 text-center">Status Aktif</th>
-                  <th class="p-3.5 text-center">Aksi Cepat</th>
+                  <th class="p-3.5 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                           <!-- ROW: AD1 (SPONSOR STATIS) -->
-                <tr class="sponsor-row-item hover:bg-slate-50/80 transition cursor-pointer ${sponsorType === 'ad1' ? 'bg-emerald-50/40' : ''}" data-type="ad1">
-                  <td class="p-3.5">
-                    <img src="${escapeHtml(ad1.image_url || 'assets/images/logo-songer-creative.png')}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100" onerror="this.onerror=null; this.outerHTML='<div class=\'w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 text-slate-400 text-sm border border-slate-200\'><i class=\'bi bi-images\'></i></div>';" />
-                  </td>
-                  <td class="p-3.5">
-                    <span class="font-bold text-slate-800 block">${escapeHtml(ad1.title || 'Sponsor Statis')}</span>
-                    <span class="inline-block text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-semibold mt-0.5">Saran Skala: 4:3 / 3:2 Landscape (atau 1:1) + 2 CTA</span>
-                  </td>
-                  <td class="p-3.5 text-slate-600">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-slate-50 text-slate-700 border-slate-200">Sponsor Statis (1 Gambar)</span>
-                  </td>
-                  <td class="p-3.5 text-center">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${ad1.active !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
-                      ${ad1.active !== false ? 'AKTIF' : 'NONAKTIF'}
-                    </span>
-                  </td>
-                  <td class="p-3.5 text-center" onclick="event.stopPropagation()">
-                    <div class="flex items-center justify-center gap-2">
-                      <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" class="sr-only peer toggle-sponsor-status" data-type="ad1" ${ad1.active !== false ? 'checked' : ''} />
-                        <div class="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
-                      </label>
-                      <button type="button" class="btn-reset-sponsor text-slate-400 hover:text-rose-500 transition" data-type="ad1" title="Reset Sponsor">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                ${sponsorList.length === 0 ? `
+                  <tr>
+                    <td colspan="6" class="p-8 text-center text-slate-400">
+                      Belum ada kartu sponsor. Klik tombol <strong>Tambah Card Sponsor Baru</strong> di atas untuk membuat sponsor.
+                    </td>
+                  </tr>
+                ` : sponsorList.map((s) => {
+                  const isSelected = String(currentEditingSponsorId) === String(s.id);
+                  let thumbHtml = '';
+                  if (s.type === 'carousel') {
+                    thumbHtml = `
+                      <div class="w-10 h-10 rounded-lg border border-slate-200 bg-slate-900 flex items-center justify-center text-blue-400">
+                        <i data-lucide="images" class="w-5 h-5"></i>
+                      </div>
+                    `;
+                  } else if (s.type === 'internal') {
+                    thumbHtml = `
+                      <div class="w-10 h-10 rounded-lg border border-slate-200 bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                      </div>
+                    `;
+                  } else {
+                    thumbHtml = `
+                      <img src="${escapeHtml(s.image_url || 'assets/images/logo-songer-creative.png')}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 text-slate-400 text-sm border border-slate-200\\'><i class=\\'bi bi-images\\'></i></div>';" />
+                    `;
+                  }
 
-                <!-- ROW: CAROUSEL -->
-                <tr class="sponsor-row-item hover:bg-slate-50/80 transition cursor-pointer ${sponsorType === 'carousel' ? 'bg-emerald-50/40' : ''}" data-type="carousel">
-                  <td class="p-3.5">
-                    <div class="w-10 h-10 rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center text-blue-600">
-                      <i data-lucide="images" class="w-5 h-5"></i>
-                    </div>
-                  </td>
-                  <td class="p-3.5">
-                    <span class="font-bold text-slate-800 block">Sponsor Slider Carousel (${carouselSlideCount} / 5 Gambar)</span>
-                    <span class="inline-block text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-semibold mt-0.5">Saran Skala: 3:4 Portrait (Full Card) Tanpa CTA</span>
-                  </td>
-                  <td class="p-3.5 text-slate-600">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-blue-50 text-blue-700 border-blue-200">Slider Carousel (Otomatis)</span>
-                  </td>
-                  <td class="p-3.5 text-center">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${(carousel.is_active || carousel.active) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
-                      ${(carousel.is_active || carousel.active) ? 'AKTIF' : 'NONAKTIF'}
-                    </span>
-                  </td>
-                  <td class="p-3.5 text-center" onclick="event.stopPropagation()">
-                    <div class="flex items-center justify-center gap-2">
-                      <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" class="sr-only peer toggle-sponsor-status" data-type="carousel" ${(carousel.is_active || carousel.active) ? 'checked' : ''} />
-                        <div class="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
-                      </label>
-                      <button type="button" class="btn-reset-sponsor text-slate-400 hover:text-rose-500 transition" data-type="carousel" title="Reset Carousel">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  let modelBadge = '';
+                  if (s.type === 'carousel') {
+                    const slideCount = Array.isArray(s.slides) ? s.slides.length : 0;
+                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-blue-50 text-blue-700 border-blue-200">Slider (${slideCount}/5 Foto)</span>`;
+                  } else if (s.type === 'internal') {
+                    const prodCount = Array.isArray(s.product_ids) ? s.product_ids.length : 0;
+                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">Produk Sendiri 2x2 (${prodCount} Produk)</span>`;
+                  } else {
+                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-slate-50 text-slate-700 border-slate-200">Statis 3:4 (1 Banner)</span>`;
+                  }
 
-                <!-- ROW: INTERNAL TOKO (GRID 2x2) -->
-                <tr class="sponsor-row-item hover:bg-slate-50/80 transition cursor-pointer ${sponsorType === 'internal' ? 'bg-emerald-50/40' : ''}" data-type="internal">
-                  <td class="p-3.5">
-                    <div class="w-10 h-10 rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center text-emerald-600">
-                      <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                    </div>
-                  </td>
-                  <td class="p-3.5">
-                    <div class="flex items-center gap-2" onclick="event.stopPropagation()">
-                      <input type="text" id="sponsor-internal-title-table-input" value="${escapeHtml(internal.title || 'FLASH SALE 11.11')}" class="px-2.5 py-1 text-xs font-bold border border-slate-300 rounded-lg focus:border-emerald-500 outline-none bg-white w-40 sm:w-48 shadow-2xs" placeholder="Judul Promo (misal: FLASH SALE 11.11)" title="Input Judul Promo Internal Langsung di Tabel" />
-                      <span class="text-[10px] text-slate-500 shrink-0">(${internalProdCount} Produk)</span>
-                    </div>
-                    <span class="inline-block text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold mt-1">Produk Sendiri Grid 2x2 (Dots Dinamis 1-5)</span>
-                  </td>
-                  <td class="p-3.5 text-slate-600">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">Sponsor Produk Sendiri (Grid 2x2)</span>
-                  </td>
-                  <td class="p-3.5 text-center">
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${internal.active !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
-                      ${internal.active !== false ? 'AKTIF' : 'NONAKTIF'}
-                    </span>
-                  </td>
-                  <td class="p-3.5 text-center" onclick="event.stopPropagation()">
-                    <div class="flex items-center justify-center gap-2">
-                      <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" class="sr-only peer toggle-sponsor-status" data-type="internal" ${internal.active !== false ? 'checked' : ''} />
-                        <div class="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
-                      </label>
-                      <button type="button" class="btn-reset-sponsor text-slate-400 hover:text-rose-500 transition" data-type="internal" title="Reset Sponsor Internal">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  let scheduleInfo = '';
+                  if (s.type === 'internal') {
+                    const linkedCount = Array.isArray(s.linked_promo_ids) ? s.linked_promo_ids.length : 0;
+                    if (linkedCount > 0) {
+                      scheduleInfo = `<span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold"><i class="bi bi-clock-history"></i> Auto (${linkedCount} Promo)</span>`;
+                    } else {
+                      scheduleInfo = `<span class="text-[10px] text-slate-500 font-medium">Selalu Aktif (Manual)</span>`;
+                    }
+                  } else {
+                    if (s.is_always_active !== false) {
+                      scheduleInfo = `<span class="text-[10px] text-slate-500 font-medium">Selalu Aktif</span>`;
+                    } else if (s.start_datetime || s.end_datetime) {
+                      const startStr = s.start_datetime ? s.start_datetime.replace('T', ' ') : 'Mulai';
+                      const endStr = s.end_datetime ? s.end_datetime.replace('T', ' ') : 'Selesai';
+                      scheduleInfo = `<span class="inline-flex items-center gap-1 text-[10px] text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded font-semibold" title="${startStr} s/d ${endStr}"><i class="bi bi-calendar-event"></i> ${startStr.slice(5, 16)} s/d ${endStr.slice(5, 16)}</span>`;
+                    } else {
+                      scheduleInfo = `<span class="text-[10px] text-slate-500 font-medium">Selalu Aktif</span>`;
+                    }
+                  }
 
+                  const mobileOnlyBadge = s.mobile_only_ready ? `<span class="inline-block text-[9px] font-black uppercase text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.2 rounded ml-1" title="Hanya tampil di versi mobile/ponsel">Mobile Only</span>` : '';
+
+                  return `
+                    <tr class="sponsor-row-item hover:bg-slate-50/80 transition cursor-pointer ${isSelected ? 'bg-emerald-50/50 ring-1 ring-emerald-500/30' : ''}" data-id="${s.id}">
+                      <td class="p-3.5">
+                        ${thumbHtml}
+                      </td>
+                      <td class="p-3.5">
+                        <div class="flex items-center gap-1.5">
+                          <span class="font-bold text-slate-800 block">${escapeHtml(s.title || 'Tanpa Judul')}</span>
+                          ${mobileOnlyBadge}
+                        </div>
+                        <div class="mt-0.5 flex items-center gap-2">
+                          ${scheduleInfo}
+                        </div>
+                      </td>
+                      <td class="p-3.5 text-slate-600">
+                        ${modelBadge}
+                      </td>
+                      <td class="p-3.5 text-center" onclick="event.stopPropagation()">
+                        <div class="inline-flex items-center gap-1">
+                          <input type="number" min="1" max="10" value="${s.display_quota || 1}" class="input-sponsor-quota w-14 px-2 py-1 text-center font-bold border border-slate-200 rounded-lg focus:border-emerald-500 outline-none text-xs bg-white shadow-2xs" data-id="${s.id}" title="Jumlah kuota kemunculan kartu ini di etalase toko" />
+                          <span class="text-[10px] text-slate-400">x</span>
+                        </div>
+                      </td>
+                      <td class="p-3.5 text-center">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
+                          ${s.is_active ? 'AKTIF' : 'NONAKTIF'}
+                        </span>
+                      </td>
+                      <td class="p-3.5 text-center" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-center gap-2">
+                          <label class="relative inline-flex items-center cursor-pointer" title="Nyalakan / Matikan Sponsor">
+                            <input type="checkbox" class="sr-only peer toggle-sponsor-status" data-id="${s.id}" ${s.active !== false ? 'checked' : ''} />
+                            <div class="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+                          </label>
+                          <button type="button" class="btn-edit-sponsor text-slate-400 hover:text-emerald-600 transition p-1 cursor-pointer" data-id="${s.id}" title="Edit Konfigurasi">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                          </button>
+                          <button type="button" class="btn-delete-sponsor text-slate-400 hover:text-rose-500 transition p-1 cursor-pointer" data-id="${s.id}" title="Hapus Sponsor">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -1553,47 +1637,86 @@ const PromoManager = (() => {
   }
 
   function renderSponsorForm(promos) {
-    const ads = promos.sponsor_ads || [];
-    const ad1 = ads[0] || {};
-    const carousel = promos.sponsor_carousel || { is_active: false, active: false, slides: [], auto_slide_interval: 3500 };
-    const internal = promos.sponsor_internal || { active: true, title: promos.internal_promo_title || 'Sedang Promo', product_ids: [] };
-    const allProducts = (typeof DB !== 'undefined' && DB.getAllProducts) ? DB.getAllProducts().filter(p => p.is_active !== false) : [];
+    const sponsorList = (typeof DB !== 'undefined' && DB.getSponsorList) ? DB.getSponsorList() : [];
+    const currentSponsor = (currentEditingSponsorId && currentEditingSponsorId !== 'new')
+      ? (typeof DB !== 'undefined' && DB.getSponsorById ? DB.getSponsorById(currentEditingSponsorId) : sponsorList.find(s => String(s.id) === String(currentEditingSponsorId)))
+      : null;
+    const isCreatingNew = currentEditingSponsorId === 'new';
 
-    // State sync
-    if (!currentCarouselSlides || currentCarouselSlides.length === 0) {
-      currentCarouselSlides = Array.isArray(carousel.slides) ? [...carousel.slides].slice(0, 5) : [];
-    }
-    if (!currentInternalProductIds || currentInternalProductIds.length === 0) {
-      if (Array.isArray(internal.product_ids) && internal.product_ids.length > 0) {
-        currentInternalProductIds = [...internal.product_ids];
-      } else {
-        currentInternalProductIds = allProducts.slice(0, 4).map(p => p.id);
+    if (currentSponsor && !isCreatingNew) {
+      if (!activeSponsorType || (activeSponsorType !== currentSponsor.type)) {
+        activeSponsorType = currentSponsor.type || 'ad1';
       }
     }
-    if (!currentSponsorAdImages || currentSponsorAdImages.length === 0) {
-      currentSponsorAdImages = ad1.image_url ? [ad1.image_url] : ['assets/images/logo-songer-creative.png'];
+
+    const allProducts = (typeof DB !== 'undefined' && DB.getAllProducts) ? DB.getAllProducts().filter(p => p.is_active !== false) : [];
+
+    // State sync for carousel slides
+    if (activeSponsorType === 'carousel') {
+      if (!currentCarouselSlides || currentCarouselSlides.length === 0) {
+        if (currentSponsor && Array.isArray(currentSponsor.slides)) {
+          currentCarouselSlides = [...currentSponsor.slides].slice(0, 5);
+        } else {
+          currentCarouselSlides = [];
+        }
+      }
+    } else {
+      if (currentSponsor && Array.isArray(currentSponsor.slides)) {
+        currentCarouselSlides = [...currentSponsor.slides].slice(0, 5);
+      }
     }
 
-    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
-    const cardVariants = settings.card_variants_config || (typeof DB !== 'undefined' && DB.DEFAULT_CARD_VARIANTS_CONFIG) || {};
-    const sponsorConfig = cardVariants.sponsor_1 || {};
-    const promoSponsorStyle = promos.sponsor_style || {};
+    // State sync for internal products
+    if (activeSponsorType === 'internal') {
+      if (!currentInternalProductIds || currentInternalProductIds.length === 0) {
+        if (currentSponsor && Array.isArray(currentSponsor.product_ids) && currentSponsor.product_ids.length > 0) {
+          currentInternalProductIds = [...currentSponsor.product_ids];
+        } else {
+          currentInternalProductIds = allProducts.slice(0, 4).map(p => p.id);
+        }
+      }
+    } else {
+      if (currentSponsor && Array.isArray(currentSponsor.product_ids)) {
+        currentInternalProductIds = [...currentSponsor.product_ids];
+      }
+    }
 
-    const isStyleCustomEnabled = promoSponsorStyle.enabled !== undefined
-      ? promoSponsorStyle.enabled
-      : (sponsorConfig.custom_style_enabled === true);
+    // State sync for ad1 image
+    if (activeSponsorType === 'ad1') {
+      if (!currentSponsorAdImages || currentSponsorAdImages.length === 0) {
+        if (currentSponsor && currentSponsor.image_url) {
+          currentSponsorAdImages = [currentSponsor.image_url];
+        } else {
+          currentSponsorAdImages = ['assets/images/logo-songer-creative.png'];
+        }
+      }
+    } else {
+      if (currentSponsor && currentSponsor.image_url) {
+        currentSponsorAdImages = [currentSponsor.image_url];
+      }
+    }
 
-    const currentBgColor = promoSponsorStyle.bg_color || sponsorConfig.bg_color || 'transparent';
-    const currentBorderColor = promoSponsorStyle.border_color || sponsorConfig.border_color || '#e2e8f0';
-    const currentBorderRadius = promoSponsorStyle.border_radius || sponsorConfig.border_radius || '16px';
-
-    const isCurrentActive = activeSponsorType === 'carousel'
-      ? (carousel.is_active || carousel.active)
-      : (activeSponsorType === 'internal' ? (internal.active !== false) : (ad1.active !== false));
+    const currentBgColor = currentSponsor?.bg_color || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent');
+    const currentBorderColor = currentSponsor?.border_color || '#e2e8f0';
+    const currentBorderWidth = currentSponsor?.border_width || '1px';
+    const currentBorderRadius = currentSponsor?.border_radius || '16px';
+    const currentShadow = currentSponsor?.shadow || 'sm';
+    const currentAnim = currentSponsor?.animation || 'none';
+    const currentQuota = currentSponsor?.display_quota || 1;
+    const isCurrentActive = isCreatingNew ? true : (currentSponsor?.active !== false);
 
     const modelName = activeSponsorType === 'carousel'
-      ? 'Sponsor Slider Carousel (Maksimal 5 Gambar)'
+      ? 'Sponsor Slider Carousel (Maksimal 5 Foto)'
       : (activeSponsorType === 'internal' ? 'Sponsor Produk Sendiri (Katalog Mini Grid 2x2)' : 'Sponsor Statis (1 Gambar Banner Rasio 3:4)');
+
+    const titleVal = currentSponsor?.title || (activeSponsorType === 'carousel' ? 'Sponsor Slider Carousel' : (activeSponsorType === 'internal' ? 'FLASH SALE 11.11' : 'Layanan Mitra & Desain Prioritas'));
+    const subtitleVal = currentSponsor?.subtitle || '';
+    const isAlwaysActive = currentSponsor ? (currentSponsor.is_always_active !== false) : true;
+    const startDatetimeVal = currentSponsor?.start_datetime || '';
+    const endDatetimeVal = currentSponsor?.end_datetime || '';
+
+    // Database promo list untuk auto-activation internal sponsor
+    const allPromos = (typeof DB !== 'undefined' && DB.getPromotions) ? DB.getPromotions() : [];
 
     return `
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -1602,7 +1725,9 @@ const PromoManager = (() => {
           
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
-              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600">Alur Pembuatan Sponsor</span>
+              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600">
+                ${isCreatingNew ? 'Pembuatan Card Sponsor Baru' : 'Edit Konfigurasi Sponsor'}
+              </span>
               <h3 class="text-base font-bold text-slate-900">${modelName}</h3>
             </div>
             <div class="flex items-center gap-3">
@@ -1616,7 +1741,7 @@ const PromoManager = (() => {
             </div>
           </div>
 
-          <!-- LANGKAH 1: PENENTUAN MODEL TAMPILAN KARTU SPONSOR (STANDARISASI ALUR) -->
+          <!-- LANGKAH 1: PENENTUAN MODEL TAMPILAN KARTU SPONSOR -->
           <div class="space-y-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">1</span>
@@ -1628,14 +1753,14 @@ const PromoManager = (() => {
                   <input type="radio" name="sponsor_card_model" value="ad1" ${activeSponsorType === 'ad1' ? 'checked' : ''} class="text-emerald-600" />
                   <span class="font-bold text-slate-900 text-xs">Sponsor Statis</span>
                 </div>
-                <p class="text-slate-500 text-[10px] leading-relaxed">1 Banner foto rasio 3:4 dengan 2 tombol aksi langsung.</p>
+                <p class="text-slate-500 text-[10px] leading-relaxed">1 Banner foto rasio 3:4 Portrait dengan 2 tombol aksi.</p>
               </label>
               <label class="relative p-3 rounded-xl border ${activeSponsorType === 'carousel' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <input type="radio" name="sponsor_card_model" value="carousel" ${activeSponsorType === 'carousel' ? 'checked' : ''} class="text-emerald-600" />
                   <span class="font-bold text-slate-900 text-xs">Slider Carousel</span>
                 </div>
-                <p class="text-slate-500 text-[10px] leading-relaxed">Maksimal 5 slide gambar + putar otomatis 3.5 detik (Tanpa CTA).</p>
+                <p class="text-slate-500 text-[10px] leading-relaxed">Maksimal 5 slide gambar + putar otomatis (Tanpa CTA).</p>
               </label>
               <label class="relative p-3 rounded-xl border ${activeSponsorType === 'internal' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
                 <div class="flex items-center gap-2">
@@ -1656,7 +1781,7 @@ const PromoManager = (() => {
                 <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 2 - Konfigurasi Slider Carousel (Tanpa CTA):</h4>
               </div>
 
-              <!-- Saran Skala Gambar Versi 2 -->
+              <!-- Saran Skala Gambar -->
               <div class="p-3 bg-blue-50/90 rounded-xl border border-blue-200 text-xs text-blue-900 leading-relaxed space-y-1">
                 <div class="flex items-center gap-1.5 font-bold">
                   <i data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0"></i>
@@ -1667,15 +1792,9 @@ const PromoManager = (() => {
                 </p>
               </div>
 
-              <!-- Saran Pilihan Animasi Slide Carousel -->
-              <div class="p-3 bg-emerald-50/90 rounded-xl border border-emerald-200 text-xs text-emerald-950 leading-relaxed space-y-1.5">
-                <div class="flex items-center gap-1.5 font-bold text-emerald-800">
-                  <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600 shrink-0"></i>
-                  <span>Saran Pilihan Animasi & Transisi Slide:</span>
-                </div>
-                <p class="text-[11px] text-emerald-900 leading-normal">
-                  Untuk kartu sponsor portrait, disarankan menggunakan animasi <strong>Slide Horizontal (3.5s)</strong> agar pembeli langsung menyadari adanya multi-foto produk, atau <strong>Fade In / Out</strong> untuk perpindahan visual yang lembut tanpa jeda tajam.
-                </p>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1 text-xs">Judul / Label Sponsor Carousel:</label>
+                <input type="text" id="sponsor-title-input" value="${escapeHtml(titleVal)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="Judul Sponsor Slider Carousel" />
               </div>
 
               <!-- Pilihan Animasi & Interval Pergantian Slide -->
@@ -1683,19 +1802,16 @@ const PromoManager = (() => {
                 <div>
                   <label class="block font-bold text-slate-700 mb-1 text-xs">Interval Putar Otomatis (milidetik):</label>
                   <div class="flex items-center gap-2">
-                    <input type="number" id="carousel-interval-input" value="${carousel.auto_slide_interval || 3500}" class="w-28 px-3 py-2 rounded-xl border border-slate-300 font-semibold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="3500" />
+                    <input type="number" id="carousel-interval-input" value="${currentSponsor?.auto_slide_interval || 3500}" class="w-28 px-3 py-2 rounded-xl border border-slate-300 font-semibold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="3500" />
                     <span class="text-[11px] text-slate-500">Standar: 3.5 detik</span>
                   </div>
                 </div>
                 <div>
-                  <label class="block font-bold text-slate-700 mb-1 text-xs flex items-center justify-between">
-                    <span>Saran Dropdown Animasi Slide:</span>
-                    <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-100 px-1.5 py-0.2 rounded">Rekomendasi Aktif</span>
-                  </label>
-                  <select id="carousel-anim-type-select" class="w-full px-3 py-2 rounded-xl border border-emerald-300 bg-white font-semibold outline-none focus:border-emerald-500 text-xs ring-1 ring-emerald-500/20">
-                    <option value="slide" ${(carousel.animation_type === 'slide' || !carousel.animation_type) ? 'selected' : ''}>✨ Slide Horizontal (Geser Halus) - [Saran Terbaik / Rekomendasi]</option>
-                    <option value="fade" ${carousel.animation_type === 'fade' ? 'selected' : ''}>✨ Fade In / Out (Pudar Elegan) - [Saran Rekomendasi]</option>
-                    <option value="scale" ${carousel.animation_type === 'scale' ? 'selected' : ''}>Ken Burns Zoom / Scale (Sinematik)</option>
+                  <label class="block font-bold text-slate-700 mb-1 text-xs">Animasi Pergantian Slide:</label>
+                  <select id="carousel-anim-type-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-semibold outline-none focus:border-emerald-500 text-xs">
+                    <option value="slide" ${(currentSponsor?.animation_type === 'slide' || !currentSponsor?.animation_type) ? 'selected' : ''}>Slide Horizontal (Geser Halus)</option>
+                    <option value="fade" ${currentSponsor?.animation_type === 'fade' ? 'selected' : ''}>Fade In / Out (Pudar Elegan)</option>
+                    <option value="scale" ${currentSponsor?.animation_type === 'scale' ? 'selected' : ''}>Scale Sinematik</option>
                   </select>
                 </div>
               </div>
@@ -1704,7 +1820,7 @@ const PromoManager = (() => {
                 <div class="flex items-center justify-between">
                   <div>
                     <label class="block font-bold text-slate-800 text-xs">Slide Foto Carousel (Maksimal 5 Foto):</label>
-                    <p class="text-[11px] text-slate-400">Unggah berkas atau tempel URL link gambar slide.</p>
+                    <p class="text-[11px] text-slate-400">Unggah berkas foto atau tempel URL link gambar slide.</p>
                   </div>
                   <span id="carousel-slide-counter-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${currentCarouselSlides.length >= 5 ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">
                     ${currentCarouselSlides.length} / 5 Slide
@@ -1722,7 +1838,7 @@ const PromoManager = (() => {
                 <!-- Repeater Items with Target URLs -->
                 <div class="pt-3 border-t border-slate-200">
                   <div class="flex items-center justify-between mb-2">
-                    <h5 class="font-bold text-slate-800 text-xs">Target Link & Detail Tiap Slide:</h5>
+                    <h5 class="font-bold text-slate-800 text-xs">Target Link Tiap Slide:</h5>
                     ${currentCarouselSlides.length < 5 ? `
                       <button type="button" id="btn-add-carousel-slide" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-xs cursor-pointer">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -1746,7 +1862,7 @@ const PromoManager = (() => {
                 <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 2 - Konfigurasi Katalog Mini Internal (Grid 2x2):</h4>
               </div>
 
-              <!-- Saran Format Versi 3 -->
+              <!-- Format & Panduan -->
               <div class="p-3 bg-emerald-50/90 rounded-xl border border-emerald-200 text-xs text-emerald-900 leading-relaxed space-y-1">
                 <div class="flex items-center gap-1.5 font-bold">
                   <i data-lucide="info" class="w-4 h-4 text-emerald-600 shrink-0"></i>
@@ -1759,8 +1875,8 @@ const PromoManager = (() => {
 
               <div>
                 <label class="block font-bold text-slate-700 mb-1 text-xs">Judul Iklan Promo (Headline):</label>
-                <input type="text" id="sponsor-internal-title-input" value="${escapeHtml(internal.title || 'FLASH SALE 11.11')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="Contoh: FLASH SALE 11.11 atau Sedang Promo" />
-                <p class="text-[10px] text-slate-400 mt-1">Judul ini langsung tampil di baris atas kartu produk sendiri.</p>
+                <input type="text" id="sponsor-internal-title-input" value="${escapeHtml(titleVal)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="Contoh: FLASH SALE 11.11 atau Sedang Promo" />
+                <p class="text-[10px] text-slate-400 mt-1">Judul ini langsung tampil bersih di baris atas kartu tanpa dot dan tanpa border pemisah.</p>
               </div>
 
               <div class="pt-2 border-t border-slate-200 space-y-2">
@@ -1774,7 +1890,7 @@ const PromoManager = (() => {
                   </span>
                 </div>
 
-                <!-- Input Pencarian / Pemilih Produk Internal -->
+                <!-- Input Pencarian -->
                 <div class="relative">
                   <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                   <input type="text" id="internal-prod-search-input" placeholder="Cari nama produk internal toko..." class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs outline-none focus:border-emerald-500 bg-white" />
@@ -1809,55 +1925,36 @@ const PromoManager = (() => {
               </div>
             </div>
           ` : `
-            <!-- FORM SPONSOR STATIS (1 GAMBAR DENGAN 2 CTA) -->
+            <!-- FORM SPONSOR STATIS (1 GAMBAR DENGAN 2 CTA - 3:4 PORTRAIT MURNI) -->
             <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80 text-xs">
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">2</span>
-                <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 2 - Konfigurasi Sponsor Statis (1 Gambar 2 CTA):</h4>
+                <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 2 - Konfigurasi Sponsor Statis (1 Gambar Banner 3:4):</h4>
               </div>
 
-              <!-- Saran Skala Gambar Versi 1 Sesuai Arahan Gambar 1 -->
+              <!-- Saran Skala Gambar -->
               <div class="p-3 bg-amber-50/90 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed space-y-1">
                 <div class="flex items-center gap-1.5 font-bold">
                   <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0"></i>
-                  <span>Saran Ukuran & Skala Gambar Banner (Rasio 3:4 Portrait):</span>
+                  <span>Format Skala Banner (Rasio 3:4 Portrait Murni):</span>
                 </div>
                 <p class="text-[11px] text-amber-800">
-                  Gunakan rasio <strong>3:4 Portrait</strong> (resolusi ideal <strong>600×800 px</strong>, maksimal 500 KB) agar gambar mengisi <strong>75% tinggi card sponsor</strong>, dan memberikan ruang 25% untuk <strong>2 Tombol CTA</strong> ("Lihat Tawaran" & "Pasang Iklan WA") di bagian bawah kartu.
+                  Gunakan rasio <strong>3:4 Portrait</strong> murni (resolusi ideal <strong>600×800 px</strong>, maksimal 500 KB). Gambar banner terkunci portrait tanpa melar horizontal, dengan 2 tombol aksi stacked di bawahnya.
                 </p>
               </div>
 
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Judul / Headline Iklan:</label>
-                <input type="text" id="sponsor-title-input" value="${escapeHtml(ad1.title || '')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold outline-none focus:border-emerald-500 bg-white" placeholder="Contoh: Mitra Rekanan Percetakan" />
+                <input type="text" id="sponsor-title-input" value="${escapeHtml(titleVal)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold outline-none focus:border-emerald-500 bg-white" placeholder="Contoh: Mitra Rekanan Percetakan" />
               </div>
 
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Sub-judul / Keterangan Singkat:</label>
-                <input type="text" id="sponsor-subtitle-input" value="${escapeHtml(ad1.subtitle || '')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-medium outline-none focus:border-emerald-500 bg-white" placeholder="Contoh: Solusi cetak kemasan dan merchandise" />
-              </div>
-
-              <!-- PENGATURAN DURASI & ANIMASI SPONSOR VERSI 1 (STATIS) -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div>
-                  <label class="block font-bold text-slate-700 mb-1 text-xs">Durasi Animasi / Tayang (milidetik):</label>
-                  <div class="flex items-center gap-2">
-                    <input type="number" id="sponsor-ad1-duration-input" value="${ad1.animation_duration || ad1.auto_slide_interval || 3500}" class="w-28 px-3 py-2 rounded-xl border border-slate-300 font-semibold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="3500" />
-                    <span class="text-[11px] text-slate-500">Standar: 3.5 detik</span>
-                  </div>
-                </div>
-                <div>
-                  <label class="block font-bold text-slate-700 mb-1 text-xs">Pilihan Transisi Animasi:</label>
-                  <select id="sponsor-ad1-anim-type-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-semibold outline-none focus:border-emerald-500 text-xs">
-                    <option value="fade" ${(ad1.animation_type === 'fade' || !ad1.animation_type) ? 'selected' : ''}>Fade In / Out (Pudar Halus)</option>
-                    <option value="slide" ${ad1.animation_type === 'slide' ? 'selected' : ''}>Slide Horizontal (Geser Halus)</option>
-                    <option value="scale" ${ad1.animation_type === 'scale' ? 'selected' : ''}>Scale / Zoom Sinematik</option>
-                  </select>
-                </div>
+                <input type="text" id="sponsor-subtitle-input" value="${escapeHtml(subtitleVal)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-medium outline-none focus:border-emerald-500 bg-white" placeholder="Contoh: Solusi cetak kemasan dan merchandise" />
               </div>
 
               <div class="space-y-2 pt-2 border-t border-slate-200">
-                <label class="block font-bold text-slate-700">Media Banner Sponsor (Rasio 3:4 Portrait, Tinggi 75% Card):</label>
+                <label class="block font-bold text-slate-700">Media Banner Sponsor (Rasio 3:4 Portrait Murni):</label>
                 <p class="text-[11px] text-slate-400 mb-2">Unggah berkas foto banner atau tempel link URL gambar langsung.</p>
                 ${renderUnifiedUploaderHtml({
                   id: 'sponsor-ad1-uploader',
@@ -1872,126 +1969,207 @@ const PromoManager = (() => {
                 <div>
                   <label class="block font-bold text-slate-700 mb-1">Tipe CTA Tombol Utama:</label>
                   <select id="sponsor-cta-type" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-semibold outline-none focus:border-emerald-500 bg-white">
-                    <option value="external_url" ${ad1.cta_type !== 'whatsapp' ? 'selected' : ''}>Buka Link Tawaran (URL Luar)</option>
-                    <option value="whatsapp" ${ad1.cta_type === 'whatsapp' ? 'selected' : ''}>Tanyakan via WhatsApp</option>
+                    <option value="external_url" ${(currentSponsor?.cta_type || 'external_url') !== 'whatsapp' ? 'selected' : ''}>Buka Link Tawaran (URL Luar)</option>
+                    <option value="whatsapp" ${currentSponsor?.cta_type === 'whatsapp' ? 'selected' : ''}>Tanyakan via WhatsApp</option>
                   </select>
                 </div>
                 <div>
                   <label class="block font-bold text-slate-700 mb-1">Teks Tombol Utama (CTA 1):</label>
-                  <input type="text" id="sponsor-cta-label" value="${escapeHtml(ad1.cta_label || 'Lihat Tawaran')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-semibold outline-none focus:border-emerald-500 bg-white" />
+                  <input type="text" id="sponsor-cta-label" value="${escapeHtml(currentSponsor?.cta_label || 'Lihat Tawaran')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-semibold outline-none focus:border-emerald-500 bg-white" />
                 </div>
               </div>
 
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Target Link / Nomor WhatsApp Tujuan CTA 1:</label>
-                <input type="text" id="sponsor-cta-target" value="${escapeHtml(ad1.cta_target || '')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500 bg-white" placeholder="https://... atau 6281234567890" />
+                <input type="text" id="sponsor-cta-target" value="${escapeHtml(currentSponsor?.cta_target || '')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500 bg-white" placeholder="https://... atau 6281234567890" />
               </div>
             </div>
           `)}
 
-          <!-- LANGKAH 3: KUSTOMISASI STYLE CARD SPONSOR -->
+          <!-- LANGKAH 3: PENGATURAN MASA AKTIF & PENJADWALAN (AUTO-ACTIVATION & EXPIRATION) -->
           <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">3</span>
-              <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 3 - Kustomisasi Style Card Sponsor:</h4>
+              <h4 class="font-bold text-xs sm:text-sm text-slate-900">
+                ${activeSponsorType === 'internal' ? 'Langkah 3 - Auto-Activation Berdasarkan Jadwal Promosi:' : 'Langkah 3 - Jangka Waktu Aktif & Jadwal Penayangan:'}
+              </h4>
             </div>
 
-            <!-- Checkbox Edit Style Card Sponsor (Sebelum mengcustom, tampilkan dahulu checkbox ini) -->
-            <div class="p-3.5 bg-white rounded-xl border ${isStyleCustomEnabled ? 'border-emerald-400 bg-emerald-50/20' : 'border-slate-200'} transition-all shadow-2xs">
-              <div class="flex items-center justify-between">
-                <label class="flex items-center gap-2.5 cursor-pointer select-none">
-                  <input type="checkbox" id="chk-edit-sponsor-style" ${isStyleCustomEnabled ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                  <div>
-                    <span class="text-xs font-bold text-slate-900 block">Edit Style Card Sponsor</span>
-                    <span class="text-[10px] text-slate-500 block">Centang untuk membuka akses kustomisasi warna card, border, dan radius.</span>
+            ${activeSponsorType === 'internal' ? `
+              <!-- Logika Auto-Activation dari Database Promo DB.getPromotions() -->
+              <div class="space-y-2">
+                <label class="block font-bold text-slate-800 text-xs">Tautkan ke Jadwal Promosi Toko:</label>
+                ${allPromos.length === 0 ? `
+                  <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                    <p class="font-bold">Belum ada jadwal promosi aktif.</p>
+                    <p class="text-[11px] mt-0.5 text-amber-800">Buat promosi terlebih dahulu di menu Promosi untuk menggunakan fitur auto-activation.</p>
                   </div>
-                </label>
-                <span id="badge-sponsor-style-state" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${isStyleCustomEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
-                  ${isStyleCustomEnabled ? 'Kustomisasi Aktif' : 'Default (Transparan)'}
-                </span>
+                ` : `
+                  <div class="space-y-1.5 max-h-48 overflow-y-auto p-2.5 bg-white border border-slate-200 rounded-xl">
+                    ${allPromos.map(promo => {
+                      const isChecked = Array.isArray(currentSponsor?.linked_promo_ids) && currentSponsor.linked_promo_ids.some(lid => String(lid) === String(promo.id));
+                      const pStart = promo.start_datetime || promo.start_date || 'Mulai';
+                      const pEnd = promo.end_datetime || promo.end_date || 'Selesai';
+                      const pName = promo.name || promo.title_line1 || 'Promosi';
+                      return `
+                        <label class="flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-50 transition cursor-pointer text-xs">
+                          <input type="checkbox" value="${String(promo.id)}" class="chk-linked-promo w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" ${isChecked ? 'checked' : ''} />
+                          <div class="flex-1 min-w-0">
+                            <span class="font-bold text-slate-800 block truncate">${escapeHtml(pName)}</span>
+                            <span class="text-[10px] text-slate-400 block">${escapeHtml(pStart)} s/d ${escapeHtml(pEnd)}</span>
+                          </div>
+                        </label>
+                      `;
+                    }).join('')}
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-1">
+                    Jika memilih minimal 1 promo, kartu sponsor otomatis tampil saat promosi aktif. Kosongkan pilihan jika ingin status manual / selalu aktif.
+                  </p>
+                `}
+              </div>
+            ` : `
+              <!-- Jangka Waktu Aktif: Toggle Selalu Aktif & Rentang Waktu -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200">
+                  <div>
+                    <span class="text-xs font-bold text-slate-800 block">Selalu Aktif / Tanpa Batas Waktu</span>
+                    <span class="text-[10px] text-slate-500 block">Matikan toggle untuk mengatur jam tayang dan waktu kedaluwarsa otomatis.</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="chk-sponsor-always-active" ${isAlwaysActive ? 'checked' : ''} class="sr-only peer" />
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                </div>
+
+                <div id="sponsor-datetime-range-box" class="${isAlwaysActive ? 'hidden' : ''} grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                  <div>
+                    <label class="block font-bold text-slate-700 text-xs mb-1">Tanggal & Waktu Mulai:</label>
+                    <input type="datetime-local" id="sponsor-start-datetime" value="${escapeHtml(startDatetimeVal)}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold outline-none focus:border-emerald-500 bg-white" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 text-xs mb-1">Tanggal & Waktu Berakhir:</label>
+                    <input type="datetime-local" id="sponsor-end-datetime" value="${escapeHtml(endDatetimeVal)}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold outline-none focus:border-emerald-500 bg-white" />
+                  </div>
+                </div>
+              </div>
+            `}
+          </div>
+
+          <!-- LANGKAH 4: KUSTOMISASI STYLE INDIVIDUAL (PER-CARD) -->
+          <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">4</span>
+              <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 4 - Kustomisasi Tampilan Individual & Kuota:</h4>
+            </div>
+
+            <!-- Kuota Tampil & Animasi Masuk Viewport -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 text-xs mb-1">Kuota Frekuensi Tampil di Etalase:</label>
+                <div class="flex items-center gap-2">
+                  <input type="number" id="sponsor-card-quota-input" min="1" max="10" value="${currentQuota}" class="w-24 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none focus:border-emerald-500 bg-white" />
+                  <span class="text-[11px] text-slate-500">Maksimal per rotasi</span>
+                </div>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 text-xs mb-1">Efek Animasi Transisi Viewport:</label>
+                <select id="sponsor-card-anim-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold outline-none focus:border-emerald-500 bg-white">
+                  <option value="none" ${currentAnim === 'none' ? 'selected' : ''}>Tanpa Animasi</option>
+                  <option value="fade" ${currentAnim === 'fade' ? 'selected' : ''}>Fade In (Pudar Lembut)</option>
+                  <option value="slide" ${currentAnim === 'slide' ? 'selected' : ''}>Slide-in (Geser dari Bawah)</option>
+                  <option value="zoom" ${currentAnim === 'zoom' ? 'selected' : ''}>Smooth Zoom (Perbesar Halus)</option>
+                </select>
               </div>
             </div>
 
-            <!-- Panel Customisasi Card Sponsor (Akses terbuka setelah checkbox dicentang) -->
-            <div id="sponsor-style-custom-panel" class="${isStyleCustomEnabled ? '' : 'hidden'} space-y-4 pt-3 border-t border-slate-200 transition-all">
-              
-              <!-- 1. Warna Card (Background) - Default: transparent -->
+            <!-- Border Radius -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-700 text-xs">Sudut Lengkung (Border Radius):</label>
+                <span id="label-sponsor-radius-val" class="text-xs font-mono font-bold text-emerald-700">${currentBorderRadius}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <input type="range" id="sponsor-card-radius-range" min="0" max="32" step="2" value="${parseInt(currentBorderRadius) || 16}" class="flex-1 accent-emerald-600 cursor-pointer" />
+                <input type="text" id="sponsor-card-radius-input" value="${escapeHtml(currentBorderRadius)}" class="w-20 px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-center outline-none focus:border-emerald-500 bg-white shrink-0" />
+              </div>
+              <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                <span class="text-[10px] text-slate-400 mr-1">Preset:</span>
+                <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="0px">0px (Siku)</button>
+                <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="8px">8px (Kecil)</button>
+                <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-pointer" data-radius="16px">16px (Standar)</button>
+                <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="24px">24px (Bulat)</button>
+                <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="32px">32px (Maks)</button>
+              </div>
+            </div>
+
+            <!-- Border Color & Width -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
+                <label class="block font-bold text-slate-700 text-xs mb-1">Ketebalan Border:</label>
+                <select id="sponsor-card-border-width-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold outline-none focus:border-emerald-500 bg-white">
+                  <option value="0px" ${currentBorderWidth === '0px' ? 'selected' : ''}>Tanpa Garis Border (0px)</option>
+                  <option value="1px" ${(currentBorderWidth === '1px' || !currentBorderWidth) ? 'selected' : ''}>Tipis Standar (1px)</option>
+                  <option value="2px" ${currentBorderWidth === '2px' ? 'selected' : ''}>Tebal Menonjol (2px)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 text-xs mb-1">Warna Garis Border:</label>
+                <div class="flex items-center gap-2">
+                  <input type="color" id="sponsor-card-border-picker" value="${currentBorderColor === 'transparent' ? '#e2e8f0' : currentBorderColor}" class="w-9 h-9 p-0.5 rounded-lg border border-slate-300 cursor-pointer bg-white shrink-0" />
+                  <input type="text" id="sponsor-card-border-input" value="${escapeHtml(currentBorderColor)}" placeholder="#e2e8f0" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold outline-none focus:border-emerald-500 bg-white" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Box Shadow Preset -->
+            <div>
+              <label class="block font-bold text-slate-700 text-xs mb-1">Efek Bayangan (Box Shadow):</label>
+              <select id="sponsor-card-shadow-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold outline-none focus:border-emerald-500 bg-white">
+                <option value="none" ${currentShadow === 'none' ? 'selected' : ''}>Tanpa Shadow (none)</option>
+                <option value="sm" ${(currentShadow === 'sm' || !currentShadow) ? 'selected' : ''}>Ringan Elegan (sm)</option>
+                <option value="md" ${currentShadow === 'md' ? 'selected' : ''}>Sedang Proporsional (md)</option>
+                <option value="lg" ${currentShadow === 'lg' ? 'selected' : ''}>Kuat Tegas (lg)</option>
+                <option value="xl" ${currentShadow === 'xl' ? 'selected' : ''}>Ekstra Mengapung (xl)</option>
+              </select>
+            </div>
+
+            <!-- Warna Background Card (KHUSUS: DISEMBUNYIKAN PADA VARIAN SLIDE/CAROUSEL) -->
+            ${activeSponsorType === 'carousel' ? '' : `
+              <div id="sponsor-bg-color-wrapper">
                 <div class="flex items-center justify-between mb-1">
                   <label class="font-bold text-slate-700 text-xs">Warna Background Card:</label>
-                  <span class="text-[10px] text-slate-500">Default: <strong class="text-emerald-700 font-mono">transparent</strong></span>
+                  <span class="text-[10px] text-slate-500">Default: <strong class="text-emerald-700 font-mono">${activeSponsorType === 'internal' ? '#ffffff' : 'transparent'}</strong></span>
                 </div>
                 <div class="flex items-center gap-2">
                   <input type="color" id="sponsor-card-bg-picker" value="${currentBgColor === 'transparent' ? '#ffffff' : currentBgColor}" class="w-9 h-9 p-0.5 rounded-lg border border-slate-300 cursor-pointer bg-white shrink-0" />
                   <input type="text" id="sponsor-card-bg-input" value="${escapeHtml(currentBgColor)}" placeholder="transparent atau #ffffff" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold outline-none focus:border-emerald-500 bg-white" />
-                  <button type="button" id="btn-preset-bg-transparent" class="px-2.5 py-2 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition shrink-0" title="Set Latar Belakang Transparan">
+                  <button type="button" id="btn-preset-bg-transparent" class="px-2.5 py-2 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition shrink-0 cursor-pointer" title="Set Latar Belakang Transparan">
                     Set Transparan
                   </button>
                 </div>
-                <!-- Preset Cepat Warna Background -->
                 <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span class="text-[10px] text-slate-400 mr-1">Preset Cepat:</span>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50" data-color="transparent">Transparan (Bawaan)</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50" data-color="#ffffff">Putih (#ffffff)</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100" data-color="#f8fafc">Slate (#f8fafc)</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100" data-color="#f0fdf4">Emerald Soft (#f0fdf4)</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-900 text-white border-slate-800 hover:bg-slate-800" data-color="#0f172a">Dark (#0f172a)</button>
+                  <span class="text-[10px] text-slate-400 mr-1">Preset:</span>
+                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-color="transparent">Transparan</button>
+                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-color="#ffffff">Putih</button>
+                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 cursor-pointer" data-color="#f8fafc">Slate Soft</button>
+                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-pointer" data-color="#f0fdf4">Emerald Soft</button>
+                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-900 text-white border-slate-800 hover:bg-slate-800 cursor-pointer" data-color="#0f172a">Dark</button>
                 </div>
               </div>
+            `}
 
-              <!-- 2. Warna Border Card -->
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <label class="font-bold text-slate-700 text-xs">Warna Border Card:</label>
-                  <span class="text-[10px] text-slate-500">Default: <strong class="text-slate-600 font-mono">#e2e8f0</strong></span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <input type="color" id="sponsor-card-border-picker" value="${currentBorderColor === 'transparent' ? '#e2e8f0' : currentBorderColor}" class="w-9 h-9 p-0.5 rounded-lg border border-slate-300 cursor-pointer bg-white shrink-0" />
-                  <input type="text" id="sponsor-card-border-input" value="${escapeHtml(currentBorderColor)}" placeholder="#e2e8f0 atau transparent" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold outline-none focus:border-emerald-500 bg-white" />
-                  <button type="button" id="btn-preset-border-transparent" class="px-2.5 py-2 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition shrink-0" title="Set Border Transparan / Tanpa Garis">
-                    Tanpa Border
-                  </button>
-                </div>
-                <!-- Preset Cepat Warna Border -->
-                <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span class="text-[10px] text-slate-400 mr-1">Preset Cepat:</span>
-                  <button type="button" class="btn-preset-sponsor-border px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50" data-color="transparent">Transparan</button>
-                  <button type="button" class="btn-preset-sponsor-border px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200" data-color="#e2e8f0">Abu (#e2e8f0)</button>
-                  <button type="button" class="btn-preset-sponsor-border px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100" data-color="#10b981">Emerald (#10b981)</button>
-                  <button type="button" class="btn-preset-sponsor-border px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100" data-color="#f59e0b">Amber (#f59e0b)</button>
-                  <button type="button" class="btn-preset-sponsor-border px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-800 text-white border-slate-700 hover:bg-slate-700" data-color="#334155">Dark (#334155)</button>
-                </div>
-              </div>
-
-              <!-- 3. Border Radius Card (Sudut Lengkung) -->
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <label class="font-bold text-slate-700 text-xs">Sudut Lengkung (Border Radius):</label>
-                  <span id="label-sponsor-radius-val" class="text-xs font-mono font-bold text-emerald-700">${currentBorderRadius}</span>
-                </div>
-                <div class="flex items-center gap-3">
-                  <input type="range" id="sponsor-card-radius-range" min="0" max="32" step="2" value="${parseInt(currentBorderRadius) || 16}" class="flex-1 accent-emerald-600 cursor-pointer" />
-                  <input type="text" id="sponsor-card-radius-input" value="${escapeHtml(currentBorderRadius)}" class="w-20 px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-center outline-none focus:border-emerald-500 bg-white shrink-0" />
-                </div>
-                <!-- Preset Radius Cepat -->
-                <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span class="text-[10px] text-slate-400 mr-1">Preset Cepat:</span>
-                  <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50" data-radius="0px">0px (Siku)</button>
-                  <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50" data-radius="8px">8px (Kecil)</button>
-                  <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100" data-radius="16px">16px (Standar)</button>
-                  <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50" data-radius="24px">24px (Bulat)</button>
-                  <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50" data-radius="32px">32px (Maks)</button>
-                </div>
-              </div>
-
-            </div>
           </div>
 
           <!-- Tombol Simpan Sponsor -->
-          <div class="pt-4 border-t border-slate-100 flex justify-end">
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+            ${isCreatingNew ? `
+              <button type="button" id="btn-cancel-create-sponsor" class="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-bold transition cursor-pointer">
+                Batal
+              </button>
+            ` : `<div></div>`}
             <button type="button" id="btn-save-single-sponsor" class="btn-primary-brand px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-md flex items-center gap-2 transition hover:brightness-105 cursor-pointer">
               <i data-lucide="check" class="w-4 h-4"></i>
-              <span>Simpan Konfigurasi Sponsor Ini</span>
+              <span>${isCreatingNew ? 'Terbitkan Card Sponsor Baru' : 'Simpan Perubahan Sponsor Ini'}</span>
             </button>
           </div>
 
@@ -2017,10 +2195,10 @@ const PromoManager = (() => {
           <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-[11px] text-slate-500 leading-relaxed">
             <span class="font-bold text-slate-700 block mb-0.5">Penempatan Otomatis di Web Toko:</span>
             ${activeSponsorType === 'carousel'
-              ? 'Kartu slider carousel akan otomatis memutar pergantian slide tiap 3.5 detik di slot sponsor etalase.'
+              ? 'Kartu slider carousel akan otomatis memutar pergantian slide tiap interval waktu di slot sponsor etalase tanpa tombol CTA.'
               : (activeSponsorType === 'internal'
-                ? 'Kartu katalog mini 2x2 menampilkan produk internal toko secara interaktif. Klik mini card di etalase akan langsung membuka halaman produk (PDP).'
-                : 'Kartu sponsor statis menampilkan gambar banner 3:4 penuh dengan 2 tombol aksi CTA.')}
+                ? 'Kartu katalog mini 2x2 menampilkan produk internal toko secara interaktif tanpa garis pemisah header. Klik mini card di etalase akan langsung membuka halaman produk (PDP).'
+                : 'Kartu sponsor statis menampilkan gambar banner 3:4 portrait murni dengan 2 tombol aksi CTA di bagian bawah.')}
           </div>
         </div>
 
@@ -2033,11 +2211,16 @@ const PromoManager = (() => {
     const box = document.getElementById('sponsor-card-live-preview');
     if (!box) return;
 
-    const isCustomStyle = document.getElementById('chk-edit-sponsor-style')?.checked;
-    const bgVal = isCustomStyle ? (document.getElementById('sponsor-card-bg-input')?.value.trim() || 'transparent') : 'transparent';
-    const borderVal = isCustomStyle ? (document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0') : '#e2e8f0';
-    const radiusVal = isCustomStyle ? (document.getElementById('sponsor-card-radius-input')?.value.trim() || '16px') : '16px';
-    const cardStyleCss = `background-color: ${bgVal}; border: 1px solid ${borderVal}; border-radius: ${radiusVal};`;
+    const bgInput = document.getElementById('sponsor-card-bg-input');
+    const bgVal = (activeSponsorType === 'carousel') ? 'transparent' : (bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent'));
+    const borderVal = document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0';
+    const borderWidthVal = document.getElementById('sponsor-card-border-width-select')?.value || '1px';
+    const radiusVal = document.getElementById('sponsor-card-radius-input')?.value.trim() || '16px';
+    const shadowVal = document.getElementById('sponsor-card-shadow-select')?.value || 'sm';
+    const shadowStyle = shadowVal === 'none' ? 'box-shadow: none !important;' : '';
+    const shadowClass = shadowVal === 'none' ? 'sponsor-shadow-none' : `sponsor-shadow-${shadowVal}`;
+
+    const cardStyleCss = `background-color: ${bgVal}; border: ${borderWidthVal} solid ${borderVal}; border-radius: ${radiusVal}; ${shadowStyle}`;
 
     if (activeSponsorType === 'carousel') {
       const slides = currentCarouselSlides || [];
@@ -2063,7 +2246,6 @@ const PromoManager = (() => {
         return;
       }
 
-      // Dynamic dots: jika 1 tidak ada dots, jika 2 hanya ada 2 dots, jika 3 maka 3, jika 4 maka 4, jika 5 maka 5
       const showDots = slides.length > 1;
       const dotsHtml = showDots ? slides.map((_, idx) => `
         <button type="button" class="admin-carousel-preview-dot w-2 h-2 rounded-full ${idx === 0 ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/80'} transition-all cursor-pointer shadow-sm" data-idx="${idx}" aria-label="Slide ${idx + 1}"></button>
@@ -2090,9 +2272,8 @@ const PromoManager = (() => {
         `;
       }
 
-      // WIREFRAME GAMBAR 1 & 2: FULL IMG CAROUSEL TANPA CTA DENGAN DOTS DI BAWAH
       box.innerHTML = `
-        <div class="h-full flex flex-col justify-between overflow-hidden shadow-md relative group aspect-[3/4]" style="${cardStyleCss}">
+        <div class="h-full flex flex-col justify-between overflow-hidden shadow-md relative group aspect-[3/4] ${shadowClass}" style="${cardStyleCss}">
           <div class="relative w-full h-full bg-slate-900 overflow-hidden block shrink-0 shadow-inner">
             ${slidesContentHtml}
             <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-20">
@@ -2108,7 +2289,6 @@ const PromoManager = (() => {
       `;
 
       if (window.lucide) window.lucide.createIcons();
-      // Interactive dot clicks on preview
       box.querySelectorAll('.admin-carousel-preview-dot').forEach(btn => {
         btn.addEventListener('click', () => {
           const targetIdx = parseInt(btn.getAttribute('data-idx')) || 0;
@@ -2136,8 +2316,7 @@ const PromoManager = (() => {
     if (activeSponsorType === 'internal') {
       const allProducts = (typeof DB !== 'undefined' && DB.getAllProducts) ? DB.getAllProducts().filter(p => p.is_active !== false) : [];
       const titleInputForm = document.getElementById('sponsor-internal-title-input');
-      const titleInputTable = document.getElementById('sponsor-internal-title-table-input');
-      const title = (titleInputForm?.value || titleInputTable?.value || 'FLASH SALE 11.11').trim();
+      const title = (titleInputForm?.value || 'FLASH SALE 11.11').trim();
 
       const selectedIds = currentInternalProductIds || [];
       let displayProds = [];
@@ -2149,7 +2328,6 @@ const PromoManager = (() => {
         displayProds = promoProds.length >= 4 ? promoProds : allProducts;
       }
 
-      // Dinamis: 1 hingga 5 Batches (kelipatan 4 produk)
       const batches = [];
       for (let i = 0; i < displayProds.length && batches.length < 5; i += 4) {
         const chunk = displayProds.slice(i, i + 4);
@@ -2171,8 +2349,8 @@ const PromoManager = (() => {
           const imgSrc = (Array.isArray(prod.images) && prod.images.length > 0) ? prod.images[0] : (prod.image_url || 'assets/images/logo-songer-creative.png');
 
           return `
-            <div class="group/mini block p-1.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs hover:shadow-sm transition flex flex-col justify-between">
-              <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 shrink-0 mb-1">
+            <div class="group/mini block p-1 sm:p-1.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs hover:shadow-sm transition flex flex-col justify-between">
+              <div class="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 shrink-0 mb-0.5 sm:mb-1">
                 <img src="${escapeHtml(imgSrc)}" class="w-full h-full object-cover" alt="${escapeHtml(prod.name)}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-xs\\'><i class=\\'bi bi-image\\'></i></div>';" />
                 ${effDiscount.has_discount ? `
                   <span class="absolute top-1 right-1 bg-rose-600 text-white text-[8px] font-black px-1 py-0.2 rounded shadow-xs">
@@ -2181,8 +2359,8 @@ const PromoManager = (() => {
                 ` : ''}
               </div>
               <div>
-                <p class="text-[10px] font-bold text-slate-800 line-clamp-1 leading-tight" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</p>
-                <p class="text-[10px] font-black text-emerald-600 mt-0.5">Rp ${Math.round(finalPrice).toLocaleString('id-ID')}</p>
+                <p class="text-[9px] sm:text-[11px] font-bold text-slate-800 line-clamp-1 leading-tight" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</p>
+                <p class="text-[9px] sm:text-[11px] font-black text-emerald-600 mt-0.5">Rp ${Math.round(finalPrice).toLocaleString('id-ID')}</p>
               </div>
             </div>
           `;
@@ -2190,7 +2368,7 @@ const PromoManager = (() => {
       }
 
       const batchesHtml = batches.map((batchList, idx) => `
-        <div class="admin-internal-preview-batch batch-${idx + 1} grid grid-cols-2 gap-2 my-auto py-1 ${idx === 0 ? '' : 'hidden'}">
+        <div class="admin-internal-preview-batch batch-${idx + 1} grid grid-cols-2 gap-1.5 sm:gap-2 my-auto py-1 ${idx === 0 ? '' : 'hidden'}">
           ${renderMiniGrid(batchList)}
         </div>
       `).join('');
@@ -2203,16 +2381,12 @@ const PromoManager = (() => {
         </div>
       ` : '';
 
-      // WIREFRAME GAMBAR 1 & 2: CARD SPONSOR UNTUK PRODUK SENDIRI
+      // HEADER BERSIH TANPA DOT, BADGE, & DIVIDER (REFAKTOR PERSYARATAN 1)
       box.innerHTML = `
-        <div class="h-full flex flex-col justify-between p-3 sm:p-3.5 shadow-md transition-all duration-300 group relative" style="${cardStyleCss}">
-          <!-- Header Judul Promo Sesuai Wireframe Gambar 1 (#3) -->
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200/80">
-            <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <h4 class="font-extrabold text-xs text-slate-900 tracking-tight line-clamp-1">${escapeHtml(title)}</h4>
-            </div>
-            <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase shrink-0">Pilihan</span>
+        <div class="h-full flex flex-col justify-between p-3 sm:p-3.5 shadow-md transition-all duration-300 group relative ${shadowClass}" style="${cardStyleCss}">
+          <!-- Header Judul Sponsor Bersih -->
+          <div class="flex items-center justify-start pb-1 min-w-0">
+            <h4 class="font-extrabold text-xs text-slate-900 tracking-tight line-clamp-1">${escapeHtml(title)}</h4>
           </div>
 
           <!-- Dynamic Batches Grid 2x2 Mini-Card Produk Internal -->
@@ -2220,7 +2394,7 @@ const PromoManager = (() => {
             ${batchesHtml}
           </div>
 
-          <!-- Dynamic Dots Navigasi Slide (Dinamis 1-5 Dots) -->
+          <!-- Dynamic Dots Navigasi Slide -->
           ${dotsHtml}
 
           <!-- Tombol Aksi Bawah -->
@@ -2260,23 +2434,23 @@ const PromoManager = (() => {
       return;
     }
 
-    // Default: 'ad1'
+    // Default: 'ad1' (Sponsor Statis 1 Banner - 3:4 Portrait Murni)
     const image = (currentSponsorAdImages && currentSponsorAdImages[0])
       ? currentSponsorAdImages[0]
       : (document.getElementById('sponsor-image-input')?.value.trim() || 'assets/images/logo-songer-creative.png');
     const ctaLabel = document.getElementById('sponsor-cta-label')?.value.trim() || 'Lihat Tawaran';
 
     box.innerHTML = `
-      <div class="h-full flex flex-col justify-between overflow-hidden shadow-md relative group aspect-[3/4]" style="${cardStyleCss}">
-        <!-- Area Gambar Rasio 3:4 Portrait (75% Tinggi Card Sponsor) Sesuai Wireframe Gambar 1 -->
-        <div class="relative w-full aspect-[3/4] max-h-[75%] bg-slate-100 overflow-hidden block shrink-0">
-          <img src="${image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-bold text-slate-400\\'>SPACE IKLAN AVAILABLE</span></div>';" />
+      <div class="h-full flex flex-col justify-between overflow-hidden shadow-md relative group aspect-[3/4] ${shadowClass}" style="${cardStyleCss}">
+        <!-- Area Gambar Rasio 3:4 Portrait Murni Sesuai Revisi Wireframe -->
+        <div class="relative w-full aspect-[3/4] max-h-[75%] bg-slate-100 overflow-hidden block shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
+          <img src="${image}" class="aspect-[3/4] w-full h-full object-cover rounded-[inherit]" onerror="this.onerror=null; this.outerHTML='<div class=\\'aspect-[3/4] w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 p-3 rounded-[inherit]\\'><i class=\\'bi bi-badge-ad text-3xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-bold text-slate-400\\'>SPACE IKLAN AVAILABLE</span></div>';" />
           <div class="absolute inset-0 bg-black/10 pointer-events-none"></div>
           <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
             SPONSOR
           </span>
         </div>
-        <!-- 2 Tombol Aksi Stacked Vertikal Sesuai Wireframe Gambar 1 & 2 (~25% Tinggi Card) -->
+        <!-- 2 Tombol Aksi Stacked Vertikal -->
         <div class="p-2 sm:p-2.5 flex-1 flex flex-col justify-end gap-1.5 mt-auto">
           <div class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-white text-[10px] sm:text-[11px] font-bold bg-slate-900 flex items-center justify-center gap-1.5 shadow-xs">
             <i class="bi bi-box-arrow-up-right text-xs"></i>
@@ -2330,15 +2504,20 @@ const PromoManager = (() => {
         const id = e.target.getAttribute('data-id') || e.target.getAttribute('data-type');
         const promos = DB.getPromos();
         let promoList = promos.promo_list || [];
-        const item = promoList.find(p => p.id === id);
+        const item = promoList.find(p => String(p.id) === String(id));
         if (item) {
           item.active = e.target.checked;
+          item.is_active = e.target.checked;
           promos.promo_list = promoList;
         }
         if (promos[id]) {
           promos[id].active = e.target.checked;
         }
         DB.updatePromos(promos);
+        if (typeof DB.savePromotions === 'function') {
+          DB.savePromotions(promos.promo_list);
+        }
+        currentPromotions = (typeof DB.getPromotions === 'function') ? DB.getPromotions() : promos.promo_list;
         render();
       });
     });
@@ -2350,11 +2529,18 @@ const PromoManager = (() => {
         if (confirm('Hapus program promo ini secara permanen?')) {
           const promos = DB.getPromos();
           let promoList = promos.promo_list || [];
-          promos.promo_list = promoList.filter(p => p.id !== id);
-          if (activePromoId === id) {
+          promos.promo_list = promoList.filter(p => String(p.id) !== String(id));
+          if (String(activePromoId) === String(id)) {
             activePromoId = promos.promo_list.length > 0 ? promos.promo_list[0].id : 'new';
           }
           DB.updatePromos(promos);
+          if (typeof DB.savePromotions === 'function') {
+            DB.savePromotions(promos.promo_list);
+          }
+          if (typeof DB.cleanOrphanedPromoLinks === 'function') {
+            DB.cleanOrphanedPromoLinks(promos);
+          }
+          currentPromotions = (typeof DB.getPromotions === 'function') ? DB.getPromotions() : promos.promo_list;
           const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
           toastFn('Program promo berhasil dihapus.', 'info');
           render();
@@ -2365,12 +2551,12 @@ const PromoManager = (() => {
     // 3. Save All Promos Button (Top Right)
     const btnSaveAll = document.getElementById('btn-save-all-promos');
     if (btnSaveAll) {
-      btnSaveAll.addEventListener('click', saveAllConfigurations);
+      btnSaveAll.addEventListener('click', (e) => saveAllConfigurations(e));
     }
 
     const btnSaveSingle = document.getElementById('btn-save-single-promo');
     if (btnSaveSingle) {
-      btnSaveSingle.addEventListener('click', saveAllConfigurations);
+      btnSaveSingle.addEventListener('click', (e) => saveAllConfigurations(e));
     }
 
     // 4. Promo Toko Interactive Live Preview & Uploader Listeners
@@ -2565,13 +2751,153 @@ const PromoManager = (() => {
 
     // 6. Iklan Sponsor Actions
     if (activeTab === 'sponsors') {
+      // Row click to select/edit sponsor
       document.querySelectorAll('.sponsor-row-item').forEach(r => {
         r.addEventListener('click', () => {
-          activeSponsorType = r.getAttribute('data-type');
-          render();
+          const id = r.getAttribute('data-id');
+          if (id) {
+            currentEditingSponsorId = id;
+            currentEditingSponsorMobileOnly = false;
+            const sp = (typeof DB !== 'undefined' && DB.getSponsorById) ? DB.getSponsorById(id) : null;
+            if (sp && sp.type) activeSponsorType = sp.type;
+            currentCarouselSlides = [];
+            currentInternalProductIds = [];
+            currentSponsorAdImages = [];
+            render();
+            const formEl = document.getElementById('sponsor-title-input') || document.getElementById('sponsor-card-live-preview');
+            if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+          }
         });
       });
 
+      // Tombol Tambah Card Sponsor Baru (dengan Validasi Bertingkat Sesuai Spesifikasi)
+      const btnAddSponsor = document.getElementById('btn-add-new-sponsor');
+      if (btnAddSponsor) {
+        btnAddSponsor.addEventListener('click', () => {
+          const allProds = (typeof DB !== 'undefined' && DB.getAllProducts) ? DB.getAllProducts().filter(p => p.is_active !== false) : [];
+          const prodCount = allProds.length;
+          if (prodCount < 5) {
+            // Kasus 1: Kurang dari batas minimal global (< 5 produk) - Blokir
+            showSponsorValidationModal({
+              type: 'blocked',
+              title: 'Batas Minimum Produk Belum Terpenuhi',
+              message: 'Jumlah produk Anda belum memenuhi batas minimum untuk menambahkan Card Sponsor baru. Silakan tambahkan produk terlebih dahulu.',
+              productCount: prodCount
+            });
+          } else if (prodCount < 11) {
+            // Kasus 2: Kuota terpenuhi di mobile saja (5 - 10 produk) - Konfirmasi Mobile Only
+            showSponsorValidationModal({
+              type: 'confirm',
+              title: 'Pemberitahuan Penayangan Sponsor (Mobile Only)',
+              message: 'Sponsor ini hanya akan tampil di versi mobile/ponsel karena jumlah produk toko belum mencapai batas minimum untuk menampilkan sponsor baru di versi desktop.',
+              productCount: prodCount,
+              onConfirm: () => {
+                currentEditingSponsorId = 'new';
+                currentEditingSponsorMobileOnly = true;
+                activeSponsorType = 'ad1';
+                currentCarouselSlides = [];
+                currentInternalProductIds = [];
+                currentSponsorAdImages = [];
+                render();
+                const formEl = document.getElementById('sponsor-title-input') || document.getElementById('sponsor-card-live-preview');
+                if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+              }
+            });
+          } else {
+            // Kasus 3: Kuota terpenuhi penuh (>= 11 produk)
+            currentEditingSponsorId = 'new';
+            currentEditingSponsorMobileOnly = false;
+            activeSponsorType = 'ad1';
+            currentCarouselSlides = [];
+            currentInternalProductIds = [];
+            currentSponsorAdImages = [];
+            render();
+            const formEl = document.getElementById('sponsor-title-input') || document.getElementById('sponsor-card-live-preview');
+            if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      // Tombol Batal Buat Sponsor Baru
+      const btnCancelSponsor = document.getElementById('btn-cancel-create-sponsor');
+      if (btnCancelSponsor) {
+        btnCancelSponsor.addEventListener('click', () => {
+          const spList = (typeof DB !== 'undefined' && DB.getSponsorList) ? DB.getSponsorList() : [];
+          currentEditingSponsorId = spList.length > 0 ? spList[0].id : null;
+          currentEditingSponsorMobileOnly = false;
+          render();
+        });
+      }
+
+      // Tombol Edit di tabel
+      document.querySelectorAll('.btn-edit-sponsor').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-id');
+          if (id) {
+            currentEditingSponsorId = id;
+            currentEditingSponsorMobileOnly = false;
+            const sp = (typeof DB !== 'undefined' && DB.getSponsorById) ? DB.getSponsorById(id) : null;
+            if (sp && sp.type) activeSponsorType = sp.type;
+            currentCarouselSlides = [];
+            currentInternalProductIds = [];
+            currentSponsorAdImages = [];
+            render();
+            const formEl = document.getElementById('sponsor-title-input') || document.getElementById('sponsor-card-live-preview');
+            if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+
+      // Tombol Hapus di tabel
+      document.querySelectorAll('.btn-delete-sponsor').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-id');
+          if (id && confirm('Hapus kartu sponsor ini secara permanen?')) {
+            if (typeof DB !== 'undefined' && DB.deleteSponsor) {
+              DB.deleteSponsor(id);
+            }
+            const spList = (typeof DB !== 'undefined' && DB.getSponsorList) ? DB.getSponsorList() : [];
+            if (currentEditingSponsorId === id) {
+              currentEditingSponsorId = spList.length > 0 ? spList[0].id : null;
+            }
+            const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
+            toastFn('Kartu sponsor berhasil dihapus.', 'info');
+            render();
+          }
+        });
+      });
+
+      // Toggle status aktif langsung dari tabel
+      document.querySelectorAll('.toggle-sponsor-status').forEach(toggle => {
+        toggle.addEventListener('change', (e) => {
+          e.stopPropagation();
+          const id = toggle.getAttribute('data-id');
+          if (id && typeof DB !== 'undefined' && DB.updateSponsor) {
+            DB.updateSponsor(id, { active: toggle.checked, is_active: toggle.checked });
+            const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
+            toastFn(`Status kartu sponsor berhasil diperbarui.`, 'success');
+            render();
+          }
+        });
+      });
+
+      // Input Kuota Tampil di tabel
+      document.querySelectorAll('.input-sponsor-quota').forEach(inp => {
+        const updateQuota = () => {
+          const id = inp.getAttribute('data-id');
+          const val = Math.max(1, parseInt(inp.value, 10) || 1);
+          inp.value = val;
+          if (id && typeof DB !== 'undefined' && DB.updateSponsor) {
+            DB.updateSponsor(id, { display_quota: val });
+          }
+        };
+        inp.addEventListener('change', updateQuota);
+        inp.addEventListener('blur', updateQuota);
+      });
+
+      // Pilihan Model Kartu (Radio)
       document.querySelectorAll('input[name="sponsor_card_model"]').forEach(r => {
         r.addEventListener('change', (e) => {
           activeSponsorType = e.target.value;
@@ -2579,61 +2905,39 @@ const PromoManager = (() => {
         });
       });
 
-      // Quick actions: toggle & reset sponsor
-      document.querySelectorAll('.toggle-sponsor-status').forEach(toggle => {
-        toggle.addEventListener('change', (e) => {
-          const type = e.target.getAttribute('data-type');
-          const promos = DB.getPromos();
-          if (type === 'carousel') {
-            if (promos.sponsor_carousel) {
-              promos.sponsor_carousel.active = e.target.checked;
-              promos.sponsor_carousel.is_active = e.target.checked;
-            }
-          } else if (type === 'internal') {
-            if (!promos.sponsor_internal) promos.sponsor_internal = {};
-            promos.sponsor_internal.active = e.target.checked;
-          } else {
-            if (promos.sponsor_ads && promos.sponsor_ads[0]) {
-              promos.sponsor_ads[0].active = e.target.checked;
-            }
-          }
-          DB.updatePromos(promos);
-          const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
-          toastFn(`Status sponsor ${type} berhasil diperbarui.`, 'success');
-          render();
+      // Toggle Status Aktif di Form
+      const activeToggle = document.getElementById('sponsor-active-toggle');
+      const activeLabel = document.getElementById('label-sponsor-active');
+      if (activeToggle && activeLabel) {
+        activeToggle.addEventListener('change', (e) => {
+          activeLabel.textContent = e.target.checked ? 'Slot Aktif' : 'Nonaktif';
+          activeLabel.className = `text-xs font-bold ${e.target.checked ? 'text-emerald-700' : 'text-slate-400'}`;
         });
+      }
+
+      // Schedule: Toggle Selalu Aktif vs Rentang Datetime
+      const chkAlwaysActive = document.getElementById('chk-sponsor-always-active');
+      if (chkAlwaysActive) {
+        chkAlwaysActive.addEventListener('change', (e) => {
+          const rangeBox = document.getElementById('sponsor-datetime-range-box');
+          if (rangeBox) {
+            if (e.target.checked) rangeBox.classList.add('hidden');
+            else rangeBox.classList.remove('hidden');
+          }
+          updateSponsorPreviews();
+        });
+      }
+      const startDtInp = document.getElementById('sponsor-start-datetime');
+      if (startDtInp) startDtInp.addEventListener('change', updateSponsorPreviews);
+      const endDtInp = document.getElementById('sponsor-end-datetime');
+      if (endDtInp) endDtInp.addEventListener('change', updateSponsorPreviews);
+
+      // Checkbox Dynamic Promo Auto-Activation
+      document.querySelectorAll('.chk-linked-promo').forEach(cb => {
+        cb.addEventListener('change', updateSponsorPreviews);
       });
 
-      document.querySelectorAll('.btn-reset-sponsor').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const type = btn.getAttribute('data-type');
-          if (confirm(`Reset sponsor ini ke pengaturan awal?`)) {
-            const promos = DB.getPromos();
-            if (type === 'carousel') {
-              if (promos.sponsor_carousel) {
-                promos.sponsor_carousel.active = false;
-                promos.sponsor_carousel.is_active = false;
-                promos.sponsor_carousel.slides = [];
-              }
-            } else if (type === 'internal') {
-              if (promos.sponsor_internal) {
-                promos.sponsor_internal.active = false;
-                promos.sponsor_internal.product_ids = [];
-              }
-            } else {
-              if (promos.sponsor_ads && promos.sponsor_ads[0]) {
-                promos.sponsor_ads[0].active = false;
-              }
-            }
-            DB.updatePromos(promos);
-            const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
-            toastFn(`Sponsor ${type} berhasil direset.`, 'info');
-            render();
-          }
-        });
-      });
-
+      // Model-specific handlers
       if (activeSponsorType === 'carousel') {
         renderCarouselSlideRows(currentCarouselSlides);
         initUnifiedUploader({
@@ -2676,21 +2980,13 @@ const PromoManager = (() => {
 
         const animSelect = document.getElementById('carousel-anim-type-select');
         if (animSelect) animSelect.addEventListener('change', updateSponsorPreviews);
+
+        const titleInp = document.getElementById('sponsor-title-input');
+        if (titleInp) titleInp.addEventListener('input', updateSponsorPreviews);
+
       } else if (activeSponsorType === 'internal') {
         const titleInp = document.getElementById('sponsor-internal-title-input');
-        const titleTableInp = document.getElementById('sponsor-internal-title-table-input');
-        if (titleInp) {
-          titleInp.addEventListener('input', () => {
-            if (titleTableInp) titleTableInp.value = titleInp.value;
-            updateSponsorPreviews();
-          });
-        }
-        if (titleTableInp) {
-          titleTableInp.addEventListener('input', () => {
-            if (titleInp) titleInp.value = titleTableInp.value;
-            updateSponsorPreviews();
-          });
-        }
+        if (titleInp) titleInp.addEventListener('input', updateSponsorPreviews);
 
         const prodSearchInp = document.getElementById('internal-prod-search-input');
         if (prodSearchInp) {
@@ -2719,10 +3015,12 @@ const PromoManager = (() => {
             updateSponsorPreviews();
           });
         });
+
       } else {
+        // 'ad1'
         initUnifiedUploader({
           id: 'sponsor-ad1-uploader',
-          initialImages: currentSponsorAdImages,
+          images: currentSponsorAdImages,
           isMulti: false,
           onChange: (imgs) => {
             currentSponsorAdImages = imgs;
@@ -2736,16 +3034,12 @@ const PromoManager = (() => {
           document.getElementById('sponsor-title-input'),
           document.getElementById('sponsor-subtitle-input'),
           document.getElementById('sponsor-cta-label'),
-          document.getElementById('sponsor-cta-target'),
-          document.getElementById('sponsor-ad1-duration-input')
+          document.getElementById('sponsor-cta-target')
         ];
         sponsorInputs.forEach(inp => {
           if (inp) inp.addEventListener('input', updateSponsorPreviews);
         });
-        const sponsorAd1Anim = document.getElementById('sponsor-ad1-anim-type-select');
-        if (sponsorAd1Anim) {
-          sponsorAd1Anim.addEventListener('change', updateSponsorPreviews);
-        }
+
         const sponsorCtaType = document.getElementById('sponsor-cta-type');
         if (sponsorCtaType) {
           sponsorCtaType.addEventListener('change', () => {
@@ -2758,25 +3052,7 @@ const PromoManager = (() => {
         }
       }
 
-      // Event Listeners: Kustomisasi Style Card Sponsor (Langkah 3)
-      const chkStyle = document.getElementById('chk-edit-sponsor-style');
-      const panelStyle = document.getElementById('sponsor-style-custom-panel');
-      const badgeStyleState = document.getElementById('badge-sponsor-style-state');
-      if (chkStyle) {
-        chkStyle.addEventListener('change', () => {
-          const isChecked = chkStyle.checked;
-          if (panelStyle) {
-            if (isChecked) panelStyle.classList.remove('hidden');
-            else panelStyle.classList.add('hidden');
-          }
-          if (badgeStyleState) {
-            badgeStyleState.textContent = isChecked ? 'Kustomisasi Aktif' : 'Default (Transparan)';
-            badgeStyleState.className = `px-2.5 py-1 rounded-full text-[10px] font-bold ${isChecked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}`;
-          }
-          updateSponsorPreviews();
-        });
-      }
-
+      // Kustomisasi Style Individual:
       // Background Color Controls
       const bgPicker = document.getElementById('sponsor-card-bg-picker');
       const bgInput = document.getElementById('sponsor-card-bg-input');
@@ -2811,7 +3087,6 @@ const PromoManager = (() => {
       // Border Color Controls
       const borderPicker = document.getElementById('sponsor-card-border-picker');
       const borderInput = document.getElementById('sponsor-card-border-input');
-      const btnBorderTrans = document.getElementById('btn-preset-border-transparent');
       if (borderPicker && borderInput) {
         borderPicker.addEventListener('input', () => {
           borderInput.value = borderPicker.value;
@@ -2824,20 +3099,10 @@ const PromoManager = (() => {
           updateSponsorPreviews();
         });
       }
-      if (btnBorderTrans && borderInput) {
-        btnBorderTrans.addEventListener('click', () => {
-          borderInput.value = 'transparent';
-          updateSponsorPreviews();
-        });
-      }
-      document.querySelectorAll('.btn-preset-sponsor-border').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const col = btn.getAttribute('data-color') || 'transparent';
-          if (borderInput) borderInput.value = col;
-          if (borderPicker && col.startsWith('#')) borderPicker.value = col;
-          updateSponsorPreviews();
-        });
-      });
+
+      // Border Width Controls
+      const borderWidthSel = document.getElementById('sponsor-card-border-width-select');
+      if (borderWidthSel) borderWidthSel.addEventListener('change', updateSponsorPreviews);
 
       // Border Radius Controls
       const radiusRange = document.getElementById('sponsor-card-radius-range');
@@ -2867,10 +3132,22 @@ const PromoManager = (() => {
         });
       });
 
+      // Box Shadow Controls
+      const shadowSel = document.getElementById('sponsor-card-shadow-select');
+      if (shadowSel) shadowSel.addEventListener('change', updateSponsorPreviews);
+
+      // Animation Controls
+      const animSel = document.getElementById('sponsor-card-anim-select');
+      if (animSel) animSel.addEventListener('change', updateSponsorPreviews);
+
+      // Kuota Input Controls
+      const quotaInput = document.getElementById('sponsor-card-quota-input');
+      if (quotaInput) quotaInput.addEventListener('input', updateSponsorPreviews);
+
       // Tombol Simpan Konfigurasi Sponsor Ini
       const btnSaveSponsor = document.getElementById('btn-save-single-sponsor');
       if (btnSaveSponsor) {
-        btnSaveSponsor.addEventListener('click', saveAllConfigurations);
+        btnSaveSponsor.addEventListener('click', (e) => saveAllConfigurations(e));
       }
 
       updateSponsorPreviews();
@@ -2933,11 +3210,17 @@ const PromoManager = (() => {
     }
   }
 
-  function saveAllConfigurations() {
+  function saveAllConfigurations(e) {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+
     const current = DB.getPromos();
 
     // 1. Promo Toko Form Values (Tanpa Dummy Otomatis)
-    let promoList = current.promo_list || [];
+    let promoList = (Array.isArray(current.promo_list) && current.promo_list.length > 0)
+      ? [...current.promo_list]
+      : (Array.isArray(currentPromotions) ? [...currentPromotions] : []);
 
     if (activeTab === 'promos') {
       // Validasi Kuota Produk Toko (Interval Grid 8 Desktop / 4 Mobile)
@@ -2985,7 +3268,7 @@ const PromoManager = (() => {
       const cta2TextColor = document.getElementById('promo-cta2-text-color')?.value || '#ffffff';
 
       const promoData = {
-        id: (activePromoId && activePromoId !== 'new') ? activePromoId : ('promo_' + Date.now()),
+        id: String((activePromoId && activePromoId !== 'new') ? activePromoId : ('promo_' + Date.now())),
         active,
         is_active: active,
         title_line1: titleLine1,
@@ -3025,7 +3308,7 @@ const PromoManager = (() => {
         promoList.push(promoData);
         activePromoId = promoData.id;
       } else {
-        const idx = promoList.findIndex(p => p.id === activePromoId);
+        const idx = promoList.findIndex(p => String(p.id) === String(activePromoId));
         if (idx !== -1) {
           promoList[idx] = { ...promoList[idx], ...promoData };
         } else {
@@ -3040,6 +3323,19 @@ const PromoManager = (() => {
         current.special = { ...current.special, ...promoData };
       }
 
+      // Pemanggilan DB.savePromotions() benar-benar melakukan penulisan ke localStorage
+      if (typeof DB.savePromotions === 'function') {
+        DB.savePromotions(promoList);
+      } else {
+        DB.updatePromos({ promo_list: promoList });
+        try {
+          localStorage.setItem('pos_promotions', JSON.stringify(promoList));
+        } catch (err) {}
+      }
+
+      // Sinkronisasi state memori (currentPromotions) secara langsung setelah simpan
+      currentPromotions = (typeof DB.getPromotions === 'function') ? DB.getPromotions() : promoList;
+
       // Feedback kuota produk
       const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
       if (!hasEnoughQuota) {
@@ -3047,117 +3343,103 @@ const PromoManager = (() => {
       } else {
         toastFn('Program promo toko berhasil disimpan dan langsung aktif!', 'success');
       }
+      render();
+      return;
     }
 
-    // 2. Sponsor Ads Form Values (3 Model)
-    const existingAds = current.sponsor_ads || [current.ad_banner || {}];
-    let sponsor_ads = existingAds;
-    let sponsorCarousel = current.sponsor_carousel || { active: false, is_active: false, slides: [] };
-    let sponsorInternal = current.sponsor_internal || { active: true, title: 'Koleksi Rekomendasi Toko', product_ids: [] };
-
+    // 2. Sponsor Ads Form Values (Unlimited Cards, Kuota, Schedule & Style Individual)
     if (activeTab === 'sponsors') {
-      // Check if table input has title update
-      const tableTitleInp = document.getElementById('sponsor-internal-title-table-input')?.value.trim();
-      if (tableTitleInp) {
-        sponsorInternal = { ...sponsorInternal, title: tableTitleInp };
-        current.internal_promo_title = tableTitleInp;
-      }
+      const active = document.getElementById('sponsor-active-toggle')?.checked ?? true;
+      const quota = parseInt(document.getElementById('sponsor-card-quota-input')?.value, 10) || 1;
+      const anim = document.getElementById('sponsor-card-anim-select')?.value || 'none';
+      const radius = document.getElementById('sponsor-card-radius-input')?.value.trim() || '16px';
+      const borderWidth = document.getElementById('sponsor-card-border-width-select')?.value || '1px';
+      const borderColor = document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0';
+      const shadow = document.getElementById('sponsor-card-shadow-select')?.value || 'sm';
+      const bgInput = document.getElementById('sponsor-card-bg-input');
+      const bgColor = (activeSponsorType === 'carousel')
+        ? 'transparent'
+        : (bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent'));
+
+      const sponsorData = {
+        type: activeSponsorType || 'ad1',
+        active: active,
+        is_active: active,
+        display_quota: quota,
+        animation: anim,
+        border_radius: radius,
+        border_width: borderWidth,
+        border_color: borderColor,
+        shadow: shadow,
+        bg_color: bgColor
+      };
 
       if (activeSponsorType === 'carousel') {
-        const carouselActive = document.getElementById('sponsor-active-toggle')?.checked ?? (sponsorCarousel.active || sponsorCarousel.is_active);
-        const interval = parseInt(document.getElementById('carousel-interval-input')?.value) || 3500;
-        const animType = document.getElementById('carousel-anim-type-select')?.value || sponsorCarousel.animation_type || 'slide';
-        
-        sponsorCarousel = {
-          ...sponsorCarousel,
-          active: carouselActive,
-          is_active: carouselActive,
-          auto_slide_interval: interval,
-          animation_type: animType,
-          slides: (currentCarouselSlides || []).slice(0, 5)
-        };
+        sponsorData.title = document.getElementById('sponsor-title-input')?.value.trim() || 'Sponsor Slider Carousel';
+        sponsorData.auto_slide_interval = parseInt(document.getElementById('carousel-interval-input')?.value, 10) || 3500;
+        sponsorData.animation_type = document.getElementById('carousel-anim-type-select')?.value || 'slide';
+        sponsorData.slides = (currentCarouselSlides || []).slice(0, 5);
+        sponsorData.is_always_active = document.getElementById('chk-sponsor-always-active')?.checked ?? true;
+        sponsorData.start_datetime = document.getElementById('sponsor-start-datetime')?.value || '';
+        sponsorData.end_datetime = document.getElementById('sponsor-end-datetime')?.value || '';
       } else if (activeSponsorType === 'internal') {
-        const internalActive = document.getElementById('sponsor-active-toggle')?.checked ?? true;
-        const internalTitle = document.getElementById('sponsor-internal-title-input')?.value.trim() || tableTitleInp || 'FLASH SALE 11.11';
-
-        sponsorInternal = {
-          active: internalActive,
-          title: internalTitle,
-          product_ids: currentInternalProductIds || []
-        };
-        current.internal_promo_title = internalTitle;
+        sponsorData.title = document.getElementById('sponsor-internal-title-input')?.value.trim() || 'FLASH SALE 11.11';
+        sponsorData.product_ids = currentInternalProductIds || [];
+        sponsorData.is_always_active = true;
+        // String ID consistency
+        sponsorData.linked_promo_ids = Array.from(document.querySelectorAll('.chk-linked-promo:checked')).map(cb => String(cb.value));
       } else {
-        const active = document.getElementById('sponsor-active-toggle')?.checked ?? (existingAds[0]?.active ?? true);
-        const title = document.getElementById('sponsor-title-input')?.value.trim() || existingAds[0]?.title || '';
-        const subtitle = document.getElementById('sponsor-subtitle-input')?.value.trim() || existingAds[0]?.subtitle || '';
-        const image = (currentSponsorAdImages && currentSponsorAdImages[0])
+        // 'ad1'
+        sponsorData.title = document.getElementById('sponsor-title-input')?.value.trim() || 'Layanan Mitra & Desain Prioritas';
+        sponsorData.subtitle = document.getElementById('sponsor-subtitle-input')?.value.trim() || '';
+        sponsorData.image_url = (currentSponsorAdImages && currentSponsorAdImages[0])
           ? currentSponsorAdImages[0]
-          : (document.getElementById('sponsor-image-input')?.value.trim() || existingAds[0]?.image_url || '');
-        const ctaType = document.getElementById('sponsor-cta-type')?.value || (existingAds[0]?.cta_type || 'whatsapp');
-        const ctaLabel = document.getElementById('sponsor-cta-label')?.value.trim() || existingAds[0]?.cta_label || 'Tanyakan via WhatsApp';
-        const ctaTarget = document.getElementById('sponsor-cta-target')?.value.trim() || existingAds[0]?.cta_target || '';
-        const duration = parseInt(document.getElementById('sponsor-ad1-duration-input')?.value) || 3500;
-        const animType = document.getElementById('sponsor-ad1-anim-type-select')?.value || existingAds[0]?.animation_type || 'fade';
-
-        const updatedAd = {
-          id: 'sponsor-ad-1',
-          title, subtitle, image_url: image, active, cta_type: ctaType, cta_label: ctaLabel, cta_target: ctaTarget,
-          animation_duration: duration,
-          auto_slide_interval: duration,
-          animation_type: animType
-        };
-        sponsor_ads = [updatedAd, existingAds[1] || {}];
+          : (document.getElementById('sponsor-image-input')?.value.trim() || 'assets/images/logo-songer-creative.png');
+        sponsorData.cta_type = document.getElementById('sponsor-cta-type')?.value || 'whatsapp';
+        sponsorData.cta_label = document.getElementById('sponsor-cta-label')?.value.trim() || 'Lihat Tawaran';
+        sponsorData.cta_target = document.getElementById('sponsor-cta-target')?.value.trim() || '';
+        sponsorData.is_always_active = document.getElementById('chk-sponsor-always-active')?.checked ?? true;
+        sponsorData.start_datetime = document.getElementById('sponsor-start-datetime')?.value || '';
+        sponsorData.end_datetime = document.getElementById('sponsor-end-datetime')?.value || '';
       }
 
-      // Kustomisasi Style Card Sponsor
-      const isCustomStyle = document.getElementById('chk-edit-sponsor-style')?.checked ?? false;
-      const bgVal = isCustomStyle ? (document.getElementById('sponsor-card-bg-input')?.value.trim() || 'transparent') : 'transparent';
-      const borderVal = isCustomStyle ? (document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0') : '#e2e8f0';
-      const radiusVal = isCustomStyle ? (document.getElementById('sponsor-card-radius-input')?.value.trim() || '16px') : '16px';
-
-      const sponsorStyleObj = {
-        enabled: isCustomStyle,
-        bg_color: bgVal,
-        border_color: borderVal,
-        border_radius: radiusVal
-      };
-
-      // Sinkronisasi ke DB Settings -> card_variants_config.sponsor_1 & sponsor_2
-      const curSettings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
-      if (!curSettings.card_variants_config) {
-        curSettings.card_variants_config = (typeof DB !== 'undefined' && DB.DEFAULT_CARD_VARIANTS_CONFIG)
-          ? JSON.parse(JSON.stringify(DB.DEFAULT_CARD_VARIANTS_CONFIG))
-          : {};
+      if (currentEditingSponsorId === 'new') {
+        sponsorData.mobile_only_ready = currentEditingSponsorMobileOnly;
+        const newSponsor = DB.addSponsor(sponsorData);
+        currentEditingSponsorId = newSponsor.id;
+        currentEditingSponsorMobileOnly = false;
+      } else if (currentEditingSponsorId) {
+        const existing = DB.getSponsorById(currentEditingSponsorId);
+        sponsorData.mobile_only_ready = existing ? existing.mobile_only_ready : false;
+        DB.updateSponsor(currentEditingSponsorId, sponsorData);
+      } else {
+        const newSponsor = DB.addSponsor(sponsorData);
+        currentEditingSponsorId = newSponsor.id;
       }
-      curSettings.card_variants_config.sponsor_1 = {
-        ...(curSettings.card_variants_config.sponsor_1 || {}),
-        bg_color: bgVal,
-        border_color: borderVal,
-        border_radius: radiusVal,
-        custom_style_enabled: isCustomStyle
-      };
-      curSettings.card_variants_config.sponsor_2 = { ...curSettings.card_variants_config.sponsor_1 };
-      if (typeof DB !== 'undefined' && DB.saveSettings) DB.saveSettings(curSettings);
 
-      current.sponsor_style = sponsorStyleObj;
-    }
+      const allSponsors = (typeof DB.getSponsors === 'function') ? DB.getSponsors() : (DB.getSponsorList ? DB.getSponsorList() : []);
+      if (typeof DB.saveSponsors === 'function') {
+        DB.saveSponsors(allSponsors);
+      }
 
-    const updated = {
-      ...current,
-      promo_list: promoList,
-      sponsor_ads: sponsor_ads,
-      ad_banner: sponsor_ads[0],
-      sponsor_carousel: sponsorCarousel,
-      sponsor_internal: sponsorInternal,
-      sponsor_style: current.sponsor_style || { enabled: false, bg_color: 'transparent', border_color: '#e2e8f0', border_radius: '16px' },
-      internal_promo_title: sponsorInternal.title || current.internal_promo_title
-    };
+      // Sinkronisasi state memori (currentSponsors) secara langsung setelah simpan
+      currentSponsors = (typeof DB.getSponsors === 'function') ? DB.getSponsors() : allSponsors;
 
-    DB.updatePromos(updated);
-    if (activeTab !== 'promos') {
       const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
-      toastFn('Seluruh konfigurasi promosi & iklan sponsor berhasil disimpan!', 'success');
+      toastFn('Konfigurasi kartu sponsor berhasil disimpan!', 'success');
+      render();
+      return;
     }
+
+    if (typeof DB.savePromotions === 'function') {
+      DB.savePromotions(promoList);
+    } else {
+      DB.updatePromos({ promo_list: promoList });
+      try {
+        localStorage.setItem('pos_promotions', JSON.stringify(promoList));
+      } catch (e) {}
+    }
+    currentPromotions = (typeof DB.getPromotions === 'function') ? DB.getPromotions() : promoList;
     render();
   }
 
