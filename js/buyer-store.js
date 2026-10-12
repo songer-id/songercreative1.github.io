@@ -554,8 +554,8 @@ const BuyerStore = (() => {
 
     // Helper: generate slides HTML Non-Split
     const slidesHtml = heroBanners.map((b, i) => `
-      <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}">
-        <img src="${b}" alt="Hero Banner ${i + 1}" class="w-full h-full object-cover ${isFullWidth ? 'rounded-none' : ''}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-3xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
+      <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}" style="border-radius: inherit; overflow: hidden;">
+        <img src="${b}" alt="Hero Banner ${i + 1}" class="w-full h-full object-cover ${isFullWidth ? 'rounded-none' : ''}" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-3xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
       </div>
     `).join('');
 
@@ -563,8 +563,8 @@ const BuyerStore = (() => {
     const splitSlidesHtml = heroBanners.map((b, i) => {
       const imgSrc = heroSplitImage ? heroSplitImage : b;
       return `
-        <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}">
-          <img src="${imgSrc}" alt="Hero Banner ${i + 1}" class="w-full h-full hero-split-image-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
+        <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}" style="border-radius: inherit; overflow: hidden;">
+          <img src="${imgSrc}" alt="Hero Banner ${i + 1}" class="w-full h-full hero-split-image-cover" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
         </div>
       `;
     }).join('');
@@ -597,12 +597,17 @@ const BuyerStore = (() => {
       // [2] VARIAN HERO SPLIT (TEKS KIRI 55% - 60% + WADAH GAMBAR KANAN 40% - 45%)
       // Tinggi total konsisten mengikuti banner utama (desktop 9:2, mobile 16:5)
       // Tombol CTA aktif, sudut lengkung kontainer & gambar serta efek bayangan dapat disesuaikan
+      const isContainerShadowNone = heroContainerShadow === 'none' || !heroContainerShadow;
+      const containerBorderClass = isContainerShadowNone ? 'border-0 shadow-none hero-shadow-none' : `border border-slate-200 dark:border-slate-800 hero-shadow-${heroContainerShadow}`;
+
+      const isImageShadowNone = heroImageShadow === 'none' || !heroImageShadow;
+      const splitBoxShadowClass = isImageShadowNone ? 'border-0 shadow-none hero-shadow-none' : `hero-shadow-${heroImageShadow} border border-slate-200/60 dark:border-slate-700/60`;
+
       const splitBoxRadiusStyle = `border-radius: ${heroImageRadius};`;
-      const splitBoxShadowClass = `hero-shadow-${heroImageShadow}`;
 
       heroSectionHtml = `
-        <div class="relative overflow-hidden ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none' : 'border border-slate-200 dark:border-slate-800 hero-shadow-' + heroContainerShadow}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + ';'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-          <div class="${nonSplitAspectClass} flex items-center p-3 sm:p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40" style="${nonSplitAspectStyle}">
+        <div class="relative overflow-hidden ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+          <div class="${nonSplitAspectClass} flex items-center p-3 sm:p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40" style="${nonSplitAspectStyle}; border-radius: inherit;">
             <div class="flex flex-row items-center gap-3 sm:gap-4 md:gap-6 w-full h-full">
               
               <!-- Kolom Kiri: Area Teks & CTA (~55% - 60%) -->
@@ -620,21 +625,21 @@ const BuyerStore = (() => {
 
               <!-- Kolom Kanan: Kotak Gambar Hero (~40% - 45%) -->
               <div class="w-[42%] md:w-[40%] flex flex-col items-center justify-center shrink-0 h-full">
-                <div class="overflow-hidden w-full h-full relative bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass} border border-slate-200/60 dark:border-slate-700/60" style="${splitBoxRadiusStyle}">
-                  <div class="hero-slider-track w-full h-full relative">
+                <div class="overflow-hidden w-full h-full relative bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass}" style="${splitBoxRadiusStyle}; overflow: hidden;">
+                  <div class="hero-slider-track w-full h-full relative" style="border-radius: inherit;">
                     ${splitSlidesHtml}
                   </div>
                   ${heroShowArrows ? `
                     <button type="button" class="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
                     <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
                   ` : ''}
+                  <!-- Indikator Slider Dots Melayang (Absolute di dalam kotak gambar) -->
+                  ${heroBanners.length > 1 ? `
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 pointer-events-auto">
+                      ${heroBanners.map((_, i) => `<button type="button" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all hero-slide-dot cursor-pointer" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
+                    </div>
+                  ` : ''}
                 </div>
-                <!-- Indikator Slider (...): Khusus mode Split di mobile, letakkan di bawah kotak gambar kolom kanan -->
-                ${heroBanners.length > 1 ? `
-                  <div class="flex items-center justify-center gap-1.5 mt-1.5 w-full">
-                    ${heroBanners.map((_, i) => `<button type="button" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all hero-slide-dot" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
-                  </div>
-                ` : ''}
               </div>
 
             </div>
@@ -643,11 +648,14 @@ const BuyerStore = (() => {
       `;
     } else if (heroModel === 'model_3') {
       // [3] Model Gambar DENGAN Teks & CTA Overlay
+      const isContainerShadowNone = heroContainerShadow === 'none' || !heroContainerShadow;
+      const containerBorderClass = isContainerShadowNone ? 'border-0 shadow-none hero-shadow-none' : `border border-white/10 hero-shadow-${heroContainerShadow}`;
+
       heroSectionHtml = `
         <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
-          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'border border-white/10 hero-shadow-' + heroContainerShadow} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + ';'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-            <div class="${nonSplitAspectClass} relative bg-slate-950 overflow-hidden flex items-center" style="${nonSplitAspectStyle}">
-              <div class="hero-slider-track absolute inset-0 w-full h-full">
+          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+            <div class="${nonSplitAspectClass} relative bg-slate-950 overflow-hidden flex items-center" style="${nonSplitAspectStyle}; border-radius: inherit;">
+              <div class="hero-slider-track absolute inset-0 w-full h-full" style="border-radius: inherit;">
                 ${slidesHtml}
               </div>
               <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/40 z-10 pointer-events-none"></div>
@@ -669,13 +677,13 @@ const BuyerStore = (() => {
                 <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
                 <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
               ` : ''}
+              <!-- Indikator Slider Dots Melayang (Absolute di atas gambar banner) -->
+              ${heroBanners.length > 1 ? `
+                <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 pointer-events-auto">
+                  ${heroBanners.map((_, i) => `<button type="button" class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full transition-all hero-slide-dot cursor-pointer" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
+                </div>
+              ` : ''}
             </div>
-            <!-- Indikator Slider (...): Posisikan tepat di tengah horizontal (justify-center mx-auto) di bawah banner -->
-            ${heroBanners.length > 1 ? `
-              <div class="flex items-center justify-center mx-auto gap-2 py-2.5">
-                ${heroBanners.map((_, i) => `<button type="button" class="w-2.5 h-2.5 rounded-full transition-all hero-slide-dot" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
-              </div>
-            ` : ''}
           </div>
         </div>
       `;
@@ -684,25 +692,28 @@ const BuyerStore = (() => {
       // Desktop: Kunci rasio 9 : 2 (4.5 : 1)
       // Mobile: Kunci rasio 16 : 5 (3.2 : 1)
       // Mode Non-Split: Sembunyikan elemen tombol CTA di etalase!
-      // Indikator Slider (...): Posisikan tepat di tengah horizontal (justify-center mx-auto) di bawah banner
+      // Indikator Slider (...): Melayang (absolute) di atas bagian bawah gambar banner
+      const isContainerShadowNone = heroContainerShadow === 'none' || !heroContainerShadow;
+      const containerBorderClass = isContainerShadowNone ? 'border-0 shadow-none hero-shadow-none' : `border border-slate-200/80 dark:border-slate-800 hero-shadow-${heroContainerShadow}`;
+
       heroSectionHtml = `
         <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
-          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : 'border border-slate-200/80 dark:border-slate-800 hero-shadow-' + heroContainerShadow} group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + ';'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-            <div class="${nonSplitAspectClass} relative bg-slate-900 overflow-hidden" style="${nonSplitAspectStyle}">
-              <div class="hero-slider-track w-full h-full relative">
+          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass} group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+            <div class="${nonSplitAspectClass} relative bg-slate-900 overflow-hidden" style="${nonSplitAspectStyle}; border-radius: inherit;">
+              <div class="hero-slider-track w-full h-full relative" style="border-radius: inherit;">
                 ${slidesHtml}
               </div>
               ${heroShowArrows && heroBanners.length > 1 ? `
                 <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
                 <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
               ` : ''}
+              <!-- Indikator Slider Dots Melayang (Absolute di atas gambar banner) -->
+              ${heroBanners.length > 1 ? `
+                <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 pointer-events-auto">
+                  ${heroBanners.map((_, i) => `<button type="button" class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full transition-all hero-slide-dot cursor-pointer" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
+                </div>
+              ` : ''}
             </div>
-            <!-- Indikator Slider (...): Posisikan tepat di tengah horizontal (justify-center mx-auto) di bawah banner -->
-            ${heroBanners.length > 1 ? `
-              <div class="flex items-center justify-center mx-auto gap-2 py-2.5">
-                ${heroBanners.map((_, i) => `<button type="button" class="w-2.5 h-2.5 rounded-full transition-all hero-slide-dot" data-index="${i}" style="background-color: ${i === 0 ? heroDotsActiveColor : heroDotsInactiveColor}; ${i === 0 ? 'transform: scale(1.25);' : ''}"></button>`).join('')}
-              </div>
-            ` : ''}
           </div>
         </div>
       `;
@@ -979,20 +990,16 @@ const BuyerStore = (() => {
         <!-- Hero Section Dinamis -->
         ${heroSectionHtml}
 
-        <!-- CATALOG TITLE & QUICK FILTERS -->
+        <!-- CATALOG QUICK FILTERS & SEARCH STATUS -->
         <div id="katalog-section" class="space-y-4">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h2 class="text-xl font-bold text-slate-900 tracking-tight">Katalog Produk & Layanan</h2>
-              <p class="text-xs text-slate-500">Pilih kategori etalase atau cari produk yang Anda butuhkan melalui pencarian di atas.</p>
-            </div>
-            ${activeSearchQuery ? `
+          ${activeSearchQuery ? `
+            <div class="flex items-center justify-between gap-3">
               <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-1.5 rounded-xl shadow-xs">
                 <span>Hasil Pencarian: "<strong>${escapeHtml(activeSearchQuery)}</strong>"</span>
                 <button type="button" id="btn-clear-search-filter" class="hover:text-rose-600 font-bold ml-1 text-slate-400 hover:scale-110 transition" title="Hapus Filter Pencarian">✕</button>
               </div>
-            ` : ''}
-          </div>
+            </div>
+          ` : ''}
 
           <!-- QUICK ACTION FILTER TRACK (BERDASARKAN PILIHAN VIEWPORT MOBILE & DESKTOP) -->
           <div id="quick-filter-container" class="w-full py-1">
@@ -1023,22 +1030,8 @@ const BuyerStore = (() => {
           ` : ''}
         </div>
 
-
-          <!-- Sub-Category Chips (If main category selected has children) -->
-          ${activeSubCategories.length > 0 ? `
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Sub:</span>
-              <button type="button" class="btn-sub-cat-chip px-3 py-1 rounded-lg text-[11px] font-medium transition shrink-0 ${activeSubCategoryId === 'all' ? 'bg-slate-800 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-id="all">
-                Semua Sub
-              </button>
-              ${activeSubCategories.map(sub => `
-                <button type="button" class="btn-sub-cat-chip px-3 py-1 rounded-lg text-[11px] font-medium transition shrink-0 ${activeSubCategoryId === sub.id ? 'bg-slate-800 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-id="${sub.id}">
-                  ${escapeHtml(sub.name)}
-                </button>
-              `).join('')}
-            </div>
-          ` : ''}
-        </div>
+        <!-- Garis Pemisah (Divider) Tipis Antara Kategori & Etalase Produk -->
+        <hr class="border-t border-slate-200/80 dark:border-slate-800 my-4 md:my-6 mx-auto w-full max-w-7xl">
 
         <!-- PRODUCT CATALOG GRID WITH RESPONSIVE LAYOUT & INTERSPERSED PROMO BANNERS -->
         ${allActiveProducts.length === 0 ? `
