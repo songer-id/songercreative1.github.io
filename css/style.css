@@ -381,11 +381,13 @@ body {
 #admin-main-sidebar {
   background-color: #33b589 !important;
   color: #ffffff;
+  height: 100vh;
 }
 
 @media (min-width: 1024px) {
   .admin-sidebar-hover-expand {
     width: 4.5rem;
+    height: 100vh;
     /* w-18 default collapsed desktop */
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
     overflow: visible !important;

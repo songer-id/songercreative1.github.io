@@ -54,7 +54,7 @@
   <link rel="stylesheet" href="css/style.css?v=2.4">
 </head>
 
-<body class="bg-slate-100 text-slate-800 font-sans antialiased h-screen overflow-hidden flex flex-col selection:bg-emerald-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased h-screen overflow-hidden selection:bg-emerald-500 selection:text-white">
 
   <!-- ========================================================================
        1. LOGIN OVERLAY (TERLINDUNGI FORM LOGIN ADMIN)
@@ -119,129 +119,16 @@
     </div>
   </div>
 
-  <!-- ========================================================================
-       2. TOP ADMIN HEADER (FIXED TOP NON-SCROLL)
-       ======================================================================== -->
-  <!-- ========================================================================
-       2. TOP ADMIN HEADER (FIXED TOP NON-SCROLL)
-       ======================================================================== -->
-  <header id="admin-top-header" class="bg-white border-b border-slate-200 shrink-0 z-40 shadow-xs">
-    <div class="px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-4 w-full">
-
-      <!-- Left: Hamburger Toggle + Nama Toko (Sesuai Gambar 3-5 & 8) -->
-      <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        <!-- Hamburger Menu Toggle (Desktop & Mobile) -->
-        <button type="button" id="btn-sidebar-hamburger" class="p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition cursor-pointer select-none" aria-label="Toggle Sidebar" title="Buka/Tutup Sidebar">
-          <i data-lucide="menu" class="w-5 h-5"></i>
-        </button>
-
-        <div id="admin-header-store-info-box" class="flex items-center">
-          <span id="header-store-name" class="font-bold text-slate-800 text-base tracking-tight">Songer Creative</span>
-        </div>
-      </div>
-
-      <!-- Center: Kolom input pencarian data cepat -->
-      <div class="hidden md:flex items-center flex-1 max-w-md mx-2 lg:mx-6">
-        <div class="relative w-full">
-          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <i data-lucide="search" class="w-4 h-4"></i>
-          </span>
-          <input type="text" id="topbar-quick-search" placeholder="Cari transaksi, produk, pelanggan..." class="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-1 focus:ring-emerald-500 transition" />
-        </div>
-      </div>
-
-      <!-- Right: Lonceng Notifikasi + Profile Trigger Card (Avatar Bulat + Email + Chevron) -->
-      <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        <!-- Ikon Lonceng Notifikasi Order -->
-        <button type="button" id="btn-topbar-notifications" class="relative p-2 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition cursor-pointer" title="Notifikasi Pesanan">
-          <i data-lucide="bell" class="w-4 h-4 text-slate-600"></i>
-          <span id="sidebar-badge-orders" class="sidebar-badge absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 rounded-full text-[9px] font-black bg-rose-500 text-white flex items-center justify-center shadow-xs">0</span>
-        </button>
-
-        <!-- Kartu Trigger Profil Dropdown: Avatar Bulat + Email Toko + Chevron v -->
-        <div class="relative" id="profile-dropdown-wrapper">
-          <button type="button" id="btn-profile-dropdown" class="flex items-center gap-2 sm:gap-2.5 p-1 sm:p-1.5 pr-2.5 rounded-full hover:bg-slate-50 border border-slate-200 transition cursor-pointer select-none">
-            <div class="w-8 h-8 rounded-full bg-[#33b589] text-white flex items-center justify-center font-bold text-xs shadow-xs" id="header-profile-avatar">
-              SC
-            </div>
-            <div class="text-left hidden md:block leading-tight">
-              <span id="header-profile-email" class="block text-xs font-bold text-slate-800 truncate max-w-[150px]">admin@songercreative.com</span>
-              <span class="block text-[10px] text-slate-400 font-medium">Owner Toko</span>
-            </div>
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform" id="header-profile-chevron"></i>
-          </button>
-
-          <!-- Dropdown Menu Profil Melayang (Floating Card sesuai Gambar 5) -->
-          <div id="profile-floating-menu" class="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 p-4 space-y-3 hidden animate-scale-up">
-            <!-- Baris 1: Nama Toko -->
-            <div class="space-y-0.5">
-              <div class="font-black text-sm text-slate-900" id="profile-dropdown-store-name">Songer Creative</div>
-              <!-- Baris 2: ID Toko / Seller -->
-              <div class="text-xs font-mono font-semibold text-emerald-700" id="profile-dropdown-store-id">ID: songer-creative-01</div>
-            </div>
-            <!-- Garis Pemisah Tipis (Divider) -->
-            <hr class="border-slate-100 my-2">
-            <!-- Menu Tautan: Profile -->
-            <button type="button" id="btn-dropdown-profile-link" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition text-left cursor-pointer">
-              <i data-lucide="user" class="w-4 h-4 text-emerald-600"></i>
-              <span>Profile</span>
-            </button>
-            <!-- Menu Tautan: Buka Web Toko -->
-            <a href="index.html" target="_blank" id="btn-view-live-store" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition text-left cursor-pointer">
-              <i data-lucide="external-link" class="w-4 h-4 text-emerald-600"></i>
-              <span>Buka Web Toko</span>
-            </a>
-            <!-- Tombol Logout Hijau Emerald (#33b589 text-white rounded) -->
-            <button type="button" id="btn-admin-logout" class="w-full py-2.5 px-4 rounded-xl bg-[#33b589] hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-              <i data-lucide="log-out" class="w-4 h-4"></i>
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </header>
-
   <!-- Mobile Drawer Backdrop Overlay (< lg) -->
   <div id="sidebar-mobile-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity"></div>
 
-  <!-- Mobile Quick Navigation Bar (Horizontal scroll shortcut on mobile screens) -->
-  <nav id="admin-mobile-nav" class="lg:hidden bg-white border-b border-slate-200 px-3 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 z-30 shadow-xs">
-    <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-50 text-emerald-700 flex items-center gap-1.5 transition" data-view="dashboard">
-      <i class="bi bi-speedometer2 text-sm"></i>
-      <span>Dashboard</span>
-    </button>
-    <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="theme-branding">
-      <i class="bi bi-palette-fill text-sm"></i>
-      <span>Thema & Branding</span>
-    </button>
-    <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="orders">
-      <i class="bi bi-cash-stack text-sm"></i>
-      <span>Transaksi</span>
-    </button>
-    <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="products">
-      <i class="bi bi-shop text-sm"></i>
-      <span>Toko</span>
-    </button>
-    <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="pos">
-      <i class="bi bi-calculator-fill text-sm"></i>
-      <span>Kasir</span>
-    </button>
-    <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="account">
-      <i class="bi bi-person-circle text-sm"></i>
-      <span>Akun</span>
-    </button>
-  </nav>
-
   <!-- ========================================================================
-       3. WORKSPACE ADMIN (FIXED VIEWPORT: SIDEBAR TETAP, HANYA MAIN SCROLL)
+       ADMIN LAYOUT SHELL (FULL-HEIGHT SIDEBAR DARI ATAS KE BAWAH)
        ======================================================================== -->
-  <div class="flex-1 flex overflow-hidden w-full relative">
+  <div class="flex h-screen w-screen overflow-hidden bg-slate-50">
 
-    <!-- LEFT SIDEBAR NAVIGATION (EMERALD BRAND GREEN #33b589 / bg-emerald-600) -->
-    <aside id="admin-main-sidebar" class="admin-sidebar-hover-expand bg-[#33b589] h-full shrink-0 flex flex-col justify-between fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 lg:static lg:translate-x-0 lg:relative shadow-2xl lg:shadow-none select-none">
+    <!-- 1. SIDEBAR HIJAU (FULL HEIGHT DARI ATAS KE BAWAH) -->
+    <aside id="admin-main-sidebar" class="admin-sidebar-hover-expand h-screen shrink-0 bg-[#33b589] flex flex-col justify-between z-50 transition-all duration-300 fixed inset-y-0 left-0 transform -translate-x-full lg:static lg:translate-x-0 lg:relative shadow-2xl lg:shadow-none select-none">
       
       <!-- Expanded Sidebar Header (Logo Songer Creative + Close X Button) -->
       <div class="sidebar-header-expanded p-3.5 pb-2.5 border-b border-white/20 flex items-center justify-between">
@@ -383,8 +270,118 @@
       </div>
     </aside>
 
-    <!-- RIGHT CONTENT VIEWPORT (HANYA INI YANG OVERFLOW SCROLL) -->
-    <main id="admin-main-viewport" class="flex-1 h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+    <!-- 2. AREA KANAN (TOPBAR DI ATAS + KONTEN DI BAWAH) -->
+    <div class="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+      <!-- TOPBAR HEADER -->
+      <header id="admin-main-topbar" class="h-16 shrink-0 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between z-40 shadow-xs">
+        <div class="px-0 h-16 flex items-center justify-between gap-3 sm:gap-4 w-full">
+
+          <!-- Left: Hamburger Toggle + Nama Toko (Sesuai Gambar 3-5 & 8) -->
+          <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <!-- Hamburger Menu Toggle (Desktop & Mobile) -->
+            <button type="button" id="btn-sidebar-hamburger" class="p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition cursor-pointer select-none" aria-label="Toggle Sidebar" title="Buka/Tutup Sidebar">
+              <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+
+            <div id="admin-header-store-info-box" class="flex items-center">
+              <span id="header-store-name" class="font-bold text-slate-800 text-base tracking-tight">Songer Creative</span>
+            </div>
+          </div>
+
+          <!-- Center: Kolom input pencarian data cepat -->
+          <div class="hidden md:flex items-center flex-1 max-w-md mx-2 lg:mx-6">
+            <div class="relative w-full">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="topbar-quick-search" placeholder="Cari transaksi, produk, pelanggan..." class="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-1 focus:ring-emerald-500 transition" />
+            </div>
+          </div>
+
+          <!-- Right: Lonceng Notifikasi + Profile Trigger Card (Avatar Bulat + Email + Chevron) -->
+          <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <!-- Ikon Lonceng Notifikasi Order -->
+            <button type="button" id="btn-topbar-notifications" class="relative p-2 rounded-xl text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition cursor-pointer" title="Notifikasi Pesanan">
+              <i data-lucide="bell" class="w-4 h-4 text-slate-600"></i>
+              <span id="sidebar-badge-orders" class="sidebar-badge absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 rounded-full text-[9px] font-black bg-rose-500 text-white flex items-center justify-center shadow-xs">0</span>
+            </button>
+
+            <!-- Kartu Trigger Profil Dropdown: Avatar Bulat + Email Toko + Chevron v -->
+            <div class="relative" id="profile-dropdown-wrapper">
+              <button type="button" id="btn-profile-dropdown" class="flex items-center gap-2 sm:gap-2.5 p-1 sm:p-1.5 pr-2.5 rounded-full hover:bg-slate-50 border border-slate-200 transition cursor-pointer select-none">
+                <div class="w-8 h-8 rounded-full bg-[#33b589] text-white flex items-center justify-center font-bold text-xs shadow-xs" id="header-profile-avatar">
+                  SC
+                </div>
+                <div class="text-left hidden md:block leading-tight">
+                  <span id="header-profile-email" class="block text-xs font-bold text-slate-800 truncate max-w-[150px]">admin@songercreative.com</span>
+                  <span class="block text-[10px] text-slate-400 font-medium">Owner Toko</span>
+                </div>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform" id="header-profile-chevron"></i>
+              </button>
+
+              <!-- Dropdown Menu Profil Melayang (Floating Card sesuai Gambar 5) -->
+              <div id="profile-floating-menu" class="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 p-4 space-y-3 hidden animate-scale-up">
+                <!-- Baris 1: Nama Toko -->
+                <div class="space-y-0.5">
+                  <div class="font-black text-sm text-slate-900" id="profile-dropdown-store-name">Songer Creative</div>
+                  <!-- Baris 2: ID Toko / Seller -->
+                  <div class="text-xs font-mono font-semibold text-emerald-700" id="profile-dropdown-store-id">ID: songer-creative-01</div>
+                </div>
+                <!-- Garis Pemisah Tipis (Divider) -->
+                <hr class="border-slate-100 my-2">
+                <!-- Menu Tautan: Profile -->
+                <button type="button" id="btn-dropdown-profile-link" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition text-left cursor-pointer">
+                  <i data-lucide="user" class="w-4 h-4 text-emerald-600"></i>
+                  <span>Profile</span>
+                </button>
+                <!-- Menu Tautan: Buka Web Toko -->
+                <a href="index.html" target="_blank" id="btn-view-live-store" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition text-left cursor-pointer">
+                  <i data-lucide="external-link" class="w-4 h-4 text-emerald-600"></i>
+                  <span>Buka Web Toko</span>
+                </a>
+                <!-- Tombol Logout Hijau Emerald (#33b589 text-white rounded) -->
+                <button type="button" id="btn-admin-logout" class="w-full py-2.5 px-4 rounded-xl bg-[#33b589] hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                  <i data-lucide="log-out" class="w-4 h-4"></i>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </header>
+
+      <!-- Mobile Quick Navigation Bar (Horizontal scroll shortcut on mobile screens) -->
+      <nav id="admin-mobile-nav" class="lg:hidden bg-white border-b border-slate-200 px-3 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 z-30 shadow-xs">
+        <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-50 text-emerald-700 flex items-center gap-1.5 transition" data-view="dashboard">
+          <i class="bi bi-speedometer2 text-sm"></i>
+          <span>Dashboard</span>
+        </button>
+        <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="theme-branding">
+          <i class="bi bi-palette-fill text-sm"></i>
+          <span>Thema & Branding</span>
+        </button>
+        <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="orders">
+          <i class="bi bi-cash-stack text-sm"></i>
+          <span>Transaksi</span>
+        </button>
+        <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="products">
+          <i class="bi bi-shop text-sm"></i>
+          <span>Toko</span>
+        </button>
+        <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="pos">
+          <i class="bi bi-calculator-fill text-sm"></i>
+          <span>Kasir</span>
+        </button>
+        <button type="button" class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition" data-view="account">
+          <i class="bi bi-person-circle text-sm"></i>
+          <span>Akun</span>
+        </button>
+      </nav>
+
+      <!-- RIGHT CONTENT VIEWPORT (HANYA INI YANG OVERFLOW SCROLL) -->
+      <main id="admin-main-viewport" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
 
       <!-- VIEW 0: DASHBOARD MULTI-FUNGSI UTAMA (DEFAULT ACTIVE) -->
       <section id="view-dashboard" class="space-y-6">
@@ -442,7 +439,9 @@
 
     </main>
 
-  </div>
+    </div> <!-- Close AREA KANAN -->
+
+  </div> <!-- Close ADMIN LAYOUT SHELL -->
 
   <!-- ========================================================================
        4. MODAL KALKULATOR UKURAN PXL UNTUK KASIR POS
