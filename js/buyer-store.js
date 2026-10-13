@@ -432,9 +432,15 @@ const BuyerStore = (() => {
     const heroDescColor = settings.hero_desc_color || '#475569';
     const heroImageRadius = settings.hero_image_radius || '12px';
     const heroImageShadow = settings.hero_image_shadow || 'sm';
-    const heroSplitImage = (settings.hero_split_image || '').trim();
     const heroDotsActiveColor = settings.hero_dots_active_color || '#10b981';
     const heroDotsInactiveColor = settings.hero_dots_inactive_color || '#cbd5e1';
+
+    // Kustomisasi Tombol Panah Slider & Geser Manual
+    const heroArrowsBg = settings.hero_arrows_bg || 'rgba(0,0,0,0.45)';
+    const heroArrowsHoverBg = settings.hero_arrows_hover_bg || 'rgba(0,0,0,0.75)';
+    const heroArrowsIconColor = settings.hero_arrows_icon_color || '#ffffff';
+    const heroArrowsRadius = settings.hero_arrows_radius || '9999px';
+    const heroArrowsShadow = settings.hero_arrows_shadow || 'sm';
 
     // Hero Split Mobile Layout setting: 'image_top' (default) vs 'image_bottom'
     const heroSplitMobile = settings.hero_split_mobile || 'image_top';
@@ -449,6 +455,10 @@ const BuyerStore = (() => {
     const heroWidthLayout = settings.hero_width_layout || 'boxed';
     const isFullWidth = (heroModel === 'non_split' || heroModel === 'model_2' || heroModel === 'model_3') && (heroWidthLayout === 'full');
     const heroShowArrows = shouldShowNavArrows(animType, settings.hero_show_arrows !== false);
+    const isAlwaysVisible = (animType === 'manual' || animType === 'manual_swipe') || (settings.hero_arrows_visibility === 'always');
+    const arrowVisibilityClass = isAlwaysVisible 
+      ? 'opacity-100' 
+      : 'opacity-0 group-hover:opacity-100 transition-opacity';
 
     // Helper: generate slides HTML Non-Split
     const slidesHtml = heroBanners.map((b, i) => `
@@ -457,15 +467,12 @@ const BuyerStore = (() => {
       </div>
     `).join('');
 
-    // Helper: generate slides HTML Split (Gambar khusus split atau fallback cover center)
-    const splitSlidesHtml = heroBanners.map((b, i) => {
-      const imgSrc = heroSplitImage ? heroSplitImage : b;
-      return `
-        <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}" style="border-radius: inherit; overflow: hidden;">
-          <img src="${imgSrc}" alt="Hero Banner ${i + 1}" class="w-full h-full hero-split-image-cover" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
-        </div>
-      `;
-    }).join('');
+    // Helper: generate slides HTML Split (Menggunakan daftar heroBanners utama)
+    const splitSlidesHtml = heroBanners.map((b, i) => `
+      <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}" style="border-radius: inherit; overflow: hidden;">
+        <img src="${b}" alt="Hero Banner ${i + 1}" class="w-full h-full hero-split-image-cover" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
+      </div>
+    `).join('');
 
     if (heroModel === 'model_1') {
       // [1] Model Teks Saja / Text-Only: Card Elegan dengan Background, Radius, Shadow (Tanpa CTA)
@@ -499,19 +506,19 @@ const BuyerStore = (() => {
       const textDesktopOrder = heroSplitDesktopPos === 'image_left' ? 'md:order-2' : 'md:order-1';
 
       heroSectionHtml = `
-        <div class="relative overflow-hidden ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
-          <div class="w-full md:aspect-[9/2] flex items-center p-3 sm:p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40" style="border-radius: inherit;">
+        <div class="relative overflow-hidden group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+          <div class="w-full md:aspect-[9/2] flex items-center p-3 sm:p-5 md:p-6" style="${heroBgCss} border-radius: inherit;">
             <div class="${mobileFlexClass} items-stretch md:items-center gap-3 sm:gap-4 md:gap-6 w-full h-full">
               
               <!-- Kolom Gambar: Desktop 60% (order adaptif), Mobile Membentang Penuh Proporsional 16:5 -->
               <div class="w-full md:w-[60%] ${imgDesktopOrder} flex flex-col items-center justify-center shrink-0 min-w-0 aspect-[16/5] md:aspect-auto md:h-full hero-split-mobile-image">
-                <div class="overflow-hidden w-full h-full relative bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass}" style="${splitBoxRadiusStyle}; overflow: hidden;">
+                <div class="overflow-hidden w-full h-full relative group bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass}" style="${splitBoxRadiusStyle}; overflow: hidden;">
                   <div class="hero-slider-track w-full h-full relative" style="border-radius: inherit;">
                     ${splitSlidesHtml}
                   </div>
                   ${heroShowArrows ? `
-                    <button type="button" class="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
-                    <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
+                    <button type="button" class="hero-arrow-btn absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 hidden md:flex items-center justify-center z-20 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadow}" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)" style="background-color: ${heroArrowsBg}; color: ${heroArrowsIconColor}; border-radius: ${heroArrowsRadius};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBg}'" onmouseleave="this.style.backgroundColor='${heroArrowsBg}'"><i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
+                    <button type="button" class="hero-arrow-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 hidden md:flex items-center justify-center z-20 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadow}" id="hero-slide-next" title="Slide Berikutnya (&gt;)" style="background-color: ${heroArrowsBg}; color: ${heroArrowsIconColor}; border-radius: ${heroArrowsRadius};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBg}'" onmouseleave="this.style.backgroundColor='${heroArrowsBg}'"><i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
                   ` : ''}
                   <!-- Indikator Slider Dots Melayang (Absolute di dalam kotak gambar) -->
                   ${heroBanners.length > 1 ? `
@@ -559,8 +566,8 @@ const BuyerStore = (() => {
                 </p>
               </div>
               ${heroShowArrows && heroBanners.length > 1 ? `
-                <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
-                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                <button type="button" class="hero-arrow-btn absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadow}" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)" style="background-color: ${heroArrowsBg}; color: ${heroArrowsIconColor}; border-radius: ${heroArrowsRadius};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBg}'" onmouseleave="this.style.backgroundColor='${heroArrowsBg}'"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                <button type="button" class="hero-arrow-btn absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadow}" id="hero-slide-next" title="Slide Berikutnya (&gt;)" style="background-color: ${heroArrowsBg}; color: ${heroArrowsIconColor}; border-radius: ${heroArrowsRadius};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBg}'" onmouseleave="this.style.backgroundColor='${heroArrowsBg}'"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
               ` : ''}
               <!-- Indikator Slider Dots Melayang (Absolute di atas gambar banner) -->
               ${heroBanners.length > 1 ? `
@@ -589,8 +596,8 @@ const BuyerStore = (() => {
                 ${slidesHtml}
               </div>
               ${heroShowArrows && heroBanners.length > 1 ? `
-                <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
-                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                <button type="button" class="hero-arrow-btn absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadow}" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)" style="background-color: ${heroArrowsBg}; color: ${heroArrowsIconColor}; border-radius: ${heroArrowsRadius};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBg}'" onmouseleave="this.style.backgroundColor='${heroArrowsBg}'"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                <button type="button" class="hero-arrow-btn absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadow}" id="hero-slide-next" title="Slide Berikutnya (&gt;)" style="background-color: ${heroArrowsBg}; color: ${heroArrowsIconColor}; border-radius: ${heroArrowsRadius};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBg}'" onmouseleave="this.style.backgroundColor='${heroArrowsBg}'"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
               ` : ''}
               <!-- Indikator Slider Dots Melayang (Absolute di atas gambar banner) -->
               ${heroBanners.length > 1 ? `
@@ -3070,6 +3077,9 @@ const BuyerStore = (() => {
     const sliderContainer = document.getElementById('hero-slider-container');
     if (!sliderContainer) return;
 
+    // Ambil data settings di baris paling atas agar dapat diakses fungsi internal slider
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+
     const count = parseInt(sliderContainer.getAttribute('data-count') || '1', 10);
     if (count <= 1) return;
 
@@ -3103,50 +3113,52 @@ const BuyerStore = (() => {
       const outgoingSlide = slides[currentIndex];
       const incomingSlide = slides[normalizedTarget];
 
-      // Bersihkan transform/transition sisa interaksi drag
-      if (outgoingSlide) {
-        outgoingSlide.style.transition = '';
-        outgoingSlide.style.transform = '';
-      }
-      if (incomingSlide) {
-        incomingSlide.style.transition = '';
-        incomingSlide.style.transform = '';
-      }
-
       if (isFade) {
-        if (direction < 0) {
-          // Klik < (Mundur) / Geser ke Kiri pada Fade: Slide aktif memudar di atas, memunculkan kembali slide sebelumnya
-          incomingSlide.classList.remove('is-hidden', 'is-fading-out', 'is-fading-out-top', 'is-prev', 'is-next');
-          incomingSlide.classList.add('is-active');
-          outgoingSlide.classList.remove('is-active');
-          outgoingSlide.classList.add('is-fading-out-top');
-        } else {
-          // Klik > (Maju) / Geser ke Kanan pada Fade: Fade-in memunculkan slide berikutnya
-          outgoingSlide.classList.remove('is-active');
-          outgoingSlide.classList.add('is-fading-out');
-          incomingSlide.classList.remove('is-hidden', 'is-fading-out', 'is-fading-out-top', 'is-prev', 'is-next');
-          incomingSlide.classList.add('is-active');
+        // --- MODE FADE (Murni Cross-Fade, Tanpa Transform Translasi) ---
+        if (outgoingSlide) {
+          outgoingSlide.classList.remove('is-active', 'is-hidden');
+          outgoingSlide.style.transform = 'none';
+          outgoingSlide.style.zIndex = '5';
+          outgoingSlide.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+          outgoingSlide.style.opacity = '0';
+        }
+
+        if (incomingSlide) {
+          incomingSlide.classList.remove('is-hidden');
+          incomingSlide.style.transform = 'none';
+          incomingSlide.style.zIndex = '10';
+          incomingSlide.style.opacity = '0';
+          incomingSlide.style.visibility = 'visible';
+          incomingSlide.style.transition = 'none';
+
+          void incomingSlide.offsetWidth; // Paksa reflow
+
+          incomingSlide.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+          incomingSlide.style.opacity = '1';
         }
       } else {
-        // Horizontal slide transform (Bebas dari bug lompat patah saat looping dari ujung ke ujung)
-        // 1. Bersihkan kelas lama incoming slide dan letakkan di posisi awal tanpa animasi transisi
-        incomingSlide.classList.remove('is-hidden', 'is-active', 'is-prev', 'is-next', 'is-fading-out', 'is-fading-out-top');
-        incomingSlide.style.transition = 'none';
-        incomingSlide.classList.add(direction > 0 ? 'is-next' : 'is-prev');
+        // --- MODE SLIDE HORIZONTAL (Bebas Bug Terkunci / Bentrok Class) ---
+        const startTranslate = direction > 0 ? 'translateX(100%)' : 'translateX(-100%)';
+        const exitTranslate = direction > 0 ? 'translateX(-100%)' : 'translateX(100%)';
 
-        // 2. Paksa reflow agar browser mendaftarkan koordinat awal (-100% atau +100%)
-        void incomingSlide.offsetWidth;
+        if (incomingSlide) {
+          incomingSlide.classList.remove('is-hidden', 'is-prev', 'is-next');
+          incomingSlide.style.visibility = 'visible';
+          incomingSlide.style.zIndex = '10';
+          incomingSlide.style.transition = 'none';
+          incomingSlide.style.transform = startTranslate;
 
-        // 3. Kembalikan transisi CSS halus
-        incomingSlide.style.transition = '';
+          void incomingSlide.offsetWidth; // Paksa reflow untuk render koordinat awal
 
-        // 4. Geser outgoing slide ke arah luar
-        outgoingSlide.classList.remove('is-active');
-        outgoingSlide.classList.add(direction > 0 ? 'is-prev' : 'is-next');
+          incomingSlide.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+          incomingSlide.style.transform = 'translateX(0)';
+        }
 
-        // 5. Geser incoming slide ke posisi tengah aktif (0)
-        incomingSlide.classList.remove('is-prev', 'is-next');
-        incomingSlide.classList.add('is-active');
+        if (outgoingSlide) {
+          outgoingSlide.style.zIndex = '5';
+          outgoingSlide.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+          outgoingSlide.style.transform = exitTranslate;
+        }
       }
 
       // Update dots indicator
@@ -3165,23 +3177,36 @@ const BuyerStore = (() => {
       currentIndex = normalizedTarget;
 
       setTimeout(() => {
-        slides.forEach((s, idx) => {
-          if (idx !== currentIndex) {
-            s.classList.remove('is-active', 'is-prev', 'is-next', 'is-fading-out', 'is-fading-out-top');
-            s.classList.add('is-hidden');
-            s.style.transition = '';
-            s.style.transform = '';
-          }
-        });
-        isTransitioning = false;
-        // Jalankan kembali autoplay setelah animasi perpindahan gambar tuntas
-        startTimer();
-      }, isFade ? 680 : 620);
+        try {
+          slides.forEach((s, idx) => {
+            if (idx === currentIndex) {
+              s.className = 'hero-slide-smooth is-active';
+              s.style.transition = '';
+              s.style.transform = '';
+              s.style.opacity = '';
+              s.style.zIndex = '';
+              s.style.visibility = '';
+            } else {
+              s.className = 'hero-slide-smooth is-hidden';
+              s.style.transition = '';
+              s.style.transform = '';
+              s.style.opacity = '';
+              s.style.zIndex = '';
+              s.style.visibility = '';
+            }
+          });
+        } finally {
+          isTransitioning = false;
+          // Jalankan kembali autoplay setelah animasi perpindahan gambar tuntas
+          startTimer();
+        }
+      }, 620);
     }
 
     dots.forEach((dot, idx) => {
       dot.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         if (idx === currentIndex) return;
         if (slideInterval) clearInterval(slideInterval);
         const dir = idx > currentIndex ? 1 : -1;
@@ -3194,6 +3219,7 @@ const BuyerStore = (() => {
     if (prevBtn) {
       prevBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         if (slideInterval) clearInterval(slideInterval);
         goToSlide((currentIndex - 1 + totalSlides) % totalSlides, -1);
       });
@@ -3201,6 +3227,7 @@ const BuyerStore = (() => {
     if (nextBtn) {
       nextBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         if (slideInterval) clearInterval(slideInterval);
         goToSlide((currentIndex + 1) % totalSlides, 1);
       });
@@ -3217,7 +3244,7 @@ const BuyerStore = (() => {
     let currentY = 0;
     let isHorizontalGesture = false;
     let hasDragged = false;
-    const threshold = 45; // Ambang batas jarak minimal perpindahan slide (40px - 50px)
+    const threshold = 30; // Ambang batas jarak minimal perpindahan slide (30px untuk responsivitas swipe optimal)
 
     function handleDragStart(x, y) {
       if (isTransitioning) return;
@@ -3336,11 +3363,24 @@ const BuyerStore = (() => {
       }
     }, { passive: false });
 
-    sliderContainer.addEventListener('touchend', () => {
+    sliderContainer.addEventListener('touchend', (e) => {
+      if (e.changedTouches && e.changedTouches[0]) {
+        currentX = e.changedTouches[0].clientX;
+        currentY = e.changedTouches[0].clientY;
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+        if (!isHorizontalGesture && Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) {
+          isHorizontalGesture = true;
+        }
+      }
       handleDragEnd();
     }, { passive: true });
 
-    sliderContainer.addEventListener('touchcancel', () => {
+    sliderContainer.addEventListener('touchcancel', (e) => {
+      if (e.changedTouches && e.changedTouches[0]) {
+        currentX = e.changedTouches[0].clientX;
+        currentY = e.changedTouches[0].clientY;
+      }
       handleDragEnd();
     }, { passive: true });
 

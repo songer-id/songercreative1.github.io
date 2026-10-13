@@ -35,18 +35,30 @@ const AdminApp = (() => {
     return Boolean(showArrowsToggle);
   }
 
+  // 4. Kesiapan Validasi Fitur Seller (SaaS Feature Flags Hook)
+  function checkFeatureAccess(featureKey) {
+    const tenant = (typeof DB !== 'undefined' && DB.getCurrentTenant) ? DB.getCurrentTenant() : {};
+    const features = tenant.features || {
+      custom_theme_colors: true,
+      hero_banner: true,
+      allowed_product_cards: ['v1', 'v2', 'v3'],
+      manage_sponsor_ads: true
+    };
+    return features[featureKey] !== false;
+  }
+
   // ----------------------------------------------------------------------------
   // 1. INITIALIZATION & AUTHENTICATION
   // ----------------------------------------------------------------------------
   function init() {
     // Global File Upload Guard (Max 500KB)
-    document.addEventListener('change', function(e) {
+    document.addEventListener('change', function (e) {
       if (e.target && e.target.type === 'file') {
         const files = e.target.files;
         if (files) {
-          for(let i = 0; i < files.length; i++) {
-            if(files[i].size > 500 * 1024) { // 500 KB limit
-              if(typeof showToast === 'function') showToast('Ukuran gambar terlalu besar! Maksimal ukuran file adalah 500 KB agar tidak memenuhi penyimpanan lokal.', 'error');
+          for (let i = 0; i < files.length; i++) {
+            if (files[i].size > 500 * 1024) { // 500 KB limit
+              if (typeof showToast === 'function') showToast('Ukuran gambar terlalu besar! Maksimal ukuran file adalah 500 KB agar tidak memenuhi penyimpanan lokal.', 'error');
               else alert('Ukuran gambar terlalu besar! Maksimal ukuran file adalah 500 KB agar tidak memenuhi penyimpanan lokal.');
               e.target.value = '';
               e.stopPropagation();
@@ -180,51 +192,30 @@ const AdminApp = (() => {
     document.title = `Admin & POS - ${settings.store_name || currentTenant.store_name}`;
 
     // Header info
-    const logoEl = document.getElementById('header-brand-logo');
-    if (logoEl && settings.web_logo) {
-      logoEl.src = settings.web_logo;
-      logoEl.alt = settings.store_name || currentTenant.store_name;
-    }
-
     const storeNameEl = document.getElementById('header-store-name');
-    if (storeNameEl) storeNameEl.textContent = settings.store_name || currentTenant.store_name;
+    if (storeNameEl) storeNameEl.textContent = settings.store_name || currentTenant.store_name || 'Songer Creative';
 
     const tenantBadgeEl = document.getElementById('header-tenant-badge');
-    if (tenantBadgeEl) tenantBadgeEl.textContent = currentTenant.store_slug;
+    if (tenantBadgeEl) tenantBadgeEl.textContent = currentTenant.store_slug || currentTenant.id || 'songer-creative-01';
 
     const taglineEl = document.getElementById('header-store-tagline');
     if (taglineEl) taglineEl.textContent = settings.store_tagline || currentTenant.store_tagline || 'Digital Printing & Percetakan Terpadu';
 
-    // Sinkronisasi Visibilitas Logo & Nama Toko di Top Header Admin
-    const adminLogoContainer = document.getElementById('admin-header-logo-container');
-    const adminStoreInfoBox = document.getElementById('admin-header-store-info-box');
-    const brandingMode = settings.navbar_branding_mode || (settings.header_use_logo === false ? 'text_only' : 'logo_landscape');
-    const showHeaderStoreName = settings.show_header_store_name !== false;
+    // Synchronize Floating Profile Menu & Avatar
+    const profileStoreName = document.getElementById('profile-dropdown-store-name');
+    if (profileStoreName) profileStoreName.textContent = settings.store_name || currentTenant.store_name || 'Songer Creative';
 
-    if (adminLogoContainer) {
-      if (brandingMode === 'text_only') {
-        adminLogoContainer.className = 'hidden';
-      } else {
-        adminLogoContainer.className = 'h-10 flex items-center shrink-0';
-        const adminLogoImg = adminLogoContainer.querySelector('img');
-        if (adminLogoImg) {
-          if (brandingMode === 'logo_square') {
-            adminLogoImg.className = 'h-8 w-8 sm:h-9 sm:w-9 aspect-square object-contain rounded-lg';
-          } else {
-            adminLogoImg.className = 'h-8 sm:h-9 w-auto max-w-[130px] sm:max-w-[150px] object-contain';
-          }
-        }
-      }
-    }
+    const profileStoreId = document.getElementById('profile-dropdown-store-id');
+    if (profileStoreId) profileStoreId.textContent = `ID: ${currentTenant.store_slug || currentTenant.id || 'songer-creative-01'}`;
 
-    if (adminStoreInfoBox) {
-      if (brandingMode === 'text_only') {
-        adminStoreInfoBox.className = 'border-l-0 pl-0 block';
-      } else if (showHeaderStoreName) {
-        adminStoreInfoBox.className = 'border-l border-slate-200 pl-3 hidden md:block';
-      } else {
-        adminStoreInfoBox.className = 'hidden';
-      }
+    const profileEmail = document.getElementById('header-profile-email');
+    if (profileEmail) profileEmail.textContent = settings.store_email || currentTenant.email || 'admin@songercreative.com';
+
+    const profileAvatar = document.getElementById('header-profile-avatar');
+    if (profileAvatar) {
+      const sName = settings.store_name || currentTenant.store_name || 'Songer Creative';
+      const letters = sName.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'SC';
+      profileAvatar.textContent = letters;
     }
 
     // Sidebar footer
@@ -321,9 +312,11 @@ const AdminApp = (() => {
       btnCreateTenant.addEventListener('click', handleCreateNewTenant);
     }
 
-    // Mobile Hamburger and Drawer Backdrop Controls
+    // Mobile Hamburger, Desktop Toggle, and Drawer Backdrop Controls
     const btnHamburger = document.getElementById('btn-sidebar-hamburger');
+    const btnCloseSidebar = document.getElementById('btn-close-sidebar');
     const btnCloseMobileSidebar = document.getElementById('btn-close-sidebar-mobile');
+    const btnCollapsedLogoTrigger = document.getElementById('btn-collapsed-logo-trigger');
     const backdropSidebar = document.getElementById('sidebar-mobile-backdrop');
     const sidebarEl = document.getElementById('admin-main-sidebar');
 
@@ -337,62 +330,128 @@ const AdminApp = (() => {
       if (backdropSidebar) backdropSidebar.classList.add('hidden');
     };
 
-    if (btnHamburger) btnHamburger.addEventListener('click', openMobileSidebar);
-    if (btnCloseMobileSidebar) btnCloseMobileSidebar.addEventListener('click', closeMobileSidebar);
-    if (backdropSidebar) backdropSidebar.addEventListener('click', closeMobileSidebar);
+    const toggleSidebar = () => {
+      if (window.innerWidth >= 1024) {
+        if (sidebarEl) sidebarEl.classList.toggle('is-expanded');
+      } else {
+        if (sidebarEl && !sidebarEl.classList.contains('-translate-x-full')) {
+          closeMobileSidebar();
+        } else {
+          openMobileSidebar();
+        }
+      }
+    };
 
     const collapseDesktopSidebar = () => {
       if (sidebarEl) sidebarEl.classList.remove('is-expanded');
+      closeMobileSidebar();
     };
 
     const expandDesktopSidebar = () => {
       if (sidebarEl) sidebarEl.classList.add('is-expanded');
     };
 
-    const btnCollapseSidebar = document.getElementById('btn-collapse-sidebar');
-    if (btnCollapseSidebar) {
-      btnCollapseSidebar.addEventListener('click', (e) => {
+    if (btnHamburger) btnHamburger.addEventListener('click', toggleSidebar);
+    if (btnCloseSidebar) btnCloseSidebar.addEventListener('click', collapseDesktopSidebar);
+    if (btnCloseMobileSidebar) btnCloseMobileSidebar.addEventListener('click', closeMobileSidebar);
+    if (btnCollapsedLogoTrigger) btnCollapsedLogoTrigger.addEventListener('click', expandDesktopSidebar);
+    if (backdropSidebar) backdropSidebar.addEventListener('click', closeMobileSidebar);
+
+    // Floating Profile Menu Dropdown in Topbar (Gambar 5)
+    const btnProfileDropdown = document.getElementById('btn-profile-dropdown');
+    const profileFloatingMenu = document.getElementById('profile-floating-menu');
+    const profileChevron = document.getElementById('header-profile-chevron');
+    const btnProfileLink = document.getElementById('btn-dropdown-profile-link');
+    const btnTopbarNotif = document.getElementById('btn-topbar-notifications');
+
+    if (btnProfileDropdown && profileFloatingMenu) {
+      btnProfileDropdown.addEventListener('click', (e) => {
         e.stopPropagation();
-        collapseDesktopSidebar();
+        const isHidden = profileFloatingMenu.classList.toggle('hidden');
+        if (profileChevron) {
+          if (!isHidden) profileChevron.classList.add('rotate-180');
+          else profileChevron.classList.remove('rotate-180');
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!profileFloatingMenu.contains(e.target) && !btnProfileDropdown.contains(e.target)) {
+          profileFloatingMenu.classList.add('hidden');
+          if (profileChevron) profileChevron.classList.remove('rotate-180');
+        }
       });
     }
 
-    // Sidebar navigation items
+    if (btnProfileLink) {
+      btnProfileLink.addEventListener('click', () => {
+        if (profileFloatingMenu) profileFloatingMenu.classList.add('hidden');
+        if (profileChevron) profileChevron.classList.remove('rotate-180');
+        navigate('account');
+      });
+    }
+
+    if (btnTopbarNotif) {
+      btnTopbarNotif.addEventListener('click', () => {
+        navigate('orders');
+      });
+    }
+
+    // Quick Search Input in Topbar
+    const topbarQuickSearch = document.getElementById('topbar-quick-search');
+    if (topbarQuickSearch) {
+      topbarQuickSearch.addEventListener('input', (e) => {
+        ordersSearchQuery = e.target.value;
+        if (currentView !== 'orders') {
+          navigate('orders');
+        } else {
+          renderOrdersView();
+        }
+      });
+    }
+
+    // Official Sidebar Navigation Items (7 Menu Resmi)
     const navDashboard = document.getElementById('admin-nav-dashboard');
+    const navThemeBranding = document.getElementById('admin-nav-theme-branding');
     const navOrders = document.getElementById('admin-nav-orders');
-    const navPos = document.getElementById('admin-nav-pos');
     const navProducts = document.getElementById('admin-nav-products');
     const navAddProduct = document.getElementById('admin-nav-add-product');
     const navCategories = document.getElementById('admin-nav-categories');
+    const navPos = document.getElementById('admin-nav-pos');
+    const navAccount = document.getElementById('admin-nav-account');
+    const navSettingsTheme = document.getElementById('admin-nav-settings-theme');
+    const navSettingsPrint = document.getElementById('admin-nav-settings-print');
+
+    // Menu Tambahan Marketing & Ulasan
     const navPromos = document.getElementById('admin-nav-promos');
     const navVouchers = document.getElementById('admin-nav-vouchers');
     const navSponsors = document.getElementById('admin-nav-sponsors');
     const navReviews = document.getElementById('admin-nav-reviews');
-    const navThemeBranding = document.getElementById('admin-nav-theme-branding');
-    const navBrandingHero = document.getElementById('admin-nav-branding-hero');
-    const navSettings = document.getElementById('admin-nav-settings');
 
     const handleNavClick = (viewName) => {
       closeMobileSidebar();
-      expandDesktopSidebar();
       navigate(viewName);
     };
 
     if (navDashboard) navDashboard.addEventListener('click', () => handleNavClick('dashboard'));
+    if (navThemeBranding) navThemeBranding.addEventListener('click', () => handleNavClick('theme-branding'));
     if (navOrders) navOrders.addEventListener('click', () => handleNavClick('orders'));
-    if (navPos) navPos.addEventListener('click', () => handleNavClick('pos'));
     if (navProducts) navProducts.addEventListener('click', () => handleNavClick('products'));
     if (navAddProduct) navAddProduct.addEventListener('click', () => handleNavClick('create-product'));
     if (navCategories) navCategories.addEventListener('click', () => handleNavClick('categories'));
+    if (navPos) navPos.addEventListener('click', () => handleNavClick('pos'));
+    if (navAccount) navAccount.addEventListener('click', () => handleNavClick('account'));
+    if (navSettingsTheme) navSettingsTheme.addEventListener('click', () => handleNavClick('theme-branding'));
+    if (navSettingsPrint) navSettingsPrint.addEventListener('click', () => {
+      closeMobileSidebar();
+      openReceiptModal();
+    });
+
     if (navPromos) navPromos.addEventListener('click', () => handleNavClick('promos'));
     if (navVouchers) navVouchers.addEventListener('click', () => handleNavClick('vouchers'));
     if (navSponsors) navSponsors.addEventListener('click', () => handleNavClick('sponsors'));
     if (navReviews) navReviews.addEventListener('click', () => handleNavClick('reviews'));
-    if (navThemeBranding) navThemeBranding.addEventListener('click', () => handleNavClick('theme-branding'));
-    if (navBrandingHero) navBrandingHero.addEventListener('click', () => handleNavClick('theme-branding'));
-    if (navSettings) navSettings.addEventListener('click', () => handleNavClick('theme-branding'));
 
-    // Accordion group headers (Toko & Marketing)
+    // Accordion group headers (Toko, Pengaturan & Marketing)
     document.querySelectorAll('.admin-nav-group-toggle').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -400,6 +459,7 @@ const AdminApp = (() => {
         const group = btn.getAttribute('data-group');
         const submenu = document.getElementById(`submenu-${group}`);
         if (submenu) {
+          submenu.classList.remove('hidden');
           const isExpanded = submenu.classList.toggle('is-expanded');
           const chevron = btn.querySelector('.nav-group-chevron');
           if (chevron) {
@@ -457,6 +517,9 @@ const AdminApp = (() => {
   // ----------------------------------------------------------------------------
   // 4. NAVIGATION CONTROLLER
   // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // 4. NAVIGATION CONTROLLER
+  // ----------------------------------------------------------------------------
   function navigate(viewName, param = null) {
     currentView = viewName;
 
@@ -478,13 +541,26 @@ const AdminApp = (() => {
       'reviews': document.getElementById('view-review-manager'),
       'theme-branding': document.getElementById('view-theme-branding') || document.getElementById('view-branding-hero'),
       'branding-hero': document.getElementById('view-theme-branding') || document.getElementById('view-branding-hero'),
-      'settings': document.getElementById('view-theme-branding') || document.getElementById('view-settings')
+      'settings': document.getElementById('view-theme-branding') || document.getElementById('view-settings'),
+      'account': document.getElementById('view-account')
     };
 
     // Hide all views
     Object.values(views).forEach(v => {
       if (v) v.classList.add('hidden');
     });
+
+    // Control viewport padding for Shopify studio customizer mode vs standard view
+    const mainViewport = document.getElementById('admin-main-viewport');
+    if (mainViewport) {
+      if (viewName === 'theme-branding' || viewName === 'branding-hero') {
+        mainViewport.classList.remove('p-4', 'sm:p-6', 'lg:p-8', 'overflow-y-auto');
+        mainViewport.classList.add('p-0', 'overflow-hidden');
+      } else {
+        mainViewport.classList.remove('p-0', 'overflow-hidden');
+        mainViewport.classList.add('p-4', 'sm:p-6', 'lg:p-8', 'overflow-y-auto');
+      }
+    }
 
     // Update sidebar navigation active style and badges
     updateSidebarNavActive(viewName);
@@ -564,6 +640,9 @@ const AdminApp = (() => {
     } else if (viewName === 'theme-branding' || viewName === 'branding-hero' || viewName === 'settings') {
       if (views['theme-branding']) views['theme-branding'].classList.remove('hidden');
       renderThemeBrandingView();
+    } else if (viewName === 'account') {
+      if (views.account) views.account.classList.remove('hidden');
+      renderAccountView();
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -573,67 +652,207 @@ const AdminApp = (() => {
     }, 40);
   }
 
+  // ----------------------------------------------------------------------------
+  // 4B. RENDER ACCOUNT & PROFIL VIEW
+  // ----------------------------------------------------------------------------
+  function renderAccountView() {
+    const container = document.getElementById('account-view-container');
+    if (!container) return;
+
+    const tenant = (typeof DB !== 'undefined' && DB.getCurrentTenant) ? DB.getCurrentTenant() : (currentTenant || {});
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+
+    const storeName = settings.store_name || tenant.store_name || 'Songer Creative';
+    const storeSlug = tenant.store_slug || tenant.id || 'songer-creative-01';
+    const email = settings.store_email || tenant.email || 'admin@songercreative.com';
+    const phone = settings.store_phone || tenant.phone || '0812-3456-7890';
+    const address = settings.store_address || tenant.address || 'Jl. Raya Percetakan No. 1, Kota Surabaya';
+
+    container.innerHTML = `
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+          <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-0.5">
+              <span>Admin Center</span> <span>/</span> <span class="text-slate-800 font-bold">Profil Akun & Toko</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Akun Pengguna & Profil Toko</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Informasi akun seller, hak akses tenant aktif, serta preferensi operasional toko Anda.</p>
+          </div>
+          <button type="button" id="btn-account-logout" class="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold border border-red-200 transition flex items-center gap-2 cursor-pointer">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Logout Akun</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Profil Card -->
+          <div class="md:col-span-1 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col items-center text-center space-y-4">
+            <div class="w-24 h-24 rounded-3xl bg-emerald-600 text-white flex items-center justify-center font-black text-2xl shadow-md border-4 border-emerald-50">
+              ${escapeHtml((storeName || 'SC').slice(0, 2).toUpperCase())}
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-slate-900">${escapeHtml(storeName)}</h2>
+              <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-900 text-emerald-400">
+                ${escapeHtml(storeSlug)}
+              </span>
+            </div>
+            <div class="w-full pt-4 border-t border-slate-100 text-xs space-y-2 text-slate-600">
+              <div class="flex justify-between py-1 border-b border-slate-50">
+                <span class="text-slate-400">Role:</span>
+                <span class="font-bold text-slate-800">Owner & Administrator</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-50">
+                <span class="text-slate-400">Status Toko:</span>
+                <span class="font-bold text-emerald-600 flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                  Aktif / Online
+                </span>
+              </div>
+              <div class="flex justify-between py-1">
+                <span class="text-slate-400">Multi-tenant ID:</span>
+                <span class="font-mono text-slate-700">${escapeHtml(storeSlug)}</span>
+              </div>
+            </div>
+            <a href="index.html?store=${encodeURIComponent(storeSlug)}" target="_blank" class="w-full py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition flex items-center justify-center gap-2 border border-emerald-200 shadow-2xs">
+              <i data-lucide="external-link" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Buka Storefront Pembeli</span>
+            </a>
+          </div>
+
+          <!-- Detail & Feature Flags Card -->
+          <div class="md:col-span-2 space-y-6">
+            <!-- Informasi Kontak -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+              <h3 class="font-extrabold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="contact" class="w-4 h-4 text-emerald-600"></i>
+                <span>Informasi Kontak Resmi Toko</span>
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <span class="block text-slate-400 text-[11px] mb-1">Email Toko Terdaftar:</span>
+                  <span class="font-bold text-slate-800 font-mono">${escapeHtml(email)}</span>
+                </div>
+                <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <span class="block text-slate-400 text-[11px] mb-1">No. WhatsApp / Telepon:</span>
+                  <span class="font-bold text-slate-800 font-mono">${escapeHtml(phone)}</span>
+                </div>
+                <div class="sm:col-span-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <span class="block text-slate-400 text-[11px] mb-1">Alamat Outlet / Workshop Percetakan:</span>
+                  <span class="font-semibold text-slate-800">${escapeHtml(address)}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hak Akses Fitur Seller (SaaS Feature Flags) -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+              <h3 class="font-extrabold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                <span>Hak Akses Fitur Seller (SaaS Feature Flags)</span>
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-50/50 border border-emerald-100">
+                  <span class="font-semibold text-slate-800">Custom Theme &amp; Colors:</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                    <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Aktif
+                  </span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-50/50 border border-emerald-100">
+                  <span class="font-semibold text-slate-800">Hero Banner &amp; Slider Studio:</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                    <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Aktif
+                  </span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-50/50 border border-emerald-100">
+                  <span class="font-semibold text-slate-800">Model Kartu Produk (v1, v2, v3):</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                    <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Penuh (3 Model)
+                  </span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-50/50 border border-emerald-100">
+                  <span class="font-semibold text-slate-800">Iklan Promosi &amp; Sponsor Ads:</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                    <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Aktif
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const btnLogout = document.getElementById('btn-account-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', handleLogout);
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  // ----------------------------------------------------------------------------
+  // 4C. UPDATE SIDEBAR NAV ACTIVE STYLING (EMERALD BRAND GREEN)
+  // ----------------------------------------------------------------------------
   function updateSidebarNavActive(viewName) {
     const navDashboard = document.getElementById('admin-nav-dashboard');
+    const navThemeBranding = document.getElementById('admin-nav-theme-branding');
     const navOrders = document.getElementById('admin-nav-orders');
-    const navThemeBranding = document.getElementById('admin-nav-theme-branding') || document.getElementById('admin-nav-branding-hero');
-    const navPos = document.getElementById('admin-nav-pos');
     const navProducts = document.getElementById('admin-nav-products');
     const navAddProduct = document.getElementById('admin-nav-add-product');
     const navCategories = document.getElementById('admin-nav-categories');
-    const navReviews = document.getElementById('admin-nav-reviews');
+    const navPos = document.getElementById('admin-nav-pos');
+    const navAccount = document.getElementById('admin-nav-account');
+    const navSettingsTheme = document.getElementById('admin-nav-settings-theme');
+    const navSettingsPrint = document.getElementById('admin-nav-settings-print');
+
     const navPromos = document.getElementById('admin-nav-promos');
     const navVouchers = document.getElementById('admin-nav-vouchers');
     const navSponsors = document.getElementById('admin-nav-sponsors');
+    const navReviews = document.getElementById('admin-nav-reviews');
 
     const navMap = [
       { key: 'dashboard', el: navDashboard },
-      { key: 'orders', el: navOrders },
       { key: 'theme-branding', el: navThemeBranding },
       { key: 'branding-hero', el: navThemeBranding },
-      { key: 'settings', el: navThemeBranding },
-      { key: 'pos', el: navPos },
+      { key: 'orders', el: navOrders },
       { key: 'products', el: navProducts },
       { key: 'list', el: navProducts },
       { key: 'create-product', el: navAddProduct },
       { key: 'create', el: navAddProduct },
       { key: 'categories', el: navCategories },
-      { key: 'reviews', el: navReviews },
+      { key: 'pos', el: navPos },
+      { key: 'account', el: navAccount },
+      { key: 'settings', el: navSettingsTheme },
       { key: 'promos', el: navPromos },
       { key: 'vouchers', el: navVouchers },
-      { key: 'sponsors', el: navSponsors }
+      { key: 'sponsors', el: navSponsors },
+      { key: 'reviews', el: navReviews }
     ];
 
-    // Determine auto-contrast based on sidebar background
-    const sidebarEl = document.getElementById('admin-main-sidebar');
-    const isDarkSidebar = sidebarEl && (sidebarEl.classList.contains('bg-slate-900') || sidebarEl.classList.contains('bg-slate-800'));
-    const activeClass = isDarkSidebar ? 'is-active-dark' : 'is-active-light';
-    const activeTailwind = isDarkSidebar 
-      ? ['bg-emerald-600/20', 'text-emerald-400', 'font-bold', 'rounded-2xl', 'shadow-xs'] 
-      : ['bg-emerald-50', 'text-emerald-700', 'font-bold', 'rounded-2xl', 'shadow-xs'];
-    const obsoleteClasses = [
-      'bg-emerald-50', 'text-emerald-700', 'text-emerald-800',
-      'bg-emerald-600/20', 'text-emerald-400', 'bg-white/10', 'text-white',
-      'font-black', 'font-bold', 'shadow-xs',
-      'border-l-4', 'border-l-2', 'border-r-4', 'border-r-2', 'border-white', 'border-emerald-600', 'border-transparent',
-      'is-active-dark', 'is-active-light'
-    ];
+    const activeClasses = ['bg-white', 'text-emerald-700', 'font-bold', 'rounded-2xl', 'shadow-xs', 'is-nav-active'];
+    const inactiveClasses = ['text-white/90', 'hover:bg-white/20', 'hover:text-white', 'rounded-2xl'];
 
     navMap.forEach(item => {
       if (item.el) {
-        const isSelected = item.key === viewName || (viewName === 'edit' && item.key === 'products');
+        const isSelected = item.key === viewName || (viewName === 'edit' && item.key === 'products') || (viewName === 'theme-branding' && item.el === navSettingsTheme);
         const iconEl = item.el.querySelector('.nav-icon') || item.el.querySelector('i');
+        const labelEl = item.el.querySelector('.nav-label-text');
+
         if (isSelected) {
-          item.el.classList.remove(...obsoleteClasses, 'text-slate-600', 'font-medium', 'hover:bg-slate-100', 'hover:text-slate-900');
-          item.el.classList.add(...activeTailwind, activeClass);
+          item.el.classList.remove('text-white/90', 'text-white/80', 'text-white/70', 'hover:bg-white/20', 'hover:text-white');
+          item.el.classList.add(...activeClasses);
           if (iconEl) {
-            iconEl.classList.remove('text-slate-400', 'text-slate-500', 'text-slate-600');
-            iconEl.classList.add('text-emerald-600');
+            iconEl.classList.remove('text-white/90', 'text-white/80', 'text-white/70', 'text-white', 'text-emerald-100');
+            iconEl.classList.add('text-emerald-700', 'font-bold');
           }
-          
+          if (labelEl) {
+            labelEl.classList.remove('text-white/90', 'text-white/80', 'text-white/70', 'text-white');
+            labelEl.classList.add('text-emerald-700', 'font-bold');
+          }
+
           // Auto-expand group submenu
           const parentSubmenu = item.el.closest('.nav-submenu');
           if (parentSubmenu) {
+            parentSubmenu.classList.remove('hidden');
             parentSubmenu.classList.add('is-expanded');
             const groupToggleBtn = document.querySelector(`.admin-nav-group-toggle[data-group="${parentSubmenu.id.replace('submenu-', '')}"]`);
             const chevron = groupToggleBtn?.querySelector('.nav-group-chevron');
@@ -643,15 +862,28 @@ const AdminApp = (() => {
             }
           }
         } else {
-          item.el.classList.remove(...obsoleteClasses);
-          item.el.classList.add('text-slate-600', 'font-medium', 'rounded-2xl', 'hover:bg-slate-100', 'hover:text-slate-900');
+          item.el.classList.remove(...activeClasses);
+          item.el.classList.add(...inactiveClasses);
           if (iconEl) {
-            iconEl.classList.remove('text-emerald-600', 'text-emerald-400');
-            iconEl.classList.add('text-slate-500');
+            iconEl.classList.remove('text-emerald-700', 'font-bold');
+            iconEl.classList.add('text-white/90');
+          }
+          if (labelEl) {
+            labelEl.classList.remove('text-emerald-700', 'font-bold');
+            labelEl.classList.add('text-white/90');
           }
         }
       }
     });
+
+    // Sync notification badge count in topbar and sidebar
+    const ordersCount = (typeof DB !== 'undefined' && DB.getOrders) ? DB.getOrders().length : 0;
+    const badgeEl = document.getElementById('sidebar-badge-orders');
+    if (badgeEl) {
+      badgeEl.textContent = ordersCount;
+      if (ordersCount > 0) badgeEl.classList.remove('hidden');
+    }
+
 
     // SINKRONISASI INDUK SUBMENU: Menu Induk ("Toko" dan "Marketing & Promosi") WAJIB ikut menyala saat submenunya aktif
     const isTokoActive = ['products', 'list', 'create-product', 'create', 'categories', 'reviews', 'edit'].includes(viewName);
@@ -692,11 +924,11 @@ const AdminApp = (() => {
     // Also update mobile quick nav buttons
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
       const v = btn.getAttribute('data-view');
-      const isMatch = v === viewName || 
-                      (viewName === 'edit' && v === 'products') || 
-                      (viewName === 'list' && v === 'products') ||
-                      (viewName === 'create' && v === 'create-product') ||
-                      (v === 'theme-branding' && (viewName === 'branding-hero' || viewName === 'settings'));
+      const isMatch = v === viewName ||
+        (viewName === 'edit' && v === 'products') ||
+        (viewName === 'list' && v === 'products') ||
+        (viewName === 'create' && v === 'create-product') ||
+        (v === 'theme-branding' && (viewName === 'branding-hero' || viewName === 'settings'));
       if (isMatch) {
         btn.classList.add('bg-emerald-50', 'text-emerald-700', 'font-bold');
         btn.classList.remove('text-slate-600', 'font-medium', 'hover:bg-slate-100');
@@ -758,11 +990,11 @@ const AdminApp = (() => {
     const dateNow = new Date();
     const invoicePreview = window.InvoiceGenerator
       ? InvoiceGenerator.formatInvoiceNumber({
-          channel: 'B_POS',
-          labelCode: posOrderPrefix,
-          counter: currentCounter,
-          date: dateNow
-        })
+        channel: 'B_POS',
+        labelCode: posOrderPrefix,
+        counter: currentCounter,
+        date: dateNow
+      })
       : `B-${posOrderPrefix}-${String(currentCounter).padStart(5, '0')}-${String(dateNow.getMonth() + 1).padStart(2, '0')}${String(dateNow.getFullYear()).slice(-2)}`;
 
     container.innerHTML = `
@@ -1037,11 +1269,11 @@ const AdminApp = (() => {
         const dateNow = new Date();
         const invoicePreview = window.InvoiceGenerator
           ? InvoiceGenerator.formatInvoiceNumber({
-              channel: 'B_POS',
-              labelCode: posOrderPrefix,
-              counter: currentCounter,
-              date: dateNow
-            })
+            channel: 'B_POS',
+            labelCode: posOrderPrefix,
+            counter: currentCounter,
+            date: dateNow
+          })
           : `B-${posOrderPrefix}-${String(currentCounter).padStart(5, '0')}`;
         const previewEl = document.getElementById('pos-invoice-code-preview');
         if (previewEl) previewEl.textContent = invoicePreview;
@@ -1205,7 +1437,7 @@ const AdminApp = (() => {
 
     // Filter by Search Query
     if (posSearchQuery) {
-      products = products.filter(p => 
+      products = products.filter(p =>
         (p.name || '').toLowerCase().includes(posSearchQuery) ||
         (p.order_category || '').toLowerCase().includes(posSearchQuery) ||
         (p.description || '').toLowerCase().includes(posSearchQuery)
@@ -1466,7 +1698,7 @@ const AdminApp = (() => {
     if (prod.price_type === 1) {
       const matIdx = parseInt(matSelect?.value || '0', 10);
       const matPrice = prod.materials && prod.materials[matIdx] ? prod.materials[matIdx].price_per_m2 : 30000;
-      
+
       const finIdx = parseInt(finishSelect?.value || '0', 10);
       let finPrice = 0;
       if (prod.finishings && prod.finishings[finIdx]) {
@@ -1511,7 +1743,7 @@ const AdminApp = (() => {
     if (prod.price_type === 1) {
       const matIdx = parseInt(matSelect?.value || '0', 10);
       const selectedMat = prod.materials && prod.materials[matIdx] ? prod.materials[matIdx] : { name: 'Standar Fleksi', price_per_m2: 30000 };
-      
+
       const finIdx = parseInt(finishSelect?.value || '0', 10);
       let finName = 'Standar';
       let finPrice = 0;
@@ -1759,11 +1991,11 @@ const AdminApp = (() => {
     const now = new Date();
     const invoiceNumber = window.InvoiceGenerator
       ? InvoiceGenerator.formatInvoiceNumber({
-          channel: 'B_POS',
-          labelCode: posOrderPrefix,
-          counter: currentCounter,
-          date: now
-        })
+        channel: 'B_POS',
+        labelCode: posOrderPrefix,
+        counter: currentCounter,
+        date: now
+      })
       : `B-${posOrderPrefix}-${String(currentCounter).padStart(5, '0')}`;
 
     // Build Receipt Data Object
@@ -2190,13 +2422,12 @@ const AdminApp = (() => {
     const isSuccess = type === 'success';
     const isInfo = type === 'info';
 
-    toast.className = `flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-xl text-xs font-semibold animate-slide-in pointer-events-auto transition-all duration-300 ${
-      isSuccess 
-        ? 'bg-slate-900 text-white border-emerald-500 shadow-emerald-950/20' 
+    toast.className = `flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-xl text-xs font-semibold animate-slide-in pointer-events-auto transition-all duration-300 ${isSuccess
+        ? 'bg-slate-900 text-white border-emerald-500 shadow-emerald-950/20'
         : isInfo
-        ? 'bg-slate-900 text-white border-slate-700 shadow-slate-950/20'
-        : 'bg-red-950 text-white border-red-600 shadow-red-950/20'
-    }`;
+          ? 'bg-slate-900 text-white border-slate-700 shadow-slate-950/20'
+          : 'bg-red-950 text-white border-red-600 shadow-red-950/20'
+      }`;
 
     toast.innerHTML = `
       <i data-lucide="${isSuccess ? 'check-circle' : isInfo ? 'info' : 'alert-circle'}" class="w-4 h-4 ${isSuccess ? 'text-emerald-400' : isInfo ? 'text-blue-400' : 'text-red-400'} shrink-0"></i>
@@ -2547,32 +2778,32 @@ const AdminApp = (() => {
     }
 
     return `
-      <tr class="hover:bg-slate-50/80 transition cursor-pointer order-table-row" data-id="${ord.id}">
+      <tr class="hover:bg-slate-50/80 transition cursor-pointer order-table-row border-b border-slate-100 last:border-b-0" data-id="${ord.id}">
         <!-- Invoice ID -->
-        <td class="p-4 font-mono font-bold text-slate-900">
-          <span class="text-emerald-700">${escapeHtml(ord.invoice_number)}</span>
+        <td class="px-5 py-4.5 font-mono font-bold text-slate-900">
+          <span class="text-emerald-700 font-extrabold">${escapeHtml(ord.invoice_number)}</span>
         </td>
 
         <!-- Tanggal -->
-        <td class="p-4 text-slate-500 font-mono text-[11px]">
+        <td class="px-5 py-4.5 text-slate-500 font-mono text-[11px]">
           ${dateFormatted}
         </td>
 
         <!-- Nama Pelanggan -->
-        <td class="p-4">
-          <div class="font-bold text-slate-900">${escapeHtml(ord.customer_name || 'Pelanggan Umum')}</div>
-          <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(ord.customer_phone || '-')}</div>
+        <td class="px-5 py-4.5">
+          <div class="font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(ord.customer_name || 'Pelanggan Umum')}</div>
+          <div class="text-[11px] text-slate-400 font-mono mt-0.5">${escapeHtml(ord.customer_phone || '-')}</div>
         </td>
 
         <!-- Sumber Pesanan -->
-        <td class="p-4">
+        <td class="px-5 py-4.5">
           ${isWeb ? `
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
               <i data-lucide="message-square" class="w-3 h-3 text-teal-600"></i>
               Web Checkout
             </span>
           ` : `
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
               <i data-lucide="monitor" class="w-3 h-3 text-slate-600"></i>
               Kasir POS
             </span>
@@ -2580,26 +2811,26 @@ const AdminApp = (() => {
         </td>
 
         <!-- Total Tagihan -->
-        <td class="p-4 font-bold text-slate-900 font-mono">
+        <td class="px-5 py-4.5 font-bold text-slate-900 font-mono text-sm">
           ${formatIDR(ord.total)}
         </td>
 
         <!-- Status -->
-        <td class="p-4 text-center">
+        <td class="px-5 py-4.5 text-center">
           ${statusBadge}
         </td>
 
         <!-- Aksi -->
-        <td class="p-4 text-center" onclick="event.stopPropagation()">
-          <div class="flex items-center justify-center gap-1.5">
-            <select class="select-order-status px-2 py-1.5 rounded-xl border border-slate-300 text-[10px] font-bold outline-none cursor-pointer bg-white text-slate-700" data-id="${ord.id}">
+        <td class="px-5 py-4.5 text-center" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-center gap-2">
+            <select class="select-order-status px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold outline-none cursor-pointer bg-white text-slate-700 focus:border-emerald-500 shadow-2xs" data-id="${ord.id}">
               <option value="PENDING" ${st === 'PENDING' ? 'selected' : ''}>Menunggu</option>
               <option value="PROCESSING" ${st === 'PROCESSING' ? 'selected' : ''}>Diproses</option>
               <option value="COMPLETED" ${st === 'COMPLETED' || st === 'PAID' ? 'selected' : ''}>Selesai</option>
               <option value="CANCELLED" ${st === 'CANCELLED' ? 'selected' : ''}>Dibatalkan</option>
             </select>
-            <button type="button" class="btn-print-order-receipt px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition font-bold text-[10px] flex items-center gap-1" data-id="${ord.id}" title="Cetak Struk Thermal 58mm/80mm">
-              <i data-lucide="printer" class="w-3 h-3 text-emerald-600"></i>
+            <button type="button" class="btn-print-order-receipt p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition font-bold text-xs flex items-center justify-center shadow-2xs" data-id="${ord.id}" title="Cetak Struk Thermal 58mm/80mm">
+              <i data-lucide="printer" class="w-3.5 h-3.5 text-emerald-600"></i>
             </button>
           </div>
         </td>
@@ -2627,7 +2858,7 @@ const AdminApp = (() => {
           } else if (typeof window.DB.updateOrder === 'function') {
             DB.updateOrder(id, { status: newStatus });
           }
-          
+
           if (currentView === 'orders') {
             renderOrdersView();
           } else if (currentView === 'dashboard') {
@@ -2660,7 +2891,7 @@ const AdminApp = (() => {
     let filteredOrders = [...allOrders];
     if (ordersSearchQuery.trim() !== '') {
       const q = ordersSearchQuery.toLowerCase();
-      filteredOrders = filteredOrders.filter(o => 
+      filteredOrders = filteredOrders.filter(o =>
         (o.invoice_number && o.invoice_number.toLowerCase().includes(q)) ||
         (o.customer_name && o.customer_name.toLowerCase().includes(q)) ||
         (o.customer_phone && o.customer_phone.toLowerCase().includes(q))
@@ -2702,26 +2933,26 @@ const AdminApp = (() => {
         </div>
 
         <!-- Filter Controls -->
-        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <!-- Search Input -->
-            <div class="relative sm:col-span-1">
+            <div class="relative flex-1 max-w-sm">
               <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-              <input type="text" id="input-orders-search" value="${escapeHtml(ordersSearchQuery)}" placeholder="Cari No. Faktur / Nama Pembeli..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-xs outline-none focus:border-emerald-500 font-medium" />
+              <input type="text" id="input-orders-search" value="${escapeHtml(ordersSearchQuery)}" placeholder="Cari No. Faktur / Nama Pembeli..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs outline-none focus:border-emerald-500 focus:bg-white font-medium transition" />
             </div>
 
-            <!-- Status Tabs -->
-            <div class="flex items-center gap-1 overflow-x-auto scrollbar-none sm:col-span-1">
-              <button type="button" class="btn-orders-status-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${ordersStatusFilter === 'all' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="all">Semua (${allOrders.length})</button>
-              <button type="button" class="btn-orders-status-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${ordersStatusFilter === 'PENDING' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="PENDING">Menunggu (${pendingCount})</button>
-              <button type="button" class="btn-orders-status-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${ordersStatusFilter === 'PROCESSING' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="PROCESSING">Diproses (${processingCount})</button>
-              <button type="button" class="btn-orders-status-tab px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${ordersStatusFilter === 'COMPLETED' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="COMPLETED">Selesai (${completedCount})</button>
+            <!-- Status Tabs (Sesuai Gambar 8) -->
+            <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+              <button type="button" class="btn-orders-status-tab px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${ordersStatusFilter === 'all' ? 'bg-[#33b589] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="all">Semua Pesanan (${allOrders.length})</button>
+              <button type="button" class="btn-orders-status-tab px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${ordersStatusFilter === 'PENDING' ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="PENDING">Menunggu Konfirmasi (${pendingCount})</button>
+              <button type="button" class="btn-orders-status-tab px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${ordersStatusFilter === 'PROCESSING' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="PROCESSING">Diproses (${processingCount})</button>
+              <button type="button" class="btn-orders-status-tab px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${ordersStatusFilter === 'COMPLETED' ? 'bg-[#33b589] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-status="COMPLETED">Selesai (${completedCount})</button>
             </div>
 
             <!-- Channel Filter -->
-            <div class="flex items-center justify-end gap-2 text-xs sm:col-span-1">
+            <div class="flex items-center gap-2 text-xs">
               <span class="font-bold text-slate-500 whitespace-nowrap">Sumber:</span>
-              <select id="select-orders-channel" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500 w-full sm:w-auto">
+              <select id="select-orders-channel" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:border-emerald-500 cursor-pointer">
                 <option value="all" ${ordersChannelFilter === 'all' ? 'selected' : ''}>Semua Saluran</option>
                 <option value="WEB_WA" ${ordersChannelFilter === 'WEB_WA' ? 'selected' : ''}>Web Checkout WA</option>
                 <option value="B_POS" ${ordersChannelFilter === 'B_POS' ? 'selected' : ''}>Kasir POS Offline</option>
@@ -2731,24 +2962,24 @@ const AdminApp = (() => {
         </div>
 
         <!-- Orders Table -->
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr class="bg-slate-50/80 text-slate-600 font-bold border-b border-slate-200">
-                  <th class="p-4 w-40">No. Faktur / Invoice</th>
-                  <th class="p-4 w-36">Waktu & Tanggal</th>
-                  <th class="p-4">Nama Pelanggan</th>
-                  <th class="p-4 w-32">Sumber</th>
-                  <th class="p-4 w-32">Total Tagihan</th>
-                  <th class="p-4 w-32 text-center">Status</th>
-                  <th class="p-4 w-44 text-center">Aksi Transaksi</th>
+                <tr class="bg-slate-50/90 text-slate-700 font-bold border-b border-slate-200/80 text-[11px] tracking-wide uppercase">
+                  <th class="px-5 py-4 w-44">No. Faktur / Invoice</th>
+                  <th class="px-5 py-4 w-36">Waktu & Tanggal</th>
+                  <th class="px-5 py-4">Nama Pelanggan</th>
+                  <th class="px-5 py-4 w-32">Sumber</th>
+                  <th class="px-5 py-4 w-36">Total Tagihan</th>
+                  <th class="px-5 py-4 w-36 text-center">Status</th>
+                  <th class="px-5 py-4 w-44 text-center">Aksi Transaksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
                 ${filteredOrders.length === 0 ? `
                   <tr>
-                    <td colspan="7" class="p-10 text-center text-slate-400 text-xs">
+                    <td colspan="7" class="p-12 text-center text-slate-400 text-xs">
                       Tidak ada pesanan yang sesuai dengan filter pencarian.
                     </td>
                   </tr>
@@ -3013,22 +3244,18 @@ const AdminApp = (() => {
     const heroImageRadiusRaw = settings.hero_image_radius || '12px';
     const heroImageRadiusNum = parseInt(heroImageRadiusRaw, 10) || 12;
     const heroImageShadow = settings.hero_image_shadow || 'sm';
-    const heroSplitImage = settings.hero_split_image || '';
 
     // Hero Dots Navigation Customization
     const heroDotsActiveColor = settings.hero_dots_active_color || '#10b981';
     const heroDotsInactiveColor = settings.hero_dots_inactive_color || '#cbd5e1';
 
-    // Hero CTA Customization (Split & Text-Only)
-    const heroCtaConfig = settings.hero_cta_config || {};
-    const heroCta1Text = heroCtaConfig.text || settings.hero_cta1_text || settings.hero_cta_text || 'Lihat Semua Katalog';
-    const heroCta1Link = heroCtaConfig.link || settings.hero_cta1_link || '#katalog-section';
-    const heroCta1Bg = heroCtaConfig.bg_color || settings.hero_cta1_bg || primaryColor;
-    const heroCta1TextColor = heroCtaConfig.text_color || settings.hero_cta1_text_color || '#ffffff';
-    const heroCtaRadiusRaw = heroCtaConfig.radius || settings.hero_cta_radius || '12px';
-    const heroCtaRadiusNum = parseInt(heroCtaRadiusRaw, 10) || 12;
-    const heroCtaShadow = heroCtaConfig.shadow || settings.hero_cta_shadow || 'md';
-    const heroCtaUseThemeDefault = settings.hero_cta_use_theme_default === true;
+    // Hero Manual Arrows Navigation Customization
+    const heroArrowsBg = settings.hero_arrows_bg || 'rgba(0,0,0,0.45)';
+    const heroArrowsHoverBg = settings.hero_arrows_hover_bg || 'rgba(0,0,0,0.75)';
+    const heroArrowsIconColor = settings.hero_arrows_icon_color || '#ffffff';
+    const heroArrowsRadius = settings.hero_arrows_radius || '9999px';
+    const heroArrowsShadow = settings.hero_arrows_shadow || 'sm';
+    const heroArrowsVisibility = settings.hero_arrows_visibility || 'hover';
 
     // Map backwards-compatible hero model & mobile ratio
     let heroModel = settings.hero_model || 'non_split';
@@ -3065,76 +3292,72 @@ const AdminApp = (() => {
     const heroAnimation = settings.hero_slider_animation || 'slide_3s';
 
     container.innerHTML = `
-      <div class="max-w-6xl mx-auto space-y-6 pb-20">
-        
-        <!-- Header Section -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200">
-          <div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 mb-0.5">
-              <span>Konfigurasi Toko</span> <span>/</span> <span class="text-slate-800 font-bold">Tema & Branding</span>
-            </div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Tema & Branding Toko</h1>
-            <p class="text-xs text-slate-500 mt-0.5">Kelola identitas visual, warna navbar & body, model hero banner, dan pantau melalui Live Preview Toko real-time.</p>
-          </div>
-          <button type="button" id="btn-save-theme-branding" class="btn-primary-brand px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow-md flex items-center gap-2 hover:brightness-105 transition">
-            <i data-lucide="save" class="w-4 h-4"></i>
-            <span>Simpan Tema & Branding</span>
+      <div class="theme-customizer-studio h-full w-full">
+
+        <!-- Mobile Tab Switcher (< 768px) -->
+        <div class="theme-studio-mobile-tabs bg-slate-900 border-b border-slate-800 p-2 flex items-center justify-center gap-2 shrink-0">
+          <button type="button" id="btn-theme-tab-tools" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs cursor-pointer">
+            <i data-lucide="sliders" class="w-4 h-4"></i>
+            <span>Tab 1: Pengaturan Tools</span>
+          </button>
+          <button type="button" id="btn-theme-tab-preview" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+            <span>Tab 2: Pratinjau Toko</span>
           </button>
         </div>
 
-        <!-- DEDICATED LIVE PREVIEW HERO BANNER (ISOLASI IFRAME & RESPONSIF DINAMIS) -->
-        <div class="bg-slate-900 rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-800 space-y-4">
-          <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-3">
+        <!-- CENTER / LEFT LIVE CANVAS STOREFRONT -->
+        <div class="theme-studio-canvas-col is-tab-hidden" id="theme-canvas-container">
+          <!-- Canvas Toolbar Header -->
+          <div class="px-4 py-2.5 bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <div class="flex items-center gap-2">
               <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
               <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
               <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
-              <span class="ml-2 font-bold text-xs text-white flex items-center gap-2">
-                <i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i>
-                <span>Live Preview Toko: Navbar & Hero Banner</span>
+              <span class="ml-2 font-black text-xs text-white tracking-tight flex items-center gap-1.5">
+                <i data-lucide="layout-template" class="w-4 h-4 text-emerald-400"></i>
+                <span>Live Canvas Storefront</span>
               </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Isolasi Komponen
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Real-Time Sync
               </span>
             </div>
 
             <!-- CONTROLS: 3 RESOLUTION PRESETS & MANUAL RESIZE SLIDER -->
-            <div class="flex flex-wrap items-center gap-2.5 sm:gap-3">
-
+            <div class="flex items-center gap-2">
               <!-- 3 PRESET RESOLUSI (DESKTOP, TAB, MOBILE) -->
-              <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
+              <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 shadow-inner">
                 <button type="button" id="btn-hero-preset-desktop" class="hero-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-emerald-600 text-white shadow-xs cursor-pointer" data-width="1200" title="Preset Resolusi Layar Desktop (1200px)">
                   <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
-                  <span>Desktop</span>
+                  <span>[ 💻 Desktop ]</span>
                 </button>
                 <button type="button" id="btn-hero-preset-tablet" class="hero-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer" data-width="768" title="Preset Resolusi Layar Tablet (768px)">
                   <i data-lucide="tablet" class="w-3.5 h-3.5"></i>
-                  <span>Tab</span>
+                  <span>[ 📱 Tab ]</span>
                 </button>
                 <button type="button" id="btn-hero-preset-mobile" class="hero-preset-btn px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer" data-width="390" title="Preset Resolusi Layar Mobile (390px)">
                   <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
-                  <span>Mobile</span>
+                  <span>[ 📲 Mobile ]</span>
                 </button>
               </div>
 
               <!-- MANUAL RESIZE SLIDER & PX DISPLAY -->
-              <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-                <span class="text-[10px] font-bold text-slate-400">Lebar:</span>
-                <input type="range" id="hero-preview-width-slider" min="360" max="1200" value="1200" step="5" class="w-20 sm:w-28 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-ew-resize accent-emerald-500" title="Geser untuk resize lebar preview secara dinamis" />
-                <span id="hero-preview-width-display" class="font-mono text-[11px] font-black text-emerald-400 min-w-[50px] text-right">1200px</span>
+              <div class="hidden sm:flex items-center gap-2 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">
+                <input type="range" id="hero-preview-width-slider" min="360" max="1200" value="1200" step="5" class="w-20 lg:w-28 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-ew-resize accent-emerald-500" title="Geser untuk resize lebar preview secara dinamis" />
+                <span id="hero-preview-width-display" class="font-mono text-[11px] font-black text-emerald-400 min-w-[45px] text-right">1200px</span>
               </div>
             </div>
           </div>
 
-          <!-- ISOLATED CONTAINER WRAPPER WITH DYNAMIC RESIZE HANDLE & IFRAME -->
-          <div class="w-full flex justify-center overflow-x-auto py-2">
+          <!-- Canvas Interactive Viewport Area -->
+          <div class="flex-1 w-full overflow-y-auto overflow-x-hidden p-3 sm:p-5 flex justify-center items-start bg-slate-900/95">
             <div id="hero-preview-resizable-wrapper" class="preview-viewport-wrapper relative transition-[width] duration-150 ease-out flex justify-center w-full max-w-[1200px]">
               
               <!-- IFRAME ISOLASI (MEDIA QUERY & CSS LAYOUT 100% IDENTIK TANPA DISTORSI) -->
-              <iframe id="hero-preview-iframe" class="w-full rounded-2xl shadow-2xl border border-slate-800 bg-white" scrolling="auto"></iframe>
+              <iframe id="hero-preview-iframe" class="w-full rounded-2xl shadow-2xl border border-slate-800 bg-white" scrolling="auto" style="min-height: 650px; height: 100%;"></iframe>
 
               <!-- MANUAL RESIZE HANDLE (DRAGGABLE SLIDER/HANDLE DI TEPI KANAN) -->
-              <div id="hero-preview-drag-handle" class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-14 bg-slate-800 hover:bg-emerald-600 border border-slate-600 hover:border-emerald-400 rounded-full flex flex-col items-center justify-center gap-1 cursor-ew-resize shadow-lg z-30 transition-colors group select-none" title="Tarik ke kiri/kanan untuk resize bebas">
+              <div id="hero-preview-drag-handle" class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-14 bg-slate-800 hover:bg-emerald-600 border border-slate-600 hover:border-emerald-400 rounded-full flex-col items-center justify-center gap-1 cursor-ew-resize shadow-lg z-30 transition-colors group select-none" title="Tarik ke kiri/kanan untuk resize bebas">
                 <span class="w-1 h-1 rounded-full bg-slate-400 group-hover:bg-white"></span>
                 <span class="w-1 h-1 rounded-full bg-slate-400 group-hover:bg-white"></span>
                 <span class="w-1 h-1 rounded-full bg-slate-400 group-hover:bg-white"></span>
@@ -3143,422 +3366,353 @@ const AdminApp = (() => {
           </div>
         </div>
 
-        <form id="form-theme-branding" class="space-y-6" onsubmit="event.preventDefault();">
+        <!-- RIGHT INSPECTOR TOOLS PANEL (w-96 / 24rem) -->
+        <div class="theme-studio-inspector-col flex flex-col h-full bg-white border-l border-slate-200" id="theme-inspector-container">
           
-          <!-- BAGIAN 1: KONTROL WARNA LENGKAP (NAVBAR, BODY, & TEMA) -->
-          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-5">
-            <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-sm">
-                1
-              </div>
-              <div>
-                <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Skema Warna & Tampilan Toko</h3>
-                <p class="text-xs text-slate-500">Sesuaikan warna navbar etalase, latar belakang halaman body toko, serta warna aksen tema primer & sekunder.</p>
-              </div>
+          <!-- Inspector Header -->
+          <div class="p-4 border-b border-slate-200 bg-white shrink-0 flex items-center justify-between">
+            <div>
+              <h2 class="font-black text-sm text-slate-900 flex items-center gap-2">
+                <i data-lucide="sliders" class="w-4 h-4 text-emerald-600"></i>
+                <span>Inspektor Desain Toko</span>
+              </h2>
+              <p class="text-[11px] text-slate-400">Atur kustomisasi tema &amp; branding storefront</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-              
-              <!-- 1. Warna Navbar Toko -->
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <span class="block font-bold text-slate-900">Warna Latar Navbar Toko:</span>
-                  <p class="text-[11px] text-slate-400">Header navigasi atas storefront</p>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <input type="color" id="ctrl-color-navbar-bg" value="${navbarBgColor}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shadow-xs" />
-                  <input type="text" id="ctrl-hex-navbar-bg" value="${navbarBgColor}" maxlength="7" class="w-24 px-2.5 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-emerald-500" placeholder="#FFFFFF" />
-                </div>
-              </div>
-
-              <!-- 2. Warna Teks Navbar Toko -->
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <span class="block font-bold text-slate-900">Warna Teks & Ikon Navbar:</span>
-                  <p class="text-[11px] text-slate-400">Teks menu dan ikon header</p>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <input type="color" id="ctrl-color-navbar-text" value="${navbarTextColor}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shadow-xs" />
-                  <input type="text" id="ctrl-hex-navbar-text" value="${navbarTextColor}" maxlength="7" class="w-24 px-2.5 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-emerald-500" placeholder="#0F172A" />
-                </div>
-              </div>
-
-              <!-- 3. Warna Body Toko -->
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <span class="block font-bold text-slate-900">Warna Latar Body Toko:</span>
-                  <p class="text-[11px] text-slate-400">Background seluruh halaman etalase</p>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <input type="color" id="ctrl-color-body-bg" value="${bodyBgColor}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shadow-xs" />
-                  <input type="text" id="ctrl-hex-body-bg" value="${bodyBgColor}" maxlength="7" class="w-24 px-2.5 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-emerald-500" placeholder="#F8FAFC" />
-                </div>
-              </div>
-
-              <!-- 4. Warna Primer Toko -->
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <span class="block font-bold text-slate-900">Warna Primer Toko:</span>
-                  <p class="text-[11px] text-slate-400">Tombol CTA, badge utama & sorotan</p>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <input type="color" id="ctrl-color-primary" value="${primaryColor}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shadow-xs" />
-                  <input type="text" id="ctrl-hex-primary" value="${primaryColor}" maxlength="7" class="w-24 px-2.5 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-emerald-500" placeholder="#33B589" />
-                </div>
-              </div>
-
-              <!-- 5. Warna Sekunder Toko -->
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <span class="block font-bold text-slate-900">Warna Sekunder & Aksen:</span>
-                  <p class="text-[11px] text-slate-400">Aksen diskon & rating bintang</p>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <input type="color" id="ctrl-color-secondary" value="${secondaryColor}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shadow-xs" />
-                  <input type="text" id="ctrl-hex-secondary" value="${secondaryColor}" maxlength="7" class="w-24 px-2.5 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-emerald-500" placeholder="#F59E0B" />
-                </div>
-              </div>
-
-              <!-- 6. Warna Latar Top Bar (Sapaan & Countdown) -->
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <span class="block font-bold text-slate-900">Warna Latar Top Bar:</span>
-                  <p class="text-[11px] text-slate-400">Bilah atas sapaan & countdown</p>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <input type="color" id="ctrl-color-top-bar-bg" value="${topBarBgColor}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shadow-xs" />
-                  <input type="text" id="ctrl-hex-top-bar-bg" value="${topBarBgColor}" maxlength="7" class="w-24 px-2.5 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-emerald-500" placeholder="#0F172A" />
-                </div>
-              </div>
-
-              <!-- 7. Warna Teks Top Bar (Sapaan & Countdown) -->
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div>
-                  <span class="block font-bold text-slate-900">Warna Teks Top Bar:</span>
-                  <p class="text-[11px] text-slate-400">Teks sapaan & countdown promo</p>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <input type="color" id="ctrl-color-top-bar-text" value="${topBarTextColor}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-300 p-0.5 bg-white shadow-xs" />
-                  <input type="text" id="ctrl-hex-top-bar-text" value="${topBarTextColor}" maxlength="7" class="w-24 px-2.5 py-2 rounded-xl border border-slate-300 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-emerald-500" placeholder="#F8FAFC" />
-                </div>
-              </div>
-
-            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Shopify Studio
+            </span>
           </div>
 
-          <!-- BAGIAN 2: IDENTITAS TOKO & LOGO -->
-          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-5">
-            <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-sm">
-                2
-              </div>
-              <div>
-                <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Identitas Toko & Logo</h3>
-                <p class="text-xs text-slate-500">Logo utama, nama toko, slogan percetakan, dan kontak resmi.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start text-xs">
-              
-              <!-- Logo Upload & Preview (4 cols) -->
-              <div class="md:col-span-4 space-y-4">
-                <div class="space-y-3">
-                  <label class="block font-bold text-slate-700">Logo Utama Toko:</label>
-                  <div class="w-full aspect-[4/3] rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-4 relative group overflow-hidden shadow-inner">
-                    <img id="preview-store-logo-img" src="${settings.web_logo || 'assets/images/logo-songer-creative.png'}" class="max-h-24 w-auto object-contain transition duration-300 group-hover:scale-105" alt="Preview Logo" onerror="this.src='assets/images/logo-songer-creative.png'" />
-                  </div>
-                  <div class="space-y-2">
-                    <input type="text" id="store-logo-url-input" value="${escapeHtml(settings.web_logo || 'assets/images/logo-songer-creative.png')}" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500" placeholder="Path logo atau URL gambar" />
-                    <label class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer border border-slate-200 transition flex items-center justify-center gap-1.5">
-                      <i data-lucide="upload" class="w-4 h-4"></i>
-                      <span>Unggah Logo (Maks 500 KB)</span>
-                      <input type="file" id="store-logo-file-input" accept="image/*" class="hidden" />
-                    </label>
-                  </div>
-                </div>
-
-                <div class="space-y-3 pt-4 border-t border-slate-100">
-                  <label class="block font-bold text-slate-700">Icon Browser / Favicon:</label>
-                  <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center p-2 relative overflow-hidden shadow-inner shrink-0">
-                      <img id="preview-store-favicon-img" src="${settings.browser_icon || 'assets/images/favicon.png'}" class="w-full h-full object-contain" alt="Preview Favicon" onerror="this.src='assets/images/favicon.png'" />
+          <!-- Inspector Scrollable Accordions Form -->
+          <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3.5 scrollbar-thin">
+            <form id="form-theme-branding" class="space-y-3" onsubmit="event.preventDefault();">
+          
+              <!-- ========================================================
+                   ACCORDION 1: HEADER & TOP BAR
+                   ======================================================== -->
+              <div class="theme-accordion-item" data-accordion="header-topbar">
+                <div class="theme-accordion-header is-open cursor-pointer select-none" data-target="body-header-topbar">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-xs shrink-0">
+                      1
                     </div>
-                    <div class="flex-1 space-y-2">
-                      <input type="text" id="store-favicon-url-input" value="${escapeHtml(settings.browser_icon || 'assets/images/favicon.png')}" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500" placeholder="Path favicon atau URL" />
-                      <label class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] cursor-pointer border border-slate-200 transition flex items-center justify-center gap-1.5">
-                        <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                        <span>Unggah Favicon (Maks 500 KB)</span>
-                        <input type="file" id="store-favicon-file-input" accept="image/png, image/x-icon, image/webp" class="hidden" />
+                    <div>
+                      <h4 class="font-bold text-xs text-slate-900">Header &amp; Top Bar</h4>
+                      <p class="text-[10px] text-slate-400 font-normal">Identitas toko, navbar, logo, &amp; warna header</p>
+                    </div>
+                  </div>
+                  <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400"></i>
+                </div>
+                <div class="theme-accordion-body space-y-4" id="body-header-topbar">
+                  
+                  <!-- Identitas Toko & Logo -->
+                  <div class="space-y-3">
+                    <span class="block font-bold text-slate-800 text-xs flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                      <i data-lucide="store" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      <span>Identitas &amp; Logo Toko:</span>
+                    </span>
+
+                    <div class="space-y-2.5">
+                      <!-- Logo Utama -->
+                      <div>
+                        <label class="block font-bold text-slate-700 text-[11px] mb-1">Logo Utama Toko:</label>
+                        <div class="w-full aspect-[4/2] rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-2 relative group overflow-hidden mb-1.5">
+                          <img id="preview-store-logo-img" src="${settings.web_logo || 'assets/images/logo-songer-creative.png'}" class="max-h-16 w-auto object-contain transition duration-300 group-hover:scale-105" alt="Preview Logo" onerror="this.src='assets/images/logo-songer-creative.png'" />
+                        </div>
+                        <input type="text" id="store-logo-url-input" value="${escapeHtml(settings.web_logo || 'assets/images/logo-songer-creative.png')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-[10px] outline-none focus:border-emerald-500 mb-1" placeholder="Path logo atau URL gambar" />
+                        <label class="w-full py-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer border border-slate-200 transition flex items-center justify-center gap-1">
+                          <i data-lucide="upload" class="w-3 h-3"></i>
+                          <span>Unggah Logo (Maks 500 KB)</span>
+                          <input type="file" id="store-logo-file-input" accept="image/*" class="hidden" />
+                        </label>
+                      </div>
+
+                      <!-- Icon Browser / Favicon -->
+                      <div class="pt-2 border-t border-slate-100">
+                        <label class="block font-bold text-slate-700 text-[11px] mb-1">Favicon Toko:</label>
+                        <div class="flex items-center gap-2">
+                          <div class="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center p-1.5 shrink-0">
+                            <img id="preview-store-favicon-img" src="${settings.browser_icon || 'assets/images/favicon.png'}" class="w-full h-full object-contain" alt="Favicon" onerror="this.src='assets/images/favicon.png'" />
+                          </div>
+                          <div class="flex-1 space-y-1">
+                            <input type="text" id="store-favicon-url-input" value="${escapeHtml(settings.browser_icon || 'assets/images/favicon.png')}" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] outline-none focus:border-emerald-500" placeholder="Path favicon" />
+                            <label class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[9px] cursor-pointer border border-slate-200 transition inline-flex items-center gap-1">
+                              <i data-lucide="image" class="w-3 h-3"></i>
+                              <span>Unggah Favicon</span>
+                              <input type="file" id="store-favicon-file-input" accept="image/png, image/x-icon, image/webp" class="hidden" />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Nama Toko & Kontak -->
+                      <div class="space-y-2 pt-2 border-t border-slate-100">
+                        <div>
+                          <label class="block font-bold text-slate-700 text-[11px] mb-0.5">Nama Toko / Brand <span class="text-red-500">*</span>:</label>
+                          <input type="text" id="store-name-input" value="${escapeHtml(settings.store_name || currentTenant.store_name || 'Songer Creative')}" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-bold text-xs text-slate-900 outline-none focus:border-emerald-500" required />
+                        </div>
+                        <div>
+                          <label class="block font-bold text-slate-700 text-[11px] mb-0.5">Slogan / Tagline Toko:</label>
+                          <input type="text" id="store-tagline-input" value="${escapeHtml(settings.store_tagline || 'Digital Printing & Percetakan Terpadu')}" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 outline-none focus:border-emerald-500 font-medium text-xs" />
+                        </div>
+                        <div>
+                          <label class="block font-bold text-slate-700 text-[11px] mb-0.5">WhatsApp CS:</label>
+                          <input type="text" id="store-phone-input" value="${escapeHtml(settings.store_phone || '0888-5844-380')}" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-mono outline-none focus:border-emerald-500 text-xs font-semibold" />
+                        </div>
+                        <div>
+                          <label class="block font-bold text-slate-700 text-[11px] mb-0.5">Alamat Workshop / Toko:</label>
+                          <textarea id="store-address-input" rows="2" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 outline-none focus:border-emerald-500 text-xs leading-relaxed font-medium">${escapeHtml(settings.store_address || 'Jl. Raya Percetakan Kreatif No. 88, Kota Anda')}</textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Format Tampilan Identitas Navbar Toko -->
+                  <div class="space-y-2.5 pt-2 border-t border-slate-100">
+                    <span class="block font-bold text-slate-800 text-xs flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                      <i data-lucide="layout-template" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      <span>Format Identitas Navbar:</span>
+                    </span>
+
+                    <div class="grid grid-cols-1 gap-2">
+                      <!-- [1] Logo Persegi -->
+                      <label class="navbar-branding-choice-card p-2.5 rounded-xl border ${navbarBrandingMode === 'logo_square' ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-between" data-mode="logo_square">
+                        <div class="flex items-center gap-2">
+                          <input type="radio" name="navbar_branding_mode_radio" value="logo_square" ${navbarBrandingMode === 'logo_square' ? 'checked' : ''} class="text-emerald-600" />
+                          <span class="font-bold text-slate-800 text-[11px]">1. Logo Persegi (1:1 Icon)</span>
+                        </div>
+                        <i data-lucide="square" class="w-4 h-4 text-slate-400"></i>
+                      </label>
+
+                      <!-- [2] Logo Landscape -->
+                      <label class="navbar-branding-choice-card p-2.5 rounded-xl border ${navbarBrandingMode === 'logo_landscape' ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-between" data-mode="logo_landscape">
+                        <div class="flex items-center gap-2">
+                          <input type="radio" name="navbar_branding_mode_radio" value="logo_landscape" ${navbarBrandingMode === 'logo_landscape' ? 'checked' : ''} class="text-emerald-600" />
+                          <span class="font-bold text-slate-800 text-[11px]">2. Logo Landscape (Memanjang)</span>
+                        </div>
+                        <i data-lucide="rectangle-horizontal" class="w-4 h-4 text-slate-400"></i>
+                      </label>
+
+                      <!-- [3] Hanya Teks -->
+                      <label class="navbar-branding-choice-card p-2.5 rounded-xl border ${navbarBrandingMode === 'text_only' ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-between" data-mode="text_only">
+                        <div class="flex items-center gap-2">
+                          <input type="radio" name="navbar_branding_mode_radio" value="text_only" ${navbarBrandingMode === 'text_only' ? 'checked' : ''} class="text-emerald-600" />
+                          <span class="font-bold text-slate-800 text-[11px]">3. Hanya Teks (Nama Toko &amp; Tagline)</span>
+                        </div>
+                        <i data-lucide="type" class="w-4 h-4 text-slate-400"></i>
+                      </label>
+                    </div>
+
+                    <!-- Input Warna Kondisional (Jika Hanya Teks) -->
+                    <div id="navbar-text-only-colors-container" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 ${navbarBrandingMode === 'text_only' ? '' : 'hidden'}">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Nama Toko:</label>
+                        <div class="flex items-center gap-2">
+                          <input type="color" id="ctrl-color-navbar-store-name" value="${navbarStoreNameColor}" class="w-7 h-7 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-store-name" value="${navbarStoreNameColor}" maxlength="7" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[11px] uppercase outline-none focus:border-emerald-500" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Tagline Toko:</label>
+                        <div class="flex items-center gap-2">
+                          <input type="color" id="ctrl-color-navbar-tagline" value="${navbarTaglineColor}" class="w-7 h-7 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-tagline" value="${navbarTaglineColor}" maxlength="7" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[11px] uppercase outline-none focus:border-emerald-500" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Toggle Nama Toko di Desktop jika Logo Aktif -->
+                    <div id="navbar-logo-desktop-name-toggle-container" class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 ${navbarBrandingMode === 'text_only' ? 'hidden' : ''}">
+                      <div>
+                        <span class="block font-bold text-slate-800 text-[11px]">Tampilkan Nama di Desktop:</span>
+                        <p class="text-[10px] text-slate-400">Teks di samping logo layar PC</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" id="ctrl-toggle-show-header-store-name" ${settings.show_header_store_name !== false ? 'checked' : ''} class="sr-only peer" />
+                        <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                       </label>
                     </div>
                   </div>
+
+                  <!-- Warna Top Bar (Sapaan & Countdown) -->
+                  <div class="space-y-2.5 pt-2 border-t border-slate-100">
+                    <span class="block font-bold text-slate-800 text-xs flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                      <i data-lucide="stopwatch" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      <span>Top Bar &amp; Sapaan:</span>
+                    </span>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Latar Top Bar:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-top-bar-bg" value="${topBarBgColor}" class="w-7 h-7 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="ctrl-hex-top-bar-bg" value="${topBarBgColor}" maxlength="7" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Teks Top Bar:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-top-bar-text" value="${topBarTextColor}" class="w-7 h-7 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="ctrl-hex-top-bar-text" value="${topBarTextColor}" maxlength="7" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Switch Sapaan Personal Pelanggan -->
+                    <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs flex items-center justify-between gap-2">
+                      <div class="space-y-0.5">
+                        <span class="font-bold text-emerald-950 text-[11px] block">Sapaan Personal Pelanggan</span>
+                        <p class="text-[10px] text-emerald-800">Sapaan hangat pelanggan lama</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" id="ctrl-toggle-greeting" ${settings.enable_customer_greeting !== false ? 'checked' : ''} class="sr-only peer" />
+                        <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Warna Latar & Teks Navbar Toko -->
+                  <div class="space-y-2.5 pt-2 border-t border-slate-100">
+                    <span class="block font-bold text-slate-800 text-xs flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                      <i data-lucide="palette" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      <span>Warna Bar Navigasi (Navbar):</span>
+                    </span>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Latar Navbar:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-navbar-bg" value="${navbarBgColor}" class="w-7 h-7 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-bg" value="${navbarBgColor}" maxlength="7" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Teks &amp; Ikon Navbar:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-navbar-text" value="${navbarTextColor}" class="w-7 h-7 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-text" value="${navbarTextColor}" maxlength="7" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Kustomisasi Warna Elemen Navbar (Cart, Badge, Search, Login) -->
+                  <div class="space-y-2.5 pt-2 border-t border-slate-100">
+                    <span class="block font-bold text-slate-800 text-xs flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                      <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      <span>Warna Elemen Spesifik Navbar:</span>
+                    </span>
+
+                    <!-- Cart & Badge -->
+                    <div class="grid grid-cols-3 gap-2">
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Ikon Cart:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-cart-icon" value="${navbarCartIconColor}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-cart-icon" value="${navbarCartIconColor}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Badge BG:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-cart-badge-bg" value="${navbarCartBadgeBg}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-cart-badge-bg" value="${navbarCartBadgeBg}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Badge Teks:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-cart-badge-text" value="${navbarCartBadgeText}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-cart-badge-text" value="${navbarCartBadgeText}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Search Input & Border -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Ikon Cari:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-search-icon" value="${navbarSearchIconColor}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-search-icon" value="${navbarSearchIconColor}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Cari BG:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-search-input-bg" value="${navbarSearchInputBg}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-search-input-bg" value="${navbarSearchInputBg}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Border Cari:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-search-border" value="${navbarSearchBorderColor}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-search-border" value="${navbarSearchBorderColor}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Placeholder:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-search-placeholder" value="${navbarSearchPlaceholderColor}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-search-placeholder" value="${navbarSearchPlaceholderColor}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Login -->
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Ikon Login:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-login-icon" value="${navbarLoginIconColor}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-login-icon" value="${navbarLoginIconColor}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-[9px] font-bold text-slate-600 truncate">Teks Login:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-navbar-login-text" value="${navbarLoginTextColor}" class="w-6 h-6 rounded border cursor-pointer p-0 shrink-0" />
+                          <input type="text" id="ctrl-hex-navbar-login-text" value="${navbarLoginTextColor}" maxlength="7" class="w-full px-1 py-0.5 rounded border text-[9px] font-mono uppercase" />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
                 </div>
               </div>
 
-              <!-- Store Details Form (8 cols) -->
-              <div class="md:col-span-8 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold text-slate-700 mb-1">Nama Toko / Brand <span class="text-red-500">*</span>:</label>
-                    <input type="text" id="store-name-input" value="${escapeHtml(settings.store_name || currentTenant.store_name || 'Songer Creative')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 outline-none focus:border-emerald-500" required />
-                  </div>
-                  <div>
-                    <label class="block font-bold text-slate-700 mb-1">Nomor WhatsApp CS Toko:</label>
-                    <input type="text" id="store-phone-input" value="${escapeHtml(settings.store_phone || '0888-5844-380')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono outline-none focus:border-emerald-500 font-semibold" placeholder="0888-5844-380" />
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-700 mb-1">Slogan / Tagline Toko:</label>
-                  <input type="text" id="store-tagline-input" value="${escapeHtml(settings.store_tagline || 'Digital Printing & Percetakan Terpadu')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 font-medium" placeholder="Digital Printing & Percetakan Terpadu" />
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-700 mb-1">Alamat Workshop / Kantor Toko:</label>
-                  <textarea id="store-address-input" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 leading-relaxed font-medium" placeholder="Alamat lengkap workshop percetakan">${escapeHtml(settings.store_address || 'Jl. Raya Percetakan Kreatif No. 88, Kota Anda')}</textarea>
-                </div>
-
-                <!-- KONFIGURASI HEADER BRANDING NAVBAR (3 OPSI MODEL BRANDING) -->
-                <div class="pt-4 border-t border-slate-100 space-y-4">
-                  <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+              <!-- ========================================================
+                   ACCORDION 2: HERO BANNER
+                   ======================================================== -->
+              <div class="theme-accordion-item" data-accordion="hero-banner">
+                <div class="theme-accordion-header cursor-pointer select-none" data-target="body-hero-banner">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-xs shrink-0">
+                      2
+                    </div>
                     <div>
-                      <h4 class="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-                        <i data-lucide="layout-template" class="w-4 h-4 text-emerald-600"></i>
-                        <span>Format Tampilan Identitas Navbar Toko</span>
-                      </h4>
-                      <p class="text-[11px] text-slate-500">Pilih bagaimana logo atau nama toko ditampilkan pada bar navigasi atas etalase.</p>
+                      <h4 class="font-bold text-xs text-slate-900">Hero Banner</h4>
+                      <p class="text-[10px] text-slate-400 font-normal">Model banner, slider, rasio &amp; upload gambar</p>
                     </div>
                   </div>
-
-                  <!-- 3 PILIHAN MODEL BRANDING NAVBAR SESUAI WIREFRAME -->
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    
-                    <!-- [1] Logo Persegi / Icon -->
-                    <label class="navbar-branding-choice-card p-3.5 rounded-2xl border ${navbarBrandingMode === 'logo_square' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col justify-between gap-2.5" data-mode="logo_square">
-                      <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
-                          <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
-                          <span>Logo Persegi / Icon</span>
-                        </span>
-                        <input type="radio" name="navbar_branding_mode_radio" value="logo_square" ${navbarBrandingMode === 'logo_square' ? 'checked' : ''} class="text-emerald-600" />
-                      </div>
-                      <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto my-1">
-                        <i data-lucide="square" class="w-5 h-5 text-slate-500"></i>
-                      </div>
-                      <p class="text-slate-500 text-[10px] leading-relaxed">
-                        Kotak persegi (1:1) di sisi kiri navbar, minimalis dan modern.
-                      </p>
-                    </label>
-
-                    <!-- [2] Logo Landscape -->
-                    <label class="navbar-branding-choice-card p-3.5 rounded-2xl border ${navbarBrandingMode === 'logo_landscape' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col justify-between gap-2.5" data-mode="logo_landscape">
-                      <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
-                          <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">2</span>
-                          <span>Logo Landscape</span>
-                        </span>
-                        <input type="radio" name="navbar_branding_mode_radio" value="logo_landscape" ${navbarBrandingMode === 'logo_landscape' ? 'checked' : ''} class="text-emerald-600" />
-                      </div>
-                      <div class="w-20 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto my-2">
-                        <i data-lucide="rectangle-horizontal" class="w-5 h-5 text-slate-500"></i>
-                      </div>
-                      <p class="text-slate-500 text-[10px] leading-relaxed">
-                        Memanjang horizontal di sisi kiri navbar, pas untuk logo teks/wide.
-                      </p>
-                    </label>
-
-                    <!-- [3] Hanya Teks (Nama Toko & Tagline) -->
-                    <label class="navbar-branding-choice-card p-3.5 rounded-2xl border ${navbarBrandingMode === 'text_only' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col justify-between gap-2.5" data-mode="text_only">
-                      <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-900 text-xs flex items-center gap-2">
-                          <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center">3</span>
-                          <span>Hanya Teks</span>
-                        </span>
-                        <input type="radio" name="navbar_branding_mode_radio" value="text_only" ${navbarBrandingMode === 'text_only' ? 'checked' : ''} class="text-emerald-600" />
-                      </div>
-                      <div class="py-1 px-2 text-center my-auto">
-                        <span class="block font-black text-slate-900 text-xs tracking-tight truncate leading-tight">NAMA TOKO</span>
-                        <span class="block text-slate-400 text-[9px] truncate leading-tight">Tagline percetakan</span>
-                      </div>
-                      <p class="text-slate-500 text-[10px] leading-relaxed">
-                        Tanpa logo gambar. Nama toko & slogan tersusun rapi 2 baris.
-                      </p>
-                    </label>
-
-                  </div>
-
-                  <!-- INPUT WARNA KONDISIONAL (HANYA MUNCUL PADA MODE HANYA TEKS) -->
-                  <div id="navbar-text-only-colors-container" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 ${navbarBrandingMode === 'text_only' ? '' : 'hidden'} transition-all">
-                    <div class="flex items-center gap-2 pb-1 border-b border-slate-200/60">
-                      <i data-lucide="palette" class="w-4 h-4 text-emerald-600"></i>
-                      <span class="font-bold text-slate-800 text-xs">Pengaturan Warna Teks Branding Navbar:</span>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <!-- 1. Warna Nama Toko -->
-                      <div class="space-y-1.5">
-                        <label class="block font-bold text-slate-700 text-xs">1. Warna Nama Toko:</label>
-                        <div class="flex items-center gap-2.5">
-                          <input type="color" id="ctrl-color-navbar-store-name" value="${navbarStoreNameColor}" class="w-9 h-9 rounded-xl border border-slate-300 cursor-pointer p-0.5 bg-white shadow-xs shrink-0" />
-                          <input type="text" id="ctrl-hex-navbar-store-name" value="${navbarStoreNameColor}" maxlength="7" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs uppercase font-semibold text-slate-800 outline-none focus:border-emerald-500 bg-white" placeholder="#0F172A" />
-                        </div>
-                        <p class="text-[10px] text-slate-400">Default: gelap (#0F172A) atau sesuai tema navbar.</p>
-                      </div>
-
-                      <!-- 2. Warna Tagline Toko -->
-                      <div class="space-y-1.5">
-                        <label class="block font-bold text-slate-700 text-xs">2. Warna Tagline Toko:</label>
-                        <div class="flex items-center gap-2.5">
-                          <input type="color" id="ctrl-color-navbar-tagline" value="${navbarTaglineColor}" class="w-9 h-9 rounded-xl border border-slate-300 cursor-pointer p-0.5 bg-white shadow-xs shrink-0" />
-                          <input type="text" id="ctrl-hex-navbar-tagline" value="${navbarTaglineColor}" maxlength="7" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs uppercase font-semibold text-slate-800 outline-none focus:border-emerald-500 bg-white" placeholder="#64748B" />
-                        </div>
-                        <p class="text-[10px] text-slate-400">Default: abu-abu (#64748B).</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- TOGGLE OPSIONAL DESKTOP (JIKA LOGO PERSEGI ATAU LANDSCAPE AKTIF) -->
-                  <div id="navbar-logo-desktop-name-toggle-container" class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 ${navbarBrandingMode === 'text_only' ? 'hidden' : ''}">
+                  <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400"></i>
+                </div>
+                <div class="theme-accordion-body is-collapsed space-y-3.5" id="body-hero-banner">
+                  <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
                     <div>
-                      <div class="flex items-center gap-1.5">
-                        <span class="px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 font-bold text-[10px]">💻 Layar Desktop</span>
-                        <label class="block font-bold text-slate-800 text-xs">Tampilkan Nama & Slogan Toko di Samping Logo (Desktop):</label>
-                      </div>
-                      <p class="text-[11px] text-slate-500 mt-0.5">Jika aktif, layar desktop menampilkan <strong>[Logo] | [Nama & Slogan]</strong>. Jika nonaktif, desktop murni menampilkan logo saja (sesuai wireframe).</p>
+                      <span class="block font-bold text-slate-800 text-xs">Hero Banner Toggle</span>
+                      <p class="text-[10px] text-slate-400">Aktifkan atau sembunyikan banner di etalase</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input type="checkbox" id="ctrl-toggle-show-header-store-name" ${settings.show_header_store_name !== false ? 'checked' : ''} class="sr-only peer" />
-                      <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                      <input type="checkbox" id="hero-enable-toggle" class="sr-only peer" ${heroEnabled ? 'checked' : ''} />
+                      <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                     </label>
                   </div>
 
-                  <!-- KUSTOMISASI WARNA ELEMEN NAVBAR (Cart, Badge, Search, Login) -->
-                  <div class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-4">
-                    <div class="flex items-center gap-2 pb-2 border-b border-slate-200/80">
-                      <i data-lucide="palette" class="w-4 h-4 text-emerald-600"></i>
-                      <h4 class="font-extrabold text-xs sm:text-sm text-slate-900">Kustomisasi Warna Elemen Navbar Toko:</h4>
-                    </div>
-
-                    <!-- 1. WARNA IKON CART & BADGE CART -->
-                    <div class="space-y-2">
-                      <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                        <i data-lucide="shopping-cart" class="w-3.5 h-3.5 text-emerald-600"></i>
-                        1. Keranjang Belanja (Cart Icon & Counter Badge):
-                      </span>
-                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Warna Ikon Cart:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-cart-icon" value="${navbarCartIconColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-cart-icon" value="${navbarCartIconColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Background Badge Cart:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-cart-badge-bg" value="${navbarCartBadgeBg}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-cart-badge-bg" value="${navbarCartBadgeBg}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Warna Angka Badge:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-cart-badge-text" value="${navbarCartBadgeText}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-cart-badge-text" value="${navbarCartBadgeText}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 2. WARNA IKON SEARCH & KOTAK INPUT -->
-                    <div class="space-y-2 pt-2 border-t border-slate-200/60">
-                      <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                        <i data-lucide="search" class="w-3.5 h-3.5 text-emerald-600"></i>
-                        2. Kolom Pencarian (Search Input & Icon):
-                      </span>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Warna Ikon Kaca Pembesar:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-search-icon" value="${navbarSearchIconColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-search-icon" value="${navbarSearchIconColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Background Input Search:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-search-input-bg" value="${navbarSearchInputBg}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-search-input-bg" value="${navbarSearchInputBg}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Border Input Search:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-search-border" value="${navbarSearchBorderColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-search-border" value="${navbarSearchBorderColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Teks Placeholder:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-search-placeholder" value="${navbarSearchPlaceholderColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-search-placeholder" value="${navbarSearchPlaceholderColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 3. WARNA IKON & TEKS LOGIN -->
-                    <div class="space-y-2 pt-2 border-t border-slate-200/60">
-                      <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                        <i data-lucide="user" class="w-3.5 h-3.5 text-emerald-600"></i>
-                        3. Tombol Login (Icon & Text):
-                      </span>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Warna Ikon Login:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-login-icon" value="${navbarLoginIconColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-login-icon" value="${navbarLoginIconColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                        <div class="space-y-1">
-                          <label class="block text-[11px] font-bold text-slate-600">Warna Teks Login:</label>
-                          <div class="flex items-center gap-2">
-                            <input type="color" id="ctrl-color-navbar-login-text" value="${navbarLoginTextColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
-                            <input type="text" id="ctrl-hex-navbar-login-text" value="${navbarLoginTextColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- BAGIAN 3: VARIAN MODEL HERO, ASPEK RASIO & PANEL KUSTOMISASI LENGKAP -->
-          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-sm">
-                  3
-                </div>
-                <div>
-                  <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Hero Banner: Model Split, Text-Only &amp; Non-Split</h3>
-                  <p class="text-xs text-slate-500">Pilih antara Mode Normal (Gambar Penuh), Mode Split (Teks 40% &amp; Gambar 60%), atau Mode Hanya Teks (Text-Only), dan sesuaikan tampilan kartu secara menyeluruh.</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl shrink-0">
-                <label for="hero-enable-toggle" class="text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer">
-                  <span>Hero Banner Toggle [On / Off]</span>
-                  <input type="checkbox" id="hero-enable-toggle" class="w-4 h-4 text-emerald-600 rounded cursor-pointer" ${heroEnabled ? 'checked' : ''} />
-                </label>
-              </div>
-            </div>
-
-            <!-- CONTAINER KONFIGURASI HERO BANNER -->
-            <div id="hero-configuration-body" class="${heroEnabled ? 'space-y-6' : 'hidden space-y-6'}">
+                  <!-- CONTAINER KONFIGURASI HERO BANNER -->
+                  <div id="hero-configuration-body" class="${heroEnabled ? 'space-y-4' : 'hidden space-y-4'}">
 
             <!-- PILIHAN UTAMA: 3 MODEL HERO BANNER SESUAI SPESIFIKASI -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
@@ -3685,11 +3839,11 @@ const AdminApp = (() => {
               </div>
             </div>
 
-            <!-- PANEL KUSTOMISASI LATAR BELAKANG KARTU (Khusus Mode Hanya Teks / Text-Only) -->
-            <div id="hero-text-background-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 ${heroModel === 'model_1' ? '' : 'hidden'}">
+            <!-- PANEL KUSTOMISASI LATAR BELAKANG KARTU (Mode Hanya Teks & Split) -->
+            <div id="hero-text-background-section" class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 ${(heroModel === 'model_1' || heroModel === 'split' || heroModel === 'model_4') ? '' : 'hidden'}">
               <div class="flex items-center gap-2 text-slate-800 font-bold text-xs sm:text-sm">
                 <i data-lucide="paint-bucket" class="w-4 h-4 text-emerald-600"></i>
-                <span>Warna Latar Kartu Hero (Mode Hanya Teks)</span>
+                <span>Warna Latar Kartu Hero (Mode Teks &amp; Split)</span>
               </div>
               <p class="text-[11px] text-slate-500">Pilih warna solid atau kombinasi gradien untuk kartu teks promosi etalase toko:</p>
 
@@ -3881,7 +4035,7 @@ const AdminApp = (() => {
                 <i data-lucide="image" class="w-4 h-4 text-emerald-600"></i>
                 <span>3. Kotak Gambar Hero (Mode Split)</span>
               </div>
-              <p class="text-[11px] text-slate-500">Wadah gambar terisolasi di sisi kanan (~60% lebar desktop). Jika gambar khusus tidak diunggah, gambar banner utama otomatis dipotong rapi secara seimbang di sisi kiri dan kanan (cover &amp; center).</p>
+              <p class="text-[11px] text-slate-500">Wadah gambar terisolasi di sisi kanan (~60% lebar desktop). Gambar banner utama otomatis dipotong rapi secara seimbang di sisi kiri dan kanan (cover &amp; center).</p>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <!-- Sudut Lengkung Gambar (0px - 24px) -->
@@ -3914,35 +4068,6 @@ const AdminApp = (() => {
                     <option value="lg" ${heroImageShadow === 'lg' ? 'selected' : ''}>lg (Tebal Menonjol)</option>
                   </select>
                   <p class="text-[10px] text-slate-400">Efek bayangan memberikan isolasi visual pada kotak gambar split.</p>
-                </div>
-              </div>
-
-              <!-- Manajemen Aset Gambar Khusus Split -->
-              <div class="p-3.5 bg-white rounded-xl border border-slate-200 space-y-3 shadow-2xs">
-                <div class="flex items-center justify-between">
-                  <label class="font-bold text-slate-800 block text-xs">Gambar Khusus Versi Split (Opsional):</label>
-                  <span class="text-[10px] text-slate-400">Rekomendasi rasio 4:3 (Maks 500 KB)</span>
-                </div>
-                <div class="flex flex-col sm:flex-row items-center gap-3">
-                  <div class="w-16 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
-                    <img id="hero-split-image-preview" src="${heroSplitImage || (heroBanners[0] || 'assets/images/banner1.jpg')}" alt="Preview Split" class="w-full h-full object-cover ${heroSplitImage ? '' : 'opacity-60'}" onerror="this.src='assets/images/banner1.jpg'" />
-                  </div>
-                  <div class="flex-1 w-full space-y-1.5">
-                    <div class="flex items-center gap-2">
-                      <input type="text" id="hero-split-image-url-input" value="${heroSplitImage}" placeholder="Tempel URL gambar khusus split (https://...)" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500" />
-                      <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs cursor-pointer shrink-0 transition flex items-center gap-1 shadow-xs">
-                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                        <span>Unggah</span>
-                        <input type="file" id="hero-split-image-file-input" accept="image/jpeg,image/png,image/webp" class="hidden" />
-                      </label>
-                      <button type="button" id="btn-clear-hero-split-image" class="px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs transition cursor-pointer" title="Reset ke Banner Utama">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                      </button>
-                    </div>
-                    <p class="text-[10px] text-slate-500 italic">
-                      * Jika dikosongkan, banner utama otomatis digunakan dengan aturan <code>object-fit: cover; object-position: center;</code> sehingga terpotong seimbang di sisi kiri dan kanan tanpa merusak proporsi vertikal.
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -3993,18 +4118,98 @@ const AdminApp = (() => {
                   <option value="manual" ${heroAnimation === 'manual' ? 'selected' : ''}>Geser Manual (Navigasi Tombol Panah &amp; Gesture Saja)</option>
                 </select>
 
-                <div id="hero-show-arrows-toggle-container" class="pt-2 border-t border-slate-200/80 flex items-center justify-between ${heroAnimation === 'manual' ? 'hidden' : ''}">
-                  <div class="space-y-0.5">
-                    <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
-                      <i data-lucide="chevron-left-right" class="w-3.5 h-3.5 text-emerald-600"></i>
-                      <span>Tampilkan Tombol Navigasi Panah (&lt; / &gt;)</span>
-                    </span>
-                    <p class="text-[10px] text-slate-500">Tampilkan atau sembunyikan tombol panah navigasi pada slider.</p>
+                <div id="hero-show-arrows-toggle-container" class="pt-2 border-t border-slate-200/80 space-y-3">
+                  <div id="hero-show-arrows-toggle-row" class="flex items-center justify-between ${heroAnimation === 'manual' ? 'hidden' : ''}">
+                    <div class="space-y-0.5">
+                      <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+                        <i data-lucide="chevron-left-right" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Dapat Di Geser Manual</span>
+                      </span>
+                      <p class="text-[10px] text-slate-500">Di desktop memunculkan tombol navigasi panah (&lt; / &gt;), di mobile otomatis dapat digeser swipe sentuh.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input type="checkbox" id="hero-show-arrows-toggle" ${heroShowArrows ? 'checked' : ''} class="sr-only peer" />
+                      <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                    <input type="checkbox" id="hero-show-arrows-toggle" ${heroShowArrows ? 'checked' : ''} class="sr-only peer" />
-                    <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                  </label>
+
+                  <!-- Sub-panel Kustomisasi Tombol Panah (tampil jika toggle aktif atau mode manual) -->
+                  <div id="hero-arrows-customization-panel" class="p-3.5 bg-white rounded-xl border border-slate-200 space-y-3 shadow-2xs ${(heroShowArrows || heroAnimation === 'manual') ? '' : 'hidden'}">
+                    <span class="font-bold text-slate-800 block text-xs">Kustomisasi Tampilan Tombol Panah:</span>
+
+                    <!-- Pilihan Visibilitas Panah Desktop (Hover vs Selalu Tampil) -->
+                    <div id="hero-arrows-visibility-container" class="space-y-1.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 ${heroAnimation === 'manual' ? 'hidden' : ''}">
+                      <label class="block font-bold text-slate-700 text-[11px]">Mode Tampilan Panah Desktop:</label>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <label class="hero-arrows-vis-label flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition ${heroArrowsVisibility === 'hover' ? 'border-emerald-500 bg-emerald-50/50 font-bold text-emerald-900 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'}">
+                          <input type="radio" name="hero_arrows_visibility_radio" value="hover" ${heroArrowsVisibility === 'hover' ? 'checked' : ''} class="text-emerald-600" />
+                          <div>
+                            <span class="block font-bold">Tampil Saat Hover</span>
+                            <span class="block text-[10px] text-slate-400 font-normal">Muncul saat kursor diarahkan ke banner</span>
+                          </div>
+                        </label>
+                        <label class="hero-arrows-vis-label flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition ${heroArrowsVisibility === 'always' ? 'border-emerald-500 bg-emerald-50/50 font-bold text-emerald-900 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'}">
+                          <input type="radio" name="hero_arrows_visibility_radio" value="always" ${heroArrowsVisibility === 'always' ? 'checked' : ''} class="text-emerald-600" />
+                          <div>
+                            <span class="block font-bold">Selalu Tampil</span>
+                            <span class="block text-[10px] text-slate-400 font-normal">Selalu terlihat tanpa perlu mouse hover</span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      
+                      <!-- Warna Background Tombol -->
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[11px]">Warna Background:</label>
+                        <div class="flex items-center gap-2">
+                          <input type="color" id="hero-arrows-bg-picker" value="${heroArrowsBg.startsWith('#') && heroArrowsBg.length === 7 ? heroArrowsBg : '#000000'}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="hero-arrows-bg" value="${heroArrowsBg}" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-mono text-[11px]" placeholder="rgba(0,0,0,0.45)" />
+                        </div>
+                      </div>
+
+                      <!-- Warna Hover Background -->
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[11px]">Warna Hover Background:</label>
+                        <div class="flex items-center gap-2">
+                          <input type="color" id="hero-arrows-hover-bg-picker" value="${heroArrowsHoverBg.startsWith('#') && heroArrowsHoverBg.length === 7 ? heroArrowsHoverBg : '#1f2937'}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="hero-arrows-hover-bg" value="${heroArrowsHoverBg}" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-mono text-[11px]" placeholder="rgba(0,0,0,0.75)" />
+                        </div>
+                      </div>
+
+                      <!-- Warna Ikon Panah -->
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[11px]">Warna Ikon Panah:</label>
+                        <div class="flex items-center gap-2">
+                          <input type="color" id="hero-arrows-icon-color-picker" value="${heroArrowsIconColor.startsWith('#') && heroArrowsIconColor.length === 7 ? heroArrowsIconColor : '#ffffff'}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                          <input type="text" id="hero-arrows-icon-color" value="${heroArrowsIconColor}" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-mono text-[11px] uppercase" placeholder="#FFFFFF" />
+                        </div>
+                      </div>
+
+                      <!-- Sudut Lengkung (Radius) -->
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[11px]">Sudut Lengkung (Radius):</label>
+                        <select id="hero-arrows-radius" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold outline-none focus:border-emerald-500 bg-white text-xs">
+                          <option value="0px" ${heroArrowsRadius === '0px' ? 'selected' : ''}>0px (Persegi Lancip)</option>
+                          <option value="8px" ${heroArrowsRadius === '8px' ? 'selected' : ''}>8px (Membulat Halus)</option>
+                          <option value="16px" ${heroArrowsRadius === '16px' ? 'selected' : ''}>16px (Membulat Sedang)</option>
+                          <option value="9999px" ${(heroArrowsRadius === '9999px' || !['0px', '8px', '16px'].includes(heroArrowsRadius)) ? 'selected' : ''}>9999px / Bulat (Lingkaran Penuh)</option>
+                        </select>
+                      </div>
+
+                      <!-- Bayangan (Shadow) -->
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[11px]">Bayangan (Shadow):</label>
+                        <select id="hero-arrows-shadow" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold outline-none focus:border-emerald-500 bg-white text-xs">
+                          <option value="none" ${heroArrowsShadow === 'none' ? 'selected' : ''}>none (Tanpa Bayangan)</option>
+                          <option value="sm" ${heroArrowsShadow === 'sm' ? 'selected' : ''}>sm (Tipis / Halus)</option>
+                          <option value="md" ${heroArrowsShadow === 'md' ? 'selected' : ''}>md (Sedang)</option>
+                          <option value="lg" ${heroArrowsShadow === 'lg' ? 'selected' : ''}>lg (Tebal Menonjol)</option>
+                        </select>
+                      </div>
+
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -4053,37 +4258,27 @@ const AdminApp = (() => {
               </div>
             </div>
 
-            <!-- Switch Sapaan Personal Pelanggan -->
-            <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between gap-4">
-              <div class="space-y-0.5">
-                <span class="font-bold flex items-center gap-1.5 text-emerald-950">
-                  <i data-lucide="user-check" class="w-4 h-4 text-emerald-700"></i>
-                  Fitur Sapaan Personal Pelanggan (Personalized Greeting):
-                </span>
-                <p class="text-[11px] text-emerald-800">
-                  Tampilkan sapaan ramah di bagian atas web saat pelanggan lama/langganan membuka kembali toko.
-                </p>
+                  </div>
+                </div>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                <input type="checkbox" id="ctrl-toggle-greeting" ${settings.enable_customer_greeting !== false ? 'checked' : ''} class="sr-only peer" />
-                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-              </label>
-            </div>
 
-            </div>
-          </div>
-
-          <!-- BAGIAN 4: FORMAT & VARIAN NAVIGASI KATEGORI (QUICK FILTER) -->
-          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-6">
-            <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-sm">
-                4
-              </div>
-              <div>
-                <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Format & Varian Navigasi Kategori (Quick Filter)</h3>
-                <p class="text-xs text-slate-500">Sesuaikan tata letak dan model filter kategori cepat untuk pengunjung di layar smartphone (Mobile) dan komputer (Desktop).</p>
-              </div>
-            </div>
+              <!-- ========================================================
+                   ACCORDION 3: NAVIGASI KATEGORI
+                   ======================================================== -->
+              <div class="theme-accordion-item" data-accordion="cat-nav">
+                <div class="theme-accordion-header cursor-pointer select-none" data-target="body-cat-nav">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-xs shrink-0">
+                      3
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-xs text-slate-900">Navigasi Kategori</h4>
+                      <p class="text-[10px] text-slate-400 font-normal">Format filter kategori di Mobile &amp; Desktop</p>
+                    </div>
+                  </div>
+                  <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400"></i>
+                </div>
+                <div class="theme-accordion-body is-collapsed space-y-4" id="body-cat-nav">
 
             <!-- TAMPILAN VIEWPORT MOBILE -->
             <div class="space-y-3">
@@ -4225,9 +4420,156 @@ const AdminApp = (() => {
                   </div>
                 </label>
               </div>
-            </div>
+                </div>
+              </div>
 
+              <!-- ========================================================
+                   ACCORDION 4: GAYA KARTU PRODUK
+                   ======================================================== -->
+              <div class="theme-accordion-item" data-accordion="product-cards">
+                <div class="theme-accordion-header cursor-pointer select-none" data-target="body-product-cards">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-xs shrink-0">
+                      4
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-xs text-slate-900">Gaya Kartu Produk</h4>
+                      <p class="text-[10px] text-slate-400 font-normal">Pilih model layout kartu etalase katalog</p>
+                    </div>
+                  </div>
+                  <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400"></i>
+                </div>
+                <div class="theme-accordion-body is-collapsed space-y-3" id="body-product-cards">
+                  <p class="text-[11px] text-slate-500 leading-relaxed">
+                    Pilih tata letak kartu produk untuk katalog etalase toko. Pratinjau langsung akan diperbarui di layar tengah.
+                  </p>
+
+                  <div class="grid grid-cols-1 gap-2.5">
+                    <!-- [v1] Versi 1: Compact Klasik -->
+                    <label class="card-style-choice-card p-3 rounded-2xl border-2 ${(cardProductVersion === 'v1' || !cardProductVersion) ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-start gap-3" data-card-ver="v1">
+                      <input type="radio" name="card_product_version_radio" value="v1" ${(cardProductVersion === 'v1' || !cardProductVersion) ? 'checked' : ''} class="mt-0.5 text-emerald-600 focus:ring-emerald-500 shrink-0" />
+                      <div class="space-y-1 flex-1">
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-slate-900 text-xs">Versi 1: Compact Klasik</span>
+                          <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600">Default</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">
+                          Format kartu ringkas dan padat. Menampilkan gambar produk, nama produk 2 baris, badge harga tebal, dan tombol beli instan.
+                        </p>
+                        <div class="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center gap-2">
+                          <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-bold shrink-0">v1</div>
+                          <div class="text-[10px] text-slate-600 truncate flex-1">
+                            <span class="font-bold block truncate">Brosur A4 Full Color</span>
+                            <span class="text-emerald-700 font-extrabold">Rp 150.000</span>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+
+                    <!-- [v2] Versi 2: Modern Minimalis -->
+                    <label class="card-style-choice-card p-3 rounded-2xl border-2 ${cardProductVersion === 'v2' ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-start gap-3" data-card-ver="v2">
+                      <input type="radio" name="card_product_version_radio" value="v2" ${cardProductVersion === 'v2' ? 'checked' : ''} class="mt-0.5 text-emerald-600 focus:ring-emerald-500 shrink-0" />
+                      <div class="space-y-1 flex-1">
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-slate-900 text-xs">Versi 2: Modern Minimalis</span>
+                          <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600">Modern</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">
+                          Desain bersih dengan badge diskon mengambang, bayangan lembut halus, info kategori tipis, dan tombol keranjang melayang.
+                        </p>
+                        <div class="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center gap-2">
+                          <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold shrink-0">v2</div>
+                          <div class="text-[10px] text-slate-600 truncate flex-1">
+                            <span class="font-bold block truncate">Spanduk Flexy 280gr</span>
+                            <span class="text-slate-900 font-bold">Rp 25.000/m</span>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+
+                    <!-- [v3] Versi 3: Shopify Showcase Elegan -->
+                    <label class="card-style-choice-card p-3 rounded-2xl border-2 ${cardProductVersion === 'v3' ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-start gap-3" data-card-ver="v3">
+                      <input type="radio" name="card_product_version_radio" value="v3" ${cardProductVersion === 'v3' ? 'checked' : ''} class="mt-0.5 text-emerald-600 focus:ring-emerald-500 shrink-0" />
+                      <div class="space-y-1 flex-1">
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-slate-900 text-xs">Versi 3: Shopify Showcase Elegan</span>
+                          <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700">Premium</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">
+                          Format etalase bergaya Shopify. Efek hover zoom halus, rating bintang, label status siap kirim/pre-order, dan tombol aksi ganda.
+                        </p>
+                        <div class="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center gap-2">
+                          <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 text-xs font-bold shrink-0">v3</div>
+                          <div class="text-[10px] text-slate-600 truncate flex-1">
+                            <span class="font-bold block truncate">Kartu Nama Premium Doff</span>
+                            <span class="text-emerald-700 font-extrabold">Rp 45.000 <span class="text-[8px] text-slate-400 font-normal">/box</span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ========================================================
+                   ACCORDION 5: WARNA & LATAR BELAKANG
+                   ======================================================== -->
+              <div class="theme-accordion-item" data-accordion="theme-colors">
+                <div class="theme-accordion-header cursor-pointer select-none" data-target="body-theme-colors">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-xs shrink-0">
+                      5
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-xs text-slate-900">Warna &amp; Latar Belakang</h4>
+                      <p class="text-[10px] text-slate-400 font-normal">Kustomisasi palet warna global etalase toko</p>
+                    </div>
+                  </div>
+                  <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400"></i>
+                </div>
+                <div class="theme-accordion-body is-collapsed space-y-3.5" id="body-theme-colors">
+                  <div class="space-y-3">
+                    <!-- 1. Warna Latar Toko (Body Background) -->
+                    <div class="space-y-1">
+                      <label class="block font-bold text-slate-700 text-[11px]">Warna Latar Halaman (Body Background):</label>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="ctrl-color-body-bg" value="${bodyBgColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                        <input type="text" id="ctrl-hex-body-bg" value="${bodyBgColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase outline-none focus:border-emerald-500 font-semibold" />
+                      </div>
+                    </div>
+
+                    <!-- 2. Warna Brand Utama (Primary Color) -->
+                    <div class="space-y-1">
+                      <label class="block font-bold text-slate-700 text-[11px]">Warna Aksen Utama / Brand (Primary):</label>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="ctrl-color-primary" value="${primaryColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                        <input type="text" id="ctrl-hex-primary" value="${primaryColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase outline-none focus:border-emerald-500 font-semibold" />
+                      </div>
+                    </div>
+
+                    <!-- 3. Warna Aksen Sekunder (Secondary Color) -->
+                    <div class="space-y-1">
+                      <label class="block font-bold text-slate-700 text-[11px]">Warna Aksen Sekunder (Secondary):</label>
+                      <div class="flex items-center gap-2">
+                        <input type="color" id="ctrl-color-secondary" value="${secondaryColor}" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white shrink-0" />
+                        <input type="text" id="ctrl-hex-secondary" value="${secondaryColor}" maxlength="7" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase outline-none focus:border-emerald-500 font-semibold" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </form>
           </div>
+
+          <!-- Sticky Inspector Footer: Save Button -->
+          <div class="p-3.5 bg-white border-t border-slate-200 sticky bottom-0 z-10 shrink-0">
+            <button type="button" id="btn-save-theme-branding" class="w-full py-2.5 px-4 rounded-xl bg-[#33b589] hover:bg-[#2aa27a] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98] cursor-pointer">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <span>Simpan Perubahan</span>
+            </button>
+          </div>
+        </div>
       </div>
     `;
 
@@ -4477,7 +4819,7 @@ const AdminApp = (() => {
       }
 
       const selectedModel = document.querySelector('input[name="hero_model_radio"]:checked')?.value || 'non_split';
-      
+
       // Update radio cards active styles
       document.querySelectorAll('.hero-model-card').forEach(card => {
         const m = card.getAttribute('data-model');
@@ -4566,10 +4908,10 @@ const AdminApp = (() => {
         }
       }
 
-      // [2] Hero Text Background Section (Khusus Mode Text-Only / model_1)
+      // [2] Hero Text Background Section (Mode Text-Only & Mode Split)
       const textBgSection = document.getElementById('hero-text-background-section');
       if (textBgSection) {
-        if (selectedModel === 'model_1') {
+        if (selectedModel === 'model_1' || selectedModel === 'split' || selectedModel === 'model_4') {
           textBgSection.classList.remove('hidden');
         } else {
           textBgSection.classList.add('hidden');
@@ -4621,16 +4963,40 @@ const AdminApp = (() => {
       const activeBanners = (typeof getActiveBannersList === 'function' ? getActiveBannersList() : []) || [];
       const animSelectEl = document.getElementById('hero-slider-animation-select');
       const showArrowsToggleContainer = document.getElementById('hero-show-arrows-toggle-container');
+      const showArrowsToggleRow = document.getElementById('hero-show-arrows-toggle-row');
+      const showArrowsToggle = document.getElementById('hero-show-arrows-toggle');
+      const arrowsPanel = document.getElementById('hero-arrows-customization-panel');
+      const arrowsVisibilityContainer = document.getElementById('hero-arrows-visibility-container');
       const currentAnimationType = animSelectEl?.value || 'slide_5s';
+      const isManualAnim = (currentAnimationType === 'manual' || currentAnimationType === 'manual_swipe');
 
       if (animContainer) {
         if (selectedModel !== 'model_1' && activeBanners.length > 1) {
           animContainer.classList.remove('hidden');
           if (showArrowsToggleContainer) {
-            if (currentAnimationType === 'manual' || currentAnimationType === 'manual_swipe') {
-              showArrowsToggleContainer.classList.add('hidden');
+            showArrowsToggleContainer.classList.remove('hidden');
+          }
+          if (showArrowsToggleRow) {
+            if (isManualAnim) {
+              showArrowsToggleRow.classList.add('hidden');
             } else {
-              showArrowsToggleContainer.classList.remove('hidden');
+              showArrowsToggleRow.classList.remove('hidden');
+            }
+          }
+          if (arrowsPanel) {
+            if (isManualAnim || (showArrowsToggle && showArrowsToggle.checked)) {
+              arrowsPanel.classList.remove('hidden');
+            } else {
+              arrowsPanel.classList.add('hidden');
+            }
+          }
+          if (arrowsVisibilityContainer) {
+            if (isManualAnim) {
+              arrowsVisibilityContainer.classList.add('hidden');
+              const alwaysRadio = document.querySelector('input[name="hero_arrows_visibility_radio"][value="always"]');
+              if (alwaysRadio) alwaysRadio.checked = true;
+            } else {
+              arrowsVisibilityContainer.classList.remove('hidden');
             }
           }
         } else {
@@ -4677,25 +5043,9 @@ const AdminApp = (() => {
       const heroDescColorVal = document.getElementById('hero-desc-color-hex')?.value || '#475569';
       const heroImageRadiusVal = (document.getElementById('hero-image-radius-number')?.value ?? '12') + 'px';
       const heroImageShadowVal = document.getElementById('hero-image-shadow-select')?.value || 'sm';
-      const heroSplitImageVal = document.getElementById('hero-split-image-url-input')?.value?.trim() || '';
-
-      const heroCtaTextVal = document.getElementById('hero-cta1-text-input')?.value || 'Lihat Semua Katalog';
-      const heroCtaLinkVal = document.getElementById('hero-cta1-link-input')?.value || '#katalog-section';
-      const heroCtaTextColorVal = document.getElementById('hero-cta1-text-hex')?.value || '#ffffff';
-      const heroCtaBgVal = document.getElementById('hero-cta1-bg-hex')?.value || primColor;
-      const heroCtaRadiusVal = (document.getElementById('hero-cta-radius-number')?.value ?? '12') + 'px';
-      const heroCtaShadowVal = document.getElementById('hero-cta-shadow-select')?.value || 'sm';
 
       const heroDotsActiveColorVal = document.getElementById('hero-dots-active-hex')?.value || '#10b981';
       const heroDotsInactiveColorVal = document.getElementById('hero-dots-inactive-hex')?.value || '#cbd5e1';
-
-      // Tombol CTA Kustom (Aktif di Mode Split & Mode Teks)
-      const heroCustomCtaHtml = `
-        <a href="${escapeHtml(heroCtaLinkVal)}" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold transition hover:brightness-105 active:scale-95 hero-shadow-${heroCtaShadowVal}" style="background-color: ${heroCtaBgVal}; color: ${heroCtaTextColorVal}; border-radius: ${heroCtaRadiusVal};">
-          <span>${escapeHtml(heroCtaTextVal)}</span>
-          <i data-lucide="arrow-right" class="w-3.5 h-3.5 shrink-0"></i>
-        </a>
-      `;
 
       // Standarisasi Aspek Rasio Hero Banner: Desktop 9:2 (4.5:1) & Mobile 16:5 (3.2:1)
       const nonSplitAspectClass = 'aspect-[16/5] md:aspect-[9/2] w-full hero-responsive-aspect object-cover';
@@ -4721,6 +5071,18 @@ const AdminApp = (() => {
       const showArrowsToggleVal = document.getElementById('hero-show-arrows-toggle')?.checked !== false;
       const showArrows = shouldShowNavArrows(animType, showArrowsToggleVal) && (banners.length > 1);
 
+      // Hero Manual Arrows Style Values
+      const heroArrowsBgVal = document.getElementById('hero-arrows-bg')?.value.trim() || 'rgba(0,0,0,0.45)';
+      const heroArrowsHoverBgVal = document.getElementById('hero-arrows-hover-bg')?.value.trim() || 'rgba(0,0,0,0.75)';
+      const heroArrowsIconColorVal = document.getElementById('hero-arrows-icon-color')?.value.trim() || '#ffffff';
+      const heroArrowsRadiusVal = document.getElementById('hero-arrows-radius')?.value || '9999px';
+      const heroArrowsShadowVal = document.getElementById('hero-arrows-shadow')?.value || 'sm';
+      const heroArrowsVisibilityVal = document.querySelector('input[name="hero_arrows_visibility_radio"]:checked')?.value || settings.hero_arrows_visibility || 'hover';
+      const isAlwaysVisible = (animType === 'manual' || animType === 'manual_swipe') || (heroArrowsVisibilityVal === 'always');
+      const arrowVisibilityClass = isAlwaysVisible 
+        ? 'opacity-100' 
+        : 'opacity-0 group-hover:opacity-100 transition-opacity';
+
       // Generate background CSS style
       let heroBgCss = '';
       if (bgType === 'solid') {
@@ -4738,16 +5100,12 @@ const AdminApp = (() => {
         </div>
       `).join('');
 
-      // Helper untuk Slides HTML Split (Bisa gambar khusus split atau fallback cover center)
-      const splitImageSource = heroSplitImageVal || banners[0] || 'assets/images/banner1.jpg';
-      const splitSlidesHtml = banners.map((b, i) => {
-        const imgSrc = heroSplitImageVal ? heroSplitImageVal : b;
-        return `
-          <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}" style="border-radius: inherit; overflow: hidden;">
-            <img src="${imgSrc}" alt="Hero Banner ${i + 1}" class="w-full h-full hero-split-image-cover" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
-          </div>
-        `;
-      }).join('');
+      // Helper untuk Slides HTML Split (Menggunakan daftar banner utama)
+      const splitSlidesHtml = banners.map((b, i) => `
+        <div class="hero-slide-smooth ${i === 0 ? 'is-active' : 'is-hidden'}" data-index="${i}" style="border-radius: inherit; overflow: hidden;">
+          <img src="${b}" alt="Hero Banner ${i + 1}" class="w-full h-full hero-split-image-cover" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-2xl\\'><i class=\\'bi bi-images\\'></i></div>';" />
+        </div>
+      `).join('');
 
       const isContainerShadowNone = containerShadowVal === 'none' || !containerShadowVal;
       const containerBorderClass = isContainerShadowNone ? 'border-0 shadow-none hero-shadow-none' : 'border border-slate-200/80 dark:border-slate-800 hero-shadow-' + containerShadowVal;
@@ -4784,18 +5142,18 @@ const AdminApp = (() => {
 
         heroBannerHtml = `
           <div class="relative overflow-hidden ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${isFullWidth ? '' : 'border-radius: ' + containerRadiusVal + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${banners.length}">
-            <div class="w-full md:aspect-[9/2] flex items-center p-3 sm:p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40" style="border-radius: inherit;">
+            <div class="w-full md:aspect-[9/2] flex items-center p-3 sm:p-5 md:p-6" style="${heroBgCss} border-radius: inherit;">
               <div class="${mobileFlexClass} items-stretch md:items-center gap-3 sm:gap-4 md:gap-6 w-full h-full">
                 
                 <!-- Kolom Gambar: Desktop 60% (order adaptif), Mobile Membentang Penuh Proporsional 16:5 -->
                 <div class="w-full md:w-[60%] ${imgDesktopOrder} flex flex-col items-center justify-center shrink-0 min-w-0 aspect-[16/5] md:aspect-auto md:h-full hero-split-mobile-image">
-                  <div class="overflow-hidden w-full h-full relative bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass}" style="${splitBoxRadiusStyle}; overflow: hidden;">
+                  <div class="overflow-hidden w-full h-full relative group bg-slate-100 dark:bg-slate-800 ${splitBoxShadowClass}" style="${splitBoxRadiusStyle}; overflow: hidden;">
                     <div class="hero-slider-track w-full h-full relative" style="border-radius: inherit;">
                       ${splitSlidesHtml}
                     </div>
                     ${showArrows ? `
-                      <button type="button" class="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
-                      <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-20 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
+                      <button type="button" class="hero-arrow-btn absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 hidden md:flex items-center justify-center z-20 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadowVal}" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)" style="background-color: ${heroArrowsBgVal}; color: ${heroArrowsIconColorVal}; border-radius: ${heroArrowsRadiusVal};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBgVal}'" onmouseleave="this.style.backgroundColor='${heroArrowsBgVal}'"><i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
+                      <button type="button" class="hero-arrow-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 hidden md:flex items-center justify-center z-20 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadowVal}" id="hero-slide-next" title="Slide Berikutnya (&gt;)" style="background-color: ${heroArrowsBgVal}; color: ${heroArrowsIconColorVal}; border-radius: ${heroArrowsRadiusVal};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBgVal}'" onmouseleave="this.style.backgroundColor='${heroArrowsBgVal}'"><i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i></button>
                     ` : ''}
                     <!-- Indikator Slider Dots Melayang (Absolute di dalam kotak gambar) -->
                     ${banners.length > 1 ? `
@@ -4840,8 +5198,8 @@ const AdminApp = (() => {
                   </p>
                 </div>
                 ${showArrows ? `
-                  <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-30 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
-                  <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-30 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                  <button type="button" class="hero-arrow-btn absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadowVal}" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)" style="background-color: ${heroArrowsBgVal}; color: ${heroArrowsIconColorVal}; border-radius: ${heroArrowsRadiusVal};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBgVal}'" onmouseleave="this.style.backgroundColor='${heroArrowsBgVal}'"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                  <button type="button" class="hero-arrow-btn absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadowVal}" id="hero-slide-next" title="Slide Berikutnya (&gt;)" style="background-color: ${heroArrowsBgVal}; color: ${heroArrowsIconColorVal}; border-radius: ${heroArrowsRadiusVal};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBgVal}'" onmouseleave="this.style.backgroundColor='${heroArrowsBgVal}'"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
                 ` : ''}
                 <!-- Indikator Slider Dots Melayang (Absolute di atas gambar banner) -->
                 ${banners.length > 1 ? `
@@ -4867,8 +5225,8 @@ const AdminApp = (() => {
                   ${slidesHtml}
                 </div>
                 ${showArrows ? `
-                  <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-30 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
-                  <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center z-30 transition pointer-events-auto backdrop-blur-sm active:scale-90" id="hero-slide-next" title="Slide Berikutnya (&gt;)"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                  <button type="button" class="hero-arrow-btn absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadowVal}" id="hero-slide-prev" title="Slide Sebelumnya (&lt;)" style="background-color: ${heroArrowsBgVal}; color: ${heroArrowsIconColorVal}; border-radius: ${heroArrowsRadiusVal};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBgVal}'" onmouseleave="this.style.backgroundColor='${heroArrowsBgVal}'"><i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
+                  <button type="button" class="hero-arrow-btn absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 hidden md:flex items-center justify-center z-30 ${arrowVisibilityClass} transition duration-200 pointer-events-auto backdrop-blur-sm active:scale-90 hero-shadow-${heroArrowsShadowVal}" id="hero-slide-next" title="Slide Berikutnya (&gt;)" style="background-color: ${heroArrowsBgVal}; color: ${heroArrowsIconColorVal}; border-radius: ${heroArrowsRadiusVal};" onmouseenter="this.style.backgroundColor='${heroArrowsHoverBgVal}'" onmouseleave="this.style.backgroundColor='${heroArrowsBgVal}'"><i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
                 ` : ''}
                 <!-- Indikator Slider Dots Melayang (Absolute di atas gambar banner) -->
                 ${banners.length > 1 ? `
@@ -4901,13 +5259,13 @@ const AdminApp = (() => {
                   <option>Souvenir, Merchandise & Apparel</option>
                 </select>
               </div>
-              \${isDesktop ? \`
+              ${isDesktop ? `
                 <div class="flex items-center gap-1.5 shrink-0 pl-2 border-l border-slate-200">
-                  <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold text-white shadow-2xs" style="background-color: \${primColor};">Semua</span>
+                  <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold text-white shadow-2xs" style="background-color: ${primColor};">Semua</span>
                   <span class="px-2.5 py-1 rounded-xl text-[11px] font-semibold text-slate-600 bg-slate-100">Terlaris</span>
                   <span class="px-2.5 py-1 rounded-xl text-[11px] font-semibold text-slate-600 bg-slate-100">Promo</span>
                 </div>
-              \` : ''}
+              ` : ''}
             </div>
           `;
         }
@@ -4915,7 +5273,7 @@ const AdminApp = (() => {
         if (mode === 'pills_text') {
           return `
             <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full">
-              <button class="px-3.5 py-2 rounded-2xl text-xs font-bold text-white flex items-center gap-1.5 shrink-0 shadow-xs" style="background-color: \${primColor};">
+              <button class="px-3.5 py-2 rounded-2xl text-xs font-bold text-white flex items-center gap-1.5 shrink-0 shadow-xs" style="background-color: ${primColor};">
                 <i class="bi bi-grid-fill text-xs"></i>
                 <span>Semua</span>
               </button>
@@ -4963,25 +5321,25 @@ const AdminApp = (() => {
 
         return `
           <div class="relative group/catnav w-full">
-            \${hasMoreThanTen ? \`
+            ${hasMoreThanTen ? `
               <button type="button" class="hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -left-2.5 top-7 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 items-center justify-center cursor-pointer">
                 <i class="bi bi-chevron-left text-[11px]"></i>
               </button>
               <button type="button" class="hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -right-2.5 top-7 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 items-center justify-center cursor-pointer">
                 <i class="bi bi-chevron-right text-[11px]"></i>
               </button>
-            \` : ''}
-            <div class="\${trackClasses}">
-              \${dummyItems.map(item => \`
+            ` : ''}
+            <div class="${trackClasses}">
+              ${dummyItems.map(item => `
                 <div class="cat-item-peek flex flex-col items-center justify-start text-center select-none shrink-0 cursor-pointer">
-                  <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition shadow-2xs \${item.active ? 'ring-2' : 'border border-slate-200/80 bg-slate-100'} overflow-hidden" style="\${item.active ? \`background-color: \${primColor}; color: #ffffff; ring-color: \${primColor};\` : \`background-color: #f8fafc; color: \${item.color};\`}">
-                    \${item.image ? \`<img src="\${item.image}" class="w-full h-full object-cover rounded-2xl" onerror="this.outerHTML='<i class=\\\'bi bi-tag-fill text-lg sm:text-xl md:text-2xl\\\'></i>';" />\` : \`<i class="bi \${item.icon} text-lg sm:text-xl md:text-2xl"></i>\`}
+                  <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition shadow-2xs ${item.active ? 'ring-2' : 'border border-slate-200/80 bg-slate-100'} overflow-hidden" style="${item.active ? `background-color: ${primColor}; color: #ffffff; ring-color: ${primColor};` : `background-color: #f8fafc; color: ${item.color};`}">
+                    ${item.image ? `<img src="${item.image}" class="w-full h-full object-cover rounded-2xl" onerror="this.outerHTML='<i class=\\'bi bi-tag-fill text-lg sm:text-xl md:text-2xl\\'></i>';" />` : `<i class="bi ${item.icon} text-lg sm:text-xl md:text-2xl"></i>`}
                   </div>
-                  <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight \${item.active ? 'font-bold' : 'text-slate-700'}" style="\${item.active ? \`color: \${primColor};\` : ''}">
-                    \${item.name}
+                  <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight ${item.active ? 'font-bold' : 'text-slate-700'}" style="${item.active ? `color: ${primColor};` : ''}">
+                    ${item.name}
                   </span>
                 </div>
-              \`).join('')}
+              `).join('')}
             </div>
           </div>
         `;
@@ -4999,6 +5357,109 @@ const AdminApp = (() => {
           <div class="hidden lg:block w-full">
             ${renderPreviewCatNav(selectedCatNavDesktop, true)}
           </div>
+        </div>
+      `;
+
+      // Generator Preview Produk (Sesuai Gaya Kartu v1, v2, v3)
+      const cardVer = document.querySelector('input[name="card_product_version_radio"]:checked')?.value || settings.card_product_version || 'v1';
+
+      function renderPreviewProductCards(version) {
+        const dummyProducts = [
+          { name: 'Brosur A4 Full Color', price: 'Rp 150.000', cat: 'Digital Printing', badge: 'Terlaris', img: 'assets/images/banner1.jpg', rating: '4.9' },
+          { name: 'Spanduk Flexy 280gr', price: 'Rp 25.000/m', cat: 'Outdoor', badge: 'Diskon 10%', img: 'assets/images/banner1.jpg', rating: '4.8' },
+          { name: 'Kartu Nama Eksklusif', price: 'Rp 45.000', cat: 'Branding', badge: 'Siap Kirim', img: 'assets/images/banner1.jpg', rating: '5.0' },
+          { name: 'Mug Keramik Custom', price: 'Rp 22.500', cat: 'Merchandise', badge: 'Promo', img: 'assets/images/banner1.jpg', rating: '4.7' }
+        ];
+
+        if (version === 'v2') {
+          return `
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 mt-2.5">
+              ${dummyProducts.map(p => `
+                <div class="bg-white rounded-2xl overflow-hidden shadow-xs border border-slate-100 flex flex-col group">
+                  <div class="aspect-square w-full relative overflow-hidden bg-slate-100">
+                    <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='assets/images/banner1.jpg'" />
+                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold text-white shadow-xs" style="background-color: ${primColor};">${p.badge}</span>
+                    <button type="button" class="absolute bottom-2 right-2 w-7 h-7 rounded-full text-white flex items-center justify-center shadow-md" style="background-color: ${primColor};">
+                      <i class="bi bi-cart-plus text-xs"></i>
+                    </button>
+                  </div>
+                  <div class="p-2.5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider block">${p.cat}</span>
+                      <h4 class="font-bold text-slate-800 text-[11px] line-clamp-2 mt-0.5">${p.name}</h4>
+                    </div>
+                    <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                      <span class="font-black text-xs text-slate-900">${p.price}</span>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        if (version === 'v3') {
+          return `
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 mt-2.5">
+              ${dummyProducts.map(p => `
+                <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs flex flex-col group">
+                  <div class="aspect-[4/3] w-full relative overflow-hidden bg-slate-100">
+                    <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='assets/images/banner1.jpg'" />
+                    <div class="absolute top-2 right-2 bg-white/95 px-2 py-0.5 rounded-lg text-[9px] font-bold text-slate-700 shadow-2xs border border-slate-200/60">
+                      ${p.badge}
+                    </div>
+                  </div>
+                  <div class="p-2.5 flex-1 flex flex-col justify-between space-y-2">
+                    <div>
+                      <div class="flex items-center gap-1 text-[10px] text-amber-500 mb-0.5">
+                        <i class="bi bi-star-fill text-[9px]"></i>
+                        <span class="font-bold text-slate-600">${p.rating}</span>
+                      </div>
+                      <h4 class="font-bold text-slate-800 text-[11px] line-clamp-2 leading-tight">${p.name}</h4>
+                    </div>
+                    <div>
+                      <div class="font-black text-xs" style="color: ${primColor};">${p.price}</div>
+                      <button type="button" class="w-full mt-2 py-1.5 rounded-xl text-white font-bold text-[10px] flex items-center justify-center gap-1 shadow-2xs" style="background-color: ${primColor};">
+                        <i class="bi bi-bag-plus"></i>
+                        <span>Lihat Opsi</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        // v1 (Default Compact Klasik)
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mt-2.5">
+            ${dummyProducts.map(p => `
+              <div class="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
+                <div class="aspect-square w-full relative bg-slate-100 overflow-hidden">
+                  <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover" onerror="this.src='assets/images/banner1.jpg'" />
+                  <span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[8px] font-bold">${p.badge}</span>
+                </div>
+                <div class="p-2 flex-1 flex flex-col justify-between">
+                  <h4 class="font-semibold text-slate-800 text-[10px] line-clamp-2 leading-tight">${p.name}</h4>
+                  <div class="mt-2 flex items-center justify-between gap-1">
+                    <span class="font-bold text-[11px] text-slate-900">${p.price}</span>
+                    <button type="button" class="px-2 py-1 rounded-lg text-white font-bold text-[9px] shrink-0" style="background-color: ${primColor};">Pesan</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      const previewProductsHtml = `
+        <div class="w-full space-y-1.5 mt-4 pt-3 border-t border-slate-200/80">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-800">Katalog Produk (Gaya ${cardVer.toUpperCase()})</span>
+            <span class="text-[10px] text-slate-400">Simulasi Kartu Produk</span>
+          </div>
+          ${renderPreviewProductCards(cardVer)}
         </div>
       `;
 
@@ -5038,39 +5499,50 @@ const AdminApp = (() => {
             const outgoingSlide = slides[currentIndex];
             const incomingSlide = slides[normalizedTarget];
 
-            if (outgoingSlide) {
-              outgoingSlide.style.transition = '';
-              outgoingSlide.style.transform = '';
-            }
-            if (incomingSlide) {
-              incomingSlide.style.transition = '';
-              incomingSlide.style.transform = '';
-            }
-
             if (isFade) {
-              if (direction < 0) {
-                incomingSlide.classList.remove('is-hidden', 'is-fading-out', 'is-fading-out-top', 'is-prev', 'is-next');
-                incomingSlide.classList.add('is-active');
-                outgoingSlide.classList.remove('is-active');
-                outgoingSlide.classList.add('is-fading-out-top');
-              } else {
-                outgoingSlide.classList.remove('is-active');
-                outgoingSlide.classList.add('is-fading-out');
-                incomingSlide.classList.remove('is-hidden', 'is-fading-out', 'is-fading-out-top', 'is-prev', 'is-next');
-                incomingSlide.classList.add('is-active');
+              if (outgoingSlide) {
+                outgoingSlide.classList.remove('is-active', 'is-hidden');
+                outgoingSlide.style.transform = 'none';
+                outgoingSlide.style.zIndex = '5';
+                outgoingSlide.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                outgoingSlide.style.opacity = '0';
+              }
+
+              if (incomingSlide) {
+                incomingSlide.classList.remove('is-hidden');
+                incomingSlide.style.transform = 'none';
+                incomingSlide.style.zIndex = '10';
+                incomingSlide.style.opacity = '0';
+                incomingSlide.style.visibility = 'visible';
+                incomingSlide.style.transition = 'none';
+
+                void incomingSlide.offsetWidth;
+
+                incomingSlide.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                incomingSlide.style.opacity = '1';
               }
             } else {
-              incomingSlide.classList.remove('is-hidden', 'is-active', 'is-prev', 'is-next', 'is-fading-out', 'is-fading-out-top');
-              incomingSlide.style.transition = 'none';
-              incomingSlide.classList.add(direction > 0 ? 'is-next' : 'is-prev');
-              void incomingSlide.offsetWidth;
-              incomingSlide.style.transition = '';
+              const startTranslate = direction > 0 ? 'translateX(100%)' : 'translateX(-100%)';
+              const exitTranslate = direction > 0 ? 'translateX(-100%)' : 'translateX(100%)';
 
-              outgoingSlide.classList.remove('is-active');
-              outgoingSlide.classList.add(direction > 0 ? 'is-prev' : 'is-next');
+              if (incomingSlide) {
+                incomingSlide.classList.remove('is-hidden', 'is-prev', 'is-next');
+                incomingSlide.style.visibility = 'visible';
+                incomingSlide.style.zIndex = '10';
+                incomingSlide.style.transition = 'none';
+                incomingSlide.style.transform = startTranslate;
 
-              incomingSlide.classList.remove('is-prev', 'is-next');
-              incomingSlide.classList.add('is-active');
+                void incomingSlide.offsetWidth;
+
+                incomingSlide.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+                incomingSlide.style.transform = 'translateX(0)';
+              }
+
+              if (outgoingSlide) {
+                outgoingSlide.style.zIndex = '5';
+                outgoingSlide.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+                outgoingSlide.style.transform = exitTranslate;
+              }
             }
 
             dots.forEach((dot, idx) => {
@@ -5090,17 +5562,29 @@ const AdminApp = (() => {
             currentIndex = normalizedTarget;
 
             setTimeout(() => {
-              slides.forEach((s, idx) => {
-                if (idx !== currentIndex) {
-                  s.classList.remove('is-active', 'is-prev', 'is-next', 'is-fading-out', 'is-fading-out-top');
-                  s.classList.add('is-hidden');
-                  s.style.transition = '';
-                  s.style.transform = '';
-                }
-              });
-              isTransitioning = false;
-              startTimer();
-            }, isFade ? 680 : 620);
+              try {
+                slides.forEach((s, idx) => {
+                  if (idx === currentIndex) {
+                    s.className = 'hero-slide-smooth is-active';
+                    s.style.transition = '';
+                    s.style.transform = '';
+                    s.style.opacity = '';
+                    s.style.zIndex = '';
+                    s.style.visibility = '';
+                  } else {
+                    s.className = 'hero-slide-smooth is-hidden';
+                    s.style.transition = '';
+                    s.style.transform = '';
+                    s.style.opacity = '';
+                    s.style.zIndex = '';
+                    s.style.visibility = '';
+                  }
+                });
+              } finally {
+                isTransitioning = false;
+                startTimer();
+              }
+            }, 620);
           }
 
           dots.forEach((dot, idx) => {
@@ -5386,9 +5870,10 @@ const AdminApp = (() => {
           </header>
 
           <!-- FRAMED HERO BANNER & CATALOG PREVIEW -->
-          <div class="w-full ${isFullWidth ? '' : 'p-3 sm:p-5'}">
+          <div class="w-full ${isFullWidth ? '' : 'p-3 sm:p-5'} space-y-4">
             ${heroBannerHtml}
             ${previewCatNavHtml}
+            ${previewProductsHtml}
           </div>
 
           <script>
@@ -5445,11 +5930,6 @@ const AdminApp = (() => {
     bindColorPair('hero-dots-active-picker', 'hero-dots-active-hex');
     bindColorPair('hero-dots-inactive-picker', 'hero-dots-inactive-hex');
 
-    // Hero CTA Color Pair Bindings
-    bindColorPair('hero-cta1-bg-picker', 'hero-cta1-bg-hex');
-    bindColorPair('hero-cta1-text-picker', 'hero-cta1-text-hex');
-    bindColorPair('hero-cta1-icon-picker', 'hero-cta1-icon-hex');
-
     // Radius Slider + Input Number + Presets Two-Way Interactive Synchronizer
     function bindRadiusControl(sliderId, numberId, presetClass) {
       const slider = document.getElementById(sliderId);
@@ -5500,66 +5980,44 @@ const AdminApp = (() => {
 
     bindRadiusControl('hero-container-radius-slider', 'hero-container-radius-number', 'hero-container-radius-preset');
     bindRadiusControl('hero-image-radius-slider', 'hero-image-radius-number', 'hero-image-radius-preset');
-    bindRadiusControl('hero-cta-radius-slider', 'hero-cta-radius-number', 'hero-cta-radius-preset');
 
     // Shadow Select Dropdowns
-    ['hero-container-shadow-select', 'hero-image-shadow-select', 'hero-cta-shadow-select'].forEach(id => {
+    ['hero-container-shadow-select', 'hero-image-shadow-select'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', updateStorefrontLivePreview);
     });
 
-    // Split Image Uploader & Reset Management
-    const splitFileInput = document.getElementById('hero-split-image-file-input');
-    const splitUrlInput = document.getElementById('hero-split-image-url-input');
-    const splitPreviewImg = document.getElementById('hero-split-image-preview');
-    const btnClearSplitImg = document.getElementById('btn-clear-hero-split-image');
+    // Hero Arrows Navigation Color & Style Bindings
+    bindColorPair('hero-arrows-bg-picker', 'hero-arrows-bg');
+    bindColorPair('hero-arrows-hover-bg-picker', 'hero-arrows-hover-bg');
+    bindColorPair('hero-arrows-icon-color-picker', 'hero-arrows-icon-color');
 
-    if (splitFileInput) {
-      splitFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 500 * 1024) {
-          showToast(`Ukuran berkas (${(file.size / 1024).toFixed(0)} KB) melebihi batas maksimal 500 KB!`, 'error');
-          splitFileInput.value = '';
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          if (splitUrlInput) splitUrlInput.value = evt.target.result;
-          if (splitPreviewImg) {
-            splitPreviewImg.src = evt.target.result;
-            splitPreviewImg.classList.remove('opacity-60');
+    ['hero-arrows-bg', 'hero-arrows-hover-bg', 'hero-arrows-icon-color'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updateStorefrontLivePreview);
+    });
+
+    ['hero-arrows-radius', 'hero-arrows-shadow'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', updateStorefrontLivePreview);
+    });
+
+    // Hero Arrows Desktop Visibility Radio Change
+    document.querySelectorAll('input[name="hero_arrows_visibility_radio"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.querySelectorAll('input[name="hero_arrows_visibility_radio"]').forEach(input => {
+          const label = input.closest('.hero-arrows-vis-label');
+          if (input.checked) {
+            label?.classList.add('border-emerald-500', 'bg-emerald-50/50', 'font-bold', 'text-emerald-900', 'ring-1', 'ring-emerald-500/20');
+            label?.classList.remove('border-slate-200', 'bg-white', 'text-slate-700');
+          } else {
+            label?.classList.remove('border-emerald-500', 'bg-emerald-50/50', 'font-bold', 'text-emerald-900', 'ring-1', 'ring-emerald-500/20');
+            label?.classList.add('border-slate-200', 'bg-white', 'text-slate-700');
           }
-          updateStorefrontLivePreview();
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    if (splitUrlInput) {
-      splitUrlInput.addEventListener('input', (e) => {
-        const val = e.target.value.trim();
-        if (splitPreviewImg) {
-          splitPreviewImg.src = val || (getActiveBannersList()[0] || 'assets/images/banner1.jpg');
-          if (val) splitPreviewImg.classList.remove('opacity-60');
-          else splitPreviewImg.classList.add('opacity-60');
-        }
+        });
         updateStorefrontLivePreview();
       });
-    }
-
-    if (btnClearSplitImg) {
-      btnClearSplitImg.addEventListener('click', () => {
-        if (splitUrlInput) splitUrlInput.value = '';
-        if (splitFileInput) splitFileInput.value = '';
-        if (splitPreviewImg) {
-          splitPreviewImg.src = getActiveBannersList()[0] || 'assets/images/banner1.jpg';
-          splitPreviewImg.classList.add('opacity-60');
-        }
-        updateStorefrontLivePreview();
-        showToast('Gambar khusus split direset ke banner utama', 'info');
-      });
-    }
+    });
 
     // Navbar Text-Only Color Pair Bindings
     bindColorPair('ctrl-color-navbar-store-name', 'ctrl-hex-navbar-store-name');
@@ -5577,13 +6035,13 @@ const AdminApp = (() => {
     bindColorPair('ctrl-color-navbar-login-text', 'ctrl-hex-navbar-login-text');
 
     // Live typing on text inputs
-    ['store-name-input', 'store-tagline-input', 'store-logo-url-input', 'hero-headline-input', 'hero-subheadline-input', 'hero-bg-angle-input', 'hero-cta1-text-input', 'hero-cta1-link-input', 'hero-split-image-url-input', 'ctrl-hex-top-bar-bg', 'ctrl-hex-top-bar-text', 'ctrl-hex-navbar-store-name', 'ctrl-hex-navbar-tagline', 'ctrl-hex-navbar-cart-icon', 'ctrl-hex-navbar-cart-badge-bg', 'ctrl-hex-navbar-cart-badge-text', 'ctrl-hex-navbar-search-icon', 'ctrl-hex-navbar-search-input-bg', 'ctrl-hex-navbar-search-border', 'ctrl-hex-navbar-search-placeholder', 'ctrl-hex-navbar-login-icon', 'ctrl-hex-navbar-login-text'].forEach(id => {
+    ['store-name-input', 'store-tagline-input', 'store-logo-url-input', 'hero-headline-input', 'hero-subheadline-input', 'hero-bg-angle-input', 'ctrl-hex-top-bar-bg', 'ctrl-hex-top-bar-text', 'ctrl-hex-navbar-store-name', 'ctrl-hex-navbar-tagline', 'ctrl-hex-navbar-cart-icon', 'ctrl-hex-navbar-cart-badge-bg', 'ctrl-hex-navbar-cart-badge-text', 'ctrl-hex-navbar-search-icon', 'ctrl-hex-navbar-search-input-bg', 'ctrl-hex-navbar-search-border', 'ctrl-hex-navbar-search-placeholder', 'ctrl-hex-navbar-login-icon', 'ctrl-hex-navbar-login-text'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', updateStorefrontLivePreview);
     });
 
     // Select & Checkbox Change Events
-    ['hero-bg-type-select', 'hero-show-timer-toggle', 'hero-cta-use-theme-toggle', 'ctrl-toggle-show-header-store-name'].forEach(id => {
+    ['hero-bg-type-select', 'hero-show-timer-toggle', 'ctrl-toggle-show-header-store-name'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', updateStorefrontLivePreview);
     });
@@ -5873,7 +6331,14 @@ const AdminApp = (() => {
     // Hero Show Arrows Toggle
     const toggleArrows = document.getElementById('hero-show-arrows-toggle');
     if (toggleArrows) {
-      toggleArrows.addEventListener('change', updateStorefrontLivePreview);
+      toggleArrows.addEventListener('change', () => {
+        const panel = document.getElementById('hero-arrows-customization-panel');
+        if (panel) {
+          if (toggleArrows.checked) panel.classList.remove('hidden');
+          else panel.classList.add('hidden');
+        }
+        updateStorefrontLivePreview();
+      });
     }
 
     // Save Theme & Branding Button
@@ -5907,7 +6372,7 @@ const AdminApp = (() => {
 
         const headline = document.getElementById('hero-headline-input')?.value.trim() || '';
         const subheadline = document.getElementById('hero-subheadline-input')?.value.trim() || '';
-        
+
         // Hero Background & Styling Values
         const heroBgTypeVal = document.getElementById('hero-bg-type-select')?.value || 'linear_gradient';
         const heroBgColor1Val = document.getElementById('hero-bg-color1-hex')?.value.trim() || '#0f172a';
@@ -5922,31 +6387,21 @@ const AdminApp = (() => {
         const heroContainerRadiusVal = (document.getElementById('hero-container-radius-number')?.value ?? '16') + 'px';
         const heroContainerShadowVal = document.getElementById('hero-container-shadow-select')?.value || 'sm';
 
-        // Hero Split Image Box Customization (0px - 24px, shadow, & upload/url)
+        // Hero Split Image Box Customization (0px - 24px & shadow)
         const heroImageRadiusVal = (document.getElementById('hero-image-radius-number')?.value ?? '12') + 'px';
         const heroImageShadowVal = document.getElementById('hero-image-shadow-select')?.value || 'sm';
-        const heroSplitImageVal = document.getElementById('hero-split-image-url-input')?.value.trim() || '';
+
+        // Hero Manual Arrows Navigation Customization
+        const heroArrowsBgVal = document.getElementById('hero-arrows-bg')?.value.trim() || 'rgba(0,0,0,0.45)';
+        const heroArrowsHoverBgVal = document.getElementById('hero-arrows-hover-bg')?.value.trim() || 'rgba(0,0,0,0.75)';
+        const heroArrowsIconColorVal = document.getElementById('hero-arrows-icon-color')?.value.trim() || '#ffffff';
+        const heroArrowsRadiusVal = document.getElementById('hero-arrows-radius')?.value || '9999px';
+        const heroArrowsShadowVal = document.getElementById('hero-arrows-shadow')?.value || 'sm';
+        const heroArrowsVisibilityVal = document.querySelector('input[name="hero_arrows_visibility_radio"]:checked')?.value || 'hover';
 
         // Hero Dots Navigation Colors
         const heroDotsActiveColorVal = document.getElementById('hero-dots-active-hex')?.value.trim() || '#10b981';
         const heroDotsInactiveColorVal = document.getElementById('hero-dots-inactive-hex')?.value.trim() || '#cbd5e1';
-
-        // Hero CTA Customization (6 Parameter Lengkap)
-        const heroCta1TextVal = document.getElementById('hero-cta1-text-input')?.value.trim() || 'Lihat Semua Katalog';
-        const heroCta1LinkVal = document.getElementById('hero-cta1-link-input')?.value.trim() || '#katalog-section';
-        const heroCta1BgVal = document.getElementById('hero-cta1-bg-hex')?.value.trim() || primColor;
-        const heroCta1TextColVal = document.getElementById('hero-cta1-text-hex')?.value.trim() || '#ffffff';
-        const heroCtaRadiusVal = (document.getElementById('hero-cta-radius-number')?.value ?? '12') + 'px';
-        const heroCtaShadowVal = document.getElementById('hero-cta-shadow-select')?.value || 'sm';
-
-        const heroCtaConfig = {
-          text: heroCta1TextVal,
-          url: heroCta1LinkVal,
-          text_color: heroCta1TextColVal,
-          bg_color: heroCta1BgVal,
-          radius: heroCtaRadiusVal,
-          shadow: heroCtaShadowVal
-        };
 
         // Navbar Header Branding Rules
         const navbarBrandingModeVal = document.querySelector('input[name="navbar_branding_mode_radio"]:checked')?.value || settings.navbar_branding_mode || 'logo_landscape';
@@ -5954,8 +6409,8 @@ const AdminApp = (() => {
         const navbarTaglineColorVal = document.getElementById('ctrl-hex-navbar-tagline')?.value.trim() || settings.navbar_tagline_color || '#64748b';
         const showHeaderStoreNameVal = document.getElementById('ctrl-toggle-show-header-store-name')?.checked !== false;
 
-        // Card Product Version (Pertahankan nilai yang ada)
-        const cardProductVersionVal = settings.card_product_version || 'v1';
+        // Card Product Version
+        const cardProductVersionVal = document.querySelector('input[name="card_product_version_radio"]:checked')?.value || settings.card_product_version || 'v1';
 
         const sliderAnimation = document.getElementById('hero-slider-animation-select')?.value || 'slide_3s';
         const enableGreeting = document.getElementById('ctrl-toggle-greeting')?.checked !== false;
@@ -5989,6 +6444,12 @@ const AdminApp = (() => {
           hero_split_mobile: selectedHeroSplitMobile,
           hero_split_desktop_pos: selectedHeroSplitDesktop,
           hero_show_arrows: heroShowArrowsVal,
+          hero_arrows_bg: heroArrowsBgVal,
+          hero_arrows_hover_bg: heroArrowsHoverBgVal,
+          hero_arrows_icon_color: heroArrowsIconColorVal,
+          hero_arrows_radius: heroArrowsRadiusVal,
+          hero_arrows_shadow: heroArrowsShadowVal,
+          hero_arrows_visibility: heroArrowsVisibilityVal,
           hero_type: selectedHeroModel === 'model_1' ? 'text' : 'banner', // backward compat
           hero_headline: headline,
           hero_subheadline: subheadline,
@@ -5998,15 +6459,8 @@ const AdminApp = (() => {
           hero_desc_color: heroDescColorVal,
           hero_image_radius: heroImageRadiusVal,
           hero_image_shadow: heroImageShadowVal,
-          hero_split_image: heroSplitImageVal,
           hero_dots_active_color: heroDotsActiveColorVal,
           hero_dots_inactive_color: heroDotsInactiveColorVal,
-          hero_cta_config: heroCtaConfig,
-          hero_cta_text: heroCta1TextVal,
-          hero_cta1_text: heroCta1TextVal,
-          hero_cta1_link: heroCta1LinkVal,
-          hero_cta1_bg: heroCta1BgVal,
-          hero_cta1_text_color: heroCta1TextColVal,
           // Hero Background & Text styling
           hero_bg_type: heroBgTypeVal,
           hero_bg_color1: heroBgColor1Val,
@@ -6042,6 +6496,79 @@ const AdminApp = (() => {
       });
     }
 
+    // Accordion Header Toggle
+    document.querySelectorAll('.theme-accordion-header').forEach(hdr => {
+      hdr.addEventListener('click', () => {
+        const targetId = hdr.getAttribute('data-target');
+        const bodyEl = document.getElementById(targetId);
+        if (!bodyEl) return;
+        const isOpen = hdr.classList.contains('is-open');
+        if (isOpen) {
+          hdr.classList.remove('is-open');
+          bodyEl.classList.add('is-collapsed');
+        } else {
+          hdr.classList.add('is-open');
+          bodyEl.classList.remove('is-collapsed');
+        }
+      });
+    });
+
+    // Mobile Tab Switcher (< 768px): Pengaturan Tools vs Pratinjau Toko
+    const btnThemeTabTools = document.getElementById('btn-theme-tab-tools');
+    const btnThemeTabPreview = document.getElementById('btn-theme-tab-preview');
+    const themeCanvasCol = document.getElementById('theme-canvas-container');
+    const themeInspectorCol = document.getElementById('theme-inspector-container');
+
+    if (btnThemeTabTools && btnThemeTabPreview && themeCanvasCol && themeInspectorCol) {
+      btnThemeTabTools.addEventListener('click', () => {
+        btnThemeTabTools.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs cursor-pointer';
+        btnThemeTabPreview.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer';
+        themeInspectorCol.classList.remove('is-tab-hidden');
+        themeCanvasCol.classList.add('is-tab-hidden');
+      });
+
+      btnThemeTabPreview.addEventListener('click', () => {
+        btnThemeTabPreview.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs cursor-pointer';
+        btnThemeTabTools.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer';
+        themeCanvasCol.classList.remove('is-tab-hidden');
+        themeInspectorCol.classList.add('is-tab-hidden');
+        updateStorefrontLivePreview();
+      });
+    }
+
+    // Product Card Style Selection Handlers
+    document.querySelectorAll('input[name="card_product_version_radio"]').forEach(r => {
+      r.addEventListener('change', (e) => {
+        const val = e.target.value;
+        document.querySelectorAll('.card-style-choice-card').forEach(card => {
+          const cVer = card.getAttribute('data-card-ver');
+          if (cVer === val) {
+            card.className = 'card-style-choice-card p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/20 cursor-pointer transition flex items-start gap-3';
+          } else {
+            card.className = 'card-style-choice-card p-3 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-start gap-3';
+          }
+        });
+        updateStorefrontLivePreview();
+      });
+    });
+
+    document.querySelectorAll('.card-style-choice-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const radio = card.querySelector('input[name="card_product_version_radio"]');
+        if (radio && !radio.checked) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+
+    // Category Nav Radios Live Update
+    document.querySelectorAll('input[name="category_nav_mode_mobile_radio"], input[name="category_nav_mode_desktop_radio"]').forEach(r => {
+      r.addEventListener('change', () => {
+        updateStorefrontLivePreview();
+      });
+    });
+
     // Initial sync
     syncHeroFormVisibility();
     setHeroPreviewWidth(1200);
@@ -6076,6 +6603,7 @@ const AdminApp = (() => {
     showToast,
     logout,
     syncHeaderAndTheme,
+    checkFeatureAccess,
     renderPOSCashier,
     renderDashboardView,
     renderOrdersView,
