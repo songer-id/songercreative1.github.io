@@ -376,12 +376,17 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   EMERALD BRAND GREEN ADMIN SIDEBAR & SHOPIFY-STYLE THEME STUDIO
+   CLEAN WHITE & SLATE DASHBOARD ADMIN SIDEBAR (DOKANI STYLE)
    -------------------------------------------------------------------------- */
 #admin-main-sidebar {
-  background-color: #33b589 !important;
-  color: #ffffff;
+  background-color: #ffffff !important;
+  border-right: 1px solid rgba(226, 232, 240, 0.9) !important;
+  color: #334155;
   height: 100vh;
+}
+
+#admin-main-viewport {
+  background-color: #f8fafc;
 }
 
 @media (min-width: 1024px) {
@@ -398,7 +403,7 @@ body {
   .admin-sidebar-hover-expand.is-expanded {
     width: 16rem;
     /* w-64 */
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
   }
 
   /* Header elements visibility in collapsed vs expanded */
@@ -408,10 +413,14 @@ body {
 
   .admin-sidebar-hover-expand:not(.is-expanded) .sidebar-header-collapsed {
     display: flex !important;
+    height: 4rem;
+    align-items: center;
+    justify-content: center;
   }
 
   .admin-sidebar-hover-expand.is-expanded .sidebar-header-expanded {
     display: flex !important;
+    height: 4rem;
   }
 
   .admin-sidebar-hover-expand.is-expanded .sidebar-header-collapsed {
@@ -466,38 +475,137 @@ body {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 1rem !important;
+    border-radius: 0.5rem !important; /* rounded-lg */
     border: 1px solid transparent !important;
     box-sizing: border-box !important;
     flex-shrink: 0 !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Hover when collapsed: semi-transparent white wrapper */
+  /* Hover when collapsed: soft slate background & dark icon, tanpa border line */
   .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item:hover .nav-icon,
   .admin-sidebar-hover-expand:not(.is-expanded) .nav-group-header:hover .nav-icon {
-    background-color: rgba(255, 255, 255, 0.22) !important;
-    border-color: rgba(255, 255, 255, 0.3) !important;
-    color: #ffffff !important;
+    background-color: #f1f5f9 !important;
+    border-color: transparent !important;
+    border-radius: 0.5rem !important;
+    color: #0e281f !important;
   }
 
-  /* Active when collapsed: solid white box, emerald green icon */
+  /* Active when collapsed: soft emerald tinted box, emerald green icon, rounded-lg */
   .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item.is-nav-active .nav-icon,
-  .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item.bg-white .nav-icon {
-    background-color: #ffffff !important;
-    border-color: #ffffff !important;
-    color: #047857 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -2px rgba(0, 0, 0, 0.08) !important;
+  .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item.bg-emerald-50 .nav-icon {
+    background-color: #ecfdf5 !important; /* bg-emerald-50 */
+    border-color: transparent !important;
+    color: #33b589 !important;
+    border-radius: 0.5rem !important; /* rounded-lg */
+    box-shadow: none !important;
   }
 
-  /* Submenus accordion behavior */
+  /* COLLAPSED FLYOUT / POPOVER SUBMENU (Hover behavior when collapsed) */
+  .admin-sidebar-hover-expand:not(.is-expanded) .sidebar-nav-container {
+    overflow: visible !important;
+  }
+
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group {
+    position: relative;
+  }
+
   .admin-sidebar-hover-expand:not(.is-expanded) .nav-submenu {
-    display: none !important;
-    max-height: 0 !important;
-    opacity: 0 !important;
-    overflow: hidden !important;
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    pointer-events: none;
   }
 
+  /* Bridge to prevent cursor leaving hover between menu icon and floating popover */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-submenu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -0.75rem;
+    width: 0.75rem;
+    height: 100%;
+  }
+
+  /* Saat sidebar collapsed, paksa teks di dalam popover terlihat */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu {
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    left: 100% !important;
+    top: 0 !important;
+    margin-left: 0.5rem !important;
+    min-width: 200px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 0.5rem !important; /* rounded-lg */
+    padding: 0.5rem !important;
+    z-index: 9999 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    max-height: none !important;
+    pointer-events: auto !important;
+  }
+
+  /* Header judul grup di popover */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .nav-popover-title,
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .nav-group-header {
+    text-align: left !important;
+    justify-content: flex-start !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+    display: block !important;
+  }
+
+  /* Item link submenu di dalam popover */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .admin-nav-item {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    padding: 0.5rem 0.625rem !important;
+    font-size: 0.8125rem !important;
+    border-bottom: 1px solid #f1f5f9 !important; /* Garis pemisah antar submenu */
+    border-radius: 0.375rem !important;
+    background-color: transparent !important;
+    color: #475569 !important;
+  }
+
+  /* Hilangkan garis pemisah pada item paling bawah */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .admin-nav-item:last-child {
+    border-bottom: none !important;
+  }
+
+  /* Hover item di popover */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .admin-nav-item:hover {
+    background-color: #f8fafc !important;
+    color: #0e281f !important;
+  }
+
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .admin-nav-item.is-nav-active,
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .admin-nav-item.bg-emerald-50 {
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+    font-weight: 700 !important;
+  }
+
+  /* KUNCI: Tampilkan kembali teks submenu di dalam popover */
+  .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .nav-label-text {
+    text-align: left !important;
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    max-width: none !important;
+    width: auto !important;
+    overflow: visible !important;
+    color: inherit !important;
+  }
+
+  /* EXPANDED ACCORDION: Submenu default tanpa background dan tanpa border */
   .admin-sidebar-hover-expand .nav-submenu {
     max-height: 0;
     opacity: 0;
@@ -508,15 +616,39 @@ body {
   .admin-sidebar-hover-expand.is-expanded .nav-submenu.is-expanded {
     max-height: 400px;
     opacity: 1;
-    background-color: rgba(0, 0, 0, 0.12);
-    border-radius: 1rem;
-    padding: 0.375rem;
-    margin-top: 0.25rem;
+    background-color: transparent !important;
+    border: none !important;
+    border-left: none !important;
+    box-shadow: none !important;
+    padding: 0.25rem 0 0.25rem 0.5rem;
+    margin-top: 0.125rem;
+    margin-left: 0;
   }
 
   .nav-submenu .admin-nav-item {
     text-align: left !important;
     justify-content: flex-start !important;
+    border-radius: 0.5rem !important;
+    background-color: transparent;
+    border: 1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-submenu .admin-nav-item:hover {
+    background-color: #f1f5f9 !important;
+    border: 1px solid transparent !important;
+    border-color: transparent !important;
+    color: #0e281f !important;
+  }
+
+  .nav-submenu .admin-nav-item.is-nav-active,
+  .nav-submenu .admin-nav-item.bg-emerald-50 {
+    background-color: #ecfdf5 !important;
+    border: 1px solid transparent !important;
+    border-color: transparent !important;
+    color: #047857 !important;
+    border-radius: 0.5rem !important; /* rounded-lg */
+    font-weight: 700 !important;
   }
 }
 
@@ -530,7 +662,7 @@ body {
     z-index: 50 !important;
     width: 16rem;
     height: 100% !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15) !important;
   }
 
   .admin-sidebar-hover-expand .sidebar-header-expanded {
@@ -561,32 +693,125 @@ body {
   .admin-sidebar-hover-expand .nav-submenu.is-expanded {
     max-height: 500px;
     opacity: 1;
-    background-color: rgba(0, 0, 0, 0.12);
-    border-radius: 1rem;
-    padding: 0.375rem;
-    margin-top: 0.25rem;
+    background-color: transparent !important;
+    border: none !important;
+    border-left: none !important;
+    box-shadow: none !important;
+    padding: 0.25rem 0 0.25rem 0.5rem;
+    margin-top: 0.125rem;
+    margin-left: 0;
+  }
+
+  .admin-sidebar-hover-expand .nav-submenu .admin-nav-item {
+    border-radius: 0.5rem !important;
+    background-color: transparent;
+    border: 1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .admin-sidebar-hover-expand .nav-submenu .admin-nav-item:hover {
+    background-color: #f1f5f9 !important;
+    border: 1px solid transparent !important;
+    border-color: transparent !important;
+    color: #0e281f !important;
+  }
+
+  .admin-sidebar-hover-expand .nav-submenu .admin-nav-item.is-nav-active,
+  .admin-sidebar-hover-expand .nav-submenu .admin-nav-item.bg-emerald-50 {
+    background-color: #ecfdf5 !important;
+    border: 1px solid transparent !important;
+    border-color: transparent !important;
+    color: #047857 !important;
+    border-radius: 0.5rem !important; /* rounded-lg */
+    font-weight: 700 !important;
   }
 }
 
-/* Active Nav Button Styling on Emerald Sidebar (Expanded & Normal) */
+/* Header & Topbar Buttons: Murni background halus tanpa border line saat hover */
+#btn-close-sidebar,
+#btn-sidebar-hamburger,
+#btn-sidebar-hamburger-mobile,
+#btn-topbar-notifications,
+#profile-dropdown-wrapper button {
+  background-color: transparent !important;
+  color: #64748b !important;
+  border: 1px solid transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#btn-close-sidebar:hover,
+#btn-sidebar-hamburger:hover,
+#btn-sidebar-hamburger-mobile:hover,
+#btn-topbar-notifications:hover,
+#profile-dropdown-wrapper button:hover {
+  background-color: #f1f5f9 !important;
+  border-color: transparent !important;
+  border: 1px solid transparent !important;
+  color: #334155 !important;
+}
+
+/* Active Nav Button Styling on Clean Dashboard (Dokani Style) */
 .admin-nav-item.is-nav-active,
-.admin-nav-item.bg-white {
-  background-color: #ffffff !important;
+.admin-nav-item.bg-emerald-50 {
+  background-color: #ecfdf5 !important; /* bg-emerald-50 */
   color: #047857 !important;
-  border-radius: 1rem !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid transparent !important;
+  border-color: transparent !important;
+  border-radius: 0.5rem !important; /* rounded-lg (8px) */
+  box-shadow: none !important;
   font-weight: 700 !important;
 }
 
 .admin-nav-item.is-nav-active .nav-icon,
-.admin-nav-item.bg-white .nav-icon {
-  color: #047857 !important;
+.admin-nav-item.bg-emerald-50 .nav-icon {
+  color: #33b589 !important;
 }
 
 .admin-nav-item.is-nav-active .nav-label-text,
-.admin-nav-item.bg-white .nav-label-text {
+.admin-nav-item.bg-emerald-50 .nav-label-text {
   color: #047857 !important;
   font-weight: 700 !important;
+}
+
+/* Inactive Nav item hover: pure soft background, rounded-lg, dark green icon */
+.admin-nav-item:hover,
+.nav-group-header:hover {
+  background-color: #f1f5f9 !important;
+  border-color: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 0.5rem !important; /* rounded-lg */
+}
+
+/* Hover effect on icons across nav items */
+.admin-nav-item:hover .nav-icon,
+.nav-group-header:hover .nav-icon {
+  color: #0e281f !important;
+}
+
+/* Automated Chevron (V) Rotation */
+.nav-group-chevron {
+  display: inline-block !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.nav-group-chevron.rotate-180 {
+  transform: rotate(180deg) !important;
+}
+
+/* Header Profile Dropdown Chevron Rotation */
+#header-profile-chevron,
+#header-profile-chevron svg {
+  display: inline-block !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transform-origin: center center !important;
+}
+
+#header-profile-chevron.rotate-180,
+#header-profile-chevron.rotate-180 svg {
+  transform: rotate(180deg) !important;
 }
 
 /* --------------------------------------------------------------------------
