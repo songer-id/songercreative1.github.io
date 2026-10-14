@@ -1001,12 +1001,50 @@ body {
   }
 }
 
-/* Pastikan pembungkus preview memiliki tinggi terkontrol & stabil (Framing Navbar + Hero) */
+/* Pembungkus preview membentang 100% tinggi layar penuh */
 .preview-viewport-wrapper,
 #hero-preview-iframe {
-  height: 520px !important;
-  max-height: 80vh;
-  overflow: hidden;
+  height: 100% !important;
+  min-height: calc(100vh - 3.5rem) !important;
+}
+
+/* Proteksi agar iframe tidak menangkap pointer saat sidebar sedang di-drag */
+body.is-resizing iframe {
+  pointer-events: none !important;
+}
+
+/* Scrollbar ultra-ramping & minimalis */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animasi Flash Highlight Akordeon saat Mode Edit Visual diklik di iframe */
+@keyframes accordionFlash {
+  0% {
+    box-shadow: 0 0 0 3px rgba(51, 181, 137, 0.7);
+    transform: scale(1.008);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(51, 181, 137, 0.3);
+  }
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
+}
+.accordion-flash-highlight {
+  animation: accordionFlash 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ==========================================================================

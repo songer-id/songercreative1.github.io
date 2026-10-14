@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme Studio Customizer - Shopify-Style Visual Editor</title>
+  <meta name="description"
+    content="Editor Visual Tema & Branding Toko Layar Penuh dengan Pratinjau Real-Time Responsif Desktop, Tablet, dan Mobile.">
+
+  <!-- Dynamic Favicon -->
+  <link rel="icon" type="image/png" id="app-favicon" href="assets/images/songer-logo.png">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#e6f7f2',
+              100: '#cdedd9',
+              200: '#9bdbc0',
+              500: '#33b589',
+              600: '#28916d',
+              700: '#217558',
+              800: '#1b5e47',
+              900: '#144635'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css?v=3.0">
+</head>
+
+<body class="bg-slate-100 text-slate-800 font-sans antialiased h-screen w-screen overflow-hidden select-none">
+
+  <!-- Toast Notification Container (Floating Top-Center) -->
+  <div id="editor-toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none space-y-2"></div>
+
+  <!-- MAIN STUDIO LAYOUT: Fullscreen (100vw x 100vh) -->
+  <div class="flex flex-col h-screen w-screen overflow-hidden">
+
+    <!-- ========================================================================
+         A. TOPBAR EDITOR (H-14 BG-WHITE BORDER-B BORDER-SLATE-200)
+         ======================================================================== -->
+    <header class="h-14 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between shrink-0 z-30 shadow-xs">
+      
+      <!-- Sisi Kiri: Tombol Kembali Sederhana -->
+      <div class="flex items-center gap-3 shrink-0">
+        <a href="admin.html" id="btn-back-to-admin"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100 transition border border-slate-200 shadow-2xs"
+          title="Kembali ke Panel Admin Utama">
+          <i class="bi bi-arrow-left"></i>
+          <span>Kembali</span>
+        </a>
+      </div>
+
+      <!-- Sisi Tengah: Device Switcher (Desktop, Tablet, Mobile) & Slider Lebar PX -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- 3 Tombol Preset Resolusi: Bersih tanpa kurung/emotikon -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-2xs">
+          <button type="button" id="btn-preset-desktop"
+            class="preset-res-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-slate-900 shadow-xs cursor-pointer"
+            data-width="1200" title="Resolusi Desktop (100% Layar Penuh Edge-to-Edge)">
+            <i class="bi bi-display"></i>
+            <span>Desktop</span>
+          </button>
+          <button type="button" id="btn-preset-tablet"
+            class="preset-res-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-white/60 cursor-pointer"
+            data-width="768" title="Resolusi Layar Tablet (768px)">
+            <i class="bi bi-tablet"></i>
+            <span>Tablet</span>
+          </button>
+          <button type="button" id="btn-preset-mobile"
+            class="preset-res-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-white/60 cursor-pointer"
+            data-width="390" title="Resolusi Layar Mobile (390px)">
+            <i class="bi bi-phone"></i>
+            <span>Mobile</span>
+          </button>
+        </div>
+
+        <!-- Slider Resize Manual + Display Lebar PX -->
+        <div class="hidden lg:flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">
+          <input type="range" id="preview-width-slider" min="360" max="1200" value="1200" step="5"
+            class="w-20 xl:w-28 h-1.5 bg-slate-300 rounded-lg appearance-none cursor-ew-resize accent-[#33b589]"
+            title="Geser untuk mengatur lebar pratinjau kanvas secara bebas" />
+          <span id="preview-width-display" class="font-mono text-[11px] font-black text-emerald-700 min-w-[48px] text-right">1200px</span>
+        </div>
+      </div>
+
+      <!-- Sisi Kanan: Edit Visual Toggle & Tombol Simpan Perubahan -->
+      <div class="flex items-center gap-2">
+        <button type="button" id="btn-toggle-inspector"
+          class="px-2.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+          title="Aktifkan Mode Klik untuk Mengedit Bagian Toko">
+          <i class="bi bi-cursor-fill text-emerald-600"></i>
+          <span>Edit Visual</span>
+        </button>
+
+        <button type="button" id="btn-save-theme-editor"
+          class="bg-[#33b589] hover:bg-[#28916d] text-white font-bold rounded-lg px-4 py-2 shadow-sm flex items-center gap-1.5 cursor-pointer text-xs transition active:scale-95"
+          title="Simpan Seluruh Pengaturan Tema ke Database Toko">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Simpan Perubahan</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================================================================
+         B. LAYOUT BODY WORKSPACE (SPLIT VIEW RESIZABLE)
+         ======================================================================== -->
+    <div class="flex-1 flex flex-col md:flex-row h-[calc(100vh-3.5rem)] w-full overflow-hidden">
+
+      <!-- ======================================================================
+           SISI KIRI: INSPEKTOR PENGATURAN TEMA (RESIZABLE 280px - 520px, DEFAULT 360px)
+           ====================================================================== -->
+      <aside id="theme-editor-sidebar"
+        class="w-full md:w-[360px] shrink-0 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-xs relative z-20"
+        style="width: 360px;">
+        
+        <!-- Scrollable Form Container Langsung (Header Inspektor Dihapus) -->
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 scrollbar-thin select-text">
+          <form id="form-theme-editor" class="space-y-3" onsubmit="event.preventDefault();">
+
+            <!-- 1. TOP BAR & SAPAAN -->
+            <div class="theme-accordion-item rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs" data-accordion="top-bar">
+              <div class="theme-accordion-header p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="body-top-bar">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <i class="bi bi-stopwatch-fill text-xs"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-xs text-slate-900">Top Bar &amp; Sapaan</h3>
+                    <p class="text-[10px] text-slate-400">Sapaan pembeli, countdown promo &amp; warna top bar</p>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400 transition-transform duration-200"></i>
+              </div>
+              <div class="theme-accordion-body p-3 space-y-2.5 hidden" id="body-top-bar">
+
+                <!-- SUB-MENU 1.1: SAPAAN PENGUNJUNG -->
+                <div class="sub-accordion-item rounded-xl border border-slate-200/90 overflow-hidden bg-white shadow-2xs">
+                  <div class="sub-accordion-header p-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="sub-body-topbar-greeting">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-chat-quote-fill text-emerald-600 text-xs"></i>
+                      <span class="font-bold text-xs text-slate-800">Sapaan Pengunjung</span>
+                    </div>
+                    <i class="bi bi-chevron-down sub-accordion-chevron text-[10px] text-slate-400 transition-transform duration-200 rotate-180"></i>
+                  </div>
+                  <div class="sub-accordion-body p-3 space-y-2.5 bg-white" id="sub-body-topbar-greeting">
+                    <div class="flex items-center justify-between">
+                      <label for="enable-greeting-toggle" class="font-bold text-slate-800 text-[11px] cursor-pointer">Sapaan Pengunjung (Top Bar):</label>
+                      <input type="checkbox" id="enable-greeting-toggle" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" checked />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="block text-slate-600 text-[10px] font-semibold">Teks Sapaan Pengunjung:</label>
+                      <input type="text" id="top-bar-greeting-text-input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500 font-medium" placeholder="Selamat datang di Songer Creative" value="Selamat datang di Songer Creative" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SUB-MENU 1.2: COUNTDOWN PROMO -->
+                <div class="sub-accordion-item rounded-xl border border-slate-200/90 overflow-hidden bg-white shadow-2xs">
+                  <div class="sub-accordion-header p-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="sub-body-topbar-promo">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-stopwatch-fill text-emerald-600 text-xs"></i>
+                      <span class="font-bold text-xs text-slate-800">Countdown Promo Kilat</span>
+                    </div>
+                    <i class="bi bi-chevron-down sub-accordion-chevron text-[10px] text-slate-400 transition-transform duration-200"></i>
+                  </div>
+                  <div class="sub-accordion-body p-3 space-y-2.5 bg-white hidden" id="sub-body-topbar-promo">
+                    <div class="flex items-center justify-between">
+                      <label for="enable-promo-countdown-toggle" class="font-bold text-slate-800 text-[11px] cursor-pointer">Countdown Promo Kilat:</label>
+                      <input type="checkbox" id="enable-promo-countdown-toggle" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" checked />
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="space-y-1">
+                        <label class="block text-slate-600 text-[10px] font-semibold">Label Promo:</label>
+                        <input type="text" id="top-bar-promo-text-input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500" value="Promo Kilat Berakhir Dalam:" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block text-slate-600 text-[10px] font-semibold">Waktu Berakhir:</label>
+                        <input type="text" id="top-bar-promo-end-input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500 font-medium text-emerald-700" value="02 Hari Lagi" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SUB-MENU 1.3: SKEMA WARNA -->
+                <div class="sub-accordion-item rounded-xl border border-slate-200/90 overflow-hidden bg-white shadow-2xs">
+                  <div class="sub-accordion-header p-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="sub-body-topbar-colors">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-palette-fill text-emerald-600 text-xs"></i>
+                      <span class="font-bold text-xs text-slate-800">Skema Warna Top Bar</span>
+                    </div>
+                    <i class="bi bi-chevron-down sub-accordion-chevron text-[10px] text-slate-400 transition-transform duration-200"></i>
+                  </div>
+                  <div class="sub-accordion-body p-3 space-y-2.5 bg-white hidden" id="sub-body-topbar-colors">
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Latar Top Bar:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-top-bar-bg" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#0f172a" />
+                          <input type="text" id="ctrl-hex-top-bar-bg" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[11px] uppercase font-bold" value="#0F172A" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Teks Top Bar:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-top-bar-text" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#f8fafc" />
+                          <input type="text" id="ctrl-hex-top-bar-text" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[11px] uppercase font-bold" value="#F8FAFC" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- 2. NAVBAR TOKO & IDENTITAS -->
+            <div class="theme-accordion-item rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs" data-accordion="navbar-identity">
+              <div class="theme-accordion-header p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="body-navbar-identity">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <i class="bi bi-window-stack text-xs"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-xs text-slate-900">Navbar &amp; Identitas Toko</h3>
+                    <p class="text-[10px] text-slate-400">Logo, format navbar, warna bar &amp; elemen</p>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400 transition-transform duration-200"></i>
+              </div>
+              <div class="theme-accordion-body p-3 space-y-2.5 hidden" id="body-navbar-identity">
+
+                <!-- SUB-MENU 2.1: IDENTITAS & BACKGROUND NAVBAR -->
+                <div class="sub-accordion-item rounded-xl border border-slate-200/90 overflow-hidden bg-white shadow-2xs">
+                  <div class="sub-accordion-header p-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="sub-body-navbar-identitas">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-shop text-emerald-600 text-xs"></i>
+                      <span class="font-bold text-xs text-slate-800">Identitas &amp; Background</span>
+                    </div>
+                    <i class="bi bi-chevron-down sub-accordion-chevron text-[10px] text-slate-400 transition-transform duration-200 rotate-180"></i>
+                  </div>
+                  <div class="sub-accordion-body p-3 space-y-3 bg-white" id="sub-body-navbar-identitas">
+                    <!-- Nama Toko & Slogan -->
+                    <div class="space-y-1">
+                      <label class="block font-bold text-slate-700 text-[11px]">Nama Toko / Brand:</label>
+                      <input type="text" id="store-name-input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-xs text-slate-900 outline-none focus:border-emerald-500" required />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="block font-bold text-slate-700 text-[11px]">Slogan / Tagline Toko:</label>
+                      <input type="text" id="store-tagline-input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 outline-none focus:border-emerald-500 text-xs" />
+                    </div>
+
+                    <!-- Logo Toko Preview & Upload -->
+                    <div class="space-y-1.5 pt-2 border-t border-slate-100" id="navbar-logo-upload-box">
+                      <label class="block font-bold text-slate-700 text-[11px]">Logo Toko:</label>
+                      <div class="w-full aspect-[4/2] rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-2 relative group overflow-hidden mb-1.5">
+                        <img id="preview-store-logo-img" src="assets/images/songer-logo.png" class="max-h-14 w-auto object-contain transition duration-300 group-hover:scale-105" alt="Preview Logo" />
+                      </div>
+                      <input type="text" id="store-logo-url-input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-[10px] outline-none focus:border-emerald-500 mb-1" placeholder="Path logo atau URL gambar" />
+                      <label class="w-full py-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer border border-slate-200 transition flex items-center justify-center gap-1">
+                        <i data-lucide="upload" class="w-3 h-3"></i>
+                        <span>Unggah Logo (Maks 500 KB)</span>
+                        <input type="file" id="store-logo-file-input" accept="image/*" class="hidden" />
+                      </label>
+                    </div>
+
+                    <!-- Favicon Upload -->
+                    <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                      <label class="block font-bold text-slate-700 text-[11px]">Favicon Browser (Tab Icon):</label>
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                          <img id="preview-store-favicon-img" src="assets/images/songer-logo.png" class="w-5 h-5 object-contain" alt="Favicon" />
+                        </div>
+                        <input type="text" id="store-favicon-url-input" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-mono text-[10px] outline-none focus:border-emerald-500" placeholder="assets/images/songer-logo.png" />
+                        <label class="px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer border border-slate-200 shrink-0" title="Unggah Favicon (Maks 200 KB)">
+                          <i class="bi bi-upload"></i>
+                          <input type="file" id="store-favicon-file-input" accept="image/*" class="hidden" />
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Format Identitas Navbar (Dropdown Kompak) -->
+                    <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                      <label for="navbar_branding_mode_select" class="block font-bold text-slate-700 text-xs">Format Logo Navbar:</label>
+                      <select id="navbar_branding_mode_select" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                        <option value="logo_landscape">2. Logo Landscape (Memanjang)</option>
+                        <option value="logo_square">1. Logo Persegi (1:1 Icon)</option>
+                        <option value="text_only">3. Hanya Teks (Nama Toko &amp; Tagline)</option>
+                      </select>
+                    </div>
+
+                    <!-- Toggle Switch: Tampilkan Nama di Desktop -->
+                    <div id="navbar-show-desktop-name-box" class="flex items-center justify-between pt-2 border-t border-slate-100">
+                      <div>
+                        <label for="show-header-store-name-toggle" class="font-bold text-slate-800 text-[11px] cursor-pointer">Tampilkan Nama di Desktop</label>
+                        <p class="text-[10px] text-slate-400">Teks di samping logo layar PC</p>
+                      </div>
+                      <input type="checkbox" id="show-header-store-name-toggle" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" checked />
+                    </div>
+
+                    <!-- Warna Background Navbar & Teks Global -->
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Latar Navbar:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-navbar-bg" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#ffffff" />
+                          <input type="text" id="ctrl-hex-navbar-bg" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[11px] uppercase font-bold" value="#FFFFFF" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Teks Global:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-navbar-text" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#0f172a" />
+                          <input type="text" id="ctrl-hex-navbar-text" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[11px] uppercase font-bold" value="#0F172A" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SUB-MENU 2.2: TOMBOL KERANJANG (CART) -->
+                <div class="sub-accordion-item rounded-xl border border-slate-200/90 overflow-hidden bg-white shadow-2xs">
+                  <div class="sub-accordion-header p-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="sub-body-navbar-cart">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-bag-fill text-emerald-600 text-xs"></i>
+                      <span class="font-bold text-xs text-slate-800">Tombol Keranjang (Cart)</span>
+                    </div>
+                    <i class="bi bi-chevron-down sub-accordion-chevron text-[10px] text-slate-400 transition-transform duration-200"></i>
+                  </div>
+                  <div class="sub-accordion-body p-3 space-y-3 bg-white hidden" id="sub-body-navbar-cart">
+                    <!-- Pilihan Ikon Keranjang -->
+                    <div class="space-y-1">
+                      <label for="cart_icon_select" class="block font-bold text-slate-700 text-xs">Pilihan Ikon Keranjang:</label>
+                      <select id="cart_icon_select" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                        <option value="bi-bag-fill">bi-bag-fill (Tas Belanja Padat - Default)</option>
+                        <option value="bi-cart-fill">bi-cart-fill (Troli Kasir Standar)</option>
+                        <option value="bi-cart3">bi-cart3 (Troli Minimalis Garis)</option>
+                        <option value="bi-basket-fill">bi-basket-fill (Keranjang Anyaman)</option>
+                        <option value="bi-bag-check-fill">bi-bag-check-fill (Tas Belanja Sukses)</option>
+                      </select>
+                    </div>
+
+                    <!-- Warna Ikon Keranjang & Background Tombol -->
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Ikon:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-cart-icon" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#334155" />
+                          <input type="text" id="ctrl-hex-cart-icon" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#334155" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Latar/Hover:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-cart-bg" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#f1f5f9" />
+                          <input type="text" id="ctrl-hex-cart-bg" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#F1F5F9" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Toggle Border Tombol Keranjang -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100">
+                      <div class="flex items-center justify-between">
+                        <label for="cart_border_toggle" class="font-bold text-slate-800 text-[11px] cursor-pointer">Garis Tepi (Border):</label>
+                        <input type="checkbox" id="cart_border_toggle" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" checked />
+                      </div>
+                      <div id="cart_border_settings_box" class="space-y-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <div class="space-y-1">
+                          <label class="block text-slate-600 text-[10px] font-semibold">Warna Border:</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="ctrl-color-cart-border" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#e2e8f0" />
+                            <input type="text" id="ctrl-hex-cart-border" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#E2E8F0" />
+                          </div>
+                        </div>
+                        <div class="space-y-1">
+                          <div class="flex items-center justify-between text-[10px] font-semibold text-slate-600">
+                            <span>Border Radius:</span>
+                            <span id="cart_border_radius_val" class="font-mono text-emerald-700 font-bold">16px</span>
+                          </div>
+                          <input type="range" id="cart_border_radius_slider" min="0" max="24" value="16" step="1" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Pengaturan Badge Jumlah Keranjang -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100">
+                      <label class="block font-bold text-slate-700 text-[11px]">Badge Jumlah Produk:</label>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                          <label class="block text-slate-600 text-[10px] font-semibold">Background Badge:</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="ctrl-color-cart-badge" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#f59e0b" />
+                            <input type="text" id="ctrl-hex-cart-badge" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#F59E0B" />
+                          </div>
+                        </div>
+                        <div class="space-y-1">
+                          <label class="block text-slate-600 text-[10px] font-semibold">Teks Angka Badge:</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="ctrl-color-cart-badge-text" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#ffffff" />
+                            <input type="text" id="ctrl-hex-cart-badge-text" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#FFFFFF" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SUB-MENU 2.3: KOLOM PENCARIAN (SEARCH BAR) -->
+                <div class="sub-accordion-item rounded-xl border border-slate-200/90 overflow-hidden bg-white shadow-2xs">
+                  <div class="sub-accordion-header p-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="sub-body-navbar-search">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-search text-emerald-600 text-xs"></i>
+                      <span class="font-bold text-xs text-slate-800">Kolom Pencarian (Search Bar)</span>
+                    </div>
+                    <i class="bi bi-chevron-down sub-accordion-chevron text-[10px] text-slate-400 transition-transform duration-200"></i>
+                  </div>
+                  <div class="sub-accordion-body p-3 space-y-3 bg-white hidden" id="sub-body-navbar-search">
+                    <!-- Dropdown Pilihan Ikon Search -->
+                    <div class="space-y-1">
+                      <label for="search_icon_select" class="block font-bold text-slate-700 text-xs">Pilihan Ikon Search:</label>
+                      <select id="search_icon_select" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                        <option value="bi-search">bi-search (Kaca Pembesar Standar - Default)</option>
+                        <option value="bi-search-heart">bi-search-heart (Kaca Pembesar Estetik)</option>
+                        <option value="bi-zoom-in">bi-zoom-in (Kaca Pembesar Plus)</option>
+                        <option value="bi-binoculars-fill">bi-binoculars-fill (Teropong Pencarian)</option>
+                      </select>
+                    </div>
+
+                    <!-- Teks Placeholder -->
+                    <div class="space-y-1">
+                      <label class="block font-bold text-slate-700 text-[11px]">Teks Placeholder:</label>
+                      <input type="text" id="search_placeholder_input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500" value="Cari banner, stiker, logo..." />
+                    </div>
+
+                    <!-- Warna Ikon & Placeholder -->
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Ikon:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-search-icon" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#94a3b8" />
+                          <input type="text" id="ctrl-hex-search-icon" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#94A3B8" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[10px]">Warna Placeholder:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-search-text" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#94a3b8" />
+                          <input type="text" id="ctrl-hex-search-text" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#94A3B8" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Toggle Box Input Background -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100">
+                      <div class="flex items-center justify-between">
+                        <label for="search_bg_solid_toggle" class="font-bold text-slate-800 text-[11px] cursor-pointer">Background Kolom (Solid):</label>
+                        <input type="checkbox" id="search_bg_solid_toggle" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" checked />
+                      </div>
+                      <div id="search_bg_color_box" class="space-y-1">
+                        <label class="block text-slate-600 text-[10px] font-semibold">Warna Background Solid:</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="ctrl-color-search-bg" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#f1f5f9" />
+                          <input type="text" id="ctrl-hex-search-bg" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#F1F5F9" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Toggle Border Kolom Input -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100">
+                      <div class="flex items-center justify-between">
+                        <label for="search_border_toggle" class="font-bold text-slate-800 text-[11px] cursor-pointer">Garis Tepi (Border):</label>
+                        <input type="checkbox" id="search_border_toggle" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" checked />
+                      </div>
+                      <div id="search_border_settings_box" class="space-y-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <div class="space-y-1">
+                          <label class="block text-slate-600 text-[10px] font-semibold">Warna Border:</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="ctrl-color-search-border" class="w-7 h-7 rounded-lg cursor-pointer border-0 shrink-0" value="#e2e8f0" />
+                            <input type="text" id="ctrl-hex-search-border" class="w-full px-2 py-1 rounded-lg border border-slate-300 font-mono text-[10px] uppercase font-bold" value="#E2E8F0" />
+                          </div>
+                        </div>
+                        <div class="space-y-1">
+                          <div class="flex items-center justify-between text-[10px] font-semibold text-slate-600">
+                            <span>Border Radius:</span>
+                            <span id="search_border_radius_val" class="font-mono text-emerald-700 font-bold">16px</span>
+                          </div>
+                          <input type="range" id="search_border_radius_slider" min="0" max="24" value="16" step="1" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SUB-MENU 2.4: TOMBOL LOGIN / AKUN -->
+                <div class="sub-accordion-item rounded-xl border border-slate-200/90 overflow-hidden bg-white shadow-2xs">
+                  <div class="sub-accordion-header p-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="sub-body-navbar-login">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-person-fill text-emerald-600 text-xs"></i>
+                      <span class="font-bold text-xs text-slate-800">Tombol Login / Akun</span>
+                    </div>
+                    <i class="bi bi-chevron-down sub-accordion-chevron text-[10px] text-slate-400 transition-transform duration-200"></i>
+                  </div>
+                  <div class="sub-accordion-body p-3 space-y-3 bg-white hidden" id="sub-body-navbar-login">
+                    <!-- Format Tampilan Tombol -->
+                    <div class="space-y-1">
+                      <label for="login_btn_display_select" class="block font-bold text-slate-700 text-xs">Format Tampilan:</label>
+                      <select id="login_btn_display_select" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                        <option value="icon_text">Ikon + Teks (Default)</option>
+                        <option value="icon_only">Hanya Ikon</option>
+                        <option value="text_only">Hanya Teks</option>
+                      </select>
+                    </div>
+
+                    <!-- Pilihan Ikon Login -->
+                    <div class="space-y-1">
+                      <label for="login_icon_select" class="block font-bold text-slate-700 text-xs">Pilihan Ikon Login:</label>
+                      <select id="login_icon_select" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                        <option value="bi-person-fill">bi-person-fill (Orang Standar)</option>
+                        <option value="bi-person-circle">bi-person-circle (Orang Lingkaran)</option>
+                        <option value="bi-shield-lock-fill">bi-shield-lock-fill (Gembok Keamanan)</option>
+                        <option value="bi-box-arrow-in-right">bi-box-arrow-in-right (Pintu Masuk)</option>
+                      </select>
+                    </div>
+
+                    <!-- Input Teks Tombol -->
+                    <div class="space-y-1">
+                      <label class="block font-bold text-slate-700 text-[11px]">Teks Tombol:</label>
+                      <input type="text" id="login_btn_text_input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500 font-bold" value="Login" />
+                    </div>
+
+                    <!-- Kustomisasi Warna Login -->
+                    <div class="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-100">
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[9px]">Warna Ikon:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-login-icon" class="w-6 h-6 rounded-lg cursor-pointer border-0 shrink-0" value="#334155" />
+                          <input type="text" id="ctrl-hex-login-icon" class="w-full px-1.5 py-1 rounded border border-slate-300 font-mono text-[9px] uppercase font-bold" value="#334155" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[9px]">Warna Teks:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-login-text" class="w-6 h-6 rounded-lg cursor-pointer border-0 shrink-0" value="#334155" />
+                          <input type="text" id="ctrl-hex-login-text" class="w-full px-1.5 py-1 rounded border border-slate-300 font-mono text-[9px] uppercase font-bold" value="#334155" />
+                        </div>
+                      </div>
+                      <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 text-[9px]">Background:</label>
+                        <div class="flex items-center gap-1">
+                          <input type="color" id="ctrl-color-login-btn" class="w-6 h-6 rounded-lg cursor-pointer border-0 shrink-0" value="#f1f5f9" />
+                          <input type="text" id="ctrl-hex-login-btn" class="w-full px-1.5 py-1 rounded border border-slate-300 font-mono text-[9px] uppercase font-bold" value="#F1F5F9" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- 3. HERO BANNER -->
+            <div class="theme-accordion-item rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs" data-accordion="hero-banner">
+              <div class="theme-accordion-header p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="body-hero-banner">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <i class="bi bi-images text-xs"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-xs text-slate-900">Hero Banner</h3>
+                    <p class="text-[10px] text-slate-400">Non-split, split 40/60, slider multi-banner</p>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400 transition-transform duration-200"></i>
+              </div>
+              <div class="theme-accordion-body p-3.5 space-y-3.5 hidden" id="body-hero-banner">
+                <!-- Dropdown Model Hero (Kompak) -->
+                <div>
+                  <label for="hero_model_select" class="block font-bold text-slate-700 text-xs mb-1">Model Layout Hero:</label>
+                  <select id="hero_model_select" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                    <option value="non_split">Non-Split (Banner Penuh Gambar)</option>
+                    <option value="split">Split (Teks 40% + Gambar 60%)</option>
+                    <option value="model_1">Text-Only (Tanpa Banner Slider)</option>
+                  </select>
+                </div>
+
+                <!-- Teks Hero (Headline & Subheadline) -->
+                <div class="space-y-2 pt-2 border-t border-slate-100" id="hero-text-fields-box">
+                  <div class="space-y-1">
+                    <label class="block font-bold text-slate-700 text-[11px]">Judul Utama Hero (Headline):</label>
+                    <input type="text" id="hero-headline-input" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-xs outline-none focus:border-emerald-500" value="Cetak Banner, Desain &amp; Souvenir Harga Instan" />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="block font-bold text-slate-700 text-[11px]">Subjudul Hero (Deskripsi Singkat):</label>
+                    <textarea id="hero-subheadline-input" rows="2" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500">Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.</textarea>
+                  </div>
+                </div>
+
+                <!-- Manajemen Multi-Banner -->
+                <div class="space-y-2 pt-2 border-t border-slate-100" id="hero-banner-management-box">
+                  <div class="flex items-center justify-between">
+                    <label class="font-bold text-slate-700 text-[11px]">Daftar Gambar Banner (<span id="hero-banner-count-badge">0</span>/5):</label>
+                  </div>
+                  <div id="hero-banner-thumb-grid" class="flex items-center gap-2 overflow-x-auto py-1.5 scrollbar-none min-h-[70px] bg-slate-50 rounded-xl p-2 border border-slate-200"></div>
+                  <!-- Upload / URL Input -->
+                  <div class="space-y-1.5 pt-1">
+                    <div class="flex gap-1.5">
+                      <input type="text" id="hero-banner-url-paste-input" class="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-[10px] outline-none focus:border-emerald-500" placeholder="Tempel URL banner..." />
+                      <button type="button" id="btn-add-hero-banner-url" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition">Tambah</button>
+                    </div>
+                    <label class="w-full py-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] cursor-pointer border border-slate-200 transition flex items-center justify-center gap-1">
+                      <i data-lucide="upload" class="w-3 h-3"></i>
+                      <span>Unggah Gambar Banner Baru</span>
+                      <input type="file" id="hero-banner-dropzone-file-input" accept="image/*" class="hidden" />
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Animasi Slider & Efek Transisi -->
+                <div class="space-y-2 pt-2 border-t border-slate-100" id="hero-slider-animation-box">
+                  <label class="block font-bold text-slate-700 text-[11px]">Animasi Slider Banner:</label>
+                  <select id="hero-slider-animation-select" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold outline-none focus:border-emerald-500 bg-white">
+                    <option value="slide_3s">Slide Otomatis Cepat (3 Detik)</option>
+                    <option value="slide_5s">Slide Otomatis Standar (5 Detik)</option>
+                    <option value="fade_3s">Fade Transisi Halus (3 Detik)</option>
+                    <option value="manual">Manual Saja (Klik Titik / Panah)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. NAVIGASI KATEGORI (QUICK FILTER) -->
+            <div class="theme-accordion-item rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs" data-accordion="nav-category">
+              <div class="theme-accordion-header p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="body-nav-category">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <i class="bi bi-grid-fill text-xs"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-xs text-slate-900">Navigasi Kategori</h3>
+                    <p class="text-[10px] text-slate-400">Icon &amp; gambar, pills teks, dropdown</p>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400 transition-transform duration-200"></i>
+              </div>
+              <div class="theme-accordion-body p-3.5 space-y-3.5 hidden" id="body-nav-category">
+                <div class="space-y-1.5">
+                  <label class="block font-bold text-slate-700 text-[11px]">Gaya Navigasi Mobile (HP):</label>
+                  <div class="space-y-1.5 text-xs">
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input type="radio" name="category_nav_mode_mobile_radio" value="icon_image" class="accent-emerald-600" checked />
+                      <span>Icon Visual &amp; Gambar Kategori</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input type="radio" name="category_nav_mode_mobile_radio" value="pills_text" class="accent-emerald-600" />
+                      <span>Pills / Kapsul Teks Rapi</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input type="radio" name="category_nav_mode_mobile_radio" value="dropdown" class="accent-emerald-600" />
+                      <span>Dropdown Menu Minimalis</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <label class="block font-bold text-slate-700 text-[11px]">Gaya Navigasi Layar Desktop:</label>
+                  <div class="space-y-1.5 text-xs">
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input type="radio" name="category_nav_mode_desktop_radio" value="icon_image" class="accent-emerald-600" checked />
+                      <span>Grid Gambar &amp; Label Ikon</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input type="radio" name="category_nav_mode_desktop_radio" value="pills_text" class="accent-emerald-600" />
+                      <span>Baris Pills Kapsul Ringkas</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. GAYA KARTU PRODUK -->
+            <div class="theme-accordion-item rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs" data-accordion="card-product">
+              <div class="theme-accordion-header p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="body-card-product">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <i class="bi bi-box-seam-fill text-xs"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-xs text-slate-900">Gaya Kartu Produk</h3>
+                    <p class="text-[10px] text-slate-400">Pilihan kartu katalog v1, v2, v3</p>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400 transition-transform duration-200"></i>
+              </div>
+              <div class="theme-accordion-body p-3.5 space-y-3 hidden" id="body-card-product">
+                <div class="space-y-2 text-xs">
+                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                    <input type="radio" name="card_product_version_radio" value="v1" class="accent-emerald-600 mt-0.5" checked />
+                    <div>
+                      <div class="font-bold text-slate-800">Versi 1: Modern Clean Card</div>
+                      <div class="text-[10px] text-slate-400">Bayangan lembut, badge diskon melayang, harga coret &amp; terjual</div>
+                    </div>
+                  </label>
+                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                    <input type="radio" name="card_product_version_radio" value="v2" class="accent-emerald-600 mt-0.5" />
+                    <div>
+                      <div class="font-bold text-slate-800">Versi 2: Bordered Minimalist</div>
+                      <div class="text-[10px] text-slate-400">Garis batas tepi rapi, tipografi tegas, fokus pada harga</div>
+                    </div>
+                  </label>
+                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                    <input type="radio" name="card_product_version_radio" value="v3" class="accent-emerald-600 mt-0.5" />
+                    <div>
+                      <div class="font-bold text-slate-800">Versi 3: Dual Footer Strip Grid</div>
+                      <div class="text-[10px] text-slate-400">Rapat 4:3 lengkap dengan dua strip footer ("Proses Cepat" &amp; "Variasi Paket")</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. PALET WARNA & LATAR BELAKANG -->
+            <div class="theme-accordion-item rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs" data-accordion="color-palette">
+              <div class="theme-accordion-header p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between cursor-pointer select-none transition" data-target="body-color-palette">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <i class="bi bi-palette-fill text-xs"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-xs text-slate-900">Palet Warna &amp; Latar Belakang</h3>
+                    <p class="text-[10px] text-slate-400">Body background, warna primer, aksen</p>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-down theme-accordion-chevron text-xs text-slate-400 transition-transform duration-200"></i>
+              </div>
+              <div class="theme-accordion-body p-3.5 space-y-3.5 hidden" id="body-color-palette">
+                <!-- Warna Primer (Brand Utama) -->
+                <div class="space-y-1.5">
+                  <label class="block font-bold text-slate-700 text-[11px]">Warna Utama Brand (Primary):</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" id="ctrl-color-primary" class="w-8 h-8 rounded-lg cursor-pointer border-0 shrink-0" value="#33b589" />
+                    <input type="text" id="ctrl-hex-primary" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase font-bold" value="#33B589" />
+                  </div>
+                  <span class="text-[10px] text-slate-400 block">Digunakan untuk navbar, tombol utama, dan aksen navigasi.</span>
+                </div>
+
+                <!-- Warna Sekunder (Aksen CTA) -->
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <label class="block font-bold text-slate-700 text-[11px]">Warna Kedua / Aksen (Secondary):</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" id="ctrl-color-secondary" class="w-8 h-8 rounded-lg cursor-pointer border-0 shrink-0" value="#f59e0b" />
+                    <input type="text" id="ctrl-hex-secondary" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase font-bold" value="#F59E0B" />
+                  </div>
+                  <span class="text-[10px] text-slate-400 block">Digunakan untuk tombol keranjang, badge diskon, &amp; highlight harga.</span>
+                </div>
+
+                <!-- Latar Belakang Halaman (Body Background) -->
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <label class="block font-bold text-slate-700 text-[11px]">Latar Belakang Storefront (Body BG):</label>
+                  <div class="flex items-center gap-2">
+                    <input type="color" id="ctrl-color-body-bg" class="w-8 h-8 rounded-lg cursor-pointer border-0 shrink-0" value="#f8fafc" />
+                    <input type="text" id="ctrl-hex-body-bg" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs uppercase font-bold" value="#F8FAFC" />
+                  </div>
+                  <!-- Preset Cepat Body BG -->
+                  <div class="flex items-center gap-1.5 pt-1 text-[10px]">
+                    <span class="text-slate-400">Preset:</span>
+                    <button type="button" class="btn-preset-body-bg px-2 py-0.5 rounded border border-slate-200 bg-[#f8fafc] text-slate-600 hover:border-emerald-500" data-color="#f8fafc">Slate Soft</button>
+                    <button type="button" class="btn-preset-body-bg px-2 py-0.5 rounded border border-slate-200 bg-[#ffffff] text-slate-600 hover:border-emerald-500" data-color="#ffffff">Pure White</button>
+                    <button type="button" class="btn-preset-body-bg px-2 py-0.5 rounded border border-slate-200 bg-[#f1f5f9] text-slate-600 hover:border-emerald-500" data-color="#f1f5f9">Cool Gray</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- RESIZE HANDLE DI TEPI KANAN SIDEBAR INSPEKTOR (LEBAR 280px - 390px) -->
+        <div id="sidebar-resize-handle"
+          class="hidden md:block absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-emerald-500/50 active:bg-emerald-600 transition-colors z-30 select-none"
+          title="Tarik untuk mengubah lebar panel kontrol (280px - 390px)"></div>
+      </aside>
+
+      <!-- ======================================================================
+           SISI KANAN (FLEX-1): LIVE CANVAS STOREFRONT PREVIEW (NETRAL TERANG)
+           ====================================================================== -->
+      <div id="preview-viewport-container" class="flex-1 h-full overflow-y-auto overflow-x-hidden flex justify-center items-start bg-slate-100/70 relative select-none">
+        
+        <!-- Pembungkus Iframe Responsif: Desktop = 100% Edge-to-Edge, Tablet/Mobile = Centered Box -->
+        <div id="theme-preview-wrapper"
+          class="preview-viewport-wrapper relative transition-all duration-150 ease-out flex justify-center w-full h-full">
+          
+          <!-- IFRAME ISOLASI PRATINJAU LIVE STOREFRONT -->
+          <iframe id="hero-preview-iframe" class="w-full h-full border-0 bg-white"
+            scrolling="auto" title="Pratinjau Toko Real-Time"></iframe>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DB & Theme Editor Core Scripts -->
+  <script src="js/db.js"></script>
+  <script src="js/theme-editor.js"></script>
+</body>
+
+</html>
