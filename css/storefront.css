@@ -1,0 +1,497 @@
+/* ==========================================================================
+   POS BY SONGER CREATIVE - STOREFRONT DEDICATED STYLESHEET
+   Dedicated styling for Buyer Storefront, Hero Banner, Catalog, and PDP.
+   ========================================================================== */
+
+:root {
+  /* 1. Warna Utama (Primary): Navbar, Header, Border Aktif, Tombol Primer */
+  --color-primary: #33b589;
+  --color-primary-hover: #28916d;
+  --color-primary-subtle: rgba(51, 181, 137, 0.12);
+
+  /* 2. Warna Kedua (Secondary / Accent): Tombol CTA "Beli Sekarang", Diskon/Promo, Bintang, Highlight Harga */
+  --color-secondary: #f59e0b;
+  --color-secondary-hover: #d97706;
+  --color-secondary-subtle: rgba(245, 158, 11, 0.14);
+
+  --color-base: #f8fafc;
+
+  /* 3. Kustomisasi Elemen Navbar Toko */
+  --navbar-cart-icon-color: #334155;
+  --navbar-cart-badge-bg: #f43f5e;
+  --navbar-cart-badge-text: #ffffff;
+  --navbar-search-icon-color: #94a3b8;
+  --navbar-search-input-bg: #f1f5f9;
+  --navbar-search-border-color: #e2e8f0;
+  --navbar-search-placeholder-color: #94a3b8;
+  --navbar-login-icon-color: #334155;
+  --navbar-login-text-color: #334155;
+
+  /* 4. Top Bar Sapaan Dinamis & Promo Countdown */
+  --topbar-bg: #0f172a;
+  --topbar-text: #f8fafc;
+}
+
+.navbar-search-input-el::placeholder {
+  color: var(--navbar-search-placeholder-color, #94a3b8) !important;
+  opacity: 1;
+}
+
+body {
+  font-family: var(--store-font-body, 'Inter'), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-base);
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: var(--store-font-heading, 'Bricolage Grotesque'), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   BRAND THEME BUTTONS
+   -------------------------------------------------------------------------- */
+.btn-primary-brand {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary-brand:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-primary-brand:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary-accent {
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-secondary-accent:hover {
+  background-color: var(--color-secondary-hover);
+}
+
+.btn-secondary-accent:active {
+  transform: scale(0.98);
+}
+
+.btn-outline-primary {
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-primary-subtle);
+}
+
+.btn-outline-secondary {
+  border: 1.5px solid var(--color-secondary);
+  color: var(--color-secondary);
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--color-secondary-subtle);
+}
+
+/* --------------------------------------------------------------------------
+   THEME COLOR UTILITIES
+   -------------------------------------------------------------------------- */
+.text-primary-brand {
+  color: var(--color-primary);
+}
+
+.text-secondary-accent {
+  color: var(--color-secondary);
+}
+
+.bg-primary-brand {
+  background-color: var(--color-primary);
+}
+
+.bg-secondary-accent {
+  background-color: var(--color-secondary);
+}
+
+.bg-primary-subtle {
+  background-color: var(--color-primary-subtle);
+}
+
+.bg-secondary-subtle {
+  background-color: var(--color-secondary-subtle);
+}
+
+.border-primary-brand {
+  border-color: var(--color-primary);
+}
+
+.border-secondary-accent {
+  border-color: var(--color-secondary);
+}
+
+.badge-promo-accent {
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.star-rating-accent {
+  color: var(--color-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   PDP & GALLERY STYLES
+   -------------------------------------------------------------------------- */
+.pdp-thumbnail-active {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-primary-subtle);
+}
+
+.configurator-pill-active {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+  font-weight: 700;
+}
+
+.sticky-mobile-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 16px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s ease-out forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.2s ease-out forwards;
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2s infinite ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   HERO SLIDER HORIZONTAL SEAMLESS TRANSITIONS
+   -------------------------------------------------------------------------- */
+.hero-slider-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hero-slide-smooth {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.hero-slide-smooth.is-active {
+  transform: translateX(0);
+  z-index: 10;
+  visibility: visible;
+}
+
+.hero-slide-smooth.is-prev {
+  transform: translateX(-100%);
+  z-index: 5;
+  visibility: visible;
+}
+
+.hero-slide-smooth.is-next {
+  transform: translateX(100%);
+  z-index: 5;
+  visibility: visible;
+}
+
+.hero-slide-smooth.is-hidden {
+  transform: translateX(100%);
+  z-index: 0;
+  visibility: hidden;
+  transition: none !important;
+}
+
+/* Hero Slider Fade Transition */
+.hero-anim-fade .hero-slide-smooth {
+  transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transform: none !important;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-active {
+  opacity: 1;
+  visibility: visible;
+  z-index: 10;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-fading-out {
+  opacity: 0;
+  visibility: visible;
+  z-index: 8;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-fading-out-top {
+  opacity: 0;
+  visibility: visible;
+  z-index: 12;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-prev,
+.hero-anim-fade .hero-slide-smooth.is-next {
+  opacity: 0;
+  visibility: hidden;
+  z-index: 5;
+  transform: none !important;
+}
+
+.hero-anim-fade .hero-slide-smooth.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  z-index: 0;
+  transform: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   STANDARISASI RASIO HERO BANNER 16:5 (MOBILE) & 9:2 (DESKTOP)
+   -------------------------------------------------------------------------- */
+.hero-responsive-aspect {
+  width: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .hero-responsive-aspect {
+    aspect-ratio: 16 / 5 !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-responsive-aspect {
+    aspect-ratio: 9 / 2 !important;
+    min-height: 0 !important;
+  }
+}
+
+/* Preset Box Shadow Utility untuk Hero & CTA */
+.hero-shadow-none {
+  box-shadow: none !important;
+}
+
+.hero-shadow-none.border,
+.hero-shadow-none[class*="border-"] {
+  border-color: transparent !important;
+}
+
+#hero-slider-container.hero-shadow-none {
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.hero-shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.hero-shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hero-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hero-shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Hero CTA Button Interactive Utilities */
+.hero-cta-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-weight: 700;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.hero-cta-btn:hover {
+  filter: brightness(1.05);
+}
+
+.hero-cta-btn:active {
+  transform: scale(0.97);
+}
+
+/* Gambar Split Otomatis Terpotong Kiri-Kanan Seimbang & Proporsional Mobile */
+.hero-split-image-cover {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+@media (max-width: 767px) {
+  .hero-split-mobile-image {
+    width: 100% !important;
+    aspect-ratio: 16 / 5 !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-split-mobile-image {
+    width: 60% !important;
+    aspect-ratio: auto !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+}
+
+/* Card Sponsor Utilities & Entry Animations */
+@keyframes sponsorFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sponsorSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sponsor-card-anim {
+  animation: sponsorSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --------------------------------------------------------------------------
+   CATEGORY QUICK ACTION SCROLL TRACK & PEEKING EFFECT
+   -------------------------------------------------------------------------- */
+.cat-scroll-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cat-scroll-track::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-scroll-track {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile (< 640px): 5 item penuh + item ke-6 intip 50% (5.5) */
+@media (max-width: 639px) {
+  .cat-item-peek {
+    width: calc((100% - (4.5 * 0.5rem)) / 5.5) !important;
+    min-width: calc((100% - (4.5 * 0.5rem)) / 5.5) !important;
+    max-width: calc((100% - (4.5 * 0.5rem)) / 5.5) !important;
+  }
+}
+
+/* Tablet (>= 640px dan < 1024px): 7 item penuh + item ke-8 intip 50% (7.5) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .cat-item-peek {
+    width: calc((100% - (6.5 * 0.625rem)) / 7.5) !important;
+    min-width: calc((100% - (6.5 * 0.625rem)) / 7.5) !important;
+    max-width: calc((100% - (6.5 * 0.625rem)) / 7.5) !important;
+  }
+}
+
+/* Desktop (>= 1024px): 10 item penuh + item ke-11 intip 50% (10.5) */
+@media (min-width: 1024px) {
+  .cat-item-peek {
+    width: calc((100% - (9.5 * 0.75rem)) / 10.5) !important;
+    min-width: calc((100% - (9.5 * 0.75rem)) / 10.5) !important;
+    max-width: calc((100% - (9.5 * 0.75rem)) / 10.5) !important;
+  }
+}

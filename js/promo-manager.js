@@ -8,7 +8,7 @@ const PromoManager = (() => {
   let activePromoId = null; 
   let activeSponsorId = null;
   let activePromoType = 'twin'; // 'twin' | 'special' | 'monthly'
-  let activeSponsorType = 'ad1'; // 'ad1' | 'carousel' | 'internal'
+  let activeSponsorType = 'ad1'; // 'ad1' | 'carousel' | 'internal' | 'double_width'
   let currentEditingPromoId = null;
   let currentEditingSponsorId = null;
   let currentEditingSponsorMobileOnly = false;
@@ -264,33 +264,107 @@ const PromoManager = (() => {
   function renderCarouselSlideRows(slides) {
     const container = document.getElementById('carousel-slides-container');
     if (!container) return;
+    const isDoubleWidth = activeSponsorType === 'double_width';
+    const maxLimit = isDoubleWidth ? 10 : 5;
     if (!slides || slides.length === 0) {
-      container.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs italic bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada slide gambar. Silakan unggah berkas di atas atau tempel URL slide baru (maksimal 5 foto).</div>`;
+      container.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs italic bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada slide gambar. Silakan unggah berkas di atas atau tempel URL slide baru (maksimal ${maxLimit} foto).</div>`;
       return;
     }
-    const safeSlides = slides.slice(0, 5);
+    const safeSlides = slides.slice(0, maxLimit);
     container.innerHTML = safeSlides.map((slide, idx) => `
-      <div class="carousel-slide-item p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-3" data-index="${idx}">
-        <div class="shrink-0 w-14 h-14 rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
-          <img src="${escapeHtml(slide.image_url || '')}" class="w-full h-full object-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-sm\\'><i class=\\'bi bi-images\\'></i></div>';" />
-        </div>
-        <div class="flex-1 min-w-0 space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-slate-700">Slide #${idx + 1}</span>
-            <button type="button" class="btn-remove-carousel-slide text-rose-500 hover:text-rose-700 p-1 text-xs font-bold transition flex items-center gap-1" data-index="${idx}">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              <span>Hapus Slide</span>
-            </button>
+      <div class="carousel-slide-item p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3" data-index="${idx}">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-lg text-[10px] font-black bg-slate-200 text-slate-800">Slide #${idx + 1}</span>
+            ${isDoubleWidth ? `<span class="text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded font-semibold">2-Kolom Slide</span>` : ''}
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div>
-              <label class="block text-[10px] font-bold text-slate-700 mb-1">URL / Berkas Gambar Banner (Tampilan):</label>
-              <input type="text" value="${escapeHtml(slide.image_url || '')}" placeholder="https://.../gambar-banner.webp atau unggah file" class="slide-image-url w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-[11px] outline-none focus:border-emerald-500 bg-white" />
+          <button type="button" class="btn-remove-carousel-slide text-rose-500 hover:text-rose-700 p-1 text-xs font-bold transition flex items-center gap-1 cursor-pointer" data-index="${idx}">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Hapus Slide</span>
+          </button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 items-start">
+          <div class="shrink-0 w-16 h-16 rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
+            <img src="${escapeHtml(slide.image_url || '')}" class="w-full h-full object-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-sm\\'><i class=\\'bi bi-images\\'></i></div>';" />
+          </div>
+          <div class="flex-1 w-full min-w-0 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-700 mb-1">URL / Berkas Gambar (Tampilan):</label>
+                <input type="text" value="${escapeHtml(slide.image_url || '')}" placeholder="https://.../gambar.webp atau unggah file" class="slide-image-url w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-[11px] outline-none focus:border-emerald-500 bg-white" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-700 mb-1">Link Target Tujuan (Saat Gambar Diklik):</label>
+                <input type="text" value="${escapeHtml(slide.target_url || '')}" placeholder="https://wa.me/... atau link produk / halaman luar" class="slide-target-url w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-[11px] font-mono outline-none focus:border-emerald-500 bg-white" />
+              </div>
             </div>
-            <div>
-              <label class="block text-[10px] font-bold text-slate-700 mb-1">Link Target Tujuan (Saat Gambar Diklik):</label>
-              <input type="text" value="${escapeHtml(slide.target_url || '')}" placeholder="https://wa.me/... atau link produk (contoh: product.html?id=123)" class="slide-target-url w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-[11px] font-mono outline-none focus:border-emerald-500 bg-white" />
-            </div>
+
+            ${isDoubleWidth ? `
+              <!-- FITUR KHUSUS 2-KOLOM: LINK KLIK GAMBAR & FLOATING CTA MANDIRI -->
+              <div class="pt-2 border-t border-slate-200/80 space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <label class="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700 select-none">
+                    <input type="checkbox" class="slide-click-img-chk w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500" ${slide.click_image_enabled !== false ? 'checked' : ''} />
+                    <span>Link Klik Gambar Banner Aktif</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-emerald-800 bg-emerald-50/90 px-2.5 py-1 rounded-xl border border-emerald-200 select-none">
+                    <input type="checkbox" class="slide-cta-enabled-chk w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500" ${slide.cta_enabled ? 'checked' : ''} />
+                    <span>Tombol CTA Melayang (Floating CTA)</span>
+                  </label>
+                </div>
+
+                <div class="slide-cta-box ${slide.cta_enabled ? '' : 'hidden'} p-3 bg-white border border-emerald-300 rounded-xl space-y-2.5 shadow-2xs">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Teks Tombol CTA Melayang:</label>
+                      <input type="text" value="${escapeHtml(slide.cta_text || 'Lihat Penawaran')}" placeholder="Contoh: Dapatkan Promo" class="slide-cta-text w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-bold outline-none focus:border-emerald-500 bg-white" />
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Link Khusus Tombol CTA:</label>
+                      <input type="text" value="${escapeHtml(slide.cta_link || '')}" placeholder="Kosongkan jika sama dengan target gambar" class="slide-cta-link w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-mono outline-none focus:border-emerald-500 bg-white" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-100">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Warna Tombol (Bg):</label>
+                      <div class="flex items-center gap-1">
+                        <input type="color" value="${slide.cta_bg_color || '#059669'}" class="slide-cta-bg-picker w-7 h-7 p-0.5 rounded border border-slate-300 cursor-pointer bg-white" />
+                        <input type="text" value="${escapeHtml(slide.cta_bg_color || '#059669')}" class="slide-cta-bg-input w-full px-1.5 py-1 rounded border border-slate-300 text-[10px] font-mono font-bold uppercase" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Warna Teks:</label>
+                      <div class="flex items-center gap-1">
+                        <input type="color" value="${slide.cta_text_color || '#ffffff'}" class="slide-cta-textcol-picker w-7 h-7 p-0.5 rounded border border-slate-300 cursor-pointer bg-white" />
+                        <input type="text" value="${escapeHtml(slide.cta_text_color || '#ffffff')}" class="slide-cta-textcol-input w-full px-1.5 py-1 rounded border border-slate-300 text-[10px] font-mono font-bold uppercase" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Ikon CTA:</label>
+                      <select class="slide-cta-icon-select w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white font-semibold outline-none focus:border-emerald-500">
+                        <option value="bi-arrow-right" ${(slide.cta_icon || 'bi-arrow-right') === 'bi-arrow-right' ? 'selected' : ''}>Panah (bi-arrow-right)</option>
+                        <option value="bi-whatsapp" ${slide.cta_icon === 'bi-whatsapp' ? 'selected' : ''}>WhatsApp (bi-whatsapp)</option>
+                        <option value="bi-cart-fill" ${slide.cta_icon === 'bi-cart-fill' ? 'selected' : ''}>Keranjang (bi-cart-fill)</option>
+                        <option value="bi-box-arrow-up-right" ${slide.cta_icon === 'bi-box-arrow-up-right' ? 'selected' : ''}>Buka Tab (bi-box-arrow-up-right)</option>
+                        <option value="bi-gift-fill" ${slide.cta_icon === 'bi-gift-fill' ? 'selected' : ''}>Hadiah (bi-gift-fill)</option>
+                        <option value="bi-stars" ${slide.cta_icon === 'bi-stars' ? 'selected' : ''}>Bintang (bi-stars)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Sudut (Radius):</label>
+                      <select class="slide-cta-radius-select w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white font-semibold outline-none focus:border-emerald-500">
+                        <option value="6px" ${slide.cta_border_radius === '6px' ? 'selected' : ''}>6px (Kecil)</option>
+                        <option value="12px" ${(slide.cta_border_radius === '12px' || !slide.cta_border_radius) ? 'selected' : ''}>12px (Standar)</option>
+                        <option value="20px" ${slide.cta_border_radius === '20px' ? 'selected' : ''}>20px (Bulat)</option>
+                        <option value="9999px" ${slide.cta_border_radius === '9999px' ? 'selected' : ''}>Pill (Kapsul)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -304,6 +378,8 @@ const PromoManager = (() => {
         const idx = parseInt(btn.getAttribute('data-index'), 10);
         currentCarouselSlides.splice(idx, 1);
         renderCarouselSlideRows(currentCarouselSlides);
+        const badge = document.getElementById('carousel-slide-counter-badge');
+        if (badge) badge.textContent = `${currentCarouselSlides.length} / ${maxLimit} Slide`;
         updateSponsorPreviews();
       });
     });
@@ -325,9 +401,130 @@ const PromoManager = (() => {
         const idx = parseInt(row.getAttribute('data-index'), 10);
         if (currentCarouselSlides[idx]) {
           currentCarouselSlides[idx].target_url = input.value.trim();
+          updateSponsorPreviews();
         }
       });
     });
+
+    if (isDoubleWidth) {
+      container.querySelectorAll('.slide-click-img-chk').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const row = chk.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].click_image_enabled = chk.checked;
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-enabled-chk').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const row = chk.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_enabled = chk.checked;
+            const ctaBox = row.querySelector('.slide-cta-box');
+            if (ctaBox) {
+              if (chk.checked) ctaBox.classList.remove('hidden');
+              else ctaBox.classList.add('hidden');
+            }
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-text').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const row = inp.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_text = inp.value.trim();
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-link').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const row = inp.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_link = inp.value.trim();
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-bg-picker').forEach(picker => {
+        picker.addEventListener('input', () => {
+          const row = picker.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          const textInput = row.querySelector('.slide-cta-bg-input');
+          if (textInput) textInput.value = picker.value;
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_bg_color = picker.value;
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-bg-input').forEach(textInput => {
+        textInput.addEventListener('input', () => {
+          const row = textInput.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          const picker = row.querySelector('.slide-cta-bg-picker');
+          if (picker && textInput.value.startsWith('#') && (textInput.value.length === 4 || textInput.value.length === 7)) {
+            picker.value = textInput.value;
+          }
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_bg_color = textInput.value.trim();
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-textcol-picker').forEach(picker => {
+        picker.addEventListener('input', () => {
+          const row = picker.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          const textInput = row.querySelector('.slide-cta-textcol-input');
+          if (textInput) textInput.value = picker.value;
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_text_color = picker.value;
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-textcol-input').forEach(textInput => {
+        textInput.addEventListener('input', () => {
+          const row = textInput.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          const picker = row.querySelector('.slide-cta-textcol-picker');
+          if (picker && textInput.value.startsWith('#') && (textInput.value.length === 4 || textInput.value.length === 7)) {
+            picker.value = textInput.value;
+          }
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_text_color = textInput.value.trim();
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-icon-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const row = sel.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_icon = sel.value;
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-radius-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const row = sel.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_border_radius = sel.value;
+            updateSponsorPreviews();
+          }
+        });
+      });
+    }
   }
 
   function init(initialTab = null) {
@@ -464,19 +661,36 @@ const PromoManager = (() => {
         discount_value: 15,
         min_spend: 50000,
         target_audience: 'all',
+        style: {
+          bg_type: 'solid',
+          bg_color1: '#ffffff',
+          bg_color2: '#f8fafc',
+          bg_angle: 135,
+          title_color: '#0f172a',
+          desc_color: '#64748b',
+          discount_color: '#e11d48',
+          border_radius: '16px',
+          box_shadow: 'sm',
+          border_color: 'transparent'
+        },
         title_color: '#0f172a',
+        desc_color: '#64748b',
         discount_color: '#e11d48',
         bg_type: 'solid',
         bg_color1: '#ffffff',
         bg_color2: '#f8fafc',
         bg_angle: 135,
+        border_radius: '16px',
+        box_shadow: 'sm',
         show_timer: true,
         cta_mode: 'dual',
         cta1_text: 'Ingatkan Saya',
+        cta1_link: '',
         cta1_bg: '#33b589',
         cta1_text_color: '#ffffff',
         cta1_icon_color: '#ffffff',
         cta2_text: 'Konsultasi Desain & Cetak',
+        cta2_link: '',
         cta2_bg: '#25d366',
         cta2_text_color: '#ffffff',
         cta2_icon_color: '#ffffff',
@@ -509,19 +723,36 @@ const PromoManager = (() => {
         discount_value: 15,
         min_spend: 50000,
         target_audience: 'all',
+        style: {
+          bg_type: 'solid',
+          bg_color1: '#ffffff',
+          bg_color2: '#f8fafc',
+          bg_angle: 135,
+          title_color: '#0f172a',
+          desc_color: '#64748b',
+          discount_color: '#e11d48',
+          border_radius: '16px',
+          box_shadow: 'sm',
+          border_color: 'transparent'
+        },
         title_color: '#0f172a',
+        desc_color: '#64748b',
         discount_color: '#e11d48',
         bg_type: 'solid',
         bg_color1: '#ffffff',
         bg_color2: '#f8fafc',
         bg_angle: 135,
+        border_radius: '16px',
+        box_shadow: 'sm',
         show_timer: true,
         cta_mode: 'dual',
         cta1_text: 'Ingatkan Saya',
+        cta1_link: '',
         cta1_bg: '#33b589',
         cta1_text_color: '#ffffff',
         cta1_icon_color: '#ffffff',
         cta2_text: 'Konsultasi Desain & Cetak',
+        cta2_link: '',
         cta2_bg: '#25d366',
         cta2_text_color: '#ffffff',
         cta2_icon_color: '#ffffff',
@@ -539,6 +770,24 @@ const PromoManager = (() => {
     const isSpecial = current.type === 'special';
     const isPerProduct = current.discount_mode === 'per_product';
     const isVariant2 = current.card_model === 'variant_2';
+
+    // Helper styling extracted from current & current.style
+    const curStyle = current.style || {};
+    const curTitleColor = curStyle.title_color || current.title_color || '#0f172a';
+    const curDescColor = curStyle.desc_color || current.desc_color || '#64748b';
+    const curDiscountColor = curStyle.discount_color || current.discount_color || '#e11d48';
+    const curBgType = curStyle.bg_type || current.bg_type || 'solid';
+    const curBgColor1 = curStyle.bg_color1 || current.bg_color1 || '#ffffff';
+    const curBgColor2 = curStyle.bg_color2 || current.bg_color2 || '#f8fafc';
+    const curBgAngle = curStyle.bg_angle !== undefined ? curStyle.bg_angle : (current.bg_angle !== undefined ? current.bg_angle : 135);
+    const curBorderRadius = curStyle.border_radius || current.border_radius || '16px';
+    const curBoxShadow = curStyle.box_shadow || current.box_shadow || 'sm';
+    const curShowTimer = (current.show_timer !== false);
+    const curCtaMode = (current.cta_mode === 'single' || current.cta_mode === '1_cta' || current.cta_mode === 'catalog_only' || current.cta_mode === 'consultation_only') ? 'single' : 'dual';
+    const curCta1Text = current.cta1_text || 'Ingatkan Saya';
+    const curCta1Link = current.cta1_link || '';
+    const curCta2Text = current.cta2_text || 'Konsultasi Desain & Cetak';
+    const curCta2Link = current.cta2_link || '';
 
     return `
       <div class="space-y-6">
@@ -839,7 +1088,7 @@ const PromoManager = (() => {
             <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">5</span>
-                <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 5 - Styling Visual, Gradasi & Dual CTA:</h4>
+                <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 5 - Kustomisasi Desain Card Promo, CTA & Countdown:</h4>
               </div>
 
               <!-- Teks Judul (2 Baris Sesuai Wireframe) & Deskripsi -->
@@ -861,45 +1110,53 @@ const PromoManager = (() => {
                 <div>
                   <label class="block font-bold text-slate-700 mb-1">Deskripsi Singkat Promo:</label>
                   <textarea id="promo-desc-input" rows="2" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 resize-none font-medium text-xs" placeholder="Contoh: Potongan harga berlaku untuk pesanan cetak dan desain pilihan di etalase.">${escapeHtml(current.description || '')}</textarea>
+                  <p class="text-[10px] text-slate-400 mt-1">*Sesuai matriks tampilan: Deskripsi otomatis tampil saat mode 1 CTA aktif, dan disembunyikan saat mode 2 CTA aktif agar ukuran kartu tetap rapi.</p>
                 </div>
               </div>
 
-              <!-- Kontrol Warna Teks & Latar Belakang Gradasi -->
+              <!-- Kontrol Warna Teks & Latar Belakang Gradasi Mandiri -->
               <div class="pt-2 border-t border-slate-200 space-y-3 text-xs">
-                <span class="font-bold text-slate-800 block">Warna Teks & Latar Belakang Kartu:</span>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <span class="font-bold text-slate-800 block">Kustomisasi Styling Mandiri (Tersimpan Khusus pada Kartu Ini):</span>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label class="block text-[11px] font-semibold text-slate-600 mb-1">Warna Judul Headline:</label>
                     <div class="flex items-center gap-2">
-                      <input type="color" id="promo-title-color" value="${current.title_color || '#0f172a'}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
-                      <input type="text" id="promo-title-color-text" value="${current.title_color || '#0f172a'}" class="w-24 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
+                      <input type="color" id="promo-title-color" value="${curTitleColor}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
+                      <input type="text" id="promo-title-color-text" value="${curTitleColor}" class="w-20 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Warna Teks Deskripsi:</label>
+                    <div class="flex items-center gap-2">
+                      <input type="color" id="promo-desc-color" value="${curDescColor}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
+                      <input type="text" id="promo-desc-color-text" value="${curDescColor}" class="w-20 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
                     </div>
                   </div>
                   <div>
                     <label class="block text-[11px] font-semibold text-slate-600 mb-1">Warna Diskon / Aksen:</label>
                     <div class="flex items-center gap-2">
-                      <input type="color" id="promo-discount-color" value="${current.discount_color || '#e11d48'}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
-                      <input type="text" id="promo-discount-color-text" value="${current.discount_color || '#e11d48'}" class="w-24 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
+                      <input type="color" id="promo-discount-color" value="${curDiscountColor}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
+                      <input type="text" id="promo-discount-color-text" value="${curDiscountColor}" class="w-20 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
                     </div>
                   </div>
                 </div>
 
-                <!-- Tipe Latar & Gradasi -->
+                <!-- Tipe Latar, Gradasi, Border Radius & Box Shadow -->
                 <div class="space-y-3 pt-2">
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tipe Latar Kartu:</label>
                       <select id="promo-bg-type" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white text-xs">
-                        <option value="solid" ${(current.bg_type || 'solid') === 'solid' ? 'selected' : ''}>Warna Solid</option>
-                        <option value="linear_gradient" ${current.bg_type === 'linear_gradient' ? 'selected' : ''}>Linier Gradient</option>
-                        <option value="radial_gradient" ${current.bg_type === 'radial_gradient' ? 'selected' : ''}>Radial Gradient</option>
+                        <option value="solid" ${curBgType === 'solid' ? 'selected' : ''}>Warna Solid</option>
+                        <option value="linear_gradient" ${curBgType === 'linear_gradient' ? 'selected' : ''}>Linier Gradient</option>
+                        <option value="radial_gradient" ${curBgType === 'radial_gradient' ? 'selected' : ''}>Radial Gradient</option>
                       </select>
                     </div>
-                    <div id="promo-bg-angle-box" class="${current.bg_type === 'linear_gradient' ? 'block' : 'hidden'}">
+                    <div id="promo-bg-angle-box" class="${curBgType === 'linear_gradient' ? 'block' : 'hidden'}">
                       <label class="block text-[11px] font-semibold text-slate-600 mb-1">Sudut Gradasi (0° - 360°):</label>
                       <div class="flex items-center gap-2">
-                        <input type="range" id="promo-bg-angle" min="0" max="360" value="${current.bg_angle !== undefined ? current.bg_angle : 135}" class="flex-1 accent-emerald-600" />
-                        <span id="promo-bg-angle-val" class="font-mono text-xs font-bold text-slate-700 w-10 text-right">${current.bg_angle !== undefined ? current.bg_angle : 135}°</span>
+                        <input type="range" id="promo-bg-angle" min="0" max="360" value="${curBgAngle}" class="flex-1 accent-emerald-600" />
+                        <span id="promo-bg-angle-val" class="font-mono text-xs font-bold text-slate-700 w-10 text-right">${curBgAngle}°</span>
                       </div>
                     </div>
                   </div>
@@ -908,38 +1165,66 @@ const PromoManager = (() => {
                     <div>
                       <label class="block text-[10px] text-slate-500 mb-1">Warna Latar 1 (Utama):</label>
                       <div class="flex items-center gap-2">
-                        <input type="color" id="promo-bg-color1" value="${current.bg_color1 || '#ffffff'}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
-                        <input type="text" id="promo-bg-color1-text" value="${current.bg_color1 || '#ffffff'}" class="w-24 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
+                        <input type="color" id="promo-bg-color1" value="${curBgColor1}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
+                        <input type="text" id="promo-bg-color1-text" value="${curBgColor1}" class="w-24 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
                       </div>
                     </div>
-                    <div id="promo-bg-color2-box" class="${(current.bg_type || 'solid') !== 'solid' ? 'block' : 'hidden'}">
+                    <div id="promo-bg-color2-box" class="${curBgType !== 'solid' ? 'block' : 'hidden'}">
                       <label class="block text-[10px] text-slate-500 mb-1">Warna Latar 2 (Gradasi):</label>
                       <div class="flex items-center gap-2">
-                        <input type="color" id="promo-bg-color2" value="${current.bg_color2 || '#f8fafc'}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
-                        <input type="text" id="promo-bg-color2-text" value="${current.bg_color2 || '#f8fafc'}" class="w-24 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
+                        <input type="color" id="promo-bg-color2" value="${curBgColor2}" class="w-9 h-9 p-0.5 rounded-xl border border-slate-300 cursor-pointer bg-white" />
+                        <input type="text" id="promo-bg-color2-text" value="${curBgColor2}" class="w-24 px-2 py-1.5 rounded-xl border border-slate-300 font-mono text-xs uppercase" />
                       </div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-600 mb-1">Border Radius (px):</label>
+                      <select id="promo-border-radius" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white text-xs">
+                        <option value="0px" ${curBorderRadius === '0px' ? 'selected' : ''}>0px (Persegi Lancip)</option>
+                        <option value="8px" ${curBorderRadius === '8px' ? 'selected' : ''}>8px (Sedikit Membulat)</option>
+                        <option value="12px" ${curBorderRadius === '12px' ? 'selected' : ''}>12px (Membulat Halus)</option>
+                        <option value="16px" ${curBorderRadius === '16px' ? 'selected' : ''}>16px (Modern Rounded - Default)</option>
+                        <option value="24px" ${curBorderRadius === '24px' ? 'selected' : ''}>24px (Sangat Membulat)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-600 mb-1">Box Shadow:</label>
+                      <select id="promo-box-shadow" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white text-xs">
+                        <option value="none" ${curBoxShadow === 'none' ? 'selected' : ''}>Tanpa Bayangan (None)</option>
+                        <option value="sm" ${curBoxShadow === 'sm' ? 'selected' : ''}>Bayangan Halus (sm - Default)</option>
+                        <option value="md" ${curBoxShadow === 'md' ? 'selected' : ''}>Bayangan Sedang (md)</option>
+                        <option value="lg" ${curBoxShadow === 'lg' ? 'selected' : ''}>Bayangan Mengambang (lg)</option>
+                        <option value="xl" ${curBoxShadow === 'xl' ? 'selected' : ''}>Bayangan Ekstra (xl)</option>
+                      </select>
                     </div>
                   </div>
                 </div>
 
-                <!-- Switch Countdown Timer -->
-                <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-                  <div>
-                    <span class="font-bold text-slate-800 text-xs block">Tampilkan Countdown Timer di Kartu Promo:</span>
-                    <span class="text-[10px] text-slate-400">Aktifkan jam hitung mundur waktu tersisa / segera hadir di etalase.</span>
+                <!-- Pilihan Tampilan Timer Countdown (Dropdown Aktif / Nonaktif) -->
+                <div class="pt-3 border-t border-slate-200 space-y-1.5">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label class="block font-bold text-slate-800 text-xs">Tampilan Jam Hitung Mundur (Countdown Timer):</label>
+                      <span class="text-[10px] text-slate-400">Aktifkan jam hitung mundur waktu tersisa di kartu promo ini.</span>
+                    </div>
+                    <select id="promo-show-timer" class="px-3 py-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs outline-none focus:border-emerald-500 shrink-0">
+                      <option value="true" ${curShowTimer ? 'selected' : ''}>Aktif</option>
+                      <option value="false" ${!curShowTimer ? 'selected' : ''}>Nonaktif</option>
+                    </select>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="promo-show-timer" ${current.show_timer !== false ? 'checked' : ''} class="sr-only peer" />
-                    <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                  </label>
+                  <p class="text-[10px] text-slate-400 italic">
+                    *Otomasi Sinkronisasi: Jika Countdown Top Bar etalase sedang aktif, jam di kartu ini otomatis dimatikan untuk mencegah duplikasi di layar.
+                  </p>
                 </div>
 
-                <!-- Konfigurasi Dual CTA -->
+                <!-- Konfigurasi Mode CTA & Tombol Fleksibel -->
                 <div class="pt-3 border-t border-slate-200 space-y-3">
                   <div class="flex items-center justify-between">
                     <div>
-                      <span class="font-bold text-slate-800 text-xs block">Opsi Tombol Aksi (Dual CTA):</span>
-                      <span class="text-[10px] text-slate-400">Tombol Katalog & Konsultasi WhatsApp di bawah kartu promo.</span>
+                      <span class="font-bold text-slate-800 text-xs block">Pengaturan Tombol Aksi (CTA):</span>
+                      <span class="text-[10px] text-slate-400">Pilih mode tombol tunggal (1 CTA) atau ganda (2 CTA) dengan link dinamis.</span>
                     </div>
                     <label class="flex items-center gap-1.5 cursor-pointer text-xs">
                       <input type="checkbox" id="promo-cta-theme-default" ${current.use_theme_default ? 'checked' : ''} class="rounded text-emerald-600 focus:ring-emerald-500" />
@@ -947,48 +1232,68 @@ const PromoManager = (() => {
                     </label>
                   </div>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                    <label class="p-2.5 rounded-xl border ${(current.cta_mode || 'dual') === 'dual' ? 'border-emerald-500 bg-white ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white'} cursor-pointer flex items-center gap-2">
-                      <input type="radio" name="promo_cta_mode" value="dual" ${(current.cta_mode || 'dual') === 'dual' ? 'checked' : ''} class="text-emerald-600" />
-                      <span class="font-bold text-[11px]">Kedua Tombol (Dual)</span>
-                    </label>
-                    <label class="p-2.5 rounded-xl border ${current.cta_mode === 'catalog_only' ? 'border-emerald-500 bg-white ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white'} cursor-pointer flex items-center gap-2">
-                      <input type="radio" name="promo_cta_mode" value="catalog_only" ${current.cta_mode === 'catalog_only' ? 'checked' : ''} class="text-emerald-600" />
-                      <span class="font-bold text-[11px]">Hanya Tombol Katalog</span>
-                    </label>
-                    <label class="p-2.5 rounded-xl border ${current.cta_mode === 'consultation_only' ? 'border-emerald-500 bg-white ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white'} cursor-pointer flex items-center gap-2">
-                      <input type="radio" name="promo_cta_mode" value="consultation_only" ${current.cta_mode === 'consultation_only' ? 'checked' : ''} class="text-emerald-600" />
-                      <span class="font-bold text-[11px]">Hanya Tombol WA</span>
-                    </label>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pilihan Mode CTA:</label>
+                    <select id="promo-cta-mode" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white text-xs outline-none focus:border-emerald-500">
+                      <option value="dual" ${curCtaMode === 'dual' ? 'selected' : ''}>2 CTA (Ingatkan Saya + WhatsApp)</option>
+                      <option value="single" ${curCtaMode === 'single' ? 'selected' : ''}>1 CTA (Tanya Admin / Link)</option>
+                    </select>
                   </div>
 
-                  <!-- Kontrol Mandiri CTA jika Switch Tema Mati -->
-                  <div id="promo-custom-cta-box" class="${current.use_theme_default ? 'hidden' : 'block'} space-y-3 pt-2">
-                    <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
-                      <span class="font-bold text-slate-800 text-[11px] block">Tombol 1: Katalog</span>
-                      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                        <div class="sm:col-span-2">
-                          <input type="text" id="promo-cta1-text" value="${escapeHtml(current.cta1_text || 'Lihat Semua Katalog')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs" placeholder="Teks Tombol 1" />
+                  <!-- Kontrol Detail CTA (Teks, Link Dinamis & Warna) -->
+                  <div class="space-y-3 pt-1">
+                    <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-2.5">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-800 text-[11px]">Tombol 1: Primary CTA (Katalog / Ingatkan Saya)</span>
+                        <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Aktif pada 1 CTA & 2 CTA</span>
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Label Teks Tombol 1:</label>
+                          <input type="text" id="promo-cta1-text" value="${escapeHtml(curCta1Text)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs" placeholder="Contoh: Ingatkan Saya" />
                         </div>
                         <div>
-                          <input type="color" id="promo-cta1-bg" value="${current.cta1_bg || '#33b589'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" title="Warna Latar Tombol 1" />
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Link Dinamis Tombol 1:</label>
+                          <input type="text" id="promo-cta1-link" value="${escapeHtml(curCta1Link)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-mono" placeholder="https://... atau kosongkan untuk modal" />
+                        </div>
+                      </div>
+                      <div id="promo-cta1-color-box" class="${current.use_theme_default ? 'hidden' : 'grid'} grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                        <div>
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Warna Latar Tombol 1:</label>
+                          <input type="color" id="promo-cta1-bg" value="${current.cta1_bg || '#33b589'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" />
                         </div>
                         <div>
-                          <input type="color" id="promo-cta1-text-color" value="${current.cta1_text_color || '#ffffff'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" title="Warna Teks Tombol 1" />
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Warna Teks Tombol 1:</label>
+                          <input type="color" id="promo-cta1-text-color" value="${current.cta1_text_color || '#ffffff'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" />
                         </div>
                       </div>
                     </div>
-                    <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
-                      <span class="font-bold text-slate-800 text-[11px] block">Tombol 2: Konsultasi WhatsApp</span>
-                      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                        <div class="sm:col-span-2">
-                          <input type="text" id="promo-cta2-text" value="${escapeHtml(current.cta2_text || 'Konsultasi Desain & Cetak')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs" placeholder="Teks Tombol 2" />
+
+                    <div id="promo-cta2-wrapper" class="p-3 bg-white rounded-xl border border-slate-200 space-y-2.5 ${curCtaMode === 'single' ? 'opacity-50' : ''}">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-800 text-[11px]">Tombol 2: Secondary CTA (WhatsApp / Hubungi Kami)</span>
+                        <span id="promo-cta2-badge" class="text-[10px] font-semibold ${curCtaMode === 'single' ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50'} px-2 py-0.5 rounded-full">
+                          ${curCtaMode === 'single' ? 'Disembunyikan saat mode 1 CTA' : 'Aktif pada mode 2 CTA'}
+                        </span>
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Label Teks Tombol 2:</label>
+                          <input type="text" id="promo-cta2-text" value="${escapeHtml(curCta2Text)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs" placeholder="Contoh: Konsultasi Desain & Cetak" />
                         </div>
                         <div>
-                          <input type="color" id="promo-cta2-bg" value="${current.cta2_bg || '#25d366'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" title="Warna Latar Tombol 2" />
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Link Dinamis Tombol 2:</label>
+                          <input type="text" id="promo-cta2-link" value="${escapeHtml(curCta2Link)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-mono" placeholder="https://wa.me/... atau URL kustom" />
+                        </div>
+                      </div>
+                      <div id="promo-cta2-color-box" class="${current.use_theme_default ? 'hidden' : 'grid'} grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                        <div>
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Warna Latar Tombol 2:</label>
+                          <input type="color" id="promo-cta2-bg" value="${current.cta2_bg || '#25d366'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" />
                         </div>
                         <div>
-                          <input type="color" id="promo-cta2-text-color" value="${current.cta2_text_color || '#ffffff'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" title="Warna Teks Tombol 2" />
+                          <label class="block text-[10px] text-slate-500 mb-0.5">Warna Teks Tombol 2:</label>
+                          <input type="color" id="promo-cta2-text-color" value="${current.cta2_text_color || '#ffffff'}" class="w-full h-8 p-0.5 rounded-lg border border-slate-300 cursor-pointer" />
                         </div>
                       </div>
                     </div>
@@ -1066,12 +1371,16 @@ const PromoManager = (() => {
     const model = modelRadio ? modelRadio.value : 'variant_1';
 
     const titleColor = document.getElementById('promo-title-color')?.value || '#0f172a';
+    const descColor = document.getElementById('promo-desc-color')?.value || '#64748b';
     const discColor = document.getElementById('promo-discount-color')?.value || '#e11d48';
 
     const bgType = document.getElementById('promo-bg-type')?.value || 'solid';
     const bgColor1 = document.getElementById('promo-bg-color1')?.value || '#ffffff';
     const bgColor2 = document.getElementById('promo-bg-color2')?.value || '#f8fafc';
     const bgAngle = parseInt(document.getElementById('promo-bg-angle')?.value) || 135;
+    const borderRadius = document.getElementById('promo-border-radius')?.value || '16px';
+    const boxShadow = document.getElementById('promo-box-shadow')?.value || 'sm';
+    const boxShadowClass = (boxShadow && boxShadow !== 'none') ? `shadow-${boxShadow}` : 'shadow-none';
 
     let bgCss = `background-color: ${bgColor1};`;
     if (bgType === 'linear_gradient') {
@@ -1080,14 +1389,43 @@ const PromoManager = (() => {
       bgCss = `background: radial-gradient(circle at center, ${bgColor1} 0%, ${bgColor2} 100%);`;
     }
 
-    const showTimer = document.getElementById('promo-show-timer')?.checked ?? true;
-
-    // Dual CTA settings
-    const ctaModeRadio = document.querySelector('input[name="promo_cta_mode"]:checked');
-    const ctaMode = ctaModeRadio ? ctaModeRadio.value : 'dual';
-    const useThemeDefault = document.getElementById('promo-cta-theme-default')?.checked ?? true;
-
+    // 2. OTOMASI COUNTDOWN (TOP BAR VS CARD PROMO):
+    // Jika Top Bar countdown aktif, paksa false pada card promo.
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+    const isTopBarCDActive = (settings.topbar_show_countdown !== false && settings.enable_promo_countdown !== false && settings.show_promo_countdown !== false);
+    
+    const timerSelect = document.getElementById('promo-show-timer');
+    const individualShowTimer = timerSelect ? (timerSelect.value === 'true' || timerSelect.value === true) : true;
+    const isCD = isTopBarCDActive ? false : individualShowTimer;
+
+    // Mode CTA: 'dual' vs 'single'
+    const ctaModeSelect = document.getElementById('promo-cta-mode');
+    const ctaMode = ctaModeSelect ? ctaModeSelect.value : 'dual';
+    const isDualCTA = (ctaMode === 'dual' || ctaMode === '2_cta');
+
+    // Update status badge on CTA 2 in form
+    const cta2Wrapper = document.getElementById('promo-cta2-wrapper');
+    const cta2Badge = document.getElementById('promo-cta2-badge');
+    if (cta2Wrapper && cta2Badge) {
+      if (isDualCTA) {
+        cta2Wrapper.classList.remove('opacity-50');
+        cta2Badge.textContent = 'Aktif pada mode 2 CTA';
+        cta2Badge.className = 'text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full';
+      } else {
+        cta2Wrapper.classList.add('opacity-50');
+        cta2Badge.textContent = 'Disembunyikan saat mode 1 CTA';
+        cta2Badge.className = 'text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full';
+      }
+    }
+
+    // 3.A. MATRIKS VISIBILITAS DESKRIPSI:
+    // Kondisi 1: CD = False & 2 CTA = True  --> Deskripsi = FALSE
+    // Kondisi 2: CD = False & 1 CTA = True  --> Deskripsi = TRUE
+    // Kondisi 3: CD = True  & 2 CTA = True  --> Deskripsi = FALSE
+    // Kondisi 4: CD = True  & 1 CTA = True  --> Deskripsi = TRUE
+    const showDescription = !isDualCTA;
+
+    const useThemeDefault = document.getElementById('promo-cta-theme-default')?.checked ?? true;
 
     let cta1Bg = useThemeDefault ? (settings.hero_cta1_bg || settings.primary_color || '#33b589') : (document.getElementById('promo-cta1-bg')?.value || '#33b589');
     let cta1TextColor = useThemeDefault ? (settings.hero_cta1_text_color || '#ffffff') : (document.getElementById('promo-cta1-text-color')?.value || '#ffffff');
@@ -1095,29 +1433,28 @@ const PromoManager = (() => {
 
     let cta2Bg = useThemeDefault ? (settings.hero_cta2_bg || '#25d366') : (document.getElementById('promo-cta2-bg')?.value || '#25d366');
     let cta2TextColor = useThemeDefault ? (settings.hero_cta2_text_color || '#ffffff') : (document.getElementById('promo-cta2-text-color')?.value || '#ffffff');
-    let cta2Text = document.getElementById('promo-cta2-text')?.value.trim() || 'Tanya Admin';
+    let cta2Text = document.getElementById('promo-cta2-text')?.value.trim() || 'Konsultasi Desain & Cetak';
 
     const cta1Btn = `
-      <div class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs border border-black/5" style="background-color: ${cta1Bg}; color: ${cta1TextColor};">
-        <i class="bi bi-bell-fill text-xs shrink-0"></i>
-        <span>${escapeHtml(cta1Text)}</span>
+      <div class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs" style="background-color: ${cta1Bg}; color: ${cta1TextColor};">
+        <i class="bi bi-bell-fill text-xs shrink-0 text-amber-300"></i>
+        <span class="truncate">${escapeHtml(cta1Text)}</span>
       </div>
     `;
 
     const cta2Btn = `
-      <div class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm border border-black/5" style="background-color: ${cta2Bg}; color: ${cta2TextColor};">
+      <div class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm" style="background-color: ${cta2Bg}; color: ${cta2TextColor};">
         <i class="bi bi-whatsapp text-xs shrink-0"></i>
-        <span>${escapeHtml(cta2Text)}</span>
+        <span class="truncate">${escapeHtml(cta2Text)}</span>
       </div>
     `;
 
+    // 3.B. Pembersihan Garis & Struktur Kartu: TANPA border divider line
     let ctaContainerHtml = '';
-    if (ctaMode === 'catalog_only') {
-      ctaContainerHtml = `<div class="mt-auto pt-2 flex flex-col gap-1.5">${cta1Btn}</div>`;
-    } else if (ctaMode === 'consultation_only') {
-      ctaContainerHtml = `<div class="mt-auto pt-2 flex flex-col gap-1.5">${cta2Btn}</div>`;
-    } else {
+    if (isDualCTA) {
       ctaContainerHtml = `<div class="mt-auto pt-2 flex flex-col gap-1.5">${cta1Btn}${cta2Btn}</div>`;
+    } else {
+      ctaContainerHtml = `<div class="mt-auto pt-2 flex flex-col gap-1.5">${cta1Btn}</div>`;
     }
 
     if (model === 'variant_1') {
@@ -1128,8 +1465,8 @@ const PromoManager = (() => {
       `;
 
       box.innerHTML = `
-        <div class="h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 shadow-xs hover:shadow-xl transition-all duration-300 group relative bg-white" style="${bgCss}">
-          <!-- Area Atas: GAMBAR PROMO Rasio 3:4 Bleed to Edge (Menempel Penuh ke Tepi) -->
+        <div class="h-full flex flex-col justify-between overflow-hidden border border-transparent ${boxShadowClass} transition-all duration-300 group relative bg-white" style="${bgCss} border-radius: ${borderRadius};">
+          <!-- Area Atas: GAMBAR PROMO Rasio 3:4 Bleed to Edge -->
           <div class="relative w-full aspect-[3/4] overflow-hidden bg-slate-100 shrink-0 block">
             ${imgContent}
             
@@ -1139,7 +1476,7 @@ const PromoManager = (() => {
             </span>
 
             <!-- Badge Timer Melayang di Sudut Bawah Gambar (Jika Varian CD) -->
-            ${showTimer ? `
+            ${isCD ? `
               <div class="absolute bottom-2.5 left-2.5 right-2.5 inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/75 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-bold shadow-md z-10">
                 <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
                 <span class="text-slate-300 font-medium hidden sm:inline">Berakhir Dalam:</span>
@@ -1148,8 +1485,13 @@ const PromoManager = (() => {
             ` : ''}
           </div>
 
-          <!-- Area Bawah: HANYA Tombol CTA Tanpa Judul Teks Sesuai Wireframe -->
-          <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-end">
+          <!-- Area Bawah: Deskripsi (jika 1 CTA) + Tombol CTA Bersih Tanpa Divider Line -->
+          <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
+            ${showDescription && desc ? `
+              <p class="text-[11px] line-clamp-2 leading-relaxed mb-2" style="color: ${descColor};">
+                ${escapeHtml(desc)}
+              </p>
+            ` : ''}
             ${ctaContainerHtml}
           </div>
         </div>
@@ -1165,8 +1507,7 @@ const PromoManager = (() => {
       ` : '';
 
       let bodyContent = '';
-      if (showTimer) {
-        // Varian CD: Judul (2 Baris), Diskon (Opsional), Deskripsi, Kotak Countdown
+      if (isCD) {
         bodyContent = `
           <div class="space-y-0.5">
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 block">
@@ -1179,9 +1520,11 @@ const PromoManager = (() => {
 
           <div class="my-auto py-2">
             ${discountHtml}
-            <p class="text-[10px] sm:text-[11px] text-slate-300 line-clamp-2 mt-1 leading-relaxed">
-              ${escapeHtml(desc)}
-            </p>
+            ${showDescription && desc ? `
+              <p class="text-[10px] sm:text-[11px] line-clamp-2 mt-1 leading-relaxed" style="color: ${descColor};">
+                ${escapeHtml(desc)}
+              </p>
+            ` : ''}
           </div>
 
           <div class="p-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-between text-[10px] font-mono text-emerald-300">
@@ -1193,8 +1536,6 @@ const PromoManager = (() => {
           </div>
         `;
       } else {
-        // Varian Non-CD Sesuai Wireframe:
-        // Judul Baris 1, Sub-Judul Baris 2, Diskon (Opsional), Deskripsi
         bodyContent = `
           <div class="space-y-0.5">
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 block">
@@ -1207,15 +1548,17 @@ const PromoManager = (() => {
 
           <div class="my-auto py-2">
             ${discountHtml}
-            <p class="text-[10px] sm:text-[11px] text-slate-300 line-clamp-4 mt-2 leading-relaxed">
-              ${escapeHtml(desc)}
-            </p>
+            ${showDescription && desc ? `
+              <p class="text-[10px] sm:text-[11px] line-clamp-4 mt-2 leading-relaxed" style="color: ${descColor};">
+                ${escapeHtml(desc)}
+              </p>
+            ` : ''}
           </div>
         `;
       }
 
       box.innerHTML = `
-        <div class="h-full flex flex-col justify-between p-3.5 sm:p-4 overflow-hidden shadow-lg relative text-white group transition hover:shadow-2xl rounded-2xl border border-slate-700/60" style="${bgCss}">
+        <div class="h-full flex flex-col justify-between p-3.5 sm:p-4 overflow-hidden border border-transparent ${boxShadowClass} relative text-white group transition" style="${bgCss} border-radius: ${borderRadius};">
           <div class="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-emerald-500/15 blur-2xl pointer-events-none"></div>
           <div class="absolute -left-8 -bottom-8 w-24 h-24 rounded-full bg-amber-500/10 blur-xl pointer-events-none"></div>
 
@@ -1223,7 +1566,7 @@ const PromoManager = (() => {
             ${bodyContent}
           </div>
 
-          <div class="relative z-10 mt-auto pt-2.5 flex flex-col gap-1.5 border-t border-slate-700/60">
+          <div class="relative z-10 mt-auto pt-2.5 flex flex-col gap-1.5">
             ${ctaContainerHtml}
           </div>
         </div>
@@ -1528,7 +1871,13 @@ const PromoManager = (() => {
                 ` : sponsorList.map((s) => {
                   const isSelected = String(currentEditingSponsorId) === String(s.id);
                   let thumbHtml = '';
-                  if (s.type === 'carousel') {
+                  if (s.type === 'double_width' || s.card_model === 'double_width') {
+                    thumbHtml = `
+                      <div class="w-10 h-10 rounded-lg border border-indigo-200 bg-indigo-950 flex items-center justify-center text-indigo-400">
+                        <i class="bi bi-aspect-ratio text-lg"></i>
+                      </div>
+                    `;
+                  } else if (s.type === 'carousel') {
                     thumbHtml = `
                       <div class="w-10 h-10 rounded-lg border border-slate-200 bg-slate-900 flex items-center justify-center text-blue-400">
                         <i data-lucide="images" class="w-5 h-5"></i>
@@ -1547,7 +1896,10 @@ const PromoManager = (() => {
                   }
 
                   let modelBadge = '';
-                  if (s.type === 'carousel') {
+                  if (s.type === 'double_width' || s.card_model === 'double_width') {
+                    const slideCount = Array.isArray(s.slides) ? s.slides.length : 0;
+                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-indigo-50 text-indigo-700 border-indigo-200">2-Kolom (${slideCount}/10 Foto)</span>`;
+                  } else if (s.type === 'carousel') {
                     const slideCount = Array.isArray(s.slides) ? s.slides.length : 0;
                     modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-blue-50 text-blue-700 border-blue-200">Slider (${slideCount}/5 Foto)</span>`;
                   } else if (s.type === 'internal') {
@@ -1651,11 +2003,13 @@ const PromoManager = (() => {
 
     const allProducts = (typeof DB !== 'undefined' && DB.getAllProducts) ? DB.getAllProducts().filter(p => p.is_active !== false) : [];
 
-    // State sync for carousel slides
-    if (activeSponsorType === 'carousel') {
+    // State sync for carousel / double_width slides
+    const isMultiSlideModel = (activeSponsorType === 'carousel' || activeSponsorType === 'double_width');
+    const maxSlidesLimit = activeSponsorType === 'double_width' ? 10 : 5;
+    if (isMultiSlideModel) {
       if (!currentCarouselSlides || currentCarouselSlides.length === 0) {
         if (currentSponsor && Array.isArray(currentSponsor.slides)) {
-          currentCarouselSlides = [...currentSponsor.slides].slice(0, 5);
+          currentCarouselSlides = [...currentSponsor.slides].slice(0, maxSlidesLimit);
         } else {
           currentCarouselSlides = [];
         }
@@ -1705,11 +2059,13 @@ const PromoManager = (() => {
     const currentQuota = currentSponsor?.display_quota || 1;
     const isCurrentActive = isCreatingNew ? true : (currentSponsor?.active !== false);
 
-    const modelName = activeSponsorType === 'carousel'
-      ? 'Sponsor Slider Carousel (Maksimal 5 Foto)'
-      : (activeSponsorType === 'internal' ? 'Sponsor Produk Sendiri (Katalog Mini Grid 2x2)' : 'Sponsor Statis (1 Gambar Banner Rasio 3:4)');
+    const modelName = activeSponsorType === 'double_width'
+      ? 'Sponsor 2-Kolom (Double-Width Multi-Slide & CTA Mandiri)'
+      : (activeSponsorType === 'carousel'
+        ? 'Sponsor Slider Carousel (Maksimal 5 Foto)'
+        : (activeSponsorType === 'internal' ? 'Sponsor Produk Sendiri (Katalog Mini Grid 2x2)' : 'Sponsor Statis (1 Gambar Banner Rasio 3:4)'));
 
-    const titleVal = currentSponsor?.title || (activeSponsorType === 'carousel' ? 'Sponsor Slider Carousel' : (activeSponsorType === 'internal' ? 'FLASH SALE 11.11' : 'Layanan Mitra & Desain Prioritas'));
+    const titleVal = currentSponsor?.title || (activeSponsorType === 'double_width' ? 'Sponsor Eksklusif 2-Kolom' : (activeSponsorType === 'carousel' ? 'Sponsor Slider Carousel' : (activeSponsorType === 'internal' ? 'FLASH SALE 11.11' : 'Layanan Mitra & Desain Prioritas')));
     const subtitleVal = currentSponsor?.subtitle || '';
     const isAlwaysActive = currentSponsor ? (currentSponsor.is_always_active !== false) : true;
     const startDatetimeVal = currentSponsor?.start_datetime || '';
@@ -1747,7 +2103,7 @@ const PromoManager = (() => {
               <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">1</span>
               <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 1 - Penentuan Model Tampilan Kartu:</h4>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
               <label class="relative p-3 rounded-xl border ${activeSponsorType === 'ad1' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <input type="radio" name="sponsor_card_model" value="ad1" ${activeSponsorType === 'ad1' ? 'checked' : ''} class="text-emerald-600" />
@@ -1769,11 +2125,105 @@ const PromoManager = (() => {
                 </div>
                 <p class="text-slate-500 text-[10px] leading-relaxed">Katalog Mini Internal Grid 2x2 dari database produk toko.</p>
               </label>
+              <label class="relative p-3 rounded-xl border ${activeSponsorType === 'double_width' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <input type="radio" name="sponsor_card_model" value="double_width" ${activeSponsorType === 'double_width' ? 'checked' : ''} class="text-emerald-600" />
+                  <span class="font-bold text-slate-900 text-xs">Sponsor 2-Kolom</span>
+                </div>
+                <p class="text-slate-500 text-[10px] leading-relaxed">Lebar 2 kolom produk, hingga 10 foto, mode otomatis/manual & CTA mandiri per slide.</p>
+              </label>
             </div>
           </div>
 
           <!-- LANGKAH 2: FORM PENGATURAN SPESIFIK MODEL -->
-          ${activeSponsorType === 'carousel' ? `
+          ${activeSponsorType === 'double_width' ? `
+            <!-- FORM SPONSOR 2-KOLOM (DOUBLE-WIDTH CAROUSEL DENGAN HINGGA 10 FOTO & CTA MANDIRI) -->
+            <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-xs">2</span>
+                <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 2 - Konfigurasi Sponsor 2-Kolom (Double-Width Multi-Slide):</h4>
+              </div>
+
+              <!-- Saran Skala Gambar & Fitur -->
+              <div class="p-3 bg-indigo-50/90 rounded-xl border border-indigo-200 text-xs text-indigo-900 leading-relaxed space-y-1">
+                <div class="flex items-center gap-1.5 font-bold">
+                  <i class="bi bi-aspect-ratio text-indigo-600 shrink-0"></i>
+                  <span>Panduan Dimensi 2-Kolom (col-span-2) & CTA Fleksibel:</span>
+                </div>
+                <p class="text-[11px] text-indigo-800">
+                  Banner membentang selebar <strong>2 kolom etalase</strong> dengan tinggi proporsional sejajar kartu produk sekitar. Mendukung <strong>hingga 10 slide foto</strong> (resolusi ideal <strong>1200×800 px</strong> lanskap atau <strong>800×600 px</strong>, maksimal 500 KB per foto). Pilihan mode putar otomatis (interval waktu) atau manual (panah hover desktop & swipe sentuh mobile), serta tombol CTA melayang kustom per slide.
+                </p>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1 text-xs">Judul / Label Sponsor 2-Kolom:</label>
+                <input type="text" id="sponsor-title-input" value="${escapeHtml(titleVal)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="Contoh: Sponsor Spesial Rekanan Toko" />
+              </div>
+
+              <!-- Mode Navigasi, Animasi & Interval Pergantian Slide -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1 text-xs">Mode Navigasi Slide:</label>
+                  <select id="sponsor-slide-mode-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-semibold outline-none focus:border-emerald-500 text-xs">
+                    <option value="auto" ${(currentSponsor?.slide_mode || 'auto') === 'auto' ? 'selected' : ''}>Putar Otomatis (Interval)</option>
+                    <option value="manual" ${currentSponsor?.slide_mode === 'manual' ? 'selected' : ''}>Manual (Panah & Geser Sentuh)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1 text-xs">Interval Putar (milidetik):</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="number" id="carousel-interval-input" value="${currentSponsor?.auto_slide_interval || 4000}" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold outline-none focus:border-emerald-500 text-xs bg-white" placeholder="4000" />
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1 text-xs">Animasi Pergantian Slide:</label>
+                  <select id="carousel-anim-type-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-semibold outline-none focus:border-emerald-500 text-xs">
+                    <option value="slide" ${(currentSponsor?.animation_type === 'slide' || !currentSponsor?.animation_type) ? 'selected' : ''}>Slide Horizontal (Geser Halus)</option>
+                    <option value="fade" ${currentSponsor?.animation_type === 'fade' ? 'selected' : ''}>Fade In / Out (Pudar Elegan)</option>
+                    <option value="scale" ${currentSponsor?.animation_type === 'scale' ? 'selected' : ''}>Scale Sinematik</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-200 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="block font-bold text-slate-800 text-xs">Slide Foto Sponsor (Maksimal 10 Foto):</label>
+                    <p class="text-[11px] text-slate-400">Unggah berkas foto atau tempel URL tautan gambar slide (maks 500 KB / foto).</p>
+                  </div>
+                  <span id="carousel-slide-counter-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${currentCarouselSlides.length >= 10 ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}">
+                    ${currentCarouselSlides.length} / 10 Slide
+                  </span>
+                </div>
+
+                <!-- Unified uploader for 2-column carousel slides -->
+                ${renderUnifiedUploaderHtml({
+                  id: 'sponsor-carousel-uploader',
+                  images: currentCarouselSlides.map(s => s.image_url).filter(Boolean),
+                  isMulti: true,
+                  placeholder: 'Tempel URL gambar slide baru (https://...)'
+                })}
+
+                <!-- Repeater Items with Target URLs & Independent CTA -->
+                <div class="pt-3 border-t border-slate-200">
+                  <div class="flex items-center justify-between mb-2">
+                    <h5 class="font-bold text-slate-800 text-xs">Daftar Slide & Pengaturan CTA Mandiri:</h5>
+                    ${currentCarouselSlides.length < 10 ? `
+                      <button type="button" id="btn-add-carousel-slide" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-xs cursor-pointer">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Tambah Slide Kosong</span>
+                      </button>
+                    ` : `
+                      <span class="text-[11px] font-bold text-slate-400">Maksimal 10 slide tercapai</span>
+                    `}
+                  </div>
+                  <div id="carousel-slides-container" class="space-y-3">
+                    <!-- Populated by renderCarouselSlideRows -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : (activeSponsorType === 'carousel' ? `
             <!-- FORM CAROUSEL (MAKSIMAL 5 GAMBAR) -->
             <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
               <div class="flex items-center gap-2">
@@ -1984,7 +2434,7 @@ const PromoManager = (() => {
                 <input type="text" id="sponsor-cta-target" value="${escapeHtml(currentSponsor?.cta_target || '')}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500 bg-white" placeholder="https://... atau 6281234567890" />
               </div>
             </div>
-          `)}
+          `))}
 
           <!-- LANGKAH 3: PENGATURAN MASA AKTIF & PENJADWALAN (AUTO-ACTIVATION & EXPIRATION) -->
           <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
@@ -2133,8 +2583,8 @@ const PromoManager = (() => {
               </select>
             </div>
 
-            <!-- Warna Background Card (KHUSUS: DISEMBUNYIKAN PADA VARIAN SLIDE/CAROUSEL) -->
-            ${activeSponsorType === 'carousel' ? '' : `
+            <!-- Warna Background Card (KHUSUS: DISEMBUNYIKAN PADA VARIAN SLIDE/CAROUSEL & 2-KOLOM) -->
+            ${(activeSponsorType === 'carousel' || activeSponsorType === 'double_width') ? '' : `
               <div id="sponsor-bg-color-wrapper">
                 <div class="flex items-center justify-between mb-1">
                   <label class="font-bold text-slate-700 text-xs">Warna Background Card:</label>
@@ -2188,17 +2638,19 @@ const PromoManager = (() => {
           </div>
 
           <!-- Container Live Preview -->
-          <div id="sponsor-card-live-preview" class="max-w-[300px] mx-auto w-full">
+          <div id="sponsor-card-live-preview" class="${activeSponsorType === 'double_width' ? 'max-w-[480px]' : 'max-w-[300px]'} mx-auto w-full">
             <!-- Rendered dynamically via updateSponsorPreviews() -->
           </div>
 
           <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-[11px] text-slate-500 leading-relaxed">
             <span class="font-bold text-slate-700 block mb-0.5">Penempatan Otomatis di Web Toko:</span>
-            ${activeSponsorType === 'carousel'
-              ? 'Kartu slider carousel akan otomatis memutar pergantian slide tiap interval waktu di slot sponsor etalase tanpa tombol CTA.'
-              : (activeSponsorType === 'internal'
-                ? 'Kartu katalog mini 2x2 menampilkan produk internal toko secara interaktif tanpa garis pemisah header. Klik mini card di etalase akan langsung membuka halaman produk (PDP).'
-                : 'Kartu sponsor statis menampilkan gambar banner 3:4 portrait murni dengan 2 tombol aksi CTA di bagian bawah.')}
+            ${activeSponsorType === 'double_width'
+              ? 'Kartu sponsor 2-kolom membentang selebar 2 kolom etalase dengan navigasi hingga 10 slide gambar, mode putar otomatis/manual panah hover & touch swipe, serta tombol CTA melayang kustom per slide.'
+              : (activeSponsorType === 'carousel'
+                ? 'Kartu slider carousel akan otomatis memutar pergantian slide tiap interval waktu di slot sponsor etalase tanpa tombol CTA.'
+                : (activeSponsorType === 'internal'
+                  ? 'Kartu katalog mini 2x2 menampilkan produk internal toko secara interaktif tanpa garis pemisah header. Klik mini card di etalase akan langsung membuka halaman produk (PDP).'
+                  : 'Kartu sponsor statis menampilkan gambar banner 3:4 portrait murni dengan 2 tombol aksi CTA di bagian bawah.'))}
           </div>
         </div>
 
@@ -2212,7 +2664,7 @@ const PromoManager = (() => {
     if (!box) return;
 
     const bgInput = document.getElementById('sponsor-card-bg-input');
-    const bgVal = (activeSponsorType === 'carousel') ? 'transparent' : (bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent'));
+    const bgVal = (activeSponsorType === 'carousel' || activeSponsorType === 'double_width') ? 'transparent' : (bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent'));
     const borderVal = document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0';
     const borderWidthVal = document.getElementById('sponsor-card-border-width-select')?.value || '1px';
     const radiusVal = document.getElementById('sponsor-card-radius-input')?.value.trim() || '16px';
@@ -2221,6 +2673,151 @@ const PromoManager = (() => {
     const shadowClass = shadowVal === 'none' ? 'sponsor-shadow-none' : `sponsor-shadow-${shadowVal}`;
 
     const cardStyleCss = `background-color: ${bgVal}; border: ${borderWidthVal} solid ${borderVal}; border-radius: ${radiusVal}; ${shadowStyle}`;
+
+    if (activeSponsorType === 'double_width') {
+      const slides = (currentCarouselSlides || []).slice(0, 10);
+      const interval = parseInt(document.getElementById('carousel-interval-input')?.value) || 4000;
+      const animType = document.getElementById('carousel-anim-type-select')?.value || 'slide';
+      const slideMode = document.getElementById('sponsor-slide-mode-select')?.value || 'auto';
+
+      if (slides.length === 0) {
+        box.innerHTML = `
+          <div class="w-full min-h-[220px] h-[240px] flex flex-col justify-between overflow-hidden shadow-md relative group ${shadowClass}" style="${cardStyleCss}">
+            <div class="relative w-full h-full overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col items-center justify-center p-5 text-center shrink-0">
+              <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
+                SPONSOR 2-KOLOM
+              </span>
+              <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-2 text-indigo-400">
+                <i class="bi bi-aspect-ratio text-2xl"></i>
+              </div>
+              <span class="text-xs font-black tracking-widest text-white uppercase">DOUBLE-WIDTH CAROUSEL</span>
+              <p class="text-[10px] text-slate-300 mt-1 max-w-[260px]">Belum ada slide gambar. Silakan unggah hingga 10 foto slide di form samping.</p>
+            </div>
+          </div>
+        `;
+        if (window.lucide) window.lucide.createIcons();
+        return;
+      }
+
+      const showDots = slides.length > 1;
+      const showArrows = slides.length > 1;
+      const dotsHtml = showDots ? slides.map((_, idx) => `
+        <button type="button" class="admin-carousel-preview-dot w-2 h-2 rounded-full ${idx === 0 ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/80'} transition-all cursor-pointer shadow-sm" data-idx="${idx}" aria-label="Slide ${idx + 1}"></button>
+      `).join('') : '';
+
+      let slidesContentHtml = '';
+      if (animType === 'fade' || animType === 'scale') {
+        slidesContentHtml = slides.map((slide, idx) => {
+          const ctaBtnHtml = slide.cta_enabled ? `
+            <div class="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-md select-none pointer-events-none" style="background-color: ${slide.cta_bg_color || '#059669'}; color: ${slide.cta_text_color || '#ffffff'}; border-radius: ${slide.cta_border_radius || '12px'};">
+              <span class="truncate">${escapeHtml(slide.cta_text || 'Lihat Penawaran')}</span>
+              <i class="${escapeHtml(slide.cta_icon || 'bi-arrow-right')} text-xs"></i>
+            </div>
+          ` : '';
+
+          return `
+            <div class="admin-carousel-preview-slide absolute inset-0 w-full h-full transition-all duration-700 ease-in-out ${idx === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}" style="transition: opacity 0.6s ease, transform 0.6s ease;">
+              <img src="${escapeHtml(slide.image_url || '')}" alt="Slide ${idx + 1}" class="w-full h-full object-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-[10px] font-bold\\'>SPACE IKLAN 2-KOLOM</span></div>';" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20"></div>
+              ${ctaBtnHtml}
+            </div>
+          `;
+        }).join('');
+      } else {
+        slidesContentHtml = `
+          <div id="sponsor-carousel-preview-track" class="flex w-full h-full transition-transform duration-500 ease-in-out">
+            ${slides.map((slide, idx) => {
+              const ctaBtnHtml = slide.cta_enabled ? `
+                <div class="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-md select-none pointer-events-none" style="background-color: ${slide.cta_bg_color || '#059669'}; color: ${slide.cta_text_color || '#ffffff'}; border-radius: ${slide.cta_border_radius || '12px'};">
+                  <span class="truncate">${escapeHtml(slide.cta_text || 'Lihat Penawaran')}</span>
+                  <i class="${escapeHtml(slide.cta_icon || 'bi-arrow-right')} text-xs"></i>
+                </div>
+              ` : '';
+
+              return `
+                <div class="w-full h-full shrink-0 relative block" style="width: 100%; height: 100%;">
+                  <img src="${escapeHtml(slide.image_url || '')}" alt="Slide ${idx + 1}" class="w-full h-full object-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-3\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-[10px] font-bold\\'>SPACE IKLAN 2-KOLOM</span></div>';" />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20"></div>
+                  ${ctaBtnHtml}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      box.innerHTML = `
+        <div class="w-full min-h-[220px] h-[240px] flex flex-col justify-between overflow-hidden shadow-md relative group ${shadowClass}" style="${cardStyleCss}">
+          <div class="relative w-full h-full bg-slate-900 overflow-hidden block shrink-0 shadow-inner">
+            ${slidesContentHtml}
+            <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-20">
+              SPONSOR 2-KOLOM
+            </span>
+            ${showArrows ? `
+              <button type="button" class="admin-preview-prev-btn absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition opacity-80 hover:opacity-100 z-20 cursor-pointer shadow-md">
+                <i class="bi bi-chevron-left text-xs"></i>
+              </button>
+              <button type="button" class="admin-preview-next-btn absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition opacity-80 hover:opacity-100 z-20 cursor-pointer shadow-md">
+                <i class="bi bi-chevron-right text-xs"></i>
+              </button>
+            ` : ''}
+            ${showDots ? `
+              <div class="absolute bottom-2.5 left-0 right-0 flex items-center justify-center gap-1.5 z-20">
+                ${dotsHtml}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
+      if (window.lucide) window.lucide.createIcons();
+
+      let currentDoubleIdx = 0;
+      const updateDoubleSlide = (targetIdx) => {
+        currentDoubleIdx = (targetIdx + slides.length) % slides.length;
+        const track = document.getElementById('sponsor-carousel-preview-track');
+        const fadeSlides = box.querySelectorAll('.admin-carousel-preview-slide');
+        const dots = box.querySelectorAll('.admin-carousel-preview-dot');
+        if (animType === 'fade' || animType === 'scale') {
+          fadeSlides.forEach((sl, idx) => {
+            sl.style.opacity = idx === currentDoubleIdx ? '1' : '0';
+            sl.style.zIndex = idx === currentDoubleIdx ? '10' : '0';
+          });
+        } else if (track) {
+          track.style.transform = `translateX(-${currentDoubleIdx * 100}%)`;
+        }
+        dots.forEach((d, idx) => {
+          d.className = `admin-carousel-preview-dot w-2 h-2 rounded-full ${idx === currentDoubleIdx ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/80'} transition-all cursor-pointer shadow-sm`;
+        });
+      };
+
+      box.querySelectorAll('.admin-carousel-preview-dot').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetIdx = parseInt(btn.getAttribute('data-idx')) || 0;
+          updateDoubleSlide(targetIdx);
+        });
+      });
+
+      const prevBtn = box.querySelector('.admin-preview-prev-btn');
+      if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateDoubleSlide(currentDoubleIdx - 1);
+        });
+      }
+      const nextBtn = box.querySelector('.admin-preview-next-btn');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateDoubleSlide(currentDoubleIdx + 1);
+        });
+      }
+
+      if (slideMode === 'auto') {
+        startAdminCarouselRotation(slides.length, interval, animType);
+      }
+      return;
+    }
 
     if (activeSponsorType === 'carousel') {
       const slides = currentCarouselSlides || [];
@@ -2617,7 +3214,9 @@ const PromoManager = (() => {
         'promo-monthly-start-day',
         'promo-monthly-end-day',
         'promo-cta1-text',
-        'promo-cta2-text'
+        'promo-cta1-link',
+        'promo-cta2-text',
+        'promo-cta2-link'
       ];
       textInputs.forEach(id => {
         const el = document.getElementById(id);
@@ -2627,7 +3226,11 @@ const PromoManager = (() => {
       const changeInputs = [
         'promo-discount-type',
         'promo-start-datetime',
-        'promo-end-datetime'
+        'promo-end-datetime',
+        'promo-border-radius',
+        'promo-box-shadow',
+        'promo-cta-mode',
+        'promo-show-timer'
       ];
       changeInputs.forEach(id => {
         const el = document.getElementById(id);
@@ -2637,6 +3240,7 @@ const PromoManager = (() => {
       // Color pickers with text field sync
       const colorPairs = [
         { picker: 'promo-title-color', text: 'promo-title-color-text' },
+        { picker: 'promo-desc-color', text: 'promo-desc-color-text' },
         { picker: 'promo-discount-color', text: 'promo-discount-color-text' },
         { picker: 'promo-bg-color1', text: 'promo-bg-color1-text' },
         { picker: 'promo-bg-color2', text: 'promo-bg-color2-text' },
@@ -2686,7 +3290,7 @@ const PromoManager = (() => {
         });
       }
 
-      // Timer switch
+      // Timer switch/dropdown
       const timerToggle = document.getElementById('promo-show-timer');
       if (timerToggle) timerToggle.addEventListener('change', updatePromoCardLivePreview);
 
@@ -2694,16 +3298,19 @@ const PromoManager = (() => {
       const ctaThemeToggle = document.getElementById('promo-cta-theme-default');
       if (ctaThemeToggle) {
         ctaThemeToggle.addEventListener('change', (e) => {
-          const customBox = document.getElementById('promo-custom-cta-box');
-          if (customBox) customBox.className = e.target.checked ? 'hidden space-y-3 pt-2' : 'block space-y-3 pt-2';
+          const box1 = document.getElementById('promo-cta1-color-box');
+          const box2 = document.getElementById('promo-cta2-color-box');
+          if (box1) box1.className = e.target.checked ? 'hidden grid-cols-2 gap-2 pt-1 border-t border-slate-100' : 'grid grid-cols-2 gap-2 pt-1 border-t border-slate-100';
+          if (box2) box2.className = e.target.checked ? 'hidden grid-cols-2 gap-2 pt-1 border-t border-slate-100' : 'grid grid-cols-2 gap-2 pt-1 border-t border-slate-100';
           updatePromoCardLivePreview();
         });
       }
 
-      // Dual CTA mode radios
-      document.querySelectorAll('input[name="promo_cta_mode"]').forEach(r => {
-        r.addEventListener('change', updatePromoCardLivePreview);
-      });
+      // CTA Mode dropdown
+      const ctaModeSel = document.getElementById('promo-cta-mode');
+      if (ctaModeSel) {
+        ctaModeSel.addEventListener('change', updatePromoCardLivePreview);
+      }
 
       // Active toggle indicator
       const activeToggle = document.getElementById('promo-active-toggle');
@@ -2938,23 +3545,34 @@ const PromoManager = (() => {
       });
 
       // Model-specific handlers
-      if (activeSponsorType === 'carousel') {
+      if (activeSponsorType === 'carousel' || activeSponsorType === 'double_width') {
+        const isDoubleWidth = activeSponsorType === 'double_width';
+        const maxLimit = isDoubleWidth ? 10 : 5;
         renderCarouselSlideRows(currentCarouselSlides);
         initUnifiedUploader({
           id: 'sponsor-carousel-uploader',
           initialImages: currentCarouselSlides.map(s => s.image_url).filter(Boolean),
           isMulti: true,
           onChange: (imgs) => {
-            currentCarouselSlides = imgs.slice(0, 5).map((img, idx) => {
+            currentCarouselSlides = imgs.slice(0, maxLimit).map((img, idx) => {
               const existing = currentCarouselSlides[idx];
               return {
                 image_url: img,
-                target_url: existing ? existing.target_url : ''
+                target_url: existing ? existing.target_url : '',
+                click_image_enabled: existing ? existing.click_image_enabled !== false : true,
+                cta_enabled: existing ? existing.cta_enabled : false,
+                cta_text: existing?.cta_text || 'Lihat Penawaran',
+                cta_link: existing?.cta_link || '',
+                cta_bg_color: existing?.cta_bg_color || '#059669',
+                cta_text_color: existing?.cta_text_color || '#ffffff',
+                cta_border_radius: existing?.cta_border_radius || '12px',
+                cta_icon: existing?.cta_icon || 'bi-arrow-right',
+                cta_shadow: existing?.cta_shadow || 'md'
               };
             });
             renderCarouselSlideRows(currentCarouselSlides);
             const badge = document.getElementById('carousel-slide-counter-badge');
-            if (badge) badge.textContent = `${currentCarouselSlides.length} / 5 Slide`;
+            if (badge) badge.textContent = `${currentCarouselSlides.length} / ${maxLimit} Slide`;
             updateSponsorPreviews();
           }
         });
@@ -2962,14 +3580,23 @@ const PromoManager = (() => {
         const btnAddSlide = document.getElementById('btn-add-carousel-slide');
         if (btnAddSlide) {
           btnAddSlide.addEventListener('click', () => {
-            if (currentCarouselSlides.length < 5) {
+            if (currentCarouselSlides.length < maxLimit) {
               currentCarouselSlides.push({
                 image_url: 'assets/images/logo-songer-creative.png',
-                target_url: ''
+                target_url: '',
+                click_image_enabled: true,
+                cta_enabled: false,
+                cta_text: 'Lihat Penawaran',
+                cta_link: '',
+                cta_bg_color: '#059669',
+                cta_text_color: '#ffffff',
+                cta_border_radius: '12px',
+                cta_icon: 'bi-arrow-right',
+                cta_shadow: 'md'
               });
               renderCarouselSlideRows(currentCarouselSlides);
               const badge = document.getElementById('carousel-slide-counter-badge');
-              if (badge) badge.textContent = `${currentCarouselSlides.length} / 5 Slide`;
+              if (badge) badge.textContent = `${currentCarouselSlides.length} / ${maxLimit} Slide`;
               updateSponsorPreviews();
             }
           });
@@ -2980,6 +3607,9 @@ const PromoManager = (() => {
 
         const animSelect = document.getElementById('carousel-anim-type-select');
         if (animSelect) animSelect.addEventListener('change', updateSponsorPreviews);
+
+        const slideModeSel = document.getElementById('sponsor-slide-mode-select');
+        if (slideModeSel) slideModeSel.addEventListener('change', updateSponsorPreviews);
 
         const titleInp = document.getElementById('sponsor-title-input');
         if (titleInp) titleInp.addEventListener('input', updateSponsorPreviews);
@@ -3256,16 +3886,37 @@ const PromoManager = (() => {
       const bgColor2 = document.getElementById('promo-bg-color2')?.value || '#f8fafc';
       const bgAngle = parseInt(document.getElementById('promo-bg-angle')?.value) || 135;
 
-      const showTimer = document.getElementById('promo-show-timer')?.checked ?? true;
+      const descColor = document.getElementById('promo-desc-color')?.value || '#64748b';
+      const borderRadius = document.getElementById('promo-border-radius')?.value || '16px';
+      const boxShadow = document.getElementById('promo-box-shadow')?.value || 'sm';
+
+      const timerSelect = document.getElementById('promo-show-timer');
+      const showTimer = timerSelect ? (timerSelect.value === 'true' || timerSelect.value === true) : (document.getElementById('promo-show-timer')?.checked ?? true);
 
       const useThemeDefault = document.getElementById('promo-cta-theme-default')?.checked ?? true;
-      const ctaMode = document.querySelector('input[name="promo_cta_mode"]:checked')?.value || 'dual';
+      const ctaModeSelect = document.getElementById('promo-cta-mode');
+      const ctaMode = ctaModeSelect ? ctaModeSelect.value : (document.querySelector('input[name="promo_cta_mode"]:checked')?.value || 'dual');
       const cta1Text = document.getElementById('promo-cta1-text')?.value.trim() || 'Ingatkan Saya';
+      const cta1Link = document.getElementById('promo-cta1-link')?.value.trim() || '';
       const cta1Bg = document.getElementById('promo-cta1-bg')?.value || '#33b589';
       const cta1TextColor = document.getElementById('promo-cta1-text-color')?.value || '#ffffff';
       const cta2Text = document.getElementById('promo-cta2-text')?.value.trim() || 'Konsultasi Desain & Cetak';
+      const cta2Link = document.getElementById('promo-cta2-link')?.value.trim() || '';
       const cta2Bg = document.getElementById('promo-cta2-bg')?.value || '#25d366';
       const cta2TextColor = document.getElementById('promo-cta2-text-color')?.value || '#ffffff';
+
+      const styleObj = {
+        bg_type: bgType,
+        bg_color1: bgColor1,
+        bg_color2: bgColor2,
+        bg_angle: bgAngle,
+        title_color: titleColor,
+        desc_color: descColor,
+        discount_color: discColor,
+        border_radius: borderRadius,
+        box_shadow: boxShadow,
+        border_color: 'transparent'
+      };
 
       const promoData = {
         id: String((activePromoId && activePromoId !== 'new') ? activePromoId : ('promo_' + Date.now())),
@@ -3287,22 +3938,32 @@ const PromoManager = (() => {
         target_audience: targetAudience,
         label,
         description: desc,
+        style: styleObj,
         title_color: titleColor,
+        desc_color: descColor,
         discount_color: discColor,
         bg_type: bgType,
         bg_color1: bgColor1,
         bg_color2: bgColor2,
         bg_angle: bgAngle,
+        border_radius: borderRadius,
+        box_shadow: boxShadow,
         show_timer: showTimer,
         use_theme_default: useThemeDefault,
         cta_mode: ctaMode,
         cta1_text: cta1Text,
+        cta1_link: cta1Link,
         cta1_bg: cta1Bg,
         cta1_text_color: cta1TextColor,
         cta2_text: cta2Text,
+        cta2_link: cta2Link,
         cta2_bg: cta2Bg,
         cta2_text_color: cta2TextColor
       };
+
+      if (typeof DB !== 'undefined' && typeof DB.savePromo === 'function') {
+        DB.savePromo(promoData);
+      }
 
       if (!activePromoId || activePromoId === 'new') {
         promoList.push(promoData);
@@ -3357,12 +4018,13 @@ const PromoManager = (() => {
       const borderColor = document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0';
       const shadow = document.getElementById('sponsor-card-shadow-select')?.value || 'sm';
       const bgInput = document.getElementById('sponsor-card-bg-input');
-      const bgColor = (activeSponsorType === 'carousel')
+      const bgColor = (activeSponsorType === 'carousel' || activeSponsorType === 'double_width')
         ? 'transparent'
         : (bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent'));
 
       const sponsorData = {
         type: activeSponsorType || 'ad1',
+        card_model: activeSponsorType || 'ad1',
         active: active,
         is_active: active,
         display_quota: quota,
@@ -3374,7 +4036,16 @@ const PromoManager = (() => {
         bg_color: bgColor
       };
 
-      if (activeSponsorType === 'carousel') {
+      if (activeSponsorType === 'double_width') {
+        sponsorData.title = document.getElementById('sponsor-title-input')?.value.trim() || 'Sponsor Spesial 2-Kolom';
+        sponsorData.slide_mode = document.getElementById('sponsor-slide-mode-select')?.value || 'auto';
+        sponsorData.auto_slide_interval = parseInt(document.getElementById('carousel-interval-input')?.value, 10) || 4000;
+        sponsorData.animation_type = document.getElementById('carousel-anim-type-select')?.value || 'slide';
+        sponsorData.slides = (currentCarouselSlides || []).slice(0, 10);
+        sponsorData.is_always_active = document.getElementById('chk-sponsor-always-active')?.checked ?? true;
+        sponsorData.start_datetime = document.getElementById('sponsor-start-datetime')?.value || '';
+        sponsorData.end_datetime = document.getElementById('sponsor-end-datetime')?.value || '';
+      } else if (activeSponsorType === 'carousel') {
         sponsorData.title = document.getElementById('sponsor-title-input')?.value.trim() || 'Sponsor Slider Carousel';
         sponsorData.auto_slide_interval = parseInt(document.getElementById('carousel-interval-input')?.value, 10) || 3500;
         sponsorData.animation_type = document.getElementById('carousel-anim-type-select')?.value || 'slide';

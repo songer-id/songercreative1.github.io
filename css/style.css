@@ -815,7 +815,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   SHOPIFY-STYLE THEME CUSTOMIZER STUDIO LAYOUT
+   SHOPIFY-STYLE THEME CUSTOMIZER STUDIO LAYOUT & INSPECTOR SIDEBAR
    -------------------------------------------------------------------------- */
 .theme-customizer-studio {
   display: flex;
@@ -962,7 +962,86 @@ body {
   transform: rotate(180deg);
 }
 
-/* Customizer Preview Frame Resizing */
+/* Sub-Accordion Components (Nested within Sections) */
+.sub-accordion-item {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sub-accordion-item:hover {
+  border-color: #cbd5e1;
+}
+
+.sub-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  background-color: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.sub-accordion-header:hover {
+  background-color: #f1f5f9;
+}
+
+.sub-accordion-body {
+  padding: 0.75rem;
+  background-color: #ffffff;
+}
+
+.sub-accordion-body.hidden {
+  display: none !important;
+}
+
+.sub-accordion-chevron {
+  transition: transform 0.2s ease;
+}
+
+.sub-accordion-header.is-open .sub-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+/* Sidebar Resize Handle & Drag Protection */
+#sidebar-resize-handle,
+#inspector-drag-handle {
+  width: 8px;
+  cursor: col-resize;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+#sidebar-resize-handle:hover,
+#inspector-drag-handle:hover {
+  background-color: rgba(51, 181, 137, 0.5);
+}
+
+#sidebar-resize-handle:active,
+#inspector-drag-handle:active {
+  background-color: #217558;
+}
+
+body.is-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.is-resizing iframe {
+  pointer-events: none !important;
+}
+
+/* Customizer Preview Frame Resizing & Viewport */
+.preview-viewport-wrapper,
+#hero-preview-iframe {
+  height: 100% !important;
+  min-height: calc(100vh - 3.5rem) !important;
+}
+
 .preview-desktop-mode {
   width: 100% !important;
   max-width: 1200px !important;
@@ -977,6 +1056,52 @@ body {
   width: 390px !important;
   max-width: 100% !important;
 }
+
+/* Visual Edit Mode Outline & Hover Highlight */
+body.visual-edit-active [data-section] {
+  transition: outline 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+body.visual-edit-active [data-section]:hover {
+  outline: 2px dashed #33b589 !important;
+  outline-offset: -2px;
+  cursor: pointer !important;
+}
+
+/* Animasi Flash Highlight Akordeon saat Mode Edit Visual diklik di iframe */
+@keyframes accordionFlash {
+  0% {
+    box-shadow: 0 0 0 3px rgba(51, 181, 137, 0.7);
+    transform: scale(1.008);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(51, 181, 137, 0.3);
+  }
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
+}
+.accordion-flash-highlight {
+  animation: accordionFlash 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Dynamic Section Builder Item Styles */
+.section-builder-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-builder-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.section-builder-item.is-disabled {
+  opacity: 0.6;
+  background-color: #f8fafc;
+}
+
 
 /* Aspect Ratio 3:4 Utility for Promo & Sponsor Cards */
 .aspect-3-4 {
@@ -1001,18 +1126,6 @@ body {
   }
 }
 
-/* Pembungkus preview membentang 100% tinggi layar penuh */
-.preview-viewport-wrapper,
-#hero-preview-iframe {
-  height: 100% !important;
-  min-height: calc(100vh - 3.5rem) !important;
-}
-
-/* Proteksi agar iframe tidak menangkap pointer saat sidebar sedang di-drag */
-body.is-resizing iframe {
-  pointer-events: none !important;
-}
-
 /* Scrollbar ultra-ramping & minimalis */
 ::-webkit-scrollbar {
   width: 5px;
@@ -1027,24 +1140,6 @@ body.is-resizing iframe {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}
-
-/* Animasi Flash Highlight Akordeon saat Mode Edit Visual diklik di iframe */
-@keyframes accordionFlash {
-  0% {
-    box-shadow: 0 0 0 3px rgba(51, 181, 137, 0.7);
-    transform: scale(1.008);
-  }
-  70% {
-    box-shadow: 0 0 0 4px rgba(51, 181, 137, 0.3);
-  }
-  100% {
-    box-shadow: none;
-    transform: scale(1);
-  }
-}
-.accordion-flash-highlight {
-  animation: accordionFlash 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ==========================================================================
@@ -1182,6 +1277,25 @@ body.is-resizing iframe {
 
 .hero-shadow-xl {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Hero CTA Button Interactive Utilities */
+.hero-cta-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-weight: 700;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.hero-cta-btn:hover {
+  filter: brightness(1.05);
+}
+
+.hero-cta-btn:active {
+  transform: scale(0.97);
 }
 
 /* Gambar Split Otomatis Terpotong Kiri-Kanan Seimbang & Proporsional Mobile */

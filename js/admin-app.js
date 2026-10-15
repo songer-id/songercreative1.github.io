@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ==============================================================================
  * SONGER CREATIVE - ADMIN & POS KASIR CONTROLLER (ADMIN-APP.JS)
  * Panel Seller Center Mandiri, POS Kasir Offline, Kalkulator PxL, & Cetak Struk
@@ -3428,7 +3428,7 @@ const AdminApp = (() => {
       <div class="theme-customizer-studio h-full w-full">
 
         <!-- Mobile Tab Switcher (< 768px) -->
-        <div class="theme-studio-mobile-tabs bg-slate-900 border-b border-slate-800 p-2 flex items-center justify-center gap-2 shrink-0">
+        <div class="theme-studio-mobile-tabs hidden max-md:flex md:hidden bg-slate-900 border-b border-slate-800 p-2 items-center justify-center gap-2 shrink-0">
           <button type="button" id="btn-theme-tab-tools" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs cursor-pointer">
             <i data-lucide="sliders" class="w-4 h-4"></i>
             <span>Tab 1: Pengaturan Tools</span>

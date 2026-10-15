@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap"
     rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
@@ -37,7 +37,8 @@
             }
           },
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['var(--store-font-body, Inter)', 'sans-serif'],
+            heading: ['var(--store-font-heading, "Bricolage Grotesque")', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace']
           }
         }
@@ -53,6 +54,7 @@
 
   <!-- Custom Stylesheet (Relative Path) -->
   <link rel="stylesheet" href="css/style.css?v=3.5">
+  <link rel="stylesheet" href="css/storefront.css?v=3.6">
 </head>
 
 <body
@@ -81,17 +83,22 @@
        TOP GREETING BAR & PROMO COUNTDOWN (NON-STICKY)
        Posisi statis/relatif biasa - otomatis hilang tergulung saat halaman di-scroll
        ======================================================================== -->
-  <div id="top-greeting-bar" class="w-full text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 relative z-30 transition-colors border-b" style="background-color: var(--topbar-bg, #0f172a); color: var(--topbar-text, #f8fafc); border-color: rgba(255, 255, 255, 0.08);">
+  <div id="top-greeting-bar"
+    class="w-full text-[11px] sm:text-xs py-1.5 px-3 sm:px-6 relative z-30 transition-colors border-b"
+    style="background-color: var(--topbar-bg, #0f172a); color: var(--topbar-text, #f8fafc); border-color: rgba(255, 255, 255, 0.08);">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
       <!-- Sisi Kiri: Sapaan Dinamis (Tanpa Dot Hijau) -->
-      <div class="flex items-center gap-2 min-w-0">
-        <span id="top-greeting-text" class="font-medium truncate tracking-tight">Selamat datang di Songer Creative</span>
+      <div id="top-greeting-container" class="flex items-center gap-2 min-w-0">
+        <span id="top-greeting-text" class="font-medium truncate tracking-tight">Selamat datang di Songer
+          Creative</span>
       </div>
 
       <!-- Sisi Kanan: Hitung Mundur Promo Dinamis (Format Hari / Jam / Menit) -->
-      <div id="top-promo-countdown-container" class="flex items-center gap-1.5 text-[10px] sm:text-[11px] shrink-0 font-medium">
+      <div id="top-promo-countdown-container"
+        class="flex items-center gap-1.5 text-[10px] sm:text-[11px] shrink-0 font-medium">
         <i class="bi bi-stopwatch text-emerald-400 shrink-0"></i>
-        <span id="top-promo-countdown-text" class="truncate font-semibold">Promo Kilat Berakhir Dalam: 02 Hari Lagi</span>
+        <span id="top-promo-countdown-text" class="truncate font-semibold">Promo Kilat Berakhir Dalam: 02 Hari
+          Lagi</span>
       </div>
     </div>
   </div>
@@ -105,16 +112,19 @@
     <div class="px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2.5 sm:gap-6 max-w-7xl mx-auto w-full">
 
       <!-- Left: Logo & Nama Toko (Dynamic Tenant Branding: Logo Square / Landscape / Text Only) -->
-      <a href="index.html" id="nav-brand-logo-btn" class="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0 group transition"
-        title="Beranda Toko">
+      <a href="index.html" id="nav-brand-logo-btn"
+        class="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0 group transition" title="Beranda Toko">
         <div id="header-logo-container" class="h-10 flex items-center shrink-0">
           <img id="header-brand-logo" src="assets/images/logo-songer-creative.png" alt="Logo Toko"
             class="h-8 sm:h-9 w-auto max-w-[115px] sm:max-w-[160px] object-contain transition group-hover:opacity-90" />
         </div>
-        <div id="header-store-info-box" class="border-l border-slate-200/80 pl-2.5 sm:pl-3 hidden sm:flex flex-col justify-center min-w-0 shrink-0">
+        <div id="header-store-info-box"
+          class="border-l border-slate-200/80 pl-2.5 sm:pl-3 hidden sm:flex flex-col justify-center min-w-0 shrink-0">
           <span id="header-store-name"
-            class="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight truncate leading-tight block">Songer Creative</span>
-          <span id="header-store-tagline" class="text-[11px] text-slate-500 block truncate max-w-[200px] leading-tight mt-0.5">Digital
+            class="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight truncate leading-tight block">Songer
+            Creative</span>
+          <span id="header-store-tagline"
+            class="text-[11px] text-slate-500 block truncate max-w-[200px] leading-tight mt-0.5">Digital
             Printing & Percetakan Terpadu</span>
         </div>
       </a>
@@ -160,7 +170,8 @@
           class="relative p-2 sm:p-2.5 rounded-2xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition flex items-center justify-center border border-slate-200/80 shadow-xs group shrink-0"
           title="Buka Keranjang Belanja">
           <div class="relative flex items-center justify-center">
-            <i data-lucide="shopping-cart" class="w-5 h-5 text-slate-700 group-hover:text-emerald-600 transition navbar-cart-icon-el"></i>
+            <i data-lucide="shopping-cart"
+              class="w-5 h-5 text-slate-700 group-hover:text-emerald-600 transition navbar-cart-icon-el"></i>
             <!-- Badge Counter Melayang -->
             <span id="cart-badge-count"
               class="cart-badge-count absolute -top-2.5 -right-2.5 bg-rose-500 text-white font-black text-[10px] min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center shadow-md animate-scale-up hidden border-2 border-white">
@@ -174,10 +185,12 @@
     </div>
 
     <!-- Mobile Search Dynamic Overlay (Slide-down saat ikon cari diklik di HP) -->
-    <div id="mobile-search-overlay" class="sm:hidden fixed inset-x-0 top-0 bg-white/98 backdrop-blur-md z-50 p-3 border-b border-slate-200 shadow-xl hidden transition-all animate-fade-in">
+    <div id="mobile-search-overlay"
+      class="sm:hidden fixed inset-x-0 top-0 bg-white/98 backdrop-blur-md z-50 p-3 border-b border-slate-200 shadow-xl hidden transition-all animate-fade-in">
       <div class="flex items-center gap-2 max-w-md mx-auto">
         <div class="relative flex-1">
-          <i class="bi bi-search text-slate-400 text-xs absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none navbar-search-icon-el"></i>
+          <i
+            class="bi bi-search text-slate-400 text-xs absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none navbar-search-icon-el"></i>
           <input type="text" id="navbar-search-input-mobile" placeholder="Cari banner, stiker, logo..."
             class="navbar-search-input-el w-full bg-slate-100 text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-emerald-500 font-medium text-slate-800 placeholder:text-slate-400" />
         </div>
@@ -205,7 +218,7 @@
   <!-- ========================================================================
        FOOTER PUBLIK TOKO ONLINE
        ======================================================================== -->
-  <footer class="bg-white border-t border-slate-200 py-8 text-xs text-slate-500 mt-auto">
+  <footer id="store-main-footer" class="bg-white border-t border-slate-200 py-8 text-xs text-slate-500 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <span class="font-bold text-slate-800">POS By Songer Creative</span>

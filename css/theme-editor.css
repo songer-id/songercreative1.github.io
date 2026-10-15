@@ -1,0 +1,967 @@
+/* ==========================================================================
+   SONGER CREATIVE - THEME CUSTOMIZER STUDIO STYLESHEET
+   File: css/theme-editor.css
+   Deskripsi: Khusus antarmuka editor tema (Theme Studio Customizer),
+              memisahkan komponen studio dari etalase toko (style.css).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. SHOPIFY-STYLE THEME CUSTOMIZER STUDIO LAYOUT
+   -------------------------------------------------------------------------- */
+.theme-customizer-studio {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #0f172a;
+}
+
+@media (min-width: 1024px) {
+  .theme-customizer-studio {
+    flex-direction: row;
+  }
+
+  /* Center Live Canvas Column */
+  .theme-studio-canvas-col {
+    flex: 1 1 0%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #0f172a;
+    border-right: 1px solid #1e293b;
+    overflow: hidden;
+  }
+
+  /* Right Inspector Tools Panel (w-80 to w-96) */
+  .theme-studio-inspector-col {
+    width: 24rem;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: -4px 0 15px -3px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* Tablet Layout (768px - 1023px): 2-Columns (Canvas 55% & Inspector 45%) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .theme-customizer-studio {
+    flex-direction: row;
+  }
+
+  .theme-studio-canvas-col {
+    flex: 0 0 55%;
+    width: 55%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #0f172a;
+    border-right: 1px solid #1e293b;
+    overflow: hidden;
+  }
+
+  .theme-studio-inspector-col {
+    flex: 0 0 45%;
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #ffffff;
+    overflow: hidden;
+  }
+
+  .theme-studio-mobile-tabs {
+    display: none !important;
+  }
+}
+
+/* Hide Theme Studio Mobile Tab Switcher on Desktop & Tablet (>= 768px) */
+@media (min-width: 768px) {
+
+  .theme-studio-mobile-tabs,
+  #btn-theme-tab-tools,
+  #btn-theme-tab-preview {
+    display: none !important;
+  }
+}
+
+/* Mobile Layout (< 768px): Tab Switcher on Top */
+@media (max-width: 767px) {
+  .theme-customizer-studio {
+    flex-direction: column;
+  }
+
+  .theme-studio-mobile-tabs {
+    display: flex !important;
+  }
+
+  .theme-studio-canvas-col.is-tab-hidden,
+  .theme-studio-inspector-col.is-tab-hidden {
+    display: none !important;
+  }
+
+  .theme-studio-canvas-col,
+  .theme-studio-inspector-col {
+    width: 100% !important;
+    flex: 1 1 0% !important;
+    height: 100% !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. THEME STUDIO INSPECTOR ACCORDION & SUB-ACCORDION
+   -------------------------------------------------------------------------- */
+.theme-accordion-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-accordion-item:hover {
+  border-color: #cbd5e1;
+}
+
+.theme-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background-color: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: #0f172a;
+  transition: background-color 0.2s ease;
+}
+
+.theme-accordion-header:hover {
+  background-color: #f1f5f9;
+}
+
+.theme-accordion-body {
+  padding: 1.125rem 1rem;
+  display: block;
+  border-top: 1px solid #f1f5f9;
+}
+
+.theme-accordion-body.is-collapsed {
+  display: none !important;
+}
+
+.theme-accordion-chevron {
+  transition: transform 0.2s ease;
+}
+
+.theme-accordion-header.is-open .theme-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+/* Sub-Accordion Components (Nested within Sections) */
+.sub-accordion-item {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sub-accordion-item:hover {
+  border-color: #cbd5e1;
+}
+
+.sub-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  background-color: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.sub-accordion-header:hover {
+  background-color: #f1f5f9;
+}
+
+.sub-accordion-body {
+  padding: 0.75rem;
+  background-color: #ffffff;
+}
+
+.sub-accordion-body.hidden {
+  display: none !important;
+}
+
+.sub-accordion-chevron {
+  transition: transform 0.2s ease;
+}
+
+.sub-accordion-header.is-open .sub-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+/* --------------------------------------------------------------------------
+   3. SIDEBAR RESIZE HANDLE & DRAG PROTECTION
+   -------------------------------------------------------------------------- */
+#sidebar-resize-handle,
+#inspector-drag-handle {
+  width: 8px;
+  cursor: col-resize;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+#sidebar-resize-handle:hover,
+#inspector-drag-handle:hover {
+  background-color: rgba(51, 181, 137, 0.5);
+}
+
+#sidebar-resize-handle:active,
+#inspector-drag-handle:active {
+  background-color: #217558;
+}
+
+body.is-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+/* Proteksi agar iframe tidak menangkap pointer mouse saat sidebar sedang di-drag */
+body.is-resizing iframe {
+  pointer-events: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. CUSTOMIZER PREVIEW FRAME RESIZING & VIEWPORT
+   -------------------------------------------------------------------------- */
+.preview-viewport-wrapper,
+#hero-preview-iframe {
+  height: 100% !important;
+  min-height: calc(100vh - 3.5rem) !important;
+}
+
+.preview-desktop-mode {
+  width: 100% !important;
+  max-width: 1200px !important;
+}
+
+.preview-tab-mode {
+  width: 768px !important;
+  max-width: 100% !important;
+}
+
+.preview-mobile-mode {
+  width: 390px !important;
+  max-width: 100% !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. VISUAL EDIT MODE OUTLINE & HOVER HIGHLIGHT
+   -------------------------------------------------------------------------- */
+body.visual-edit-active [data-section] {
+  transition: outline 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+body.visual-edit-active [data-section]:hover {
+  outline: 2px dashed #33b589 !important;
+  outline-offset: -2px;
+  cursor: pointer !important;
+}
+
+/* --------------------------------------------------------------------------
+   6. ANIMASI FLASH HIGHLIGHT AKORDEON (INSPEKTOR)
+   -------------------------------------------------------------------------- */
+@keyframes accordionFlash {
+  0% {
+    box-shadow: 0 0 0 3px rgba(51, 181, 137, 0.7);
+    transform: scale(1.008);
+  }
+
+  70% {
+    box-shadow: 0 0 0 4px rgba(51, 181, 137, 0.3);
+  }
+
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
+}
+
+.accordion-flash-highlight {
+  animation: accordionFlash 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   7. DYNAMIC SECTION BUILDER ITEM STYLES
+   -------------------------------------------------------------------------- */
+.section-builder-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-builder-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.section-builder-item.is-disabled {
+  opacity: 0.6;
+  background-color: #f8fafc;
+}
+
+/* --------------------------------------------------------------------------
+   8. MODERN SHOPIFY THEME EDITOR (THEME-EDITOR.HTML) 2-LAYER SIDEBAR & DRAWER
+   -------------------------------------------------------------------------- */
+#theme-editor-sidebar {
+  width: 300px;
+  min-width: 260px;
+  max-width: 420px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 20;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  #theme-editor-sidebar {
+    width: 270px !important;
+    min-width: 250px !important;
+  }
+}
+
+/* Mobile Bottom Sheet Drawer (< 768px) */
+@media (max-width: 767px) {
+  #theme-editor-sidebar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 85vh !important;
+    max-height: 85vh !important;
+    border-radius: 1.25rem 1.25rem 0 0 !important;
+    box-shadow: 0 -10px 30px -5px rgba(0, 0, 0, 0.25) !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-right: none !important;
+    z-index: 50 !important;
+    transform: translateY(105%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
+  }
+
+  #theme-editor-sidebar.mobile-drawer-open {
+    transform: translateY(0) !important;
+  }
+
+  #preview-viewport-container {
+    width: 100% !important;
+    height: calc(100vh - 3rem) !important;
+    padding-bottom: 4.5rem !important;
+  }
+}
+
+/* Tree-View & Sub-Nav Hover Effects */
+.tree-nav-item,
+.tree-sub-nav-item {
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tree-nav-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.tree-nav-item:active,
+.tree-sub-nav-item:active {
+  transform: scale(0.99);
+}
+
+.tree-sub-nav-item:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Flatten Accordion Items inside Drill-Down View for Clean Shopify Form Look */
+#sidebar-detail-view .theme-accordion-item {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#sidebar-detail-view .theme-accordion-header {
+  display: none !important;
+}
+
+#sidebar-detail-view .theme-accordion-body {
+  padding: 0 !important;
+  border: none !important;
+  display: block !important;
+}
+
+/* Sub-accordions in drill-down view retain clean nested card styling */
+#sidebar-detail-view .sub-accordion-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+#sidebar-detail-view .sub-accordion-header {
+  border-radius: 0.75rem;
+}
+
+#sidebar-detail-view .sub-accordion-item.is-open .sub-accordion-header {
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+/* Biarkan dropdown ikon melayang bebas di atas akordeon tanpa terpotong (overflow) */
+#sidebar-detail-view .sub-accordion-item.dropdown-active,
+#sidebar-detail-view .theme-accordion-item.dropdown-active,
+#sidebar-detail-view .sub-accordion-item:has(.visual-icon-picker.is-open),
+#sidebar-detail-view .theme-accordion-item:has(.visual-icon-picker.is-open) {
+  overflow: visible !important;
+  z-index: 9999 !important;
+}
+
+/* ==========================================================================
+   10. CUSTOM VISUAL ICON PICKER (PURE VISUAL ICON TILES & TOUCH-FRIENDLY)
+   ========================================================================== */
+.visual-icon-picker {
+  position: relative;
+  width: 100%;
+}
+
+.visual-icon-picker.is-open {
+  z-index: 9999 !important;
+}
+
+.visual-icon-picker-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.visual-icon-picker-btn:hover {
+  border-color: #10b981;
+  background-color: #f8fafc;
+}
+
+.visual-icon-picker-btn:focus,
+.visual-icon-picker-btn.is-open {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.visual-icon-picker-btn .vip-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.visual-icon-picker-btn .vip-icon-box {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.5rem;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  flex-shrink: 0;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.visual-icon-picker-btn .vip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.visual-icon-picker-btn .vip-chevron {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.visual-icon-picker-btn.is-open .vip-chevron {
+  transform: rotate(180deg);
+}
+
+.visual-icon-picker-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.875rem;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.22), 0 4px 10px -2px rgba(15, 23, 42, 0.12);
+  z-index: 9999 !important;
+  padding: 0.5rem;
+  display: none;
+  grid-template-columns: repeat(auto-fill, minmax(2.6rem, 1fr));
+  gap: 0.375rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.visual-icon-picker-menu.is-open {
+  display: grid;
+}
+
+.visual-icon-picker-menu.dropup {
+  top: auto;
+  bottom: calc(100% + 4px);
+  box-shadow: 0 -12px 28px -4px rgba(15, 23, 42, 0.22), 0 -4px 10px -2px rgba(15, 23, 42, 0.12);
+}
+
+.visual-icon-picker-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.visual-icon-picker-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.visual-icon-picker-menu::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.visual-icon-picker-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 2.6rem;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  border: 1.5px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #334155;
+  position: relative;
+  touch-action: manipulation;
+}
+
+.visual-icon-picker-option:hover {
+  background-color: #f1f5f9;
+  border-color: #33b589;
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.visual-icon-picker-option:active {
+  transform: scale(0.95);
+}
+
+.visual-icon-picker-option.is-selected {
+  background-color: #ecfdf5;
+  border-color: #10b981;
+  color: #059669;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.22);
+}
+
+.visual-icon-picker-option.is-selected::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #10b981;
+}
+
+.visual-icon-picker-option .vip-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  width: 100%;
+  height: 100%;
+}
+
+.visual-icon-picker-option.is-selected .vip-option-icon {
+  color: #059669;
+}
+
+@media (max-width: 767px) {
+  .visual-icon-picker-menu {
+    max-height: 180px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .visual-icon-picker-option {
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+  }
+
+  .visual-icon-picker-option .vip-option-icon {
+    font-size: 1.25rem;
+  }
+}
+
+/* ==========================================================================
+   11. HERO CHOICE CARDS & CTA BUTTONS
+   ========================================================================== */
+.hero-model-card,
+.hero-split-mobile-choice-card,
+.hero-split-desktop-choice-card,
+.hero-width-choice-card,
+.hero-arrows-vis-label {
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.hero-model-card:hover,
+.hero-split-mobile-choice-card:hover,
+.hero-split-desktop-choice-card:hover,
+.hero-width-choice-card:hover,
+.hero-arrows-vis-label:hover {
+  border-color: #cbd5e1;
+}
+
+.hero-cta-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-weight: 700;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.hero-cta-btn:hover {
+  filter: brightness(1.05);
+}
+
+.hero-cta-btn:active {
+  transform: scale(0.97);
+}
+
+.hero-shadow-none {
+  box-shadow: none !important;
+}
+
+.hero-shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.hero-shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hero-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hero-shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ==========================================================================
+   12. DETAIL VIEW TAB SYSTEM ([ KONTEN ] & [ PENGATURAN ])
+   ========================================================================== */
+#detail-view-tab-bar {
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+}
+
+.detail-tab-btn {
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.detail-tab-btn:focus-visible {
+  outline: 2px solid #33b589;
+  outline-offset: 1px;
+}
+
+.detail-tab-btn.active {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+}
+
+.detail-tab-btn:not(.active):hover {
+  color: #1e293b;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 1-Click Color Presets */
+.btn-color-preset {
+  position: relative;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-color-preset:hover {
+  border-color: #33b589;
+  background-color: #f0fdf4;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px -1px rgba(51, 181, 137, 0.15);
+}
+
+.btn-color-preset.active-preset {
+  border-color: #33b589 !important;
+  background-color: #f0fdf4 !important;
+  box-shadow: 0 0 0 1px #33b589, 0 2px 6px -1px rgba(51, 181, 137, 0.2) !important;
+}
+
+.btn-color-preset.active-preset .bi-check-circle-fill {
+  opacity: 1 !important;
+}
+
+/* Font sample preview boxes */
+#preview-heading-font-sample,
+#preview-body-font-sample {
+  transition: font-family 0.2s ease, background-color 0.2s ease;
+}
+
+/* Tab switching display control */
+#form-theme-editor[data-active-tab="content"] [data-tab-pane="settings"] {
+  display: none !important;
+}
+#form-theme-editor[data-active-tab="settings"] [data-tab-pane="content"] {
+  display: none !important;
+}
+
+/* ==========================================================================
+   13. FORM CONTROLS STANDARDIZATION & DIRTY STATE
+   ========================================================================== */
+#btn-save-theme-editor.is-dirty {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35), 0 4px 12px -2px rgba(16, 185, 129, 0.4) !important;
+}
+
+#btn-save-theme-editor.is-dirty:hover {
+  background-color: #047857 !important;
+}
+
+/* Universal Form Controls Standard (12px / text-xs, seragam, tidak terpotong) */
+#sidebar-detail-view select,
+#sidebar-detail-view input[type="text"],
+#sidebar-detail-view input[type="number"],
+#sidebar-detail-view input[type="url"],
+#sidebar-detail-view input[type="datetime-local"] {
+  font-size: 0.75rem !important; /* 12px text-xs */
+  line-height: 1.25rem !important;
+  border-radius: 0.5rem !important;
+  text-overflow: ellipsis;
+}
+
+#sidebar-detail-view select {
+  min-height: 2rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* Category List Card in Theme Editor */
+.theme-cat-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.625rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease;
+}
+
+.theme-cat-card-item:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-cat-item-delete {
+  transition: all 0.15s ease;
+}
+
+.btn-cat-item-delete:hover {
+  color: #e11d48 !important;
+  background-color: #ffe4e6 !important;
+  transform: scale(1.08);
+}
+
+/* Responsive Mobile Bottom Sheet Drawer (< 768px) */
+@media (max-width: 767px) {
+  #detail-view-tab-bar {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .detail-tab-btn {
+    min-height: 2.375rem; /* Nyaman 38-40px touch target pada HP */
+    font-size: 0.8125rem;
+  }
+
+  .btn-color-preset {
+    min-height: 3.25rem;
+  }
+
+  /* Kontrol Seksi & Icon Picker pada Mobile Drawer */
+  .section-card-item {
+    padding: 0.625rem 0.5rem;
+  }
+
+  .btn-sec-delete {
+    width: 1.875rem !important;
+    height: 1.875rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .visual-icon-picker-menu {
+    max-height: 190px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+/* ==========================================================================
+   VISIBILITY EYE BUTTONS & TOUCH TARGET CONSISTENCY (DESKTOP, TABLET, MOBILE)
+   ========================================================================== */
+.visibility-eye-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  touch-action: manipulation;
+}
+
+.visibility-eye-btn:active {
+  transform: scale(0.95);
+}
+
+/* Category & Section List Action Buttons (Consistent w-8 h-8 Touch Targets) */
+.btn-sec-toggle-vis,
+.btn-sec-delete,
+.btn-theme-cat-vis,
+.btn-theme-cat-edit,
+.btn-theme-cat-delete,
+.btn-footer-cat-vis {
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn-sec-toggle-vis:active,
+.btn-theme-cat-vis:active,
+.btn-theme-cat-edit:active,
+.btn-theme-cat-delete:active,
+.btn-footer-cat-vis:active {
+  transform: scale(0.95);
+}
+
+/* Sub-category chips */
+.theme-subcat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #334155;
+  transition: all 0.15s ease;
+}
+
+.theme-subcat-chip:hover {
+  background-color: #e2e8f0;
+}
+
+.theme-subcat-chip .btn-del-subcat-chip {
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+}
+
+.theme-subcat-chip .btn-del-subcat-chip:hover {
+  color: #ef4444;
+}
+
+/* Topbar Save Button: Clean Styling Without Pulsing Rings */
+#btn-save-theme-editor {
+  transition: all 0.2s ease;
+}
+
+#btn-save-theme-editor.is-dirty {
+  background-color: #059669 !important;
+}
+
+#btn-save-theme-editor.is-dirty:hover {
+  background-color: #047857 !important;
+}

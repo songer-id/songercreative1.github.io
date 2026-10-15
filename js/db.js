@@ -651,6 +651,8 @@ const DB = (() => {
     navbar_bg_color: '#ffffff',
     navbar_text_color: '#0f172a',
     body_bg_color: '#f8fafc',
+    store_font_heading: 'Bricolage Grotesque',
+    store_font_body: 'Inter',
     hero_type: 'banner', // 'banner' | 'text' (legacy compatibility)
     hero_model: 'non_split', // 'non_split' (Gambar Penuh) | 'split' (Teks Kiri + Gambar Kanan)
     hero_mobile_ratio: '16:5', // '16:5' (Mobile 3.2:1) & Desktop 9:2 (4.5:1)
@@ -703,6 +705,8 @@ const DB = (() => {
     show_header_store_name: true,
     header_mobile_display: 'logo',
     // Top Bar Sapaan Dinamis & Promo Countdown Styling
+    topbar_show_greeting: true,
+    topbar_show_countdown: true,
     top_bar_bg_color: '#0f172a',
     top_bar_text_color: '#f8fafc',
     promo_countdown_title: 'Promo Kilat',
@@ -750,7 +754,66 @@ const DB = (() => {
       show_strikethrough_price: true,
       show_category_badge: true
     },
-    card_variants_config: { ...DEFAULT_CARD_VARIANTS_CONFIG }
+    card_variants_config: { ...DEFAULT_CARD_VARIANTS_CONFIG },
+    // Sistem Multi-Layout Footer & Media Sosial Toko
+    footer_layout: 'minimalist', // 'minimalist' | 'multi_column' | 'centered'
+    footer_bg_color: '#ffffff',
+    footer_text_color: '#64748b',
+    footer_heading_color: '#0f172a',
+    footer_border_color: '#e2e8f0',
+    footer_social_icon_color: '#64748b',
+    footer_social_icon_hover_color: '#10b981',
+    footer_copyright_text: '© 2026 POS By Songer Creative. Hak Cipta Dilindungi Undang-Undang.',
+    footer_social_tiktok: 'https://tiktok.com/@songercreative',
+    footer_social_instagram: 'https://instagram.com/songercreative',
+    footer_social_youtube: 'https://youtube.com/@songercreative',
+    footer_social_facebook: 'https://facebook.com/songercreative',
+    footer_social_email: 'halo@songercreative.com',
+    footer_social_whatsapp: 'https://wa.me/628885844380',
+    footer_hours_weekday: 'Senin - Jumat: 08:00 - 21:00 WIB',
+    footer_hours_weekend: 'Sabtu - Minggu: 09:00 - 18:00 WIB',
+
+    // Granular Custom Footer & Validasi Elemen
+    footer_show_logo: true,
+    footer_logo_type: 'main', // 'main' | 'custom'
+    footer_custom_logo_url: '',
+    footer_show_store_name: true,
+    footer_store_name_color: '#0f172a',
+    footer_tagline_color: '#64748b',
+    footer_selected_categories: [], // Kosong = auto-detect semua kategori dari DB.getCategories()
+    footer_category_link_color: '#64748b',
+    footer_category_hover_color: '#33b589',
+    footer_social_tiktok_active: true,
+    footer_social_instagram_active: true,
+    footer_social_youtube_active: true,
+    footer_social_facebook_active: true,
+    footer_social_email_active: true,
+    footer_social_whatsapp_active: true,
+    footer_social_btn_border_enable: false,
+    footer_social_btn_border_color: '#e2e8f0',
+    footer_social_btn_radius: '9999px', // '0px' | '8px' | '9999px'
+    footer_social_btn_shadow: 'none', // 'none' | 'sm' | 'md' | 'lg'
+    footer_social_btn_bg: '#f1f5f9',
+    footer_social_btn_hover_bg: '#33b589',
+    footer_social_btn_hover_color: '#ffffff',
+
+    // Hero Split Mobile & Desktop
+    hero_split_mobile: 'image_top', // 'image_top' | 'image_bottom'
+    hero_split_desktop_pos: 'text_left', // 'text_left' | 'image_left'
+
+    // Sistem Modul Garis Pemisah Seksi (Section Divider)
+    divider_enabled: true,
+    divider_color: '#e2e8f0',
+    divider_thickness: 1, // 1 - 8 px
+    divider_width: '100%', // '100%' | '75%' | '50%'
+    divider_margin_y: 20, // 0 - 60 px
+
+    // Sistem Penambah Seksi Dinamis (Dynamic Section Builder)
+    storefront_sections: [
+      { id: 'sec_hero', type: 'hero', title: 'Hero Banner', is_core: true, enabled: true },
+      { id: 'sec_cat', type: 'category', title: 'Navigasi Kategori', is_core: true, enabled: true },
+      { id: 'sec_products', type: 'products_standard', title: 'Katalog Produk Utama', is_core: true, enabled: true }
+    ]
   };
 
   const DEFAULT_PROMOS = {
@@ -771,20 +834,37 @@ const DB = (() => {
       discount_value: 10,
       min_spend: 0,
       target_audience: 'all', // 'all' | 'new_buyer' | 'loyal_member'
+      style: {
+        bg_type: 'linear_gradient',
+        bg_color1: '#0f172a',
+        bg_color2: '#1e293b',
+        bg_angle: 135,
+        title_color: '#ffffff',
+        desc_color: '#cbd5e1',
+        discount_color: '#f59e0b',
+        border_radius: '16px',
+        box_shadow: 'sm',
+        border_color: 'transparent'
+      },
       title_color: '#ffffff',
+      desc_color: '#cbd5e1',
       discount_color: '#f59e0b',
       btn_color: '#33b589',
       bg_type: 'linear_gradient',
       bg_color1: '#0f172a',
       bg_color2: '#1e293b',
       bg_angle: 135,
+      border_radius: '16px',
+      box_shadow: 'sm',
       show_timer: true,
       cta_mode: 'dual',
       cta1_text: 'Lihat Semua Katalog',
+      cta1_link: '',
       cta1_bg: '#33b589',
       cta1_text_color: '#ffffff',
       cta1_icon_color: '#ffffff',
       cta2_text: 'Konsultasi Desain & Cetak',
+      cta2_link: '',
       cta2_bg: '#25d366',
       cta2_text_color: '#ffffff',
       cta2_icon_color: '#ffffff',
@@ -805,20 +885,37 @@ const DB = (() => {
       force_test_active: false,
       description: 'Berjalan otomatis setiap tanggal kembar (1.1, 2.2, 10.10, 11.11, dst.).',
       target_audience: 'all',
+      style: {
+        bg_type: 'solid',
+        bg_color1: '#ffffff',
+        bg_color2: '#f8fafc',
+        bg_angle: 135,
+        title_color: '#0f172a',
+        desc_color: '#64748b',
+        discount_color: '#e11d48',
+        border_radius: '16px',
+        box_shadow: 'sm',
+        border_color: 'transparent'
+      },
       title_color: '#0f172a',
+      desc_color: '#64748b',
       discount_color: '#e11d48',
       btn_color: '#33b589',
       bg_type: 'solid',
       bg_color1: '#ffffff',
       bg_color2: '#f8fafc',
       bg_angle: 135,
+      border_radius: '16px',
+      box_shadow: 'sm',
       show_timer: true,
       cta_mode: 'dual',
       cta1_text: 'Lihat Semua Katalog',
+      cta1_link: '',
       cta1_bg: '#33b589',
       cta1_text_color: '#ffffff',
       cta1_icon_color: '#ffffff',
       cta2_text: 'Konsultasi Desain & Cetak',
+      cta2_link: '',
       cta2_bg: '#25d366',
       cta2_text_color: '#ffffff',
       cta2_icon_color: '#ffffff',
@@ -841,20 +938,37 @@ const DB = (() => {
       product_ids: [],
       description: 'Program diskon fleksibel sewaktu-waktu yang dikonfigurasi seller.',
       target_audience: 'all',
+      style: {
+        bg_type: 'linear_gradient',
+        bg_color1: '#0f172a',
+        bg_color2: '#064e3b',
+        bg_angle: 135,
+        title_color: '#ffffff',
+        desc_color: '#cbd5e1',
+        discount_color: '#f59e0b',
+        border_radius: '16px',
+        box_shadow: 'sm',
+        border_color: 'transparent'
+      },
       title_color: '#ffffff',
+      desc_color: '#cbd5e1',
       discount_color: '#f59e0b',
       btn_color: '#33b589',
       bg_type: 'linear_gradient',
       bg_color1: '#0f172a',
       bg_color2: '#064e3b',
       bg_angle: 135,
+      border_radius: '16px',
+      box_shadow: 'sm',
       show_timer: true,
       cta_mode: 'dual',
       cta1_text: 'Lihat Semua Katalog',
+      cta1_link: '',
       cta1_bg: '#33b589',
       cta1_text_color: '#ffffff',
       cta1_icon_color: '#ffffff',
       cta2_text: 'Konsultasi Desain & Cetak',
+      cta2_link: '',
       cta2_bg: '#25d366',
       cta2_text_color: '#ffffff',
       cta2_icon_color: '#ffffff',
@@ -1788,7 +1902,8 @@ const DB = (() => {
 
     // --- STORE SETTINGS ---
     getSettings() {
-      const s = getTable(STORAGE_KEYS.SETTINGS) || DEFAULT_SETTINGS;
+      const stored = getTable(STORAGE_KEYS.SETTINGS) || {};
+      const s = { ...DEFAULT_SETTINGS, ...stored };
       if (!s.card_product_version) {
         s.card_product_version = 'v1';
       }
@@ -2876,6 +2991,19 @@ const DB = (() => {
       promos.promo_list = list;
       this.updatePromos({ promo_list: list });
       return list;
+    },
+
+    savePromo(promoData) {
+      if (!promoData || !promoData.id) return null;
+      const promoList = this.getPromoList();
+      const idx = promoList.findIndex(p => String(p.id) === String(promoData.id));
+      if (idx !== -1) {
+        promoList[idx] = { ...promoList[idx], ...promoData };
+      } else {
+        promoList.push(promoData);
+      }
+      this.savePromotions(promoList);
+      return promoData;
     },
 
     saveSponsors(sponsorList) {

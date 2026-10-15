@@ -45,6 +45,25 @@ const BuyerStore = (() => {
   }
 
   // ----------------------------------------------------------------------------
+  // UNIVERSAL ICON RENDERER (LUCIDE & BOOTSTRAP ICONS)
+  // ----------------------------------------------------------------------------
+  function renderNavIconHtml(iconKey, extraClass = '', styleAttr = '') {
+    if (!iconKey) return '';
+    const trimmed = String(iconKey).trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('lucide:')) {
+      const name = trimmed.replace('lucide:', '').trim();
+      return `<i data-lucide="${name}" class="${extraClass}" style="${styleAttr}"></i>`;
+    } else {
+      let bi = trimmed;
+      if (!bi.startsWith('bi-') && !bi.startsWith('bi ')) {
+        bi = 'bi-' + bi;
+      }
+      return `<i class="bi ${bi} ${extraClass}" style="${styleAttr}"></i>`;
+    }
+  }
+
+  // ----------------------------------------------------------------------------
   // HELPER: PENENTUAN VISIBILITAS TOMBOL PANAH HERO BANNER (< DAN >)
   // ----------------------------------------------------------------------------
   function shouldShowNavArrows(sliderType, showArrowsToggle) {
@@ -130,9 +149,46 @@ const BuyerStore = (() => {
   function updateTopGreetingBar(settings) {
     const bar = document.getElementById('top-greeting-bar');
     if (!bar) return;
+
+    // Evaluasi 2 toggle independen dengan backward compatibility
+    const showGreeting = settings ? (settings.topbar_show_greeting !== false && settings.enable_customer_greeting !== false && settings.show_topbar_greeting !== false) : true;
+    const showCountdown = settings ? (settings.topbar_show_countdown !== false && settings.enable_promo_countdown !== false && settings.show_promo_countdown !== false) : true;
+
+    const greetingContainer = document.getElementById('top-greeting-container') || document.getElementById('top-greeting-text')?.closest('div');
+    const countdownContainer = document.getElementById('top-promo-countdown-container');
+
+    if (greetingContainer) {
+      if (showGreeting) {
+        greetingContainer.classList.remove('hidden');
+        greetingContainer.style.display = '';
+      } else {
+        greetingContainer.classList.add('hidden');
+        greetingContainer.style.display = 'none';
+      }
+    }
+
+    if (countdownContainer) {
+      if (showCountdown) {
+        countdownContainer.classList.remove('hidden');
+        countdownContainer.style.display = '';
+      } else {
+        countdownContainer.classList.add('hidden');
+        countdownContainer.style.display = 'none';
+      }
+    }
+
+    // Jika kedua toggle nonaktif (false), sembunyikan seluruh kontainer Top Bar
+    if (!showGreeting && !showCountdown) {
+      bar.classList.add('hidden');
+      bar.style.display = 'none';
+    } else {
+      bar.classList.remove('hidden');
+      bar.style.display = '';
+    }
+
     const textEl = document.getElementById('top-greeting-text');
     const greetingText = getTopGreetingText(settings);
-    if (textEl) {
+    if (textEl && showGreeting) {
       textEl.textContent = greetingText;
     }
 
@@ -145,22 +201,39 @@ const BuyerStore = (() => {
   }
 
   // ----------------------------------------------------------------------------
-  // KUSTOMISASI WARNA ELEMEN NAVBAR SECARA DINAMIS
+  // KUSTOMISASI WARNA & IKON ELEMEN NAVBAR SECARA DINAMIS
   // ----------------------------------------------------------------------------
   function applyNavbarElementColors(settings) {
     if (!settings) return;
 
-    const cartIconColor = settings.navbar_cart_icon_color || '#334155';
-    const cartBadgeBg = settings.navbar_cart_badge_bg || '#f43f5e';
-    const cartBadgeText = settings.navbar_cart_badge_text || '#ffffff';
+    // 1. Cart Button Settings
+    const cartIconKey = settings.cart_icon || 'lucide:shopping-cart';
+    const cartIconColor = settings.cart_icon_color || settings.navbar_cart_icon_color || '#334155';
+    const cartBgColor = settings.cart_bg_color || '';
+    const cartBadgeBg = settings.cart_badge_color || settings.navbar_cart_badge_bg || '#f43f5e';
+    const cartBadgeText = settings.cart_badge_text_color || settings.navbar_cart_badge_text || '#ffffff';
+    const cartBorderEnable = settings.cart_border_enable !== false;
+    const cartBorderColor = settings.cart_border_color || settings.navbar_cart_border_color || '#e2e8f0';
+    const cartBorderRadius = settings.cart_border_radius !== undefined && settings.cart_border_radius !== null ? settings.cart_border_radius : '';
 
-    const searchIconColor = settings.navbar_search_icon_color || '#94a3b8';
-    const searchInputBg = settings.navbar_search_input_bg || '#f1f5f9';
-    const searchBorderColor = settings.navbar_search_border_color || '#e2e8f0';
-    const searchPlaceholderColor = settings.navbar_search_placeholder_color || '#94a3b8';
+    // 2. Search Bar Settings
+    const searchIconKey = settings.search_icon || settings.navbar_search_icon || 'bi-search';
+    const searchIconColor = settings.search_icon_color || settings.navbar_search_icon_color || '#94a3b8';
+    const searchPlaceholder = settings.search_placeholder || settings.navbar_search_placeholder;
+    const searchTextColor = settings.search_text_color || settings.navbar_search_placeholder_color || '#0f172a';
+    const searchBgSolid = settings.search_bg_solid !== false;
+    const searchInputBg = searchBgSolid ? (settings.search_bg_color || settings.navbar_search_input_bg || '#f1f5f9') : 'transparent';
+    const searchBorderEnable = settings.search_border_enable !== false;
+    const searchBorderColor = settings.search_border_color || settings.navbar_search_border_color || '#e2e8f0';
+    const searchBorderRadius = settings.search_border_radius !== undefined && settings.search_border_radius !== null ? settings.search_border_radius : '';
 
-    const loginIconColor = settings.navbar_login_icon_color || '#334155';
-    const loginTextColor = settings.navbar_login_text_color || '#334155';
+    // 3. Login Button Settings
+    const loginDisplay = settings.login_btn_display || 'icon_text';
+    const loginIconKey = settings.login_icon || settings.navbar_login_icon || 'bi-person-fill';
+    const loginText = settings.login_btn_text || 'Login';
+    const loginIconColor = settings.login_icon_color || settings.navbar_login_icon_color || '#334155';
+    const loginTextColor = settings.login_text_color || settings.navbar_login_text_color || '#334155';
+    const loginBtnBg = settings.login_btn_color || settings.navbar_login_btn_bg || '';
 
     const root = document.documentElement;
     root.style.setProperty('--navbar-cart-icon-color', cartIconColor);
@@ -169,25 +242,86 @@ const BuyerStore = (() => {
     root.style.setProperty('--navbar-search-icon-color', searchIconColor);
     root.style.setProperty('--navbar-search-input-bg', searchInputBg);
     root.style.setProperty('--navbar-search-border-color', searchBorderColor);
-    root.style.setProperty('--navbar-search-placeholder-color', searchPlaceholderColor);
+    root.style.setProperty('--navbar-search-placeholder-color', searchTextColor);
     root.style.setProperty('--navbar-login-icon-color', loginIconColor);
     root.style.setProperty('--navbar-login-text-color', loginTextColor);
 
-    document.querySelectorAll('.navbar-cart-icon-el').forEach(el => el.style.color = cartIconColor);
-    document.querySelectorAll('.navbar-cart-badge-el, #navbar-cart-count').forEach(el => {
+    // Terapkan ke Tombol Keranjang (Cart Drawer Trigger)
+    const btnCart = document.getElementById('btn-open-cart-drawer');
+    if (btnCart) {
+      if (cartBgColor) btnCart.style.backgroundColor = cartBgColor;
+      if (!cartBorderEnable) {
+        btnCart.style.borderColor = 'transparent';
+      } else if (cartBorderColor) {
+        btnCart.style.borderColor = cartBorderColor;
+      }
+      if (cartBorderRadius !== '') {
+        btnCart.style.borderRadius = `${cartBorderRadius}px`;
+      }
+      const cartIconEl = btnCart.querySelector('.navbar-cart-icon-el');
+      if (cartIconEl) {
+        const newCartIcon = renderNavIconHtml(cartIconKey, 'w-5 h-5 transition navbar-cart-icon-el', `color: ${cartIconColor};`);
+        cartIconEl.outerHTML = newCartIcon;
+      }
+    }
+
+    document.querySelectorAll('.navbar-cart-badge-el, #cart-badge-count, #navbar-cart-count').forEach(el => {
       el.style.backgroundColor = cartBadgeBg;
       el.style.color = cartBadgeText;
     });
 
-    document.querySelectorAll('.navbar-search-icon-el').forEach(el => el.style.color = searchIconColor);
-    document.querySelectorAll('.navbar-search-input-el').forEach(el => {
-      el.style.backgroundColor = searchInputBg;
-      el.style.borderColor = searchBorderColor;
-      el.style.color = '#0f172a';
+    // Terapkan ke Search Bar Desktop & Mobile
+    const desktopSearchInput = document.getElementById('navbar-search-input');
+    if (desktopSearchInput) {
+      if (searchPlaceholder) desktopSearchInput.placeholder = searchPlaceholder;
+      desktopSearchInput.style.backgroundColor = searchInputBg;
+      desktopSearchInput.style.borderColor = searchBorderEnable ? searchBorderColor : 'transparent';
+      desktopSearchInput.style.color = searchTextColor;
+      if (searchBorderRadius !== '') {
+        desktopSearchInput.style.borderRadius = `${searchBorderRadius}px`;
+      }
+    }
+
+    const mobileSearchInput = document.getElementById('navbar-search-input-mobile');
+    if (mobileSearchInput) {
+      if (searchPlaceholder) mobileSearchInput.placeholder = searchPlaceholder;
+      mobileSearchInput.style.backgroundColor = searchInputBg;
+      mobileSearchInput.style.borderColor = searchBorderEnable ? searchBorderColor : 'transparent';
+      mobileSearchInput.style.color = searchTextColor;
+      if (searchBorderRadius !== '') {
+        mobileSearchInput.style.borderRadius = `${searchBorderRadius}px`;
+      }
+    }
+
+    document.querySelectorAll('.navbar-search-icon-el').forEach(iconEl => {
+      const isMobileBtn = iconEl.closest('#btn-mobile-search-toggle');
+      const extraClass = isMobileBtn ? 'text-xs navbar-search-icon-el' : 'navbar-search-icon-el text-xs absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none';
+      const newIconHtml = renderNavIconHtml(searchIconKey, extraClass, `color: ${searchIconColor};`);
+      iconEl.outerHTML = newIconHtml;
     });
 
-    document.querySelectorAll('.navbar-login-icon-el').forEach(el => el.style.color = loginIconColor);
-    document.querySelectorAll('.navbar-login-text-el').forEach(el => el.style.color = loginTextColor);
+    // Terapkan ke Tombol Login
+    const btnLogin = document.getElementById('btn-navbar-login');
+    if (btnLogin) {
+      if (loginBtnBg) btnLogin.style.backgroundColor = loginBtnBg;
+      let loginInnerHtml = '';
+      if (loginDisplay === 'icon_only') {
+        loginInnerHtml = renderNavIconHtml(loginIconKey, 'text-sm navbar-login-icon-el', `color: ${loginIconColor};`);
+      } else if (loginDisplay === 'text_only') {
+        loginInnerHtml = `<span class="font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>`;
+      } else {
+        loginInnerHtml = `
+          ${renderNavIconHtml(loginIconKey, 'text-sm navbar-login-icon-el', `color: ${loginIconColor};`)}
+          <span class="hidden sm:inline font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>
+        `;
+      }
+      btnLogin.innerHTML = loginInnerHtml;
+    }
+
+    // Inisialisasi ikon Lucide untuk elemen ikon yang baru dirender
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
   }
 
   // ----------------------------------------------------------------------------
@@ -370,6 +504,13 @@ const BuyerStore = (() => {
       document.body.style.backgroundColor = currentBodyBg;
     }
 
+    // Terapkan Font Judul & Font Isi E-Commerce
+    const fontHeading = settings.store_font_heading || 'Bricolage Grotesque';
+    const fontBody = settings.store_font_body || 'Inter';
+    document.documentElement.style.setProperty('--store-font-heading', fontHeading);
+    document.documentElement.style.setProperty('--store-font-body', fontBody);
+    document.body.style.fontFamily = `'${fontBody}', sans-serif`;
+
     renderStorefront();
     startCountdownTimer();
     initFloatingVoucher();
@@ -383,10 +524,90 @@ const BuyerStore = (() => {
     // Realtime sync jika seller mengubah tema/hero di tab admin
     window.addEventListener('storage', (e) => {
       if (e.key && e.key.includes('settings')) {
+        const updatedSettings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+        applyHeaderBranding(updatedSettings);
+        applyNavbarElementColors(updatedSettings);
+        updateTopGreetingBar(updatedSettings);
+        if (updatedSettings.store_font_heading) {
+          document.documentElement.style.setProperty('--store-font-heading', updatedSettings.store_font_heading);
+        }
+        if (updatedSettings.store_font_body) {
+          document.documentElement.style.setProperty('--store-font-body', updatedSettings.store_font_body);
+          document.body.style.fontFamily = `'${updatedSettings.store_font_body}', sans-serif`;
+        }
         renderStorefront();
         initHeroSlider();
       }
     });
+  }
+
+  // ----------------------------------------------------------------------------
+  // UNIVERSAL HERO CTA BUTTONS HTML GENERATOR
+  // ----------------------------------------------------------------------------
+  function renderHeroCtaButtonsHtml(settings, storeName) {
+    if (!settings) settings = {};
+    const countMode = settings.hero_cta_count_mode || 'both';
+    if (countMode === 'none') return '';
+
+    const actualStoreName = storeName || settings.store_name || 'Songer Creative';
+
+    let cta1Html = '';
+    if (countMode === 'both' || countMode === 'cta1_only') {
+      const showIcon = settings.hero_cta1_show_icon !== false;
+      const text = settings.hero_cta1_text || 'Lihat Produk';
+      const iconKey = settings.hero_cta1_icon || 'bi-arrow-down-short';
+      const textColor = settings.hero_cta1_text_color || '#ffffff';
+      const iconColor = settings.hero_cta1_icon_color || '#ffffff';
+      const bgColor = settings.hero_cta1_bg_color || settings.primary_color || '#33b589';
+      const radius = settings.hero_cta1_radius || '12px';
+      const shadow = settings.hero_cta1_shadow || 'sm';
+      const shadowClass = (shadow === 'none') ? 'shadow-none hero-shadow-none' : `shadow-${shadow} hero-shadow-${shadow}`;
+      const iconHtml = showIcon ? renderNavIconHtml(iconKey, 'text-base shrink-0', `color: ${iconColor};`) : '';
+
+      cta1Html = `
+        <a href="#buyer-storefront-container" id="hero-btn-cta1" class="hero-cta-btn inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${shadowClass} hover:opacity-95 active:scale-95" style="background-color: ${bgColor}; color: ${textColor}; border-radius: ${radius};">
+          ${iconHtml}
+          <span>${escapeHtml(text)}</span>
+        </a>
+      `;
+    }
+
+    let cta2Html = '';
+    if (countMode === 'both' || countMode === 'cta2_only') {
+      const showIcon = settings.hero_cta2_show_icon !== false;
+      const text = settings.hero_cta2_text || 'Konsultasi';
+      const iconKey = settings.hero_cta2_icon || 'bi-whatsapp';
+      const textColor = settings.hero_cta2_text_color || '#0f172a';
+      const iconColor = settings.hero_cta2_icon_color || '#10b981';
+      const bgColor = settings.hero_cta2_bg_color || '#ffffff';
+      const radius = settings.hero_cta2_radius || '12px';
+      const shadow = settings.hero_cta2_shadow || 'sm';
+      const shadowClass = (shadow === 'none') ? 'shadow-none hero-shadow-none' : `shadow-${shadow} hero-shadow-${shadow}`;
+      const iconHtml = showIcon ? renderNavIconHtml(iconKey, 'text-base shrink-0', `color: ${iconColor};`) : '';
+
+      const rawPhone = settings.store_phone || settings.footer_social_whatsapp || (typeof currentTenant !== 'undefined' && currentTenant ? currentTenant.phone : '') || '08885844380';
+      let cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = '62' + cleanPhone.slice(1);
+      }
+      let rawMsg = settings.hero_cta2_wa_message || 'Halo Admin *Nama Toko* saya ingin Konsultasi mengenai layanan/produk anda';
+      rawMsg = rawMsg.replace(/\*Nama Toko\*/gi, actualStoreName).replace(/\{nama_toko\}/gi, actualStoreName);
+      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(rawMsg)}`;
+
+      cta2Html = `
+        <a href="${waUrl}" target="_blank" rel="noopener noreferrer" id="hero-btn-cta2" class="hero-cta-btn inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${shadowClass} hover:opacity-95 active:scale-95 border border-slate-200/60" style="background-color: ${bgColor}; color: ${textColor}; border-radius: ${radius};">
+          ${iconHtml}
+          <span>${escapeHtml(text)}</span>
+        </a>
+      `;
+    }
+
+    return `
+      <div class="hero-cta-group flex flex-wrap items-center gap-2.5">
+        ${cta1Html}
+        ${cta2Html}
+      </div>
+    `;
   }
 
   // --- HERO SECTION GENERATOR (EXPORTABLE & REUSABLE) ---
@@ -428,12 +649,16 @@ const BuyerStore = (() => {
     // Token Konfigurasi Hero Banner Baru
     const heroContainerRadius = settings.hero_container_radius || '16px';
     const heroContainerShadow = settings.hero_container_shadow || 'sm';
-    const heroTitleColor = settings.hero_title_color || '#0f172a';
-    const heroDescColor = settings.hero_desc_color || '#475569';
+    const heroTitleColor = settings.hero_title_color || '#ffffff';
+    const heroDescColor = settings.hero_desc_color || '#cbd5e1';
     const heroImageRadius = settings.hero_image_radius || '12px';
     const heroImageShadow = settings.hero_image_shadow || 'sm';
     const heroDotsActiveColor = settings.hero_dots_active_color || '#10b981';
     const heroDotsInactiveColor = settings.hero_dots_inactive_color || '#cbd5e1';
+
+    // CTA Buttons generator
+    const storeName = settings.store_name || 'Songer Creative';
+    const heroCtaButtonsHtml = renderHeroCtaButtonsHtml(settings, storeName);
 
     // Kustomisasi Tombol Panah Slider & Geser Manual
     const heroArrowsBg = settings.hero_arrows_bg || 'rgba(0,0,0,0.45)';
@@ -475,7 +700,7 @@ const BuyerStore = (() => {
     `).join('');
 
     if (heroModel === 'model_1') {
-      // [1] Model Teks Saja / Text-Only: Card Elegan dengan Background, Radius, Shadow (Tanpa CTA)
+      // [1] Model Teks & CTA: Card Elegan dengan Background, Radius, Shadow & Tombol CTA
       const isContainerShadowNone = heroContainerShadow === 'none' || !heroContainerShadow;
       const textBorderClass = isContainerShadowNone ? 'border-0 shadow-none hero-shadow-none' : `border border-white/10 hero-shadow-${heroContainerShadow}`;
 
@@ -489,6 +714,7 @@ const BuyerStore = (() => {
             <p class="text-xs sm:text-sm leading-relaxed" style="color: ${heroDescColor};">
               ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
             </p>
+            ${heroCtaButtonsHtml ? `<div class="pt-2 sm:pt-3">${heroCtaButtonsHtml}</div>` : ''}
           </div>
         </div>
       `;
@@ -537,6 +763,7 @@ const BuyerStore = (() => {
                 <p class="line-clamp-2 sm:line-clamp-3 text-[11px] sm:text-xs md:text-sm mt-1 sm:mt-1.5 leading-relaxed" style="color: ${heroDescColor};">
                   ${escapeHtml(settings.hero_subheadline || settings.store_tagline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, dan souvenir retail.')}
                 </p>
+                ${heroCtaButtonsHtml ? `<div class="pt-2 sm:pt-3">${heroCtaButtonsHtml}</div>` : ''}
               </div>
 
             </div>
@@ -612,6 +839,208 @@ const BuyerStore = (() => {
     }
 
     return heroSectionHtml;
+  }
+
+  // --- SECTION DIVIDER GENERATOR ---
+  function renderSectionDividerHtml(settings = {}) {
+    if (settings.divider_enabled === false) return '';
+    const color = settings.divider_color || '#e2e8f0';
+    const thickness = settings.divider_thickness || 1;
+    const width = settings.divider_width || '100%';
+    const marginY = settings.divider_margin_y !== undefined ? settings.divider_margin_y : 20;
+    return `
+      <div class="w-full flex justify-center shrink-0 my-auto" style="margin-top: ${marginY}px; margin-bottom: ${marginY}px;">
+        <div style="width: ${width};">
+          <hr style="border: 0; border-top: ${thickness}px solid ${color}; margin: 0; width: 100%;" />
+        </div>
+      </div>
+    `;
+  }
+
+  // --- FEATURED PRODUCTS SECTION GENERATOR ---
+  function renderFeaturedProductsSectionHtml(settings = {}, products = [], cardVariantsConfig = {}) {
+    let featuredList = products.filter(p => p.is_featured === true || p.featured === true);
+    if (featuredList.length === 0) {
+      const sorted = [...products].sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
+      featuredList = sorted.slice(0, 3);
+    }
+    if (featuredList.length === 0) return '';
+
+    const cardsHtml = featuredList.slice(0, 3).map((prod, idx) => {
+      const effDiscount = (typeof DB !== 'undefined' && DB.calculateEffectiveDiscount) 
+        ? DB.calculateEffectiveDiscount(prod) 
+        : (prod.effective_discount || { has_discount: false });
+      const minPrice = (typeof DB !== 'undefined' && DB.getProductMinPrice) ? DB.getProductMinPrice(prod) : (prod.price || 0);
+      const finalPrice = (effDiscount && effDiscount.has_discount) ? effDiscount.discounted_price : minPrice;
+      const formattedPrice = (typeof DB !== 'undefined' && DB.formatRupiah) ? DB.formatRupiah(finalPrice) : `Rp ${finalPrice.toLocaleString('id-ID')}`;
+      
+      const badgeLabels = ['Paling Dicari', 'Best Seller', 'Prioritas Pilihan'];
+      const currentBadge = badgeLabels[idx % badgeLabels.length];
+      const prodImg = (prod.images && prod.images[0]) || prod.image || 'assets/images/logo-songer-creative.png';
+
+      return `
+        <div class="rounded-2xl border-2 border-amber-300/80 bg-white p-4 shadow-xs hover:shadow-md transition-all space-y-3 cursor-pointer group flex flex-col justify-between" onclick="window.location.href='product.html?id=${prod.id}'">
+          <div class="space-y-3">
+            <div class="w-full aspect-[16/9] rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden relative">
+              <img src="${escapeHtml(prodImg)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${escapeHtml(prod.name)}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-200 text-slate-400 text-xl font-bold\\'><i class=\\'bi bi-box-seam\\'></i></div>';" />
+              <span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-amber-500 text-white font-extrabold text-[10px] uppercase shadow-xs tracking-wider">${currentBadge}</span>
+              ${effDiscount && effDiscount.has_discount ? `
+                <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-rose-600 text-white font-black text-[10px] uppercase shadow-xs">-${effDiscount.percent}%</span>
+              ` : ''}
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-900 group-hover:text-emerald-700 transition line-clamp-1 leading-snug">${escapeHtml(prod.name)}</h4>
+              <p class="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">${escapeHtml(prod.description || 'Spesifikasi kustom presisi tinggi dengan jaminan kualitas warna terbaik.')}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-100">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Harga Mulai</span>
+              <span class="font-black text-sm text-emerald-700">${formattedPrice}</span>
+            </div>
+            <a href="product.html?id=${prod.id}" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition inline-flex items-center gap-1" onclick="event.stopPropagation();">
+              <span>Pesan Kilat</span>
+              <i class="bi bi-arrow-right text-[10px]"></i>
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div id="section-products-featured" class="space-y-3.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <h3 class="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">Produk Unggulan &amp; Prioritas</h3>
+          </div>
+          <span class="text-xs font-bold text-amber-600 hover:underline cursor-pointer" onclick="window.scrollTo({top: 400, behavior: 'smooth'});">Lihat Semua Unggulan &rarr;</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+          ${cardsHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  // --- SPONSOR SLOT SECTION GENERATOR ---
+  function renderSponsorSectionHtml(settings = {}) {
+    const allSponsors = (typeof DB !== 'undefined' && DB.getSponsorList) ? (DB.getSponsorList() || []) : [];
+    const activeSponsors = allSponsors.filter(s => {
+      if (typeof DB !== 'undefined' && DB.isSponsorActive) return DB.isSponsorActive(s);
+      return s.active !== false && s.is_active !== false;
+    });
+
+    if (activeSponsors.length >= 2) {
+      const s1 = activeSponsors[0];
+      const s2 = activeSponsors[1];
+      return `
+        <div id="section-sponsor-slot" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-900 to-indigo-900 text-white flex items-center justify-between shadow-sm">
+            <div class="space-y-1">
+              <span class="px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-200 text-[10px] font-bold">Mitra Resmi Terverifikasi</span>
+              <h4 class="font-black text-sm">${escapeHtml(s1.title || 'Finishing Laminasi & UV Spot HD')}</h4>
+              <p class="text-[11px] text-blue-200">${escapeHtml(s1.subtitle || 'Katalog material premium dari distributor terpercaya')}</p>
+            </div>
+            ${s1.action_url ? `<a href="${escapeHtml(s1.action_url)}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-white text-blue-900 font-bold text-xs shadow hover:bg-blue-50 transition shrink-0 ml-3">Kunjungi</a>` : ''}
+          </div>
+          <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 to-teal-900 text-white flex items-center justify-between shadow-sm">
+            <div class="space-y-1">
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[10px] font-bold">Garansi Hasil CMYK</span>
+              <h4 class="font-black text-sm">${escapeHtml(s2.title || 'Mesin Cetak Konica Minolta 2026')}</h4>
+              <p class="text-[11px] text-emerald-200">${escapeHtml(s2.subtitle || 'Presisi warna tajam hingga 2400 DPI')}</p>
+            </div>
+            ${s2.action_url ? `<a href="${escapeHtml(s2.action_url)}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-white text-emerald-900 font-bold text-xs shadow hover:bg-emerald-50 transition shrink-0 ml-3">Detail</a>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div id="section-sponsor-slot" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-900 to-indigo-900 text-white flex items-center justify-between shadow-sm">
+          <div class="space-y-1">
+            <span class="px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-200 text-[10px] font-bold">Mitra Resmi Terverifikasi</span>
+            <h4 class="font-black text-sm">Finishing Laminasi &amp; UV Spot HD</h4>
+            <p class="text-[11px] text-blue-200">Katalog material premium dari distributor terpercaya</p>
+          </div>
+          <button type="button" class="px-3.5 py-1.5 rounded-xl bg-white text-blue-900 font-bold text-xs shadow hover:bg-blue-50 transition shrink-0 ml-3" onclick="window.scrollTo({top: 400, behavior: 'smooth'});">Kunjungi</button>
+        </div>
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 to-teal-900 text-white flex items-center justify-between shadow-sm">
+          <div class="space-y-1">
+            <span class="px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[10px] font-bold">Garansi Hasil CMYK</span>
+            <h4 class="font-black text-sm">Mesin Cetak Konica Minolta 2026</h4>
+            <p class="text-[11px] text-emerald-200">Presisi warna tajam hingga 2400 DPI</p>
+          </div>
+          <button type="button" class="px-3.5 py-1.5 rounded-xl bg-white text-emerald-900 font-bold text-xs shadow hover:bg-emerald-50 transition shrink-0 ml-3" onclick="window.scrollTo({top: 400, behavior: 'smooth'});">Detail</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // --- PROMO CARD SECTION GENERATOR ---
+  function renderPromoCardSectionHtml(settings = {}) {
+    const activePromos = (typeof DB !== 'undefined' && DB.getPromoList) ? (DB.getPromoList() || []).filter(p => p.is_active === true) : [];
+    if (activePromos.length > 0) {
+      const promo = activePromos[0];
+      return `
+        <div id="section-promo-card" class="p-5 rounded-2xl bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shrink-0">
+              <i class="bi bi-ticket-perforated-fill"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md bg-white text-rose-600 font-black text-[10px] uppercase">${escapeHtml(promo.badge || 'Flash Sale Terbatas')}</span>
+                <span class="text-xs font-semibold text-rose-100 flex items-center gap-1"><i class="bi bi-clock"></i> ${escapeHtml(promo.countdown_text || 'Berakhir Hari Ini')}</span>
+              </div>
+              <h3 class="font-black text-base sm:text-lg mt-0.5">${escapeHtml(promo.title || 'Diskon Hingga 35% Untuk Cetak Spanduk & Stiker')}</h3>
+            </div>
+          </div>
+          <button type="button" class="px-5 py-2.5 rounded-xl bg-white text-rose-600 font-extrabold text-xs shadow-lg hover:bg-rose-50 transition shrink-0 whitespace-nowrap" onclick="window.scrollTo({top: 500, behavior: 'smooth'});">
+            ${escapeHtml(promo.cta_text || 'Klaim Diskon Sekarang')} &rarr;
+          </button>
+        </div>
+      `;
+    }
+
+    return `
+      <div id="section-promo-card" class="p-5 rounded-2xl bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shrink-0">
+            <i class="bi bi-ticket-perforated-fill"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md bg-white text-rose-600 font-black text-[10px] uppercase">Flash Sale Terbatas</span>
+              <span class="text-xs font-semibold text-rose-100 flex items-center gap-1"><i class="bi bi-clock"></i> Berakhir 02:45:10</span>
+            </div>
+            <h3 class="font-black text-base sm:text-lg mt-0.5">Diskon Hingga 35% Untuk Cetak Spanduk &amp; Stiker</h3>
+          </div>
+        </div>
+        <button type="button" class="px-5 py-2.5 rounded-xl bg-white text-rose-600 font-extrabold text-xs shadow-lg hover:bg-rose-50 transition shrink-0 whitespace-nowrap" onclick="window.scrollTo({top: 500, behavior: 'smooth'});">
+          Klaim Diskon Sekarang &rarr;
+        </button>
+      </div>
+    `;
+  }
+
+  // --- STATIC BANNER SECTION GENERATOR ---
+  function renderStaticBannerSectionHtml(settings = {}) {
+    return `
+      <div id="section-static-banner" class="w-full p-4 sm:p-5 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs border border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl shrink-0">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-xs sm:text-sm">Jaminan Cetak Ulang Gratis Jika Salah Ukuran / Warna Melenceng</h4>
+            <p class="text-[11px] text-slate-400">Hubungi CS kami dalam 1x24 jam setelah barang diterima di workshop.</p>
+          </div>
+        </div>
+        <span class="px-3.5 py-1.5 rounded-xl bg-slate-800 text-emerald-400 text-xs font-bold shrink-0 border border-slate-700">Garansi 100% CMYK</span>
+      </div>
+    `;
   }
 
   // --- RENDER STOREFRONT MAIN VIEW ---
@@ -799,13 +1228,10 @@ const BuyerStore = (() => {
 
         let iconElement;
         if (preferIcon) {
-          // Seller memprioritaskan mode Ikon
           iconElement = renderStoreCatIcon(cat.icon || 'tag', 'text-lg sm:text-xl md:text-2xl', isCatActive ? '#ffffff' : primColor);
         } else if (catImg) {
-          // Ada gambar thumbnail kategori (Mode Gambar atau default dengan gambar)
           iconElement = `<img src="${catImg}" class="w-full h-full object-cover rounded-2xl" alt="${escapeHtml(cat.name)}" onerror="this.onerror=null; this.outerHTML='<i class=\\'bi bi-tag-fill text-lg sm:text-xl md:text-2xl\\'></i>';" />`;
         } else {
-          // Fallback ke Ikon
           iconElement = renderStoreCatIcon(cat.icon || 'tag', 'text-lg sm:text-xl md:text-2xl', isCatActive ? '#ffffff' : primColor);
         }
 
@@ -821,14 +1247,6 @@ const BuyerStore = (() => {
         `;
       }).join('');
 
-      // PERATAAN ADAPTIF DESKTOP VS MOBILE:
-      // Kondisi <= 10 Kategori di Desktop:
-      //  - Set kontainer pembungkus menjadi justify-center (flex justify-center w-full mx-auto)
-      //  - Matikan / sembunyikan tombol panah melayang < dan > karena muat penuh di layar tanpa perlu digulir
-      // Kondisi > 10 Kategori di Desktop:
-      //  - Set kontainer pembungkus menjadi justify-start (flex justify-start overflow-x-auto)
-      //  - Terapkan formula lebar item peeking (10.5 item terlihat)
-      //  - Aktifkan navigasi panah melayang < dan > yang muncul saat area di-hover
       let trackClasses = '';
       let showArrows = false;
 
@@ -841,14 +1259,12 @@ const BuyerStore = (() => {
           showArrows = true;
         }
       } else {
-        // Mobile Viewport (< lg): Selalu horizontal scrollable dengan swipe sentuh
         trackClasses = 'cat-scroll-track flex items-start justify-start overflow-x-auto gap-2 sm:gap-2.5 lg:gap-3 py-1 scrollbar-none w-full';
         showArrows = false;
       }
 
       return `
         <div class="relative group/catnav w-full">
-          <!-- Floating Navigation Arrows Desktop (Hanya aktif saat kategori > 10 & muncul saat hover) -->
           ${showArrows ? `
             <button type="button" class="btn-cat-nav-prev hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -left-3 top-8 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="${trackId}" title="Geser Kiri (<)">
               <i class="bi bi-chevron-left text-xs"></i>
@@ -858,7 +1274,6 @@ const BuyerStore = (() => {
             </button>
           ` : ''}
 
-          <!-- Track Gulir dengan Peeking Effect & Perataan Adaptif -->
           <div id="${trackId}" class="${trackClasses}">
             ${allBtnHtml}
             ${bestBtnHtml}
@@ -869,7 +1284,7 @@ const BuyerStore = (() => {
       `;
     }
 
-    // Builder 2: Mode Pill Buttons Teks (Barisan horizontal kapsul teks tanpa icon, kecuali tombol "Semua")
+    // Builder 2: Mode Pill Buttons Teks
     function renderCategoryNavPillsText() {
       const isAllActive = (activeQuickFilter === 'all' && activeMainCategoryId === 'all');
       const isBestsellerActive = (activeQuickFilter === 'bestseller');
@@ -880,36 +1295,29 @@ const BuyerStore = (() => {
 
       return `
         <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full">
-          <!-- Tombol Semua (Pill Berisi Icon Default bi-grid-fill) -->
           <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs border hover:brightness-95" style="${isAllActive ? activePillStyle : inactivePillStyle}" data-filter="all" title="${escapeHtml(filterAllText)}">
             <i class="bi bi-grid-fill text-xs"></i>
             <span>${escapeHtml(filterAllText)}</span>
           </button>
-
-          <!-- Tombol Produk Terlaris (Murni Teks Tanpa Icon) -->
           <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isBestsellerActive ? activePillStyle : inactivePillStyle}" data-filter="bestseller" title="${escapeHtml(filterBestsellerText)}">
             <span>${escapeHtml(filterBestsellerText)}</span>
           </button>
-
-          <!-- Tombol Sedang Promo (Murni Teks Tanpa Icon) -->
           <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isPromoActive ? activePillStyle : inactivePillStyle}" data-filter="discount" title="${escapeHtml(filterPromoText)}">
             <span>${escapeHtml(filterPromoText)}</span>
           </button>
-
-          <!-- Kategori Lainnya (Disaring show_in_quick_nav) -->
           ${quickNavCategories.map(cat => {
-        const isCatActive = (activeMainCategoryId === cat.id);
-        return `
+            const isCatActive = (activeMainCategoryId === cat.id);
+            return `
               <button type="button" class="btn-cat-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isCatActive ? activePillStyle : inactivePillStyle}" data-cat="${cat.id}" title="${escapeHtml(cat.name)}">
                 <span>${escapeHtml(cat.name)}</span>
               </button>
             `;
-      }).join('')}
+          }).join('')}
         </div>
       `;
     }
 
-    // Builder 3: Mode Dropdown (Compact Select Menu Teks)
+    // Builder 3: Mode Dropdown
     function renderCategoryNavDropdown(isDesktopView) {
       const isAllActive = (activeQuickFilter === 'all' && activeMainCategoryId === 'all');
       const isBestsellerActive = (activeQuickFilter === 'bestseller');
@@ -933,7 +1341,6 @@ const BuyerStore = (() => {
       `;
 
       if (isDesktopView) {
-        // Desktop: Dropdown kompak didampingi tombol quick filter teks
         const activePillStyle = `background-color: ${primColor}; color: #ffffff; border-color: ${primColor};`;
         const inactivePillStyle = `background-color: #ffffff; color: #1e293b; border-color: #e2e8f0;`;
 
@@ -956,7 +1363,6 @@ const BuyerStore = (() => {
         `;
       }
 
-      // Mobile: Compact select menu teks
       return `
         <div class="w-full">
           ${selectHtml}
@@ -964,66 +1370,57 @@ const BuyerStore = (() => {
       `;
     }
 
-    // Helper render navigasi kategori sesuai konfigurasi mode
     function renderCategoryNavByMode(mode, isDesktopView) {
       if (mode === 'dropdown') return renderCategoryNavDropdown(isDesktopView);
       if (mode === 'pills_text') return renderCategoryNavPillsText();
-      return renderCategoryNavIconImage(isDesktopView); // Default: icon_image
+      return renderCategoryNavIconImage(isDesktopView);
     }
 
-    container.innerHTML = `
-      <div class="space-y-8 pb-20">
-        
-        <!-- Sapaan Pelanggan Dinamis (Personalized Greeting) -->
-        ${customerGreetingHtml}
+    // --- HTML BLOCKS SEKSI INDIVIDUAL ETALASE ---
 
-        <!-- Hero Section Dinamis -->
-        ${heroSectionHtml}
-
-        <!-- CATALOG QUICK FILTERS & SEARCH STATUS -->
-        <div id="katalog-section" class="space-y-4">
-          ${activeSearchQuery ? `
-            <div class="flex items-center justify-between gap-3">
-              <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-1.5 rounded-xl shadow-xs">
-                <span>Hasil Pencarian: "<strong>${escapeHtml(activeSearchQuery)}</strong>"</span>
-                <button type="button" id="btn-clear-search-filter" class="hover:text-rose-600 font-bold ml-1 text-slate-400 hover:scale-110 transition" title="Hapus Filter Pencarian">✕</button>
-              </div>
-            </div>
-          ` : ''}
-
-          <!-- QUICK ACTION FILTER TRACK (BERDASARKAN PILIHAN VIEWPORT MOBILE & DESKTOP) -->
-          <div id="quick-filter-container" class="w-full py-1">
-            <!-- Mobile Viewport: Ditampilkan pada < lg -->
-            <div class="block lg:hidden w-full">
-              ${renderCategoryNavByMode(catNavModeMobile, false)}
-            </div>
-
-            <!-- Desktop Viewport: Ditampilkan pada >= lg -->
-            <div class="hidden lg:block w-full">
-              ${renderCategoryNavByMode(catNavModeDesktop, true)}
+    const categoryNavSectionHtml = `
+      <div id="katalog-section" class="space-y-4">
+        ${activeSearchQuery ? `
+          <div class="flex items-center justify-between gap-3">
+            <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-1.5 rounded-xl shadow-xs">
+              <span>Hasil Pencarian: "<strong>${escapeHtml(activeSearchQuery)}</strong>"</span>
+              <button type="button" id="btn-clear-search-filter" class="hover:text-rose-600 font-bold ml-1 text-slate-400 hover:scale-110 transition" title="Hapus Filter Pencarian">✕</button>
             </div>
           </div>
+        ` : ''}
 
-          <!-- Sub-Category Chips (If main category selected has children) -->
-          ${activeSubCategories.length > 0 ? `
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Sub:</span>
-              <button type="button" class="btn-sub-cat-chip px-3 py-1 rounded-lg text-[11px] font-medium transition shrink-0 ${activeSubCategoryId === 'all' ? 'bg-slate-800 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-id="all">
-                Semua Sub
-              </button>
-              ${activeSubCategories.map(sub => `
-                <button type="button" class="btn-sub-cat-chip px-3 py-1 rounded-lg text-[11px] font-medium transition shrink-0 ${activeSubCategoryId === sub.id ? 'bg-slate-800 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-id="${sub.id}">
-                  ${escapeHtml(sub.name)}
-                </button>
-              `).join('')}
-            </div>
-          ` : ''}
+        <!-- QUICK ACTION FILTER TRACK (BERDASARKAN PILIHAN VIEWPORT MOBILE & DESKTOP) -->
+        <div id="quick-filter-container" class="w-full py-1">
+          <!-- Mobile Viewport: Ditampilkan pada < lg -->
+          <div class="block lg:hidden w-full">
+            ${renderCategoryNavByMode(catNavModeMobile, false)}
+          </div>
+
+          <!-- Desktop Viewport: Ditampilkan pada >= lg -->
+          <div class="hidden lg:block w-full">
+            ${renderCategoryNavByMode(catNavModeDesktop, true)}
+          </div>
         </div>
 
-        <!-- Garis Pemisah (Divider) Tipis Antara Kategori & Etalase Produk -->
-        <hr class="border-t border-slate-200/80 dark:border-slate-800 my-4 md:my-6 mx-auto w-full max-w-7xl">
+        <!-- Sub-Category Chips (If main category selected has children) -->
+        ${activeSubCategories.length > 0 ? `
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Sub:</span>
+            <button type="button" class="btn-sub-cat-chip px-3 py-1 rounded-lg text-[11px] font-medium transition shrink-0 ${activeSubCategoryId === 'all' ? 'bg-slate-800 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-id="all">
+              Semua Sub
+            </button>
+            ${activeSubCategories.map(sub => `
+              <button type="button" class="btn-sub-cat-chip px-3 py-1 rounded-lg text-[11px] font-medium transition shrink-0 ${activeSubCategoryId === sub.id ? 'bg-slate-800 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-id="${sub.id}">
+                ${escapeHtml(sub.name)}
+              </button>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
 
-        <!-- PRODUCT CATALOG GRID WITH RESPONSIVE LAYOUT & INTERSPERSED PROMO BANNERS -->
+    const productsCatalogGridHtml = `
+      <div id="products-catalog-section" class="space-y-4">
         ${allActiveProducts.length === 0 ? `
           <div class="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 max-w-md mx-auto">
             <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
@@ -1036,12 +1433,54 @@ const BuyerStore = (() => {
             </button>
           </div>
         ` : `
-          <!-- Responsive Grid: Mobile 2 Kolom, Tablet 3 Kolom, Desktop 6 Kolom Murni -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 items-stretch">
+          <!-- Responsive Grid: Mobile 2 Kolom, Tablet 4 Kolom, Desktop 6 Kolom Murni -->
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 items-stretch">
             ${renderProductGridWithBanners(allActiveProducts, cardVariantsConfig)}
           </div>
         `}
+      </div>
+    `;
 
+    // SINKRONISASI DAFTAR SEKSI DINAMIS DENGAN DIVIDER
+    const activeSectionsList = (Array.isArray(settings.storefront_sections) && settings.storefront_sections.length > 0)
+      ? settings.storefront_sections
+      : [
+        { id: 'sec_hero', type: 'hero', enabled: true },
+        { id: 'sec_category', type: 'category', enabled: true },
+        { id: 'sec_products_standard', type: 'products_standard', enabled: true }
+      ];
+
+    const dividerHtml = renderSectionDividerHtml(settings);
+    const renderedSectionBlocks = [];
+
+    activeSectionsList.forEach(sec => {
+      if (sec.enabled === false) return;
+      if (sec.type === 'hero' && heroSectionHtml) {
+        renderedSectionBlocks.push(heroSectionHtml);
+      } else if (sec.type === 'category') {
+        renderedSectionBlocks.push(categoryNavSectionHtml);
+      } else if (sec.type === 'products_standard') {
+        renderedSectionBlocks.push(productsCatalogGridHtml);
+      } else if (sec.type === 'products_featured') {
+        renderedSectionBlocks.push(renderFeaturedProductsSectionHtml(settings, allActiveProducts, cardVariantsConfig));
+      } else if (sec.type === 'sponsor_slot') {
+        renderedSectionBlocks.push(renderSponsorSectionHtml(settings));
+      } else if (sec.type === 'promo_card') {
+        renderedSectionBlocks.push(renderPromoCardSectionHtml(settings));
+      } else if (sec.type === 'static_banner') {
+        renderedSectionBlocks.push(renderStaticBannerSectionHtml(settings));
+      }
+    });
+
+    const assembledSectionsHtml = renderedSectionBlocks.join(dividerHtml);
+
+    container.innerHTML = `
+      <div class="space-y-8 pb-20">
+        <!-- Sapaan Pelanggan Dinamis (Personalized Greeting) -->
+        ${customerGreetingHtml}
+
+        <!-- Seksi-seksi Etalase Terpasang & Divider Dinamis -->
+        ${assembledSectionsHtml}
       </div>
     `;
 
@@ -1049,11 +1488,15 @@ const BuyerStore = (() => {
     updateCartBadge();
     initHeroSlider();
     initStoreSponsorCarousels();
+    updateStoreFooter();
   }
 
   // Intersperses Promotional & Sponsor Cards into Product Grid
-  // Strict Edge Placement: Dilarang di Baris 1; Hanya di Kolom 6 baris genap (Desktop 6 Kolom) & Kolom 2 baris genap mulai baris 3 (Mobile 2 Kolom)
-  // Rasio Seimbang (50:50): Promo -> Sponsor -> Promo -> Sponsor bergantian
+  // Algoritma Interleaving Presisi:
+  // Desktop (6 Kolom): 1-11 Produk -> Slot 12 (Sisipan 1) -> 13-18 Produk (6) -> Slot 19 (Sisipan 2) -> 20-29 Produk (10) -> Slot 30 (Sisipan 3) ... (setiap 10)
+  // Tablet (4 Kolom): 1-7 Produk -> Slot 8 (Sisipan 1) -> 9-12 Produk (4) -> Slot 13 (Sisipan 2) -> 14-19 Produk (6) -> Slot 20 (Sisipan 3) ... (setiap 6)
+  // Mobile (2 Kolom): 1-5 Produk -> Slot 6 (Sisipan 1) -> 7-10 Produk (4) -> Slot 11 (Sisipan 2) -> 12-14 Produk (3) -> Slot 15 (Sisipan 3) ... (setiap 3)
+  // Zero-Gaps Fallback: Jika slot promo/sponsor kosong/expired, swap tipe lawan. Jika keduanya kosong, abaikan tanpa menyisakan slot bolong.
   function renderProductGridWithBanners(products, cardVariantsConfig = {}) {
     let html = '';
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
@@ -1075,7 +1518,7 @@ const BuyerStore = (() => {
       ...(promoSponsorStyle.enabled ? promoSponsorStyle : {})
     };
 
-    // Saring antrean secara ketat dari database dengan validasi masa aktif
+    // Saring promo aktif secara ketat dari database dengan validasi masa aktif
     const activePromos = (typeof DB !== 'undefined' && DB.getPromoList) ? (DB.getPromoList() || []).filter(p => p.is_active === true) : [];
     const allSponsors = (typeof DB !== 'undefined' && DB.getSponsorList) ? (DB.getSponsorList() || []) : [];
     const activeSponsors = allSponsors.filter(s => {
@@ -1087,67 +1530,91 @@ const BuyerStore = (() => {
 
     const promoGenerators = activePromos.map(p => {
       if (p.card_model === 'variant_2') {
-        return () => renderPromoCardVariation2(p, promo2);
+        return () => ({ html: renderPromoCardVariation2(p, promo2), isDoubleWidth: false });
       }
-      return () => renderPromoCardVariation1(p, promo1);
+      return () => ({ html: renderPromoCardVariation1(p, promo1), isDoubleWidth: false });
     });
 
-    // Generator Sponsor Mobile (semua sponsor aktif sesuai kuota masing-masing)
-    const sponsorGeneratorsMobile = [];
-    activeSponsors.forEach(s => {
-      const quota = Math.max(1, parseInt(s.display_quota, 10) || 1);
-      for (let q = 0; q < quota; q++) {
-        if (s.type === 'carousel') {
-          sponsorGeneratorsMobile.push(() => renderSponsorCarouselCard(s, s));
-        } else if (s.type === 'internal') {
-          sponsorGeneratorsMobile.push(() => renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, s));
-        } else {
-          sponsorGeneratorsMobile.push(() => renderSponsorAdCard(s, s));
+    // Generator Sponsor Mobile & Desktop
+    function buildSponsorGenerators(sponsorsList) {
+      const list = [];
+      sponsorsList.forEach(s => {
+        const quota = Math.max(1, parseInt(s.display_quota, 10) || 1);
+        for (let q = 0; q < quota; q++) {
+          if (s.type === 'double_width' || s.card_model === 'double_width') {
+            list.push(() => ({ html: renderSponsorDoubleWidthCard(s, s), isDoubleWidth: true }));
+          } else if (s.type === 'carousel') {
+            list.push(() => ({ html: renderSponsorCarouselCard(s, s), isDoubleWidth: false }));
+          } else if (s.type === 'internal') {
+            list.push(() => ({ html: renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, s), isDoubleWidth: false }));
+          } else {
+            list.push(() => ({ html: renderSponsorAdCard(s, s), isDoubleWidth: false }));
+          }
         }
-      }
-    });
-
-    // Generator Sponsor Desktop (hanya sponsor yang memenuhi syarat desktop / bukan mobile_only_ready)
-    const sponsorGeneratorsDesktop = [];
-    activeSponsors.filter(s => !s.mobile_only_ready).forEach(s => {
-      const quota = Math.max(1, parseInt(s.display_quota, 10) || 1);
-      for (let q = 0; q < quota; q++) {
-        if (s.type === 'carousel') {
-          sponsorGeneratorsDesktop.push(() => renderSponsorCarouselCard(s, s));
-        } else if (s.type === 'internal') {
-          sponsorGeneratorsDesktop.push(() => renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, s));
-        } else {
-          sponsorGeneratorsDesktop.push(() => renderSponsorAdCard(s, s));
-        }
-      }
-    });
-
-    // Aturan Penempatan Banner Berselang-seling (Promo -> Sponsor -> Promo, dst.)
-    function buildInterspersedGenerators(promosList, sponsorsList) {
-      if (promosList.length === 0 && sponsorsList.length > 0) return sponsorsList;
-      if (promosList.length > 0 && sponsorsList.length === 0) return promosList;
-      if (promosList.length > 0 && sponsorsList.length > 0) {
-        const combined = [];
-        const maxLen = Math.max(promosList.length, sponsorsList.length);
-        for (let i = 0; i < maxLen; i++) {
-          if (i < promosList.length) combined.push(promosList[i]);
-          if (i < sponsorsList.length) combined.push(sponsorsList[i]);
-        }
-        return combined;
-      }
-      return [];
+      });
+      return list;
     }
 
-    const bannerGeneratorsMobile = buildInterspersedGenerators(promoGenerators, sponsorGeneratorsMobile);
-    const bannerGeneratorsDesktop = buildInterspersedGenerators(promoGenerators, sponsorGeneratorsDesktop);
+    const sponsorGeneratorsMobile = buildSponsorGenerators(activeSponsors);
+    const sponsorGeneratorsDesktop = buildSponsorGenerators(activeSponsors.filter(s => !s.mobile_only_ready));
 
-    let bannerMobileIndex = 0;
-    let bannerDesktopIndex = 0;
+    // Factory untuk Interleaving dengan Zero-Gaps Fallback
+    function createInterleavingEngine(promoGens, sponsorGens) {
+      let promoIdx = 0;
+      let sponsorIdx = 0;
+
+      return function getNextBanner(step) {
+        const hasPromo = promoGens.length > 0;
+        const hasSponsor = sponsorGens.length > 0;
+
+        // Zero-Gaps Fallback rule 3: Jika keduanya kosong/nonaktif, tidak ada banner disisipkan (otomatis lanjut produk)
+        if (!hasPromo && !hasSponsor) return null;
+
+        // Tentukan prioritas awal (Sisipan 1): Promo jika ada, atau Sponsor jika promo kosong
+        const startWithPromo = hasPromo;
+        // Bergantian selang-seling (step 0 = prioritas awal, step 1 = kebalikan, dst.)
+        const wantsPromo = (step % 2 === 0) ? startWithPromo : !startWithPromo;
+
+        if (wantsPromo) {
+          if (hasPromo) {
+            const res = promoGens[promoIdx % promoGens.length]();
+            promoIdx++;
+            return res;
+          } else if (hasSponsor) {
+            // Zero-Gaps Fallback rule 1: tipe utama kosong, swap ke tipe lawan
+            const res = sponsorGens[sponsorIdx % sponsorGens.length]();
+            sponsorIdx++;
+            return res;
+          }
+        } else {
+          if (hasSponsor) {
+            const res = sponsorGens[sponsorIdx % sponsorGens.length]();
+            sponsorIdx++;
+            return res;
+          } else if (hasPromo) {
+            // Zero-Gaps Fallback rule 1: tipe utama kosong, swap ke tipe lawan
+            const res = promoGens[promoIdx % promoGens.length]();
+            promoIdx++;
+            return res;
+          }
+        }
+
+        return null;
+      };
+    }
+
+    const getDesktopBanner = createInterleavingEngine(promoGenerators, sponsorGeneratorsDesktop);
+    const getTabletBanner = createInterleavingEngine(promoGenerators, sponsorGeneratorsMobile);
+    const getMobileBanner = createInterleavingEngine(promoGenerators, sponsorGeneratorsMobile);
+
+    let desktopStep = 0;
+    let tabletStep = 0;
+    let mobileStep = 0;
 
     products.forEach((prod, idx) => {
-      // Tentukan versi kartu produk:
-      // Prioritaskan preferensi toko global (settings.card_product_version: 'v1' | 'v2' | 'v3')
-      // namun tetap mendukung override jika produk diset eksplisit (prod.card_variant_override === true)
+      const prodNum = idx + 1;
+
+      // Render kartu produk
       const rawGlobalVer = (settings.card_product_version || 'v1').toString().toLowerCase().trim();
       let globalCardVer = 'v1';
       if (rawGlobalVer === 'v3' || rawGlobalVer === '3' || rawGlobalVer === 'c') globalCardVer = 'v3';
@@ -1170,19 +1637,51 @@ const BuyerStore = (() => {
         html += renderCardVariantA(prod, varA);
       }
 
-      // STRICT EDGE PLACEMENT (Hanya jika terdapat banner aktif):
-      // Mobile (2 Kolom): Banner PERTAMA muncul di Posisi ke-6 (Row 3, Kolom 2). Banner berikutnya berjarak 3 produk.
-      if (bannerGeneratorsMobile.length > 0 && (idx + 1) >= 5 && ((idx + 1) - 5) % 3 === 0) {
-        const renderBanner = bannerGeneratorsMobile[bannerMobileIndex % bannerGeneratorsMobile.length];
-        html += `<div class="block lg:hidden w-full h-full">${renderBanner()}</div>`;
-        bannerMobileIndex++;
+      // --- ATURAN INTERLEAVING SLOT PRESISI & RESPONSIVE VIEWPORT ---
+
+      // C. Mobile (Grid 2 Kolom):
+      // Slot 1-5 Produk -> Slot 6 (Sisipan 1, setelah 5 produk)
+      // Slot 7-10 Produk -> Slot 11 (Sisipan 2, setelah 9 produk)
+      // Slot 12-14 Produk -> Slot 15 (Sisipan 3, setelah 12 produk)
+      // ...dan seterusnya berselang-seling setiap 3 produk (15, 18, 21, ...)
+      const isMobileSlot = (prodNum === 5) || (prodNum === 9) || (prodNum === 12) || (prodNum > 12 && (prodNum - 12) % 3 === 0);
+      if (isMobileSlot) {
+        const bannerObj = getMobileBanner(mobileStep);
+        if (bannerObj && bannerObj.html) {
+          const spanClass = bannerObj.isDoubleWidth ? 'col-span-2' : '';
+          html += `<div class="block md:hidden ${spanClass} w-full h-full">${bannerObj.html}</div>`;
+          mobileStep++;
+        }
       }
 
-      // Desktop (6 Kolom): Banner PERTAMA muncul di Posisi ke-12 (Row 2, Kolom 6 - setelah 11 produk).
-      if (bannerGeneratorsDesktop.length > 0 && (idx + 1) >= 11 && ((idx + 1) - 11) % 11 === 0) {
-        const renderBanner = bannerGeneratorsDesktop[bannerDesktopIndex % bannerGeneratorsDesktop.length];
-        html += `<div class="hidden lg:block w-full h-full">${renderBanner()}</div>`;
-        bannerDesktopIndex++;
+      // B. Tablet (Grid 4 Kolom):
+      // Slot 1-7 Produk -> Slot 8 (Sisipan 1, setelah 7 produk)
+      // Slot 9-12 Produk -> Slot 13 (Sisipan 2, setelah 11 produk)
+      // Slot 14-19 Produk -> Slot 20 (Sisipan 3, setelah 17 produk)
+      // ...dan seterusnya berselang-seling setiap 6 produk (23, 29, 35, ...)
+      const isTabletSlot = (prodNum === 7) || (prodNum === 11) || (prodNum === 17) || (prodNum > 17 && (prodNum - 17) % 6 === 0);
+      if (isTabletSlot) {
+        const bannerObj = getTabletBanner(tabletStep);
+        if (bannerObj && bannerObj.html) {
+          const spanClass = bannerObj.isDoubleWidth ? 'col-span-2' : '';
+          html += `<div class="hidden md:block lg:hidden ${spanClass} w-full h-full">${bannerObj.html}</div>`;
+          tabletStep++;
+        }
+      }
+
+      // A. Desktop (Grid 6 Kolom):
+      // Slot 1-11 Produk -> Slot 12 (Sisipan 1, setelah 11 produk)
+      // Slot 13-18 Produk -> Slot 19 (Sisipan 2, setelah 17 produk)
+      // Slot 20-29 Produk -> Slot 30 (Sisipan 3, setelah 27 produk)
+      // ...dan seterusnya berselang-seling setiap 10 produk (37, 47, 57, ...)
+      const isDesktopSlot = (prodNum === 11) || (prodNum === 17) || (prodNum === 27) || (prodNum > 27 && (prodNum - 27) % 10 === 0);
+      if (isDesktopSlot) {
+        const bannerObj = getDesktopBanner(desktopStep);
+        if (bannerObj && bannerObj.html) {
+          const spanClass = bannerObj.isDoubleWidth ? 'col-span-2' : '';
+          html += `<div class="hidden lg:block ${spanClass} w-full h-full">${bannerObj.html}</div>`;
+          desktopStep++;
+        }
       }
     });
 
@@ -1642,7 +2141,7 @@ const BuyerStore = (() => {
 
   // CARD PROMO VERSI GAMBAR (GAMBAR 2 - ATAS):
   // Rasio Area Gambar 3:4 (aspect-[3/4] w-full rounded-2xl object-cover overflow-hidden relative bleed to edge)
-  // Sesuai Wireframe: TANPA elemen judul teks di bawah gambar. HANYA tombol CTA di bawah gambar.
+  // Sesuai Matriks: Deskripsi otomatis tampil jika 1 CTA, dan sembunyi jika 2 CTA.
   function renderPromoCardVariation1(promoOrPromos, config = {}) {
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
     let targetPromo = {};
@@ -1661,21 +2160,39 @@ const BuyerStore = (() => {
       }
     }
 
+    // Preferensi Styling Mandiri Individual (promo.style)
+    const pStyle = targetPromo.style || {};
     const promoImg = targetPromo.image_url || targetPromo.banner_image || config.image_url || '';
-    const borderColor = config.border_color || '#e2e8f0';
-    const borderRadius = config.border_radius || '16px';
+    const borderColor = pStyle.border_color || config.border_color || 'transparent';
+    const borderRadius = pStyle.border_radius || targetPromo.border_radius || config.border_radius || '16px';
+    const boxShadowClass = pStyle.box_shadow ? `shadow-${pStyle.box_shadow}` : 'shadow-xs hover:shadow-xl';
 
-    // Apakah Countdown aktif? (CD vs Non-CD)
-    const isCD = targetPromo.show_timer !== false;
-    // Mode CTA: 'dual' (2 CTA) vs 'single' / 'catalog_only' / 'consultation_only' (1 CTA)
+    // 2. OTOMASI COUNTDOWN (TOP BAR VS CARD PROMO):
+    // Jika CD Top Bar aktif (true), maka Countdown di Card Promo otomatis DIPAKSA FALSE (mencegah duplikasi).
+    // Jika CD Top Bar nonaktif (false), status CD mengikuti targetPromo.show_timer individual.
+    const isTopBarCDActive = (settings.topbar_show_countdown !== false && settings.enable_promo_countdown !== false && settings.show_promo_countdown !== false);
+    const isCD = isTopBarCDActive ? false : (targetPromo.show_timer !== false);
+
+    // Mode CTA: 'dual' / '2_cta' (2 CTA) vs 'single' / '1_cta' / 'catalog_only' / 'consultation_only' (1 CTA)
     const ctaMode = targetPromo.cta_mode || 'dual';
-    const isDualCTA = ctaMode === 'dual';
+    const isDualCTA = (ctaMode === 'dual' || ctaMode === '2_cta');
+
+    // 3.A. MATRIKS VISIBILITAS DESKRIPSI:
+    // Kondisi 1: CD = False & 2 CTA = True  --> Deskripsi = FALSE
+    // Kondisi 2: CD = False & 1 CTA = True  --> Deskripsi = TRUE
+    // Kondisi 3: CD = True  & 2 CTA = True  --> Deskripsi = FALSE
+    // Kondisi 4: CD = True  & 1 CTA = True  --> Deskripsi = TRUE
+    let showDescription = false;
+    if (!isCD && isDualCTA) showDescription = false;
+    else if (!isCD && !isDualCTA) showDescription = true;
+    else if (isCD && isDualCTA) showDescription = false;
+    else if (isCD && !isDualCTA) showDescription = true;
 
     // Background styling calculation
-    const bgType = targetPromo.bg_type || 'solid';
-    const bgColor1 = targetPromo.bg_color1 || config.bg_color || '#ffffff';
-    const bgColor2 = targetPromo.bg_color2 || '#f8fafc';
-    const bgAngle = targetPromo.bg_angle !== undefined ? targetPromo.bg_angle : 135;
+    const bgType = pStyle.bg_type || targetPromo.bg_type || 'solid';
+    const bgColor1 = pStyle.bg_color1 || targetPromo.bg_color1 || config.bg_color || '#ffffff';
+    const bgColor2 = pStyle.bg_color2 || targetPromo.bg_color2 || '#f8fafc';
+    const bgAngle = (pStyle.bg_angle !== undefined) ? pStyle.bg_angle : (targetPromo.bg_angle !== undefined ? targetPromo.bg_angle : 135);
     let bgCss = `background-color: ${bgColor1};`;
     if (bgType === 'linear_gradient') {
       bgCss = `background: linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%);`;
@@ -1704,25 +2221,33 @@ const BuyerStore = (() => {
 
     const phone = (settings.store_phone || '0888-5844-380').replace(/[^0-9]/g, '');
     const cleanPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
-    const waUrl = `https://wa.me/${cleanPhone || '628885844380'}?text=${encodeURIComponent('Halo Songer Creative, saya ingin tanya info promo: ' + (targetPromo.label || targetPromo.name || 'Promo Spesial'))}`;
+    const defaultWaUrl = `https://wa.me/${cleanPhone || '628885844380'}?text=${encodeURIComponent('Halo Songer Creative, saya ingin tanya info promo: ' + (targetPromo.label || targetPromo.name || 'Promo Spesial'))}`;
 
     const cta1Text = targetPromo.cta1_text || 'Ingatkan Saya';
+    const cta1Link = targetPromo.cta1_link || '';
     const cta2Text = targetPromo.cta2_text || 'Tanya Admin';
+    const cta2Link = targetPromo.cta2_link || defaultWaUrl;
 
-    const cta1Btn = `
-      <button type="button" class="btn-remind-promo w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs hover:brightness-95 border border-black/5 bg-slate-900 text-white cursor-pointer" data-promo="${escapeHtml(targetPromo.label || targetPromo.name || 'Promo Spesial')}">
+    const cta1Btn = cta1Link ? `
+      <a href="${escapeHtml(cta1Link)}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs hover:brightness-95 bg-slate-900 text-white cursor-pointer">
+        <i class="bi bi-bell-fill text-xs shrink-0 text-amber-300"></i>
+        <span class="truncate">${escapeHtml(cta1Text)}</span>
+      </a>
+    ` : `
+      <button type="button" class="btn-remind-promo w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs hover:brightness-95 bg-slate-900 text-white cursor-pointer" data-promo="${escapeHtml(targetPromo.label || targetPromo.name || 'Promo Spesial')}">
         <i class="bi bi-bell-fill text-xs shrink-0 text-amber-300"></i>
         <span class="truncate">${escapeHtml(cta1Text)}</span>
       </button>
     `;
 
     const cta2Btn = `
-      <a href="${waUrl}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm hover:brightness-105 border border-black/5 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">
+      <a href="${escapeHtml(cta2Link)}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm hover:brightness-105 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">
         <i class="bi bi-whatsapp text-xs shrink-0"></i>
         <span class="truncate">${escapeHtml(cta2Text)}</span>
       </a>
     `;
 
+    // 3.B. Pembersihan Garis & Tombol CTA Fleksibel
     let ctaSectionHtml = '';
     if (isDualCTA) {
       ctaSectionHtml = `
@@ -1732,7 +2257,7 @@ const BuyerStore = (() => {
         </div>
       `;
     } else {
-      const singleBtn = ctaMode === 'consultation_only' ? cta2Btn : cta1Btn;
+      const singleBtn = (ctaMode === 'consultation_only' || ctaMode === 'whatsapp_only') ? cta2Btn : (cta1Link || cta1Text ? cta1Btn : cta2Btn);
       ctaSectionHtml = `
         <div class="mt-auto pt-2 flex flex-col gap-1.5">
           ${singleBtn}
@@ -1741,8 +2266,8 @@ const BuyerStore = (() => {
     }
 
     return `
-      <div class="h-full flex flex-col justify-between overflow-hidden rounded-2xl border shadow-xs hover:shadow-xl transition-all duration-300 group relative bg-white" style="border-color: ${borderColor}; border-radius: ${borderRadius}; ${bgCss}">
-        <!-- Area Gambar Rasio 3:4 Bleed to Edge (Menempel Penuh ke Batas Tepi Atas, Kiri, dan Kanan) -->
+      <div class="h-full flex flex-col justify-between overflow-hidden rounded-2xl border ${boxShadowClass} transition-all duration-300 group relative bg-white" style="border-color: ${borderColor}; border-radius: ${borderRadius}; ${bgCss}">
+        <!-- Area Gambar Rasio 3:4 Bleed to Edge -->
         <div class="relative w-full aspect-[3/4] overflow-hidden bg-slate-100 shrink-0 block">
           ${imgContainer}
           <!-- Badge Diskon Melayang di Sudut Atas Kiri -->
@@ -1759,8 +2284,13 @@ const BuyerStore = (() => {
           ` : ''}
         </div>
 
-        <!-- Area Bawah: HANYA Tombol CTA Tanpa Judul Teks Sesuai Wireframe -->
-        <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-end">
+        <!-- Area Bawah: Deskripsi (Jika 1 CTA sesuai matriks) + Tombol CTA Bersih Tanpa Border Divider -->
+        <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
+          ${showDescription && targetPromo.description ? `
+            <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed mb-2">
+              ${escapeHtml(targetPromo.description)}
+            </p>
+          ` : ''}
           ${ctaSectionHtml}
         </div>
       </div>
@@ -1768,12 +2298,7 @@ const BuyerStore = (() => {
   }
 
   // CARD PROMO VERSI NON-GAMBAR / TEKS (GAMBAR 2 - BAWAH):
-  // Background solid/gradient berbingkai rapi
-  // 4 Varian:
-  // 1. Varian 2 CTA + CD: Judul Baris 1 & Sub-Judul Baris 2, Kotak Countdown, 2 CTA vertikal
-  // 2. Varian 2 CTA Non-CD: Judul Baris 1, Sub-Judul Baris 2, Deskripsi, 2 CTA
-  // 3. Varian 1 CTA + CD: Judul Baris 1 & Sub-Judul Baris 2, Kotak Countdown, 1 CTA
-  // 4. Varian 1 CTA Non-CD: Judul Baris 1, Sub-Judul Baris 2, Deskripsi, 1 CTA
+  // Background solid/gradient berbingkai rapi tanpa garis pembatas dalam kartu
   function renderPromoCardVariation2(promoOrPromos, config = {}) {
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
     let targetPromo = {};
@@ -1792,22 +2317,41 @@ const BuyerStore = (() => {
       }
     }
 
-    const borderColor = config.border_color || '#334155';
-    const borderRadius = config.border_radius || '16px';
-    const titleColor = targetPromo.title_color || config.title_color || '#ffffff';
-    const priceColor = targetPromo.discount_color || config.price_color || '#f59e0b';
+    // Preferensi Styling Mandiri Individual (promo.style)
+    const pStyle = targetPromo.style || {};
+    const borderColor = pStyle.border_color || config.border_color || 'transparent';
+    const borderRadius = pStyle.border_radius || targetPromo.border_radius || config.border_radius || '16px';
+    const titleColor = pStyle.title_color || targetPromo.title_color || config.title_color || '#ffffff';
+    const descColor = pStyle.desc_color || targetPromo.desc_color || '#cbd5e1';
+    const priceColor = pStyle.discount_color || targetPromo.discount_color || config.price_color || '#f59e0b';
+    const boxShadowClass = pStyle.box_shadow ? `shadow-${pStyle.box_shadow}` : 'shadow-lg hover:shadow-2xl';
 
-    // Apakah Countdown aktif? (CD vs Non-CD)
-    const isCD = targetPromo.show_timer !== false;
-    // Apakah Dual CTA?
+    // 2. OTOMASI COUNTDOWN (TOP BAR VS CARD PROMO):
+    // Jika CD Top Bar aktif (true), maka Countdown di Card Promo otomatis DIPAKSA FALSE (mencegah duplikasi).
+    // Jika CD Top Bar nonaktif (false), status CD mengikuti targetPromo.show_timer individual.
+    const isTopBarCDActive = (settings.topbar_show_countdown !== false && settings.enable_promo_countdown !== false && settings.show_promo_countdown !== false);
+    const isCD = isTopBarCDActive ? false : (targetPromo.show_timer !== false);
+
+    // Mode CTA: 'dual' / '2_cta' (2 CTA) vs 'single' / '1_cta' (1 CTA)
     const ctaMode = targetPromo.cta_mode || 'dual';
-    const isDualCTA = ctaMode === 'dual';
+    const isDualCTA = (ctaMode === 'dual' || ctaMode === '2_cta');
+
+    // 3.A. MATRIKS VISIBILITAS DESKRIPSI:
+    // Kondisi 1: CD = False & 2 CTA = True  --> Deskripsi = FALSE
+    // Kondisi 2: CD = False & 1 CTA = True  --> Deskripsi = TRUE
+    // Kondisi 3: CD = True  & 2 CTA = True  --> Deskripsi = FALSE
+    // Kondisi 4: CD = True  & 1 CTA = True  --> Deskripsi = TRUE
+    let showDescription = false;
+    if (!isCD && isDualCTA) showDescription = false;
+    else if (!isCD && !isDualCTA) showDescription = true;
+    else if (isCD && isDualCTA) showDescription = false;
+    else if (isCD && !isDualCTA) showDescription = true;
 
     // Background calculation
-    const bgType = targetPromo.bg_type || 'linear_gradient';
-    const bgColor1 = targetPromo.bg_color1 || config.bg_color || '#0f172a';
-    const bgColor2 = targetPromo.bg_color2 || '#1e293b';
-    const bgAngle = targetPromo.bg_angle !== undefined ? targetPromo.bg_angle : 135;
+    const bgType = pStyle.bg_type || targetPromo.bg_type || 'linear_gradient';
+    const bgColor1 = pStyle.bg_color1 || targetPromo.bg_color1 || config.bg_color || '#0f172a';
+    const bgColor2 = pStyle.bg_color2 || targetPromo.bg_color2 || '#1e293b';
+    const bgAngle = (pStyle.bg_angle !== undefined) ? pStyle.bg_angle : (targetPromo.bg_angle !== undefined ? targetPromo.bg_angle : 135);
     let bgCss = `background-color: ${bgColor1};`;
     if (bgType === 'linear_gradient') {
       bgCss = `background: linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%);`;
@@ -1819,33 +2363,41 @@ const BuyerStore = (() => {
 
     const phone = (settings.store_phone || '0888-5844-380').replace(/[^0-9]/g, '');
     const cleanPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
-    const waUrl = `https://wa.me/${cleanPhone || '628885844380'}?text=${encodeURIComponent('Halo Songer Creative, saya ingin tanya info promo: ' + (targetPromo.label || targetPromo.name || 'Promo Spesial'))}`;
+    const defaultWaUrl = `https://wa.me/${cleanPhone || '628885844380'}?text=${encodeURIComponent('Halo Songer Creative, saya ingin tanya info promo: ' + (targetPromo.label || targetPromo.name || 'Promo Spesial'))}`;
 
     const cta1Text = targetPromo.cta1_text || 'Ingatkan Saya';
+    const cta1Link = targetPromo.cta1_link || '';
     const cta2Text = targetPromo.cta2_text || 'Konsultasi Desain & Cetak';
+    const cta2Link = targetPromo.cta2_link || defaultWaUrl;
 
-    const cta1Btn = `
-      <button type="button" class="btn-remind-promo w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs border border-white/10 bg-slate-900/80 hover:bg-slate-900 text-white cursor-pointer" data-promo="${escapeHtml(targetPromo.label || targetPromo.name || 'Promo Spesial')}">
+    const cta1Btn = cta1Link ? `
+      <a href="${escapeHtml(cta1Link)}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs bg-slate-900/80 hover:bg-slate-900 text-white cursor-pointer">
+        <i class="bi bi-bell-fill text-xs shrink-0 text-amber-300"></i>
+        <span class="truncate">${escapeHtml(cta1Text)}</span>
+      </a>
+    ` : `
+      <button type="button" class="btn-remind-promo w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs bg-slate-900/80 hover:bg-slate-900 text-white cursor-pointer" data-promo="${escapeHtml(targetPromo.label || targetPromo.name || 'Promo Spesial')}">
         <i class="bi bi-bell-fill text-xs shrink-0 text-amber-300"></i>
         <span class="truncate">${escapeHtml(cta1Text)}</span>
       </button>
     `;
 
     const cta2Btn = `
-      <a href="${waUrl}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm border border-white/10 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">
+      <a href="${escapeHtml(cta2Link)}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">
         <i class="bi bi-whatsapp text-xs shrink-0"></i>
         <span class="truncate">${escapeHtml(cta2Text)}</span>
       </a>
     `;
 
+    // 3.B. Pembersihan Garis Pembatas: TANPA border-t pemisah agar kartu menyatu, bersih, dan modern
     const ctaSectionHtml = isDualCTA ? `
-      <div class="relative z-10 mt-auto pt-2.5 flex flex-col gap-1.5 border-t border-slate-700/60">
+      <div class="relative z-10 mt-auto pt-2.5 flex flex-col gap-1.5">
         ${cta1Btn}
         ${cta2Btn}
       </div>
     ` : `
-      <div class="relative z-10 mt-auto pt-2.5 flex flex-col gap-1.5 border-t border-slate-700/60">
-        ${ctaMode === 'consultation_only' ? cta2Btn : cta1Btn}
+      <div class="relative z-10 mt-auto pt-2.5 flex flex-col gap-1.5">
+        ${(ctaMode === 'consultation_only' || ctaMode === 'whatsapp_only') ? cta2Btn : (cta1Link || cta1Text ? cta1Btn : cta2Btn)}
       </div>
     `;
 
@@ -1853,7 +2405,6 @@ const BuyerStore = (() => {
     const line1 = (targetPromo.title_line1 || (targetPromo.label ? targetPromo.label.split(/\s+/)[0] : 'PROMO')).trim();
     const line2 = (targetPromo.title_line2 || (targetPromo.label ? targetPromo.label.split(/\s+/).slice(1).join(' ') : 'BULAN OKTOBER')).trim();
 
-    // Nilai diskon: hilangkan jika tidak diisi/diinginkan seller (bersih sesuai wireframe)
     const hasDiscount = Boolean(targetPromo.discount_value && Number(targetPromo.discount_value) > 0);
     const discountHtml = hasDiscount ? `
       <div class="text-3xl sm:text-4xl font-black tracking-tight drop-shadow-md" style="color: ${priceColor};">
@@ -1870,7 +2421,6 @@ const BuyerStore = (() => {
     let bodyContent = '';
 
     if (isCD) {
-      // Varian CD: Judul (2 Baris), Diskon (Opsional), Deskripsi, Kotak Countdown
       bodyContent = `
         <div class="space-y-0.5">
           ${pausedBadge}
@@ -1884,9 +2434,11 @@ const BuyerStore = (() => {
 
         <div class="my-auto py-2">
           ${discountHtml}
-          <p class="text-[10px] sm:text-[11px] text-slate-300 line-clamp-2 mt-1 leading-relaxed">
-            ${escapeHtml(targetPromo.description || 'Potongan harga berlaku untuk produk pilihan.')}
-          </p>
+          ${showDescription ? `
+            <p class="text-[10px] sm:text-[11px] line-clamp-2 mt-1 leading-relaxed" style="color: ${descColor};">
+              ${escapeHtml(targetPromo.description || 'Potongan harga berlaku untuk produk pilihan.')}
+            </p>
+          ` : ''}
         </div>
 
         <div class="p-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-between text-[10px] font-mono ${isCardPaused ? 'text-amber-300' : 'text-emerald-300'}">
@@ -1898,8 +2450,6 @@ const BuyerStore = (() => {
         </div>
       `;
     } else {
-      // Varian Non-CD Sesuai Wireframe:
-      // Judul Baris 1, Sub-Judul Baris 2, Diskon (Opsional), Deskripsi
       bodyContent = `
         <div class="space-y-0.5">
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 block">
@@ -1912,15 +2462,17 @@ const BuyerStore = (() => {
 
         <div class="my-auto py-2">
           ${discountHtml}
-          <p class="text-[10px] sm:text-[11px] text-slate-300 line-clamp-4 mt-2 leading-relaxed">
-            ${escapeHtml(targetPromo.description || 'Hemat hingga potongan maksimal untuk semua transaksi cetak dan desain pilihan di seluruh etalase toko.')}
-          </p>
+          ${showDescription ? `
+            <p class="text-[10px] sm:text-[11px] line-clamp-4 mt-2 leading-relaxed" style="color: ${descColor};">
+              ${escapeHtml(targetPromo.description || 'Hemat hingga potongan maksimal untuk semua transaksi cetak dan desain pilihan di seluruh etalase toko.')}
+            </p>
+          ` : ''}
         </div>
       `;
     }
 
     return `
-      <div class="h-full flex flex-col justify-between p-3.5 sm:p-4 overflow-hidden rounded-2xl border shadow-lg relative text-white group transition hover:shadow-2xl" style="${bgCss} border-color: ${borderColor}; border-radius: ${borderRadius};">
+      <div class="h-full flex flex-col justify-between p-3.5 sm:p-4 overflow-hidden rounded-2xl border ${boxShadowClass} relative text-white group transition" style="${bgCss} border-color: ${borderColor}; border-radius: ${borderRadius};">
         <div class="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-emerald-500/15 blur-2xl pointer-events-none"></div>
         <div class="absolute -left-8 -bottom-8 w-24 h-24 rounded-full bg-amber-500/10 blur-xl pointer-events-none"></div>
 
@@ -2084,6 +2636,172 @@ const BuyerStore = (() => {
           </span>
 
           <!-- Dots Navigasi di Bagian Bawah Gambar (Hanya jika > 1 slide) -->
+          ${showDots ? `
+            <div class="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5 z-20 pointer-events-auto">
+              ${dotsHtml}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // --- CARD SPONSOR VERSI BARU: LEBAR 2 KOLOM (DOUBLE-WIDTH CAROUSEL) ---
+  // - Dimensi: Membentang selebar 2 kolom produk (col-span-2), tinggi sejajar serasi dengan kartu produk.
+  // - Multi-Gambar: Mendukung hingga maksimal 10 gambar slide.
+  // - Mode Geser: Mode Otomatis (interval detik) vs Mode Manual (tombol panah < / > di desktop hover, swipe sentuh di mobile).
+  // - Validasi & Kustomisasi CTA per-Gambar Independen: Upload/URL, Link Klik Gambar [On/Off], Tombol CTA [On/Off] posisi absolute.
+  function renderSlideCtaButton(slide, defaultUrl) {
+    if (!slide || !slide.cta_enabled) return '';
+    const ctaText = slide.cta_text || 'Lihat Penawaran';
+    const ctaLink = slide.cta_link || slide.target_url || defaultUrl;
+    const ctaBg = slide.cta_bg_color || '#059669';
+    const ctaTextCol = slide.cta_text_color || '#ffffff';
+    const ctaRadius = slide.cta_border_radius || '12px';
+    const ctaIcon = slide.cta_icon || 'bi-arrow-right';
+    const shadowPreset = slide.cta_shadow || 'md';
+    const shadowClass = shadowPreset === 'none' ? 'shadow-none' : `shadow-${shadowPreset}`;
+
+    return `
+      <a href="${escapeHtml(ctaLink)}" target="_blank" onclick="event.stopPropagation();" class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold transition-all duration-200 hover:scale-105 hover:brightness-110 ${shadowClass}" style="background-color: ${ctaBg}; color: ${ctaTextCol}; border-radius: ${ctaRadius};">
+        <span class="truncate">${escapeHtml(ctaText)}</span>
+        <i class="${escapeHtml(ctaIcon)} text-xs shrink-0"></i>
+      </a>
+    `;
+  }
+
+  function renderSponsorDoubleWidthCard(sponsor = {}, config = {}) {
+    const borderColor = sponsor.border_color || config.border_color || '#e2e8f0';
+    const borderWidth = sponsor.border_width || config.border_width || '1px';
+    const borderRadius = sponsor.border_radius || config.border_radius || '16px';
+    const shadowPreset = sponsor.shadow || config.shadow || 'sm';
+    const shadowClass = shadowPreset === 'none' ? 'sponsor-shadow-none' : `sponsor-shadow-${shadowPreset}`;
+    const shadowStyle = shadowPreset === 'none' ? 'box-shadow: none !important;' : '';
+    const animTypeCard = sponsor.animation || config.animation || 'none';
+    const animClass = animTypeCard === 'fade' ? 'sponsor-anim-fade' : (animTypeCard === 'slide' ? 'sponsor-anim-slide' : (animTypeCard === 'zoom' ? 'sponsor-anim-zoom' : ''));
+
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+    const slides = Array.isArray(sponsor.slides) ? sponsor.slides.slice(0, 10) : [];
+    const animType = sponsor.animation_type || 'slide';
+    const slideMode = sponsor.slide_mode || 'auto'; // 'auto' | 'manual'
+    const intervalTime = sponsor.auto_slide_interval || 4000;
+
+    const phone = (settings.store_phone || '0888-5844-380').replace(/[^0-9]/g, '');
+    const cleanPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
+    const sponsorWaUrl = `https://wa.me/${cleanPhone || '628885844380'}?text=${encodeURIComponent('Halo Admin Songer Creative, saya ingin pasang iklan sponsor 2-kolom di etalase toko.')}`;
+
+    const sliderId = 'sponsor-double-' + Math.random().toString(36).substring(2, 9);
+
+    if (slides.length === 0) {
+      return `
+        <div class="col-span-2 h-full min-h-[300px] w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
+          <a href="${sponsorWaUrl}" target="_blank" class="relative w-full h-full flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white cursor-pointer group" style="border-radius: inherit;">
+            <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
+              SPONSOR
+            </span>
+            <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-3 text-amber-400 group-hover:scale-110 transition duration-300">
+              <i class="bi bi-badge-ad text-3xl"></i>
+            </div>
+            <span class="text-sm font-black tracking-widest text-white uppercase mb-1">SLOT IKLAN 2-KOLOM (DOUBLE-WIDTH) TERSEDIA</span>
+            <p class="text-xs text-slate-300 max-w-md leading-relaxed">Pasang banner sponsor carousel hingga 10 foto produk/brand bisnis Anda dengan tombol aksi kustom mandiri.</p>
+            <div class="mt-4 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition">
+              <i class="bi bi-whatsapp"></i> Hubungi Admin Pasang Iklan
+            </div>
+          </a>
+        </div>
+      `;
+    }
+
+    const slideCount = slides.length;
+    const showDots = slideCount > 1;
+    const showArrows = slideCount > 1;
+
+    let slidesHtml = '';
+    if (animType === 'fade' || animType === 'scale') {
+      slidesHtml = slides.map((slide, idx) => {
+        const clickImageEnabled = slide.click_image_enabled !== false && Boolean(slide.target_url);
+        const targetUrl = slide.target_url || sponsorWaUrl;
+        const ctaBtnHtml = renderSlideCtaButton(slide, sponsorWaUrl);
+
+        const content = `
+          <img src="${escapeHtml(slide.image_url)}" alt="Slide ${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-4\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-xs font-bold\\'>SPACE IKLAN AVAILABLE</span></div>';" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 group-hover:opacity-75 transition duration-300 pointer-events-none" style="border-radius: inherit;"></div>
+          ${ctaBtnHtml}
+        `;
+
+        return `
+          <div class="carousel-slide-item absolute inset-0 w-full h-full transition-all duration-700 ease-in-out ${idx === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}" data-slide="${idx}" style="border-radius: inherit;">
+            ${clickImageEnabled ? `
+              <a href="${escapeHtml(targetUrl)}" target="_blank" class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
+                ${content}
+              </a>
+            ` : `
+              <div class="w-full h-full block relative" style="border-radius: inherit;">
+                ${content}
+              </div>
+            `}
+          </div>
+        `;
+      }).join('');
+    } else {
+      // Default: 'slide' horizontal
+      slidesHtml = `
+        <div class="slides-track flex w-full h-full transition-transform duration-500 ease-in-out" style="border-radius: inherit;">
+          ${slides.map((slide, idx) => {
+            const clickImageEnabled = slide.click_image_enabled !== false && Boolean(slide.target_url);
+            const targetUrl = slide.target_url || sponsorWaUrl;
+            const ctaBtnHtml = renderSlideCtaButton(slide, sponsorWaUrl);
+
+            const content = `
+              <img src="${escapeHtml(slide.image_url)}" alt="Slide ${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-4\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-xs font-bold\\'>SPACE IKLAN AVAILABLE</span></div>';" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 group-hover:opacity-75 transition duration-300 pointer-events-none" style="border-radius: inherit;"></div>
+              ${ctaBtnHtml}
+            `;
+
+            return `
+              <div class="w-full h-full shrink-0 relative block" style="width: 100%; height: 100%; border-radius: inherit;">
+                ${clickImageEnabled ? `
+                  <a href="${escapeHtml(targetUrl)}" target="_blank" class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
+                    ${content}
+                  </a>
+                ` : `
+                  <div class="w-full h-full block relative" style="border-radius: inherit;">
+                    ${content}
+                  </div>
+                `}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    const dotsHtml = showDots ? slides.map((_, idx) => `
+      <button type="button" class="carousel-dot-btn w-2 h-2 rounded-full ${idx === 0 ? 'bg-white scale-125 ring-2 ring-white/50' : 'bg-white/50 hover:bg-white/80'} transition-all cursor-pointer shadow-sm" data-idx="${idx}" aria-label="Slide ${idx + 1}"></button>
+    `).join('') : '';
+
+    return `
+      <!-- CARD SPONSOR 2-KOLOM (DOUBLE-WIDTH CAROUSEL HINGGA 10 SLIDE & CTA INDEPENDEN) -->
+      <div id="${sliderId}" class="sponsor-carousel-container col-span-2 h-full w-full min-h-[300px] sm:min-h-[340px] flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-anim="${animType}" data-interval="${intervalTime}" data-total="${slideCount}" data-mode="${slideMode}">
+        <div class="relative w-full h-full flex-1 min-h-0 overflow-hidden bg-slate-950" style="border-radius: inherit;">
+          ${slidesHtml}
+
+          <!-- Badge SPONSOR di Sudut Kiri Atas -->
+          <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2.5 py-0.5 rounded-lg shadow-sm z-20 pointer-events-none">
+            SPONSOR
+          </span>
+
+          <!-- Tombol Panah Navigasi Manual (< dan >) di Desktop (Muncul saat Hover) -->
+          ${showArrows ? `
+            <button type="button" class="carousel-prev-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Sebelumnya">
+              <i class="bi bi-chevron-left text-sm"></i>
+            </button>
+            <button type="button" class="carousel-next-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Berikutnya">
+              <i class="bi bi-chevron-right text-sm"></i>
+            </button>
+          ` : ''}
+
+          <!-- Dots Navigasi Slide di Bagian Bawah Gambar -->
           ${showDots ? `
             <div class="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5 z-20 pointer-events-auto">
               ${dotsHtml}
@@ -2790,6 +3508,18 @@ const BuyerStore = (() => {
     if (btnOpenCart) btnOpenCart.addEventListener('click', openCartDrawer);
     if (btnCloseCart) btnCloseCart.addEventListener('click', closeCartDrawer);
     if (btnCheckoutWaCart) btnCheckoutWaCart.addEventListener('click', checkoutWhatsAppCart);
+
+    // Smooth scroll for Hero CTA 1 (Katalog)
+    document.addEventListener('click', (e) => {
+      const cta1 = e.target.closest('#hero-btn-cta1');
+      if (cta1) {
+        e.preventDefault();
+        const target = document.getElementById('buyer-storefront-container') || document.querySelector('main');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    });
   }
 
   // --- SMART NAVBAR SEARCH & AUTOCOMPLETE ---
@@ -3443,8 +4173,11 @@ const BuyerStore = (() => {
       const track = container.querySelector('.slides-track');
       const fadeSlides = container.querySelectorAll('.carousel-slide-item');
       const dots = container.querySelectorAll('.carousel-dot-btn');
+      const prevBtn = container.querySelector('.carousel-prev-btn');
+      const nextBtn = container.querySelector('.carousel-next-btn');
       const intervalTime = parseInt(container.getAttribute('data-interval') || '3500', 10);
       const animType = container.getAttribute('data-anim') || 'slide';
+      const slideMode = container.getAttribute('data-mode') || 'auto';
 
       let currentIdx = 0;
       let timer = null;
@@ -3491,9 +4224,28 @@ const BuyerStore = (() => {
           e.preventDefault();
           e.stopPropagation();
           goToSlide(idx);
-          startAuto();
+          if (slideMode === 'auto') startAuto();
         });
       });
+
+      // Tombol Navigasi Manual (< dan >)
+      if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          goToSlide(currentIdx - 1);
+          if (slideMode === 'auto') startAuto();
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          goToSlide(currentIdx + 1);
+          if (slideMode === 'auto') startAuto();
+        });
+      }
 
       // Touch gesture swipe support for sponsor card
       let touchStartX = 0;
@@ -3509,15 +4261,256 @@ const BuyerStore = (() => {
           if (Math.abs(diffX) > 25) {
             if (diffX < 0) goToSlide(currentIdx + 1);
             else goToSlide(currentIdx - 1);
-            startAuto();
+            if (slideMode === 'auto') startAuto();
           }
         }
       }, { passive: true });
 
-      container.addEventListener('mouseenter', stopAuto);
-      container.addEventListener('mouseleave', startAuto);
-      startAuto();
+      if (slideMode === 'auto') {
+        container.addEventListener('mouseenter', stopAuto);
+        container.addEventListener('mouseleave', startAuto);
+        startAuto();
+      }
     });
+  }
+
+  // ----------------------------------------------------------------------------
+  // MULTI-LAYOUT STOREFRONT FOOTER & SOSIAL MEDIA LENGKAP
+  // ----------------------------------------------------------------------------
+  function renderSocialIconsList(settings = {}) {
+    const iconCol = settings.footer_social_btn_icon_color || settings.footer_social_icon_color || '#64748b';
+    const bgCol = settings.footer_social_btn_bg_color || '#f1f5f9';
+    const hoverBg = settings.footer_social_btn_hover_bg_color || '#33b589';
+    const hoverIcon = settings.footer_social_btn_hover_icon_color || '#ffffff';
+    const borderEnable = Boolean(settings.footer_social_btn_border_enable);
+    const borderCol = settings.footer_social_btn_border_color || '#e2e8f0';
+    const radius = settings.footer_social_btn_radius || '9999px';
+    const shadow = (settings.footer_social_btn_shadow && settings.footer_social_btn_shadow !== 'none') ? `shadow-${settings.footer_social_btn_shadow}` : 'shadow-2xs';
+    const borderStyle = borderEnable ? `border: 1px solid ${borderCol};` : 'border: none;';
+
+    const links = [];
+
+    if (settings.footer_social_tiktok_active !== false && settings.footer_social_tiktok) {
+      links.push({ icon: 'bi-tiktok', label: 'TikTok', url: settings.footer_social_tiktok });
+    }
+    if (settings.footer_social_instagram_active !== false && settings.footer_social_instagram) {
+      links.push({ icon: 'bi-instagram', label: 'Instagram', url: settings.footer_social_instagram });
+    }
+    if (settings.footer_social_youtube_active !== false && settings.footer_social_youtube) {
+      links.push({ icon: 'bi-youtube', label: 'YouTube', url: settings.footer_social_youtube });
+    }
+    if (settings.footer_social_facebook_active !== false && settings.footer_social_facebook) {
+      links.push({ icon: 'bi-facebook', label: 'Facebook', url: settings.footer_social_facebook });
+    }
+    if (settings.footer_social_email_active !== false && settings.footer_social_email) {
+      const emailUrl = settings.footer_social_email.startsWith('mailto:') ? settings.footer_social_email : `mailto:${settings.footer_social_email}`;
+      links.push({ icon: 'bi-envelope-fill', label: 'Email', url: emailUrl });
+    }
+    const wa = settings.footer_social_whatsapp || settings.store_phone;
+    if (settings.footer_social_whatsapp_active !== false && wa) {
+      const clean = wa.replace(/[^0-9]/g, '');
+      const cleanWa = clean.startsWith('0') ? '62' + clean.slice(1) : clean;
+      links.push({ icon: 'bi-whatsapp', label: 'WhatsApp', url: `https://wa.me/${cleanWa}` });
+    }
+
+    if (links.length === 0) {
+      links.push(
+        { icon: 'bi-instagram', label: 'Instagram', url: 'https://instagram.com' },
+        { icon: 'bi-tiktok', label: 'TikTok', url: 'https://tiktok.com' },
+        { icon: 'bi-whatsapp', label: 'WhatsApp', url: 'https://wa.me/628885844380' }
+      );
+    }
+
+    return links.map(item => `
+      <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="group/icon w-9 h-9 flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 ${shadow}" style="background-color: ${bgCol}; color: ${iconCol}; border-radius: ${radius}; ${borderStyle}" onmouseenter="this.style.backgroundColor='${hoverBg}'; this.style.color='${hoverIcon}';" onmouseleave="this.style.backgroundColor='${bgCol}'; this.style.color='${iconCol}';" title="${escapeHtml(item.label)}" aria-label="${escapeHtml(item.label)}">
+        <i class="bi ${item.icon} text-base transition-colors duration-200"></i>
+      </a>
+    `).join('');
+  }
+
+  // Global helper agar klik tautan kategori pada footer langsung memicu filter
+  window.filterBuyerCategory = function(catId) {
+    activeMainCategoryId = catId;
+    activeQuickFilter = 'all';
+    activeSubCategoryId = 'all';
+    renderStorefront();
+    bindStoreEvents();
+    const targetEl = document.getElementById('katalog-section') || document.getElementById('quick-filter-container');
+    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  function renderStoreFooterHtml(settings = {}) {
+    const layout = settings.footer_layout || 'multi_column';
+    const storeName = settings.store_name || 'Songer Creative';
+    const tagline = settings.store_tagline || 'Sistem Katalog E-Commerce & Percetakan Terpadu';
+    const copyrightText = settings.footer_copyright_text || `© ${new Date().getFullYear()} ${storeName}. All rights reserved.`;
+
+    const bgCol = settings.footer_bg_color || '#ffffff';
+    const textCol = settings.footer_text_color || '#64748b';
+    const headingCol = settings.footer_heading_color || '#0f172a';
+    const borderCol = settings.footer_border_color || '#e2e8f0';
+
+    const phone = (settings.store_phone || '0888-5844-380').replace(/[^0-9]/g, '');
+    const cleanPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
+    const socialIconsHtml = renderSocialIconsList(settings);
+
+    // Kontrol Logo Footer Terperinci
+    const showLogo = settings.footer_show_logo !== false;
+    const logoUrl = (settings.footer_logo_type === 'custom' && settings.footer_custom_logo_url)
+      ? settings.footer_custom_logo_url
+      : (settings.store_logo_url || 'assets/images/logo-songer-creative.png');
+
+    const logoHtml = showLogo ? `
+      <img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(storeName)}" class="h-8 w-auto object-contain shrink-0" onerror="this.onerror=null; this.outerHTML='<span class=\\'font-black text-sm text-slate-800 tracking-tight\\'>${escapeHtml(storeName)}</span>';" />
+    ` : '';
+
+    // Kontrol Nama Toko & Slogan
+    const showStoreName = settings.footer_show_store_name !== false;
+    const storeNameCol = settings.footer_store_name_color || headingCol;
+    const taglineCol = settings.footer_tagline_color || textCol;
+
+    // Kategori Populer Dinamis dari Database & Checklist
+    let categoriesToDisplay = [];
+    if (Array.isArray(settings.footer_selected_categories) && settings.footer_selected_categories.length > 0) {
+      const allDbCats = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+      categoriesToDisplay = allDbCats.filter(c => settings.footer_selected_categories.includes(c.id));
+    }
+    if (categoriesToDisplay.length === 0) {
+      const allDbCats = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+      if (allDbCats.length > 0) {
+        categoriesToDisplay = allDbCats.slice(0, 4);
+      } else {
+        categoriesToDisplay = [
+          { id: 'c1', name: 'Digital Printing & Banner' },
+          { id: 'c2', name: 'Stiker Vinyl & Label Kemasan' },
+          { id: 'c3', name: 'Kartu Nama & Brosur Promosi' },
+          { id: 'c4', name: 'Merchandise, Mug & Gantungan Kunci' }
+        ];
+      }
+    }
+    const catLinkCol = settings.footer_category_link_color || textCol;
+    const catHoverCol = settings.footer_category_hover_color || '#33b589';
+
+    const categoriesHtml = categoriesToDisplay.map(cat => `
+      <li>
+        <a href="javascript:void(0)" onclick="if(window.filterBuyerCategory){window.filterBuyerCategory('${escapeHtml(cat.id)}');}else{window.scrollTo({top: 400, behavior: 'smooth'});}" class="transition flex items-center gap-1.5" style="color: ${catLinkCol};" onmouseenter="this.style.color='${catHoverCol}'" onmouseleave="this.style.color='${catLinkCol}'">
+          <i class="bi bi-chevron-right text-[10px]"></i> ${escapeHtml(cat.name)}
+        </a>
+      </li>
+    `).join('');
+
+    // 1. Layout 1: Minimalist Modern
+    if (layout === 'minimalist') {
+      return `
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3 flex-wrap justify-center md:justify-start">
+            ${logoHtml}
+            ${logoHtml && showStoreName ? '<span class="text-slate-300 hidden sm:inline">•</span>' : ''}
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-center md:text-left">
+              ${showStoreName ? `<span class="font-bold" style="color: ${storeNameCol};">${escapeHtml(storeName)}</span>` : ''}
+              ${showStoreName ? '<span class="hidden sm:inline text-slate-300">•</span>' : ''}
+              <span style="color: ${textCol};">${escapeHtml(copyrightText)}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            ${socialIconsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Layout 3: Centered Brand-First
+    if (layout === 'centered') {
+      return `
+        <div class="max-w-3xl mx-auto px-4 py-10 text-center space-y-4">
+          ${logoHtml ? `<div class="flex justify-center">${logoHtml}</div>` : ''}
+          <div class="space-y-1">
+            ${showStoreName ? `<h3 class="text-base font-extrabold" style="color: ${storeNameCol};">${escapeHtml(storeName)}</h3>` : ''}
+            <p class="text-xs max-w-md mx-auto leading-relaxed" style="color: ${taglineCol};">${escapeHtml(tagline)}</p>
+          </div>
+          <div class="flex items-center justify-center gap-2.5 pt-2">
+            ${socialIconsHtml}
+          </div>
+          <hr class="w-24 mx-auto my-4 border-t" style="border-color: ${borderCol};">
+          <p class="text-xs" style="color: ${textCol};">${escapeHtml(copyrightText)}</p>
+        </div>
+      `;
+    }
+
+    // 2. Layout 2: Multi-Column E-Commerce (Default)
+    return `
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- Kolom 1: Profil Toko & WhatsApp CS -->
+          <div class="space-y-3">
+            ${logoHtml}
+            ${showStoreName ? `<h4 class="font-extrabold text-sm" style="color: ${storeNameCol};">${escapeHtml(storeName)}</h4>` : ''}
+            <p class="text-xs leading-relaxed" style="color: ${taglineCol};">${escapeHtml(tagline)}</p>
+            <div class="pt-1">
+              <a href="https://wa.me/${cleanPhone}" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition">
+                <i class="bi bi-whatsapp"></i>
+                <span>Konsultasi CS WhatsApp</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Kolom 2: Jam Operasional Workshop -->
+          <div class="space-y-3">
+            <h4 class="font-bold text-xs uppercase tracking-wider" style="color: ${headingCol};">Jam Operasional</h4>
+            <div class="space-y-2 text-xs" style="color: ${textCol};">
+              <div class="flex items-start gap-2">
+                <i class="bi bi-clock text-emerald-600 text-sm shrink-0 mt-0.5"></i>
+                <div>
+                  <p class="font-semibold" style="color: ${headingCol};">Hari Kerja:</p>
+                  <p>${escapeHtml(settings.footer_hours_weekday || 'Senin - Sabtu: 08:00 - 21:00 WIB')}</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-2">
+                <i class="bi bi-calendar-check text-emerald-600 text-sm shrink-0 mt-0.5"></i>
+                <div>
+                  <p class="font-semibold" style="color: ${headingCol};">Akhir Pekan:</p>
+                  <p>${escapeHtml(settings.footer_hours_weekend || 'Minggu & Hari Libur: 09:00 - 17:00 WIB')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kolom 3: Tautan Kategori Cepat -->
+          <div class="space-y-3">
+            <h4 class="font-bold text-xs uppercase tracking-wider" style="color: ${headingCol};">Kategori Populer</h4>
+            <ul class="space-y-1.5 text-xs">
+              ${categoriesHtml}
+            </ul>
+          </div>
+
+          <!-- Kolom 4: Ikon Sosial Media & Legalitas Hak Cipta -->
+          <div class="space-y-3">
+            <h4 class="font-bold text-xs uppercase tracking-wider" style="color: ${headingCol};">Media Sosial Resmi</h4>
+            <p class="text-xs" style="color: ${textCol};">Ikuti akun resmi kami untuk promo diskon dan inspirasi desain:</p>
+            <div class="flex items-center gap-2 flex-wrap pt-1">
+              ${socialIconsHtml}
+            </div>
+            <div class="pt-2 text-[11px]" style="color: ${textCol};">
+              <span class="inline-flex items-center gap-1 text-emerald-600 font-bold"><i class="bi bi-shield-check"></i> 100% CMYK Color Guarantee</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs" style="border-color: ${borderCol}; color: ${textCol};">
+          <p>${escapeHtml(copyrightText)}</p>
+          <p class="text-[11px] opacity-80">Sistem POS Kasir &amp; E-Commerce Terpadu</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateStoreFooter(customSettings = null) {
+    const footerEl = document.getElementById('store-main-footer');
+    if (!footerEl) return;
+    const settings = customSettings || ((typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {});
+    footerEl.innerHTML = renderStoreFooterHtml(settings);
+    footerEl.style.backgroundColor = settings.footer_bg_color || '#ffffff';
+    footerEl.style.borderColor = settings.footer_border_color || '#e2e8f0';
   }
 
   // --- AUTO-DETECT SELLER SESSION ---
@@ -3845,7 +4838,16 @@ const BuyerStore = (() => {
     renderCardVariantC,
     renderProductCardV1: renderCardVariantA,
     renderProductCardV2: renderCardVariantB,
-    renderProductCardV3: renderCardVariantC
+    renderProductCardV3: renderCardVariantC,
+    renderSponsorDoubleWidthCard,
+    renderSectionDividerHtml,
+    renderFeaturedProductsSectionHtml,
+    renderSponsorSectionHtml,
+    renderPromoCardSectionHtml,
+    renderStaticBannerSectionHtml,
+    renderSocialIconsList,
+    renderStoreFooterHtml,
+    updateStoreFooter
   };
 })();
 
