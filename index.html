@@ -4,9 +4,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Toko Online Percetakan & Digital Printing</title>
-  <meta name="description"
+  <title id="page-title">Toko Online Percetakan & Digital Printing</title>
+  <meta name="description" id="meta-description"
     content="Katalog terpadu percetakan & digital printing, kalkulator instan meteran PxL, jasa desain grafis profesional, dan souvenir retail siap kirim.">
+  <meta name="keywords" id="meta-keywords"
+    content="digital printing, percetakan murah, cetak spanduk, banner, sablon, souvenir promosi, nota, brosur">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" id="canonical-url" href="">
+
+  <!-- Open Graph / Facebook / WhatsApp Preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" id="og-title" content="Toko Online Percetakan & Digital Printing">
+  <meta property="og:description" id="og-description"
+    content="Katalog terpadu percetakan & digital printing, kalkulator instan meteran PxL, jasa desain grafis profesional, dan souvenir retail siap kirim.">
+  <meta property="og:image" id="og-image" content="assets/images/logo-songer-creative.png">
+  <meta property="og:url" id="og-url" content="">
+  <meta property="og:site_name" id="og-site-name" content="Songer Creative">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twitter-title" content="Toko Online Percetakan & Digital Printing">
+  <meta name="twitter:description" id="twitter-description"
+    content="Katalog terpadu percetakan & digital printing, kalkulator instan meteran PxL.">
+  <meta name="twitter:image" id="twitter-image" content="assets/images/logo-songer-creative.png">
+
+  <!-- Schema.org JSON-LD Structured Data Container -->
+  <script id="saas-store-schema-jsonld" type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Songer Creative",
+    "description": "Digital Printing & Percetakan Terpadu"
+  }
+  </script>
 
   <!-- Browser Favicon Dinamis -->
   <link rel="icon" type="image/png" id="app-favicon" href="assets/images/songer-logo.png">
@@ -145,8 +175,8 @@
         </div>
       </div>
 
-      <!-- Right: Mobile Search Toggle Button, Login Button, & Keranjang Belanja -->
-      <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+      <!-- Right: Mobile Search Toggle Button, Notification Bell, Login Button, & Keranjang Belanja -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 
         <!-- Mobile Search Toggle Button (Tampil hanya di layar HP < sm) -->
         <button type="button" id="btn-mobile-search-toggle"
@@ -154,6 +184,39 @@
           title="Cari Produk">
           <i class="bi bi-search text-xs navbar-search-icon-el"></i>
         </button>
+
+        <!-- Tombol Ikon Lonceng Notifikasi & Dropdown Status Pesanan Real-time -->
+        <div id="navbar-notif-container" class="relative">
+          <button type="button" id="btn-navbar-notif"
+            class="relative p-2 sm:p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 transition flex items-center justify-center border border-slate-200/80 shadow-xs group shrink-0"
+            title="Notifikasi & Status Pesanan">
+            <i class="bi bi-bell text-sm navbar-notif-icon-el"></i>
+            <!-- Badge Counter Melayang -->
+            <span id="notif-badge-count"
+              class="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white font-black text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-xs hidden border-2 border-white">
+              0
+            </span>
+          </button>
+
+          <!-- Dropdown Panel Status Pesanan Real-time -->
+          <div id="navbar-notif-dropdown"
+            class="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 z-50 hidden animate-fade-in">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <i class="bi bi-bell-fill text-emerald-600 text-sm"></i>
+                <h4 class="font-extrabold text-xs text-slate-900 tracking-tight">Status Pesanan Real-Time</h4>
+              </div>
+              <button type="button" id="btn-close-notif-dropdown"
+                class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
+                title="Tutup Notifikasi">
+                <i class="bi bi-x-lg text-xs"></i>
+              </button>
+            </div>
+            <div id="navbar-notif-list" class="py-2 space-y-2 max-h-72 overflow-y-auto">
+              <!-- Populated dynamically via buyer-store.js -->
+            </div>
+          </div>
+        </div>
 
         <!-- Login Container (Format Baru: bi-person-fill & Text Login) -->
         <div id="auth-container" class="flex items-center">
@@ -256,34 +319,267 @@
       </div>
 
       <!-- Checkout Footer -->
-      <div class="pt-4 border-t border-slate-200 space-y-4">
-        <!-- Customer Details -->
+      <div class="pt-3 border-t border-slate-200 space-y-3">
+        <!-- Customer Details (Validated Guest / Account) -->
         <div class="space-y-2">
-          <label class="block text-xs font-bold text-slate-700">Data Pemesan:</label>
-          <input type="text" id="cart-cust-name" placeholder="Nama Lengkap Pemesan *"
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-700">Data Pemesan:</label>
+            <span
+              class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              Guest Checkout Aktif
+            </span>
+          </div>
+          <input type="text" id="cart-cust-name" placeholder="Nama Lengkap Pemesan *" required
             class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs outline-none focus:border-emerald-500 font-medium" />
-          <input type="tel" id="cart-cust-phone" placeholder="Nomor WhatsApp (Aktif)"
+          <input type="tel" id="cart-cust-phone" placeholder="Nomor WhatsApp (Aktif) *" required
             class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs outline-none focus:border-emerald-500 font-medium" />
+          <div class="grid grid-cols-2 gap-2">
+            <input type="email" id="cart-cust-email" placeholder="Email (Opsional)"
+              class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs outline-none focus:border-emerald-500 font-medium" />
+            <input type="text" id="cart-cust-address" placeholder="Kota / Alamat (Opsional)"
+              class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs outline-none focus:border-emerald-500 font-medium" />
+          </div>
         </div>
 
-        <!-- Grand Total -->
-        <div class="flex items-center justify-between text-sm font-bold">
-          <span class="text-slate-600">Total Tagihan:</span>
-          <span id="cart-drawer-grand-total" class="text-xl font-black text-emerald-600">Rp 0</span>
+        <!-- Pilihan Ekspedisi / Kurir Pengiriman -->
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-700">Pilihan Pengiriman / Ekspedisi:</label>
+          <select id="cart-shipping-courier"
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs outline-none focus:border-emerald-500 font-semibold bg-white text-slate-800">
+            <option value="pickup" data-cost="0">Ambil Sendiri di Toko / Workshop (Gratis - Rp 0)</option>
+            <option value="instant" data-cost="15000">Kurir Instan Grab / Gojek Lokal (+Rp 15.000)</option>
+            <option value="jnt" data-cost="12000">J&amp;T Express Reguler (+Rp 12.000)</option>
+            <option value="jne" data-cost="14000">JNE Reguler (+Rp 14.000)</option>
+            <option value="sicepat" data-cost="13000">SiCepat Express (+Rp 13.000)</option>
+            <option value="pos" data-cost="10000">POS Indonesia (+Rp 10.000)</option>
+          </select>
         </div>
 
-        <!-- Checkout WA Button -->
+        <!-- Pilihan Metode Pembayaran (WhatsApp vs Gateway) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-slate-700">Metode Pembayaran:</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label
+              class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 cursor-pointer bg-slate-50 hover:bg-emerald-50/50 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 font-semibold text-slate-800">
+              <input type="radio" name="cart-payment-method" value="wa_manual" checked class="accent-emerald-600" />
+              <span class="truncate">WhatsApp / Transfer</span>
+            </label>
+            <label
+              class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 cursor-pointer bg-slate-50 hover:bg-indigo-50/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 font-semibold text-slate-800">
+              <input type="radio" name="cart-payment-method" value="gateway_auto" class="accent-indigo-600" />
+              <span class="truncate">Payment Gateway</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Rincian Biaya & Grand Total -->
+        <div class="space-y-1 pt-2 border-t border-slate-200 text-xs">
+          <div class="flex items-center justify-between text-slate-500">
+            <span>Subtotal Produk:</span>
+            <span id="cart-drawer-subtotal" class="font-bold text-slate-700">Rp 0</span>
+          </div>
+          <div id="cart-drawer-shipping-row" class="flex items-center justify-between text-slate-500">
+            <span>Ongkos Kirim:</span>
+            <span id="cart-drawer-shipping-cost" class="font-bold text-slate-700">Rp 0</span>
+          </div>
+          <div id="cart-drawer-discount-row" class="flex items-center justify-between text-emerald-600 hidden">
+            <span>Diskon Voucher:</span>
+            <span id="cart-drawer-discount-amount" class="font-bold">-Rp 0</span>
+          </div>
+          <div class="flex items-center justify-between text-sm font-bold pt-1 border-t border-slate-200">
+            <span class="text-slate-700">Total Tagihan:</span>
+            <span id="cart-drawer-grand-total" class="text-xl font-black text-emerald-600">Rp 0</span>
+          </div>
+        </div>
+
+        <!-- Checkout Action Button -->
         <button type="button" id="btn-checkout-cart-wa"
           class="w-full py-3.5 rounded-xl btn-primary-brand text-white text-xs font-bold shadow-lg flex items-center justify-center gap-2 hover:shadow-emerald-200/50 transition">
           <i data-lucide="send" class="w-4 h-4"></i>
-          <span>Kirim Pesanan ke WhatsApp</span>
+          <span id="btn-checkout-label">Kirim Pesanan ke WhatsApp</span>
         </button>
       </div>
 
     </div>
   </div>
 
-  <!-- MODAL GOOGLE AUTH TELAH DIHAPUS SESUAI SPESIFIKASI (EVENT LOGIN DIKOSONGKAN SEMENTARA) -->
+  <!-- ========================================================================
+       MODAL: AUTENTIKASI PELANGGAN (DATA PRIBADI & GOOGLE SIGN-IN)
+       ======================================================================== -->
+  <div id="modal-auth-customer"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div
+      class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-scale-up">
+      <!-- Modal Header -->
+      <div
+        class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 via-teal-50 to-white">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+            <i class="bi bi-person-circle text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-slate-900 tracking-tight">Akun Pelanggan</h3>
+            <p class="text-[11px] text-slate-500">Masuk untuk riwayat pesanan &amp; voucher</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-auth-modal"
+          class="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition" title="Tutup">
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Quick Google Sign-In Button -->
+        <button type="button" id="btn-auth-google"
+          class="w-full py-2.5 px-4 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center gap-3 font-bold text-xs text-slate-700 shadow-xs transition group">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4"
+              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z" />
+            <path fill="#34A853"
+              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.25 21.37 7.31 24 12 24z" />
+            <path fill="#FBBC05"
+              d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2 0 10.04 0 12s.46 3.8 1.27 5.42l4.01-3.15z" />
+            <path fill="#EA4335"
+              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.63 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
+          </svg>
+          <span class="group-hover:text-slate-900">Lanjutkan dengan Google</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="relative flex items-center justify-center my-2">
+          <div class="border-t border-slate-200 w-full"></div>
+          <span class="bg-white px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider absolute">atau data
+            kontak WhatsApp</span>
+        </div>
+
+        <!-- Manual Customer Form -->
+        <form id="form-customer-auth" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap *</label>
+            <input type="text" id="auth-cust-name" required placeholder="Contoh: Budi Prasetyo"
+              class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Nomor WhatsApp Aktif *</label>
+            <input type="tel" id="auth-cust-phone" required placeholder="08xxxxxxxxxx atau +628xxxxxxxxxx"
+              class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Email <span
+                class="text-slate-400 font-normal">(Opsional)</span></label>
+            <input type="email" id="auth-cust-email" placeholder="budi@example.com"
+              class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Pengiriman <span
+                class="text-slate-400 font-normal">(Opsional)</span></label>
+            <textarea id="auth-cust-address" rows="2"
+              placeholder="Nama jalan, nomor rumah, kelurahan, kota/kabupaten..."
+              class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 resize-none"></textarea>
+          </div>
+
+          <button type="submit" id="btn-save-customer-auth"
+            class="w-full py-3 rounded-2xl btn-primary-brand text-white text-xs font-bold shadow-md hover:shadow-emerald-200 transition flex items-center justify-center gap-2 mt-3">
+            <i class="bi bi-check2-circle text-base"></i>
+            <span>Simpan Profil &amp; Masuk</span>
+          </button>
+        </form>
+
+        <!-- Logged In State Box (Hidden by default, shown if logged in) -->
+        <div id="auth-logged-in-box"
+          class="hidden space-y-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
+          <div class="w-12 h-12 rounded-full overflow-hidden mx-auto border-2 border-emerald-500 bg-white">
+            <img id="auth-user-avatar" src="" alt="Avatar" class="w-full h-full object-cover" />
+          </div>
+          <div>
+            <h4 id="auth-user-name" class="font-black text-sm text-slate-900">Nama Pelanggan</h4>
+            <p id="auth-user-contact" class="text-xs text-slate-600">contact</p>
+          </div>
+          <button type="button" id="btn-logout-customer"
+            class="px-4 py-1.5 rounded-xl bg-white border border-rose-300 text-rose-600 hover:bg-rose-50 text-xs font-bold transition">
+            Keluar Akun
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: PAYMENT GATEWAY SIMULATOR & HOOK READY (MIDTRANS / XENDIT)
+       ======================================================================== -->
+  <div id="modal-payment-gateway"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div
+      class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-scale-up">
+      <div
+        class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 via-blue-50 to-white">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+            <i class="bi bi-shield-check text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-slate-900 tracking-tight">Payment Gateway Otomatis</h3>
+            <p class="text-[11px] text-slate-500">Koneksi Midtrans &amp; Xendit Instant QRIS / VA</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-gateway-modal"
+          class="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition" title="Tutup">
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Order Summary & Timer -->
+        <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">No. Pesanan</span>
+            <p id="gateway-invoice-no" class="font-mono font-black text-xs text-slate-800">INV-892102</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Pembayaran</span>
+            <p id="gateway-total-amount" class="font-black text-sm text-indigo-700">Rp 0</p>
+          </div>
+        </div>
+
+        <!-- QRIS & Virtual Account Simulation Container -->
+        <div class="p-4 bg-white border-2 border-dashed border-indigo-200 rounded-2xl text-center space-y-3">
+          <div class="flex items-center justify-center gap-2 text-xs font-bold text-indigo-900">
+            <i class="bi bi-qr-code text-base"></i>
+            <span>Scan QRIS untuk Bayar Instan</span>
+          </div>
+          <div
+            class="w-44 h-44 bg-slate-100 rounded-xl mx-auto flex items-center justify-center border border-slate-200 p-2 shadow-inner">
+            <img id="gateway-qris-image"
+              src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=SONGER-PAYMENT-MOCK" alt="QRIS Barcode"
+              class="w-full h-full object-contain" />
+          </div>
+          <div class="text-[11px] text-slate-500 flex items-center justify-center gap-1">
+            <i class="bi bi-clock-history text-amber-500"></i>
+            <span>Batas waktu bayar: <strong id="gateway-countdown-timer" class="text-slate-800">14:59</strong></span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span class="font-medium text-slate-600">Nomor Virtual Account:</span>
+            <strong id="gateway-va-number"
+              class="font-mono font-bold text-slate-800 tracking-wider">880192837192</strong>
+          </div>
+          <p class="text-[10px] text-slate-400 leading-tight">Sistem webhook payment gateway akan memverifikasi
+            pembayaran secara otomatis tanpa perlu kirim bukti transfer.</p>
+        </div>
+
+        <!-- Action Simulator Buttons -->
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" id="btn-simulate-gateway-paid"
+            class="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Simulasi Bayar Berhasil</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================================================
        WIDGET FLOATING BUTTON VOUCHER & KLAIM INTERAKTIF

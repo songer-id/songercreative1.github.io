@@ -451,6 +451,51 @@ h1, h2, h3, h4, .font-heading {
 }
 
 /* --------------------------------------------------------------------------
+   SPONSOR INTERNAL 2X2 TOUCH SWIPE & BATCH TRANSITIONS
+   -------------------------------------------------------------------------- */
+.sponsor-internal-card {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  position: relative;
+}
+
+.internal-batch-view {
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+.internal-batch-view.batch-slide-next {
+  animation: batchSlideNext 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.internal-batch-view.batch-slide-prev {
+  animation: batchSlidePrev 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes batchSlideNext {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes batchSlidePrev {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
    CATEGORY QUICK ACTION SCROLL TRACK & PEEKING EFFECT
    -------------------------------------------------------------------------- */
 .cat-scroll-track {

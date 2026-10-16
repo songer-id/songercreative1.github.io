@@ -1689,7 +1689,11 @@ const AdminApp = (() => {
     if (existingIndex > -1) {
       posCart[existingIndex].qty += 1;
       posCart[existingIndex].subtotal = posCart[existingIndex].qty * posCart[existingIndex].unitPrice;
+      posCart[existingIndex].total_cost = posCart[existingIndex].qty * (posCart[existingIndex].cost_price || Math.round(posCart[existingIndex].unitPrice * 0.6));
     } else {
+      const baseCost = (typeof prod.cost_price === 'number' && prod.cost_price > 0)
+        ? prod.cost_price
+        : Math.round(finalUnitPrice * 0.6);
       posCart.push({
         id: generateUUID(),
         productId: prod.id,
@@ -1697,6 +1701,8 @@ const AdminApp = (() => {
         orderCategory: prod.order_category || 'Ctk',
         specsText: 'Item Standar / Ready',
         unitPrice: finalUnitPrice,
+        cost_price: baseCost,
+        total_cost: baseCost * 1,
         qty: 1,
         subtotal: finalUnitPrice,
         isCustomMeter: false
@@ -1890,18 +1896,33 @@ const AdminApp = (() => {
 
       unitPrice = Math.round((billableArea * selectedMat.price_per_m2) + finPrice);
       specsText = `${length}x${width}cm (${billableArea.toFixed(2)}m²) | ${selectedMat.name} | ${finName}`;
+
+      const matCostPerM2 = (typeof selectedMat.cost_price === 'number' && selectedMat.cost_price > 0)
+        ? selectedMat.cost_price
+        : Math.round((selectedMat.price_per_m2 || 30000) * 0.6);
+      const finCost = (prod.finishings && prod.finishings[finIdx] && typeof prod.finishings[finIdx].cost_price === 'number')
+        ? prod.finishings[finIdx].cost_price
+        : Math.round(finPrice * 0.5);
+      costPerUnit = Math.round((billableArea * matCostPerM2) + finCost);
     } else {
       const matIdx = parseInt(matSelect?.value || '0', 10);
       if (prod.options && prod.options[matIdx]) {
         unitPrice = prod.options[matIdx].price;
         specsText = `Varian: ${prod.options[matIdx].name}`;
+        costPerUnit = (typeof prod.options[matIdx].cost_price === 'number' && prod.options[matIdx].cost_price > 0)
+          ? prod.options[matIdx].cost_price
+          : Math.round(unitPrice * 0.6);
       } else {
         unitPrice = prod.price || 50000;
         specsText = 'Item Custom Spesifikasi';
+        costPerUnit = (typeof prod.cost_price === 'number' && prod.cost_price > 0)
+          ? prod.cost_price
+          : Math.round(unitPrice * 0.6);
       }
     }
 
     const subtotal = unitPrice * qty;
+    const totalCost = costPerUnit * qty;
 
     posCart.push({
       id: generateUUID(),
@@ -1910,6 +1931,8 @@ const AdminApp = (() => {
       orderCategory: prod.order_category || 'Ctk',
       specsText: specsText,
       unitPrice: unitPrice,
+      cost_price: costPerUnit,
+      total_cost: totalCost,
       qty: qty,
       subtotal: subtotal,
       isCustomMeter: prod.price_type === 1,
@@ -1979,6 +2002,7 @@ const AdminApp = (() => {
           if (posCart[idx].qty > 1) {
             posCart[idx].qty -= 1;
             posCart[idx].subtotal = posCart[idx].qty * posCart[idx].unitPrice;
+            posCart[idx].total_cost = posCart[idx].qty * (posCart[idx].cost_price || Math.round(posCart[idx].unitPrice * 0.6));
           } else {
             posCart.splice(idx, 1);
           }
@@ -1994,6 +2018,7 @@ const AdminApp = (() => {
         if (posCart[idx]) {
           posCart[idx].qty += 1;
           posCart[idx].subtotal = posCart[idx].qty * posCart[idx].unitPrice;
+          posCart[idx].total_cost = posCart[idx].qty * (posCart[idx].cost_price || Math.round(posCart[idx].unitPrice * 0.6));
           renderPosCartItems();
           updatePosFinancialSummary();
         }
@@ -2132,6 +2157,8 @@ const AdminApp = (() => {
       : `B-${posOrderPrefix}-${String(currentCounter).padStart(5, '0')}`;
 
     // Build Receipt Data Object
+    const orderTotalCost = posCart.reduce((sum, item) => sum + (item.total_cost || ((item.cost_price || 0) * item.qty)), 0);
+
     posActiveReceiptData = {
       invoice_number: invoiceNumber,
       order_prefix: posOrderPrefix,
@@ -2143,6 +2170,8 @@ const AdminApp = (() => {
       discount: posVoucherDiscount,
       voucher_code: posAppliedVoucher ? posAppliedVoucher.code : null,
       total: grandTotal,
+      total_cost: orderTotalCost,
+      net_profit: Math.max(0, grandTotal - orderTotalCost),
       cash: cashVal,
       change: change,
       payment_method: 'CASH',

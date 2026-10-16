@@ -760,6 +760,25 @@ const PromoManager = (() => {
     const categories = DB.getCategories();
     const products = DB.getAllProducts();
 
+    // Hitung akurat kartu promo dan sponsor yang benar-benar aktif (DB.isPromoActive / DB.isSponsorActive)
+    const promoListAll = (Array.isArray(promos.promo_list) && promos.promo_list.length > 0)
+      ? promos.promo_list
+      : (Array.isArray(currentPromotions) ? currentPromotions : []);
+    const activePromoCount = promoListAll.filter(p => {
+      if (typeof DB !== 'undefined' && typeof DB.isPromoActive === 'function') {
+        return DB.isPromoActive(p) && p.active !== false;
+      }
+      return p.active !== false && p.is_active !== false;
+    }).length;
+
+    const sponsorListAll = Array.isArray(promos.sponsor_list) ? promos.sponsor_list : (Array.isArray(currentSponsors) ? currentSponsors : []);
+    const activeSponsorCount = sponsorListAll.filter(s => {
+      if (typeof DB !== 'undefined' && typeof DB.isSponsorActive === 'function') {
+        return DB.isSponsorActive(s) && s.active !== false;
+      }
+      return s.active !== false && s.is_active !== false;
+    }).length;
+
     container.innerHTML = `
       <div class="space-y-6 max-w-6xl mx-auto pb-16">
         
@@ -789,7 +808,7 @@ const PromoManager = (() => {
             <i data-lucide="ticket-percent" class="w-4 h-4"></i>
             <span>Promo Toko</span>
             <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black ${activeTab === 'promos' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}">
-              ${(promos.twin_date.active ? 1 : 0) + (promos.special.active ? 1 : 0) + (promos.monthly.active ? 1 : 0)} Aktif
+              ${activePromoCount} Aktif
             </span>
           </button>
 
@@ -807,7 +826,7 @@ const PromoManager = (() => {
             <i data-lucide="image" class="w-4 h-4"></i>
             <span>Iklan Sponsor</span>
             <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black ${activeTab === 'sponsors' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}">
-              2 Slot
+              ${activeSponsorCount} Slot Aktif
             </span>
           </button>
         </div>
@@ -1019,6 +1038,7 @@ const PromoManager = (() => {
                   <th class="p-3.5">Potongan Diskon</th>
                   <th class="p-3.5">Jadwal & Durasi</th>
                   <th class="p-3.5">Target Audiens</th>
+                  <th class="p-3.5 text-center">Kuota Tampil</th>
                   <th class="p-3.5 text-center">Status</th>
                   <th class="p-3.5 text-center">Aksi Cepat</th>
                 </tr>
@@ -1026,7 +1046,7 @@ const PromoManager = (() => {
               <tbody class="divide-y divide-slate-100">
                 ${promoList.length === 0 ? `
                   <tr>
-                    <td colspan="7" class="p-8 text-center text-slate-400">
+                    <td colspan="8" class="p-8 text-center text-slate-400">
                       <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
                         <i data-lucide="tag" class="w-6 h-6"></i>
                       </div>
@@ -1073,6 +1093,12 @@ const PromoManager = (() => {
                           ${audienceLabel}
                         </span>
                       </td>
+                      <td class="p-3.5 text-center" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-center gap-1">
+                          <input type="number" min="1" max="99" value="${p.display_quota || 1}" class="input-promo-quota w-12 px-1.5 py-1 text-center font-bold text-xs rounded-lg border border-slate-300 bg-white outline-none focus:border-emerald-500" data-id="${p.id}" title="Frekuensi kuota kartu promo tampil di etalase pembeli" />
+                          <span class="text-[10px] text-slate-400 font-bold">x</span>
+                        </div>
+                      </td>
                       <td class="p-3.5 text-center">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${p.active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
                           ${p.active ? 'AKTIF' : 'NONAKTIF'}
@@ -1110,14 +1136,21 @@ const PromoManager = (() => {
                   ${activePromoId === 'new' ? 'Buat Program Promo Baru (5 Langkah)' : `Edit: ${escapeHtml(current.label || 'Promo Toko')}`}
                 </h3>
               </div>
-              <div class="flex items-center gap-3">
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="promo-active-toggle" ${current.active ? 'checked' : ''} class="sr-only peer" />
-                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
-                <span id="label-promo-active" class="text-xs font-bold ${current.active ? 'text-emerald-700' : 'text-slate-400'}">
-                  ${current.active ? 'Program Aktif' : 'Nonaktif'}
-                </span>
+              <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                  <label for="promo-display-quota-input" class="text-xs font-bold text-slate-700 whitespace-nowrap">Kuota Tampil:</label>
+                  <input type="number" id="promo-display-quota-input" min="1" max="99" value="${current.display_quota || 1}" class="w-12 px-1.5 py-0.5 text-center font-bold text-xs rounded-lg border border-slate-300 bg-white outline-none focus:border-emerald-500" title="Berapa kali promo ini ditampilkan di etalase pembeli" />
+                  <span class="text-[10px] text-slate-400 font-bold">x</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="promo-active-toggle" ${current.active ? 'checked' : ''} class="sr-only peer" />
+                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                  <span id="label-promo-active" class="text-xs font-bold ${current.active ? 'text-emerald-700' : 'text-slate-400'}">
+                    ${current.active ? 'Program Aktif' : 'Nonaktif'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -2093,7 +2126,7 @@ const PromoManager = (() => {
                     `;
                   } else {
                     thumbHtml = `
-                      <img src="${escapeHtml(s.image_url || 'assets/images/logo-songer-creative.png')}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 text-slate-400 text-sm border border-slate-200\\'><i class=\\'bi bi-images\\'></i></div>';" />
+                      <img src="${escapeHtml(s.image_url || 'assets/images/logo-songer-creative.png')}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100" onerror="this.onerror=null; this.src='assets/images/logo-songer-creative.png';" />
                     `;
                   }
 
@@ -3463,6 +3496,31 @@ const PromoManager = (() => {
       });
     });
 
+    // 2c. Input Kuota Tampil Promo di Tabel
+    document.querySelectorAll('.input-promo-quota').forEach(inp => {
+      const updateQuota = () => {
+        const id = inp.getAttribute('data-id');
+        const val = Math.max(1, parseInt(inp.value, 10) || 1);
+        inp.value = val;
+        if (id && typeof DB !== 'undefined') {
+          const promos = DB.getPromos();
+          let promoList = promos.promo_list || [];
+          const item = promoList.find(p => String(p.id) === String(id));
+          if (item) {
+            item.display_quota = val;
+            promos.promo_list = promoList;
+            DB.updatePromos(promos);
+            if (typeof DB.savePromotions === 'function') {
+              DB.savePromotions(promos.promo_list);
+            }
+            currentPromotions = (typeof DB.getPromotions === 'function') ? DB.getPromotions() : promos.promo_list;
+          }
+        }
+      };
+      inp.addEventListener('change', updateQuota);
+      inp.addEventListener('blur', updateQuota);
+    });
+
     // 3. Save All Promos Button (Top Right)
     const btnSaveAll = document.getElementById('btn-save-all-promos');
     if (btnSaveAll) {
@@ -4310,6 +4368,7 @@ const PromoManager = (() => {
         id: String((activePromoId && activePromoId !== 'new') ? activePromoId : ('promo_' + Date.now())),
         active,
         is_active: active,
+        display_quota: Math.max(1, parseInt(document.getElementById('promo-display-quota-input')?.value, 10) || 1),
         title_line1: titleLine1,
         title_line2: titleLine2,
         type,

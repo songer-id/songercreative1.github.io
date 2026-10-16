@@ -702,6 +702,8 @@ const DB = (() => {
     navbar_search_placeholder_color: '#94a3b8',
     navbar_login_icon_color: '#334155',
     navbar_login_text_color: '#334155',
+    navbar_show_notification: true,
+    navbar_notif_icon_color: '#334155',
     show_header_store_name: true,
     header_mobile_display: 'logo',
     // Top Bar Sapaan Dinamis & Promo Countdown Styling
@@ -2658,31 +2660,49 @@ const DB = (() => {
         countdown_border_color: productData.countdown_border_color || '#059669',
         is_active: productData.is_active !== false,
         sales_count: parseInt(productData.sales_count) || 0,
+        price: (typeof productData.price === 'number' && productData.price > 0)
+          ? productData.price
+          : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : 0),
+        cost_price: (typeof productData.cost_price === 'number' && productData.cost_price > 0)
+          ? productData.cost_price
+          : (materialsList[0] && materialsList[0].cost_price ? (parseFloat(materialsList[0].cost_price) || 0) : Math.round(((typeof productData.price === 'number' && productData.price > 0) ? productData.price : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : 0)) * 0.6)),
         rating_avg: 5.0,
         review_count: 0,
         created_at: now,
         updated_at: now
       };
 
-      const newMaterials = materialsList.map(m => ({
-        id: generateUUID(),
-        product_id: newId,
-        name: m.name.trim(),
-        price: parseFloat(m.price) || 0,
-        cost_price: parseFloat(m.cost_price) || 0,
-        step_multiplier: newProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
-        created_at: now
-      }));
+      const newMaterials = materialsList.map(m => {
+        const mPrice = parseFloat(m.price) || 0;
+        const mCost = (m.cost_price !== undefined && m.cost_price !== null && m.cost_price !== '' && parseFloat(m.cost_price) > 0)
+          ? parseFloat(m.cost_price)
+          : Math.round(mPrice * 0.6);
+        return {
+          id: generateUUID(),
+          product_id: newId,
+          name: m.name.trim(),
+          price: mPrice,
+          cost_price: mCost,
+          step_multiplier: newProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
+          created_at: now
+        };
+      });
 
-      const newFinishings = finishingsList.map(f => ({
-        id: generateUUID(),
-        product_id: newId,
-        tier: f.tier || 'main',
-        name: f.name.trim(),
-        price: parseFloat(f.price) || 0,
-        cost_price: parseFloat(f.cost_price) || 0,
-        created_at: now
-      }));
+      const newFinishings = finishingsList.map(f => {
+        const fPrice = parseFloat(f.price) || 0;
+        const fCost = (f.cost_price !== undefined && f.cost_price !== null && f.cost_price !== '' && parseFloat(f.cost_price) > 0)
+          ? parseFloat(f.cost_price)
+          : Math.round(fPrice * 0.5);
+        return {
+          id: generateUUID(),
+          product_id: newId,
+          tier: f.tier || 'main',
+          name: f.name.trim(),
+          price: fPrice,
+          cost_price: fCost,
+          created_at: now
+        };
+      });
 
       products.unshift(newProduct);
       setTable(STORAGE_KEYS.PRODUCTS, products);
@@ -2765,31 +2785,49 @@ const DB = (() => {
         countdown_border_color: productData.countdown_border_color || products[index].countdown_border_color || '#059669',
         is_active: productData.is_active !== undefined ? productData.is_active : products[index].is_active,
         sales_count: productData.sales_count !== undefined ? parseInt(productData.sales_count) : products[index].sales_count,
+        price: (typeof productData.price === 'number' && productData.price > 0)
+          ? productData.price
+          : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : (products[index].price || 0)),
+        cost_price: (typeof productData.cost_price === 'number' && productData.cost_price > 0)
+          ? productData.cost_price
+          : (materialsList[0] && materialsList[0].cost_price ? (parseFloat(materialsList[0].cost_price) || 0) : (products[index].cost_price || Math.round(((typeof productData.price === 'number' && productData.price > 0) ? productData.price : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : (products[index].price || 0))) * 0.6))),
         updated_at: now
       };
 
       materials = materials.filter(m => m.product_id !== id);
       finishings = finishings.filter(f => f.product_id !== id);
 
-      const newMaterials = materialsList.map(m => ({
-        id: generateUUID(),
-        product_id: id,
-        name: m.name.trim(),
-        price: parseFloat(m.price) || 0,
-        cost_price: parseFloat(m.cost_price) || 0,
-        step_multiplier: updatedProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
-        created_at: now
-      }));
+      const newMaterials = materialsList.map(m => {
+        const mPrice = parseFloat(m.price) || 0;
+        const mCost = (m.cost_price !== undefined && m.cost_price !== null && m.cost_price !== '' && parseFloat(m.cost_price) > 0)
+          ? parseFloat(m.cost_price)
+          : Math.round(mPrice * 0.6);
+        return {
+          id: m.id || generateUUID(),
+          product_id: id,
+          name: m.name.trim(),
+          price: mPrice,
+          cost_price: mCost,
+          step_multiplier: updatedProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
+          created_at: now
+        };
+      });
 
-      const newFinishings = finishingsList.map(f => ({
-        id: generateUUID(),
-        product_id: id,
-        tier: f.tier || 'main',
-        name: f.name.trim(),
-        price: parseFloat(f.price) || 0,
-        cost_price: parseFloat(f.cost_price) || 0,
-        created_at: now
-      }));
+      const newFinishings = finishingsList.map(f => {
+        const fPrice = parseFloat(f.price) || 0;
+        const fCost = (f.cost_price !== undefined && f.cost_price !== null && f.cost_price !== '' && parseFloat(f.cost_price) > 0)
+          ? parseFloat(f.cost_price)
+          : Math.round(fPrice * 0.5);
+        return {
+          id: f.id || generateUUID(),
+          product_id: id,
+          tier: f.tier || 'main',
+          name: f.name.trim(),
+          price: fPrice,
+          cost_price: fCost,
+          created_at: now
+        };
+      });
 
       products[index] = updatedProduct;
 
@@ -2808,6 +2846,13 @@ const DB = (() => {
       }
 
       return updatedProduct;
+    },
+
+    saveProduct(productData, materialsList = [], finishingsList = []) {
+      if (productData && productData.id) {
+        return this.updateProduct(productData.id, productData, materialsList, finishingsList);
+      }
+      return this.createProduct(productData, materialsList, finishingsList);
     },
 
     getCustomLabelsHistory() {
@@ -3047,7 +3092,8 @@ const DB = (() => {
       return list.map(p => ({
         ...p,
         id: String(p.id),
-        is_active: p.active !== false && p.is_active !== false
+        display_quota: Math.max(1, parseInt(p.display_quota, 10) || 1),
+        is_active: this.isPromoActive ? this.isPromoActive(p) : (p.active !== false && p.is_active !== false)
       }));
     },
 
@@ -3429,6 +3475,34 @@ const DB = (() => {
           return now >= new Date(sponsor.start_datetime);
         } else if (sponsor.end_datetime) {
           return now <= new Date(sponsor.end_datetime);
+        }
+      }
+
+      return true;
+    },
+
+    isPromoActive(promo, now = new Date()) {
+      if (!promo) return false;
+      if (promo.active === false || promo.is_active === false) return false;
+
+      // 1. Promo Bulanan (Awal Bulan)
+      if (promo.type === 'monthly') {
+        const startDay = parseInt(promo.monthly_start_day, 10) || 1;
+        const endDay = parseInt(promo.monthly_end_day, 10) || 7;
+        const d = now.getDate();
+        return d >= startDay && d <= endDay;
+      }
+
+      // 2. Promo Khusus / Flash Sale
+      if (promo.is_always_active === false || (promo.start_datetime && promo.end_datetime)) {
+        if (promo.start_datetime && promo.end_datetime) {
+          const start = new Date(promo.start_datetime);
+          const end = new Date(promo.end_datetime);
+          return now >= start && now <= end;
+        } else if (promo.start_datetime) {
+          return now >= new Date(promo.start_datetime);
+        } else if (promo.end_datetime) {
+          return now <= new Date(promo.end_datetime);
         }
       }
 
@@ -4477,20 +4551,29 @@ const DB = (() => {
       }
       const totalOrdersMonth = (webOrdersMonth + posOrdersMonth) || currentMonthOrders.length || 5;
 
-      // Estimasi Laba Bersih
+      // Estimasi Laba Bersih & Kalkulasi HPP Riil
       let totalCostMonth = 0;
+      let totalDiscountMonth = 0;
       currentMonthOrders.forEach(o => {
-        if (Array.isArray(o.items)) {
+        const st = (o.status || '').toLowerCase();
+        if (st === 'batal' || st === 'cancelled' || st === 'ditolak') return;
+        totalDiscountMonth += parseFloat(o.discount) || 0;
+        if (typeof o.total_hpp === 'number' && o.total_hpp > 0) {
+          totalCostMonth += o.total_hpp;
+        } else if (Array.isArray(o.items)) {
           o.items.forEach(it => {
-            const cost = parseFloat(it.cost_price) || (parseFloat(it.unitPrice || it.subtotal || 0) * 0.58);
-            totalCostMonth += cost * (parseInt(it.qty) || 1);
+            const cost = (typeof it.total_cost === 'number' && it.total_cost > 0)
+              ? it.total_cost
+              : ((parseFloat(it.cost_price) || (parseFloat(it.unitPrice || it.subtotal || 0) * 0.6)) * (parseInt(it.qty) || 1));
+            totalCostMonth += cost;
           });
         }
       });
-      if (totalCostMonth === 0 && totalTurnoverMonth > 0) {
-        totalCostMonth = totalTurnoverMonth * 0.58;
+      if (totalCostMonth === 0 && totalRevenueMonth > 0) {
+        totalCostMonth = Math.round(totalRevenueMonth * 0.58);
       }
-      const estimatedNetProfit = Math.max(0, totalTurnoverMonth - totalCostMonth) || Math.round(totalTurnoverMonth * 0.42);
+      const estimatedNetProfit = Math.max(0, Math.round(totalRevenueMonth - totalCostMonth - totalDiscountMonth));
+      const profitMarginPercent = totalRevenueMonth > 0 ? parseFloat(((estimatedNetProfit / totalRevenueMonth) * 100).toFixed(1)) : 42.0;
 
       // Produk Terlaris Bulan Ini
       const prodSalesMap = {};
@@ -4525,7 +4608,33 @@ const DB = (() => {
           const od = new Date(o.created_at);
           return od.getFullYear() === y && od.getMonth() === m;
         });
-        const mTotal = mOrders.reduce((acc, o) => acc + (parseFloat(o.total) || 0), 0) || (i === 0 ? totalTurnoverMonth : (2200000 + (5 - i) * 500000));
+
+        let mCost = 0;
+        let mDiscount = 0;
+        mOrders.forEach(o => {
+          const st = (o.status || '').toLowerCase();
+          if (st === 'batal' || st === 'cancelled' || st === 'ditolak') return;
+          mDiscount += parseFloat(o.discount) || 0;
+          if (typeof o.total_hpp === 'number' && o.total_hpp > 0) {
+            mCost += o.total_hpp;
+          } else if (Array.isArray(o.items)) {
+            o.items.forEach(it => {
+              const cost = (typeof it.total_cost === 'number' && it.total_cost > 0)
+                ? it.total_cost
+                : ((parseFloat(it.cost_price) || (parseFloat(it.unitPrice || it.subtotal || 0) * 0.6)) * (parseInt(it.qty) || 1));
+              mCost += cost;
+            });
+          }
+        });
+
+        const mTotal = mOrders.reduce((acc, o) => {
+          const st = (o.status || '').toLowerCase();
+          if (st === 'batal' || st === 'cancelled' || st === 'ditolak') return acc;
+          return acc + (parseFloat(o.total) || 0);
+        }, 0) || (i === 0 ? totalRevenueMonth : (2200000 + (5 - i) * 500000));
+
+        const mProfit = mCost > 0 ? Math.max(0, Math.round(mTotal - mCost - mDiscount)) : Math.round(mTotal * (profitMarginPercent / 100));
+
         monthlyTrend.push({
           month: mLabel,
           year: y,
@@ -4533,7 +4642,8 @@ const DB = (() => {
           count: mOrders.length || (3 + (5 - i) * 2),
           revenue: mTotal,
           orders: mOrders.length || (3 + (5 - i) * 2),
-          profit: Math.round(mTotal * 0.42)
+          profit: mProfit,
+          cost: mCost
         });
       }
 
@@ -4546,6 +4656,9 @@ const DB = (() => {
         totalTurnoverMonth,
         totalRevenueMonth,
         totalOrdersMonth,
+        totalCostMonth,
+        totalDiscountMonth,
+        profitMarginPercent,
         webOrdersMonth,
         webOrdersCount: webOrdersMonth,
         posOrdersMonth,
@@ -4660,15 +4773,20 @@ const DB = (() => {
       const tid = tenantId || (currentTenant ? currentTenant.tenant_id : 'tenant-songer-001');
       let customers = this.getCustomers(tid);
       const email = (customerData.email || '').trim().toLowerCase();
-      const existingIdx = customers.findIndex(c => (c.email || '').toLowerCase() === email);
+      const phone = (customerData.phone || '').trim();
+      const existingIdx = customers.findIndex(c => 
+        (email && (c.email || '').toLowerCase() === email) || 
+        (phone && (c.phone || '').trim() === phone)
+      );
 
       const customerRecord = {
         id: existingIdx > -1 ? customers[existingIdx].id : generateUUID(),
-        name: customerData.name || 'Pelanggan Google',
+        name: customerData.name || (email ? 'Pelanggan Google' : 'Pelanggan Toko'),
         email: email,
         avatar_url: customerData.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
-        phone: customerData.phone || '',
-        auth_provider: 'google',
+        phone: phone,
+        address: customerData.address || '',
+        auth_provider: customerData.auth_provider || (customerData.avatar_url ? 'google' : 'manual'),
         tenant_id: tid,
         updated_at: new Date().toISOString()
       };

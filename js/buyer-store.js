@@ -324,20 +324,38 @@ const BuyerStore = (() => {
           btnLogin.style.padding = '0';
         }
       }
-      const iconStyle = `color: ${loginIconColor}; font-size: ${loginIconSize}px; width: ${loginIconSize}px; height: ${loginIconSize}px;`;
-      let loginInnerHtml = '';
-      if (loginDisplay === 'icon_only') {
-        loginInnerHtml = renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle);
-      } else if (loginDisplay === 'text_only') {
-        loginInnerHtml = `<span class="font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>`;
+      if (typeof updateNavbarLoginUI === 'function') {
+        updateNavbarLoginUI();
       } else {
-        loginInnerHtml = `
-          ${renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle)}
-          <span class="hidden sm:inline font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>
-        `;
+        const iconStyle = `color: ${loginIconColor}; font-size: ${loginIconSize}px; width: ${loginIconSize}px; height: ${loginIconSize}px;`;
+        let loginInnerHtml = '';
+        if (loginDisplay === 'icon_only') {
+          loginInnerHtml = renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle);
+        } else if (loginDisplay === 'text_only') {
+          loginInnerHtml = `<span class="font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>`;
+        } else {
+          loginInnerHtml = `
+            ${renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle)}
+            <span class="hidden sm:inline font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>
+          `;
+        }
+        btnLogin.innerHTML = loginInnerHtml;
       }
-      btnLogin.innerHTML = loginInnerHtml;
     }
+
+    // 4. Notification Bell Icon Settings & Toggle Switch
+    const notifContainer = document.getElementById('navbar-notif-container');
+    if (notifContainer) {
+      if (settings.navbar_show_notification === false) {
+        notifContainer.classList.add('hidden');
+      } else {
+        notifContainer.classList.remove('hidden');
+      }
+    }
+    const notifIconColor = settings.navbar_notif_icon_color || '#334155';
+    document.querySelectorAll('.navbar-notif-icon-el').forEach(iconEl => {
+      iconEl.style.color = notifIconColor;
+    });
 
     // Inisialisasi ikon Lucide untuk elemen ikon yang baru dirender
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -389,14 +407,422 @@ const BuyerStore = (() => {
     }
   }
 
+  // ----------------------------------------------------------------------------
+  // DYNAMIC SEO & SCHEMA.ORG JSON-LD STRUCTURED DATA
+  // ----------------------------------------------------------------------------
+  function initStorefrontSEO() {
+    try {
+      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+      const storeName = settings?.store_name || 'Songer Creative';
+      const storeTagline = settings?.store_tagline || 'Digital Printing & Percetakan Terpadu';
+      const storeDesc = settings?.store_description || `Katalog resmi ${storeName} — Percetakan & Digital Printing Berkualitas, Desain Grafis Profesional, dan Souvenir Retail Cepat Siap Kirim.`;
+      const fullTitle = `${storeName} — ${storeTagline}`;
+      const logoUrl = settings?.web_logo || 'assets/images/logo-songer-creative.png';
+      const currentUrl = window.location.href;
+
+      // Update document title and canonical
+      document.title = fullTitle;
+      const pageTitleEl = document.getElementById('page-title');
+      if (pageTitleEl) pageTitleEl.textContent = fullTitle;
+
+      const metaDesc = document.getElementById('meta-description');
+      if (metaDesc) metaDesc.setAttribute('content', storeDesc);
+
+      const canonicalEl = document.getElementById('canonical-url');
+      if (canonicalEl) canonicalEl.setAttribute('href', currentUrl);
+
+      // Open Graph Tags
+      const ogTitle = document.getElementById('og-title');
+      if (ogTitle) ogTitle.setAttribute('content', fullTitle);
+      const ogDesc = document.getElementById('og-description');
+      if (ogDesc) ogDesc.setAttribute('content', storeDesc);
+      const ogImage = document.getElementById('og-image');
+      if (ogImage) ogImage.setAttribute('content', logoUrl);
+      const ogUrl = document.getElementById('og-url');
+      if (ogUrl) ogUrl.setAttribute('href', currentUrl);
+      const ogSiteName = document.getElementById('og-site-name');
+      if (ogSiteName) ogSiteName.setAttribute('content', storeName);
+
+      // Twitter Cards
+      const twTitle = document.getElementById('twitter-title');
+      if (twTitle) twTitle.setAttribute('content', fullTitle);
+      const twDesc = document.getElementById('twitter-description');
+      if (twDesc) twDesc.setAttribute('content', storeDesc);
+      const twImage = document.getElementById('twitter-image');
+      if (twImage) twImage.setAttribute('content', logoUrl);
+
+      // Schema.org JSON-LD
+      const schemaScript = document.getElementById('saas-store-schema-jsonld');
+      if (schemaScript) {
+        const products = (typeof DB !== 'undefined' && DB.getProducts) ? DB.getProducts() : [];
+        const topProducts = (products || []).slice(0, 10).map((p, idx) => ({
+          "@type": "Product",
+          "position": idx + 1,
+          "name": p.name || 'Produk Percetakan',
+          "description": p.description || p.name,
+          "image": p.image_url || logoUrl,
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "IDR",
+            "price": p.price || 0,
+            "availability": (p.stock === undefined || p.stock > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+          }
+        }));
+
+        const schemaPayload = {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "LocalBusiness",
+              "@id": `${currentUrl}#store`,
+              "name": storeName,
+              "description": storeTagline,
+              "telephone": settings?.whatsapp_number || settings?.store_phone || "+6281234567890",
+              "email": settings?.store_email || "info@songercreative.com",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": settings?.store_address || "Workshop Songer Creative",
+                "addressCountry": "ID"
+              },
+              "image": logoUrl,
+              "url": currentUrl,
+              "priceRange": "Rp 5.000 - Rp 1.000.000"
+            },
+            {
+              "@type": "ItemList",
+              "name": `Katalog Unggulan ${storeName}`,
+              "itemListElement": topProducts
+            }
+          ]
+        };
+        schemaScript.textContent = JSON.stringify(schemaPayload, null, 2);
+      }
+    } catch (err) {
+      console.warn('Gagal memuat dynamic SEO:', err);
+    }
+  }
+
+  // ----------------------------------------------------------------------------
+  // NAVBAR CUSTOMER AUTHENTICATION & PROFILE MODAL
+  // ----------------------------------------------------------------------------
+  function updateNavbarLoginUI() {
+    const btnLogin = document.getElementById('btn-navbar-login');
+    if (!btnLogin) return;
+
+    const customer = (typeof DB !== 'undefined' && DB.getActiveCustomer) ? DB.getActiveCustomer() : null;
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+    const loginTextColor = settings.login_text_color || settings.navbar_login_text_color || '#334155';
+    const loginIconColor = settings.login_icon_color || settings.navbar_login_icon_color || '#334155';
+
+    if (customer && customer.name) {
+      const firstName = customer.name.split(' ')[0] || 'User';
+      const avatarHtml = customer.avatar_url
+        ? `<img src="${customer.avatar_url}" alt="Avatar" class="w-4 h-4 rounded-full object-cover shrink-0" />`
+        : `<i class="bi bi-person-check-fill text-sm text-emerald-600 shrink-0"></i>`;
+
+      btnLogin.innerHTML = `
+        ${avatarHtml}
+        <span class="font-bold text-xs truncate max-w-[80px] sm:max-w-[120px] text-slate-800" style="color: ${loginTextColor};">${escapeHtml(firstName)}</span>
+      `;
+      btnLogin.title = `Profil: ${customer.name} (Klik untuk kelola)`;
+      btnLogin.classList.add('border-emerald-300', 'bg-emerald-50/70');
+    } else {
+      btnLogin.classList.remove('border-emerald-300', 'bg-emerald-50/70');
+      const loginIconKey = settings.login_icon || settings.navbar_login_icon || 'bi-person-fill';
+      const loginText = settings.login_btn_text || 'Login';
+      const loginIconSize = settings.login_icon_size || '16';
+      const iconStyle = `color: ${loginIconColor}; font-size: ${loginIconSize}px; width: ${loginIconSize}px; height: ${loginIconSize}px;`;
+
+      btnLogin.innerHTML = `
+        ${renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle)}
+        <span class="hidden sm:inline font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>
+      `;
+      btnLogin.title = 'Masuk Akun';
+    }
+  }
+
+  function prefillCustomerIntoCart(customer) {
+    if (!customer) return;
+    const nameEl = document.getElementById('cart-cust-name');
+    const phoneEl = document.getElementById('cart-cust-phone');
+    const emailEl = document.getElementById('cart-cust-email');
+    const addrEl = document.getElementById('cart-cust-address');
+
+    if (nameEl && customer.name && !nameEl.value) nameEl.value = customer.name;
+    if (phoneEl && customer.phone && !phoneEl.value) phoneEl.value = customer.phone;
+    if (emailEl && customer.email && !emailEl.value) emailEl.value = customer.email;
+    if (addrEl && customer.address && !addrEl.value) addrEl.value = customer.address;
+  }
+
   function initNavbarLogin() {
     const btnLogin = document.getElementById('btn-navbar-login');
+    const modal = document.getElementById('modal-auth-customer');
+    const btnClose = document.getElementById('btn-close-auth-modal');
+    const form = document.getElementById('form-customer-auth');
+    const btnGoogle = document.getElementById('btn-auth-google');
+    const btnLogout = document.getElementById('btn-logout-customer');
+    const loggedInBox = document.getElementById('auth-logged-in-box');
+    const authUserName = document.getElementById('auth-user-name');
+    const authUserContact = document.getElementById('auth-user-contact');
+    const authUserAvatar = document.getElementById('auth-user-avatar');
+
+    function syncModalState() {
+      const customer = (typeof DB !== 'undefined' && DB.getActiveCustomer) ? DB.getActiveCustomer() : null;
+      if (customer && customer.name) {
+        if (form) form.classList.add('hidden');
+        if (btnGoogle && btnGoogle.parentElement) btnGoogle.parentElement.classList.add('hidden');
+        if (loggedInBox) {
+          loggedInBox.classList.remove('hidden');
+          if (authUserName) authUserName.textContent = customer.name;
+          if (authUserContact) authUserContact.textContent = customer.phone || customer.email || 'Pelanggan Terdaftar';
+          if (authUserAvatar) {
+            authUserAvatar.src = customer.avatar_url || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(customer.name) + '&background=059669&color=fff');
+          }
+        }
+      } else {
+        if (form) form.classList.remove('hidden');
+        if (btnGoogle && btnGoogle.parentElement) btnGoogle.parentElement.classList.remove('hidden');
+        if (loggedInBox) loggedInBox.classList.add('hidden');
+        // Auto prefill from guest inputs if available
+        const nameInput = document.getElementById('auth-cust-name');
+        const phoneInput = document.getElementById('auth-cust-phone');
+        const cartName = document.getElementById('cart-cust-name')?.value;
+        const cartPhone = document.getElementById('cart-cust-phone')?.value;
+        if (nameInput && cartName && !nameInput.value) nameInput.value = cartName;
+        if (phoneInput && cartPhone && !phoneInput.value) phoneInput.value = cartPhone;
+      }
+    }
+
+    function openAuthModal() {
+      if (!modal) return;
+      syncModalState();
+      modal.classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      if (!modal) return;
+      modal.classList.add('hidden');
+    }
+
     if (btnLogin) {
       btnLogin.addEventListener('click', (e) => {
         e.preventDefault();
-        // Kosongkan fungsi/event handler login sementara waktu sesuai spesifikasi
+        openAuthModal();
       });
     }
+
+    if (btnClose) {
+      btnClose.addEventListener('click', closeAuthModal);
+    }
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeAuthModal();
+      });
+    }
+
+    // Google Sign-In Simulation
+    if (btnGoogle) {
+      btnGoogle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const googleName = 'Budi Santoso';
+        const googleEmail = 'budi.santoso@gmail.com';
+        const googleAvatar = 'https://ui-avatars.com/api/?name=Budi+Santoso&background=4285F4&color=fff';
+        const customerData = {
+          name: googleName,
+          email: googleEmail,
+          phone: '081234567890',
+          auth_provider: 'google',
+          avatar_url: googleAvatar
+        };
+
+        if (typeof DB !== 'undefined' && DB.saveCustomer) {
+          DB.saveCustomer(null, customerData);
+        }
+
+        prefillCustomerIntoCart(customerData);
+        updateNavbarLoginUI();
+        closeAuthModal();
+
+        alert(`Selamat datang, ${googleName}! Berhasil masuk dengan Google.`);
+      });
+    }
+
+    // Manual Form Submission
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = (document.getElementById('auth-cust-name')?.value || '').trim();
+        const phone = (document.getElementById('auth-cust-phone')?.value || '').trim();
+        const email = (document.getElementById('auth-cust-email')?.value || '').trim();
+        const address = (document.getElementById('auth-cust-address')?.value || '').trim();
+
+        if (!name || name.length < 2) {
+          alert('Mohon isi nama lengkap dengan benar.');
+          return;
+        }
+        if (!phone || phone.replace(/\D/g, '').length < 9) {
+          alert('Mohon isi nomor WhatsApp aktif dengan benar (minimal 9 digit).');
+          return;
+        }
+
+        const customerData = {
+          name,
+          phone,
+          email,
+          address,
+          auth_provider: 'manual',
+          avatar_url: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=059669&color=fff'
+        };
+
+        if (typeof DB !== 'undefined' && DB.saveCustomer) {
+          DB.saveCustomer(null, customerData);
+        }
+
+        prefillCustomerIntoCart(customerData);
+        updateNavbarLoginUI();
+        closeAuthModal();
+
+        alert(`Profil ${name} berhasil disimpan!`);
+      });
+    }
+
+    // Logout
+    if (btnLogout) {
+      btnLogout.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (typeof DB !== 'undefined' && DB.clearActiveCustomer) {
+          DB.clearActiveCustomer();
+        }
+        updateNavbarLoginUI();
+        closeAuthModal();
+        alert('Anda telah keluar dari akun pelanggan.');
+      });
+    }
+
+    updateNavbarLoginUI();
+  }
+
+  // ----------------------------------------------------------------------------
+  // NAVBAR REAL-TIME ORDER NOTIFICATION BELL & DROPDOWN
+  // ----------------------------------------------------------------------------
+  function initNavbarNotifications() {
+    const btnNotif = document.getElementById('btn-navbar-notif');
+    const dropdown = document.getElementById('navbar-notif-dropdown');
+    const btnClose = document.getElementById('btn-close-notif-dropdown');
+    const notifList = document.getElementById('navbar-notif-list');
+    const badgeCount = document.getElementById('notif-badge-count');
+
+    function refreshNotificationList() {
+      if (!notifList) return;
+      const orders = (typeof DB !== 'undefined' && DB.getOrders) ? DB.getOrders() : [];
+      const customer = (typeof DB !== 'undefined' && DB.getActiveCustomer) ? DB.getActiveCustomer() : null;
+
+      let relevantOrders = orders;
+      if (customer && customer.phone) {
+        relevantOrders = orders.filter(o => {
+          const matchPhone = o.customer_phone && o.customer_phone.replace(/\D/g, '') === customer.phone.replace(/\D/g, '');
+          const matchName = o.customer_name && o.customer_name.toLowerCase() === customer.name.toLowerCase();
+          return matchPhone || matchName;
+        });
+        if (relevantOrders.length === 0) relevantOrders = orders.slice(0, 5);
+      } else {
+        relevantOrders = orders.slice(0, 5);
+      }
+
+      const activeCount = relevantOrders.filter(o => {
+        const s = (o.status || '').toUpperCase();
+        return s === 'PENDING' || s === 'MENUNGGU_PEMBAYARAN' || s === 'PROSES' || s === 'IN_PROGRESS';
+      }).length;
+
+      if (badgeCount) {
+        if (activeCount > 0) {
+          badgeCount.textContent = activeCount > 9 ? '9+' : activeCount;
+          badgeCount.classList.remove('hidden');
+        } else {
+          badgeCount.classList.add('hidden');
+        }
+      }
+
+      if (!relevantOrders || relevantOrders.length === 0) {
+        notifList.innerHTML = `
+          <div class="py-6 text-center text-slate-400">
+            <i class="bi bi-inbox text-2xl mb-1 block"></i>
+            <p class="text-xs font-semibold">Belum ada riwayat pesanan.</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Pesanan baru Anda akan otomatis terpantau di sini.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+      const storeWa = (settings.whatsapp_number || '').replace(/\D/g, '');
+
+      notifList.innerHTML = relevantOrders.map(order => {
+        const statusUpper = (order.status || 'PENDING').toUpperCase();
+        let statusBadge = '';
+        if (statusUpper === 'PAID' || statusUpper === 'SELESAI' || statusUpper === 'COMPLETED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700">Selesai / Lunas</span>';
+        } else if (statusUpper === 'PROSES' || statusUpper === 'IN_PROGRESS') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-700">Sedang Dicetak</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-700">Menunggu Pembayaran</span>';
+        }
+
+        const dateStr = order.created_at ? new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Hari ini';
+        const invoice = order.invoice_number || `INV-${order.id ? order.id.toString().slice(-6) : '89201'}`;
+        const total = (typeof formatIDR === 'function') ? formatIDR(order.total || 0) : `Rp ${(order.total || 0).toLocaleString('id-ID')}`;
+        const waTrackUrl = storeWa ? `https://wa.me/${storeWa}?text=Halo%20Admin,%20saya%20ingin%20cek%20status%20pesanan%20no%20*${encodeURIComponent(invoice)}*` : '#';
+
+        return `
+          <div class="p-3 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-mono font-black text-slate-800">${escapeHtml(invoice)}</span>
+              ${statusBadge}
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-500">
+              <span>${escapeHtml(dateStr)}</span>
+              <span class="font-bold text-slate-900">${total}</span>
+            </div>
+            ${storeWa ? `
+              <div class="pt-1 flex justify-end">
+                <a href="${waTrackUrl}" target="_blank" rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                  <i class="bi bi-whatsapp"></i> Lacak ke CS Toko
+                </a>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (btnNotif && dropdown) {
+      btnNotif.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+        if (!dropdown.classList.contains('hidden')) {
+          refreshNotificationList();
+        }
+      });
+    }
+
+    if (btnClose && dropdown) {
+      btnClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.add('hidden');
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        if (!dropdown.contains(e.target) && !btnNotif.contains(e.target)) {
+          dropdown.classList.add('hidden');
+        }
+      }
+    });
+
+    refreshNotificationList();
   }
 
   function applyHeaderBranding(settings) {
@@ -536,9 +962,11 @@ const BuyerStore = (() => {
     startCountdownTimer();
     initFloatingVoucher();
     bindStoreEvents();
+    initStorefrontSEO();
     initNavbarSearchAutocomplete();
     initMobileSearchOverlay();
     initNavbarLogin();
+    initNavbarNotifications();
     checkSellerSession();
     initHeroSlider();
 
@@ -556,6 +984,7 @@ const BuyerStore = (() => {
           document.documentElement.style.setProperty('--store-font-body', updatedSettings.store_font_body);
           document.body.style.fontFamily = `'${updatedSettings.store_font_body}', sans-serif`;
         }
+        initStorefrontSEO();
         renderStorefront();
         initHeroSlider();
       }
@@ -1518,15 +1947,19 @@ const BuyerStore = (() => {
     updateCartBadge();
     initHeroSlider();
     initStoreSponsorCarousels();
+    initStoreInternalSponsorCards();
     updateStoreFooter();
   }
 
   // Intersperses Promotional & Sponsor Cards into Product Grid
-  // Algoritma Interleaving Presisi:
-  // Desktop (6 Kolom): 1-11 Produk -> Slot 12 (Sisipan 1) -> 13-18 Produk (6) -> Slot 19 (Sisipan 2) -> 20-29 Produk (10) -> Slot 30 (Sisipan 3) ... (setiap 10)
-  // Tablet (4 Kolom): 1-7 Produk -> Slot 8 (Sisipan 1) -> 9-12 Produk (4) -> Slot 13 (Sisipan 2) -> 14-19 Produk (6) -> Slot 20 (Sisipan 3) ... (setiap 6)
-  // Mobile (2 Kolom): 1-5 Produk -> Slot 6 (Sisipan 1) -> 7-10 Produk (4) -> Slot 11 (Sisipan 2) -> 12-14 Produk (3) -> Slot 15 (Sisipan 3) ... (setiap 3)
-  // Zero-Gaps Fallback: Jika slot promo/sponsor kosong/expired, swap tipe lawan. Jika keduanya kosong, abaikan tanpa menyisakan slot bolong.
+  // Algoritma Interleaving Presisi & Auto-Layout Grid:
+  // Desktop (6 Kolom): Slot 12 (Kanan), Slot 19 (Kiri), Slot 30 (Kanan), Slot 37 (Kiri), Slot 48 (Kanan)...
+  // Tablet (4 Kolom): Slot 8 (Kanan), Slot 13 (Kiri), Slot 20 (Kanan), Slot 25 (Kiri), Slot 32 (Kanan)...
+  // Mobile (2 Kolom): Slot 6 (Kanan), Slot 11 (Kiri), Slot 18 (Kanan), Slot 23 (Kiri), Slot 30 (Kanan)...
+  // Zero-Gaps Fallback: Jika slot promo/sponsor kosong/off, fallback tipe lawan. Jika keduanya off, diisi produk.
+  // Special Handling Double-Width (col-span-2):
+  // - Posisi Kanan: disisipkan 1 slot lebih awal (Slot 11-12 Desktop setelah 10 produk, Slot 7-8 Tablet setelah 6 produk, Slot 5-6 Mobile setelah 4 produk).
+  // - Posisi Kiri: langsung menempati 2 kolom pertama sisi kiri, dan kuota produk sebelum sisipan kanan berikutnya dikurangi 1.
   function renderProductGridWithBanners(products, cardVariantsConfig = {}) {
     let html = '';
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
@@ -1549,37 +1982,98 @@ const BuyerStore = (() => {
     };
 
     // Saring promo aktif secara ketat dari database dengan validasi masa aktif
-    const activePromos = (typeof DB !== 'undefined' && DB.getPromoList) ? (DB.getPromoList() || []).filter(p => p.is_active === true) : [];
-    const allSponsors = (typeof DB !== 'undefined' && DB.getSponsorList) ? (DB.getSponsorList() || []) : [];
-    const activeSponsors = allSponsors.filter(s => {
+    const now = new Date();
+    const rawPromoList = (typeof DB !== 'undefined' && DB.getPromoList) ? (DB.getPromoList() || []) : [];
+    const activePromos = rawPromoList.filter(p => {
+      if (p.active === false || p.is_active === false) return false;
+      if (p.is_always_active === false) {
+        if (p.start_datetime && p.end_datetime) {
+          const s = new Date(p.start_datetime);
+          const e = new Date(p.end_datetime);
+          if (now < s || now > e) return false;
+        }
+      }
+      return true;
+    });
+
+    const rawSponsorList = (typeof DB !== 'undefined' && DB.getSponsorList) ? (DB.getSponsorList() || []) : [];
+    const activeSponsors = rawSponsorList.filter(s => {
       if (typeof DB !== 'undefined' && DB.isSponsorActive) {
-        return DB.isSponsorActive(s);
+        return DB.isSponsorActive(s, now);
       }
       return s.active !== false && s.is_active !== false;
     });
 
-    const promoGenerators = activePromos.map(p => {
-      if (p.card_model === 'variant_2') {
-        return () => ({ html: renderPromoCardVariation2(p, promo2), isDoubleWidth: false });
+    // 1. Tentukan prioritas tipe sisipan pertama: bandingkan created_at / start_datetime paling awal
+    function getEarliestTimestamp(item) {
+      if (!item) return Infinity;
+      const timeStr = item.start_datetime || item.created_at || item.updated_at || '';
+      if (timeStr) {
+        const t = new Date(timeStr).getTime();
+        if (!isNaN(t)) return t;
       }
-      return () => ({ html: renderPromoCardVariation1(p, promo1), isDoubleWidth: false });
+      return Infinity;
+    }
+
+    let initialPreferredType = 'promo';
+    if (activePromos.length > 0 && activeSponsors.length > 0) {
+      const pTime = getEarliestTimestamp(activePromos[0]);
+      const sTime = getEarliestTimestamp(activeSponsors[0]);
+      if (sTime < pTime) {
+        initialPreferredType = 'sponsor';
+      } else {
+        initialPreferredType = 'promo';
+      }
+    } else if (activeSponsors.length > 0) {
+      initialPreferredType = 'sponsor';
+    } else {
+      initialPreferredType = 'promo';
+    }
+
+    // Generator Kartu Promo (dengan pembobotan display_quota ketat)
+    const promoGenerators = [];
+    activePromos.forEach(p => {
+      const quota = Math.max(1, parseInt(p.display_quota, 10) || 1);
+      for (let q = 0; q < quota; q++) {
+        promoGenerators.push(() => {
+          const cardHtml = (p.card_model === 'variant_2')
+            ? renderPromoCardVariation2(p, promo2)
+            : renderPromoCardVariation1(p, promo1);
+          return {
+            type: 'promo',
+            id: p.id,
+            isDoubleWidth: false,
+            html: cardHtml
+          };
+        });
+      }
     });
 
-    // Generator Sponsor Mobile & Desktop
+    // Generator Kartu Sponsor (dengan pembobotan display_quota)
     function buildSponsorGenerators(sponsorsList) {
       const list = [];
       sponsorsList.forEach(s => {
         const quota = Math.max(1, parseInt(s.display_quota, 10) || 1);
+        const isDouble = (s.type === 'double_width' || s.card_model === 'double_width');
         for (let q = 0; q < quota; q++) {
-          if (s.type === 'double_width' || s.card_model === 'double_width') {
-            list.push(() => ({ html: renderSponsorDoubleWidthCard(s, s), isDoubleWidth: true }));
-          } else if (s.type === 'carousel') {
-            list.push(() => ({ html: renderSponsorCarouselCard(s, s), isDoubleWidth: false }));
-          } else if (s.type === 'internal') {
-            list.push(() => ({ html: renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, s), isDoubleWidth: false }));
-          } else {
-            list.push(() => ({ html: renderSponsorAdCard(s, s), isDoubleWidth: false }));
-          }
+          list.push(() => {
+            let cardHtml = '';
+            if (isDouble) {
+              cardHtml = renderSponsorDoubleWidthCard(s, s);
+            } else if (s.type === 'carousel') {
+              cardHtml = renderSponsorCarouselCard(s, s);
+            } else if (s.type === 'internal') {
+              cardHtml = renderSponsorInternalProductsCard({ sponsor_internal: s, internal_promo_title: s.title }, s);
+            } else {
+              cardHtml = renderSponsorAdCard(s, s);
+            }
+            return {
+              type: 'sponsor',
+              id: s.id,
+              isDoubleWidth: isDouble,
+              html: cardHtml
+            };
+          });
         }
       });
       return list;
@@ -1588,58 +2082,159 @@ const BuyerStore = (() => {
     const sponsorGeneratorsMobile = buildSponsorGenerators(activeSponsors);
     const sponsorGeneratorsDesktop = buildSponsorGenerators(activeSponsors.filter(s => !s.mobile_only_ready));
 
-    // Factory untuk Interleaving dengan Zero-Gaps Fallback
-    function createInterleavingEngine(promoGens, sponsorGens) {
-      let promoIdx = 0;
-      let sponsorIdx = 0;
+    // Factory Provider Kartu dengan Sistem Antrean Kuota Ketat (Strict Quota Consumption) & Fallback Zero-Gap
+    function createBannerProvider(promoListGens, sponsorListGens, startType) {
+      let promoCursor = 0;
+      let sponsorCursor = 0;
+      let lastInsertedType = null;
 
-      return function getNextBanner(step) {
-        const hasPromo = promoGens.length > 0;
-        const hasSponsor = sponsorGens.length > 0;
+      return {
+        peekNext() {
+          const hasPromo = promoCursor < promoListGens.length;
+          const hasSponsor = sponsorCursor < sponsorListGens.length;
+          if (!hasPromo && !hasSponsor) return null;
 
-        // Zero-Gaps Fallback rule 3: Jika keduanya kosong/nonaktif, tidak ada banner disisipkan (otomatis lanjut produk)
-        if (!hasPromo && !hasSponsor) return null;
-
-        // Tentukan prioritas awal (Sisipan 1): Promo jika ada, atau Sponsor jika promo kosong
-        const startWithPromo = hasPromo;
-        // Bergantian selang-seling (step 0 = prioritas awal, step 1 = kebalikan, dst.)
-        const wantsPromo = (step % 2 === 0) ? startWithPromo : !startWithPromo;
-
-        if (wantsPromo) {
-          if (hasPromo) {
-            const res = promoGens[promoIdx % promoGens.length]();
-            promoIdx++;
-            return res;
-          } else if (hasSponsor) {
-            // Zero-Gaps Fallback rule 1: tipe utama kosong, swap ke tipe lawan
-            const res = sponsorGens[sponsorIdx % sponsorGens.length]();
-            sponsorIdx++;
-            return res;
+          let targetType;
+          if (lastInsertedType === null) {
+            targetType = startType;
+          } else if (lastInsertedType === 'promo') {
+            targetType = 'sponsor';
+          } else {
+            targetType = 'promo';
           }
-        } else {
-          if (hasSponsor) {
-            const res = sponsorGens[sponsorIdx % sponsorGens.length]();
-            sponsorIdx++;
-            return res;
-          } else if (hasPromo) {
-            // Zero-Gaps Fallback rule 1: tipe utama kosong, swap ke tipe lawan
-            const res = promoGens[promoIdx % promoGens.length]();
-            promoIdx++;
-            return res;
+
+          if (targetType === 'promo') {
+            if (hasPromo) return { type: 'promo', isDoubleWidth: false };
+            if (hasSponsor) {
+              const fn = sponsorListGens[sponsorCursor];
+              const sample = fn();
+              return { type: 'sponsor', isDoubleWidth: sample.isDoubleWidth };
+            }
+          } else {
+            if (hasSponsor) {
+              const fn = sponsorListGens[sponsorCursor];
+              const sample = fn();
+              return { type: 'sponsor', isDoubleWidth: sample.isDoubleWidth };
+            }
+            if (hasPromo) return { type: 'promo', isDoubleWidth: false };
           }
+          return null;
+        },
+
+        getNext() {
+          const hasPromo = promoCursor < promoListGens.length;
+          const hasSponsor = sponsorCursor < sponsorListGens.length;
+          if (!hasPromo && !hasSponsor) return null;
+
+          let targetType;
+          if (lastInsertedType === null) {
+            targetType = startType;
+          } else if (lastInsertedType === 'promo') {
+            targetType = 'sponsor';
+          } else {
+            targetType = 'promo';
+          }
+
+          if (targetType === 'promo') {
+            if (hasPromo) {
+              const banner = promoListGens[promoCursor]();
+              promoCursor++;
+              lastInsertedType = 'promo';
+              return banner;
+            } else if (hasSponsor) {
+              const banner = sponsorListGens[sponsorCursor]();
+              sponsorCursor++;
+              lastInsertedType = 'sponsor';
+              return banner;
+            }
+          } else {
+            if (hasSponsor) {
+              const banner = sponsorListGens[sponsorCursor]();
+              sponsorCursor++;
+              lastInsertedType = 'sponsor';
+              return banner;
+            } else if (hasPromo) {
+              const banner = promoListGens[promoCursor]();
+              promoCursor++;
+              lastInsertedType = 'promo';
+              return banner;
+            }
+          }
+          return null;
         }
-
-        return null;
       };
     }
 
-    const getDesktopBanner = createInterleavingEngine(promoGenerators, sponsorGeneratorsDesktop);
-    const getTabletBanner = createInterleavingEngine(promoGenerators, sponsorGeneratorsMobile);
-    const getMobileBanner = createInterleavingEngine(promoGenerators, sponsorGeneratorsMobile);
+    // Engine Simulasi Jadwal Penempatan Kartu per Viewport
+    function buildViewportSchedule(cols, provider, totalProds) {
+      const schedule = {};
+      let prevAfterProd = 0;
+      let prevSpan = 1;
+      let isRight = true;
 
-    let desktopStep = 0;
-    let tabletStep = 0;
-    let mobileStep = 0;
+      for (let step = 0; step < 60; step++) {
+        const peek = provider.peekNext();
+        if (!peek) break;
+
+        const isDouble = Boolean(peek.isDoubleWidth);
+        const span = isDouble ? 2 : 1;
+
+        let afterProd = 0;
+        if (step === 0) {
+          // Sisipan 1 (Posisi KANAN)
+          if (cols === 6) {
+            afterProd = isDouble ? 10 : 11;
+          } else if (cols === 4) {
+            afterProd = isDouble ? 6 : 7;
+          } else if (cols === 2) {
+            afterProd = isDouble ? 4 : 5;
+          }
+        } else if (isRight) {
+          // Transisi dari KIRI ke KANAN
+          if (cols === 2) {
+            // Mobile: 2 baris jeda (4 produk)
+            afterProd = prevAfterProd + (2 - prevSpan) + 4 + (2 - span);
+          } else {
+            // Desktop & Tablet:
+            afterProd = prevAfterProd + (cols - prevSpan) + (cols - span);
+          }
+        } else {
+          // Transisi dari KANAN ke KIRI
+          if (cols === 2) {
+            // Mobile: 2 baris jeda (4 produk)
+            afterProd = prevAfterProd + 4;
+          } else {
+            // Desktop & Tablet: 1 baris jeda penuh produk
+            afterProd = prevAfterProd + cols;
+          }
+        }
+
+        if (afterProd > totalProds) break;
+
+        const banner = provider.getNext();
+        if (!banner) break;
+
+        if (!schedule[afterProd]) {
+          schedule[afterProd] = [];
+        }
+        schedule[afterProd].push(banner);
+
+        prevAfterProd = afterProd;
+        prevSpan = span;
+        isRight = !isRight;
+      }
+
+      return schedule;
+    }
+
+    const totalProducts = products.length;
+    const desktopProvider = createBannerProvider(promoGenerators, sponsorGeneratorsDesktop, initialPreferredType);
+    const tabletProvider = createBannerProvider(promoGenerators, sponsorGeneratorsMobile, initialPreferredType);
+    const mobileProvider = createBannerProvider(promoGenerators, sponsorGeneratorsMobile, initialPreferredType);
+
+    const desktopSchedule = buildViewportSchedule(6, desktopProvider, totalProducts);
+    const tabletSchedule = buildViewportSchedule(4, tabletProvider, totalProducts);
+    const mobileSchedule = buildViewportSchedule(2, mobileProvider, totalProducts);
 
     products.forEach((prod, idx) => {
       const prodNum = idx + 1;
@@ -1667,51 +2262,28 @@ const BuyerStore = (() => {
         html += renderCardVariantA(prod, varA);
       }
 
-      // --- ATURAN INTERLEAVING SLOT PRESISI & RESPONSIVE VIEWPORT ---
-
-      // C. Mobile (Grid 2 Kolom):
-      // Slot 1-5 Produk -> Slot 6 (Sisipan 1, setelah 5 produk)
-      // Slot 7-10 Produk -> Slot 11 (Sisipan 2, setelah 9 produk)
-      // Slot 12-14 Produk -> Slot 15 (Sisipan 3, setelah 12 produk)
-      // ...dan seterusnya berselang-seling setiap 3 produk (15, 18, 21, ...)
-      const isMobileSlot = (prodNum === 5) || (prodNum === 9) || (prodNum === 12) || (prodNum > 12 && (prodNum - 12) % 3 === 0);
-      if (isMobileSlot) {
-        const bannerObj = getMobileBanner(mobileStep);
-        if (bannerObj && bannerObj.html) {
+      // Sisipan Mobile (Grid 2 Kolom)
+      if (mobileSchedule[prodNum]) {
+        mobileSchedule[prodNum].forEach(bannerObj => {
           const spanClass = bannerObj.isDoubleWidth ? 'col-span-2' : '';
           html += `<div class="block md:hidden ${spanClass} w-full h-full">${bannerObj.html}</div>`;
-          mobileStep++;
-        }
+        });
       }
 
-      // B. Tablet (Grid 4 Kolom):
-      // Slot 1-7 Produk -> Slot 8 (Sisipan 1, setelah 7 produk)
-      // Slot 9-12 Produk -> Slot 13 (Sisipan 2, setelah 11 produk)
-      // Slot 14-19 Produk -> Slot 20 (Sisipan 3, setelah 17 produk)
-      // ...dan seterusnya berselang-seling setiap 6 produk (23, 29, 35, ...)
-      const isTabletSlot = (prodNum === 7) || (prodNum === 11) || (prodNum === 17) || (prodNum > 17 && (prodNum - 17) % 6 === 0);
-      if (isTabletSlot) {
-        const bannerObj = getTabletBanner(tabletStep);
-        if (bannerObj && bannerObj.html) {
+      // Sisipan Tablet (Grid 4 Kolom)
+      if (tabletSchedule[prodNum]) {
+        tabletSchedule[prodNum].forEach(bannerObj => {
           const spanClass = bannerObj.isDoubleWidth ? 'col-span-2' : '';
           html += `<div class="hidden md:block lg:hidden ${spanClass} w-full h-full">${bannerObj.html}</div>`;
-          tabletStep++;
-        }
+        });
       }
 
-      // A. Desktop (Grid 6 Kolom):
-      // Slot 1-11 Produk -> Slot 12 (Sisipan 1, setelah 11 produk)
-      // Slot 13-18 Produk -> Slot 19 (Sisipan 2, setelah 17 produk)
-      // Slot 20-29 Produk -> Slot 30 (Sisipan 3, setelah 27 produk)
-      // ...dan seterusnya berselang-seling setiap 10 produk (37, 47, 57, ...)
-      const isDesktopSlot = (prodNum === 11) || (prodNum === 17) || (prodNum === 27) || (prodNum > 27 && (prodNum - 27) % 10 === 0);
-      if (isDesktopSlot) {
-        const bannerObj = getDesktopBanner(desktopStep);
-        if (bannerObj && bannerObj.html) {
+      // Sisipan Desktop (Grid 6 Kolom)
+      if (desktopSchedule[prodNum]) {
+        desktopSchedule[prodNum].forEach(bannerObj => {
           const spanClass = bannerObj.isDoubleWidth ? 'col-span-2' : '';
           html += `<div class="hidden lg:block ${spanClass} w-full h-full">${bannerObj.html}</div>`;
-          desktopStep++;
-        }
+        });
       }
     });
 
@@ -2942,7 +3514,7 @@ const BuyerStore = (() => {
 
     return `
       <!-- CARD SPONSOR UNTUK PRODUK SENDIRI (HEADER BERSIH TANPA DOT, BADGE, & DIVIDER) -->
-      <div id="${cardId}" class="h-full flex flex-col justify-between p-2.5 sm:p-3.5 transition-all duration-300 group relative ${shadowClass} ${animClass}" style="background-color: ${bgColor}; border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
+      <div id="${cardId}" class="sponsor-internal-card h-full flex flex-col justify-between p-2.5 sm:p-3.5 transition-all duration-300 group relative select-none ${shadowClass} ${animClass}" style="background-color: ${bgColor}; border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-total-batches="${totalBatches}">
         <!-- Header Judul Sponsor Bersih -->
         <div class="flex items-center justify-start pb-1 min-w-0">
           <h4 class="font-black text-xs sm:text-sm text-slate-900 tracking-tight uppercase truncate" title="${escapeHtml(title)}">${escapeHtml(title)}</h4>
@@ -3335,18 +3907,55 @@ const BuyerStore = (() => {
       localStorage.setItem(`pos_active_customer_${tenantId}`, JSON.stringify({ name: custName, phone: custPhone }));
     } catch (e) { }
 
-    // 2. Simpan order ke state Database lokal
+    // 2. Simpan order ke state Database lokal dengan kalkulasi HPP riil
     const newOrderId = DB.generateUUID ? DB.generateUUID() : 'ord-' + Date.now();
     const invoiceNum = 'INV-' + Date.now().toString().slice(-6);
-    const orderItems = cart.map(it => ({
-      productName: it.productName,
-      materialName: it.materialName || 'Standar',
-      finishingName: it.finishingName || '-',
-      qty: it.qty,
-      unitPrice: it.unitPrice,
-      subtotal: it.subtotal,
-      cost_price: Math.round(it.subtotal * 0.55)
-    }));
+    const allProducts = (window.DB && typeof DB.getProducts === 'function') ? DB.getProducts() : [];
+
+    let totalHpp = 0;
+    const orderItems = cart.map(it => {
+      let costPerUnit = 0;
+      const matchedProd = allProducts.find(p => p.id === it.productId || p.name === it.productName);
+      if (typeof it.cost_price === 'number' && it.cost_price > 0) {
+        costPerUnit = it.cost_price;
+      } else if (matchedProd) {
+        if (matchedProd.price_type === 1 && it.materialName && matchedProd.materials) {
+          const mat = matchedProd.materials.find(m => m.name === it.materialName);
+          costPerUnit = (mat && typeof mat.cost_price === 'number' && mat.cost_price > 0)
+            ? mat.cost_price
+            : Math.round((it.unitPrice || 0) * 0.6);
+        } else if (matchedProd.options && it.materialName) {
+          const opt = matchedProd.options.find(o => o.name === it.materialName);
+          costPerUnit = (opt && typeof opt.cost_price === 'number' && opt.cost_price > 0)
+            ? opt.cost_price
+            : (typeof matchedProd.cost_price === 'number' && matchedProd.cost_price > 0 ? matchedProd.cost_price : Math.round((it.unitPrice || 0) * 0.6));
+        } else {
+          costPerUnit = (typeof matchedProd.cost_price === 'number' && matchedProd.cost_price > 0)
+            ? matchedProd.cost_price
+            : Math.round((it.unitPrice || 0) * 0.6);
+        }
+      } else {
+        costPerUnit = Math.round((it.unitPrice || 0) * 0.6);
+      }
+
+      const totalItemCost = (typeof it.billableArea === 'number' && it.billableArea > 0)
+        ? Math.round(costPerUnit * it.billableArea * it.qty)
+        : Math.round(costPerUnit * it.qty);
+
+      totalHpp += totalItemCost;
+
+      return {
+        productId: it.productId || (matchedProd ? matchedProd.id : null),
+        productName: it.productName,
+        materialName: it.materialName || 'Standar',
+        finishingName: it.finishingName || '-',
+        qty: it.qty,
+        unitPrice: it.unitPrice,
+        subtotal: it.subtotal,
+        cost_price: costPerUnit,
+        total_cost: totalItemCost
+      };
+    });
 
     if (window.DB && typeof DB.saveOrder === 'function') {
       DB.saveOrder({
@@ -3359,6 +3968,7 @@ const BuyerStore = (() => {
         payment_method: 'WhatsApp / Transfer',
         items: orderItems,
         subtotal: subtotal,
+        total_hpp: totalHpp,
         discount: discount,
         total: grandTotal,
         receipt_footer: 'Pesanan Web Checkout WhatsApp'
@@ -3519,35 +4129,8 @@ const BuyerStore = (() => {
       });
     });
 
-    // Internal Sponsor Mini-Cards Batch Switcher (Dinamis 1 hingga 5 Batches)
-    document.querySelectorAll('.internal-batch-dot').forEach(dot => {
-      dot.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const cardId = dot.getAttribute('data-target');
-        const batchNum = dot.getAttribute('data-batch');
-        const card = document.getElementById(cardId);
-        if (!card) return;
-
-        // Tampilkan batch yang dipilih dan sembunyikan batch lainnya
-        card.querySelectorAll('.internal-batch-view').forEach(view => {
-          if (view.classList.contains(`batch-${batchNum}`)) {
-            view.classList.remove('hidden');
-          } else {
-            view.classList.add('hidden');
-          }
-        });
-
-        // Perbarui highlight dot aktif
-        card.querySelectorAll('.internal-batch-dot').forEach(d => {
-          if (d.getAttribute('data-batch') === batchNum) {
-            d.className = 'internal-batch-dot w-2 h-2 rounded-full bg-emerald-600 scale-125 transition-all cursor-pointer';
-          } else {
-            d.className = 'internal-batch-dot w-2 h-2 rounded-full bg-slate-300 hover:bg-slate-400 transition-all cursor-pointer';
-          }
-        });
-      });
-    });
+    // Inisialisasi gestur sentuh & dots switcher kartu sponsor internal toko 2x2
+    initStoreInternalSponsorCards();
 
     // Cart Drawer triggers
     const btnOpenCart = document.getElementById('btn-open-cart-drawer');
@@ -4320,6 +4903,81 @@ const BuyerStore = (() => {
         container.addEventListener('mouseleave', startAuto);
         startAuto();
       }
+    });
+
+    // Inisialisasi gestur swipe kartu sponsor internal toko 2x2
+    initStoreInternalSponsorCards();
+  }
+
+  // --- SPONSOR INTERNAL PRODUCTS 2X2 TOUCH SWIPE & BATCH SWITCHER ---
+  function initStoreInternalSponsorCards() {
+    const cards = document.querySelectorAll('.sponsor-internal-card, [id^="sponsor-internal-"]');
+    cards.forEach(card => {
+      if (card.dataset.swipeInitialized === 'true') return;
+      card.dataset.swipeInitialized = 'true';
+
+      const views = Array.from(card.querySelectorAll('.internal-batch-view'));
+      const dots = Array.from(card.querySelectorAll('.internal-batch-dot'));
+      const total = views.length;
+      if (total <= 1) return;
+
+      let currentIdx = 0;
+
+      function goToBatch(idx) {
+        currentIdx = (idx + total) % total;
+        const targetBatchNum = currentIdx + 1;
+
+        views.forEach(v => {
+          if (v.classList.contains(`batch-${targetBatchNum}`)) {
+            v.classList.remove('hidden');
+          } else {
+            v.classList.add('hidden');
+          }
+        });
+
+        dots.forEach((d, i) => {
+          if (i === currentIdx) {
+            d.className = 'internal-batch-dot w-2 h-2 rounded-full bg-emerald-600 scale-125 transition-all cursor-pointer';
+          } else {
+            d.className = 'internal-batch-dot w-2 h-2 rounded-full bg-slate-300 hover:bg-slate-400 transition-all cursor-pointer';
+          }
+        });
+      }
+
+      // Dot click
+      dots.forEach((dot, idx) => {
+        dot.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          goToBatch(idx);
+        });
+      });
+
+      // Touch gesture swipe support for 2x2 internal sponsor card in mobile
+      let touchStartX = 0;
+      let touchStartY = 0;
+
+      card.addEventListener('touchstart', (e) => {
+        if (e.changedTouches && e.changedTouches[0]) {
+          touchStartX = e.changedTouches[0].clientX;
+          touchStartY = e.changedTouches[0].clientY;
+        }
+      }, { passive: true });
+
+      card.addEventListener('touchend', (e) => {
+        if (e.changedTouches && e.changedTouches[0]) {
+          const diffX = e.changedTouches[0].clientX - touchStartX;
+          const diffY = e.changedTouches[0].clientY - touchStartY;
+          // Picu swipe jika perpindahan horizontal signifikan dan lebih dominan dibanding vertikal
+          if (Math.abs(diffX) > 25 && Math.abs(diffX) > Math.abs(diffY)) {
+            if (diffX < 0) {
+              goToBatch(currentIdx + 1);
+            } else {
+              goToBatch(currentIdx - 1);
+            }
+          }
+        }
+      }, { passive: true });
     });
   }
 
