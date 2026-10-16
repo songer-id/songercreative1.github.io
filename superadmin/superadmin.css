@@ -1,0 +1,220 @@
+/* ==============================================================================
+   SONGER DIGITAL CREATIVE V.1 - SUPERADMIN CONTROL TOWER STYLESHEET
+   Sistem Pusat Kontrol SaaS Multi-Tenant & Multi-Edisi
+   ============================================================================== */
+
+:root {
+  --color-primary: #10b981;
+  --color-primary-hover: #059669;
+  --color-primary-glow: rgba(16, 185, 129, 0.25);
+  --color-secondary: #06b6d4;
+  --color-accent: #8b5cf6;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  --bg-cockpit-dark: #090d16;
+  --bg-cockpit-card: #0f172a;
+  --bg-cockpit-sidebar: #0b1120;
+  --border-cockpit: #1e293b;
+  --border-cockpit-highlight: #334155;
+  --text-cockpit-dim: #94a3b8;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Animations */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.45);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: fadeInScale 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(51, 65, 85, 0.55);
+}
+
+.glass-panel-elevated {
+  background: rgba(18, 28, 51, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(71, 85, 105, 0.6);
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Sidebar Active & Hover States */
+.superadmin-nav-item {
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.superadmin-nav-item.is-active {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.04) 100%);
+  color: #34d399;
+  border-left: 3px solid #10b981;
+  font-weight: 700;
+}
+
+.superadmin-nav-item.is-active i {
+  color: #34d399 !important;
+}
+
+/* Custom Interactive Switches */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #334155;
+  transition: .3s;
+  border-radius: 24px;
+  border: 1px solid #475569;
+}
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+input:checked + .switch-slider {
+  background-color: #10b981;
+  border-color: #059669;
+}
+input:focus + .switch-slider {
+  box-shadow: 0 0 1px #10b981;
+}
+input:checked + .switch-slider:before {
+  transform: translateX(20px);
+}
+
+/* Tier Badge Chips */
+.tier-badge-starter {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.tier-badge-pro {
+  background: rgba(59, 130, 246, 0.14);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.tier-badge-enterprise {
+  background: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+/* Status Badges */
+.status-pill-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-pill-suspended {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pill-trial {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Table Hover */
+.cockpit-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.cockpit-table tbody tr:hover {
+  background-color: rgba(30, 41, 59, 0.65);
+}
+
+/* Gradient Text */
+.text-gradient-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Modal Overlay Blur */
+.modal-backdrop-blur {
+  background-color: rgba(6, 11, 23, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}

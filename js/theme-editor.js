@@ -249,13 +249,41 @@
     if (!cb) return;
     const isChecked = cb.checked;
     if (isChecked) {
-      btn.className = 'visibility-eye-btn w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-2xs';
-      btn.innerHTML = '<i class="bi bi-eye text-sm pointer-events-none"></i>';
+      btn.className = 'visibility-eye-btn w-6 h-6 rounded-md flex items-center justify-center transition cursor-pointer text-emerald-600 hover:bg-slate-100';
+      btn.innerHTML = '<i class="bi bi-eye text-xs pointer-events-none"></i>';
       btn.title = 'Tampilkan / Aktif (Klik untuk sembunyikan)';
     } else {
-      btn.className = 'visibility-eye-btn w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer text-slate-400 bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-2xs';
-      btn.innerHTML = '<i class="bi bi-eye-slash text-sm pointer-events-none"></i>';
+      btn.className = 'visibility-eye-btn w-6 h-6 rounded-md flex items-center justify-center transition cursor-pointer text-slate-400 hover:bg-slate-100';
+      btn.innerHTML = '<i class="bi bi-eye-slash text-xs pointer-events-none"></i>';
       btn.title = 'Sembunyi / Nonaktif (Klik untuk tampilkan)';
+    }
+
+    // Khusus Hero Banner Utama: Sembunyikan/tampilkan seluruh alur kustomisasi di bawahnya
+    if (forId === 'hero-enable-toggle') {
+      const heroConfigBody = document.getElementById('hero-configuration-body');
+      if (heroConfigBody) {
+        heroConfigBody.classList.toggle('hidden', !isChecked);
+      }
+    }
+
+    // Jika button berada di dalam header baris lipat, jika bernilai false, sembunyikan sub-opsi di dalamnya
+    const parentHeader = btn.closest('.sub-accordion-header') || btn.closest('.flat-collapse-header');
+    if (parentHeader) {
+      const targetId = parentHeader.getAttribute('data-target');
+      const targetBody = document.getElementById(targetId);
+      const chevron = parentHeader.querySelector('.sub-accordion-chevron') || parentHeader.querySelector('.flat-collapse-chevron');
+      if (targetBody) {
+        if (!isChecked) {
+          targetBody.classList.add('hidden');
+          parentHeader.classList.remove('is-open');
+          if (chevron) {
+            chevron.classList.remove('rotate-90');
+          }
+          targetBody.classList.add('opacity-40', 'pointer-events-none');
+        } else {
+          targetBody.classList.remove('opacity-40', 'pointer-events-none');
+        }
+      }
     }
   }
 
@@ -293,6 +321,7 @@
     setupDetailTabs();
     setupMobileDrawer();
     setupResizableSidebar();
+    setupSidebarPositionToggle();
     setupCanvasControls();
     setupColorPickers();
     setupTypographyControls();
@@ -320,8 +349,15 @@
       window.lucide.createIcons();
     }
 
-    // Terapkan default desktop view (100% edge-to-edge full height)
-    applyCanvasWidth(1200, document.getElementById('btn-preset-desktop'));
+    // Terapkan default viewport responsif sesuai ukuran layar perangkat
+    if (window.innerWidth < 768) {
+      applyCanvasWidth(390, document.getElementById('btn-preset-mobile'));
+      closeMobileDrawer();
+    } else if (window.innerWidth < 1024) {
+      applyCanvasWidth(768, document.getElementById('btn-preset-tablet'));
+    } else {
+      applyCanvasWidth(1200, document.getElementById('btn-preset-desktop'));
+    }
 
     // Render preview perdana
     updateLivePreview();
@@ -402,13 +438,13 @@
     setSelectValue('cart_icon_select', settings.cart_icon || 'lucide:shopping-cart');
     setColorPair('ctrl-color-cart-icon', 'ctrl-hex-cart-icon', settings.cart_icon_color || settings.navbar_cart_icon_color || '#334155');
     setColorPair('ctrl-color-cart-bg', 'ctrl-hex-cart-bg', settings.cart_bg_color || '#f1f5f9');
-    
+
     const cartBorderEnable = settings.cart_border_enable !== false;
     setCheckboxValue('cart_border_toggle', cartBorderEnable);
     const cartBorderBox = document.getElementById('cart_border_settings_box');
     if (cartBorderBox) cartBorderBox.classList.toggle('hidden', !cartBorderEnable);
     setColorPair('ctrl-color-cart-border', 'ctrl-hex-cart-border', settings.cart_border_color || settings.navbar_cart_border_color || '#e2e8f0');
-    
+
     const cartRadius = settings.cart_border_radius !== undefined ? settings.cart_border_radius : 16;
     setInputValue('cart_border_radius_slider', cartRadius);
     const cartRadiusVal = document.getElementById('cart_border_radius_val');
@@ -416,6 +452,16 @@
 
     setColorPair('ctrl-color-cart-badge', 'ctrl-hex-cart-badge', settings.cart_badge_color || settings.navbar_cart_badge_bg || '#f59e0b');
     setColorPair('ctrl-color-cart-badge-text', 'ctrl-hex-cart-badge-text', settings.cart_badge_text_color || settings.navbar_cart_badge_text || '#ffffff');
+
+    const cartIconSize = settings.cart_icon_size !== undefined ? settings.cart_icon_size : 16;
+    setInputValue('cart_icon_size_slider', cartIconSize);
+    const cartIconSizeVal = document.getElementById('cart_icon_size_val');
+    if (cartIconSizeVal) cartIconSizeVal.textContent = `${cartIconSize}px`;
+
+    const cartBoxSize = settings.cart_box_size !== undefined ? settings.cart_box_size : 38;
+    setInputValue('cart_box_size_slider', cartBoxSize);
+    const cartBoxSizeVal = document.getElementById('cart_box_size_val');
+    if (cartBoxSizeVal) cartBoxSizeVal.textContent = `${cartBoxSize}px`;
 
     // Sub-Menu 3: Kolom Pencarian (Search Bar)
     setSelectValue('search_icon_select', settings.search_icon || settings.navbar_search_icon || 'bi-search');
@@ -448,6 +494,16 @@
     setColorPair('ctrl-color-login-text', 'ctrl-hex-login-text', settings.login_text_color || settings.navbar_login_text_color || '#334155');
     setColorPair('ctrl-color-login-btn', 'ctrl-hex-login-btn', settings.login_btn_color || settings.navbar_login_btn_bg || '#f1f5f9');
 
+    const loginIconSize = settings.login_icon_size !== undefined ? settings.login_icon_size : 16;
+    setInputValue('login_icon_size_slider', loginIconSize);
+    const loginIconSizeVal = document.getElementById('login_icon_size_val');
+    if (loginIconSizeVal) loginIconSizeVal.textContent = `${loginIconSize}px`;
+
+    const loginBoxSize = settings.login_box_size !== undefined ? settings.login_box_size : 38;
+    setInputValue('login_box_size_slider', loginBoxSize);
+    const loginBoxSizeVal = document.getElementById('login_box_size_val');
+    if (loginBoxSizeVal) loginBoxSizeVal.textContent = `${loginBoxSize}px`;
+
     // 3. Hero Banner
     setCheckboxValue('hero-enable-toggle', settings.hero_enabled !== false && settings.enable_hero !== false);
 
@@ -468,6 +524,15 @@
     setInputValue('hero-container-radius-slider', heroRad);
     setInputValue('hero-container-radius-number', heroRad);
     setSelectValue('hero-container-shadow-select', settings.hero_container_shadow || 'sm');
+
+    // Hero Border Bottom
+    setCheckboxValue('hero-border-bottom-toggle', Boolean(settings.hero_border_bottom_enable));
+    setColorPair('hero-border-bottom-color-picker', 'hero-border-bottom-color-hex', settings.hero_border_bottom_color || '#e2e8f0');
+    setSelectValue('hero-border-bottom-thickness-select', settings.hero_border_bottom_thickness || '1px');
+    const heroBorderEyeBtn = document.querySelector('.visibility-eye-btn[data-for="hero-border-bottom-toggle"]');
+    if (heroBorderEyeBtn && typeof syncVisibilityEyeBtn === 'function') {
+      syncVisibilityEyeBtn(heroBorderEyeBtn);
+    }
 
     setInputValue('hero-headline-input', settings.hero_headline || 'Cetak Banner, Desain & Souvenir Harga Instan');
     setColorPair('hero-title-color-picker', 'hero-title-color-hex', settings.hero_title_color || '#ffffff');
@@ -646,11 +711,20 @@
   function setupAccordions() {
     // Parent Main Accordions
     document.querySelectorAll('.theme-accordion-header').forEach(header => {
-      header.addEventListener('click', () => {
-        const targetId = header.getAttribute('data-target');
-        const targetBody = document.getElementById(targetId);
-        const chevron = header.querySelector('.theme-accordion-chevron');
+      const targetId = header.getAttribute('data-target');
+      const targetBody = document.getElementById(targetId);
+      const chevron = header.querySelector('.theme-accordion-chevron');
 
+      // Sync initial state
+      if (targetBody && !targetBody.classList.contains('hidden')) {
+        header.classList.add('is-open');
+        if (chevron) {
+          chevron.classList.add('rotate-90');
+          chevron.classList.remove('rotate-180');
+        }
+      }
+
+      header.addEventListener('click', () => {
         if (!targetBody) return;
 
         const isCurrentlyOpen = !targetBody.classList.contains('hidden');
@@ -659,38 +733,73 @@
         document.querySelectorAll('.theme-accordion-body').forEach(b => {
           if (b.id !== targetId) b.classList.add('hidden');
         });
+        document.querySelectorAll('.theme-accordion-header').forEach(h => {
+          if (h !== header) h.classList.remove('is-open');
+        });
         document.querySelectorAll('.theme-accordion-chevron').forEach(c => {
-          if (c !== chevron) c.classList.remove('rotate-180');
+          if (c !== chevron) {
+            c.classList.remove('rotate-90');
+            c.classList.remove('rotate-180');
+          }
         });
 
         if (isCurrentlyOpen) {
           targetBody.classList.add('hidden');
-          if (chevron) chevron.classList.remove('rotate-180');
+          header.classList.remove('is-open');
+          if (chevron) {
+            chevron.classList.remove('rotate-90');
+            chevron.classList.remove('rotate-180');
+          }
         } else {
           targetBody.classList.remove('hidden');
-          if (chevron) chevron.classList.add('rotate-180');
+          header.classList.add('is-open');
+          if (chevron) {
+            chevron.classList.add('rotate-90');
+            chevron.classList.remove('rotate-180');
+          }
         }
       });
     });
 
-    // Nested Sub-Accordions (Top Bar & Navbar Sub-Menus)
+    // Nested Sub-Accordions (Flat Collapsible Rows > ↓)
     document.querySelectorAll('.sub-accordion-header').forEach(subHeader => {
+      const targetId = subHeader.getAttribute('data-target');
+      const targetBody = document.getElementById(targetId);
+      const chevron = subHeader.querySelector('.sub-accordion-chevron');
+      const subItem = subHeader.closest('.sub-accordion-item');
+
+      // Sync initial state
+      if (targetBody && !targetBody.classList.contains('hidden')) {
+        subHeader.classList.add('is-open');
+        if (subItem) subItem.classList.add('is-open');
+        if (chevron) {
+          chevron.classList.add('rotate-90');
+          chevron.classList.remove('rotate-180');
+        }
+      }
+
       subHeader.addEventListener('click', (e) => {
         e.stopPropagation();
-        const targetId = subHeader.getAttribute('data-target');
-        const targetBody = document.getElementById(targetId);
-        const chevron = subHeader.querySelector('.sub-accordion-chevron');
-
         if (!targetBody) return;
 
         const isCurrentlyOpen = !targetBody.classList.contains('hidden');
 
         if (isCurrentlyOpen) {
           targetBody.classList.add('hidden');
-          if (chevron) chevron.classList.remove('rotate-180');
+          subHeader.classList.remove('is-open');
+          if (subItem) subItem.classList.remove('is-open');
+          if (chevron) {
+            chevron.classList.remove('rotate-90');
+            chevron.classList.remove('rotate-180');
+          }
         } else {
           targetBody.classList.remove('hidden');
-          if (chevron) chevron.classList.add('rotate-180');
+          subHeader.classList.add('is-open');
+          if (subItem) subItem.classList.add('is-open');
+          if (chevron) {
+            chevron.classList.add('rotate-90');
+            chevron.classList.remove('rotate-180');
+          }
         }
       });
     });
@@ -757,6 +866,12 @@
       targetBodyId: 'body-hero-banner',
       title: 'Hero Banner'
     },
+    'panel-hero-border-bottom': {
+      accordionAttr: 'hero-banner',
+      targetBodyId: 'body-hero-banner',
+      subTargetId: 'sub-body-hero-border-bottom',
+      title: 'Garis Bawah Hero'
+    },
     'panel-nav-category': {
       accordionAttr: 'nav-category',
       targetBodyId: 'body-nav-category',
@@ -770,6 +885,7 @@
     'panel-card-product': {
       accordionAttr: 'card-product',
       targetBodyId: 'body-card-product',
+      subTargetId: 'sub-body-card-product-style',
       title: 'Gaya Kartu Produk'
     },
     'panel-color-palette': {
@@ -777,10 +893,70 @@
       targetBodyId: 'body-color-palette',
       title: 'Pengaturan Tema Global'
     },
+    'panel-color-presets': {
+      accordionAttr: 'color-palette',
+      targetBodyId: 'body-color-palette',
+      subTargetId: 'sub-body-color-presets',
+      title: 'Preset Palet Warna'
+    },
+    'panel-custom-colors': {
+      accordionAttr: 'color-palette',
+      targetBodyId: 'body-color-palette',
+      subTargetId: 'sub-body-custom-colors',
+      title: 'Penyesuaian Warna Mandiri'
+    },
+    'panel-typography': {
+      accordionAttr: 'color-palette',
+      targetBodyId: 'body-color-palette',
+      subTargetId: 'sub-body-typography',
+      title: 'Tipografi & Font Toko'
+    },
     'panel-footer-social': {
       accordionAttr: 'footer-social',
       targetBodyId: 'body-footer-social',
       title: 'Footer & Media Sosial'
+    },
+    'panel-footer-logo': {
+      accordionAttr: 'footer-social',
+      targetBodyId: 'body-footer-social',
+      subTargetId: 'sub-body-footer-logo',
+      title: 'Logo Footer Toko'
+    },
+    'panel-footer-identity': {
+      accordionAttr: 'footer-social',
+      targetBodyId: 'body-footer-social',
+      subTargetId: 'sub-body-footer-identity',
+      title: 'Jam Operasional & Hak Cipta'
+    },
+    'panel-footer-categories': {
+      accordionAttr: 'footer-social',
+      targetBodyId: 'body-footer-social',
+      subTargetId: 'sub-body-footer-categories',
+      title: 'Kategori Populer Footer'
+    },
+    'panel-footer-social-links': {
+      accordionAttr: 'footer-social',
+      targetBodyId: 'body-footer-social',
+      subTargetId: 'sub-body-footer-social-links',
+      title: 'Tautan Media Sosial'
+    },
+    'panel-footer-layout': {
+      accordionAttr: 'footer-social',
+      targetBodyId: 'body-footer-social',
+      subTargetId: 'sub-body-footer-layout',
+      title: 'Model Layout Footer'
+    },
+    'panel-footer-colors': {
+      accordionAttr: 'footer-social',
+      targetBodyId: 'body-footer-social',
+      subTargetId: 'sub-body-footer-colors',
+      title: 'Skema Warna Dasar Footer'
+    },
+    'panel-footer-social-style': {
+      accordionAttr: 'footer-social',
+      targetBodyId: 'body-footer-social',
+      subTargetId: 'sub-body-footer-social-style',
+      title: 'Gaya Tombol Media Sosial'
     }
   };
 
@@ -902,8 +1078,8 @@
     Object.keys(COLOR_PRESETS).forEach(id => {
       const p = COLOR_PRESETS[id];
       if (p.primary.toUpperCase() === curPrimary &&
-          p.secondary.toUpperCase() === curSecondary &&
-          p.bg.toUpperCase() === curBg) {
+        p.secondary.toUpperCase() === curSecondary &&
+        p.bg.toUpperCase() === curBg) {
         matchedId = id;
       }
     });
@@ -983,7 +1159,20 @@
     }
 
     // Atur tab awal sesuai jenis panel yang dibuka
-    if (drillKey === 'panel-color-palette' || drillKey === 'panel-topbar-colors' || drillKey === 'panel-card-product' || drillKey === 'panel-nav-category') {
+    const settingsKeys = [
+      'panel-color-palette',
+      'panel-color-presets',
+      'panel-custom-colors',
+      'panel-typography',
+      'panel-topbar-colors',
+      'panel-card-product',
+      'panel-nav-category',
+      'panel-hero-border-bottom',
+      'panel-footer-layout',
+      'panel-footer-colors',
+      'panel-footer-social-style'
+    ];
+    if (settingsKeys.includes(drillKey)) {
       setDetailTab('settings');
     } else {
       setDetailTab('content');
@@ -995,6 +1184,15 @@
         item.classList.remove('hidden');
         const bodyEl = item.querySelector('.theme-accordion-body');
         if (bodyEl) bodyEl.classList.remove('hidden');
+        const headerEl = item.querySelector('.theme-accordion-header');
+        if (headerEl) {
+          headerEl.classList.add('is-open');
+          const chev = headerEl.querySelector('.theme-accordion-chevron');
+          if (chev) {
+            chev.classList.remove('rotate-180');
+            chev.classList.add('rotate-90');
+          }
+        }
         item.classList.remove('accordion-flash-highlight');
         void item.offsetWidth;
         item.classList.add('accordion-flash-highlight');
@@ -1010,8 +1208,14 @@
         subBody.classList.remove('hidden');
         const subHeader = document.querySelector(`[data-target="${config.subTargetId}"]`);
         if (subHeader) {
+          subHeader.classList.add('is-open');
+          const subItem = subHeader.closest('.sub-accordion-item');
+          if (subItem) subItem.classList.add('is-open');
           const subChev = subHeader.querySelector('.sub-accordion-chevron');
-          if (subChev) subChev.classList.add('rotate-180');
+          if (subChev) {
+            subChev.classList.remove('rotate-180');
+            subChev.classList.add('rotate-90');
+          }
           setTimeout(() => {
             subHeader.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }, 100);
@@ -1099,9 +1303,13 @@
 
     if (btnOpen) {
       btnOpen.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs cursor-pointer';
+      const span = btnOpen.querySelector('span');
+      if (span) span.classList.remove('hidden');
     }
     if (btnPreview) {
-      btnPreview.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 text-slate-300 hover:text-white cursor-pointer';
+      btnPreview.className = 'w-9 h-9 rounded-full flex items-center justify-center transition text-slate-400 hover:text-white cursor-pointer';
+      const span = btnPreview.querySelector('span');
+      if (span) span.classList.add('hidden');
     }
   }
 
@@ -1115,10 +1323,14 @@
     if (backdrop) backdrop.classList.add('hidden');
 
     if (btnOpen) {
-      btnOpen.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 text-slate-300 hover:text-white cursor-pointer';
+      btnOpen.className = 'w-9 h-9 rounded-full flex items-center justify-center transition text-slate-400 hover:text-white cursor-pointer';
+      const span = btnOpen.querySelector('span');
+      if (span) span.classList.add('hidden');
     }
     if (btnPreview) {
       btnPreview.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-xs cursor-pointer';
+      const span = btnPreview.querySelector('span');
+      if (span) span.classList.remove('hidden');
     }
   }
 
@@ -1135,47 +1347,73 @@
   }
 
   // ============================================================================
-  // 3. RESIZABLE SIDEBAR (FIX IFRAME MOUSE INTERCEPT VIA BODY.IS-RESIZING)
+  // 3. FIXED SIDEBAR WIDTH (300px STANDAR PROFESIONAL - DRAG RESIZE DINONAKTIFKAN)
   // ============================================================================
   function setupResizableSidebar() {
     const sidebar = document.getElementById('theme-editor-sidebar') || document.getElementById('theme-inspector-sidebar');
+    if (sidebar) {
+      sidebar.style.width = '300px';
+    }
     const resizeHandle = document.getElementById('sidebar-resize-handle') || document.getElementById('inspector-drag-handle');
-    if (!sidebar || !resizeHandle) return;
-
-    let isResizing = false;
-    let startX = 0;
-    let startWidth = 0;
-
-    resizeHandle.addEventListener('mousedown', (e) => {
-      isResizing = true;
-      startX = e.clientX;
-      startWidth = sidebar.offsetWidth;
-      document.body.classList.add('is-resizing');
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (!isResizing) return;
-      const dx = e.clientX - startX; // Pastikan dx dideklarasikan di sini!
-      // Batas minimum 280px dan maksimum 390px
-      const newWidth = Math.min(Math.max(startWidth + dx, 280), 390);
-      sidebar.style.width = `${newWidth}px`;
-    });
-
-    window.addEventListener('mouseup', () => {
-      if (isResizing) {
-        isResizing = false;
-        document.body.classList.remove('is-resizing');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-      }
-    });
+    if (resizeHandle) {
+      resizeHandle.style.display = 'none';
+      resizeHandle.style.pointerEvents = 'none';
+    }
   }
 
   // ============================================================================
-  // 4. CANVAS VIEWPORT CONTROLS (FULL HEIGHT & RESPONSIVE FRAMING)
+  // 3B. SIDEBAR POSITION CONTROLLER (PENGALIH POSISI KIRI / KANAN)
   // ============================================================================
+  function setupSidebarPositionToggle() {
+    const btn = document.getElementById('btn-toggle-sidebar-pos');
+    const container = document.getElementById('theme-workspace-container');
+    if (!btn || !container) return;
+
+    // Baca preferensi tersimpan di localStorage (default: 'left')
+    let currentPos = localStorage.getItem('theme_studio_sidebar_pos') || 'left';
+    applySidebarPosition(currentPos);
+
+    btn.addEventListener('click', () => {
+      currentPos = currentPos === 'left' ? 'right' : 'left';
+      localStorage.setItem('theme_studio_sidebar_pos', currentPos);
+      applySidebarPosition(currentPos);
+    });
+  }
+
+  function applySidebarPosition(position) {
+    const btn = document.getElementById('btn-toggle-sidebar-pos');
+    const icon = document.getElementById('icon-toggle-sidebar-pos');
+    const container = document.getElementById('theme-workspace-container');
+    if (!container) return;
+
+    if (position === 'right') {
+      container.classList.add('sidebar-position-right');
+      if (btn) btn.setAttribute('title', 'Pindahkan Sidebar ke Sisi Kiri');
+      if (icon) {
+        icon.className = 'bi bi-layout-sidebar text-slate-600 text-sm';
+      }
+    } else {
+      container.classList.remove('sidebar-position-right');
+      if (btn) btn.setAttribute('title', 'Pindahkan Sidebar ke Sisi Kanan');
+      if (icon) {
+        icon.className = 'bi bi-layout-sidebar-reverse text-slate-600 text-sm';
+      }
+    }
+  }
+
+  // ============================================================================
+  // 4. CANVAS VIEWPORT CONTROLS (FULL HEIGHT & RESPONSIVE FRAMING + NOTICE STATE)
+  // ============================================================================
+  function showDesktopNotice() {
+    const notice = document.getElementById('desktop-notice-state');
+    if (notice) notice.classList.remove('hidden');
+  }
+
+  function hideDesktopNotice() {
+    const notice = document.getElementById('desktop-notice-state');
+    if (notice) notice.classList.add('hidden');
+  }
+
   function setupCanvasControls() {
     const slider = document.getElementById('preview-width-slider');
     const display = document.getElementById('preview-width-display');
@@ -1183,19 +1421,55 @@
     const btnDesktop = document.getElementById('btn-preset-desktop');
     const btnTablet = document.getElementById('btn-preset-tablet');
     const btnMobile = document.getElementById('btn-preset-mobile');
+    const btnDismissNotice = document.getElementById('btn-dismiss-desktop-notice');
 
     if (btnDesktop) {
-      btnDesktop.addEventListener('click', () => applyCanvasWidth(1200, btnDesktop));
+      btnDesktop.addEventListener('click', () => {
+        if (window.innerWidth < 1024) {
+          showDesktopNotice();
+          [btnDesktop, btnTablet, btnMobile].forEach(btn => {
+            if (!btn) return;
+            if (btn === btnDesktop) {
+              btn.classList.add('bg-white', 'text-slate-900', 'shadow-xs');
+              btn.classList.remove('text-slate-600', 'hover:bg-white/60');
+            } else {
+              btn.classList.remove('bg-white', 'text-slate-900', 'shadow-xs');
+              btn.classList.add('text-slate-600', 'hover:bg-white/60');
+            }
+          });
+        } else {
+          hideDesktopNotice();
+          applyCanvasWidth(1200, btnDesktop);
+        }
+      });
     }
     if (btnTablet) {
-      btnTablet.addEventListener('click', () => applyCanvasWidth(768, btnTablet));
+      btnTablet.addEventListener('click', () => {
+        hideDesktopNotice();
+        applyCanvasWidth(768, btnTablet);
+      });
     }
     if (btnMobile) {
-      btnMobile.addEventListener('click', () => applyCanvasWidth(390, btnMobile));
+      btnMobile.addEventListener('click', () => {
+        hideDesktopNotice();
+        applyCanvasWidth(390, btnMobile);
+      });
+    }
+
+    if (btnDismissNotice) {
+      btnDismissNotice.addEventListener('click', () => {
+        hideDesktopNotice();
+        if (window.innerWidth >= 768) {
+          applyCanvasWidth(768, btnTablet);
+        } else {
+          applyCanvasWidth(390, btnMobile);
+        }
+      });
     }
 
     if (slider) {
       slider.addEventListener('input', (e) => {
+        hideDesktopNotice();
         const val = parseInt(e.target.value, 10);
         let matchedBtn = null;
         if (val === 1200) matchedBtn = btnDesktop;
@@ -1207,6 +1481,7 @@
   }
 
   function applyCanvasWidth(widthPx, activeBtn = null) {
+    hideDesktopNotice();
     const container = document.getElementById('preview-viewport-container');
     const wrapper = document.getElementById('theme-preview-wrapper');
     const iframe = document.getElementById('hero-preview-iframe');
@@ -1238,36 +1513,33 @@
 
     if (!wrapper || !iframe) return;
 
+    if (container) {
+      container.classList.remove('p-4', 'sm:p-6', 'p-6');
+      container.classList.add('p-0');
+    }
+
     if (clampedWidth >= 1150) {
       // MODE DESKTOP: 100% Layar Penuh Edge-to-Edge tanpa frame abu-abu
-      if (container) {
-        container.classList.remove('p-4', 'sm:p-6', 'p-6');
-        container.classList.add('p-0');
-      }
       wrapper.style.width = '100%';
       wrapper.style.maxWidth = '100%';
       wrapper.style.height = '100%';
-      wrapper.style.minHeight = 'calc(100vh - 3.5rem)';
-      wrapper.className = 'preview-viewport-wrapper relative transition-all duration-150 ease-out flex justify-center w-full h-full m-0';
+      wrapper.style.minHeight = 'calc(100vh - 3rem)';
+      wrapper.className = 'preview-viewport-wrapper relative transition-all duration-150 ease-out flex justify-center w-full h-full m-0 bg-white shadow-none border-0 rounded-none';
 
-      iframe.className = 'w-full h-full border-0 bg-white';
+      iframe.className = 'w-full h-full border-0 bg-white rounded-none';
       iframe.style.height = '100%';
-      iframe.style.minHeight = 'calc(100vh - 3.5rem)';
+      iframe.style.minHeight = 'calc(100vh - 3rem)';
     } else {
-      // MODE TABLET & MOBILE: Terpusat di tengah dengan pembungkus berbingkai halus
-      if (container) {
-        container.classList.remove('p-0');
-        container.classList.add('p-4', 'sm:p-6');
-      }
+      // MODE MOBILE & TABLET: Bersih, selebar ukuran piksel responsif (390px / 768px), membentang vertikal penuh tanpa bingkai/shadow/border
       wrapper.style.width = `${clampedWidth}px`;
       wrapper.style.maxWidth = `${clampedWidth}px`;
       wrapper.style.height = '100%';
-      wrapper.style.minHeight = 'calc(100vh - 3.5rem)';
-      wrapper.className = 'preview-viewport-wrapper relative transition-all duration-150 ease-out flex justify-center shadow-2xl rounded-2xl border border-slate-300 bg-white overflow-hidden my-auto';
+      wrapper.style.minHeight = 'calc(100vh - 3rem)';
+      wrapper.className = 'preview-viewport-wrapper relative transition-all duration-150 ease-out flex justify-center h-full m-0 bg-white shadow-none border-0 rounded-none overflow-hidden';
 
-      iframe.className = 'w-full h-full border-0 bg-white rounded-2xl';
+      iframe.className = 'w-full h-full border-0 bg-white rounded-none';
       iframe.style.height = '100%';
-      iframe.style.minHeight = 'calc(100vh - 3.5rem)';
+      iframe.style.minHeight = 'calc(100vh - 3rem)';
     }
 
     scheduleLivePreview();
@@ -1746,6 +2018,19 @@
     const shadowSelect = document.getElementById('hero-container-shadow-select');
     if (shadowSelect) {
       shadowSelect.addEventListener('change', scheduleLivePreview);
+    }
+
+    // Hero Border Bottom Controls
+    bindColorPair('hero-border-bottom-color-picker', 'hero-border-bottom-color-hex');
+
+    const heroBorderToggle = document.getElementById('hero-border-bottom-toggle');
+    if (heroBorderToggle) {
+      heroBorderToggle.addEventListener('change', scheduleLivePreview);
+    }
+
+    const heroBorderThicknessSelect = document.getElementById('hero-border-bottom-thickness-select');
+    if (heroBorderThicknessSelect) {
+      heroBorderThicknessSelect.addEventListener('change', scheduleLivePreview);
     }
 
     // 8. Typography & Text Colors
@@ -2888,6 +3173,26 @@
       });
     }
 
+    const cartIconSizeSlider = document.getElementById('cart_icon_size_slider');
+    const cartIconSizeVal = document.getElementById('cart_icon_size_val');
+    if (cartIconSizeSlider && cartIconSizeVal) {
+      cartIconSizeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        cartIconSizeVal.textContent = `${val}px`;
+        scheduleLivePreview();
+      });
+    }
+
+    const cartBoxSizeSlider = document.getElementById('cart_box_size_slider');
+    const cartBoxSizeVal = document.getElementById('cart_box_size_val');
+    if (cartBoxSizeSlider && cartBoxSizeVal) {
+      cartBoxSizeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        cartBoxSizeVal.textContent = `${val}px`;
+        scheduleLivePreview();
+      });
+    }
+
     // Sub-Menu 3: Search Solid BG Toggle
     const searchBgSolidToggle = document.getElementById('search_bg_solid_toggle');
     const searchBgBox = document.getElementById('search_bg_color_box');
@@ -2914,6 +3219,27 @@
       searchRadiusSlider.addEventListener('input', (e) => {
         const val = e.target.value;
         searchRadiusVal.textContent = `${val}px`;
+        scheduleLivePreview();
+      });
+    }
+
+    // Sub-Menu 4: Login Icon Size & Box Size Sliders
+    const loginIconSizeSlider = document.getElementById('login_icon_size_slider');
+    const loginIconSizeVal = document.getElementById('login_icon_size_val');
+    if (loginIconSizeSlider && loginIconSizeVal) {
+      loginIconSizeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        loginIconSizeVal.textContent = `${val}px`;
+        scheduleLivePreview();
+      });
+    }
+
+    const loginBoxSizeSlider = document.getElementById('login_box_size_slider');
+    const loginBoxSizeVal = document.getElementById('login_box_size_val');
+    if (loginBoxSizeSlider && loginBoxSizeVal) {
+      loginBoxSizeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        loginBoxSizeVal.textContent = `${val}px`;
         scheduleLivePreview();
       });
     }
@@ -3012,10 +3338,10 @@
     const isSplit = (selectedModel === 'split' || selectedModel === 'model_4');
     const isModel1 = (selectedModel === 'model_1');
 
-    // Section lebar & rasio hanya untuk model Non-Split
+    // Section lebar aktif untuk SEMUA model Hero (Non-Split, Split, dan Teks & CTA)
     const widthSection = document.getElementById('hero-layout-width-section');
     const ratioSection = document.getElementById('hero-mobile-ratio-section');
-    if (widthSection) widthSection.classList.toggle('hidden', !isNonSplit);
+    if (widthSection) widthSection.classList.remove('hidden');
     if (ratioSection) ratioSection.classList.toggle('hidden', !isNonSplit);
 
     // Section tata letak Split
@@ -3228,6 +3554,8 @@
     const cartBorderEnable = document.getElementById('cart_border_toggle')?.checked !== false;
     const cartBorderColor = getInputValue('ctrl-hex-cart-border') || '#e2e8f0';
     const cartBorderRadius = getInputValue('cart_border_radius_slider') || '16';
+    const cartIconSize = getInputValue('cart_icon_size_slider') || '16';
+    const cartBoxSize = getInputValue('cart_box_size_slider') || '38';
     const cartBadgeColor = getInputValue('ctrl-hex-cart-badge') || '#f59e0b';
     const cartBadgeTextColor = getInputValue('ctrl-hex-cart-badge-text') || '#ffffff';
 
@@ -3249,6 +3577,8 @@
     const loginIconColor = getInputValue('ctrl-hex-login-icon') || '#334155';
     const loginTextColor = getInputValue('ctrl-hex-login-text') || '#334155';
     const loginBtnColor = getInputValue('ctrl-hex-login-btn') || '#f1f5f9';
+    const loginIconSize = getInputValue('login_icon_size_slider') || '16';
+    const loginBoxSize = getInputValue('login_box_size_slider') || '38';
 
     const enableGreeting = document.getElementById('enable-greeting-toggle')?.checked !== false;
     const greetingText = getInputValue('top-bar-greeting-text-input') || ('Selamat datang di ' + storeName);
@@ -3309,6 +3639,12 @@
       heroBgCss = `background: linear-gradient(${heroBgAngle}deg, ${heroBgColor1} 0%, ${heroBgColor2} 100%);`;
     }
     const heroShadowClass = (heroShadow === 'none') ? 'shadow-none' : `shadow-${heroShadow}`;
+
+    // Hero Border Bottom Configuration
+    const heroBorderBottomEnable = Boolean(document.getElementById('hero-border-bottom-toggle')?.checked);
+    const heroBorderBottomColor = getInputValue('hero-border-bottom-color-hex') || '#e2e8f0';
+    const heroBorderBottomThickness = getSelectValue('hero-border-bottom-thickness-select') || '1px';
+    const heroBorderBottomStyle = heroBorderBottomEnable ? `border-bottom: ${heroBorderBottomThickness} solid ${heroBorderBottomColor};` : '';
 
     // Hero Slider Arrows & Navigation Configuration (Top-level scope)
     const heroShowArrows = document.getElementById('hero-show-arrows-toggle')?.checked !== false;
@@ -3473,19 +3809,24 @@
 
     // Sub-Menu 4: Login Button Preview Element
     let loginContentHtml = '';
+    const loginIconStyle = `color: ${loginIconColor}; font-size: ${loginIconSize}px; width: 1em; height: 1em;`;
     if (loginBtnDisplay === 'icon_only') {
-      loginContentHtml = renderNavIconHtml(loginIcon, 'text-sm', `color: ${loginIconColor};`);
+      loginContentHtml = renderNavIconHtml(loginIcon, '', loginIconStyle);
     } else if (loginBtnDisplay === 'text_only') {
       loginContentHtml = `<span class="font-bold text-xs" style="color: ${loginTextColor};">${escapeHtml(loginBtnText)}</span>`;
     } else {
       loginContentHtml = `
-        ${renderNavIconHtml(loginIcon, 'text-sm', `color: ${loginIconColor};`)}
+        ${renderNavIconHtml(loginIcon, '', loginIconStyle)}
         <span class="hidden sm:inline font-bold text-xs" style="color: ${loginTextColor};">${escapeHtml(loginBtnText)}</span>
       `;
     }
 
+    const loginBoxStyle = (loginBtnDisplay === 'icon_only')
+      ? `width: ${loginBoxSize}px; height: ${loginBoxSize}px; min-width: ${loginBoxSize}px;`
+      : `height: ${loginBoxSize}px; min-height: ${loginBoxSize}px; padding-left: 0.75rem; padding-right: 0.75rem;`;
+
     const loginBtnHtml = `
-      <div data-section="navbar-login" class="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-2xl text-xs font-bold border border-slate-200 shadow-xs shrink-0 cursor-pointer transition hover:opacity-95" style="background-color: ${loginBtnColor};">
+      <div data-section="navbar-login" class="inline-flex items-center justify-center gap-1.5 rounded-2xl text-xs font-bold border border-slate-200 shadow-xs shrink-0 cursor-pointer transition hover:opacity-95" style="background-color: ${loginBtnColor}; ${loginBoxStyle}">
         ${loginContentHtml}
       </div>
     `;
@@ -3493,11 +3834,12 @@
     // Sub-Menu 2: Cart Button Preview Element
     const cartBorderStyle = cartBorderEnable ? `border: 1px solid ${cartBorderColor};` : 'border: 1px solid transparent;';
     const cartRadiusStyle = `border-radius: ${cartBorderRadius}px;`;
+    const cartBoxStyle = `width: ${cartBoxSize}px; height: ${cartBoxSize}px; min-width: ${cartBoxSize}px;`;
 
     const cartBtnHtml = `
-      <div data-section="navbar-cart" class="relative p-2 sm:p-2.5 flex items-center justify-center shadow-xs shrink-0 cursor-pointer transition hover:opacity-95" style="background-color: ${cartBgColor}; ${cartBorderStyle} ${cartRadiusStyle}">
+      <div data-section="navbar-cart" class="relative flex items-center justify-center shadow-xs shrink-0 cursor-pointer transition hover:opacity-95" style="background-color: ${cartBgColor}; ${cartBorderStyle} ${cartRadiusStyle} ${cartBoxStyle}">
         <div class="relative flex items-center justify-center">
-          ${renderNavIconHtml(cartIcon, 'text-sm', `color: ${cartIconColor};`)}
+          ${renderNavIconHtml(cartIcon, '', `color: ${cartIconColor}; font-size: ${cartIconSize}px; width: 1em; height: 1em;`)}
           <span class="absolute -top-2.5 -right-2.5 font-black text-[10px] min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center shadow-md border-2 border-white" style="background-color: ${cartBadgeColor}; color: ${cartBadgeTextColor};">
             2
           </span>
@@ -3579,14 +3921,16 @@
         `).join('');
 
         heroHtml = `
-          <div class="relative w-full overflow-hidden ${heroShadowClass} aspect-[16/5] sm:aspect-[16/5] md:aspect-[9/2] bg-slate-900 group" style="${heroWidthLayout === 'full' ? 'border-radius: 0;' : `border-radius: ${heroRadius};`}">
-            <div class="w-full h-full relative">
-              ${slides}
-            </div>
-            ${heroArrowsHtml}
-            <!-- Dot Navigasi Melayang Murni di Bawah Banner -->
-            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 px-3 py-1 rounded-full bg-slate-950/30 backdrop-blur-xs">
-              ${dots}
+          <div class="${heroWidthLayout === 'full' ? '-mx-3 sm:-mx-5 lg:-mx-6 -mt-3 sm:-mt-5 lg:-mt-6' : ''}">
+            <div class="relative w-full overflow-hidden ${heroShadowClass} aspect-[16/5] sm:aspect-[16/5] md:aspect-[9/2] bg-slate-900 group" style="${heroWidthLayout === 'full' ? 'border-radius: 0;' : `border-radius: ${heroRadius};`} ${heroBorderBottomStyle}">
+              <div class="w-full h-full relative">
+                ${slides}
+              </div>
+              ${heroArrowsHtml}
+              <!-- Dot Navigasi Melayang Murni di Bawah Banner -->
+              <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 px-3 py-1 rounded-full bg-slate-950/30 backdrop-blur-xs">
+                ${dots}
+              </div>
             </div>
           </div>
         `;
@@ -3606,22 +3950,24 @@
         const textOrder = heroSplitDesktopPos === 'image_left' ? 'md:order-2' : 'md:order-1';
 
         heroHtml = `
-          <div class="w-full overflow-hidden border border-slate-200/80 ${heroShadowClass} p-4 sm:p-6" style="${heroBgCss} border-radius: ${heroRadius};">
-            <div class="${mobileFlex} gap-5 items-center">
-              <div class="w-full md:w-5/12 ${textOrder} space-y-3">
-                <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-white/90 border border-emerald-200">
-                  Percetakan Digital Terpadu
-                </span>
-                <h2 class="font-black text-lg sm:text-2xl leading-tight" style="color: ${heroTitleColor};">${escapeHtml(heroHeadline)}</h2>
-                <p class="text-xs leading-relaxed" style="color: ${heroDescColor};">${escapeHtml(heroSubheadline)}</p>
-                ${heroCtaButtonsHtml ? `<div class="pt-1">${heroCtaButtonsHtml}</div>` : ''}
-              </div>
-              <div class="w-full md:w-7/12 ${imgOrder}">
-                <div class="relative w-full aspect-[16/9] md:aspect-[16/9] overflow-hidden ${heroImgShadowClass} bg-slate-800 group" style="border-radius: ${heroImgRad};">
-                  ${slides}
-                  ${heroArrowsHtml}
-                  <div class="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 px-2 py-0.5 rounded-full bg-slate-950/30">
-                    ${dots}
+          <div class="${heroWidthLayout === 'full' ? '-mx-3 sm:-mx-5 lg:-mx-6 -mt-3 sm:-mt-5 lg:-mt-6' : ''}">
+            <div class="w-full overflow-hidden border border-slate-200/80 ${heroShadowClass} p-4 sm:p-6" style="${heroBgCss} ${heroWidthLayout === 'full' ? 'border-radius: 0; border-left: none; border-right: none;' : `border-radius: ${heroRadius};`} ${heroBorderBottomStyle}">
+              <div class="${mobileFlex} gap-5 items-center">
+                <div class="w-full md:w-5/12 ${textOrder} space-y-3">
+                  <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-white/90 border border-emerald-200">
+                    Percetakan Digital Terpadu
+                  </span>
+                  <h2 class="font-black text-lg sm:text-2xl leading-tight" style="color: ${heroTitleColor};">${escapeHtml(heroHeadline)}</h2>
+                  <p class="text-xs leading-relaxed" style="color: ${heroDescColor};">${escapeHtml(heroSubheadline)}</p>
+                  ${heroCtaButtonsHtml ? `<div class="pt-1">${heroCtaButtonsHtml}</div>` : ''}
+                </div>
+                <div class="w-full md:w-7/12 ${imgOrder}">
+                  <div class="relative w-full aspect-[16/9] md:aspect-[16/9] overflow-hidden ${heroImgShadowClass} bg-slate-800 group" style="border-radius: ${heroImgRad};">
+                    ${slides}
+                    ${heroArrowsHtml}
+                    <div class="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 px-2 py-0.5 rounded-full bg-slate-950/30">
+                      ${dots}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3631,13 +3977,15 @@
       } else {
         // Model 1: Mode Teks & CTA
         heroHtml = `
-          <div class="w-full border border-slate-200/80 ${heroShadowClass} p-6 sm:p-10 text-center space-y-3.5" style="${heroBgCss} border-radius: ${heroRadius};">
-            <span class="inline-block px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-white border border-emerald-200 shadow-2xs">
-              Promo Spesial Percetakan
-            </span>
-            <h2 class="font-black text-xl sm:text-3xl max-w-2xl mx-auto leading-tight" style="color: ${heroTitleColor};">${escapeHtml(heroHeadline)}</h2>
-            <p class="text-xs sm:text-sm max-w-xl mx-auto leading-relaxed" style="color: ${heroDescColor};">${escapeHtml(heroSubheadline)}</p>
-            ${heroCtaButtonsHtml ? `<div class="flex items-center justify-center pt-2">${heroCtaButtonsHtml}</div>` : ''}
+          <div class="${heroWidthLayout === 'full' ? '-mx-3 sm:-mx-5 lg:-mx-6 -mt-3 sm:-mt-5 lg:-mt-6' : ''}">
+            <div class="w-full border border-slate-200/80 ${heroShadowClass} p-6 sm:p-10 text-center space-y-3.5" style="${heroBgCss} ${heroWidthLayout === 'full' ? 'border-radius: 0; border-left: none; border-right: none;' : `border-radius: ${heroRadius};`} ${heroBorderBottomStyle}">
+              <span class="inline-block px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-white border border-emerald-200 shadow-2xs">
+                Promo Spesial Percetakan
+              </span>
+              <h2 class="font-black text-xl sm:text-3xl max-w-2xl mx-auto leading-tight" style="color: ${heroTitleColor};">${escapeHtml(heroHeadline)}</h2>
+              <p class="text-xs sm:text-sm max-w-xl mx-auto leading-relaxed" style="color: ${heroDescColor};">${escapeHtml(heroSubheadline)}</p>
+              ${heroCtaButtonsHtml ? `<div class="flex items-center justify-center pt-2">${heroCtaButtonsHtml}</div>` : ''}
+            </div>
           </div>
         `;
       }
@@ -3654,39 +4002,58 @@
     }
     const quickNavCategories = dbCategories.filter(c => c.show_in_quick_nav !== false);
 
-    let catNavHtml = '';
-    if (catModeDesktop === 'dropdown' || catModeMobile === 'dropdown') {
-      catNavHtml = `
-        <div class="space-y-2">
-          <div class="flex items-center gap-3">
-            <div class="relative w-full max-w-xs">
-              <i class="bi bi-grid-fill text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-xs"></i>
-              <select class="w-full bg-white border border-slate-200 rounded-xl py-2 pl-9 pr-8 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs appearance-none">
-                <option value="all">Semua Kategori (${quickNavCategories.length})</option>
-                <option value="bestseller">🔥 Produk Terlaris</option>
-                <option value="promo">🏷️ Sedang Promo</option>
-                ${quickNavCategories.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}
-              </select>
-              <i class="bi bi-chevron-down text-slate-400 text-xs absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            </div>
-            <div class="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold">${quickNavCategories.length} Kategori Aktif</span>
-            </div>
+    // Render Category Nav by Mode (Mobile & Desktop Decoupled)
+    function renderPreviewCategoryNavByMode(mode, isDesktopView) {
+      if (mode === 'dropdown') {
+        const selectHtml = `
+          <div class="relative w-full ${isDesktopView ? 'max-w-xs' : ''}">
+            <i class="bi bi-grid-fill text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-xs"></i>
+            <select class="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-9 pr-8 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs appearance-none">
+              <option value="all">Semua Kategori</option>
+              <option value="bestseller">Produk Terlaris</option>
+              <option value="promo">Sedang Promo</option>
+              ${quickNavCategories.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}
+            </select>
+            <i class="bi bi-chevron-down text-slate-400 text-xs absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
           </div>
-        </div>
-      `;
-    } else if (catModeDesktop === 'pills_text' || catModeMobile === 'pills_text') {
-      catNavHtml = `
-        <div class="space-y-2">
-          <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        `;
+
+        if (isDesktopView) {
+          return `
+            <div class="flex items-center gap-3 w-full">
+              ${selectHtml}
+              <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none flex-1 min-w-0">
+                <button type="button" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs border text-white" style="background-color: ${primaryColor}; border-color: ${primaryColor};">
+                  <i class="bi bi-grid-fill text-xs"></i>
+                  <span>Semua</span>
+                </button>
+                <button type="button" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 shadow-xs border bg-white text-slate-800 border-slate-200 hover:bg-slate-50">
+                  <span>Produk Terlaris</span>
+                </button>
+                <button type="button" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 shadow-xs border bg-white text-slate-800 border-slate-200 hover:bg-slate-50">
+                  <span>Sedang Promo</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="w-full">
+            ${selectHtml}
+          </div>
+        `;
+      } else if (mode === 'pills_text') {
+        return `
+          <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full">
             <button type="button" class="px-3.5 py-1.5 rounded-full font-bold text-xs shrink-0 text-white shadow-2xs" style="background-color: ${primaryColor};">
               Semua
             </button>
             <button type="button" class="px-3.5 py-1.5 rounded-full font-bold text-xs shrink-0 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50">
-              🔥 Terlaris
+              Terlaris
             </button>
             <button type="button" class="px-3.5 py-1.5 rounded-full font-bold text-xs shrink-0 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50">
-              🏷️ Promo
+              Promo
             </button>
             ${quickNavCategories.map(c => `
               <button type="button" class="px-3.5 py-1.5 rounded-full font-bold text-xs shrink-0 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50">
@@ -3694,75 +4061,91 @@
               </button>
             `).join('')}
           </div>
-        </div>
-      `;
-    } else {
-      // Standar Icon & Gambar (cat-scroll-track & cat-item-peek: 10.5 item desktop, 5.5 item mobile)
-      const allItemHtml = `
-        <div class="cat-item-peek flex flex-col items-center justify-start text-center group cursor-pointer transition select-none shrink-0">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition group-hover:scale-105 group-hover:shadow-xs ring-2" style="background-color: ${primaryColor}; color: #ffffff; ring-color: ${primaryColor};">
-            <i class="bi bi-grid-fill text-lg sm:text-xl md:text-2xl"></i>
-          </div>
-          <span class="text-[10px] sm:text-xs font-bold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight" style="color: ${primaryColor};">
-            Semua
-          </span>
-        </div>
-      `;
-
-      const bestItemHtml = `
-        <div class="cat-item-peek flex flex-col items-center justify-start text-center group cursor-pointer transition select-none shrink-0">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition group-hover:scale-105 group-hover:shadow-xs border border-slate-200/80 bg-slate-100" style="background-color: #f1f5f9; color: #f59e0b;">
-            <i class="bi bi-fire text-lg sm:text-xl md:text-2xl"></i>
-          </div>
-          <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight text-slate-700">
-            Terlaris
-          </span>
-        </div>
-      `;
-
-      const promoItemHtml = `
-        <div class="cat-item-peek flex flex-col items-center justify-start text-center group cursor-pointer transition select-none shrink-0">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition group-hover:scale-105 group-hover:shadow-xs border border-slate-200/80 bg-slate-100" style="background-color: #f1f5f9; color: #ef4444;">
-            <i class="bi bi-ticket-perforated-fill text-lg sm:text-xl md:text-2xl"></i>
-          </div>
-          <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight text-slate-700">
-            Promo
-          </span>
-        </div>
-      `;
-
-      const catsItemHtml = quickNavCategories.map(c => {
-        let iconHtml;
-        if (c.image) {
-          iconHtml = `<img src="${c.image}" class="w-full h-full object-cover rounded-2xl" alt="${escapeHtml(c.name)}" onerror="this.onerror=null; this.outerHTML='<i class=\\'bi bi-tag-fill text-lg sm:text-xl md:text-2xl\\'></i>';" />`;
-        } else {
-          let bi = c.icon || 'bi-tag';
-          if (!bi.startsWith('bi-') && !bi.startsWith('bi ')) bi = 'bi-' + bi;
-          iconHtml = `<i class="bi ${bi} text-lg sm:text-xl md:text-2xl"></i>`;
-        }
-        return `
+        `;
+      } else {
+        // Standar Icon & Gambar (cat-scroll-track & cat-item-peek: 10.5 item desktop, 5.5 item mobile)
+        const allItemHtml = `
           <div class="cat-item-peek flex flex-col items-center justify-start text-center group cursor-pointer transition select-none shrink-0">
-            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center overflow-hidden transition group-hover:scale-105 group-hover:shadow-xs border border-slate-200/80 bg-slate-100" style="background-color: #f1f5f9; color: ${primaryColor};">
-              ${iconHtml}
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition group-hover:scale-105 group-hover:shadow-xs ring-2" style="background-color: ${primaryColor}; color: #ffffff; ring-color: ${primaryColor};">
+              <i class="bi bi-grid-fill text-lg sm:text-xl md:text-2xl"></i>
             </div>
-            <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight text-slate-700">
-              ${escapeHtml(c.name)}
+            <span class="text-[10px] sm:text-xs font-bold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight" style="color: ${primaryColor};">
+              Semua
             </span>
           </div>
         `;
-      }).join('');
 
-      catNavHtml = `
-        <div class="w-full relative">
-          <div class="cat-scroll-track flex items-start justify-start gap-2 sm:gap-2.5 lg:gap-3 py-1 w-full">
-            ${allItemHtml}
-            ${bestItemHtml}
-            ${promoItemHtml}
-            ${catsItemHtml}
+        const bestItemHtml = `
+          <div class="cat-item-peek flex flex-col items-center justify-start text-center group cursor-pointer transition select-none shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition group-hover:scale-105 group-hover:shadow-xs border border-slate-200/80 bg-slate-100" style="background-color: #f1f5f9; color: #f59e0b;">
+              <i class="bi bi-fire text-lg sm:text-xl md:text-2xl"></i>
+            </div>
+            <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight text-slate-700">
+              Terlaris
+            </span>
           </div>
-        </div>
-      `;
+        `;
+
+        const promoItemHtml = `
+          <div class="cat-item-peek flex flex-col items-center justify-start text-center group cursor-pointer transition select-none shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition group-hover:scale-105 group-hover:shadow-xs border border-slate-200/80 bg-slate-100" style="background-color: #f1f5f9; color: #ef4444;">
+              <i class="bi bi-ticket-perforated-fill text-lg sm:text-xl md:text-2xl"></i>
+            </div>
+            <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight text-slate-700">
+              Promo
+            </span>
+          </div>
+        `;
+
+        const catsItemHtml = quickNavCategories.map(c => {
+          let iconHtml;
+          if (c.image) {
+            iconHtml = `<img src="${c.image}" class="w-full h-full object-cover rounded-2xl" alt="${escapeHtml(c.name)}" onerror="this.onerror=null; this.outerHTML='<i class=\\'bi bi-tag-fill text-lg sm:text-xl md:text-2xl\\'></i>';" />`;
+          } else {
+            let bi = c.icon || 'bi-tag';
+            if (!bi.startsWith('bi-') && !bi.startsWith('bi ')) bi = 'bi-' + bi;
+            iconHtml = `<i class="bi ${bi} text-lg sm:text-xl md:text-2xl"></i>`;
+          }
+          return `
+            <div class="cat-item-peek flex flex-col items-center justify-start text-center group cursor-pointer transition select-none shrink-0">
+              <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center overflow-hidden transition group-hover:scale-105 group-hover:shadow-xs border border-slate-200/80 bg-slate-100" style="background-color: #f1f5f9; color: ${primaryColor};">
+                ${iconHtml}
+              </div>
+              <span class="text-[10px] sm:text-xs font-semibold text-center line-clamp-2 mt-1.5 w-full break-words leading-tight text-slate-700">
+                ${escapeHtml(c.name)}
+              </span>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="w-full relative">
+            <div class="cat-scroll-track flex items-start justify-start gap-2 sm:gap-2.5 lg:gap-3 py-1 w-full">
+              ${allItemHtml}
+              ${bestItemHtml}
+              ${promoItemHtml}
+              ${catsItemHtml}
+            </div>
+          </div>
+        `;
+      }
     }
+
+    const mobileCatNavHtml = renderPreviewCategoryNavByMode(catModeMobile, false);
+    const desktopCatNavHtml = renderPreviewCategoryNavByMode(catModeDesktop, true);
+
+    const catNavHtml = `
+      <div id="quick-filter-container" class="w-full py-1">
+        <!-- Mobile Viewport: Ditampilkan pada < lg -->
+        <div class="block lg:hidden w-full">
+          ${mobileCatNavHtml}
+        </div>
+        <!-- Desktop Viewport: Ditampilkan pada >= lg -->
+        <div class="hidden lg:block w-full">
+          ${desktopCatNavHtml}
+        </div>
+      </div>
+    `;
 
     // --- E. GRID PRODUK STANDAR ---
     const demoProducts = [
@@ -4395,6 +4778,17 @@
             }
           }
 
+          /* Normalisasi Otomatis Ikon Lucide SVG vs Bootstrap Icons */
+          svg.lucide, i.bi, i[data-lucide] {
+            width: 1em !important;
+            height: 1em !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            vertical-align: middle !important;
+          }
+
           /* Mode Edit Visual Interaktif */
           body.visual-edit-active [data-section] {
             transition: outline 0.15s ease, box-shadow 0.15s ease;
@@ -4486,6 +4880,8 @@
         cart_border_color: getInputValue('ctrl-hex-cart-border'),
         navbar_cart_border_color: getInputValue('ctrl-hex-cart-border'),
         cart_border_radius: parseInt(getInputValue('cart_border_radius_slider') || '16', 10),
+        cart_icon_size: parseInt(getInputValue('cart_icon_size_slider') || '16', 10),
+        cart_box_size: parseInt(getInputValue('cart_box_size_slider') || '38', 10),
         cart_badge_color: getInputValue('ctrl-hex-cart-badge'),
         navbar_cart_badge_bg: getInputValue('ctrl-hex-cart-badge'),
         cart_badge_text_color: getInputValue('ctrl-hex-cart-badge-text'),
@@ -4519,6 +4915,8 @@
         navbar_login_text_color: getInputValue('ctrl-hex-login-text'),
         login_btn_color: getInputValue('ctrl-hex-login-btn'),
         navbar_login_btn_bg: getInputValue('ctrl-hex-login-btn'),
+        login_icon_size: parseInt(getInputValue('login_icon_size_slider') || '16', 10),
+        login_box_size: parseInt(getInputValue('login_box_size_slider') || '38', 10),
 
         // Hero Banner Settings
         hero_enabled: document.getElementById('hero-enable-toggle')?.checked !== false,
@@ -4541,6 +4939,9 @@
         hero_bg_angle: parseInt(getInputValue('hero-bg-angle-input') || '135', 10),
         hero_container_radius: (getInputValue('hero-container-radius-number') || '16') + 'px',
         hero_container_shadow: getSelectValue('hero-container-shadow-select') || 'sm',
+        hero_border_bottom_enable: Boolean(document.getElementById('hero-border-bottom-toggle')?.checked),
+        hero_border_bottom_color: getInputValue('hero-border-bottom-color-hex') || '#e2e8f0',
+        hero_border_bottom_thickness: getSelectValue('hero-border-bottom-thickness-select') || '1px',
         hero_image_radius: (getInputValue('hero-image-radius-number') || '12') + 'px',
         hero_image_shadow: getSelectValue('hero-image-shadow-select') || 'sm',
 
@@ -4848,6 +5249,30 @@
         cartRadiusVal.textContent = val === '24' ? '24px (Bulat)' : `${val}px`;
       }
 
+      const cartIconSizeSlider = document.getElementById('cart_icon_size_slider');
+      const cartIconSizeVal = document.getElementById('cart_icon_size_val');
+      if (cartIconSizeSlider && cartIconSizeVal) {
+        cartIconSizeVal.textContent = `${cartIconSizeSlider.value}px`;
+      }
+
+      const cartBoxSizeSlider = document.getElementById('cart_box_size_slider');
+      const cartBoxSizeVal = document.getElementById('cart_box_size_val');
+      if (cartBoxSizeSlider && cartBoxSizeVal) {
+        cartBoxSizeVal.textContent = `${cartBoxSizeSlider.value}px`;
+      }
+
+      const loginIconSizeSlider = document.getElementById('login_icon_size_slider');
+      const loginIconSizeVal = document.getElementById('login_icon_size_val');
+      if (loginIconSizeSlider && loginIconSizeVal) {
+        loginIconSizeVal.textContent = `${loginIconSizeSlider.value}px`;
+      }
+
+      const loginBoxSizeSlider = document.getElementById('login_box_size_slider');
+      const loginBoxSizeVal = document.getElementById('login_box_size_val');
+      if (loginBoxSizeSlider && loginBoxSizeVal) {
+        loginBoxSizeVal.textContent = `${loginBoxSizeSlider.value}px`;
+      }
+
       const searchRadiusSlider = document.getElementById('search_border_radius_slider');
       const searchRadiusVal = document.getElementById('search_border_radius_val');
       if (searchRadiusSlider && searchRadiusVal) {
@@ -5002,24 +5427,23 @@
     if (!container) return;
 
     const toast = document.createElement('div');
-    toast.className = `px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-0 opacity-100 pointer-events-auto select-none ${
-      type === 'success'
-        ? 'bg-emerald-600 text-white'
-        : type === 'warning'
+    toast.className = `px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-0 opacity-100 pointer-events-auto select-none ${type === 'success'
+      ? 'bg-emerald-600 text-white'
+      : type === 'warning'
         ? 'bg-amber-500 text-white'
         : type === 'info'
-        ? 'bg-slate-800 text-white'
-        : 'bg-red-600 text-white'
-    }`;
+          ? 'bg-slate-800 text-white'
+          : 'bg-red-600 text-white'
+      }`;
 
     const iconClass =
       type === 'success'
         ? 'bi-check-circle-fill'
         : type === 'warning'
-        ? 'bi-exclamation-triangle-fill'
-        : type === 'info'
-        ? 'bi-info-circle-fill'
-        : 'bi-x-circle-fill';
+          ? 'bi-exclamation-triangle-fill'
+          : type === 'info'
+            ? 'bi-info-circle-fill'
+            : 'bi-x-circle-fill';
 
     toast.innerHTML = `
       <i class="bi ${iconClass} text-sm"></i>

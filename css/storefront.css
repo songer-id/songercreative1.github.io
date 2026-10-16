@@ -495,3 +495,32 @@ h1, h2, h3, h4, .font-heading {
     max-width: calc((100% - (9.5 * 0.75rem)) / 10.5) !important;
   }
 }
+
+/* ==========================================================================
+   NORMALISASI PROPORSIONAL IKON LUCIDE SVG & BOOTSTRAP ICONS
+   ========================================================================== */
+#btn-open-cart-drawer svg.lucide,
+#btn-open-cart-drawer i.bi,
+#btn-navbar-login svg.lucide,
+#btn-navbar-login i.bi,
+.navbar-cart-icon-el,
+.navbar-login-icon-el,
+.navbar-search-icon-el,
+.hero-cta-btn svg.lucide,
+.hero-cta-btn i.bi,
+.footer-social-btn svg.lucide,
+.footer-social-btn i.bi,
+header svg.lucide,
+header i.bi,
+footer svg.lucide,
+footer i.bi {
+  width: 1em !important;
+  height: 1em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
+}
+

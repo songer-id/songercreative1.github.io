@@ -114,99 +114,176 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. THEME STUDIO INSPECTOR ACCORDION & SUB-ACCORDION
+   2. THEME STUDIO INSPECTOR ACCORDION & SUB-ACCORDION (FLAT COLLAPSIBLE ROWS)
    -------------------------------------------------------------------------- */
 .theme-accordion-item {
-  border: 1px solid #e2e8f0;
-  border-radius: 1.25rem;
-  overflow: hidden;
-  background-color: #ffffff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.theme-accordion-item:hover {
-  border-color: #cbd5e1;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  overflow: visible !important;
+  margin-bottom: 0.25rem;
 }
 
 .theme-accordion-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.875rem 1rem;
-  background-color: #f8fafc;
+  padding: 0.625rem 0.5rem;
+  background-color: transparent !important;
+  border-radius: 0.5rem;
   cursor: pointer;
   user-select: none;
   font-weight: 700;
   font-size: 0.8125rem;
   color: #0f172a;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .theme-accordion-header:hover {
-  background-color: #f1f5f9;
+  background-color: #f1f5f9 !important;
 }
 
 .theme-accordion-body {
-  padding: 1.125rem 1rem;
+  padding: 0.25rem 0;
   display: block;
-  border-top: 1px solid #f1f5f9;
+  border-top: none !important;
 }
 
-.theme-accordion-body.is-collapsed {
+.theme-accordion-body.is-collapsed,
+.theme-accordion-body.hidden {
   display: none !important;
 }
 
 .theme-accordion-chevron {
-  transition: transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+  color: #94a3b8;
+  font-size: 0.75rem;
 }
 
-.theme-accordion-header.is-open .theme-accordion-chevron {
-  transform: rotate(180deg);
+.theme-accordion-header.is-open .theme-accordion-chevron,
+.theme-accordion-chevron.rotate-90 {
+  transform: rotate(90deg);
+  color: #059669;
 }
 
-/* Sub-Accordion Components (Nested within Sections) */
-.sub-accordion-item {
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 0.75rem;
-  overflow: hidden;
-  background-color: #ffffff;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+/* Sub-Accordion Components: Flat Collapsible Tree-Menu Rows (> ↓) */
+.sub-accordion-item,
+.flat-collapse-row {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  overflow: visible !important;
+  margin-bottom: 0 !important;
+  position: relative;
 }
 
-.sub-accordion-item:hover {
-  border-color: #cbd5e1;
-}
-
-.sub-accordion-header {
+.sub-accordion-header,
+.flat-collapse-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.625rem 0.75rem;
-  background-color: #f8fafc;
+  padding: 0.625rem 0.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 0.375rem;
+  background-color: transparent !important;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.15s ease;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #1e293b;
+  min-height: 2.25rem;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.sub-accordion-header:hover {
-  background-color: #f1f5f9;
+.sub-accordion-header:hover,
+.flat-collapse-header:hover {
+  background-color: rgba(248, 250, 252, 0.9) !important;
+  color: #0f172a;
 }
 
-.sub-accordion-body {
-  padding: 0.75rem;
-  background-color: #ffffff;
+.sub-accordion-header.is-open,
+.flat-collapse-header.is-open {
+  color: #047857;
+  border-bottom-color: #e2e8f0;
 }
 
-.sub-accordion-body.hidden {
+.sub-accordion-chevron,
+.flat-collapse-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Panah berputar ke bawah saat dibuka (rotate-90) */
+.sub-accordion-header.is-open .sub-accordion-chevron,
+.sub-accordion-item.is-open .sub-accordion-chevron,
+.sub-accordion-chevron.rotate-90,
+.flat-collapse-header.is-open .flat-collapse-chevron,
+.flat-collapse-chevron.rotate-90 {
+  transform: rotate(90deg);
+  color: #059669;
+}
+
+/* Form kontrol input di bawahnya dengan indentasi garis vertikal halus di sisi kiri */
+.sub-accordion-body,
+.flat-collapse-body {
+  padding: 0.5rem 0 0.5rem 0.75rem !important;
+  margin: 0.25rem 0 0.5rem 0.375rem !important;
+  border-left: 2px solid rgba(16, 185, 129, 0.35) !important; /* border-l-2 border-emerald-500/35 */
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.sub-accordion-body.hidden,
+.flat-collapse-body.hidden {
   display: none !important;
 }
 
-.sub-accordion-chevron {
-  transition: transform 0.2s ease;
+/* Nested sub-accordions (Level 3 tree menu) */
+.sub-accordion-body .sub-accordion-header {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.75rem;
+  border-bottom: 1px dashed #e2e8f0;
 }
 
-.sub-accordion-header.is-open .sub-accordion-chevron {
-  transform: rotate(180deg);
+.sub-accordion-body .sub-accordion-body {
+  padding: 0.375rem 0 0.375rem 0.625rem !important;
+  margin: 0.125rem 0 0.375rem 0.25rem !important;
+  border-left: 1.5px solid rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Compact eye buttons inside flat header rows */
+.sub-accordion-header .visibility-eye-btn,
+.flat-collapse-header .visibility-eye-btn {
+  width: 1.625rem !important;
+  height: 1.625rem !important;
+  min-width: 1.625rem !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0.375rem !important;
+}
+
+.sub-accordion-header .visibility-eye-btn:hover,
+.flat-collapse-header .visibility-eye-btn:hover {
+  background-color: #f1f5f9 !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -246,7 +323,10 @@ body.is-resizing iframe {
 .preview-viewport-wrapper,
 #hero-preview-iframe {
   height: 100% !important;
-  min-height: calc(100vh - 3.5rem) !important;
+  min-height: calc(100vh - 3rem) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .preview-desktop-mode {
@@ -262,6 +342,39 @@ body.is-resizing iframe {
 .preview-mobile-mode {
   width: 390px !important;
   max-width: 100% !important;
+}
+
+/* Sidebar Fixed Width 300px & Resize Handle Disabled */
+#theme-editor-sidebar {
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 300px !important;
+}
+
+@media (max-width: 767px) {
+  #theme-editor-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+#sidebar-resize-handle {
+  display: none !important;
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+/* Sidebar Position Switcher: Left / Right */
+@media (min-width: 768px) {
+  #theme-workspace-container.sidebar-position-right {
+    flex-direction: row-reverse !important;
+  }
+
+  #theme-workspace-container.sidebar-position-right #theme-editor-sidebar {
+    border-right: none !important;
+    border-left: 1px solid #e2e8f0 !important;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -416,21 +529,44 @@ body.visual-edit-active [data-section]:hover {
   display: block !important;
 }
 
-/* Sub-accordions in drill-down view retain clean nested card styling */
-#sidebar-detail-view .sub-accordion-item {
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  background-color: #ffffff;
-  margin-bottom: 0.75rem;
+/* Sub-accordions in drill-down view: Modern Flat Collapsible Tree-Menu Rows (> ↓) */
+#sidebar-detail-view .sub-accordion-item,
+#sidebar-detail-view .flat-collapse-row {
+  border: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
   position: relative;
 }
 
-#sidebar-detail-view .sub-accordion-header {
-  border-radius: 0.75rem;
+#sidebar-detail-view .sub-accordion-header,
+#sidebar-detail-view .flat-collapse-header {
+  border-radius: 0.375rem;
+  background-color: transparent !important;
+  padding: 0.625rem 0.25rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-#sidebar-detail-view .sub-accordion-item.is-open .sub-accordion-header {
-  border-radius: 0.75rem 0.75rem 0 0;
+#sidebar-detail-view .sub-accordion-header:hover,
+#sidebar-detail-view .flat-collapse-header:hover {
+  background-color: rgba(248, 250, 252, 0.9) !important;
+}
+
+#sidebar-detail-view .sub-accordion-header.is-open,
+#sidebar-detail-view .flat-collapse-header.is-open {
+  border-bottom-color: #e2e8f0;
+  color: #047857;
+}
+
+#sidebar-detail-view .sub-accordion-body,
+#sidebar-detail-view .flat-collapse-body {
+  border-left: 2px solid rgba(16, 185, 129, 0.35) !important;
+  padding: 0.5rem 0 0.5rem 0.75rem !important;
+  margin: 0.25rem 0 0.5rem 0.375rem !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 /* Biarkan dropdown ikon melayang bebas di atas akordeon tanpa terpotong (overflow) */
@@ -964,4 +1100,46 @@ body.visual-edit-active [data-section]:hover {
 
 #btn-save-theme-editor.is-dirty:hover {
   background-color: #047857 !important;
+}
+
+/* ==========================================================================
+   NORMALISASI PROPORSIONAL IKON LUCIDE SVG & BOOTSTRAP ICONS
+   ========================================================================== */
+.vip-icon-box svg.lucide,
+.vip-icon-box i.bi,
+[data-section="navbar-cart"] svg.lucide,
+[data-section="navbar-cart"] i.bi,
+[data-section="navbar-login"] svg.lucide,
+[data-section="navbar-login"] i.bi,
+[data-section="navbar-search"] svg.lucide,
+[data-section="navbar-search"] i.bi,
+#btn-open-cart-drawer svg.lucide,
+#btn-open-cart-drawer i.bi,
+#btn-navbar-login svg.lucide,
+#btn-navbar-login i.bi,
+.navbar-cart-icon-el,
+.navbar-login-icon-el,
+.navbar-search-icon-el,
+.hero-cta-btn svg.lucide,
+.hero-cta-btn i.bi,
+.footer-social-btn svg.lucide,
+.footer-social-btn i.bi {
+  width: 1em !important;
+  height: 1em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
+}
+
+/* Desktop notice state animation */
+#desktop-notice-state {
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* Mobile floating nav transitions */
+#mobile-floating-nav button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

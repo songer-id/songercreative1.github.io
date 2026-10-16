@@ -3177,11 +3177,38 @@ const DB = (() => {
       const promos = this.getPromos();
       let list = Array.isArray(promos.sponsor_list) ? [...promos.sponsor_list] : [];
       const newId = 'sp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+
+      const sanitizeSlides = (slides) => {
+        if (!Array.isArray(slides)) return [];
+        return slides.map(sl => ({
+          image_url: sl.image_url || '',
+          linked_product_id: sl.linked_product_id ? String(sl.linked_product_id) : '',
+          advertiser_name: sl.advertiser_name || '',
+          price: parseFloat(sl.price !== undefined ? sl.price : sl.contract_price) || 0,
+          contract_price: parseFloat(sl.contract_price !== undefined ? sl.contract_price : sl.price) || 0,
+          click_image_enabled: sl.click_image_enabled !== false,
+          target_url: sl.target_url || '',
+          cta_enabled: sl.cta_enabled === true,
+          cta_text: sl.cta_text || 'Lihat Penawaran',
+          cta_link: sl.cta_link || '',
+          cta_icon: sl.cta_icon || 'bi-arrow-right',
+          cta_bg_color: sl.cta_bg_color || '#059669',
+          cta_text_color: sl.cta_text_color || '#ffffff',
+          cta_border_radius: sl.cta_border_radius || '12px',
+          cta_shadow: sl.cta_shadow || 'md'
+        }));
+      };
+
       const newSponsor = {
         id: String(newId),
         type: sponsorData.type || 'ad1',
-        title: sponsorData.title || (sponsorData.type === 'carousel' ? 'Sponsor Slider Carousel' : (sponsorData.type === 'internal' ? 'Produk Rekomendasi' : 'Sponsor Baru')),
+        title: sponsorData.title || (sponsorData.type === 'double_width' ? 'Sponsor Spesial 2-Kolom' : (sponsorData.type === 'carousel' ? 'Sponsor Slider Carousel' : (sponsorData.type === 'internal' ? 'Produk Rekomendasi' : 'Sponsor Baru'))),
         subtitle: sponsorData.subtitle || '',
+        // Kepemilikan Slot Sponsor ('self' = Toko Sendiri vs 'third_party' = Orang Lain / Pihak Ketiga):
+        sponsor_owner_type: sponsorData.sponsor_owner_type || (sponsorData.type === 'internal' ? 'self' : 'third_party'),
+        // Model Kontrak Space ('wholesale' = Borongan Penuh 1 Orang vs 'per_slide' = Per-Space / Per-Slide Berbeda Orang):
+        contract_model: sponsorData.contract_model || 'wholesale',
+        advertiser_name: sponsorData.advertiser_name || '',
         active: sponsorData.active !== false,
         is_active: sponsorData.active !== false,
         display_quota: parseInt(sponsorData.display_quota, 10) || 1,
@@ -3191,21 +3218,25 @@ const DB = (() => {
         start_datetime: sponsorData.start_datetime || '',
         end_datetime: sponsorData.end_datetime || '',
         linked_promo_ids: Array.isArray(sponsorData.linked_promo_ids) ? sponsorData.linked_promo_ids.map(id => String(id)) : [],
-        // Styling:
-        border_radius: sponsorData.border_radius || '16px',
+        // Slide Navigation & Movement:
+        slide_mode: sponsorData.slide_mode || 'auto',
+        auto_slide_interval: parseInt(sponsorData.auto_slide_interval, 10) || 4000,
+        animation_type: sponsorData.animation_type || 'slide',
+        // Nilai Kontrak / Biaya Slot Iklan Sponsor (Metrik Dashboard):
+        price: parseFloat(sponsorData.price) || 0,
+        // Styling Kartu Universal:
+        bg_color: sponsorData.bg_color !== undefined ? sponsorData.bg_color : (sponsorData.type === 'internal' ? '#ffffff' : 'transparent'),
         border_color: sponsorData.border_color || '#e2e8f0',
         border_width: sponsorData.border_width || '1px',
+        border_radius: sponsorData.border_radius || '16px',
         shadow: sponsorData.shadow || 'sm',
-        bg_color: sponsorData.bg_color || (sponsorData.type === 'internal' ? '#ffffff' : 'transparent'),
         animation: sponsorData.animation || 'none',
         // Type specifics:
         image_url: sponsorData.image_url || '',
         cta_type: sponsorData.cta_type || 'whatsapp',
         cta_label: sponsorData.cta_label || 'Tanyakan via WhatsApp',
         cta_target: sponsorData.cta_target || '',
-        slides: Array.isArray(sponsorData.slides) ? sponsorData.slides : [],
-        auto_slide_interval: parseInt(sponsorData.auto_slide_interval, 10) || 3500,
-        animation_type: sponsorData.animation_type || 'slide',
+        slides: sanitizeSlides(sponsorData.slides),
         product_ids: Array.isArray(sponsorData.product_ids) ? sponsorData.product_ids : []
       };
       list.push(newSponsor);
@@ -3223,6 +3254,46 @@ const DB = (() => {
         const cleanUpdate = { ...updateData };
         if (Array.isArray(cleanUpdate.linked_promo_ids)) {
           cleanUpdate.linked_promo_ids = cleanUpdate.linked_promo_ids.map(lid => String(lid));
+        }
+        if (cleanUpdate.slides !== undefined) {
+          cleanUpdate.slides = Array.isArray(cleanUpdate.slides) ? cleanUpdate.slides.map(sl => ({
+            image_url: sl.image_url || '',
+            linked_product_id: sl.linked_product_id ? String(sl.linked_product_id) : '',
+            advertiser_name: sl.advertiser_name || '',
+            price: parseFloat(sl.price !== undefined ? sl.price : sl.contract_price) || 0,
+            contract_price: parseFloat(sl.contract_price !== undefined ? sl.contract_price : sl.price) || 0,
+            click_image_enabled: sl.click_image_enabled !== false,
+            target_url: sl.target_url || '',
+            cta_enabled: sl.cta_enabled === true,
+            cta_text: sl.cta_text || 'Lihat Penawaran',
+            cta_link: sl.cta_link || '',
+            cta_icon: sl.cta_icon || 'bi-arrow-right',
+            cta_bg_color: sl.cta_bg_color || '#059669',
+            cta_text_color: sl.cta_text_color || '#ffffff',
+            cta_border_radius: sl.cta_border_radius || '12px',
+            cta_shadow: sl.cta_shadow || 'md'
+          })) : [];
+        }
+        if (cleanUpdate.price !== undefined) {
+          cleanUpdate.price = parseFloat(cleanUpdate.price) || 0;
+        }
+        if (cleanUpdate.auto_slide_interval !== undefined) {
+          cleanUpdate.auto_slide_interval = parseInt(cleanUpdate.auto_slide_interval, 10) || 4000;
+        }
+        if (cleanUpdate.display_quota !== undefined) {
+          cleanUpdate.display_quota = parseInt(cleanUpdate.display_quota, 10) || 1;
+        }
+        if (cleanUpdate.active !== undefined) {
+          cleanUpdate.is_active = cleanUpdate.active;
+        }
+        if (cleanUpdate.sponsor_owner_type !== undefined) {
+          cleanUpdate.sponsor_owner_type = cleanUpdate.sponsor_owner_type;
+        }
+        if (cleanUpdate.contract_model !== undefined) {
+          cleanUpdate.contract_model = cleanUpdate.contract_model;
+        }
+        if (cleanUpdate.advertiser_name !== undefined) {
+          cleanUpdate.advertiser_name = cleanUpdate.advertiser_name;
         }
         list[idx] = {
           ...list[idx],
@@ -3259,6 +3330,14 @@ const DB = (() => {
           ...firstCarousel,
           active: firstCarousel.active,
           is_active: firstCarousel.active
+        };
+      }
+      const firstDouble = list.find(s => s.type === 'double_width');
+      if (firstDouble) {
+        promos.sponsor_double_width = {
+          ...firstDouble,
+          active: firstDouble.active,
+          is_active: firstDouble.active
         };
       }
       const firstInternal = list.find(s => s.type === 'internal');
@@ -3304,7 +3383,7 @@ const DB = (() => {
 
     isSponsorActive(sponsor, now = new Date()) {
       if (!sponsor) return false;
-      if (sponsor.active === false) return false;
+      if (sponsor.active === false || sponsor.is_active === false) return false;
 
       // 1. Khusus Sponsor Internal Toko (Mini Grid 2x2)
       if (sponsor.type === 'internal') {
@@ -3340,7 +3419,7 @@ const DB = (() => {
         return true;
       }
 
-      // 2. Khusus Card Versi Carousel / Slide & Versi Statis Potret (3:4)
+      // 2. Khusus Card Versi Double-Width, Carousel / Slide & Versi Statis Potret (3:4)
       if (sponsor.is_always_active === false) {
         if (sponsor.start_datetime && sponsor.end_datetime) {
           const start = new Date(sponsor.start_datetime);

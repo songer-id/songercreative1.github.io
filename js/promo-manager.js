@@ -9,6 +9,8 @@ const PromoManager = (() => {
   let activeSponsorId = null;
   let activePromoType = 'twin'; // 'twin' | 'special' | 'monthly'
   let activeSponsorType = 'ad1'; // 'ad1' | 'carousel' | 'internal' | 'double_width'
+  let activeSponsorOwnerType = 'third_party'; // 'third_party' | 'self'
+  let activeContractModel = 'wholesale'; // 'wholesale' | 'per_slide'
   let currentEditingPromoId = null;
   let currentEditingSponsorId = null;
   let currentEditingSponsorMobileOnly = false;
@@ -266,6 +268,8 @@ const PromoManager = (() => {
     if (!container) return;
     const isDoubleWidth = activeSponsorType === 'double_width';
     const maxLimit = isDoubleWidth ? 10 : 5;
+    const allProducts = (typeof DB !== 'undefined' && DB.getAllProducts) ? DB.getAllProducts().filter(p => p.is_active !== false) : ((typeof DB !== 'undefined' && DB.getProducts) ? DB.getProducts().filter(p => p.is_active !== false) : []);
+
     if (!slides || slides.length === 0) {
       container.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs italic bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada slide gambar. Silakan unggah berkas di atas atau tempel URL slide baru (maksimal ${maxLimit} foto).</div>`;
       return;
@@ -277,11 +281,21 @@ const PromoManager = (() => {
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded-lg text-[10px] font-black bg-slate-200 text-slate-800">Slide #${idx + 1}</span>
             ${isDoubleWidth ? `<span class="text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded font-semibold">2-Kolom Slide</span>` : ''}
+            ${activeSponsorOwnerType === 'self' ? `<span class="text-[10px] text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-1.5 py-0.2 rounded font-bold"><i class="bi bi-shop"></i> Produk Sendiri</span>` : ''}
+            ${(activeSponsorOwnerType === 'third_party' && activeContractModel === 'per_slide') ? `<span class="text-[10px] text-purple-800 bg-purple-100 border border-purple-200 px-1.5 py-0.2 rounded font-semibold">Slot Eceran</span>` : ''}
           </div>
-          <button type="button" class="btn-remove-carousel-slide text-rose-500 hover:text-rose-700 p-1 text-xs font-bold transition flex items-center gap-1 cursor-pointer" data-index="${idx}">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            <span>Hapus Slide</span>
-          </button>
+          <div class="flex items-center gap-1">
+            <button type="button" class="btn-move-slide-up p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 rounded transition cursor-pointer ${idx === 0 ? 'opacity-30 pointer-events-none' : ''}" data-index="${idx}" title="Geser Urutan ke Atas">
+              <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
+            </button>
+            <button type="button" class="btn-move-slide-down p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 rounded transition cursor-pointer ${idx === safeSlides.length - 1 ? 'opacity-30 pointer-events-none' : ''}" data-index="${idx}" title="Geser Urutan ke Bawah">
+              <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+            </button>
+            <button type="button" class="btn-remove-carousel-slide text-rose-500 hover:text-rose-700 p-1 text-xs font-bold transition flex items-center gap-1 cursor-pointer ml-1" data-index="${idx}" title="Hapus Slide">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              <span>Hapus</span>
+            </button>
+          </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 items-start">
@@ -289,10 +303,53 @@ const PromoManager = (() => {
             <img src="${escapeHtml(slide.image_url || '')}" class="w-full h-full object-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-sm\\'><i class=\\'bi bi-images\\'></i></div>';" />
           </div>
           <div class="flex-1 w-full min-w-0 space-y-2">
+            <!-- FITUR TOKO SENDIRI: TAUTKAN KE PRODUK KATALOG TOKO -->
+            ${activeSponsorOwnerType === 'self' ? `
+              <div class="p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label class="block text-[10px] font-bold text-emerald-900">
+                    <i class="bi bi-link-45deg text-emerald-600"></i> Tautkan Produk Toko (Buka PDP saat Diklik):
+                  </label>
+                  <button type="button" class="btn-apply-linked-product text-[10px] font-bold text-emerald-800 bg-white hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg transition shadow-2xs cursor-pointer" data-index="${idx}">
+                    Terapkan Foto & Link Produk
+                  </button>
+                </div>
+                <select class="slide-linked-product-select w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white outline-none focus:border-emerald-500" data-index="${idx}">
+                  <option value="">-- Pilih Produk dari Katalog Toko --</option>
+                  ${allProducts.map(p => `
+                    <option value="${p.id}" ${slide.linked_product_id === String(p.id) ? 'selected' : ''}>
+                      ${escapeHtml(p.name)} (Rp ${Math.round(p.price || p.starting_price || 0).toLocaleString('id-ID')})
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+            ` : ''}
+
+            <!-- FITUR PIHAK KETIGA: DETAIL KONTRAK PER-SLIDE -->
+            ${(activeSponsorOwnerType === 'third_party' && activeContractModel === 'per_slide') ? `
+              <div class="p-2.5 bg-indigo-50/80 border border-indigo-200 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Nama Pemasang Iklan Slide #${idx + 1}:</label>
+                  <input type="text" value="${escapeHtml(slide.advertiser_name || '')}" placeholder="Contoh: Toko Mitra Prima" class="slide-advertiser-name w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-bold outline-none focus:border-indigo-500 bg-white" data-index="${idx}" />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Nilai Kontrak Slide #${idx + 1} (Rp):</label>
+                  <input type="number" value="${slide.contract_price || slide.price || 0}" placeholder="Contoh: 250000" class="slide-contract-price w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-mono font-bold outline-none focus:border-indigo-500 bg-white" data-index="${idx}" />
+                </div>
+              </div>
+            ` : ''}
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
-                <label class="block text-[10px] font-bold text-slate-700 mb-1">URL / Berkas Gambar (Tampilan):</label>
-                <input type="text" value="${escapeHtml(slide.image_url || '')}" placeholder="https://.../gambar.webp atau unggah file" class="slide-image-url w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-[11px] outline-none focus:border-emerald-500 bg-white" />
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-[10px] font-bold text-slate-700">URL / Berkas Gambar (Tampilan):</label>
+                  <label class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer" title="Unggah file foto gambar maks 500 KB">
+                    <i data-lucide="upload" class="w-3 h-3"></i>
+                    <span>Upload Foto</span>
+                    <input type="file" accept="image/*" class="slide-file-upload-input hidden" data-index="${idx}" />
+                  </label>
+                </div>
+                <input type="text" value="${escapeHtml(slide.image_url || '')}" placeholder="https://.../gambar.webp atau klik Upload Foto" class="slide-image-url w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-[11px] outline-none focus:border-emerald-500 bg-white" />
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-slate-700 mb-1">Link Target Tujuan (Saat Gambar Diklik):</label>
@@ -326,7 +383,7 @@ const PromoManager = (() => {
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-100">
+                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1 border-t border-slate-100">
                     <div>
                       <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Warna Tombol (Bg):</label>
                       <div class="flex items-center gap-1">
@@ -344,21 +401,30 @@ const PromoManager = (() => {
                     <div>
                       <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Ikon CTA:</label>
                       <select class="slide-cta-icon-select w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white font-semibold outline-none focus:border-emerald-500">
-                        <option value="bi-arrow-right" ${(slide.cta_icon || 'bi-arrow-right') === 'bi-arrow-right' ? 'selected' : ''}>Panah (bi-arrow-right)</option>
+                        <option value="bi-arrow-right" ${(slide.cta_icon || 'bi-arrow-right') === 'bi-arrow-right' ? 'selected' : ''}>Panah Kanan (bi-arrow-right)</option>
                         <option value="bi-whatsapp" ${slide.cta_icon === 'bi-whatsapp' ? 'selected' : ''}>WhatsApp (bi-whatsapp)</option>
-                        <option value="bi-cart-fill" ${slide.cta_icon === 'bi-cart-fill' ? 'selected' : ''}>Keranjang (bi-cart-fill)</option>
-                        <option value="bi-box-arrow-up-right" ${slide.cta_icon === 'bi-box-arrow-up-right' ? 'selected' : ''}>Buka Tab (bi-box-arrow-up-right)</option>
-                        <option value="bi-gift-fill" ${slide.cta_icon === 'bi-gift-fill' ? 'selected' : ''}>Hadiah (bi-gift-fill)</option>
-                        <option value="bi-stars" ${slide.cta_icon === 'bi-stars' ? 'selected' : ''}>Bintang (bi-stars)</option>
+                        <option value="bi-bag-check" ${slide.cta_icon === 'bi-bag-check' ? 'selected' : ''}>Keranjang Cek (bi-bag-check)</option>
+                        <option value="bi-cart-fill" ${slide.cta_icon === 'bi-cart-fill' ? 'selected' : ''}>Keranjang Belanja (bi-cart-fill)</option>
+                        <option value="bi-box-arrow-up-right" ${slide.cta_icon === 'bi-box-arrow-up-right' ? 'selected' : ''}>Link Eksternal (bi-box-arrow-up-right)</option>
+                        <option value="bi-gift-fill" ${slide.cta_icon === 'bi-gift-fill' ? 'selected' : ''}>Hadiah Promo (bi-gift-fill)</option>
+                        <option value="bi-stars" ${slide.cta_icon === 'bi-stars' ? 'selected' : ''}>Bintang Spesial (bi-stars)</option>
                       </select>
                     </div>
                     <div>
                       <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Sudut (Radius):</label>
                       <select class="slide-cta-radius-select w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white font-semibold outline-none focus:border-emerald-500">
-                        <option value="6px" ${slide.cta_border_radius === '6px' ? 'selected' : ''}>6px (Kecil)</option>
+                        <option value="8px" ${slide.cta_border_radius === '8px' ? 'selected' : ''}>8px (Kecil)</option>
                         <option value="12px" ${(slide.cta_border_radius === '12px' || !slide.cta_border_radius) ? 'selected' : ''}>12px (Standar)</option>
-                        <option value="20px" ${slide.cta_border_radius === '20px' ? 'selected' : ''}>20px (Bulat)</option>
                         <option value="9999px" ${slide.cta_border_radius === '9999px' ? 'selected' : ''}>Pill (Kapsul)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Bayangan (Shadow):</label>
+                      <select class="slide-cta-shadow-select w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white font-semibold outline-none focus:border-emerald-500">
+                        <option value="none" ${slide.cta_shadow === 'none' ? 'selected' : ''}>Tanpa Shadow (none)</option>
+                        <option value="sm" ${slide.cta_shadow === 'sm' ? 'selected' : ''}>Halus (sm)</option>
+                        <option value="md" ${(slide.cta_shadow === 'md' || !slide.cta_shadow) ? 'selected' : ''}>Sedang (md)</option>
+                        <option value="lg" ${slide.cta_shadow === 'lg' ? 'selected' : ''}>Tegas (lg)</option>
                       </select>
                     </div>
                   </div>
@@ -383,6 +449,132 @@ const PromoManager = (() => {
         updateSponsorPreviews();
       });
     });
+
+    container.querySelectorAll('.btn-move-slide-up').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-index'), 10);
+        if (idx > 0 && currentCarouselSlides[idx]) {
+          const temp = currentCarouselSlides[idx];
+          currentCarouselSlides[idx] = currentCarouselSlides[idx - 1];
+          currentCarouselSlides[idx - 1] = temp;
+          renderCarouselSlideRows(currentCarouselSlides);
+          updateSponsorPreviews();
+        }
+      });
+    });
+
+    container.querySelectorAll('.btn-move-slide-down').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-index'), 10);
+        if (idx < currentCarouselSlides.length - 1 && currentCarouselSlides[idx]) {
+          const temp = currentCarouselSlides[idx];
+          currentCarouselSlides[idx] = currentCarouselSlides[idx + 1];
+          currentCarouselSlides[idx + 1] = temp;
+          renderCarouselSlideRows(currentCarouselSlides);
+          updateSponsorPreviews();
+        }
+      });
+    });
+
+    // Linked product actions for self store
+    container.querySelectorAll('.btn-apply-linked-product').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-index'), 10);
+        const row = btn.closest('.carousel-slide-item');
+        const sel = row ? row.querySelector('.slide-linked-product-select') : null;
+        const prodId = sel ? sel.value : (currentCarouselSlides[idx]?.linked_product_id);
+        if (!prodId) {
+          const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
+          toastFn('Pilih produk dari dropdown katalog toko terlebih dahulu.', 'warning');
+          return;
+        }
+        const prod = allProducts.find(p => String(p.id) === String(prodId));
+        if (prod && currentCarouselSlides[idx]) {
+          currentCarouselSlides[idx].linked_product_id = String(prod.id);
+          const pImg = (Array.isArray(prod.images) && prod.images.length > 0) ? prod.images[0] : (prod.image_url || '');
+          if (pImg) currentCarouselSlides[idx].image_url = pImg;
+          currentCarouselSlides[idx].target_url = `product.html?id=${prod.id}`;
+          currentCarouselSlides[idx].cta_text = 'Beli Produk Ini';
+          currentCarouselSlides[idx].cta_link = `product.html?id=${prod.id}`;
+          currentCarouselSlides[idx].cta_enabled = true;
+          renderCarouselSlideRows(currentCarouselSlides);
+          updateSponsorPreviews();
+        }
+      });
+    });
+
+    container.querySelectorAll('.slide-linked-product-select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const idx = parseInt(sel.getAttribute('data-index'), 10);
+        if (currentCarouselSlides[idx]) {
+          currentCarouselSlides[idx].linked_product_id = sel.value;
+          if (sel.value) {
+            currentCarouselSlides[idx].target_url = `product.html?id=${sel.value}`;
+            currentCarouselSlides[idx].cta_link = `product.html?id=${sel.value}`;
+          }
+          updateSponsorPreviews();
+        }
+      });
+    });
+
+    // Per-slide advertiser & contract price
+    container.querySelectorAll('.slide-advertiser-name').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const idx = parseInt(inp.getAttribute('data-index'), 10);
+        if (currentCarouselSlides[idx]) {
+          currentCarouselSlides[idx].advertiser_name = inp.value.trim();
+        }
+      });
+    });
+
+    container.querySelectorAll('.slide-contract-price').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const idx = parseInt(inp.getAttribute('data-index'), 10);
+        const val = parseFloat(inp.value) || 0;
+        if (currentCarouselSlides[idx]) {
+          currentCarouselSlides[idx].contract_price = val;
+          currentCarouselSlides[idx].price = val;
+        }
+        const priceInput = document.getElementById('sponsor-price-input');
+        if (priceInput && activeContractModel === 'per_slide') {
+          const sum = currentCarouselSlides.reduce((acc, s) => acc + (parseFloat(s.contract_price || s.price) || 0), 0);
+          priceInput.value = sum;
+        }
+      });
+    });
+
+    container.querySelectorAll('.slide-file-upload-input').forEach(fileInp => {
+      fileInp.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (file.size > 500 * 1024) {
+          const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
+          toastFn('Ukuran berkas gambar melebihi batas 500 KB. Harap pilih gambar di bawah 500 KB.', 'warning');
+          return;
+        }
+        const idx = parseInt(fileInp.getAttribute('data-index'), 10);
+        const reader = new FileReader();
+        reader.onload = (loadEvt) => {
+          const base64 = loadEvt.target.result;
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].image_url = base64;
+            const row = fileInp.closest('.carousel-slide-item');
+            if (row) {
+              const urlInp = row.querySelector('.slide-image-url');
+              if (urlInp) urlInp.value = base64;
+              const imgEl = row.querySelector('img');
+              if (imgEl) imgEl.src = base64;
+            }
+            updateSponsorPreviews();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
     container.querySelectorAll('.slide-image-url').forEach(input => {
       input.addEventListener('input', () => {
         const row = input.closest('.carousel-slide-item');
@@ -520,6 +712,16 @@ const PromoManager = (() => {
           const idx = parseInt(row.getAttribute('data-index'), 10);
           if (currentCarouselSlides[idx]) {
             currentCarouselSlides[idx].cta_border_radius = sel.value;
+            updateSponsorPreviews();
+          }
+        });
+      });
+      container.querySelectorAll('.slide-cta-shadow-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const row = sel.closest('.carousel-slide-item');
+          const idx = parseInt(row.getAttribute('data-index'), 10);
+          if (currentCarouselSlides[idx]) {
+            currentCarouselSlides[idx].cta_shadow = sel.value;
             updateSponsorPreviews();
           }
         });
@@ -1898,13 +2100,13 @@ const PromoManager = (() => {
                   let modelBadge = '';
                   if (s.type === 'double_width' || s.card_model === 'double_width') {
                     const slideCount = Array.isArray(s.slides) ? s.slides.length : 0;
-                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-indigo-50 text-indigo-700 border-indigo-200">2-Kolom (${slideCount}/10 Foto)</span>`;
+                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-indigo-50 text-indigo-700 border-indigo-200">Double-Width 2-Kolom (${slideCount}/10 Foto)</span>`;
                   } else if (s.type === 'carousel') {
                     const slideCount = Array.isArray(s.slides) ? s.slides.length : 0;
-                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-blue-50 text-blue-700 border-blue-200">Slider (${slideCount}/5 Foto)</span>`;
+                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-blue-50 text-blue-700 border-blue-200">Carousel 1-Kolom (${slideCount}/5 Foto)</span>`;
                   } else if (s.type === 'internal') {
                     const prodCount = Array.isArray(s.product_ids) ? s.product_ids.length : 0;
-                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">Produk Sendiri 2x2 (${prodCount} Produk)</span>`;
+                    modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">Internal 2x2 (${prodCount} Produk)</span>`;
                   } else {
                     modelBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-slate-50 text-slate-700 border-slate-200">Statis 3:4 (1 Banner)</span>`;
                   }
@@ -1929,7 +2131,13 @@ const PromoManager = (() => {
                     }
                   }
 
+                  const isSelf = s.sponsor_owner_type === 'self' || s.type === 'internal';
+                  const ownerBadge = isSelf
+                    ? `<span class="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-1.5 py-0.2 rounded" title="Promosi produk toko sendiri"><i class="bi bi-shop"></i> Toko Sendiri</span>`
+                    : `<span class="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-800 bg-indigo-100/90 border border-indigo-300 px-1.5 py-0.2 rounded" title="Pemasang: ${escapeHtml(s.contract_model === 'per_slide' ? 'Per-Slide Eceran' : (s.advertiser_name || 'Borongan'))}"><i class="bi bi-building"></i> Pihak Ketiga (${s.contract_model === 'per_slide' ? 'Per-Slide' : 'Borongan'})</span>`;
+
                   const mobileOnlyBadge = s.mobile_only_ready ? `<span class="inline-block text-[9px] font-black uppercase text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.2 rounded ml-1" title="Hanya tampil di versi mobile/ponsel">Mobile Only</span>` : '';
+                  const priceVal = (typeof s.price === 'number' && s.price > 0) ? s.price : (s.type === 'double_width' ? 1200000 : (s.type === 'carousel' ? 750000 : (s.type === 'internal' ? 350000 : 500000)));
 
                   return `
                     <tr class="sponsor-row-item hover:bg-slate-50/80 transition cursor-pointer ${isSelected ? 'bg-emerald-50/50 ring-1 ring-emerald-500/30' : ''}" data-id="${s.id}">
@@ -1937,9 +2145,13 @@ const PromoManager = (() => {
                         ${thumbHtml}
                       </td>
                       <td class="p-3.5">
-                        <div class="flex items-center gap-1.5">
-                          <span class="font-bold text-slate-800 block">${escapeHtml(s.title || 'Tanpa Judul')}</span>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span class="font-bold text-slate-800">${escapeHtml(s.title || 'Tanpa Judul')}</span>
+                          ${ownerBadge}
                           ${mobileOnlyBadge}
+                          <span class="text-[10px] font-mono font-bold text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.2 rounded" title="Nilai Kontrak / Harga Slot Iklan">
+                            Rp ${Math.round(priceVal).toLocaleString('id-ID')}
+                          </span>
                         </div>
                         <div class="mt-0.5 flex items-center gap-2">
                           ${scheduleInfo}
@@ -1998,6 +2210,12 @@ const PromoManager = (() => {
     if (currentSponsor && !isCreatingNew) {
       if (!activeSponsorType || (activeSponsorType !== currentSponsor.type)) {
         activeSponsorType = currentSponsor.type || 'ad1';
+      }
+      activeSponsorOwnerType = currentSponsor.sponsor_owner_type || (currentSponsor.type === 'internal' ? 'self' : 'third_party');
+      activeContractModel = currentSponsor.contract_model || 'wholesale';
+    } else {
+      if (activeSponsorType === 'internal') {
+        activeSponsorOwnerType = 'self';
       }
     }
 
@@ -2107,31 +2325,97 @@ const PromoManager = (() => {
               <label class="relative p-3 rounded-xl border ${activeSponsorType === 'ad1' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <input type="radio" name="sponsor_card_model" value="ad1" ${activeSponsorType === 'ad1' ? 'checked' : ''} class="text-emerald-600" />
-                  <span class="font-bold text-slate-900 text-xs">Sponsor Statis</span>
+                  <span class="font-bold text-slate-900 text-xs">Model 1: Statis 3:4</span>
                 </div>
-                <p class="text-slate-500 text-[10px] leading-relaxed">1 Banner foto rasio 3:4 Portrait dengan 2 tombol aksi.</p>
+                <p class="text-slate-500 text-[10px] leading-relaxed">Kartu Statis Potret 3:4 (1 Kolom + 2 Tombol Aksi Bawah).</p>
               </label>
               <label class="relative p-3 rounded-xl border ${activeSponsorType === 'carousel' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <input type="radio" name="sponsor_card_model" value="carousel" ${activeSponsorType === 'carousel' ? 'checked' : ''} class="text-emerald-600" />
-                  <span class="font-bold text-slate-900 text-xs">Slider Carousel</span>
+                  <span class="font-bold text-slate-900 text-xs">Model 2: Carousel 1-Kolom</span>
                 </div>
-                <p class="text-slate-500 text-[10px] leading-relaxed">Maksimal 5 slide gambar + putar otomatis (Tanpa CTA).</p>
-              </label>
-              <label class="relative p-3 rounded-xl border ${activeSponsorType === 'internal' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
-                <div class="flex items-center gap-2">
-                  <input type="radio" name="sponsor_card_model" value="internal" ${activeSponsorType === 'internal' ? 'checked' : ''} class="text-emerald-600" />
-                  <span class="font-bold text-slate-900 text-xs">Produk Sendiri</span>
-                </div>
-                <p class="text-slate-500 text-[10px] leading-relaxed">Katalog Mini Internal Grid 2x2 dari database produk toko.</p>
+                <p class="text-slate-500 text-[10px] leading-relaxed">Kartu Slider Carousel 1-Kolom (Maks. 5 Gambar Full-Bleed Tanpa CTA).</p>
               </label>
               <label class="relative p-3 rounded-xl border ${activeSponsorType === 'double_width' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <input type="radio" name="sponsor_card_model" value="double_width" ${activeSponsorType === 'double_width' ? 'checked' : ''} class="text-emerald-600" />
-                  <span class="font-bold text-slate-900 text-xs">Sponsor 2-Kolom</span>
+                  <span class="font-bold text-slate-900 text-xs">Model 3: Double-Width 2-Kolom</span>
                 </div>
-                <p class="text-slate-500 text-[10px] leading-relaxed">Lebar 2 kolom produk, hingga 10 foto, mode otomatis/manual & CTA mandiri per slide.</p>
+                <p class="text-slate-500 text-[10px] leading-relaxed">Kartu Lebar 2-Kolom (Maks. 10 Slide Gambar + Kustomisasi Tombol CTA per-Slide).</p>
               </label>
+              <label class="relative p-3 rounded-xl border ${activeSponsorType === 'internal' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <input type="radio" name="sponsor_card_model" value="internal" ${activeSponsorType === 'internal' ? 'checked' : ''} class="text-emerald-600" />
+                  <span class="font-bold text-slate-900 text-xs">Model 4: Internal 2x2</span>
+                </div>
+                <p class="text-slate-500 text-[10px] leading-relaxed">Kartu Rekomendasi Produk Toko 2x2 (Maks. 20 Produk / 5 Slide Batch).</p>
+              </label>
+            </div>
+          </div>
+
+          <!-- LANGKAH 1B: KEPEMILIKAN SLOT SPONSOR & MODEL KONTRAK -->
+          <div class="space-y-3.5 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-xs">1B</span>
+              <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 1B - Kepemilikan Slot & Model Kontrak Iklan:</h4>
+            </div>
+
+            <!-- Pilihan Kepemilikan: Pihak Ketiga vs Toko Sendiri -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1.5 text-xs">Kepemilikan Slot Sponsor:</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <label class="p-3 rounded-xl border ${activeSponsorOwnerType === 'third_party' ? 'border-indigo-500 bg-white ring-2 ring-indigo-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
+                  <div class="flex items-center gap-2">
+                    <input type="radio" name="sponsor_owner_type" value="third_party" ${activeSponsorOwnerType === 'third_party' ? 'checked' : ''} class="text-indigo-600" />
+                    <span class="font-bold text-slate-900 text-xs">Pihak Ketiga / Orang Lain</span>
+                  </div>
+                  <p class="text-slate-500 text-[10px] leading-relaxed">Slot disewakan ke mitra/rekanan bisnis luar (iklan komersial berbayar dengan link eksternal / WhatsApp).</p>
+                </label>
+
+                <label class="p-3 rounded-xl border ${activeSponsorOwnerType === 'self' ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-1">
+                  <div class="flex items-center gap-2">
+                    <input type="radio" name="sponsor_owner_type" value="self" ${activeSponsorOwnerType === 'self' ? 'checked' : ''} class="text-emerald-600" />
+                    <span class="font-bold text-slate-900 text-xs">Toko Sendiri (Produk Internal)</span>
+                  </div>
+                  <p class="text-slate-500 text-[10px] leading-relaxed">Slot mempromosikan produk katalog toko sendiri. Saat diklik di etalase, langsung membuka halaman PDP produk.</p>
+                </label>
+              </div>
+            </div>
+
+            <!-- Jika Pihak Ketiga: Model Kontrak Space (Borongan Penuh vs Per-Slide) -->
+            <div id="box-contract-model" class="${activeSponsorOwnerType === 'third_party' ? '' : 'hidden'} space-y-3 pt-2 border-t border-slate-200/80">
+              <label class="block font-bold text-slate-700 mb-1 text-xs">Model Kontrak Slot Iklan:</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <label class="p-2.5 rounded-xl border ${activeContractModel === 'wholesale' ? 'border-indigo-500 bg-white ring-1 ring-indigo-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-0.5">
+                  <div class="flex items-center gap-2">
+                    <input type="radio" name="sponsor_contract_model" value="wholesale" ${activeContractModel === 'wholesale' ? 'checked' : ''} class="text-indigo-600" />
+                    <span class="font-bold text-slate-800 text-xs">Borongan Penuh (1 Pemasang Iklan)</span>
+                  </div>
+                  <p class="text-slate-400 text-[10px]">Seluruh slot kartu diborong oleh 1 orang/perusahaan rekanan.</p>
+                </label>
+
+                <label class="p-2.5 rounded-xl border ${activeContractModel === 'per_slide' ? 'border-indigo-500 bg-white ring-1 ring-indigo-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex flex-col gap-0.5">
+                  <div class="flex items-center gap-2">
+                    <input type="radio" name="sponsor_contract_model" value="per_slide" ${activeContractModel === 'per_slide' ? 'checked' : ''} class="text-indigo-600" />
+                    <span class="font-bold text-slate-800 text-xs">Per-Space / Per-Slide (Beda Orang)</span>
+                  </div>
+                  <p class="text-slate-400 text-[10px]">Tiap slide gambar diisi oleh pemasang iklan dan nilai kontrak yang berbeda-beda.</p>
+                </label>
+              </div>
+
+              <!-- Input Nama Pemasang Iklan Utama (jika wholesale) -->
+              <div id="box-advertiser-name" class="${activeContractModel === 'wholesale' ? '' : 'hidden'} pt-1">
+                <label class="block font-bold text-slate-700 mb-1 text-xs">Nama Pemasang Iklan / Mitra Utama:</label>
+                <input type="text" id="sponsor-advertiser-name-input" value="${escapeHtml(currentSponsor?.advertiser_name || '')}" placeholder="Contoh: PT Sumber Grafika Prima" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold outline-none focus:border-indigo-500 text-xs bg-white" />
+              </div>
+            </div>
+
+            <!-- Jika Toko Sendiri: Banner Notif Info -->
+            <div id="box-self-owner-info" class="${activeSponsorOwnerType === 'self' ? '' : 'hidden'} p-2.5 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs text-emerald-800 flex items-start gap-2">
+              <i class="bi bi-shop text-emerald-600 mt-0.5 text-sm shrink-0"></i>
+              <p class="text-[11px] leading-relaxed">
+                Slot ini disetel untuk <strong>Promosi Toko Sendiri</strong>. Anda dapat menautkan slide langsung ke produk katalog toko pada pengaturan slide di bawah. Pembeli yang mengklik slide atau tombol CTA di etalase akan langsung diarahkan ke halaman detail produk terkait.
+              </p>
             </div>
           </div>
 
@@ -2209,9 +2493,9 @@ const PromoManager = (() => {
                   <div class="flex items-center justify-between mb-2">
                     <h5 class="font-bold text-slate-800 text-xs">Daftar Slide & Pengaturan CTA Mandiri:</h5>
                     ${currentCarouselSlides.length < 10 ? `
-                      <button type="button" id="btn-add-carousel-slide" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-xs cursor-pointer">
+                      <button type="button" id="btn-add-carousel-slide" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                        <span>Tambah Slide Kosong</span>
+                        <span>+ Tambah Slide Gambar (Maks 10)</span>
                       </button>
                     ` : `
                       <span class="text-[11px] font-bold text-slate-400">Maksimal 10 slide tercapai</span>
@@ -2290,9 +2574,9 @@ const PromoManager = (() => {
                   <div class="flex items-center justify-between mb-2">
                     <h5 class="font-bold text-slate-800 text-xs">Target Link Tiap Slide:</h5>
                     ${currentCarouselSlides.length < 5 ? `
-                      <button type="button" id="btn-add-carousel-slide" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-xs cursor-pointer">
+                      <button type="button" id="btn-add-carousel-slide" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                        <span>Tambah Slide Kosong</span>
+                        <span>+ Tambah Slide Gambar (Maks 5)</span>
                       </button>
                     ` : `
                       <span class="text-[11px] font-bold text-slate-400">Maksimal 5 slide tercapai</span>
@@ -2392,6 +2676,28 @@ const PromoManager = (() => {
                   Gunakan rasio <strong>3:4 Portrait</strong> murni (resolusi ideal <strong>600×800 px</strong>, maksimal 500 KB). Gambar banner terkunci portrait tanpa melar horizontal, dengan 2 tombol aksi stacked di bawahnya.
                 </p>
               </div>
+
+              <!-- OPSI TAUTKAN KE PRODUK TOKO (KHUSUS AD1 TOKO SENDIRI) -->
+              ${activeSponsorOwnerType === 'self' ? `
+                <div class="p-3 bg-emerald-50/80 rounded-xl border border-emerald-200 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-emerald-900">
+                      <i class="bi bi-shop text-emerald-600"></i> Pilih Produk Toko untuk Diiklankan:
+                    </label>
+                    <button type="button" id="btn-ad1-apply-product" class="text-[10px] font-bold text-emerald-800 bg-white hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition shadow-2xs cursor-pointer">
+                      Isi Otomatis Info & Foto Produk
+                    </button>
+                  </div>
+                  <select id="sponsor-ad1-linked-prod" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold bg-white outline-none focus:border-emerald-500">
+                    <option value="">-- Pilih Produk dari Katalog Toko --</option>
+                    ${allProducts.map(p => `
+                      <option value="${p.id}" ${(currentSponsor?.linked_product_id === String(p.id) || currentSponsor?.target_product_id === String(p.id)) ? 'selected' : ''}>
+                        ${escapeHtml(p.name)} - Rp ${Math.round(p.price || p.starting_price || 0).toLocaleString('id-ID')}
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+              ` : ''}
 
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Judul / Headline Iklan:</label>
@@ -2506,28 +2812,37 @@ const PromoManager = (() => {
           </div>
 
           <!-- LANGKAH 4: KUSTOMISASI STYLE INDIVIDUAL (PER-CARD) -->
+          <!-- LANGKAH 4: KUSTOMISASI STYLE INDIVIDUAL (PER-CARD) -->
           <div class="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs">4</span>
               <h4 class="font-bold text-xs sm:text-sm text-slate-900">Langkah 4 - Kustomisasi Tampilan Individual & Kuota:</h4>
             </div>
 
-            <!-- Kuota Tampil & Animasi Masuk Viewport -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Nilai Kontrak, Kuota Tampil & Animasi Masuk Viewport -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label class="block font-bold text-slate-700 text-xs mb-1">Kuota Frekuensi Tampil di Etalase:</label>
+                <label class="block font-bold text-slate-700 text-xs mb-1">Nilai Kontrak / Harga Slot (Rp):</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                  <input type="number" id="sponsor-price-input" min="0" step="50000" value="${currentSponsor?.price !== undefined ? currentSponsor.price : (activeSponsorType === 'double_width' ? 1200000 : (activeSponsorType === 'carousel' ? 750000 : (activeSponsorType === 'internal' ? 350000 : 500000)))}" class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs font-bold font-mono outline-none focus:border-emerald-500 bg-white" placeholder="500000" />
+                </div>
+                <span class="text-[10px] text-slate-400 mt-0.5 block">Metrik Pendapatan Sponsor</span>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 text-xs mb-1">Kuota Tampil di Etalase:</label>
                 <div class="flex items-center gap-2">
-                  <input type="number" id="sponsor-card-quota-input" min="1" max="10" value="${currentQuota}" class="w-24 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none focus:border-emerald-500 bg-white" />
-                  <span class="text-[11px] text-slate-500">Maksimal per rotasi</span>
+                  <input type="number" id="sponsor-card-quota-input" min="1" max="10" value="${currentQuota}" class="w-20 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none focus:border-emerald-500 bg-white" />
+                  <span class="text-[11px] text-slate-500">Maks rotasi</span>
                 </div>
               </div>
               <div>
-                <label class="block font-bold text-slate-700 text-xs mb-1">Efek Animasi Transisi Viewport:</label>
+                <label class="block font-bold text-slate-700 text-xs mb-1">Animasi Masuk Viewport:</label>
                 <select id="sponsor-card-anim-select" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold outline-none focus:border-emerald-500 bg-white">
-                  <option value="none" ${currentAnim === 'none' ? 'selected' : ''}>Tanpa Animasi</option>
-                  <option value="fade" ${currentAnim === 'fade' ? 'selected' : ''}>Fade In (Pudar Lembut)</option>
-                  <option value="slide" ${currentAnim === 'slide' ? 'selected' : ''}>Slide-in (Geser dari Bawah)</option>
-                  <option value="zoom" ${currentAnim === 'zoom' ? 'selected' : ''}>Smooth Zoom (Perbesar Halus)</option>
+                  <option value="none" ${currentAnim === 'none' ? 'selected' : ''}>Tanpa Animasi (none)</option>
+                  <option value="fade" ${currentAnim === 'fade' ? 'selected' : ''}>Fade In (fade)</option>
+                  <option value="slide" ${currentAnim === 'slide' ? 'selected' : ''}>Slide-in (slide)</option>
+                  <option value="zoom" ${currentAnim === 'zoom' ? 'selected' : ''}>Smooth Zoom (zoom)</option>
                 </select>
               </div>
             </div>
@@ -2546,6 +2861,7 @@ const PromoManager = (() => {
                 <span class="text-[10px] text-slate-400 mr-1">Preset:</span>
                 <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="0px">0px (Siku)</button>
                 <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="8px">8px (Kecil)</button>
+                <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="12px">12px (Sedang)</button>
                 <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-pointer" data-radius="16px">16px (Standar)</button>
                 <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="24px">24px (Bulat)</button>
                 <button type="button" class="btn-preset-sponsor-radius px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-radius="32px">32px (Maks)</button>
@@ -2583,30 +2899,28 @@ const PromoManager = (() => {
               </select>
             </div>
 
-            <!-- Warna Background Card (KHUSUS: DISEMBUNYIKAN PADA VARIAN SLIDE/CAROUSEL & 2-KOLOM) -->
-            ${(activeSponsorType === 'carousel' || activeSponsorType === 'double_width') ? '' : `
-              <div id="sponsor-bg-color-wrapper">
-                <div class="flex items-center justify-between mb-1">
-                  <label class="font-bold text-slate-700 text-xs">Warna Background Card:</label>
-                  <span class="text-[10px] text-slate-500">Default: <strong class="text-emerald-700 font-mono">${activeSponsorType === 'internal' ? '#ffffff' : 'transparent'}</strong></span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <input type="color" id="sponsor-card-bg-picker" value="${currentBgColor === 'transparent' ? '#ffffff' : currentBgColor}" class="w-9 h-9 p-0.5 rounded-lg border border-slate-300 cursor-pointer bg-white shrink-0" />
-                  <input type="text" id="sponsor-card-bg-input" value="${escapeHtml(currentBgColor)}" placeholder="transparent atau #ffffff" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold outline-none focus:border-emerald-500 bg-white" />
-                  <button type="button" id="btn-preset-bg-transparent" class="px-2.5 py-2 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition shrink-0 cursor-pointer" title="Set Latar Belakang Transparan">
-                    Set Transparan
-                  </button>
-                </div>
-                <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span class="text-[10px] text-slate-400 mr-1">Preset:</span>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-color="transparent">Transparan</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-color="#ffffff">Putih</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 cursor-pointer" data-color="#f8fafc">Slate Soft</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-pointer" data-color="#f0fdf4">Emerald Soft</button>
-                  <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-900 text-white border-slate-800 hover:bg-slate-800 cursor-pointer" data-color="#0f172a">Dark</button>
-                </div>
+            <!-- Warna Background Card (Seragam untuk Ke-4 Model Sponsor) -->
+            <div id="sponsor-bg-color-wrapper">
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-700 text-xs">Warna Latar Kartu (Card Background):</label>
+                <span class="text-[10px] text-slate-500">Default: <strong class="text-emerald-700 font-mono">${activeSponsorType === 'internal' ? '#ffffff' : 'transparent'}</strong></span>
               </div>
-            `}
+              <div class="flex items-center gap-2">
+                <input type="color" id="sponsor-card-bg-picker" value="${currentBgColor === 'transparent' ? '#ffffff' : currentBgColor}" class="w-9 h-9 p-0.5 rounded-lg border border-slate-300 cursor-pointer bg-white shrink-0" />
+                <input type="text" id="sponsor-card-bg-input" value="${escapeHtml(currentBgColor)}" placeholder="transparent atau #ffffff" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold outline-none focus:border-emerald-500 bg-white" />
+                <button type="button" id="btn-preset-bg-transparent" class="px-2.5 py-2 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition shrink-0 cursor-pointer" title="Set Latar Belakang Transparan">
+                  Set Transparan
+                </button>
+              </div>
+              <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                <span class="text-[10px] text-slate-400 mr-1">Preset:</span>
+                <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-color="transparent">Transparan</button>
+                <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 cursor-pointer" data-color="#ffffff">Putih</button>
+                <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 cursor-pointer" data-color="#f8fafc">Slate Soft</button>
+                <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-pointer" data-color="#f0fdf4">Emerald Soft</button>
+                <button type="button" class="btn-preset-sponsor-bg px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-900 text-white border-slate-800 hover:bg-slate-800 cursor-pointer" data-color="#0f172a">Dark</button>
+              </div>
+            </div>
 
           </div>
 
@@ -2664,7 +2978,7 @@ const PromoManager = (() => {
     if (!box) return;
 
     const bgInput = document.getElementById('sponsor-card-bg-input');
-    const bgVal = (activeSponsorType === 'carousel' || activeSponsorType === 'double_width') ? 'transparent' : (bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent'));
+    const bgVal = bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent');
     const borderVal = document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0';
     const borderWidthVal = document.getElementById('sponsor-card-border-width-select')?.value || '1px';
     const radiusVal = document.getElementById('sponsor-card-radius-input')?.value.trim() || '16px';
@@ -2708,8 +3022,10 @@ const PromoManager = (() => {
       let slidesContentHtml = '';
       if (animType === 'fade' || animType === 'scale') {
         slidesContentHtml = slides.map((slide, idx) => {
+          const ctaShadow = slide.cta_shadow || 'md';
+          const ctaShadowClass = ctaShadow === 'none' ? 'shadow-none' : `shadow-${ctaShadow}`;
           const ctaBtnHtml = slide.cta_enabled ? `
-            <div class="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-md select-none pointer-events-none" style="background-color: ${slide.cta_bg_color || '#059669'}; color: ${slide.cta_text_color || '#ffffff'}; border-radius: ${slide.cta_border_radius || '12px'};">
+            <div class="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold ${ctaShadowClass} select-none pointer-events-none" style="background-color: ${slide.cta_bg_color || '#059669'}; color: ${slide.cta_text_color || '#ffffff'}; border-radius: ${slide.cta_border_radius || '12px'};">
               <span class="truncate">${escapeHtml(slide.cta_text || 'Lihat Penawaran')}</span>
               <i class="${escapeHtml(slide.cta_icon || 'bi-arrow-right')} text-xs"></i>
             </div>
@@ -2727,8 +3043,10 @@ const PromoManager = (() => {
         slidesContentHtml = `
           <div id="sponsor-carousel-preview-track" class="flex w-full h-full transition-transform duration-500 ease-in-out">
             ${slides.map((slide, idx) => {
+              const ctaShadow = slide.cta_shadow || 'md';
+              const ctaShadowClass = ctaShadow === 'none' ? 'shadow-none' : `shadow-${ctaShadow}`;
               const ctaBtnHtml = slide.cta_enabled ? `
-                <div class="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-md select-none pointer-events-none" style="background-color: ${slide.cta_bg_color || '#059669'}; color: ${slide.cta_text_color || '#ffffff'}; border-radius: ${slide.cta_border_radius || '12px'};">
+                <div class="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold ${ctaShadowClass} select-none pointer-events-none" style="background-color: ${slide.cta_bg_color || '#059669'}; color: ${slide.cta_text_color || '#ffffff'}; border-radius: ${slide.cta_border_radius || '12px'};">
                   <span class="truncate">${escapeHtml(slide.cta_text || 'Lihat Penawaran')}</span>
                   <i class="${escapeHtml(slide.cta_icon || 'bi-arrow-right')} text-xs"></i>
                 </div>
@@ -2748,7 +3066,7 @@ const PromoManager = (() => {
 
       box.innerHTML = `
         <div class="w-full min-h-[220px] h-[240px] flex flex-col justify-between overflow-hidden shadow-md relative group ${shadowClass}" style="${cardStyleCss}">
-          <div class="relative w-full h-full bg-slate-900 overflow-hidden block shrink-0 shadow-inner">
+          <div class="relative w-full h-full ${bgVal !== 'transparent' ? '' : 'bg-slate-900'} overflow-hidden block shrink-0 shadow-inner" style="${bgVal !== 'transparent' ? `background-color: ${bgVal};` : ''}">
             ${slidesContentHtml}
             <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-20">
               SPONSOR 2-KOLOM
@@ -3512,6 +3830,76 @@ const PromoManager = (() => {
         });
       });
 
+      // Pilihan Kepemilikan Slot Sponsor (Radio)
+      document.querySelectorAll('input[name="sponsor_owner_type"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+          activeSponsorOwnerType = e.target.value;
+          const boxContract = document.getElementById('box-contract-model');
+          const boxSelfInfo = document.getElementById('box-self-owner-info');
+          if (boxContract) {
+            if (activeSponsorOwnerType === 'third_party') boxContract.classList.remove('hidden');
+            else boxContract.classList.add('hidden');
+          }
+          if (boxSelfInfo) {
+            if (activeSponsorOwnerType === 'self') boxSelfInfo.classList.remove('hidden');
+            else boxSelfInfo.classList.add('hidden');
+          }
+          if (activeSponsorType === 'carousel' || activeSponsorType === 'double_width') {
+            renderCarouselSlideRows(currentCarouselSlides);
+          }
+          updateSponsorPreviews();
+        });
+      });
+
+      // Pilihan Model Kontrak Slot Iklan (Radio)
+      document.querySelectorAll('input[name="sponsor_contract_model"]').forEach(r => {
+        r.addEventListener('change', (e) => {
+          activeContractModel = e.target.value;
+          const boxAdv = document.getElementById('box-advertiser-name');
+          if (boxAdv) {
+            if (activeContractModel === 'wholesale') boxAdv.classList.remove('hidden');
+            else boxAdv.classList.add('hidden');
+          }
+          if (activeSponsorType === 'carousel' || activeSponsorType === 'double_width') {
+            renderCarouselSlideRows(currentCarouselSlides);
+          }
+          updateSponsorPreviews();
+        });
+      });
+
+      // Autocomplete Produk Toko untuk Model 1 (ad1)
+      const btnAd1Apply = document.getElementById('btn-ad1-apply-product');
+      if (btnAd1Apply) {
+        btnAd1Apply.addEventListener('click', () => {
+          const sel = document.getElementById('sponsor-ad1-linked-prod');
+          const prodId = sel ? sel.value : null;
+          if (!prodId) {
+            const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
+            toastFn('Pilih produk dari katalog toko terlebih dahulu.', 'warning');
+            return;
+          }
+          const allProds = (typeof DB !== 'undefined' && DB.getAllProducts) ? DB.getAllProducts() : ((typeof DB !== 'undefined' && DB.getProducts) ? DB.getProducts() : []);
+          const prod = allProds.find(p => String(p.id) === String(prodId));
+          if (prod) {
+            const titleInp = document.getElementById('sponsor-title-input');
+            const subInp = document.getElementById('sponsor-subtitle-input');
+            const ctaTargetInp = document.getElementById('sponsor-cta-target');
+            const ctaLabelInp = document.getElementById('sponsor-cta-label');
+            const imgInp = document.getElementById('sponsor-image-input');
+            if (titleInp) titleInp.value = prod.name;
+            if (subInp) subInp.value = prod.description ? prod.description.slice(0, 80) : `Dapatkan sekarang hanya Rp ${Math.round(prod.price || prod.starting_price || 0).toLocaleString('id-ID')}`;
+            if (ctaTargetInp) ctaTargetInp.value = `product.html?id=${prod.id}`;
+            if (ctaLabelInp) ctaLabelInp.value = 'Beli Sekarang';
+            const pImg = (Array.isArray(prod.images) && prod.images.length > 0) ? prod.images[0] : (prod.image_url || '');
+            if (pImg) {
+              if (imgInp) imgInp.value = pImg;
+              currentSponsorAdImages = [pImg];
+            }
+            updateSponsorPreviews();
+          }
+        });
+      }
+
       // Toggle Status Aktif di Form
       const activeToggle = document.getElementById('sponsor-active-toggle');
       const activeLabel = document.getElementById('label-sponsor-active');
@@ -4012,22 +4400,29 @@ const PromoManager = (() => {
     if (activeTab === 'sponsors') {
       const active = document.getElementById('sponsor-active-toggle')?.checked ?? true;
       const quota = parseInt(document.getElementById('sponsor-card-quota-input')?.value, 10) || 1;
+      const price = parseFloat(document.getElementById('sponsor-price-input')?.value) || 0;
       const anim = document.getElementById('sponsor-card-anim-select')?.value || 'none';
       const radius = document.getElementById('sponsor-card-radius-input')?.value.trim() || '16px';
       const borderWidth = document.getElementById('sponsor-card-border-width-select')?.value || '1px';
       const borderColor = document.getElementById('sponsor-card-border-input')?.value.trim() || '#e2e8f0';
       const shadow = document.getElementById('sponsor-card-shadow-select')?.value || 'sm';
       const bgInput = document.getElementById('sponsor-card-bg-input');
-      const bgColor = (activeSponsorType === 'carousel' || activeSponsorType === 'double_width')
-        ? 'transparent'
-        : (bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent'));
+      const bgColor = bgInput?.value.trim() || (activeSponsorType === 'internal' ? '#ffffff' : 'transparent');
+
+      const ownerType = document.querySelector('input[name="sponsor_owner_type"]:checked')?.value || activeSponsorOwnerType || (activeSponsorType === 'internal' ? 'self' : 'third_party');
+      const contractModel = document.querySelector('input[name="sponsor_contract_model"]:checked')?.value || activeContractModel || 'wholesale';
+      const advertiserName = document.getElementById('sponsor-advertiser-name-input')?.value.trim() || '';
 
       const sponsorData = {
         type: activeSponsorType || 'ad1',
         card_model: activeSponsorType || 'ad1',
+        sponsor_owner_type: ownerType,
+        contract_model: contractModel,
+        advertiser_name: advertiserName,
         active: active,
         is_active: active,
         display_quota: quota,
+        price: price,
         animation: anim,
         border_radius: radius,
         border_width: borderWidth,
@@ -4045,14 +4440,23 @@ const PromoManager = (() => {
         sponsorData.is_always_active = document.getElementById('chk-sponsor-always-active')?.checked ?? true;
         sponsorData.start_datetime = document.getElementById('sponsor-start-datetime')?.value || '';
         sponsorData.end_datetime = document.getElementById('sponsor-end-datetime')?.value || '';
+        if (contractModel === 'per_slide' && Array.isArray(sponsorData.slides)) {
+          const sumSlidePrice = sponsorData.slides.reduce((acc, s) => acc + (parseFloat(s.contract_price || s.price) || 0), 0);
+          if (sumSlidePrice > 0) sponsorData.price = sumSlidePrice;
+        }
       } else if (activeSponsorType === 'carousel') {
         sponsorData.title = document.getElementById('sponsor-title-input')?.value.trim() || 'Sponsor Slider Carousel';
-        sponsorData.auto_slide_interval = parseInt(document.getElementById('carousel-interval-input')?.value, 10) || 3500;
+        sponsorData.slide_mode = 'auto';
+        sponsorData.auto_slide_interval = parseInt(document.getElementById('carousel-interval-input')?.value, 10) || 4000;
         sponsorData.animation_type = document.getElementById('carousel-anim-type-select')?.value || 'slide';
         sponsorData.slides = (currentCarouselSlides || []).slice(0, 5);
         sponsorData.is_always_active = document.getElementById('chk-sponsor-always-active')?.checked ?? true;
         sponsorData.start_datetime = document.getElementById('sponsor-start-datetime')?.value || '';
         sponsorData.end_datetime = document.getElementById('sponsor-end-datetime')?.value || '';
+        if (contractModel === 'per_slide' && Array.isArray(sponsorData.slides)) {
+          const sumSlidePrice = sponsorData.slides.reduce((acc, s) => acc + (parseFloat(s.contract_price || s.price) || 0), 0);
+          if (sumSlidePrice > 0) sponsorData.price = sumSlidePrice;
+        }
       } else if (activeSponsorType === 'internal') {
         sponsorData.title = document.getElementById('sponsor-internal-title-input')?.value.trim() || 'FLASH SALE 11.11';
         sponsorData.product_ids = currentInternalProductIds || [];
@@ -4072,6 +4476,11 @@ const PromoManager = (() => {
         sponsorData.is_always_active = document.getElementById('chk-sponsor-always-active')?.checked ?? true;
         sponsorData.start_datetime = document.getElementById('sponsor-start-datetime')?.value || '';
         sponsorData.end_datetime = document.getElementById('sponsor-end-datetime')?.value || '';
+        const linkedProdId = document.getElementById('sponsor-ad1-linked-prod')?.value || '';
+        if (linkedProdId) {
+          sponsorData.linked_product_id = linkedProdId;
+          sponsorData.target_product_id = linkedProdId;
+        }
       }
 
       if (currentEditingSponsorId === 'new') {

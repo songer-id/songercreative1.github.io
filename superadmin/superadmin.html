@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Superadmin Control Tower - Songer Digital Creative V.1</title>
+  <meta name="description"
+    content="Pusat Kendali SaaS Multi-Tenant & Multi-Edisi untuk Platform Songer Digital Creative V.1. Manajemen tenant, paket langganan, feature flags matrix, dan siaran sistem.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../assets/images/songer-logo.png">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cockpit: {
+              950: '#060a12',
+              900: '#0a0f1d',
+              850: '#0f172a',
+              800: '#1e293b',
+              700: '#334155'
+            },
+            brand: {
+              emerald: '#10b981',
+              cyan: '#06b6d4',
+              purple: '#8b5cf6'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Custom Superadmin Stylesheet -->
+  <link rel="stylesheet" href="superadmin.css?v=1.0">
+</head>
+
+<body class="bg-[#070b14] text-slate-100 font-sans antialiased h-screen w-screen overflow-hidden selection:bg-emerald-500 selection:text-white">
+
+  <!-- ========================================================================
+       1. SUPERADMIN LOGIN SCREEN OVERLAY (ISOLATED CREDENTIALS)
+       Default: superadmin / songermaster
+       ======================================================================== -->
+  <div id="superadmin-login-screen"
+    class="fixed inset-0 bg-[#060a12]/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+    <div
+      class="bg-slate-900/90 border border-slate-700/80 rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 animate-scale-in relative overflow-hidden">
+      
+      <!-- Top Neon Glow -->
+      <div class="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-16 -left-16 w-44 h-44 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none"></div>
+
+      <!-- Login Header -->
+      <div class="text-center space-y-2 relative z-10">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-lg shadow-emerald-950/50">
+          <i data-lucide="shield-alert" class="w-8 h-8 text-emerald-400"></i>
+        </div>
+        <div>
+          <span class="text-[10px] font-mono tracking-widest text-emerald-400 uppercase font-black">Central Control Tower</span>
+          <h2 class="text-xl font-black text-white tracking-tight mt-0.5">SONGER DIGITAL CREATIVE V.1</h2>
+        </div>
+        <p class="text-xs text-slate-400">Masuk ke pusat kendali superadmin untuk mengelola seluruh tenant toko dan matriks fitur platform.</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="form-superadmin-login" class="space-y-4 relative z-10" onsubmit="event.preventDefault();">
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 mb-1">Username Superadmin</label>
+          <div class="relative">
+            <i data-lucide="user-check" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="superadmin-username-input" value="superadmin" required
+              placeholder="Username superadmin"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border border-slate-700 text-xs font-mono text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 mb-1">Password Otoritas</label>
+          <div class="relative">
+            <i data-lucide="key" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="password" id="superadmin-password-input" value="songermaster" required placeholder="••••••••"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border border-slate-700 text-xs font-mono text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition" />
+          </div>
+        </div>
+
+        <div id="superadmin-login-error"
+          class="p-3 bg-rose-950/40 border border-rose-500/40 text-rose-300 rounded-xl text-xs font-semibold hidden font-mono">
+          Kredensial Superadmin tidak valid!
+        </div>
+
+        <button type="submit" id="btn-submit-superadmin-login"
+          class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 transition cursor-pointer">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          <span>Autentikasi &amp; Buka Control Tower</span>
+        </button>
+
+        <div class="pt-2 text-center">
+          <button type="button" id="btn-autofill-superadmin"
+            class="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 underline cursor-pointer">
+            Gunakan Akun Bawaan (superadmin / songermaster)
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. MAIN SUPERADMIN LAYOUT COCKPIT
+       ======================================================================== -->
+  <div class="flex h-screen w-screen overflow-hidden bg-[#070b14]">
+
+    <!-- SIDEBAR CONTROL TOWER (DARK INDIGO / SLATE COCKPIT) -->
+    <aside id="superadmin-sidebar"
+      class="w-72 h-screen shrink-0 bg-[#0a0f1d] border-r border-slate-800 flex flex-col justify-between z-40 select-none">
+      
+      <!-- Top Brand Header -->
+      <div class="h-16 px-5 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 p-0.5 shadow-md shadow-emerald-950/50 flex items-center justify-center">
+            <div class="w-full h-full bg-[#0a0f1d] rounded-[10px] flex items-center justify-center">
+              <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+          </div>
+          <div>
+            <div class="font-black text-xs text-white tracking-tight flex items-center gap-1.5">
+              <span>SONGER DIGITAL</span>
+            </div>
+            <div class="text-[9px] font-mono font-bold text-emerald-400 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>SUPERADMIN TOWER</span>
+            </div>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded text-[9px] font-mono font-black bg-slate-800 text-slate-300 border border-slate-700">
+          V.1
+        </span>
+      </div>
+
+      <!-- Navigation Menus (4 Core Menus as requested) -->
+      <div class="py-4 px-3 space-y-1.5 overflow-y-auto flex-1 scrollbar-none">
+        
+        <div class="px-3 pb-1.5 text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">
+          Pusat Kontrol SaaS
+        </div>
+
+        <!-- MENU 1: DASHBOARD OVERVIEW -->
+        <button type="button" class="superadmin-nav-item is-active w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition text-left cursor-pointer"
+          data-tab="dashboard">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i>
+          <span class="flex-1">Dashboard &amp; Monitoring</span>
+        </button>
+
+        <!-- MENU 2: MANAJEMEN PAKET & FEATURE FLAGS MATRIX -->
+        <button type="button" class="superadmin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition text-left cursor-pointer"
+          data-tab="tiers">
+          <i data-lucide="layers" class="w-4 h-4 text-slate-400"></i>
+          <span class="flex-1">Paket &amp; Feature Flags</span>
+        </button>
+
+        <!-- MENU 3: MANAJEMEN TENANT & KENDALI AKUN TOKO -->
+        <button type="button" class="superadmin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition text-left cursor-pointer"
+          data-tab="tenants">
+          <i data-lucide="store" class="w-4 h-4 text-slate-400"></i>
+          <span class="flex-1">Manajemen Tenant Toko</span>
+        </button>
+
+        <!-- MENU 4: PUSAT BROADCAST & NOTIFIKASI SISTEM -->
+        <button type="button" class="superadmin-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition text-left cursor-pointer"
+          data-tab="broadcast">
+          <i data-lucide="megaphone" class="w-4 h-4 text-slate-400"></i>
+          <span class="flex-1">Pusat Siaran &amp; Notifikasi</span>
+        </button>
+
+        <!-- External Direct Access -->
+        <div class="pt-4 px-3 pb-1.5 text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">
+          Jalur Langsung Seller
+        </div>
+
+        <a href="../admin.html" target="_blank"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/40 transition text-left">
+          <i data-lucide="external-link" class="w-4 h-4 text-slate-500"></i>
+          <span>Buka Seller Center (admin.html)</span>
+        </a>
+
+        <a href="../theme-editor.html" target="_blank"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/40 transition text-left">
+          <i data-lucide="palette" class="w-4 h-4 text-slate-500"></i>
+          <span>Buka Theme Studio</span>
+        </a>
+
+        <a href="../index.html" target="_blank"
+          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/40 transition text-left">
+          <i data-lucide="shopping-bag" class="w-4 h-4 text-slate-500"></i>
+          <span>Buka Storefront Pembeli</span>
+        </a>
+      </div>
+
+      <!-- Sidebar Footer (Superadmin Status & System Edition) -->
+      <div class="p-4 border-t border-slate-800 bg-slate-950/60 text-xs">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px] border border-emerald-500/30">
+              SA
+            </div>
+            <div>
+              <div class="font-bold text-white text-[11px] leading-tight">Master Authority</div>
+              <div class="text-[9px] font-mono text-slate-500">superadmin@central</div>
+            </div>
+          </div>
+          <button type="button" id="btn-superadmin-logout" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition cursor-pointer" title="Logout Superadmin">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT VIEWPORT -->
+    <div class="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+      
+      <!-- TOPBAR -->
+      <header class="h-16 shrink-0 bg-[#0a0f1d] border-b border-slate-800 px-6 flex items-center justify-between z-30">
+        <div class="flex items-center gap-4">
+          <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Edisi: SDC_V1_PRINTING</span>
+          </span>
+          <span class="hidden sm:inline-block text-xs font-mono text-slate-500">
+            Database: LocalStorage Relational Engine
+          </span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="hidden md:flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+            <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span>Mode: Standalone Sub-folder (/superadmin)</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- SCROLLABLE MAIN CONTENT AREA -->
+      <main class="flex-1 overflow-y-auto p-6 lg:p-8 bg-[#070b14] scrollbar-thin">
+        
+        <!-- VIEW 1: DASHBOARD & MONITORING TENANT -->
+        <section id="view-superadmin-dashboard">
+          <div id="dashboard-metrics-container"></div>
+        </section>
+
+        <!-- VIEW 2: TIER BUILDER & FEATURE FLAGS MATRIX -->
+        <section id="view-superadmin-tiers" class="hidden">
+          <div id="tiers-view-container"></div>
+        </section>
+
+        <!-- VIEW 3: MANAJEMEN TENANT & KENDALI AKUN TOKO -->
+        <section id="view-superadmin-tenants" class="hidden">
+          <div id="tenants-view-container"></div>
+        </section>
+
+        <!-- VIEW 4: PUSAT BROADCAST & NOTIFIKASI SISTEM -->
+        <section id="view-superadmin-broadcast" class="hidden">
+          <div id="broadcast-view-container"></div>
+        </section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================================================
+       MODAL 1: + BUAT TENANT / TOKO BARU
+       ======================================================================== -->
+  <div id="modal-create-tenant" class="fixed inset-0 modal-backdrop-blur z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel-elevated rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+            <i data-lucide="store" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white">+ Daftarkan Tenant Toko Baru</h3>
+            <p class="text-xs text-slate-400">Otomatis membuat entri toko di <code>pos_tenants_registry</code> dan inisialisasi database toko.</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-create-tenant-modal" class="text-slate-500 hover:text-white p-1 rounded cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-create-new-tenant" class="space-y-4 text-xs font-sans" onsubmit="event.preventDefault();">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Nama Toko / Percetakan <span class="text-red-400">*</span>:</label>
+            <input type="text" id="create-store-name" required placeholder="Contoh: Songer Printing Gresik" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-medium outline-none focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Custom Slug (Opsional):</label>
+            <input type="text" id="create-store-slug" placeholder="Kosongkan untuk auto-slug (-01)" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-cyan-300 font-mono outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Username Admin Toko:</label>
+            <input type="text" id="create-admin-username" value="admin" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono outline-none focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Password Admin Toko:</label>
+            <input type="text" id="create-admin-password" value="admin123" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Email Pemilik / Seller:</label>
+            <input type="email" id="create-admin-email" placeholder="owner@tokobaru.com" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-medium outline-none focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">No. WhatsApp Toko:</label>
+            <input type="text" id="create-admin-phone" value="0812-3456-7890" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Paket Langganan:</label>
+            <select id="create-tier-select" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 font-mono outline-none focus:border-emerald-500">
+              <option value="starter">UMKM Starter</option>
+              <option value="pro" selected>Bisnis Pro</option>
+              <option value="enterprise">Enterprise Custom</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Siklus Tagihan:</label>
+            <select id="create-billing-cycle" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 font-mono outline-none focus:border-emerald-500">
+              <option value="monthly" selected>Bulanan</option>
+              <option value="yearly">Tahunan</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Status Awal:</label>
+            <select id="create-status-select" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 font-mono outline-none focus:border-emerald-500">
+              <option value="active" selected>Active (Aktif)</option>
+              <option value="trial">Trial (Masa Uji)</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <button type="button" id="btn-cancel-create-tenant-modal" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition cursor-pointer">
+            Batal
+          </button>
+          <button type="submit" id="btn-submit-create-tenant" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-950/40 cursor-pointer">
+            Daftarkan Tenant Toko
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: EDIT HAK AKSES & OVERRIDE FITUR KHUSUS PER TOKO
+       ======================================================================== -->
+  <div id="modal-tenant-overrides" class="fixed inset-0 modal-backdrop-blur z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel-elevated rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 animate-scale-in max-h-[90vh] flex flex-col">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
+            <i data-lucide="sliders" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white" id="override-modal-store-name">Songer Creative</h3>
+            <span class="text-xs font-mono text-cyan-400" id="override-modal-tier-badge">Paket: Bisnis Pro (songer-creative-01)</span>
+          </div>
+        </div>
+        <button type="button" id="btn-close-override-modal" class="text-slate-500 hover:text-white p-1 rounded cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto pr-1" id="override-form-toggles-container">
+        <!-- Rendered dynamically via superadmin.js -->
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-slate-800 shrink-0 text-xs">
+        <button type="button" id="btn-cancel-override-modal" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition cursor-pointer">
+          Tutup
+        </button>
+        <button type="button" id="btn-save-tenant-overrides" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-lg shadow-emerald-950/40 cursor-pointer">
+          Simpan Override Toko
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 3: IMPERSONATE DESTINATION PICKER (1-KLIK MASUK SEBAGAI OWNER)
+       ======================================================================== -->
+  <div id="modal-impersonate-destination" class="fixed inset-0 modal-backdrop-blur z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel-elevated rounded-3xl max-w-md w-full p-6 space-y-5 animate-scale-in">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+            <i data-lucide="log-in" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white">Login Sebagai Owner (Impersonate)</h3>
+            <p class="text-[11px] text-slate-400">Pilih modul yang ingin Anda buka sebagai toko ini:</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-impersonate-modal" class="text-slate-500 hover:text-white p-1 rounded cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-3.5 bg-slate-900 rounded-xl border border-slate-800">
+        <div class="font-black text-white text-sm" id="impersonate-modal-store-name">Songer Creative</div>
+        <div class="text-xs font-mono text-cyan-400 mt-0.5" id="impersonate-modal-store-slug">Slug: songer-creative-01</div>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <button type="button" id="btn-open-impersonate-admin" class="w-full p-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-bold flex items-center justify-between transition cursor-pointer">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="layout" class="w-4 h-4 text-emerald-400"></i>
+            <span>Buka Seller Center (admin.html)</span>
+          </div>
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </button>
+
+        <button type="button" id="btn-open-impersonate-theme" class="w-full p-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 font-bold flex items-center justify-between transition cursor-pointer">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="palette" class="w-4 h-4 text-blue-400"></i>
+            <span>Buka Theme &amp; Layout Studio (theme-editor.html)</span>
+          </div>
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </button>
+
+        <button type="button" id="btn-open-impersonate-storefront" class="w-full p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold flex items-center justify-between transition cursor-pointer">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400"></i>
+            <span>Buka Storefront Pembeli (index.html?store=...)</span>
+          </div>
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button type="button" id="btn-cancel-impersonate-modal" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition cursor-pointer">
+          Batal
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 4: EDIT TARIF HARGA PAKET (TIER PRICING)
+       ======================================================================== -->
+  <div id="modal-edit-tier-price" class="fixed inset-0 modal-backdrop-blur z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel-elevated rounded-3xl max-w-md w-full p-6 space-y-4 animate-scale-in">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-sm font-black text-white" id="tier-price-modal-title">Atur Tarif Paket Langganan</h3>
+        </div>
+        <button type="button" id="btn-close-tier-price-modal" class="text-slate-500 hover:text-white p-1 rounded cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Tarif Bulanan (Rp):</label>
+          <input type="number" id="tier-edit-price-monthly" min="0" step="5000" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono font-bold outline-none focus:border-emerald-500" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Tarif Tahunan (Rp):</label>
+          <input type="number" id="tier-edit-price-yearly" min="0" step="10000" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-emerald-400 font-mono font-bold outline-none focus:border-emerald-500" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Deskripsi Singkat / Tagline:</label>
+          <input type="text" id="tier-edit-tagline" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-200 outline-none focus:border-emerald-500" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800 text-xs">
+        <button type="button" id="btn-cancel-tier-price-modal" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold cursor-pointer">Batal</button>
+        <button type="button" id="btn-save-tier-price" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer">Simpan Tarif</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="superadmin-toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- ========================================================================
+       APPLICATION SCRIPTS (IN STRICT ISOLATED ORDER)
+       ======================================================================== -->
+  <!-- 1. Hubungkan ke database utama secara read/write via localStorage -->
+  <script src="../js/db.js"></script>
+
+  <!-- 2. Controller Superadmin SaaS terisolasi -->
+  <script src="superadmin.js"></script>
+
+</body>
+
+</html>

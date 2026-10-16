@@ -215,6 +215,8 @@ const BuyerStore = (() => {
     const cartBorderEnable = settings.cart_border_enable !== false;
     const cartBorderColor = settings.cart_border_color || settings.navbar_cart_border_color || '#e2e8f0';
     const cartBorderRadius = settings.cart_border_radius !== undefined && settings.cart_border_radius !== null ? settings.cart_border_radius : '';
+    const cartIconSize = settings.cart_icon_size || '16';
+    const cartBoxSize = settings.cart_box_size || '38';
 
     // 2. Search Bar Settings
     const searchIconKey = settings.search_icon || settings.navbar_search_icon || 'bi-search';
@@ -234,6 +236,8 @@ const BuyerStore = (() => {
     const loginIconColor = settings.login_icon_color || settings.navbar_login_icon_color || '#334155';
     const loginTextColor = settings.login_text_color || settings.navbar_login_text_color || '#334155';
     const loginBtnBg = settings.login_btn_color || settings.navbar_login_btn_bg || '';
+    const loginIconSize = settings.login_icon_size || '16';
+    const loginBoxSize = settings.login_box_size || '38';
 
     const root = document.documentElement;
     root.style.setProperty('--navbar-cart-icon-color', cartIconColor);
@@ -258,9 +262,16 @@ const BuyerStore = (() => {
       if (cartBorderRadius !== '') {
         btnCart.style.borderRadius = `${cartBorderRadius}px`;
       }
+      if (cartBoxSize) {
+        btnCart.style.width = `${cartBoxSize}px`;
+        btnCart.style.height = `${cartBoxSize}px`;
+        btnCart.style.minWidth = `${cartBoxSize}px`;
+        btnCart.style.minHeight = `${cartBoxSize}px`;
+        btnCart.style.padding = '0';
+      }
       const cartIconEl = btnCart.querySelector('.navbar-cart-icon-el');
       if (cartIconEl) {
-        const newCartIcon = renderNavIconHtml(cartIconKey, 'w-5 h-5 transition navbar-cart-icon-el', `color: ${cartIconColor};`);
+        const newCartIcon = renderNavIconHtml(cartIconKey, 'transition navbar-cart-icon-el', `color: ${cartIconColor}; font-size: ${cartIconSize}px; width: ${cartIconSize}px; height: ${cartIconSize}px;`);
         cartIconEl.outerHTML = newCartIcon;
       }
     }
@@ -304,14 +315,24 @@ const BuyerStore = (() => {
     const btnLogin = document.getElementById('btn-navbar-login');
     if (btnLogin) {
       if (loginBtnBg) btnLogin.style.backgroundColor = loginBtnBg;
+      if (loginBoxSize) {
+        btnLogin.style.height = `${loginBoxSize}px`;
+        btnLogin.style.minHeight = `${loginBoxSize}px`;
+        if (loginDisplay === 'icon_only') {
+          btnLogin.style.width = `${loginBoxSize}px`;
+          btnLogin.style.minWidth = `${loginBoxSize}px`;
+          btnLogin.style.padding = '0';
+        }
+      }
+      const iconStyle = `color: ${loginIconColor}; font-size: ${loginIconSize}px; width: ${loginIconSize}px; height: ${loginIconSize}px;`;
       let loginInnerHtml = '';
       if (loginDisplay === 'icon_only') {
-        loginInnerHtml = renderNavIconHtml(loginIconKey, 'text-sm navbar-login-icon-el', `color: ${loginIconColor};`);
+        loginInnerHtml = renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle);
       } else if (loginDisplay === 'text_only') {
         loginInnerHtml = `<span class="font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>`;
       } else {
         loginInnerHtml = `
-          ${renderNavIconHtml(loginIconKey, 'text-sm navbar-login-icon-el', `color: ${loginIconColor};`)}
+          ${renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle)}
           <span class="hidden sm:inline font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>
         `;
       }
@@ -678,7 +699,12 @@ const BuyerStore = (() => {
     const nonSplitAspectStyle = 'aspect-ratio: 16 / 5; width: 100%;';
 
     const heroWidthLayout = settings.hero_width_layout || 'boxed';
-    const isFullWidth = (heroModel === 'non_split' || heroModel === 'model_2' || heroModel === 'model_3') && (heroWidthLayout === 'full');
+    const isFullWidth = (heroWidthLayout === 'full');
+    const heroBorderBottomEnable = Boolean(settings.hero_border_bottom_enable);
+    const heroBorderBottomColor = settings.hero_border_bottom_color || '#e2e8f0';
+    const heroBorderBottomThickness = settings.hero_border_bottom_thickness || '1px';
+    const heroBorderBottomStyle = heroBorderBottomEnable ? `border-bottom: ${heroBorderBottomThickness} solid ${heroBorderBottomColor};` : '';
+
     const heroShowArrows = shouldShowNavArrows(animType, settings.hero_show_arrows !== false);
     const isAlwaysVisible = (animType === 'manual' || animType === 'manual_swipe') || (settings.hero_arrows_visibility === 'always');
     const arrowVisibilityClass = isAlwaysVisible 
@@ -705,16 +731,18 @@ const BuyerStore = (() => {
       const textBorderClass = isContainerShadowNone ? 'border-0 shadow-none hero-shadow-none' : `border border-white/10 hero-shadow-${heroContainerShadow}`;
 
       heroSectionHtml = `
-        <div class="relative overflow-hidden p-6 sm:p-12 ${textBorderClass}" style="${heroBgCss} border-radius: ${heroContainerRadius};" id="hero-slider-container">
-          <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
-          <div class="relative z-10 max-w-2xl space-y-3.5 sm:space-y-4">
-            <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight" style="color: ${heroTitleColor};">
-              ${escapeHtml(settings.hero_headline || 'Cetak Banner, Desain & Souvenir Harga Instan')}
-            </h1>
-            <p class="text-xs sm:text-sm leading-relaxed" style="color: ${heroDescColor};">
-              ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
-            </p>
-            ${heroCtaButtonsHtml ? `<div class="pt-2 sm:pt-3">${heroCtaButtonsHtml}</div>` : ''}
+        <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
+          <div class="relative overflow-hidden p-6 sm:p-12 ${isFullWidth ? 'rounded-none border-x-0' : textBorderClass}" style="${heroBgCss} ${isFullWidth ? 'border-radius: 0;' : 'border-radius: ' + heroContainerRadius + ';'} ${heroBorderBottomStyle}" id="hero-slider-container">
+            <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
+            <div class="relative z-10 max-w-2xl space-y-3.5 sm:space-y-4">
+              <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight" style="color: ${heroTitleColor};">
+                ${escapeHtml(settings.hero_headline || 'Cetak Banner, Desain & Souvenir Harga Instan')}
+              </h1>
+              <p class="text-xs sm:text-sm leading-relaxed" style="color: ${heroDescColor};">
+                ${escapeHtml(settings.hero_subheadline || 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.')}
+              </p>
+              ${heroCtaButtonsHtml ? `<div class="pt-2 sm:pt-3">${heroCtaButtonsHtml}</div>` : ''}
+            </div>
           </div>
         </div>
       `;
@@ -732,7 +760,8 @@ const BuyerStore = (() => {
       const textDesktopOrder = heroSplitDesktopPos === 'image_left' ? 'md:order-2' : 'md:order-1';
 
       heroSectionHtml = `
-        <div class="relative overflow-hidden group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+        <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
+          <div class="relative overflow-hidden group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''} ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass}" style="${isFullWidth ? 'border-radius: 0;' : 'border-radius: ' + heroContainerRadius + ';'} ${heroBorderBottomStyle} overflow: hidden;" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
           <div class="w-full md:aspect-[9/2] flex items-center p-3 sm:p-5 md:p-6" style="${heroBgCss} border-radius: inherit;">
             <div class="${mobileFlexClass} items-stretch md:items-center gap-3 sm:gap-4 md:gap-6 w-full h-full">
               
@@ -769,6 +798,7 @@ const BuyerStore = (() => {
             </div>
           </div>
         </div>
+      </div>
       `;
     } else if (heroModel === 'model_3') {
       // [3] Model Gambar DENGAN Teks Overlay (Tanpa CTA)
@@ -777,7 +807,7 @@ const BuyerStore = (() => {
 
       heroSectionHtml = `
         <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
-          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass} shadow-2xl group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? 'border-radius: 0;' : 'border-radius: ' + heroContainerRadius + ';'} ${heroBorderBottomStyle} overflow: hidden;" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
             <div class="${nonSplitAspectClass} relative bg-slate-950 overflow-hidden flex items-center" style="${nonSplitAspectStyle}; border-radius: inherit;">
               <div class="hero-slider-track absolute inset-0 w-full h-full" style="border-radius: inherit;">
                 ${slidesHtml}
@@ -817,7 +847,7 @@ const BuyerStore = (() => {
 
       heroSectionHtml = `
         <div class="${isFullWidth ? '-mx-3 sm:-mx-4 lg:-mx-6 -mt-3 sm:-mt-4 lg:-mt-6' : ''}">
-          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass} group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? '' : 'border-radius: ' + heroContainerRadius + '; overflow: hidden;'}" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
+          <div class="relative overflow-hidden ${isFullWidth ? 'rounded-none border-x-0' : containerBorderClass} group ${animType.startsWith('fade') ? 'hero-anim-fade' : ''}" style="${isFullWidth ? 'border-radius: 0;' : 'border-radius: ' + heroContainerRadius + ';'} ${heroBorderBottomStyle} overflow: hidden;" id="hero-slider-container" data-anim="${animType}" data-count="${heroBanners.length}">
             <div class="${nonSplitAspectClass} relative bg-slate-900 overflow-hidden" style="${nonSplitAspectStyle}; border-radius: inherit;">
               <div class="hero-slider-track w-full h-full relative" style="border-radius: inherit;">
                 ${slidesHtml}
@@ -2501,7 +2531,13 @@ const BuyerStore = (() => {
     const animClass = animType === 'fade' ? 'sponsor-anim-fade' : (animType === 'slide' ? 'sponsor-anim-slide' : (animType === 'zoom' ? 'sponsor-anim-zoom' : ''));
 
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
-    const targetUrl = ad.cta_target || ad.link_url || 'https://songercreative.com';
+    const isInternalProduct = Boolean(ad.linked_product_id || ad.target_product_id);
+    const prodTargetUrl = isInternalProduct ? `product.html?id=${ad.linked_product_id || ad.target_product_id}` : '';
+    const targetUrl = ad.cta_target || prodTargetUrl || ad.link_url || 'https://songercreative.com';
+    const targetAttr = (targetUrl && targetUrl.startsWith('product.html')) ? '' : 'target="_blank"';
+    const primaryCtaLabel = ad.cta_label || (isInternalProduct ? 'Beli Sekarang' : 'Lihat Tawaran');
+    const primaryCtaIcon = isInternalProduct ? 'bi-cart-fill' : 'bi-box-arrow-up-right';
+
     const phone = (settings.store_phone || '0888-5844-380').replace(/[^0-9]/g, '');
     const cleanPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
     const sponsorWaUrl = `https://wa.me/${cleanPhone || '628885844380'}?text=${encodeURIComponent('Halo Admin Songer Creative, saya ingin pasang iklan sponsor di etalase toko.')}`;
@@ -2519,7 +2555,7 @@ const BuyerStore = (() => {
       <!-- CARD SPONSOR VERSI 1 GAMBAR DENGAN 2 CTA (RASIO 3:4 PORTRAIT MURNI) -->
       <div class="h-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="background-color: ${bgColor}; border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-id="${ad.id || 'sponsor'}">
         <!-- Area Gambar Rasio 3:4 Portrait Murni -->
-        <a href="${escapeHtml(targetUrl)}" target="_blank" class="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden block shrink-0 cursor-pointer" style="border-top-left-radius: inherit; border-top-right-radius: inherit;" title="Buka Tawaran Sponsor">
+        <a href="${escapeHtml(targetUrl)}" ${targetAttr} class="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden block shrink-0 cursor-pointer" style="border-top-left-radius: inherit; border-top-right-radius: inherit;" title="Buka Tawaran Sponsor">
           ${imgContainer}
           <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition duration-300 pointer-events-none"></div>
           <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
@@ -2529,10 +2565,10 @@ const BuyerStore = (() => {
 
         <!-- Bagian Bawah: 2 Tombol Aksi Stacked Vertikal Sesuai Wireframe -->
         <div class="p-2 sm:p-2.5 flex-1 flex flex-col justify-end gap-1.5 mt-auto">
-          <!-- Tombol 1: (Icon External Link) Lihat Tawaran -->
-          <a href="${escapeHtml(targetUrl)}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs hover:brightness-110">
-            <i class="bi bi-box-arrow-up-right text-xs"></i>
-            <span class="truncate">${escapeHtml(ad.cta_label || 'Lihat Tawaran')}</span>
+          <!-- Tombol 1: (Icon External Link atau Cart) Lihat Tawaran / Beli Sekarang -->
+          <a href="${escapeHtml(targetUrl)}" ${targetAttr} class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-xs hover:brightness-110">
+            <i class="${primaryCtaIcon} text-xs"></i>
+            <span class="truncate">${escapeHtml(primaryCtaLabel)}</span>
           </a>
           <!-- Tombol 2: (Icon WA) Pasang Iklan -->
           <a href="${sponsorWaUrl}" target="_blank" class="w-full py-1.5 sm:py-2 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm hover:brightness-110">
@@ -2549,6 +2585,8 @@ const BuyerStore = (() => {
   //    Tinggi serasi dan proporsional dengan kartu produk dalam baris yang sama.
   //    Dilengkapi dots navigasi dinamis: 1 slide = tanpa dots, 2-5 slide = 2-5 dots.
   function renderSponsorCarouselCard(carousel = {}, config = {}) {
+    const bgColor = (carousel.bg_color !== undefined && carousel.bg_color !== '') ? carousel.bg_color : ((config.bg_color !== undefined && config.bg_color !== '') ? config.bg_color : 'transparent');
+    const bgStyle = (bgColor && bgColor !== 'transparent') ? `background-color: ${bgColor};` : '';
     const borderColor = carousel.border_color || config.border_color || '#e2e8f0';
     const borderWidth = carousel.border_width || config.border_width || '1px';
     const borderRadius = carousel.border_radius || config.border_radius || '16px';
@@ -2571,7 +2609,7 @@ const BuyerStore = (() => {
 
     if (slides.length === 0) {
       return `
-        <div class="h-full w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
+        <div class="h-full w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="${bgStyle} border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
           <!-- Area Placeholder Penuh (FULL IMG TANPA CTA) -->
           <a href="${sponsorWaUrl}" target="_blank" class="relative w-full h-full flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white cursor-pointer group" style="border-radius: inherit;">
             <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
@@ -2625,7 +2663,7 @@ const BuyerStore = (() => {
 
     return `
       <!-- CARD SPONSOR VERSI MAX 5 GAMBAR CAROUSEL TANPA CTA -->
-      <div id="${sliderId}" class="sponsor-carousel-container h-full w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-anim="${animType}" data-interval="${intervalTime}" data-total="${slideCount}">
+      <div id="${sliderId}" class="sponsor-carousel-container h-full w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="${bgStyle} border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-anim="${animType}" data-interval="${intervalTime}" data-total="${slideCount}">
         <!-- Area Gambar Penuh (FULL IMG) Mengisi Penuh Kartu Mengikuti Baris Grid & Proporsional -->
         <div class="relative w-full h-full flex-1 min-h-0 aspect-[3/4] sm:aspect-auto overflow-hidden bg-slate-900" style="border-radius: inherit;">
           ${slidesHtml}
@@ -2653,17 +2691,20 @@ const BuyerStore = (() => {
   // - Validasi & Kustomisasi CTA per-Gambar Independen: Upload/URL, Link Klik Gambar [On/Off], Tombol CTA [On/Off] posisi absolute.
   function renderSlideCtaButton(slide, defaultUrl) {
     if (!slide || !slide.cta_enabled) return '';
-    const ctaText = slide.cta_text || 'Lihat Penawaran';
-    const ctaLink = slide.cta_link || slide.target_url || defaultUrl;
+    const isInternalProduct = Boolean(slide.linked_product_id);
+    const prodTargetUrl = isInternalProduct ? `product.html?id=${slide.linked_product_id}` : '';
+    const ctaText = slide.cta_text || (isInternalProduct ? 'Beli Sekarang' : 'Lihat Penawaran');
+    const ctaLink = slide.cta_link || prodTargetUrl || slide.target_url || defaultUrl;
     const ctaBg = slide.cta_bg_color || '#059669';
     const ctaTextCol = slide.cta_text_color || '#ffffff';
     const ctaRadius = slide.cta_border_radius || '12px';
-    const ctaIcon = slide.cta_icon || 'bi-arrow-right';
+    const ctaIcon = slide.cta_icon || (isInternalProduct ? 'bi-cart-fill' : 'bi-arrow-right');
     const shadowPreset = slide.cta_shadow || 'md';
     const shadowClass = shadowPreset === 'none' ? 'shadow-none' : `shadow-${shadowPreset}`;
+    const targetAttr = (ctaLink && ctaLink.startsWith('product.html')) ? '' : 'target="_blank"';
 
     return `
-      <a href="${escapeHtml(ctaLink)}" target="_blank" onclick="event.stopPropagation();" class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold transition-all duration-200 hover:scale-105 hover:brightness-110 ${shadowClass}" style="background-color: ${ctaBg}; color: ${ctaTextCol}; border-radius: ${ctaRadius};">
+      <a href="${escapeHtml(ctaLink)}" ${targetAttr} onclick="event.stopPropagation();" class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-30 inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold transition-all duration-200 hover:scale-105 hover:brightness-110 ${shadowClass}" style="background-color: ${ctaBg}; color: ${ctaTextCol}; border-radius: ${ctaRadius};">
         <span class="truncate">${escapeHtml(ctaText)}</span>
         <i class="${escapeHtml(ctaIcon)} text-xs shrink-0"></i>
       </a>
@@ -2671,6 +2712,8 @@ const BuyerStore = (() => {
   }
 
   function renderSponsorDoubleWidthCard(sponsor = {}, config = {}) {
+    const bgColor = (sponsor.bg_color !== undefined && sponsor.bg_color !== '') ? sponsor.bg_color : ((config.bg_color !== undefined && config.bg_color !== '') ? config.bg_color : 'transparent');
+    const bgStyle = (bgColor && bgColor !== 'transparent') ? `background-color: ${bgColor};` : '';
     const borderColor = sponsor.border_color || config.border_color || '#e2e8f0';
     const borderWidth = sponsor.border_width || config.border_width || '1px';
     const borderRadius = sponsor.border_radius || config.border_radius || '16px';
@@ -2694,7 +2737,7 @@ const BuyerStore = (() => {
 
     if (slides.length === 0) {
       return `
-        <div class="col-span-2 h-full min-h-[300px] w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
+        <div class="col-span-2 h-full min-h-[300px] w-full flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="${bgStyle} border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}">
           <a href="${sponsorWaUrl}" target="_blank" class="relative w-full h-full flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white cursor-pointer group" style="border-radius: inherit;">
             <span class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm z-10">
               SPONSOR
@@ -2719,8 +2762,11 @@ const BuyerStore = (() => {
     let slidesHtml = '';
     if (animType === 'fade' || animType === 'scale') {
       slidesHtml = slides.map((slide, idx) => {
-        const clickImageEnabled = slide.click_image_enabled !== false && Boolean(slide.target_url);
-        const targetUrl = slide.target_url || sponsorWaUrl;
+        const isInternalProduct = Boolean(slide.linked_product_id);
+        const prodTargetUrl = isInternalProduct ? `product.html?id=${slide.linked_product_id}` : '';
+        const targetUrl = slide.target_url || prodTargetUrl || sponsorWaUrl;
+        const clickImageEnabled = slide.click_image_enabled !== false && Boolean(targetUrl);
+        const targetAttr = (targetUrl && targetUrl.startsWith('product.html')) ? '' : 'target="_blank"';
         const ctaBtnHtml = renderSlideCtaButton(slide, sponsorWaUrl);
 
         const content = `
@@ -2732,7 +2778,7 @@ const BuyerStore = (() => {
         return `
           <div class="carousel-slide-item absolute inset-0 w-full h-full transition-all duration-700 ease-in-out ${idx === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}" data-slide="${idx}" style="border-radius: inherit;">
             ${clickImageEnabled ? `
-              <a href="${escapeHtml(targetUrl)}" target="_blank" class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
+              <a href="${escapeHtml(targetUrl)}" ${targetAttr} class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
                 ${content}
               </a>
             ` : `
@@ -2748,8 +2794,11 @@ const BuyerStore = (() => {
       slidesHtml = `
         <div class="slides-track flex w-full h-full transition-transform duration-500 ease-in-out" style="border-radius: inherit;">
           ${slides.map((slide, idx) => {
-            const clickImageEnabled = slide.click_image_enabled !== false && Boolean(slide.target_url);
-            const targetUrl = slide.target_url || sponsorWaUrl;
+            const isInternalProduct = Boolean(slide.linked_product_id);
+            const prodTargetUrl = isInternalProduct ? `product.html?id=${slide.linked_product_id}` : '';
+            const targetUrl = slide.target_url || prodTargetUrl || sponsorWaUrl;
+            const clickImageEnabled = slide.click_image_enabled !== false && Boolean(targetUrl);
+            const targetAttr = (targetUrl && targetUrl.startsWith('product.html')) ? '' : 'target="_blank"';
             const ctaBtnHtml = renderSlideCtaButton(slide, sponsorWaUrl);
 
             const content = `
@@ -2761,7 +2810,7 @@ const BuyerStore = (() => {
             return `
               <div class="w-full h-full shrink-0 relative block" style="width: 100%; height: 100%; border-radius: inherit;">
                 ${clickImageEnabled ? `
-                  <a href="${escapeHtml(targetUrl)}" target="_blank" class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
+                  <a href="${escapeHtml(targetUrl)}" ${targetAttr} class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
                     ${content}
                   </a>
                 ` : `
@@ -2782,7 +2831,7 @@ const BuyerStore = (() => {
 
     return `
       <!-- CARD SPONSOR 2-KOLOM (DOUBLE-WIDTH CAROUSEL HINGGA 10 SLIDE & CTA INDEPENDEN) -->
-      <div id="${sliderId}" class="sponsor-carousel-container col-span-2 h-full w-full min-h-[300px] sm:min-h-[340px] flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-anim="${animType}" data-interval="${intervalTime}" data-total="${slideCount}" data-mode="${slideMode}">
+      <div id="${sliderId}" class="sponsor-carousel-container col-span-2 h-full w-full min-h-[300px] sm:min-h-[340px] flex flex-col justify-between overflow-hidden transition-all duration-300 group relative ${shadowClass} ${animClass}" style="${bgStyle} border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-anim="${animType}" data-interval="${intervalTime}" data-total="${slideCount}" data-mode="${slideMode}">
         <div class="relative w-full h-full flex-1 min-h-0 overflow-hidden bg-slate-950" style="border-radius: inherit;">
           ${slidesHtml}
 
