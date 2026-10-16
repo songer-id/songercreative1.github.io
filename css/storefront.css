@@ -473,6 +473,14 @@ h1, h2, h3, h4, .font-heading {
   animation: batchSlidePrev 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.internal-batch-view.batch-fade {
+  animation: batchFade 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.internal-batch-view.batch-zoom {
+  animation: batchZoom 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @keyframes batchSlideNext {
   from {
     opacity: 0;
@@ -492,6 +500,26 @@ h1, h2, h3, h4, .font-heading {
   to {
     opacity: 1;
     transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes batchFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes batchZoom {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -568,4 +596,68 @@ footer i.bi {
   vertical-align: middle !important;
   flex-shrink: 0 !important;
 }
+
+/* ==========================================================================
+   NAVIGATION ARROWS HOVER SCALE (HERO BANNER, KATEGORI, & CARD SPONSOR)
+   ========================================================================== */
+#hero-slide-prev,
+#hero-slide-next,
+.hero-arrow-btn,
+.btn-cat-nav-prev,
+.btn-cat-nav-next,
+.carousel-prev-btn,
+.carousel-next-btn {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), scale 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+#hero-slide-prev:hover,
+#hero-slide-next:hover,
+.hero-arrow-btn:hover,
+.btn-cat-nav-prev:hover,
+.btn-cat-nav-next:hover,
+.carousel-prev-btn:hover,
+.carousel-next-btn:hover {
+  transform: translateY(-50%) scale(1.18) !important;
+  scale: 1.18 !important;
+}
+
+#hero-slide-prev:active,
+#hero-slide-next:active,
+.hero-arrow-btn:active,
+.btn-cat-nav-prev:active,
+.btn-cat-nav-next:active,
+.carousel-prev-btn:active,
+.carousel-next-btn:active {
+  transform: translateY(-50%) scale(0.95) !important;
+  scale: 0.95 !important;
+}
+
+/* Enforce category arrow hiding even when lg:flex is declared */
+.btn-cat-nav-prev.cat-nav-hidden,
+.btn-cat-nav-next.cat-nav-hidden {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* ==========================================================================
+   DYNAMIC NAVBAR ARCHITECTURE & NOTIFICATION RESPONSIVENESS
+   ========================================================================== */
+:root {
+  --store-header-height: 64px;
+}
+
+@media (max-width: 639.98px) {
+  #navbar-notif-dropdown {
+    position: fixed !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    width: auto !important;
+    max-width: calc(100vw - 1.5rem) !important;
+    z-index: 50 !important;
+  }
+}
+
+
 

@@ -4818,6 +4818,42 @@ const DB = (() => {
       const tid = tenantId || (currentTenant ? currentTenant.tenant_id : 'tenant-songer-001');
       localStorage.removeItem(`pos_active_customer_${tid}`);
       return true;
+    },
+
+    // --- 12. CUSTOMER LOYALTY POINTS HELPER ---
+    isCustomerPointsActive(customer = null) {
+      const cust = customer || this.getActiveCustomer();
+      const settings = (typeof this.getSettings === 'function') ? (this.getSettings() || {}) : {};
+      const tenant = (typeof currentTenant !== 'undefined' && currentTenant) ? currentTenant : null;
+
+      // Syarat 1: Hak akses fitur poin dari Superadmin ke tenant
+      const tenantFeatureAllowed = !tenant || !tenant.features || tenant.features.loyalty_points !== false;
+      const settingFeatureAllowed = settings.feature_loyalty_points_allowed !== false;
+      const isSuperadminAllowed = tenantFeatureAllowed && settingFeatureAllowed;
+
+      // Syarat 2: Admin toko mengaktifkan sistem poin untuk toko dan user ini
+      const isStoreEnabled = settings.enable_loyalty_points === true;
+      const isCustomerEnabled = !cust || cust.points_enabled !== false;
+
+      return isSuperadminAllowed && isStoreEnabled && isCustomerEnabled;
+    },
+
+    getCustomerPoints(customer = null) {
+      const cust = customer || this.getActiveCustomer();
+      if (!cust) return 0;
+      if (typeof cust.points === 'number') return cust.points;
+      const tid = (typeof currentTenant !== 'undefined' && currentTenant) ? currentTenant.tenant_id : 'tenant-songer-001';
+      const orders = (typeof this.getOrders === 'function') ? (this.getOrders(tid) || []) : [];
+      const phone = (cust.phone || '').replace(/\D/g, '');
+      const email = (cust.email || '').trim().toLowerCase();
+      const completed = orders.filter(o => {
+        const s = (o.status || '').toUpperCase();
+        const match = (phone && (o.customer_phone || '').replace(/\D/g, '') === phone) ||
+                      (email && (o.customer_email || '').toLowerCase() === email);
+        return match && (s === 'COMPLETED' || s === 'PAID' || s === 'SELESAI');
+      });
+      const totalSpent = completed.reduce((sum, o) => sum + (o.total || 0), 0);
+      return Math.floor(totalSpent / 10000);
     }
   };
 })();

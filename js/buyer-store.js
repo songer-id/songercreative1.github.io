@@ -281,7 +281,7 @@ const BuyerStore = (() => {
       el.style.color = cartBadgeText;
     });
 
-    // Terapkan ke Search Bar Desktop & Mobile
+    // Terapkan ke Search Bar Desktop, Mobile, & Second Row
     const desktopSearchInput = document.getElementById('navbar-search-input');
     if (desktopSearchInput) {
       if (searchPlaceholder) desktopSearchInput.placeholder = searchPlaceholder;
@@ -290,6 +290,17 @@ const BuyerStore = (() => {
       desktopSearchInput.style.color = searchTextColor;
       if (searchBorderRadius !== '') {
         desktopSearchInput.style.borderRadius = `${searchBorderRadius}px`;
+      }
+    }
+
+    const secondRowSearchInput = document.getElementById('navbar-second-search-input');
+    if (secondRowSearchInput) {
+      if (searchPlaceholder) secondRowSearchInput.placeholder = searchPlaceholder;
+      secondRowSearchInput.style.backgroundColor = searchInputBg;
+      secondRowSearchInput.style.borderColor = searchBorderEnable ? searchBorderColor : 'transparent';
+      secondRowSearchInput.style.color = searchTextColor;
+      if (searchBorderRadius !== '') {
+        secondRowSearchInput.style.borderRadius = `${searchBorderRadius}px`;
       }
     }
 
@@ -364,6 +375,208 @@ const BuyerStore = (() => {
   }
 
   // ----------------------------------------------------------------------------
+  // SMART SEARCH AUTOCOMPLETE, ENTER HANDLER, & HIGHLIGHT UTILITIES
+  // ----------------------------------------------------------------------------
+
+  function highlightProductCard(prodId) {
+    setTimeout(() => {
+      const cardEl = document.querySelector(`[data-id="${prodId}"]`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardEl.classList.add('ring-4', 'ring-emerald-400', 'border-emerald-500', 'scale-[1.02]', 'transition', 'duration-300');
+
+        let blinkCount = 0;
+        const blinkInterval = setInterval(() => {
+          blinkCount++;
+          cardEl.classList.toggle('ring-emerald-400');
+          cardEl.classList.toggle('ring-emerald-200');
+          if (blinkCount >= 6) {
+            clearInterval(blinkInterval);
+            cardEl.classList.remove('ring-4', 'ring-emerald-400', 'ring-emerald-200', 'border-emerald-500', 'scale-[1.02]');
+          }
+        }, 350);
+      }
+    }, 150);
+  }
+
+  function renderSearchSuggestionsHtml(query, matched) {
+    if (matched.length === 0) {
+      return `
+        <div class="py-4 px-3 text-center text-slate-500 text-xs">
+          Tidak ada produk yang cocok dengan "<strong>${escapeHtml(query)}</strong>"
+        </div>
+      `;
+    }
+
+    const headerHtml = `
+      <div class="px-2.5 py-1.5 text-[11px] font-medium text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-100">
+        <span>Saran Produk</span>
+        <span class="text-[10px] text-slate-400 font-semibold">${matched.length} produk</span>
+      </div>
+    `;
+
+    const itemsHtml = matched.map(p => {
+      const startingPrice = getProductStartingPrice(p);
+      const effDiscount = p.effective_discount || (typeof DB !== 'undefined' && DB.getProductEffectiveDiscount ? DB.getProductEffectiveDiscount(p) : { has_discount: false });
+      const finalPrice = effDiscount.has_discount ? effDiscount.discounted_price : startingPrice;
+      const img = (Array.isArray(p.images) && p.images[0]) || p.image_url || 'assets/images/logo-songer-creative.png';
+
+      return `
+        <div class="navbar-search-item border-b border-slate-100 last:border-b-0 rounded-none py-2.5 px-2 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition group" data-id="${p.id}">
+          <img src="${img}" class="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0" alt="${escapeHtml(p.name)}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 text-slate-400 text-xs\\'><i class=\\'bi bi-image\\'></i></div>';" />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <h5 class="text-xs font-semibold text-slate-800 group-hover:text-emerald-600 truncate transition leading-tight">${escapeHtml(p.name)}</h5>
+              <span class="text-xs font-bold text-slate-900 shrink-0">${formatIDR(finalPrice)}</span>
+            </div>
+            <div class="text-[11px] text-slate-400 truncate mt-0.5">
+              ${escapeHtml(p.category_name || '')}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return headerHtml + itemsHtml;
+  }
+
+  function handleSelectSearchProduct(prodId) {
+    const desktopInput = document.getElementById('navbar-search-input');
+    const secondInput = document.getElementById('navbar-second-search-input');
+    const mobileInput = document.getElementById('navbar-search-input-mobile');
+    const suggestionsBox = document.getElementById('navbar-search-suggestions');
+    const suggestionsSecondBox = document.getElementById('navbar-second-search-suggestions');
+    const suggestionsMobileBox = document.getElementById('navbar-search-suggestions-mobile');
+    const overlay = document.getElementById('mobile-search-overlay');
+    const searchBackdrop = document.getElementById('navbar-search-backdrop');
+
+    if (suggestionsBox) {
+      suggestionsBox.classList.add('hidden');
+      suggestionsBox.innerHTML = '';
+    }
+    if (suggestionsSecondBox) {
+      suggestionsSecondBox.classList.add('hidden');
+      suggestionsSecondBox.innerHTML = '';
+    }
+    if (suggestionsMobileBox) {
+      suggestionsMobileBox.classList.add('hidden');
+      suggestionsMobileBox.innerHTML = '';
+    }
+    if (overlay) overlay.classList.add('hidden');
+    if (searchBackdrop) searchBackdrop.classList.add('hidden');
+
+    if (desktopInput) desktopInput.value = '';
+    if (secondInput) secondInput.value = '';
+    if (mobileInput) mobileInput.value = '';
+
+    // Pastikan produk tampil di katalog: reset filter kategori & pencarian
+    activeQuickFilter = 'all';
+    activeMainCategoryId = 'all';
+    activeSubCategoryId = 'all';
+    activeSearchQuery = '';
+    renderStorefront();
+    bindStoreEvents();
+
+    highlightProductCard(prodId);
+  }
+
+  function handleEnterSearchQuery(queryText, inputEl, suggestionsBoxEl) {
+    const trimmed = (queryText || '').trim();
+    const overlay = document.getElementById('mobile-search-overlay');
+    const searchBackdrop = document.getElementById('navbar-search-backdrop');
+    const desktopSuggestions = document.getElementById('navbar-search-suggestions');
+    const mobileSuggestions = document.getElementById('navbar-search-suggestions-mobile');
+
+    if (!trimmed) {
+      activeSearchQuery = '';
+      if (suggestionsBoxEl) {
+        suggestionsBoxEl.classList.add('hidden');
+        suggestionsBoxEl.innerHTML = '';
+      }
+      if (overlay) overlay.classList.add('hidden');
+      if (searchBackdrop) searchBackdrop.classList.add('hidden');
+      renderStorefront();
+      bindStoreEvents();
+      return;
+    }
+
+    const allActive = (typeof DB !== 'undefined' && DB.getProducts)
+      ? DB.getProducts({ status: 'active' }).filter(p => p.is_active !== false)
+      : [];
+    const qLower = trimmed.toLowerCase();
+    const matched = allActive.filter(p =>
+      (p.name && p.name.toLowerCase().includes(qLower)) ||
+      (p.description && p.description.toLowerCase().includes(qLower)) ||
+      (p.category_name && p.category_name.toLowerCase().includes(qLower))
+    );
+
+    if (matched.length === 0) {
+      // JIKA TIDAK ADA PRODUK COCOK:
+      // JANGAN mengubah activeSearchQuery, JANGAN menampilkan chip Hasil Pencarian, JANGAN mengosongkan grid katalog!
+      if (suggestionsBoxEl) {
+        suggestionsBoxEl.innerHTML = renderSearchSuggestionsHtml(trimmed, []);
+        suggestionsBoxEl.classList.remove('hidden');
+      }
+      if (searchBackdrop && !overlay) {
+        searchBackdrop.classList.remove('hidden');
+      }
+      return;
+    }
+
+    // Jika ada 1 atau beberapa produk yang cocok saat Enter
+    const secondSuggestions = document.getElementById('navbar-second-search-suggestions');
+    if (desktopSuggestions) desktopSuggestions.classList.add('hidden');
+    if (secondSuggestions) secondSuggestions.classList.add('hidden');
+    if (mobileSuggestions) mobileSuggestions.classList.add('hidden');
+    if (overlay) overlay.classList.add('hidden');
+    if (searchBackdrop) searchBackdrop.classList.add('hidden');
+
+    const targetProdId = matched[0].id;
+
+    // Reset filter kategori agar produk tampil di katalog
+    activeQuickFilter = 'all';
+    activeMainCategoryId = 'all';
+    activeSubCategoryId = 'all';
+    activeSearchQuery = trimmed;
+    renderStorefront();
+    bindStoreEvents();
+
+    highlightProductCard(targetProdId);
+  }
+
+  function handleSearchAutocompleteInput(inputEl, suggestionsBoxEl) {
+    if (!inputEl || !suggestionsBoxEl) return;
+    const q = inputEl.value.trim();
+    if (!q) {
+      suggestionsBoxEl.classList.add('hidden');
+      suggestionsBoxEl.innerHTML = '';
+      return;
+    }
+
+    const allActive = (typeof DB !== 'undefined' && DB.getProducts)
+      ? DB.getProducts({ status: 'active' }).filter(p => p.is_active !== false)
+      : [];
+    const qLower = q.toLowerCase();
+    const matched = allActive.filter(p =>
+      (p.name && p.name.toLowerCase().includes(qLower)) ||
+      (p.description && p.description.toLowerCase().includes(qLower)) ||
+      (p.category_name && p.category_name.toLowerCase().includes(qLower))
+    ).slice(0, 6);
+
+    suggestionsBoxEl.innerHTML = renderSearchSuggestionsHtml(q, matched);
+    suggestionsBoxEl.classList.remove('hidden');
+
+    suggestionsBoxEl.querySelectorAll('.navbar-search-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const prodId = item.getAttribute('data-id');
+        handleSelectSearchProduct(prodId);
+      });
+    });
+  }
+
+  // ----------------------------------------------------------------------------
   // RESPONSIVE SEARCH MOBILE & LOGIN BUTTON
   // ----------------------------------------------------------------------------
   function initMobileSearchOverlay() {
@@ -372,6 +585,8 @@ const BuyerStore = (() => {
     const btnClose = document.getElementById('btn-close-mobile-search');
     const mobileInput = document.getElementById('navbar-search-input-mobile');
     const desktopInput = document.getElementById('navbar-search-input');
+    const secondInput = document.getElementById('navbar-second-search-input');
+    const mobileSuggestions = document.getElementById('navbar-search-suggestions-mobile');
 
     if (btnToggle && overlay) {
       btnToggle.addEventListener('click', (e) => {
@@ -379,8 +594,10 @@ const BuyerStore = (() => {
         overlay.classList.toggle('hidden');
         if (!overlay.classList.contains('hidden') && mobileInput) {
           mobileInput.focus();
-          if (desktopInput && desktopInput.value) {
-            mobileInput.value = desktopInput.value;
+          const activeVal = (desktopInput && desktopInput.value) || (secondInput && secondInput.value) || '';
+          if (activeVal) {
+            mobileInput.value = activeVal;
+            handleSearchAutocompleteInput(mobileInput, mobileSuggestions);
           }
         }
       });
@@ -389,38 +606,421 @@ const BuyerStore = (() => {
     if (btnClose && overlay) {
       btnClose.addEventListener('click', () => {
         overlay.classList.add('hidden');
+        if (mobileSuggestions) {
+          mobileSuggestions.classList.add('hidden');
+          mobileSuggestions.innerHTML = '';
+        }
       });
     }
 
     if (mobileInput) {
-      mobileInput.addEventListener('input', (e) => {
-        const val = e.target.value;
-        if (desktopInput) desktopInput.value = val;
-        activeSearchQuery = val.trim();
-        renderStorefront();
+      mobileInput.addEventListener('input', () => {
+        if (desktopInput) desktopInput.value = mobileInput.value;
+        if (secondInput) secondInput.value = mobileInput.value;
+        if (mobileSuggestions) {
+          handleSearchAutocompleteInput(mobileInput, mobileSuggestions);
+        }
       });
+
       mobileInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && overlay) {
-          overlay.classList.add('hidden');
+        if (e.key === 'Escape') {
+          if (overlay) overlay.classList.add('hidden');
+          if (mobileSuggestions) mobileSuggestions.classList.add('hidden');
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          handleEnterSearchQuery(mobileInput.value, mobileInput, mobileSuggestions);
         }
       });
     }
   }
 
   // ----------------------------------------------------------------------------
-  // DYNAMIC SEO & SCHEMA.ORG JSON-LD STRUCTURED DATA
+  // DYNAMIC TECHNICAL SEO & SCHEMA.ORG JSON-LD ARCHITECTURE
   // ----------------------------------------------------------------------------
-  function initStorefrontSEO() {
-    try {
-      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
-      const storeName = settings?.store_name || 'Songer Creative';
-      const storeTagline = settings?.store_tagline || 'Digital Printing & Percetakan Terpadu';
-      const storeDesc = settings?.store_description || `Katalog resmi ${storeName} — Percetakan & Digital Printing Berkualitas, Desain Grafis Profesional, dan Souvenir Retail Cepat Siap Kirim.`;
-      const fullTitle = `${storeName} — ${storeTagline}`;
-      const logoUrl = settings?.web_logo || 'assets/images/logo-songer-creative.png';
-      const currentUrl = window.location.href;
 
-      // Update document title and canonical
+  /**
+   * 1. STRICT CANONICAL URL SANITIZER
+   * Membersihkan transient query strings (?utm_*, ?fbclid, ?search, ?sort, #hash)
+   * Mengembalikan URL kanonikal deterministik untuk Storefront atau Product Deep Link.
+   */
+  function getSanitizedCanonicalUrl(extraParams = {}) {
+    try {
+      const origin = window.location.origin || '';
+      const pathname = window.location.pathname || '';
+      const cleanBase = `${origin}${pathname}`.replace(/\/+$/, '') || '/';
+
+      const currentParams = new URLSearchParams(window.location.search || '');
+      const canonicalParams = new URLSearchParams();
+
+      // Pertahankan routing multi-tenant yang sah (?store=slug atau ?tenant=id)
+      const validRoutingKeys = ['store', 'tenant', 'tenant_id'];
+      validRoutingKeys.forEach(k => {
+        if (currentParams.has(k)) {
+          canonicalParams.set(k, currentParams.get(k));
+        }
+      });
+
+      // Tambahkan parameter kanonikal deterministik yang sah (misal ?p=slug atau ?category=slug)
+      if (extraParams && typeof extraParams === 'object') {
+        Object.keys(extraParams).forEach(k => {
+          const val = extraParams[k];
+          if (val !== undefined && val !== null && val !== '') {
+            canonicalParams.set(k, String(val));
+          }
+        });
+      }
+
+      const queryString = canonicalParams.toString();
+      return queryString ? `${cleanBase}?${queryString}` : cleanBase;
+    } catch (e) {
+      return (window.location.origin || '') + (window.location.pathname || '');
+    }
+  }
+
+  /**
+   * 2. INFERENSI TIPE ENTITAS SCHEMA.ORG DINAMIS
+   * Memetakan @type ke ontologi Schema.org yang valid (F&B, Fashion, Elektronik, Jasa/Cetak, atau Ritel)
+   * berbasis konfigurasi admin atau agregasi semantik katalog produk.
+   */
+  function inferBusinessSchemaType(settings, products = []) {
+    // A. Prioritas 1: Setting eksplisit merchant jika tersedia
+    const explicitType = (settings?.business_vertical || settings?.store_type || '').toLowerCase();
+    if (explicitType === 'fnb' || explicitType === 'culinary' || explicitType === 'food' || explicitType === 'resto') {
+      return ['Store', 'FoodEstablishment'];
+    }
+    if (explicitType === 'fashion' || explicitType === 'clothing' || explicitType === 'apparel') {
+      return ['Store', 'ClothingStore'];
+    }
+    if (explicitType === 'electronics' || explicitType === 'gadget' || explicitType === 'it') {
+      return ['Store', 'ElectronicsStore'];
+    }
+    if (explicitType === 'printing' || explicitType === 'percetakan' || explicitType === 'service') {
+      return ['ProfessionalService', 'LocalBusiness'];
+    }
+
+    // B. Prioritas 2: Analisis Semantik Frekuensi Kata Kunci pada Kategori & Katalog
+    const categoryCounts = { fnb: 0, fashion: 0, electronics: 0, printing: 0 };
+
+    const fnbKeywords = ['makanan', 'kuliner', 'minuman', 'food', 'drink', 'resto', 'restaurant', 'cafe', 'kafe', 'snack', 'kue', 'bakery', 'roti', 'kopi', 'coffee', 'bento', 'catering'];
+    const fashionKeywords = ['fashion', 'baju', 'pakaian', 'kaos', 't-shirt', 'distro', 'hijab', 'dress', 'sepatu', 'shoes', 'tas', 'bag', 'jaket', 'jacket', 'celana', 'outfit', 'butik', 'boutique'];
+    const electronicsKeywords = ['elektronik', 'electronic', 'komputer', 'computer', 'laptop', 'gadget', 'handphone', 'smartphone', 'cctv', 'audio', 'kabel', 'hardware'];
+    const printingKeywords = ['cetak', 'percetakan', 'printing', 'print', 'banner', 'spanduk', 'brosur', 'nota', 'stiker', 'sticker', 'desain', 'grafis', 'sablon', 'offset'];
+
+    const testText = (str) => {
+      if (!str || typeof str !== 'string') return;
+      const lower = str.toLowerCase();
+      fnbKeywords.forEach(k => { if (lower.includes(k)) categoryCounts.fnb++; });
+      fashionKeywords.forEach(k => { if (lower.includes(k)) categoryCounts.fashion++; });
+      electronicsKeywords.forEach(k => { if (lower.includes(k)) categoryCounts.electronics++; });
+      printingKeywords.forEach(k => { if (lower.includes(k)) categoryCounts.printing++; });
+    };
+
+    testText(settings?.store_name);
+    testText(settings?.store_tagline);
+    testText(settings?.store_description);
+
+    const categories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+    categories.forEach(c => {
+      testText(c.name);
+      testText(c.description);
+    });
+
+    products.slice(0, 25).forEach(p => {
+      testText(p.name);
+      testText(p.category_name);
+      testText(p.description);
+    });
+
+    let maxCount = 0;
+    let selectedType = ['Store', 'LocalBusiness']; // Fallback default universal
+
+    if (categoryCounts.fnb > maxCount) {
+      maxCount = categoryCounts.fnb;
+      selectedType = ['Store', 'FoodEstablishment'];
+    }
+    if (categoryCounts.fashion > maxCount) {
+      maxCount = categoryCounts.fashion;
+      selectedType = ['Store', 'ClothingStore'];
+    }
+    if (categoryCounts.electronics > maxCount) {
+      maxCount = categoryCounts.electronics;
+      selectedType = ['Store', 'ElectronicsStore'];
+    }
+    if (categoryCounts.printing > maxCount) {
+      maxCount = categoryCounts.printing;
+      selectedType = ['ProfessionalService', 'LocalBusiness'];
+    }
+
+    return selectedType;
+  }
+
+  /**
+   * 3. INJEKSI SKEMA BREADCRUMBLIST DINAMIS
+   * Membangun hierarki taksonomi Schema.org: Beranda > Kategori > Produk (jika aktif)
+   */
+  function buildBreadcrumbListSchema(baseUrl, activeCategory = null, activeProduct = null) {
+    const items = [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Beranda',
+        item: baseUrl
+      }
+    ];
+
+    if (activeCategory && activeCategory.id !== 'all') {
+      const catUrl = getSanitizedCanonicalUrl({ category: activeCategory.slug || activeCategory.id });
+      items.push({
+        '@type': 'ListItem',
+        position: 2,
+        name: activeCategory.name || 'Kategori',
+        item: catUrl
+      });
+    }
+
+    if (activeProduct) {
+      const prodUrl = getSanitizedCanonicalUrl({ p: activeProduct.slug || activeProduct.id });
+      items.push({
+        '@type': 'ListItem',
+        position: items.length + 1,
+        name: activeProduct.name || 'Detail Produk',
+        item: prodUrl
+      });
+    }
+
+    return {
+      '@type': 'BreadcrumbList',
+      '@id': `${baseUrl}#breadcrumbs`,
+      itemListElement: items
+    };
+  }
+
+  /**
+   * KOMPILASI SCHEMA.ORG JSON-LD GRAPH
+   * Menyatukan WebSite, Store/LocalBusiness, BreadcrumbList, ItemList, dan Product tunggal (jika aktif)
+   */
+  function renderStoreSchemaGraph(activeProduct = null) {
+    const schemaScript = document.getElementById('saas-store-schema-jsonld');
+    if (!schemaScript) return;
+
+    try {
+      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+      const storeName = settings?.store_name || 'Toko Resmi';
+      const storeTagline = settings?.store_tagline || 'Katalog & Layanan Terpadu';
+      const storeDesc = settings?.store_description || `Katalog resmi ${storeName} dengan pilihan produk berkualitas dan transaksi aman terpercaya.`;
+
+      const origin = window.location.origin || '';
+      let rawLogo = settings?.web_logo || 'assets/images/logo-songer-creative.png';
+      const logoUrl = rawLogo.startsWith('http') ? rawLogo : `${origin}/${rawLogo.replace(/^\/+/, '')}`;
+      const canonicalStoreUrl = getSanitizedCanonicalUrl();
+      const products = (typeof DB !== 'undefined' && DB.getProducts) ? DB.getProducts({ status: 'active' }).filter(p => p.is_active !== false) : [];
+
+      // 1. WebSite Schema dengan SearchAction
+      const websiteSchema = {
+        '@type': 'WebSite',
+        '@id': `${canonicalStoreUrl}#website`,
+        url: canonicalStoreUrl,
+        name: storeName,
+        description: storeTagline,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${canonicalStoreUrl}?q={search_term_string}`,
+          'query-input': 'required name=search_term_string'
+        }
+      };
+
+      // 2. Entitas Toko / Merchant Dinamis (Inferensi Subtipe)
+      const inferredTypes = inferBusinessSchemaType(settings, products);
+      const storeEntitySchema = {
+        '@type': inferredTypes,
+        '@id': `${canonicalStoreUrl}#store`,
+        name: storeName,
+        description: storeDesc,
+        telephone: settings?.whatsapp_number || settings?.store_phone || '+6281234567890',
+        email: settings?.store_email || 'kontak@tokoresmi.com',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: settings?.store_address || 'Jl. Niaga Raya No. 88',
+          addressCountry: 'ID'
+        },
+        image: logoUrl,
+        url: canonicalStoreUrl,
+        priceRange: 'Rp 5.000 - Rp 10.000.000'
+      };
+
+      // 3. BreadcrumbList Schema Dinamis
+      let activeCatObj = null;
+      if (activeMainCategoryId && activeMainCategoryId !== 'all') {
+        const categories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+        activeCatObj = categories.find(c => String(c.id) === String(activeMainCategoryId));
+      }
+      const breadcrumbSchema = buildBreadcrumbListSchema(canonicalStoreUrl, activeCatObj, activeProduct);
+
+      // 4. ItemList Katalog Produk Unggulan (Top 10)
+      const topProducts = products.slice(0, 10).map((p, idx) => {
+        const minPrice = getProductStartingPrice(p);
+        const eff = p.effective_discount || (typeof DB !== 'undefined' && DB.getProductEffectiveDiscount ? DB.getProductEffectiveDiscount(p) : { has_discount: false });
+        const finalPrice = eff.has_discount ? eff.discounted_price : minPrice;
+        let rawPImg = (Array.isArray(p.images) && p.images[0]) || p.image_url || logoUrl;
+        const pImgUrl = rawPImg.startsWith('http') ? rawPImg : `${origin}/${rawPImg.replace(/^\/+/, '')}`;
+
+        return {
+          '@type': 'Product',
+          position: idx + 1,
+          name: p.name || 'Produk Unggulan',
+          description: p.description || p.name,
+          image: pImgUrl,
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'IDR',
+            price: Number(finalPrice) || 0,
+            availability: (p.stock === undefined || p.stock === null || p.stock > 0 || p.is_unlimited_stock)
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock'
+          }
+        };
+      });
+
+      const itemListSchema = {
+        '@type': 'ItemList',
+        name: `Katalog Unggulan ${storeName}`,
+        itemListElement: topProducts
+      };
+
+      const graph = [websiteSchema, storeEntitySchema, breadcrumbSchema, itemListSchema];
+
+      // 5. Entitas Mandiri @type: Product (jika sedang membuka produk spesifik / deep link)
+      if (activeProduct) {
+        const minPrice = getProductStartingPrice(activeProduct);
+        const eff = activeProduct.effective_discount || (typeof DB !== 'undefined' && DB.getProductEffectiveDiscount ? DB.getProductEffectiveDiscount(activeProduct) : { has_discount: false });
+        const finalPrice = eff.has_discount ? eff.discounted_price : minPrice;
+        let rawActiveImg = (Array.isArray(activeProduct.images) && activeProduct.images[0]) || activeProduct.image_url || logoUrl;
+        const activeImgUrl = rawActiveImg.startsWith('http') ? rawActiveImg : `${origin}/${rawActiveImg.replace(/^\/+/, '')}`;
+        const pUrl = getSanitizedCanonicalUrl({ p: activeProduct.slug || activeProduct.id });
+
+        const standaloneProductSchema = {
+          '@type': 'Product',
+          '@id': `${pUrl}#product`,
+          name: activeProduct.name,
+          description: activeProduct.description || activeProduct.name,
+          image: [activeImgUrl],
+          sku: activeProduct.sku || activeProduct.id,
+          offers: {
+            '@type': 'Offer',
+            url: pUrl,
+            priceCurrency: 'IDR',
+            price: Number(finalPrice) || 0,
+            priceValidUntil: '2027-12-31',
+            availability: (activeProduct.stock === undefined || activeProduct.stock === null || activeProduct.stock > 0 || activeProduct.is_unlimited_stock)
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            seller: {
+              '@type': 'Organization',
+              name: storeName
+            }
+          },
+          brand: {
+            '@type': 'Brand',
+            name: storeName
+          }
+        };
+
+        graph.push(standaloneProductSchema);
+      }
+
+      schemaScript.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': graph
+      }, null, 2);
+    } catch (err) {
+      console.warn('Gagal menyusun Schema.org JSON-LD:', err);
+    }
+  }
+
+  /**
+   * 4. MODULASI META TAG GRANULAR PADA LEVEL PRODUK (DEEP LINKING & SOCIAL SHARE)
+   */
+  let storefrontDefaultMetadata = null;
+
+  function setProductMetaSEO(product) {
+    if (!product) return;
+    try {
+      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+      const storeName = settings?.store_name || 'Songer Creative';
+      const prodTitle = `${product.name} | ${storeName}`;
+      const rawDesc = product.description || `Dapatkan ${product.name} harga terbaik dengan jaminan kualitas resmi di ${storeName}.`;
+      const prodDesc = rawDesc.replace(/\s+/g, ' ').trim().slice(0, 160);
+
+      const origin = window.location.origin || '';
+      let rawImg = (Array.isArray(product.images) && product.images[0]) || product.image_url || settings?.web_logo || 'assets/images/logo-songer-creative.png';
+      const prodImg = rawImg.startsWith('http') ? rawImg : `${origin}/${rawImg.replace(/^\/+/, '')}`;
+      const prodUrl = getSanitizedCanonicalUrl({ p: product.slug || product.id });
+
+      // Simpan backup state storefront awal jika belum tersimpan
+      if (!storefrontDefaultMetadata) {
+        storefrontDefaultMetadata = {
+          title: document.title,
+          description: document.getElementById('meta-description')?.getAttribute('content') || '',
+          canonical: document.getElementById('canonical-url')?.getAttribute('href') || '',
+          ogTitle: document.getElementById('og-title')?.getAttribute('content') || '',
+          ogDesc: document.getElementById('og-description')?.getAttribute('content') || '',
+          ogImage: document.getElementById('og-image')?.getAttribute('content') || '',
+          ogUrl: document.getElementById('og-url')?.getAttribute('href') || '',
+          twTitle: document.getElementById('twitter-title')?.getAttribute('content') || '',
+          twDesc: document.getElementById('twitter-description')?.getAttribute('content') || '',
+          twImage: document.getElementById('twitter-image')?.getAttribute('content') || ''
+        };
+      }
+
+      // Mutasi Title & Deskripsi Meta
+      document.title = prodTitle;
+      const pageTitleEl = document.getElementById('page-title');
+      if (pageTitleEl) pageTitleEl.textContent = prodTitle;
+
+      const metaDesc = document.getElementById('meta-description');
+      if (metaDesc) metaDesc.setAttribute('content', prodDesc);
+
+      const canonicalEl = document.getElementById('canonical-url');
+      if (canonicalEl) canonicalEl.setAttribute('href', prodUrl);
+
+      // Mutasi Open Graph
+      const ogTitle = document.getElementById('og-title');
+      if (ogTitle) ogTitle.setAttribute('content', prodTitle);
+      const ogDesc = document.getElementById('og-description');
+      if (ogDesc) ogDesc.setAttribute('content', prodDesc);
+      const ogImage = document.getElementById('og-image');
+      if (ogImage) ogImage.setAttribute('content', prodImg);
+      const ogUrl = document.getElementById('og-url');
+      if (ogUrl) ogUrl.setAttribute('href', prodUrl);
+
+      // Mutasi Twitter Card
+      const twTitle = document.getElementById('twitter-title');
+      if (twTitle) twTitle.setAttribute('content', prodTitle);
+      const twDesc = document.getElementById('twitter-description');
+      if (twDesc) twDesc.setAttribute('content', prodDesc);
+      const twImage = document.getElementById('twitter-image');
+      if (twImage) twImage.setAttribute('content', prodImg);
+
+      // Mutasi Skema JSON-LD dengan Entitas Product
+      renderStoreSchemaGraph(product);
+    } catch (e) {
+      console.warn('Gagal memutasi metadata SEO produk:', e);
+    }
+  }
+
+  function restoreStorefrontSEO() {
+    try {
+      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+      const storeName = settings?.store_name || 'Songer Creative';
+      const storeTagline = settings?.store_tagline || 'Katalog & Layanan Terpadu';
+      const fullTitle = `${storeName} — ${storeTagline}`;
+      const storeDesc = settings?.store_description || `Katalog resmi ${storeName} dengan pilihan produk berkualitas dan transaksi aman terpercaya.`;
+
+      const origin = window.location.origin || '';
+      let rawLogo = settings?.web_logo || 'assets/images/logo-songer-creative.png';
+      const logoUrl = rawLogo.startsWith('http') ? rawLogo : `${origin}/${rawLogo.replace(/^\/+/, '')}`;
+      const canonicalStoreUrl = getSanitizedCanonicalUrl();
+
       document.title = fullTitle;
       const pageTitleEl = document.getElementById('page-title');
       if (pageTitleEl) pageTitleEl.textContent = fullTitle;
@@ -429,7 +1029,7 @@ const BuyerStore = (() => {
       if (metaDesc) metaDesc.setAttribute('content', storeDesc);
 
       const canonicalEl = document.getElementById('canonical-url');
-      if (canonicalEl) canonicalEl.setAttribute('href', currentUrl);
+      if (canonicalEl) canonicalEl.setAttribute('href', canonicalStoreUrl);
 
       // Open Graph Tags
       const ogTitle = document.getElementById('og-title');
@@ -439,9 +1039,7 @@ const BuyerStore = (() => {
       const ogImage = document.getElementById('og-image');
       if (ogImage) ogImage.setAttribute('content', logoUrl);
       const ogUrl = document.getElementById('og-url');
-      if (ogUrl) ogUrl.setAttribute('href', currentUrl);
-      const ogSiteName = document.getElementById('og-site-name');
-      if (ogSiteName) ogSiteName.setAttribute('content', storeName);
+      if (ogUrl) ogUrl.setAttribute('href', canonicalStoreUrl);
 
       // Twitter Cards
       const twTitle = document.getElementById('twitter-title');
@@ -451,55 +1049,143 @@ const BuyerStore = (() => {
       const twImage = document.getElementById('twitter-image');
       if (twImage) twImage.setAttribute('content', logoUrl);
 
-      // Schema.org JSON-LD
-      const schemaScript = document.getElementById('saas-store-schema-jsonld');
-      if (schemaScript) {
-        const products = (typeof DB !== 'undefined' && DB.getProducts) ? DB.getProducts() : [];
-        const topProducts = (products || []).slice(0, 10).map((p, idx) => ({
-          "@type": "Product",
-          "position": idx + 1,
-          "name": p.name || 'Produk Percetakan',
-          "description": p.description || p.name,
-          "image": p.image_url || logoUrl,
-          "offers": {
-            "@type": "Offer",
-            "priceCurrency": "IDR",
-            "price": p.price || 0,
-            "availability": (p.stock === undefined || p.stock > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-          }
-        }));
-
-        const schemaPayload = {
-          "@context": "https://schema.org",
-          "@graph": [
-            {
-              "@type": "LocalBusiness",
-              "@id": `${currentUrl}#store`,
-              "name": storeName,
-              "description": storeTagline,
-              "telephone": settings?.whatsapp_number || settings?.store_phone || "+6281234567890",
-              "email": settings?.store_email || "info@songercreative.com",
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": settings?.store_address || "Workshop Songer Creative",
-                "addressCountry": "ID"
-              },
-              "image": logoUrl,
-              "url": currentUrl,
-              "priceRange": "Rp 5.000 - Rp 1.000.000"
-            },
-            {
-              "@type": "ItemList",
-              "name": `Katalog Unggulan ${storeName}`,
-              "itemListElement": topProducts
-            }
-          ]
-        };
-        schemaScript.textContent = JSON.stringify(schemaPayload, null, 2);
-      }
-    } catch (err) {
-      console.warn('Gagal memuat dynamic SEO:', err);
+      // Kembalikan Schema.org JSON-LD ke level toko
+      renderStoreSchemaGraph(null);
+    } catch (e) {
+      console.warn('Gagal merestorasi SEO toko:', e);
     }
+  }
+
+  /**
+   * KONTROLER MODAL DETAIL / QUICK VIEW PRODUK
+   */
+  function openProductDetailModal(productOrId) {
+    const modal = document.getElementById('modal-product-detail');
+    if (!modal) return;
+
+    let prod = null;
+    if (typeof productOrId === 'object' && productOrId) {
+      prod = productOrId;
+    } else if (typeof DB !== 'undefined' && DB.getProductById) {
+      prod = DB.getProductById(productOrId);
+    }
+    if (!prod) return;
+
+    const titleEl = document.getElementById('pdp-modal-title');
+    const catEl = document.getElementById('pdp-modal-cat-badge');
+    const descEl = document.getElementById('pdp-modal-desc');
+    const priceEl = document.getElementById('pdp-modal-price');
+    const strikeEl = document.getElementById('pdp-modal-strike-price');
+    const imgEl = document.getElementById('pdp-modal-img');
+    const discTagEl = document.getElementById('pdp-modal-discount-tag');
+    const fullPdpBtn = document.getElementById('btn-pdp-modal-full-pdp');
+    const addCartBtn = document.getElementById('btn-pdp-modal-add-cart');
+
+    const minPrice = getProductStartingPrice(prod);
+    const eff = prod.effective_discount || (typeof DB !== 'undefined' && DB.getProductEffectiveDiscount ? DB.getProductEffectiveDiscount(prod) : { has_discount: false });
+    const finalPrice = eff.has_discount ? eff.discounted_price : minPrice;
+    const img = (Array.isArray(prod.images) && prod.images[0]) || prod.image_url || 'assets/images/logo-songer-creative.png';
+
+    if (titleEl) titleEl.textContent = prod.name;
+    if (catEl) catEl.textContent = prod.category_name || 'Katalog';
+    if (descEl) descEl.textContent = prod.description || 'Tidak ada deskripsi rinci.';
+    if (priceEl) priceEl.textContent = formatIDR(finalPrice);
+
+    if (strikeEl) {
+      if (eff.has_discount && eff.original_price > finalPrice) {
+        strikeEl.textContent = formatIDR(eff.original_price);
+        strikeEl.classList.remove('hidden');
+      } else {
+        strikeEl.classList.add('hidden');
+      }
+    }
+
+    if (discTagEl) {
+      if (eff.has_discount && eff.percent > 0) {
+        discTagEl.textContent = `-${eff.percent}%`;
+        discTagEl.classList.remove('hidden');
+      } else {
+        discTagEl.classList.add('hidden');
+      }
+    }
+
+    if (imgEl) {
+      imgEl.src = img;
+      imgEl.alt = prod.name;
+    }
+
+    if (fullPdpBtn) {
+      fullPdpBtn.href = `product.html?id=${prod.id}`;
+    }
+
+    if (addCartBtn) {
+      addCartBtn.onclick = (e) => {
+        e.preventDefault();
+        handleSmartAddToCart(prod.id);
+        closeProductDetailModal();
+      };
+    }
+
+    // Mutasi SEO ke produk
+    setProductMetaSEO(prod);
+
+    // Tampilkan modal
+    modal.classList.remove('hidden');
+    if (window.lucide && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
+    }
+  }
+
+  function closeProductDetailModal() {
+    const modal = document.getElementById('modal-product-detail');
+    if (!modal || modal.classList.contains('hidden')) return;
+    modal.classList.add('hidden');
+
+    // Kembalikan SEO ke level storefront
+    restoreStorefrontSEO();
+  }
+
+  function initProductDetailModalEvents() {
+    const modal = document.getElementById('modal-product-detail');
+    const btnClose = document.getElementById('btn-close-product-modal');
+    if (btnClose && !btnClose._hasEventListener) {
+      btnClose._hasEventListener = true;
+      btnClose.addEventListener('click', closeProductDetailModal);
+    }
+    if (modal && !modal._hasEventListener) {
+      modal._hasEventListener = true;
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeProductDetailModal();
+      });
+    }
+    if (!document._hasPdpModalEscapeListener) {
+      document._hasPdpModalEscapeListener = true;
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+          closeProductDetailModal();
+        }
+      });
+    }
+  }
+
+  function initStorefrontSEO() {
+    restoreStorefrontSEO();
+    initProductDetailModalEvents();
+
+    // Deteksi Deep-Link produk pada URL saat initial page load (?p=slug atau ?id=...)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetParam = urlParams.get('p') || urlParams.get('id');
+      if (targetParam && typeof DB !== 'undefined') {
+        const products = DB.getProducts ? DB.getProducts({ status: 'active' }) : [];
+        const matched = products.find(p => String(p.id) === String(targetParam) || (p.slug && p.slug === targetParam));
+        if (matched) {
+          setTimeout(() => {
+            openProductDetailModal(matched);
+          }, 350);
+        }
+      }
+    } catch (e) {}
   }
 
   // ----------------------------------------------------------------------------
@@ -515,28 +1201,55 @@ const BuyerStore = (() => {
     const loginIconColor = settings.login_icon_color || settings.navbar_login_icon_color || '#334155';
 
     if (customer && customer.name) {
-      const firstName = customer.name.split(' ')[0] || 'User';
-      const avatarHtml = customer.avatar_url
-        ? `<img src="${customer.avatar_url}" alt="Avatar" class="w-4 h-4 rounded-full object-cover shrink-0" />`
-        : `<i class="bi bi-person-check-fill text-sm text-emerald-600 shrink-0"></i>`;
+      // Poin 8: Saat SUDAH login -> SEMBUNYIKAN teks nama, tampilkan HANYA foto/avatar bulat pelanggan
+      const boxSize = settings.login_box_size || '38';
+      const avatarUrl = customer.avatar_url || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(customer.name) + '&background=059669&color=fff');
+      const avatarHtml = `<img src="${avatarUrl}" alt="${escapeHtml(customer.name)}" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.outerHTML='<i class=\\'bi bi-person-circle text-lg text-emerald-600\\'></i>';" />`;
 
-      btnLogin.innerHTML = `
-        ${avatarHtml}
-        <span class="font-bold text-xs truncate max-w-[80px] sm:max-w-[120px] text-slate-800" style="color: ${loginTextColor};">${escapeHtml(firstName)}</span>
-      `;
-      btnLogin.title = `Profil: ${customer.name} (Klik untuk kelola)`;
-      btnLogin.classList.add('border-emerald-300', 'bg-emerald-50/70');
+      btnLogin.innerHTML = avatarHtml;
+      btnLogin.className = 'w-[38px] h-[38px] rounded-full overflow-hidden border-2 border-emerald-500 bg-white shadow-xs hover:ring-2 hover:ring-emerald-200 transition flex items-center justify-center p-0 shrink-0 cursor-pointer';
+      btnLogin.style.width = `${boxSize}px`;
+      btnLogin.style.height = `${boxSize}px`;
+      btnLogin.style.minWidth = `${boxSize}px`;
+      btnLogin.style.minHeight = `${boxSize}px`;
+      btnLogin.style.padding = '0';
+      btnLogin.title = `Profil: ${customer.name} (Klik untuk detail)`;
     } else {
-      btnLogin.classList.remove('border-emerald-300', 'bg-emerald-50/70');
+      // Pelanggan BELUM login: tampilkan sesuai konfigurasi tema
+      btnLogin.style.width = '';
+      btnLogin.style.height = '';
+      btnLogin.style.minWidth = '';
+      btnLogin.style.minHeight = '';
+      btnLogin.style.padding = '';
+      btnLogin.className = 'inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-2xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-bold border border-slate-200 shadow-xs transition shrink-0 cursor-pointer';
+
+      const loginDisplay = settings.login_btn_display || 'icon_text';
       const loginIconKey = settings.login_icon || settings.navbar_login_icon || 'bi-person-fill';
       const loginText = settings.login_btn_text || 'Login';
       const loginIconSize = settings.login_icon_size || '16';
+      const loginBoxSize = settings.login_box_size || '38';
       const iconStyle = `color: ${loginIconColor}; font-size: ${loginIconSize}px; width: ${loginIconSize}px; height: ${loginIconSize}px;`;
 
-      btnLogin.innerHTML = `
-        ${renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle)}
-        <span class="hidden sm:inline font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>
-      `;
+      if (loginBoxSize) {
+        btnLogin.style.height = `${loginBoxSize}px`;
+        btnLogin.style.minHeight = `${loginBoxSize}px`;
+        if (loginDisplay === 'icon_only') {
+          btnLogin.style.width = `${loginBoxSize}px`;
+          btnLogin.style.minWidth = `${loginBoxSize}px`;
+          btnLogin.style.padding = '0';
+        }
+      }
+
+      if (loginDisplay === 'icon_only') {
+        btnLogin.innerHTML = renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle);
+      } else if (loginDisplay === 'text_only') {
+        btnLogin.innerHTML = `<span class="font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>`;
+      } else {
+        btnLogin.innerHTML = `
+          ${renderNavIconHtml(loginIconKey, 'navbar-login-icon-el', iconStyle)}
+          <span class="hidden sm:inline font-bold navbar-login-text-el" style="color: ${loginTextColor};">${escapeHtml(loginText)}</span>
+        `;
+      }
       btnLogin.title = 'Masuk Akun';
     }
   }
@@ -561,41 +1274,83 @@ const BuyerStore = (() => {
     const form = document.getElementById('form-customer-auth');
     const btnGoogle = document.getElementById('btn-auth-google');
     const btnLogout = document.getElementById('btn-logout-customer');
+    const btnEditProfile = document.getElementById('btn-edit-customer-profile');
     const loggedInBox = document.getElementById('auth-logged-in-box');
     const authUserName = document.getElementById('auth-user-name');
-    const authUserContact = document.getElementById('auth-user-contact');
+    const authUserPhoneText = document.getElementById('auth-user-phone-text');
+    const authUserEmailText = document.getElementById('auth-user-email-text');
+    const authUserAddressText = document.getElementById('auth-user-address-text');
     const authUserAvatar = document.getElementById('auth-user-avatar');
+    const pointsCard = document.getElementById('auth-user-points-card');
+    const pointsValEl = document.getElementById('auth-user-points-val');
 
-    function syncModalState() {
+    function syncModalState(forceEditMode = false) {
       const customer = (typeof DB !== 'undefined' && DB.getActiveCustomer) ? DB.getActiveCustomer() : null;
-      if (customer && customer.name) {
+
+      if (customer && customer.name && !forceEditMode) {
+        // Tampilkan Detail User yang diperkaya (Logged In View)
         if (form) form.classList.add('hidden');
         if (btnGoogle && btnGoogle.parentElement) btnGoogle.parentElement.classList.add('hidden');
         if (loggedInBox) {
           loggedInBox.classList.remove('hidden');
           if (authUserName) authUserName.textContent = customer.name;
-          if (authUserContact) authUserContact.textContent = customer.phone || customer.email || 'Pelanggan Terdaftar';
+          if (authUserPhoneText) authUserPhoneText.textContent = customer.phone || '-';
+          if (authUserEmailText) authUserEmailText.textContent = customer.email || 'Email belum diisi';
+          if (authUserAddressText) authUserAddressText.textContent = customer.address || 'Belum ada alamat pengiriman tercatat';
           if (authUserAvatar) {
             authUserAvatar.src = customer.avatar_url || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(customer.name) + '&background=059669&color=fff');
           }
+
+          // Cek Validasi Ganda Hak Akses & Status Aktif Sistem Poin
+          const isPointsActive = (typeof DB !== 'undefined' && DB.isCustomerPointsActive) ? DB.isCustomerPointsActive(customer) : false;
+          if (pointsCard) {
+            if (isPointsActive) {
+              pointsCard.classList.remove('hidden');
+              const pts = (typeof DB !== 'undefined' && DB.getCustomerPoints) ? DB.getCustomerPoints(customer) : 0;
+              if (pointsValEl) pointsValEl.textContent = pts.toLocaleString('id-ID');
+            } else {
+              pointsCard.classList.add('hidden');
+            }
+          }
         }
       } else {
+        // Tampilkan Form Input (Guest Login atau Edit Profile Mode)
         if (form) form.classList.remove('hidden');
-        if (btnGoogle && btnGoogle.parentElement) btnGoogle.parentElement.classList.remove('hidden');
         if (loggedInBox) loggedInBox.classList.add('hidden');
-        // Auto prefill from guest inputs if available
-        const nameInput = document.getElementById('auth-cust-name');
-        const phoneInput = document.getElementById('auth-cust-phone');
-        const cartName = document.getElementById('cart-cust-name')?.value;
-        const cartPhone = document.getElementById('cart-cust-phone')?.value;
-        if (nameInput && cartName && !nameInput.value) nameInput.value = cartName;
-        if (phoneInput && cartPhone && !phoneInput.value) phoneInput.value = cartPhone;
+
+        if (customer && forceEditMode) {
+          if (btnGoogle && btnGoogle.parentElement) btnGoogle.parentElement.classList.add('hidden');
+          const submitBtn = document.getElementById('btn-save-customer-auth');
+          if (submitBtn) {
+            submitBtn.innerHTML = '<i class="bi bi-check2-circle text-base"></i><span>Perbarui Data Profil</span>';
+          }
+          const nameInput = document.getElementById('auth-cust-name');
+          const phoneInput = document.getElementById('auth-cust-phone');
+          const emailInput = document.getElementById('auth-cust-email');
+          const addrInput = document.getElementById('auth-cust-address');
+          if (nameInput) nameInput.value = customer.name || '';
+          if (phoneInput) phoneInput.value = customer.phone || '';
+          if (emailInput) emailInput.value = customer.email || '';
+          if (addrInput) addrInput.value = customer.address || '';
+        } else {
+          if (btnGoogle && btnGoogle.parentElement) btnGoogle.parentElement.classList.remove('hidden');
+          const submitBtn = document.getElementById('btn-save-customer-auth');
+          if (submitBtn) {
+            submitBtn.innerHTML = '<i class="bi bi-check2-circle text-base"></i><span>Simpan Profil &amp; Masuk</span>';
+          }
+          const nameInput = document.getElementById('auth-cust-name');
+          const phoneInput = document.getElementById('auth-cust-phone');
+          const cartName = document.getElementById('cart-cust-name')?.value;
+          const cartPhone = document.getElementById('cart-cust-phone')?.value;
+          if (nameInput && cartName && !nameInput.value) nameInput.value = cartName;
+          if (phoneInput && cartPhone && !phoneInput.value) phoneInput.value = cartPhone;
+        }
       }
     }
 
-    function openAuthModal() {
+    function openAuthModal(editMode = false) {
       if (!modal) return;
-      syncModalState();
+      syncModalState(editMode);
       modal.classList.remove('hidden');
     }
 
@@ -607,7 +1362,14 @@ const BuyerStore = (() => {
     if (btnLogin) {
       btnLogin.addEventListener('click', (e) => {
         e.preventDefault();
-        openAuthModal();
+        openAuthModal(false);
+      });
+    }
+
+    if (btnEditProfile) {
+      btnEditProfile.addEventListener('click', (e) => {
+        e.preventDefault();
+        syncModalState(true);
       });
     }
 
@@ -642,9 +1404,10 @@ const BuyerStore = (() => {
 
         prefillCustomerIntoCart(customerData);
         updateNavbarLoginUI();
+        initNavbarNotifications();
         closeAuthModal();
 
-        alert(`Selamat datang, ${googleName}! Berhasil masuk dengan Google.`);
+        showToast(`Selamat datang, ${googleName}! Berhasil masuk dengan Google.`, 'success');
       });
     }
 
@@ -658,21 +1421,23 @@ const BuyerStore = (() => {
         const address = (document.getElementById('auth-cust-address')?.value || '').trim();
 
         if (!name || name.length < 2) {
-          alert('Mohon isi nama lengkap dengan benar.');
+          showToast('Mohon isi nama lengkap dengan benar.', 'warning');
           return;
         }
         if (!phone || phone.replace(/\D/g, '').length < 9) {
-          alert('Mohon isi nomor WhatsApp aktif dengan benar (minimal 9 digit).');
+          showToast('Mohon isi nomor WhatsApp aktif dengan benar (minimal 9 digit).', 'warning');
           return;
         }
 
+        const existingCust = (typeof DB !== 'undefined' && DB.getActiveCustomer) ? DB.getActiveCustomer() : {};
         const customerData = {
+          ...existingCust,
           name,
           phone,
           email,
           address,
-          auth_provider: 'manual',
-          avatar_url: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=059669&color=fff'
+          auth_provider: existingCust.auth_provider || 'manual',
+          avatar_url: existingCust.avatar_url || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=059669&color=fff')
         };
 
         if (typeof DB !== 'undefined' && DB.saveCustomer) {
@@ -681,9 +1446,10 @@ const BuyerStore = (() => {
 
         prefillCustomerIntoCart(customerData);
         updateNavbarLoginUI();
-        closeAuthModal();
+        initNavbarNotifications();
+        syncModalState(false);
 
-        alert(`Profil ${name} berhasil disimpan!`);
+        showToast(`Profil ${name} berhasil disimpan!`, 'success');
       });
     }
 
@@ -695,8 +1461,9 @@ const BuyerStore = (() => {
           DB.clearActiveCustomer();
         }
         updateNavbarLoginUI();
+        initNavbarNotifications();
         closeAuthModal();
-        alert('Anda telah keluar dari akun pelanggan.');
+        showToast('Anda telah keluar dari akun pelanggan.', 'info');
       });
     }
 
@@ -704,7 +1471,7 @@ const BuyerStore = (() => {
   }
 
   // ----------------------------------------------------------------------------
-  // NAVBAR REAL-TIME ORDER NOTIFICATION BELL & DROPDOWN
+  // NAVBAR REAL-TIME ORDER NOTIFICATION BELL & DROPDOWN (POIN 7 REVISI)
   // ----------------------------------------------------------------------------
   function initNavbarNotifications() {
     const btnNotif = document.getElementById('btn-navbar-notif');
@@ -712,97 +1479,199 @@ const BuyerStore = (() => {
     const btnClose = document.getElementById('btn-close-notif-dropdown');
     const notifList = document.getElementById('navbar-notif-list');
     const badgeCount = document.getElementById('notif-badge-count');
+    const headerUnreadBadge = document.getElementById('notif-header-unread-badge');
 
-    function refreshNotificationList() {
+    function getSeenNotifOrderIds() {
+      const tid = (typeof DB !== 'undefined' && DB.getCurrentTenant) ? (DB.getCurrentTenant()?.tenant_id || 'tenant-songer-001') : 'tenant-songer-001';
+      try {
+        const stored = localStorage.getItem(`pos_seen_notif_order_ids_${tid}`) || localStorage.getItem('pos_seen_notif_order_ids');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function markNotifOrdersAsSeen(orderIds) {
+      if (!Array.isArray(orderIds) || orderIds.length === 0) return;
+      const tid = (typeof DB !== 'undefined' && DB.getCurrentTenant) ? (DB.getCurrentTenant()?.tenant_id || 'tenant-songer-001') : 'tenant-songer-001';
+      try {
+        const currentSeen = new Set(getSeenNotifOrderIds().map(String));
+        orderIds.forEach(id => currentSeen.add(String(id)));
+        const updated = Array.from(currentSeen);
+        localStorage.setItem(`pos_seen_notif_order_ids_${tid}`, JSON.stringify(updated));
+      } catch (e) {}
+    }
+
+    function updateNotifDropdownPosition() {
+      if (!dropdown || dropdown.classList.contains('hidden')) return;
+      const headerEl = document.getElementById('main-storefront-header');
+      if (window.innerWidth < 640) {
+        if (headerEl) {
+          const rect = headerEl.getBoundingClientRect();
+          dropdown.style.top = `${rect.bottom + 8}px`;
+        } else {
+          dropdown.style.top = '72px';
+        }
+      } else {
+        dropdown.style.top = '';
+      }
+    }
+
+    function refreshNotificationList(markSeenNow = false) {
       if (!notifList) return;
       const orders = (typeof DB !== 'undefined' && DB.getOrders) ? DB.getOrders() : [];
       const customer = (typeof DB !== 'undefined' && DB.getActiveCustomer) ? DB.getActiveCustomer() : null;
 
-      let relevantOrders = orders;
-      if (customer && customer.phone) {
+      let relevantOrders = [];
+      if (customer) {
+        const custPhone = (customer.phone || '').replace(/\D/g, '');
+        const custEmail = (customer.email || '').trim().toLowerCase();
+        const custName = (customer.name || '').trim().toLowerCase();
+
         relevantOrders = orders.filter(o => {
-          const matchPhone = o.customer_phone && o.customer_phone.replace(/\D/g, '') === customer.phone.replace(/\D/g, '');
-          const matchName = o.customer_name && o.customer_name.toLowerCase() === customer.name.toLowerCase();
-          return matchPhone || matchName;
+          const oPhone = (o.customer_phone || '').replace(/\D/g, '');
+          const oEmail = (o.customer_email || '').trim().toLowerCase();
+          const oName = (o.customer_name || '').trim().toLowerCase();
+          return (custPhone && oPhone && oPhone === custPhone) ||
+                 (custEmail && oEmail && oEmail === custEmail) ||
+                 (custName && oName && oName === custName);
         });
-        if (relevantOrders.length === 0) relevantOrders = orders.slice(0, 5);
       } else {
         relevantOrders = orders.slice(0, 5);
       }
 
-      const activeCount = relevantOrders.filter(o => {
-        const s = (o.status || '').toUpperCase();
-        return s === 'PENDING' || s === 'MENUNGGU_PEMBAYARAN' || s === 'PROSES' || s === 'IN_PROGRESS';
-      }).length;
+      // Logika Unread: hitung pesanan yang ID-nya belum ada di localStorage
+      const seenIds = new Set(getSeenNotifOrderIds().map(String));
+      const unreadOrders = relevantOrders.filter(o => !seenIds.has(String(o.id)));
+      const unreadCount = unreadOrders.length;
 
+      // Update badge di lonceng navbar (HANYA tampil jika unreadCount > 0)
       if (badgeCount) {
-        if (activeCount > 0) {
-          badgeCount.textContent = activeCount > 9 ? '9+' : activeCount;
+        if (unreadCount > 0) {
+          badgeCount.textContent = unreadCount > 9 ? '9+' : unreadCount;
           badgeCount.classList.remove('hidden');
         } else {
           badgeCount.classList.add('hidden');
         }
       }
 
-      if (!relevantOrders || relevantOrders.length === 0) {
-        notifList.innerHTML = `
-          <div class="py-6 text-center text-slate-400">
-            <i class="bi bi-inbox text-2xl mb-1 block"></i>
-            <p class="text-xs font-semibold">Belum ada riwayat pesanan.</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">Pesanan baru Anda akan otomatis terpantau di sini.</p>
-          </div>
-        `;
-        return;
+      // Update badge unread di header dropdown
+      if (headerUnreadBadge) {
+        if (unreadCount > 0) {
+          headerUnreadBadge.textContent = unreadCount > 99 ? '99+' : `${unreadCount} baru`;
+          headerUnreadBadge.classList.remove('hidden');
+        } else {
+          headerUnreadBadge.classList.add('hidden');
+        }
       }
 
-      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
-      const storeWa = (settings.whatsapp_number || '').replace(/\D/g, '');
+      // Jika dropdown sedang dibuka oleh user, tandai pesanan sebagai sudah dilihat
+      if (markSeenNow && relevantOrders.length > 0) {
+        markNotifOrdersAsSeen(relevantOrders.map(o => o.id));
+        if (badgeCount) badgeCount.classList.add('hidden');
+        if (headerUnreadBadge) headerUnreadBadge.classList.add('hidden');
+      }
 
-      notifList.innerHTML = relevantOrders.map(order => {
-        const statusUpper = (order.status || 'PENDING').toUpperCase();
-        let statusBadge = '';
-        if (statusUpper === 'PAID' || statusUpper === 'SELESAI' || statusUpper === 'COMPLETED') {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700">Selesai / Lunas</span>';
-        } else if (statusUpper === 'PROSES' || statusUpper === 'IN_PROGRESS') {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-700">Sedang Dicetak</span>';
-        } else {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-700">Menunggu Pembayaran</span>';
-        }
+      // Hitung kuota untuk 2 Menu Utama
+      const activeOrdersCount = relevantOrders.filter(o => {
+        const s = (o.status || '').toUpperCase();
+        return s === 'PENDING' || s === 'MENUNGGU_PEMBAYARAN' || s === 'PROCESSING' || s === 'PROSES' || s === 'IN_PROGRESS';
+      }).length;
 
-        const dateStr = order.created_at ? new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Hari ini';
-        const invoice = order.invoice_number || `INV-${order.id ? order.id.toString().slice(-6) : '89201'}`;
-        const total = (typeof formatIDR === 'function') ? formatIDR(order.total || 0) : `Rp ${(order.total || 0).toLocaleString('id-ID')}`;
-        const waTrackUrl = storeWa ? `https://wa.me/${storeWa}?text=Halo%20Admin,%20saya%20ingin%20cek%20status%20pesanan%20no%20*${encodeURIComponent(invoice)}*` : '#';
+      const completedOrdersCount = relevantOrders.filter(o => {
+        const s = (o.status || '').toUpperCase();
+        return s === 'COMPLETED' || s === 'PAID' || s === 'SELESAI';
+      }).length;
 
-        return `
-          <div class="p-3 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition space-y-1.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-mono font-black text-slate-800">${escapeHtml(invoice)}</span>
-              ${statusBadge}
-            </div>
-            <div class="flex items-center justify-between text-[11px] text-slate-500">
-              <span>${escapeHtml(dateStr)}</span>
-              <span class="font-bold text-slate-900">${total}</span>
-            </div>
-            ${storeWa ? `
-              <div class="pt-1 flex justify-end">
-                <a href="${waTrackUrl}" target="_blank" rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-                  <i class="bi bi-whatsapp"></i> Lacak ke CS Toko
-                </a>
+      notifList.innerHTML = `
+        <div class="space-y-2.5 py-1">
+          <!-- 1. Menu Pesanan Saya -->
+          <div id="btn-notif-menu-active" class="p-3 rounded-2xl border border-slate-200/80 hover:border-emerald-300 bg-slate-50/70 hover:bg-emerald-50/40 transition cursor-pointer flex items-center justify-between group shadow-2xs">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
+                <i class="bi bi-bag-check-fill text-lg"></i>
               </div>
-            ` : ''}
+              <div class="min-w-0">
+                <h5 class="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition leading-tight">Pesanan Saya</h5>
+                <p class="text-[11px] text-slate-500 mt-0.5 truncate">Sedang diproses &amp; menunggu pembayaran</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${activeOrdersCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-200/80 text-slate-500'}">
+                ${activeOrdersCount}
+              </span>
+              <i class="bi bi-chevron-right text-xs text-slate-400 group-hover:text-emerald-600 transition"></i>
+            </div>
           </div>
-        `;
-      }).join('');
+
+          <!-- 2. Menu Riwayat Pesanan -->
+          <div id="btn-notif-menu-history" class="p-3 rounded-2xl border border-slate-200/80 hover:border-emerald-300 bg-slate-50/70 hover:bg-emerald-50/40 transition cursor-pointer flex items-center justify-between group shadow-2xs">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
+                <i class="bi bi-clock-history text-lg"></i>
+              </div>
+              <div class="min-w-0">
+                <h5 class="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition leading-tight">Riwayat Pesanan</h5>
+                <p class="text-[11px] text-slate-500 mt-0.5 truncate">Pesanan selesai &amp; transaksi lunas</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${completedOrdersCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200/80 text-slate-500'}">
+                ${completedOrdersCount}
+              </span>
+              <i class="bi bi-chevron-right text-xs text-slate-400 group-hover:text-emerald-600 transition"></i>
+            </div>
+          </div>
+
+          ${!customer ? `
+            <div class="p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100 text-center">
+              <p class="text-[11px] text-emerald-800 font-medium">Masuk akun untuk sinkronisasi pesanan antar perangkat.</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Event listener klik pada baris menu
+      const btnActive = document.getElementById('btn-notif-menu-active');
+      const btnHistory = document.getElementById('btn-notif-menu-history');
+
+      if (btnActive) {
+        btnActive.addEventListener('click', () => {
+          dropdown.classList.add('hidden');
+          if (!customer) {
+            const authBtn = document.getElementById('btn-navbar-login');
+            if (authBtn) authBtn.click();
+            showToast('Silakan masuk akun untuk melihat rincian pesanan Anda.', 'info');
+          } else {
+            showToast(`Anda memiliki ${activeOrdersCount} pesanan aktif.`, 'info');
+          }
+        });
+      }
+
+      if (btnHistory) {
+        btnHistory.addEventListener('click', () => {
+          dropdown.classList.add('hidden');
+          if (!customer) {
+            const authBtn = document.getElementById('btn-navbar-login');
+            if (authBtn) authBtn.click();
+            showToast('Silakan masuk akun untuk melihat riwayat pesanan.', 'info');
+          } else {
+            showToast(`Total ${completedOrdersCount} pesanan selesai tercatat.`, 'info');
+          }
+        });
+      }
     }
 
     if (btnNotif && dropdown) {
       btnNotif.addEventListener('click', (e) => {
         e.stopPropagation();
+        const willOpen = dropdown.classList.contains('hidden');
         dropdown.classList.toggle('hidden');
-        if (!dropdown.classList.contains('hidden')) {
-          refreshNotificationList();
+        if (willOpen) {
+          updateNotifDropdownPosition();
+          refreshNotificationList(true);
+        } else {
+          dropdown.style.top = '';
         }
       });
     }
@@ -811,18 +1680,23 @@ const BuyerStore = (() => {
       btnClose.addEventListener('click', (e) => {
         e.stopPropagation();
         dropdown.classList.add('hidden');
+        dropdown.style.top = '';
       });
     }
 
     document.addEventListener('click', (e) => {
       if (dropdown && !dropdown.classList.contains('hidden')) {
-        if (!dropdown.contains(e.target) && !btnNotif.contains(e.target)) {
+        if (!dropdown.contains(e.target) && !btnNotif?.contains(e.target)) {
           dropdown.classList.add('hidden');
+          dropdown.style.top = '';
         }
       }
     });
 
-    refreshNotificationList();
+    window.addEventListener('resize', updateNotifDropdownPosition);
+    window.addEventListener('scroll', updateNotifDropdownPosition, { passive: true });
+
+    refreshNotificationList(false);
   }
 
   function applyHeaderBranding(settings) {
@@ -921,6 +1795,48 @@ const BuyerStore = (() => {
       if (storeTaglineEl) {
         storeTaglineEl.style.color = '';
         storeTaglineEl.className = 'text-[11px] text-slate-500 block truncate max-w-[200px] leading-tight mt-0.5';
+      }
+    }
+
+    // --- DYNAMIC NAVBAR ARCHITECTURE (STATIC VS STICKY & 1-ROW VS 2-ROWS) ---
+    const headerEl = document.getElementById('main-storefront-header');
+    if (headerEl) {
+      // 1. Opsi Posisi Navbar: 'sticky' (default) vs 'static'
+      const posMode = settings?.navbar_position_mode || 'sticky';
+      if (posMode === 'static') {
+        headerEl.classList.remove('sticky', 'top-0');
+        headerEl.classList.add('relative');
+      } else {
+        headerEl.classList.add('sticky', 'top-0');
+        headerEl.classList.remove('relative');
+      }
+
+      // 2. Opsi Baris Pencarian: '1_row' (default) vs '2_rows'
+      const layoutRows = settings?.navbar_layout_rows || '1_row';
+      const secondRowSearch = document.getElementById('navbar-second-row-search');
+      const firstRowSearch = document.getElementById('navbar-search-desktop-container');
+
+      if (layoutRows === '2_rows') {
+        if (secondRowSearch) secondRowSearch.classList.remove('hidden');
+        if (firstRowSearch) firstRowSearch.classList.add('hidden');
+        headerEl.classList.add('h-auto');
+      } else {
+        if (secondRowSearch) secondRowSearch.classList.add('hidden');
+        if (firstRowSearch) firstRowSearch.classList.remove('hidden');
+        headerEl.classList.remove('h-auto');
+      }
+
+      // 3. Update CSS Variable --store-header-height dinamis
+      const syncHeaderHeight = () => {
+        const height = headerEl.offsetHeight || 64;
+        document.documentElement.style.setProperty('--store-header-height', `${height}px`);
+      };
+      syncHeaderHeight();
+
+      if (window.ResizeObserver && !headerEl._hasResizeObserver) {
+        headerEl._hasResizeObserver = true;
+        const ro = new ResizeObserver(() => syncHeaderHeight());
+        ro.observe(headerEl);
       }
     }
   }
@@ -1543,54 +2459,8 @@ const BuyerStore = (() => {
     // Get subcategories of currently selected main category
     const activeSubCategories = activeMainCategoryId !== 'all' ? DB.getSubCategories(activeMainCategoryId) : [];
 
-    // Cek Customer Session untuk Personalized Greeting
+    // Sapaan pengunjung sudah tampil di #top-greeting-bar, hilangkan duplikasi kotak sapaan di atas Hero Banner
     let customerGreetingHtml = '';
-    if (settings.enable_customer_greeting !== false) {
-      let custName = '';
-      try {
-        const activeCust = DB.getActiveCustomer ? DB.getActiveCustomer() : null;
-        if (activeCust && activeCust.name) custName = activeCust.name;
-      } catch (e) { }
-
-      if (!custName) {
-        custName = localStorage.getItem('pos_last_customer_name') || '';
-      }
-      if (!custName) {
-        try {
-          const u = JSON.parse(localStorage.getItem('songer_customer_user') || '{}');
-          if (u.name) custName = u.name;
-        } catch (e) { }
-      }
-      if (!custName) {
-        try {
-          const tenantId = DB.getCurrentTenant ? DB.getCurrentTenant().id : 'songer-creative-01';
-          const raw = localStorage.getItem(`pos_active_customer_${tenantId}`);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            custName = parsed.name || raw;
-          }
-        } catch (e) { }
-      }
-
-      if (custName) {
-        customerGreetingHtml = `
-          <div class="p-3.5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-xs animate-fade-in">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-                👋
-              </div>
-              <div>
-                <span class="font-bold text-emerald-950">Halo, <strong class="text-emerald-700">${escapeHtml(custName)}</strong>!</span>
-                <span class="text-slate-600 ml-1">Selamat berbelanja kembali di <strong>${escapeHtml(settings.store_name || 'Songer Creative')}</strong>. Siap memesan kebutuhan cetak Anda?</span>
-              </div>
-            </div>
-            <span class="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-full whitespace-nowrap">
-              <i data-lucide="sparkles" class="w-3 h-3 text-emerald-600"></i> Pelanggan Setia
-            </span>
-          </div>
-        `;
-      }
-    }
 
     // --------------------------------------------------------------------------
     // REKONSTRUKSI 4 MODEL HERO SECTION ETALASE & SLIDER HALUS
@@ -1725,10 +2595,10 @@ const BuyerStore = (() => {
       return `
         <div class="relative group/catnav w-full">
           ${showArrows ? `
-            <button type="button" class="btn-cat-nav-prev hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -left-3 top-8 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="${trackId}" title="Geser Kiri (<)">
+            <button type="button" class="btn-cat-nav-prev cat-nav-hidden hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -left-3 top-8 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="${trackId}" title="Geser Kiri (<)" style="display: none;">
               <i class="bi bi-chevron-left text-xs"></i>
             </button>
-            <button type="button" class="btn-cat-nav-next hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -right-3 top-8 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="${trackId}" title="Geser Kanan (>)">
+            <button type="button" class="btn-cat-nav-next cat-nav-hidden hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -right-3 top-8 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="${trackId}" title="Geser Kanan (>)" style="display: none;">
               <i class="bi bi-chevron-right text-xs"></i>
             </button>
           ` : ''}
@@ -1743,35 +2613,47 @@ const BuyerStore = (() => {
       `;
     }
 
-    // Builder 2: Mode Pill Buttons Teks
-    function renderCategoryNavPillsText() {
+    // Builder 2: Mode Pill Buttons Teks (Semua Mode Kategori Memiliki Pembungkus .relative.group/catnav & Tombol Pintar)
+    function renderCategoryNavPillsText(isDesktopView) {
       const isAllActive = (activeQuickFilter === 'all' && activeMainCategoryId === 'all');
       const isBestsellerActive = (activeQuickFilter === 'bestseller');
       const isPromoActive = (activeQuickFilter === 'discount');
 
       const activePillStyle = `background-color: ${primColor}; color: #ffffff; border-color: ${primColor};`;
       const inactivePillStyle = `background-color: #ffffff; color: #1e293b; border-color: #e2e8f0;`;
+      const trackId = isDesktopView ? 'cat-pills-track-desktop' : 'cat-pills-track-mobile';
 
       return `
-        <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full">
-          <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs border hover:brightness-95" style="${isAllActive ? activePillStyle : inactivePillStyle}" data-filter="all" title="${escapeHtml(filterAllText)}">
-            <i class="bi bi-grid-fill text-xs"></i>
-            <span>${escapeHtml(filterAllText)}</span>
-          </button>
-          <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isBestsellerActive ? activePillStyle : inactivePillStyle}" data-filter="bestseller" title="${escapeHtml(filterBestsellerText)}">
-            <span>${escapeHtml(filterBestsellerText)}</span>
-          </button>
-          <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isPromoActive ? activePillStyle : inactivePillStyle}" data-filter="discount" title="${escapeHtml(filterPromoText)}">
-            <span>${escapeHtml(filterPromoText)}</span>
-          </button>
-          ${quickNavCategories.map(cat => {
-            const isCatActive = (activeMainCategoryId === cat.id);
-            return `
-              <button type="button" class="btn-cat-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isCatActive ? activePillStyle : inactivePillStyle}" data-cat="${cat.id}" title="${escapeHtml(cat.name)}">
-                <span>${escapeHtml(cat.name)}</span>
-              </button>
-            `;
-          }).join('')}
+        <div class="relative group/catnav w-full">
+          ${isDesktopView ? `
+            <button type="button" class="btn-cat-nav-prev cat-nav-hidden hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="${trackId}" title="Geser Kiri (<)" style="display: none;">
+              <i class="bi bi-chevron-left text-xs"></i>
+            </button>
+            <button type="button" class="btn-cat-nav-next cat-nav-hidden hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="${trackId}" title="Geser Kanan (>)" style="display: none;">
+              <i class="bi bi-chevron-right text-xs"></i>
+            </button>
+          ` : ''}
+
+          <div id="${trackId}" class="cat-scroll-track flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full">
+            <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs border hover:brightness-95" style="${isAllActive ? activePillStyle : inactivePillStyle}" data-filter="all" title="${escapeHtml(filterAllText)}">
+              <i class="bi bi-grid-fill text-xs"></i>
+              <span>${escapeHtml(filterAllText)}</span>
+            </button>
+            <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isBestsellerActive ? activePillStyle : inactivePillStyle}" data-filter="bestseller" title="${escapeHtml(filterBestsellerText)}">
+              <span>${escapeHtml(filterBestsellerText)}</span>
+            </button>
+            <button type="button" class="btn-quick-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isPromoActive ? activePillStyle : inactivePillStyle}" data-filter="discount" title="${escapeHtml(filterPromoText)}">
+              <span>${escapeHtml(filterPromoText)}</span>
+            </button>
+            ${quickNavCategories.map(cat => {
+              const isCatActive = (activeMainCategoryId === cat.id);
+              return `
+                <button type="button" class="btn-cat-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isCatActive ? activePillStyle : inactivePillStyle}" data-cat="${cat.id}" title="${escapeHtml(cat.name)}">
+                  <span>${escapeHtml(cat.name)}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
         </div>
       `;
     }
@@ -1806,17 +2688,25 @@ const BuyerStore = (() => {
         return `
           <div class="flex items-center gap-3 w-full">
             ${selectHtml}
-            <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none flex-1 min-w-0">
-              <button type="button" class="btn-quick-filter px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs border hover:brightness-95" style="${isAllActive ? activePillStyle : inactivePillStyle}" data-filter="all">
-                <i class="bi bi-grid-fill text-xs"></i>
-                <span>${escapeHtml(filterAllText)}</span>
+            <div class="relative group/catnav flex-1 min-w-0">
+              <button type="button" class="btn-cat-nav-prev cat-nav-hidden hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="cat-dropdown-pills-track-desktop" title="Geser Kiri (<)" style="display: none;">
+                <i class="bi bi-chevron-left text-xs"></i>
               </button>
-              <button type="button" class="btn-quick-filter px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isBestsellerActive ? activePillStyle : inactivePillStyle}" data-filter="bestseller">
-                <span>${escapeHtml(filterBestsellerText)}</span>
+              <button type="button" class="btn-cat-nav-next cat-nav-hidden hidden lg:flex opacity-0 group-hover/catnav:opacity-100 transition-opacity absolute -right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/95 shadow-md border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-white items-center justify-center cursor-pointer active:scale-95" data-target="cat-dropdown-pills-track-desktop" title="Geser Kanan (>)" style="display: none;">
+                <i class="bi bi-chevron-right text-xs"></i>
               </button>
-              <button type="button" class="btn-quick-filter px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isPromoActive ? activePillStyle : inactivePillStyle}" data-filter="discount">
-                <span>${escapeHtml(filterPromoText)}</span>
-              </button>
+              <div id="cat-dropdown-pills-track-desktop" class="cat-scroll-track flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full">
+                <button type="button" class="btn-quick-filter px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs border hover:brightness-95" style="${isAllActive ? activePillStyle : inactivePillStyle}" data-filter="all">
+                  <i class="bi bi-grid-fill text-xs"></i>
+                  <span>${escapeHtml(filterAllText)}</span>
+                </button>
+                <button type="button" class="btn-quick-filter px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isBestsellerActive ? activePillStyle : inactivePillStyle}" data-filter="bestseller">
+                  <span>${escapeHtml(filterBestsellerText)}</span>
+                </button>
+                <button type="button" class="btn-quick-filter px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isPromoActive ? activePillStyle : inactivePillStyle}" data-filter="discount">
+                  <span>${escapeHtml(filterPromoText)}</span>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -1831,7 +2721,7 @@ const BuyerStore = (() => {
 
     function renderCategoryNavByMode(mode, isDesktopView) {
       if (mode === 'dropdown') return renderCategoryNavDropdown(isDesktopView);
-      if (mode === 'pills_text') return renderCategoryNavPillsText();
+      if (mode === 'pills_text') return renderCategoryNavPillsText(isDesktopView);
       return renderCategoryNavIconImage(isDesktopView);
     }
 
@@ -1949,6 +2839,18 @@ const BuyerStore = (() => {
     initStoreSponsorCarousels();
     initStoreInternalSponsorCards();
     updateStoreFooter();
+
+    // Update dinamis BreadcrumbList & Schema.org JSON-LD saat kategori/subkategori berganti (SPA Client-Side)
+    if (typeof renderStoreSchemaGraph === 'function') {
+      renderStoreSchemaGraph();
+    }
+
+    // Inisialisasi & pembaruan visibilitas panah kategori pintar setelah DOM selesai reflow
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        initCategorySmartScroll();
+      }, 80);
+    });
   }
 
   // Intersperses Promotional & Sponsor Cards into Product Grid
@@ -3245,6 +4147,16 @@ const BuyerStore = (() => {
             SPONSOR
           </span>
 
+          <!-- Tombol Panah Navigasi Manual (< dan >) di Desktop (Muncul saat Hover) -->
+          ${showDots ? `
+            <button type="button" class="carousel-prev-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Sebelumnya">
+              <i class="bi bi-chevron-left text-sm"></i>
+            </button>
+            <button type="button" class="carousel-next-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Berikutnya">
+              <i class="bi bi-chevron-right text-sm"></i>
+            </button>
+          ` : ''}
+
           <!-- Dots Navigasi di Bagian Bawah Gambar (Hanya jika > 1 slide) -->
           ${showDots ? `
             <div class="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5 z-20 pointer-events-auto">
@@ -3414,10 +4326,10 @@ const BuyerStore = (() => {
 
           <!-- Tombol Panah Navigasi Manual (< dan >) di Desktop (Muncul saat Hover) -->
           ${showArrows ? `
-            <button type="button" class="carousel-prev-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Sebelumnya">
+            <button type="button" class="carousel-prev-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Sebelumnya">
               <i class="bi bi-chevron-left text-sm"></i>
             </button>
-            <button type="button" class="carousel-next-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Berikutnya">
+            <button type="button" class="carousel-next-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 shadow-md cursor-pointer" aria-label="Slide Berikutnya">
               <i class="bi bi-chevron-right text-sm"></i>
             </button>
           ` : ''}
@@ -3452,6 +4364,11 @@ const BuyerStore = (() => {
     const shadowStyle = shadowPreset === 'none' ? 'box-shadow: none !important;' : '';
     const animTypeCard = s.animation || config.animation || 'none';
     const animClass = animTypeCard === 'fade' ? 'sponsor-anim-fade' : (animTypeCard === 'slide' ? 'sponsor-anim-slide' : (animTypeCard === 'zoom' ? 'sponsor-anim-zoom' : ''));
+
+    // Konfigurasi Animasi & Pergerakan Sponsor Internal Produk Sendiri
+    const slideMode = s.slide_mode || config.slide_mode || 'auto';
+    const autoSlideInterval = s.auto_slide_interval || config.auto_slide_interval || 4000;
+    const animationType = s.animation_type || s.animation || config.animation_type || config.animation || 'slide';
 
     // Prioritaskan produk pilihan seller dari admin panel jika ada
     const selectedIds = s.product_ids || [];
@@ -3514,7 +4431,7 @@ const BuyerStore = (() => {
 
     return `
       <!-- CARD SPONSOR UNTUK PRODUK SENDIRI (HEADER BERSIH TANPA DOT, BADGE, & DIVIDER) -->
-      <div id="${cardId}" class="sponsor-internal-card h-full flex flex-col justify-between p-2.5 sm:p-3.5 transition-all duration-300 group relative select-none ${shadowClass} ${animClass}" style="background-color: ${bgColor}; border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-total-batches="${totalBatches}">
+      <div id="${cardId}" class="sponsor-internal-card h-full flex flex-col justify-between p-2.5 sm:p-3.5 transition-all duration-300 group relative select-none ${shadowClass} ${animClass}" style="background-color: ${bgColor}; border: ${borderWidth} solid ${borderColor}; border-radius: ${borderRadius}; ${shadowStyle}" data-total-batches="${totalBatches}" data-mode="${slideMode}" data-interval="${autoSlideInterval}" data-anim="${animationType}">
         <!-- Header Judul Sponsor Bersih -->
         <div class="flex items-center justify-start pb-1 min-w-0">
           <h4 class="font-black text-xs sm:text-sm text-slate-900 tracking-tight uppercase truncate" title="${escapeHtml(title)}">${escapeHtml(title)}</h4>
@@ -3527,6 +4444,15 @@ const BuyerStore = (() => {
               ${renderMiniGrid(batchList)}
             </div>
           `).join('')}
+
+          ${totalBatches > 1 ? `
+            <button type="button" class="carousel-prev-btn absolute -left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/95 hover:bg-white text-slate-800 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md border border-slate-200 cursor-pointer" aria-label="Batch Sebelumnya">
+              <i class="bi bi-chevron-left text-xs"></i>
+            </button>
+            <button type="button" class="carousel-next-btn absolute -right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/95 hover:bg-white text-slate-800 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md border border-slate-200 cursor-pointer" aria-label="Batch Berikutnya">
+              <i class="bi bi-chevron-right text-xs"></i>
+            </button>
+          ` : ''}
         </div>
 
         <!-- Dynamic Dots Navigasi Slide -->
@@ -4041,9 +4967,14 @@ const BuyerStore = (() => {
     document.querySelectorAll('.btn-cat-nav-prev').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        const trackEl = document.getElementById(btn.getAttribute('data-target'));
+        const targetId = btn.getAttribute('data-target');
+        const trackEl = targetId ? document.getElementById(targetId) : btn.closest('.group\\/catnav')?.querySelector('.cat-scroll-track');
         if (trackEl) {
           trackEl.scrollBy({ left: -320, behavior: 'smooth' }); // Geser 320px ke kiri
+          const wrapper = btn.closest('.group\\/catnav') || trackEl.closest('.group\\/catnav');
+          const nextBtn = wrapper?.querySelector('.btn-cat-nav-next');
+          setTimeout(() => updateSmartScrollArrows(trackEl, btn, nextBtn), 150);
+          setTimeout(() => updateSmartScrollArrows(trackEl, btn, nextBtn), 350);
         }
       });
     });
@@ -4052,11 +4983,23 @@ const BuyerStore = (() => {
     document.querySelectorAll('.btn-cat-nav-next').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        const trackEl = document.getElementById(btn.getAttribute('data-target'));
+        const targetId = btn.getAttribute('data-target');
+        const trackEl = targetId ? document.getElementById(targetId) : btn.closest('.group\\/catnav')?.querySelector('.cat-scroll-track');
         if (trackEl) {
           trackEl.scrollBy({ left: 320, behavior: 'smooth' }); // Geser 320px ke kanan
+          const wrapper = btn.closest('.group\\/catnav') || trackEl.closest('.group\\/catnav');
+          const prevBtn = wrapper?.querySelector('.btn-cat-nav-prev');
+          setTimeout(() => updateSmartScrollArrows(trackEl, prevBtn, btn), 150);
+          setTimeout(() => updateSmartScrollArrows(trackEl, prevBtn, btn), 350);
         }
       });
+    });
+
+    // Inisialisasi Smart Scroll Arrows Kategori Desktop
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        initCategorySmartScroll();
+      }, 80);
     });
 
     // Dropdown Navigasi Kategori (Compact Select Menu)
@@ -4089,6 +5032,10 @@ const BuyerStore = (() => {
         activeSearchQuery = '';
         const navInput = document.getElementById('navbar-search-input');
         if (navInput) navInput.value = '';
+        const secondNavInput = document.getElementById('navbar-second-search-input');
+        if (secondNavInput) secondNavInput.value = '';
+        const mobileNavInput = document.getElementById('navbar-search-input-mobile');
+        if (mobileNavInput) mobileNavInput.value = '';
         renderStorefront();
         bindStoreEvents();
       });
@@ -4104,6 +5051,10 @@ const BuyerStore = (() => {
         activeSearchQuery = '';
         const navInput = document.getElementById('navbar-search-input');
         if (navInput) navInput.value = '';
+        const secondNavInput = document.getElementById('navbar-second-search-input');
+        if (secondNavInput) secondNavInput.value = '';
+        const mobileNavInput = document.getElementById('navbar-search-input-mobile');
+        if (mobileNavInput) mobileNavInput.value = '';
         renderStorefront();
         bindStoreEvents();
       });
@@ -4154,121 +5105,131 @@ const BuyerStore = (() => {
     });
   }
 
+  // --- SMART SCROLL ARROWS HELPER (CATEGORIES & TRACKS) ---
+  function updateSmartScrollArrows(trackEl, prevBtn, nextBtn) {
+    if (!trackEl) return;
+    const scrollLeft = trackEl.scrollLeft;
+    const scrollWidth = trackEl.scrollWidth;
+    const clientWidth = trackEl.clientWidth;
+
+    const hasOverflowLeft = scrollLeft > 4;
+    const hasOverflowRight = (scrollWidth - clientWidth - scrollLeft) > 4;
+
+    // Aturan 1 & 2: Sembunyikan sepenuhnya jika tidak overflow di kiri, izinkan tampil jika overflow kiri
+    if (prevBtn) {
+      if (!hasOverflowLeft) {
+        prevBtn.style.display = 'none';
+        prevBtn.classList.add('cat-nav-hidden');
+      } else {
+        prevBtn.style.display = '';
+        prevBtn.classList.remove('cat-nav-hidden');
+      }
+    }
+
+    // Aturan 3 & 4: Sembunyikan sepenuhnya jika tidak overflow di kanan, izinkan tampil jika overflow kanan
+    if (nextBtn) {
+      if (!hasOverflowRight) {
+        nextBtn.style.display = 'none';
+        nextBtn.classList.add('cat-nav-hidden');
+      } else {
+        nextBtn.style.display = '';
+        nextBtn.classList.remove('cat-nav-hidden');
+      }
+    }
+  }
+
+  function initCategorySmartScroll() {
+    document.querySelectorAll('.group\\/catnav').forEach(wrapper => {
+      const trackEl = wrapper.querySelector('.cat-scroll-track');
+      const prevBtn = wrapper.querySelector('.btn-cat-nav-prev');
+      const nextBtn = wrapper.querySelector('.btn-cat-nav-next');
+      if (!trackEl) return;
+
+      const update = () => updateSmartScrollArrows(trackEl, prevBtn, nextBtn);
+      update();
+
+      if (trackEl._smartScrollHandler) {
+        trackEl.removeEventListener('scroll', trackEl._smartScrollHandler);
+      }
+      trackEl._smartScrollHandler = update;
+      trackEl.addEventListener('scroll', update, { passive: true });
+    });
+  }
+
+  // Window resize listener untuk update smart category scroll arrows
+  window.addEventListener('resize', () => {
+    initCategorySmartScroll();
+  });
+
+  // --- SPONSOR SLIDER SMART BOUNDARY ARROWS HELPER ---
+  function updateSponsorArrowBoundaries(currentIdx, total, prevBtn, nextBtn) {
+    if (!prevBtn && !nextBtn) return;
+    if (total <= 1) {
+      if (prevBtn) prevBtn.style.display = 'none';
+      if (nextBtn) nextBtn.style.display = 'none';
+      return;
+    }
+
+    // Saat berada di slide/batch pertama (currentIdx === 0): sembunyikan tombol < dan hanya tampilkan tombol >
+    if (prevBtn) {
+      prevBtn.style.display = (currentIdx <= 0) ? 'none' : '';
+    }
+    // Saat berada di slide/batch terakhir (currentIdx === total - 1): sembunyikan tombol > dan hanya tampilkan tombol <
+    if (nextBtn) {
+      nextBtn.style.display = (currentIdx >= total - 1) ? 'none' : '';
+    }
+  }
+
   // --- SMART NAVBAR SEARCH & AUTOCOMPLETE ---
   function initNavbarSearchAutocomplete() {
     const searchInput = document.getElementById('navbar-search-input');
     const suggestionsBox = document.getElementById('navbar-search-suggestions');
+    const secondSearchInput = document.getElementById('navbar-second-search-input');
+    const secondSuggestionsBox = document.getElementById('navbar-second-search-suggestions');
     const searchBackdrop = document.getElementById('navbar-search-backdrop');
-    if (!searchInput || !suggestionsBox) return;
+    const mobileInput = document.getElementById('navbar-search-input-mobile');
 
     const hideSearchDropdown = () => {
-      suggestionsBox.classList.add('hidden');
+      if (suggestionsBox) suggestionsBox.classList.add('hidden');
+      if (secondSuggestionsBox) secondSuggestionsBox.classList.add('hidden');
       if (searchBackdrop) searchBackdrop.classList.add('hidden');
     };
 
-    const showSearchDropdown = () => {
-      suggestionsBox.classList.remove('hidden');
-      if (searchBackdrop) searchBackdrop.classList.remove('hidden');
-    };
-
-    searchInput.addEventListener('input', (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      if (!q) {
-        hideSearchDropdown();
-        suggestionsBox.innerHTML = '';
-        return;
-      }
-
-      const allActiveProducts = DB.getProducts({ status: 'active' });
-      const matched = allActiveProducts.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        (p.description && p.description.toLowerCase().includes(q)) ||
-        (p.category_name && p.category_name.toLowerCase().includes(q))
-      ).slice(0, 6);
-
-      if (matched.length === 0) {
-        suggestionsBox.innerHTML = `
-          <div class="p-4 text-center text-slate-400 text-xs">
-            <i class="bi bi-search text-xl block mb-1 text-slate-300"></i>
-            Tidak ada produk yang cocok dengan "<strong>${escapeHtml(e.target.value)}</strong>"
-          </div>
-        `;
-        showSearchDropdown();
-        return;
-      }
-
-      const headerHtml = `
-        <div class="px-3 py-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between border-b border-slate-100 bg-slate-50/80 rounded-t-xl mb-1">
-          <span>Rekomendasi Produk</span>
-          <span class="text-[10px] font-semibold text-emerald-600 lowercase">${matched.length} produk ditemukan</span>
-        </div>
-      `;
-
-      const itemsHtml = matched.map(p => {
-        const startingPrice = getProductStartingPrice(p);
-        const effDiscount = p.effective_discount || DB.getProductEffectiveDiscount(p);
-        const finalPrice = effDiscount.has_discount ? effDiscount.discounted_price : startingPrice;
-        const img = (Array.isArray(p.images) && p.images[0]) || p.image_url || 'assets/images/logo-songer-creative.png';
-
-        return `
-          <div class="navbar-search-item p-2.5 rounded-xl hover:bg-emerald-50/70 cursor-pointer flex items-center gap-3 transition border-b border-slate-100 last:border-0 group" data-id="${p.id}">
-            <img src="${img}" class="w-11 h-11 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-200 shadow-2xs" alt="${escapeHtml(p.name)}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-11 h-11 rounded-xl flex items-center justify-center bg-slate-100 text-slate-400 text-xs border border-slate-200\\'><i class=\\'bi bi-image\\'></i></div>';" />
-            <div class="flex-1 min-w-0">
-              <h5 class="text-xs font-bold text-slate-800 group-hover:text-emerald-700 truncate transition">${escapeHtml(p.name)}</h5>
-              <div class="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                <span class="text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.2 rounded uppercase">${escapeHtml(p.category_name || 'Percetakan')}</span>
-                <span>•</span>
-                <span class="font-extrabold text-slate-800">${formatIDR(finalPrice)}</span>
-              </div>
-            </div>
-            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-emerald-500 shrink-0 transition"></i>
-          </div>
-        `;
-      }).join('');
-
-      suggestionsBox.innerHTML = headerHtml + itemsHtml;
-      showSearchDropdown();
-      if (window.lucide) window.lucide.createIcons();
-
-      // Bind click on each suggestion item
-      suggestionsBox.querySelectorAll('.navbar-search-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const prodId = item.getAttribute('data-id');
-          hideSearchDropdown();
-          searchInput.value = '';
-
-          // Reset filters so product is guaranteed visible in DOM
-          activeQuickFilter = 'all';
-          activeMainCategoryId = 'all';
-          activeSubCategoryId = 'all';
-          activeSearchQuery = '';
-          renderStorefront();
-          bindStoreEvents();
-
-          // Smooth scroll to product card with highlight effect
-          setTimeout(() => {
-            const cardEl = document.querySelector(`[data-id="${prodId}"]`);
-            if (cardEl) {
-              cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              // Blinking highlight border effect
-              cardEl.classList.add('ring-4', 'ring-emerald-400', 'border-emerald-500', 'scale-[1.02]', 'transition', 'duration-300');
-
-              let blinkCount = 0;
-              const blinkInterval = setInterval(() => {
-                blinkCount++;
-                cardEl.classList.toggle('ring-emerald-400');
-                cardEl.classList.toggle('ring-emerald-200');
-                if (blinkCount >= 6) {
-                  clearInterval(blinkInterval);
-                  cardEl.classList.remove('ring-4', 'ring-emerald-400', 'ring-emerald-200', 'border-emerald-500', 'scale-[1.02]');
-                }
-              }, 350);
-            }
-          }, 150);
-        });
+    if (searchInput && suggestionsBox) {
+      searchInput.addEventListener('input', () => {
+        if (mobileInput) mobileInput.value = searchInput.value;
+        if (secondSearchInput) secondSearchInput.value = searchInput.value;
+        handleSearchAutocompleteInput(searchInput, suggestionsBox);
+        if (searchBackdrop && !suggestionsBox.classList.contains('hidden')) {
+          searchBackdrop.classList.remove('hidden');
+        }
       });
-    });
+
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleEnterSearchQuery(searchInput.value, searchInput, suggestionsBox);
+        }
+      });
+    }
+
+    if (secondSearchInput && secondSuggestionsBox) {
+      secondSearchInput.addEventListener('input', () => {
+        if (mobileInput) mobileInput.value = secondSearchInput.value;
+        if (searchInput) searchInput.value = secondSearchInput.value;
+        handleSearchAutocompleteInput(secondSearchInput, secondSuggestionsBox);
+        if (searchBackdrop && !secondSuggestionsBox.classList.contains('hidden')) {
+          searchBackdrop.classList.remove('hidden');
+        }
+      });
+
+      secondSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleEnterSearchQuery(secondSearchInput.value, secondSearchInput, secondSuggestionsBox);
+        }
+      });
+    }
 
     // Close suggestions when clicking outside or on mobile backdrop
     if (searchBackdrop) {
@@ -4276,19 +5237,10 @@ const BuyerStore = (() => {
     }
 
     document.addEventListener('click', (e) => {
-      if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+      const clickedDesktop = (searchInput && searchInput.contains(e.target)) || (suggestionsBox && suggestionsBox.contains(e.target));
+      const clickedSecond = (secondSearchInput && secondSearchInput.contains(e.target)) || (secondSuggestionsBox && secondSuggestionsBox.contains(e.target));
+      if (!clickedDesktop && !clickedSecond) {
         hideSearchDropdown();
-      }
-    });
-
-    // Handle Enter key on search input: filter storefront
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        activeSearchQuery = searchInput.value.trim();
-        hideSearchDropdown();
-        renderStorefront();
-        bindStoreEvents();
       }
     });
   }
@@ -4814,6 +5766,10 @@ const BuyerStore = (() => {
       let currentIdx = 0;
       let timer = null;
 
+      function updateArrows() {
+        updateSponsorArrowBoundaries(currentIdx, total, prevBtn, nextBtn);
+      }
+
       function goToSlide(idx) {
         currentIdx = (idx + total) % total;
         if (track) {
@@ -4835,12 +5791,15 @@ const BuyerStore = (() => {
             d.className = 'carousel-dot-btn w-2 h-2 rounded-full bg-white/50 hover:bg-white/80 transition-all cursor-pointer shadow-sm';
           }
         });
+        updateArrows();
       }
+
+      updateArrows();
 
       function startAuto() {
         stopAuto();
         timer = setInterval(() => {
-          goToSlide(currentIdx + 1);
+          goToSlide((currentIdx + 1) % total);
         }, intervalTime);
       }
 
@@ -4860,13 +5819,15 @@ const BuyerStore = (() => {
         });
       });
 
-      // Tombol Navigasi Manual (< dan >)
+      // Tombol Navigasi Manual (< dan >) dengan Logika Boundary Non-Looping
       if (prevBtn) {
         prevBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          goToSlide(currentIdx - 1);
-          if (slideMode === 'auto') startAuto();
+          if (currentIdx > 0) {
+            goToSlide(currentIdx - 1);
+            if (slideMode === 'auto') startAuto();
+          }
         });
       }
 
@@ -4874,8 +5835,10 @@ const BuyerStore = (() => {
         nextBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          goToSlide(currentIdx + 1);
-          if (slideMode === 'auto') startAuto();
+          if (currentIdx < total - 1) {
+            goToSlide(currentIdx + 1);
+            if (slideMode === 'auto') startAuto();
+          }
         });
       }
 
@@ -4891,8 +5854,11 @@ const BuyerStore = (() => {
         if (e.changedTouches && e.changedTouches[0]) {
           const diffX = e.changedTouches[0].clientX - touchStartX;
           if (Math.abs(diffX) > 25) {
-            if (diffX < 0) goToSlide(currentIdx + 1);
-            else goToSlide(currentIdx - 1);
+            if (diffX < 0) {
+              if (currentIdx < total - 1) goToSlide(currentIdx + 1);
+            } else {
+              if (currentIdx > 0) goToSlide(currentIdx - 1);
+            }
             if (slideMode === 'auto') startAuto();
           }
         }
@@ -4918,18 +5884,42 @@ const BuyerStore = (() => {
 
       const views = Array.from(card.querySelectorAll('.internal-batch-view'));
       const dots = Array.from(card.querySelectorAll('.internal-batch-dot'));
+      const prevBtn = card.querySelector('.carousel-prev-btn');
+      const nextBtn = card.querySelector('.carousel-next-btn');
       const total = views.length;
-      if (total <= 1) return;
+      if (total <= 1) {
+        updateSponsorArrowBoundaries(0, total, prevBtn, nextBtn);
+        return;
+      }
+
+      const slideMode = card.getAttribute('data-mode') || 'auto';
+      const intervalTime = parseInt(card.getAttribute('data-interval') || '4000', 10);
+      const animType = card.getAttribute('data-anim') || 'slide';
 
       let currentIdx = 0;
+      let timer = null;
 
-      function goToBatch(idx) {
-        currentIdx = (idx + total) % total;
+      function updateArrows() {
+        updateSponsorArrowBoundaries(currentIdx, total, prevBtn, nextBtn);
+      }
+
+      function goToBatch(newIdx, direction) {
+        const oldIdx = currentIdx;
+        currentIdx = (newIdx + total) % total;
         const targetBatchNum = currentIdx + 1;
+        const dir = direction || (currentIdx > oldIdx || (oldIdx === total - 1 && currentIdx === 0) ? 'next' : 'prev');
 
         views.forEach(v => {
+          v.classList.remove('batch-slide-next', 'batch-slide-prev', 'batch-fade', 'batch-zoom');
           if (v.classList.contains(`batch-${targetBatchNum}`)) {
             v.classList.remove('hidden');
+            if (animType === 'fade') {
+              v.classList.add('batch-fade');
+            } else if (animType === 'zoom' || animType === 'scale') {
+              v.classList.add('batch-zoom');
+            } else {
+              v.classList.add(dir === 'next' ? 'batch-slide-next' : 'batch-slide-prev');
+            }
           } else {
             v.classList.add('hidden');
           }
@@ -4942,6 +5932,26 @@ const BuyerStore = (() => {
             d.className = 'internal-batch-dot w-2 h-2 rounded-full bg-slate-300 hover:bg-slate-400 transition-all cursor-pointer';
           }
         });
+
+        updateArrows();
+      }
+
+      updateArrows();
+
+      function startAuto() {
+        stopAuto();
+        if (slideMode !== 'manual') {
+          timer = setInterval(() => {
+            goToBatch((currentIdx + 1) % total, 'next');
+          }, intervalTime);
+        }
+      }
+
+      function stopAuto() {
+        if (timer) {
+          clearInterval(timer);
+          timer = null;
+        }
       }
 
       // Dot click
@@ -4950,8 +5960,32 @@ const BuyerStore = (() => {
           e.preventDefault();
           e.stopPropagation();
           goToBatch(idx);
+          if (slideMode !== 'manual') startAuto();
         });
       });
+
+      // Tombol Navigasi Manual Batch (< dan >)
+      if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (currentIdx > 0) {
+            goToBatch(currentIdx - 1, 'prev');
+            if (slideMode !== 'manual') startAuto();
+          }
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (currentIdx < total - 1) {
+            goToBatch(currentIdx + 1, 'next');
+            if (slideMode !== 'manual') startAuto();
+          }
+        });
+      }
 
       // Touch gesture swipe support for 2x2 internal sponsor card in mobile
       let touchStartX = 0;
@@ -4968,16 +6002,22 @@ const BuyerStore = (() => {
         if (e.changedTouches && e.changedTouches[0]) {
           const diffX = e.changedTouches[0].clientX - touchStartX;
           const diffY = e.changedTouches[0].clientY - touchStartY;
-          // Picu swipe jika perpindahan horizontal signifikan dan lebih dominan dibanding vertikal
           if (Math.abs(diffX) > 25 && Math.abs(diffX) > Math.abs(diffY)) {
             if (diffX < 0) {
-              goToBatch(currentIdx + 1);
+              if (currentIdx < total - 1) goToBatch(currentIdx + 1, 'next');
             } else {
-              goToBatch(currentIdx - 1);
+              if (currentIdx > 0) goToBatch(currentIdx - 1, 'prev');
             }
+            if (slideMode !== 'manual') startAuto();
           }
         }
       }, { passive: true });
+
+      if (slideMode !== 'manual') {
+        card.addEventListener('mouseenter', stopAuto);
+        card.addEventListener('mouseleave', startAuto);
+        startAuto();
+      }
     });
   }
 
@@ -5554,7 +6594,14 @@ const BuyerStore = (() => {
     renderStaticBannerSectionHtml,
     renderSocialIconsList,
     renderStoreFooterHtml,
-    updateStoreFooter
+    updateStoreFooter,
+    initStorefrontSEO,
+    setProductMetaSEO,
+    restoreStorefrontSEO,
+    getSanitizedCanonicalUrl,
+    inferBusinessSchemaType,
+    openProductDetailModal,
+    closeProductDetailModal
   };
 })();
 

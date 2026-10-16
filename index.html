@@ -200,11 +200,15 @@
 
           <!-- Dropdown Panel Status Pesanan Real-time -->
           <div id="navbar-notif-dropdown"
-            class="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 z-50 hidden animate-fade-in">
+            class="fixed left-3 right-3 w-auto max-w-[calc(100vw-1.5rem)] z-50 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:max-w-none bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 hidden animate-fade-in">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <i class="bi bi-bell-fill text-emerald-600 text-sm"></i>
-                <h4 class="font-extrabold text-xs text-slate-900 tracking-tight">Status Pesanan Real-Time</h4>
+                <h4 class="font-extrabold text-xs text-slate-900 tracking-tight flex items-center gap-1.5">
+                  <span>Notifikasi</span>
+                  <span id="notif-header-unread-badge"
+                    class="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white hidden">0</span>
+                </h4>
               </div>
               <button type="button" id="btn-close-notif-dropdown"
                 class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
@@ -245,6 +249,21 @@
 
       </div>
 
+    </div>
+
+    <!-- Second Row: Baris Pencarian Lebar (Aktif saat navbar_layout_rows === '2_rows') -->
+    <div id="navbar-second-row-search"
+      class="hidden px-3 sm:px-6 lg:px-8 pb-3 pt-0 max-w-7xl mx-auto w-full transition-all">
+      <div class="relative w-full">
+        <i data-lucide="search"
+          class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none navbar-search-icon-el"></i>
+        <input type="text" id="navbar-second-search-input" autocomplete="off" placeholder="Cari banner, stiker, logo..."
+          class="navbar-search-input-el w-full bg-slate-100 hover:bg-slate-100/90 focus:bg-white text-xs pl-10 pr-4 py-2 sm:py-2.5 rounded-2xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition shadow-inner font-medium text-slate-800 placeholder:text-slate-400" />
+      </div>
+      <!-- Autocomplete Suggestions Dropdown Second Row -->
+      <div id="navbar-second-search-suggestions"
+        class="absolute left-3 right-3 sm:left-6 sm:right-6 lg:left-8 lg:right-8 top-full mt-1 bg-white rounded-2xl border border-slate-200/90 shadow-2xl p-2 z-50 hidden max-h-80 overflow-y-auto space-y-1 animate-fade-in">
+      </div>
     </div>
 
     <!-- Mobile Search Dynamic Overlay (Slide-down saat ikon cari diklik di HP) -->
@@ -404,6 +423,73 @@
   </div>
 
   <!-- ========================================================================
+       MODAL: QUICK VIEW / DETAIL PRODUK (SEO PRODUCT DEEP LINK READY)
+       ======================================================================== -->
+  <div id="modal-product-detail"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div
+      class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-scale-up flex flex-col max-h-[90vh]">
+      <!-- Modal Header -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="pdp-modal-cat-badge"
+            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 truncate">Kategori</span>
+          <span id="pdp-modal-status-badge"
+            class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-700 hidden">Tersedia</span>
+        </div>
+        <button type="button" id="btn-close-product-modal"
+          class="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-200/60 transition cursor-pointer"
+          title="Tutup">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
+        <!-- Image & Discount Preview -->
+        <div
+          class="w-full aspect-video sm:aspect-[16/10] bg-slate-100 rounded-2xl overflow-hidden relative shadow-inner">
+          <img id="pdp-modal-img" src="" alt="Produk" class="w-full h-full object-cover" />
+          <div id="pdp-modal-discount-tag"
+            class="absolute top-3 right-3 text-xs font-black px-2.5 py-1 rounded-xl bg-rose-500 text-white shadow-md hidden">
+            - 20%
+          </div>
+        </div>
+
+        <!-- Title & Price -->
+        <div>
+          <h3 id="pdp-modal-title" class="text-base sm:text-lg font-black text-slate-900 leading-snug">Nama Produk</h3>
+          <div class="flex items-baseline gap-2.5 mt-1.5">
+            <span id="pdp-modal-price" class="text-lg sm:text-xl font-black text-emerald-600">Rp 0</span>
+            <span id="pdp-modal-strike-price" class="text-xs text-slate-400 line-through font-semibold hidden">Rp
+              0</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="pt-2 border-t border-slate-100">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Deskripsi Produk:</h4>
+          <p id="pdp-modal-desc" class="text-xs text-slate-600 leading-relaxed">Deskripsi produk...</p>
+        </div>
+      </div>
+
+      <!-- Modal Footer Action Buttons -->
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+        <a id="btn-pdp-modal-full-pdp" href="#"
+          class="flex-1 py-2.5 px-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+          <i data-lucide="external-link" class="w-4 h-4"></i>
+          <span>Konfigurasi Lengkap</span>
+        </a>
+        <button type="button" id="btn-pdp-modal-add-cart"
+          class="flex-1 py-2.5 px-3 rounded-xl btn-primary-brand text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md">
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+          <span>Tambah Keranjang</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
        MODAL: AUTENTIKASI PELANGGAN (DATA PRIBADI & GOOGLE SIGN-IN)
        ======================================================================== -->
   <div id="modal-auth-customer"
@@ -486,19 +572,70 @@
         </form>
 
         <!-- Logged In State Box (Hidden by default, shown if logged in) -->
-        <div id="auth-logged-in-box"
-          class="hidden space-y-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
-          <div class="w-12 h-12 rounded-full overflow-hidden mx-auto border-2 border-emerald-500 bg-white">
-            <img id="auth-user-avatar" src="" alt="Avatar" class="w-full h-full object-cover" />
+        <div id="auth-logged-in-box" class="hidden space-y-4">
+          <!-- Profile Card -->
+          <div class="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-14 h-14 rounded-full overflow-hidden border-2 border-emerald-500 bg-white shrink-0 shadow-xs">
+                <img id="auth-user-avatar" src="" alt="Avatar" class="w-full h-full object-cover" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h4 id="auth-user-name" class="font-extrabold text-sm text-slate-900 truncate">Nama Pelanggan</h4>
+                <p id="auth-user-phone" class="text-xs text-slate-600 flex items-center gap-1.5 mt-0.5">
+                  <i class="bi bi-whatsapp text-emerald-600"></i>
+                  <span id="auth-user-phone-text">-</span>
+                </p>
+                <p id="auth-user-email" class="text-[11px] text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
+                  <i class="bi bi-envelope text-slate-400"></i>
+                  <span id="auth-user-email-text">-</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Alamat Pengiriman -->
+            <div id="auth-user-address-box" class="pt-2 border-t border-slate-200/70 text-xs text-slate-600">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Alamat
+                Pengiriman:</span>
+              <p id="auth-user-address-text"
+                class="text-xs text-slate-700 leading-relaxed italic bg-white p-2 rounded-xl border border-slate-200/60">
+                -</p>
+            </div>
+
+            <!-- Loyalty Points Card (Ditampilkan hanya jika DB.isCustomerPointsActive() === true) -->
+            <div id="auth-user-points-card"
+              class="hidden p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/5 border border-amber-300/60 flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-xs text-sm">
+                  <i class="bi bi-stars"></i>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">Poin Loyalitas
+                    Anda</span>
+                  <span class="text-xs font-black text-amber-700">Toko Resmi</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span id="auth-user-points-val" class="font-black text-base text-amber-700">0</span>
+                <span class="text-[11px] font-bold text-amber-600 ml-0.5">Poin</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 id="auth-user-name" class="font-black text-sm text-slate-900">Nama Pelanggan</h4>
-            <p id="auth-user-contact" class="text-xs text-slate-600">contact</p>
+
+          <!-- Action Buttons (Edit Profile & Logout) -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button type="button" id="btn-edit-customer-profile"
+              class="w-full py-2.5 px-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+              <i class="bi bi-pencil-square text-xs"></i>
+              <span>Edit Profil</span>
+            </button>
+            <button type="button" id="btn-logout-customer"
+              class="w-full py-2.5 px-3 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+              <i class="bi bi-box-arrow-right text-xs"></i>
+              <span>Keluar Akun</span>
+            </button>
           </div>
-          <button type="button" id="btn-logout-customer"
-            class="px-4 py-1.5 rounded-xl bg-white border border-rose-300 text-rose-600 hover:bg-rose-50 text-xs font-bold transition">
-            Keluar Akun
-          </button>
         </div>
       </div>
     </div>
