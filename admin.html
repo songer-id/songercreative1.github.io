@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel & POS Kasir - Percetakan Terpadu</title>
+  <title>Admin Panel & POS Kasir - Seller Center</title>
   <meta name="description"
-    content="Panel Seller Center & Mesin POS Kasir Offline Percetakan, Kalkulator PxL, Manajemen Produk, Kategori, Promo, dan Cetak Struk Thermal 58mm/80mm.">
+    content="Panel Seller Center & Mesin POS Kasir Offline, Kalkulator Harga, Manajemen Produk, Kategori, Promo, dan Cetak Struk Thermal 58mm/80mm.">
 
   <!-- Dynamic Favicon -->
   <link rel="icon" type="image/png" id="app-favicon" href="assets/images/songer-logo.png">
@@ -220,7 +220,29 @@
           </button>
         </div>
 
-        <!-- 4. TOKO (Akordeon dropdown: Daftar Produk, Tambah Produk Baru, Kategori Produk) -->
+        <!-- 4. KASIR (Ikon Kalkulator / POS) -->
+        <div>
+          <button type="button" id="admin-nav-pos"
+            class="admin-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all font-medium text-slate-600 border border-transparent hover:bg-slate-100 hover:text-slate-900 text-left group"
+            title="Kasir">
+            <i
+              class="bi bi-calculator-fill text-lg nav-icon text-slate-500 group-hover:text-[#0e281f] shrink-0 transition-colors"></i>
+            <span class="nav-label-text flex-1">Kasir</span>
+          </button>
+        </div>
+
+        <!-- 5. PELANGGAN (CRM TOKO - Ikon People) -->
+        <div>
+          <button type="button" id="admin-nav-customers"
+            class="admin-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all font-medium text-slate-600 border border-transparent hover:bg-slate-100 hover:text-slate-900 text-left group"
+            title="Pelanggan">
+            <i
+              class="bi bi-people-fill text-lg nav-icon text-slate-500 group-hover:text-[#0e281f] shrink-0 transition-colors"></i>
+            <span class="nav-label-text flex-1">Pelanggan</span>
+          </button>
+        </div>
+
+        <!-- 6. TOKO (Akordeon dropdown: Daftar Produk, Tambah Produk Baru, Kategori Produk) -->
         <div class="nav-group relative" id="nav-group-toko">
           <button type="button" id="admin-nav-group-toko-btn"
             class="nav-group-header admin-nav-group-toggle w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all font-medium text-slate-600 border border-transparent hover:bg-slate-100 hover:text-slate-900 text-left group"
@@ -253,17 +275,6 @@
               <span class="nav-label-text">Kategori Produk</span>
             </button>
           </div>
-        </div>
-
-        <!-- 5. KASIR (Ikon Kalkulator / POS) -->
-        <div>
-          <button type="button" id="admin-nav-pos"
-            class="admin-nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all font-medium text-slate-600 border border-transparent hover:bg-slate-100 hover:text-slate-900 text-left group"
-            title="Kasir">
-            <i
-              class="bi bi-calculator-fill text-lg nav-icon text-slate-500 group-hover:text-[#0e281f] shrink-0 transition-colors"></i>
-            <span class="nav-label-text flex-1">Kasir</span>
-          </button>
         </div>
 
         <!-- 6. AKUN (Ikon User / Profile) -->
@@ -492,6 +503,12 @@
         </button>
         <button type="button"
           class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition"
+          data-view="customers">
+          <i class="bi bi-people-fill text-sm"></i>
+          <span>Pelanggan</span>
+        </button>
+        <button type="button"
+          class="mobile-nav-btn px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 transition"
           data-view="account">
           <i class="bi bi-person-circle text-sm"></i>
           <span>Akun</span>
@@ -519,6 +536,11 @@
         <!-- VIEW 3: POS KASIR OFFLINE & MESIN TRANSAKSI CETAK STRUK -->
         <section id="view-pos-cashier" class="space-y-6 hidden">
           <div id="pos-cashier-container"></div>
+        </section>
+
+        <!-- VIEW: MODUL CRM & PELANGGAN TOKO -->
+        <section id="view-customers" class="space-y-6 hidden">
+          <div id="customer-manager-container"></div>
         </section>
 
         <!-- VIEW 4: FORM TAMBAH / EDIT PRODUK -->
@@ -784,6 +806,7 @@
   <script src="js/review-manager.js?v=2.4"></script>
   <script src="js/product-form.js?v=2.4"></script>
   <script src="js/product-list.js?v=2.4"></script>
+  <script src="js/customer-manager.js?v=2.4"></script>
   <script src="js/admin-app.js?v=2.4"></script>
 
 </body>

@@ -2,7 +2,8 @@
  * Songer Creative - Advanced Product Form Controller
  * Mega Refactor Stage 4:
  *  - Removed Order Category from Product Form (determined in cashier/orders)
- *  - Multi-image upload with client-side <=500KB validation per file & interactive gallery
+ *  - Multi-image upload with client-side HTML5 Canvas auto-compression (max 1200x1200px, WebP/JPEG)
+ *  - Interactive AI Product Description Generator with smart context extraction and preview box
  *  - Monthly Promo option with toggle, custom label & [%] / [IDR] dropdown
  *  - Full Pricing repeaters (Meter, KombF, Fixed, Paket, Kg, Lt, KombStep)
  */
@@ -29,6 +30,7 @@ const ProductForm = (() => {
     max_order: null,
     image_url: null,
     images: [],
+    image_aspect_ratio: '1:1',
     description: '',
     card_footer_text: 'Proses Hanya Dalam 1Jam',
     footer_badge_icon: 'truck',
@@ -86,6 +88,31 @@ const ProductForm = (() => {
     return null;
   }
 
+  // Helper: Penentuan Otomatis Model Kartu Berdasarkan Kategori Produk
+  function getSuggestedCardVariantForCategory(categoryId) {
+    if (!categoryId) return 'A';
+    const categories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+    const cat = categories.find(c => String(c.id) === String(categoryId));
+    if (!cat) return 'A';
+
+    const text = `${cat.name || ''} ${cat.slug || ''} ${cat.description || ''}`.toLowerCase();
+
+    // 1. Ritel, Fashion, Merchandise, Kuliner/F&B -> Model 3 ('C')
+    const model3Keywords = ['ritel', 'retail', 'fashion', 'baju', 'kaos', 'pakaian', 'distro', 'hijab', 'merchandise', 'souvenir', 'kuliner', 'fnb', 'makanan', 'minuman', 'snack', 'kue', 'bakery', 'roti', 'kopi', 'coffee', 'mug', 'ganci'];
+    if (model3Keywords.some(k => text.includes(k))) {
+      return 'C';
+    }
+
+    // 2. Jasa, Layanan Profesional, Desain -> Model 2 ('B')
+    const model2Keywords = ['jasa', 'layanan', 'desain', 'design', 'profesional', 'service', 'branding', 'logo', 'kursus', 'konsultasi'];
+    if (model2Keywords.some(k => text.includes(k))) {
+      return 'B';
+    }
+
+    // 3. Fisik Reguler, Cetak Dimensi (PxL) / Default -> Model 1 ('A')
+    return 'A';
+  }
+
   function resetFormState() {
     formMode = 'create';
     currentEditingId = null;
@@ -94,6 +121,7 @@ const ProductForm = (() => {
     const defaultCatId = allCats.length > 0 ? allCats[0].id : null;
     const allSubs = defaultCatId ? DB.getSubCategories(defaultCatId) : [];
     const defaultSubId = allSubs.length > 0 ? allSubs[0].id : null;
+    const initialCardVariant = getSuggestedCardVariantForCategory(defaultCatId);
 
     const inheritedFooter = getLastProductFooterConfig();
     const f1Default = inheritedFooter?.f1 || {
@@ -114,7 +142,8 @@ const ProductForm = (() => {
       order_category: 'Ctk',
       category_id: defaultCatId,
       sub_category_id: defaultSubId,
-      card_variant: 'A',
+      card_variant: initialCardVariant,
+      card_variant_manual_override: false,
       card_variant_override: true,
       custom_labels: [],
       custom_footer_1: { ...f1Default },
@@ -142,6 +171,7 @@ const ProductForm = (() => {
       max_order: null,
       image_url: null,
       images: [],
+      image_aspect_ratio: '1:1',
       description: '',
       is_active: true
     };
@@ -236,6 +266,7 @@ const ProductForm = (() => {
       max_order: prod.max_order || null,
       image_url: imgs.length > 0 ? imgs[0] : null,
       images: imgs,
+      image_aspect_ratio: prod.image_aspect_ratio || (prod.card_variant === 'C' ? '4:3' : '1:1'),
       description: prod.description || '',
       is_active: prod.is_active
     };
@@ -282,7 +313,7 @@ const ProductForm = (() => {
               <span class="text-slate-800 font-semibold">${formMode === 'edit' ? 'Edit Produk' : 'Tambah Produk Baru'}</span>
             </div>
             <h1 class="text-2xl font-bold text-slate-900">
-              ${formMode === 'edit' ? 'Perbarui Informasi Produk' : 'Tambah Produk Percetakan Baru'}
+              ${formMode === 'edit' ? 'Perbarui Informasi Produk' : 'Tambah Produk Baru'}
             </h1>
             <p class="text-sm text-slate-500 mt-0.5">Konfigurasi formula harga dinamis, kategori etalase, multi-foto produk, dan promo bulanan.</p>
           </div>
@@ -306,12 +337,9 @@ const ProductForm = (() => {
 
         <!-- KARTU 1: INFORMASI POKOK PRODUK -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-          <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">1</div>
-            <div>
-              <h2 class="font-bold text-slate-900">Informasi Pokok Produk</h2>
-              <p class="text-xs text-slate-500">Nama produk, deskripsi lengkap spesifikasi, dan kategori etalase.</p>
-            </div>
+          <div class="border-b border-slate-100 pb-2 mb-4">
+            <h2 class="text-sm font-bold text-slate-900">Informasi Pokok Produk</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Nama produk, deskripsi lengkap spesifikasi, dan kategori etalase.</p>
           </div>
 
           <!-- Judul / Nama Produk (Wajib) -->
@@ -327,22 +355,60 @@ const ProductForm = (() => {
               id="input-prod-name" 
               maxlength="150"
               value="${escapeHtml(primaryState.name)}"
-              placeholder="Contoh: Spanduk Banner Fleksi Outdoor High-Res / Stiker Vinyl A3+" 
+              placeholder="Contoh: Kemeja Formal Pria, Paket Hampers, Custom Spanduk" 
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-slate-800 text-sm transition outline-none"
             />
           </div>
 
-          <!-- Deskripsi Produk (Wajib) -->
+          <!-- Deskripsi Produk (Wajib) & AI Generator -->
           <div>
-            <label for="input-prod-desc" class="block text-sm font-semibold text-slate-800 mb-1">
-              Deskripsi Produk <span class="text-red-500">*</span>
-            </label>
+            <div class="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+              <label for="input-prod-desc" class="block text-sm font-semibold text-slate-800">
+                Deskripsi Produk <span class="text-red-500">*</span>
+              </label>
+              <button 
+                type="button" 
+                id="btn-ai-generate-desc" 
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs hover:shadow-emerald-200 transition cursor-pointer"
+                title="Rangkai deskripsi produk secara otomatis dengan AI berdasarkan konteks formulir"
+              >
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span id="btn-ai-desc-text">✨ Buat Deskripsi dengan AI</span>
+              </button>
+            </div>
             <textarea 
               id="input-prod-desc" 
-              rows="3" 
+              rows="4" 
               placeholder="Jelaskan spesifikasi produk, keunggulan bahan, durasi pengerjaan, dan catatan penting untuk pemesan..."
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-slate-800 text-sm transition outline-none resize-y"
             >${escapeHtml(primaryState.description)}</textarea>
+
+            <!-- Kontainer Pratinjau Hasil AI (Default Hidden) -->
+            <div id="ai-description-preview-box" class="hidden mt-3 bg-emerald-50/50 border border-emerald-200 rounded-xl p-3.5 space-y-3 transition">
+              <div class="flex items-center justify-between pb-2 border-b border-emerald-100 flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                  </div>
+                  <span class="text-xs font-bold text-slate-900">Hasil Rangkaian Deskripsi AI</span>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">Pratinjau Siap Digunakan</span>
+              </div>
+
+              <!-- Area Teks Pratinjau -->
+              <div id="ai-description-preview-text" class="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white/90 p-3.5 rounded-lg border border-emerald-100 max-h-64 overflow-y-auto font-sans selection:bg-emerald-100"></div>
+
+              <!-- Tombol Aksi Gunakan / Batal -->
+              <div class="flex items-center justify-end gap-2 pt-1 border-t border-emerald-100/60">
+                <button type="button" id="btn-ai-desc-cancel" class="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition cursor-pointer">
+                  Batal
+                </button>
+                <button type="button" id="btn-ai-desc-apply" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                  <span>Gunakan Teks Ini</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Kategori & Sub-Kategori Etalase Pembeli -->
@@ -381,39 +447,44 @@ const ProductForm = (() => {
           </div>
         </div>
 
-        <!-- KARTU 2: UPLOAD GAMBAR PRODUK -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-          <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">2</div>
+        <!-- KARTU 2: FOTO PRODUK (ALA SHOPEE) -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-5">
+          <div class="border-b border-slate-100 pb-3 space-y-2.5">
             <div>
-              <h2 class="font-bold text-slate-900">Upload Gambar Produk <span class="text-red-500">* (Wajib Minimal 1)</span></h2>
-              <p class="text-xs text-slate-500">Unggah foto produk (maksimal 500 KB per berkas gambar) dan atur foto utama.</p>
+              <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1">
+                Foto Produk <span class="text-emerald-600 font-bold">*</span>
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">Unggah foto produk terbaik Anda. Foto pertama otomatis dijadikan foto utama (cover).</p>
+            </div>
+
+            <!-- Selektor Rasio Aspek (1:1 vs 4:3) -->
+            <div class="flex flex-wrap items-center gap-2.5 pt-0.5">
+              <span class="text-xs font-semibold text-slate-700">Rasio Aspek:</span>
+              <div class="flex items-center gap-2">
+                <label id="ratio-label-1-1" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border ${primaryState.image_aspect_ratio !== '4:3' ? 'border-emerald-500 bg-emerald-50/50 text-emerald-800 font-bold ring-1 ring-emerald-500/30' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium'} text-xs cursor-pointer transition select-none">
+                  <input type="radio" name="photo_aspect_ratio" value="1:1" ${primaryState.image_aspect_ratio !== '4:3' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500">
+                  <span>Foto 1:1 (Persegi)</span>
+                </label>
+                <label id="ratio-label-4-3" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border ${primaryState.image_aspect_ratio === '4:3' ? 'border-emerald-500 bg-emerald-50/50 text-emerald-800 font-bold ring-1 ring-emerald-500/30' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium'} text-xs cursor-pointer transition select-none">
+                  <input type="radio" name="photo_aspect_ratio" value="4:3" ${primaryState.image_aspect_ratio === '4:3' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500">
+                  <span>Foto 4:3 (Lanskap)</span>
+                </label>
+              </div>
             </div>
           </div>
 
           <div>
-            <div id="file-size-error-banner" class="hidden mb-3 p-3.5 rounded-xl bg-red-100 border border-red-300 text-red-800 text-xs font-semibold flex items-center gap-2">
-              <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 shrink-0"></i>
-              <span id="file-size-error-msg">Ukuran gambar melebihi batas 500 KB!</span>
+            <div id="file-size-error-banner" class="hidden mb-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+              <span id="file-size-error-msg">Pemberitahuan pemrosesan gambar</span>
             </div>
 
-            <!-- Upload Zone -->
-            <label for="input-prod-image" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 hover:bg-emerald-50/30 transition text-center block">
-              <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mb-2 mx-auto"></i>
-              <span class="text-xs font-bold text-slate-700 block">Pilih Berkas Multi-Gambar (Wajib Minimal 1 Foto)</span>
-              <span class="text-[11px] text-slate-400 mt-0.5 block">Format: JPG, PNG, WEBP (Maksimal 500 KB per file)</span>
-              <input type="file" id="input-prod-image" accept="image/png, image/jpeg, image/webp" multiple class="hidden" />
-            </label>
+            <!-- Hidden Multi-file input (dipicu klik Add Slot atau dropzone) -->
+            <input type="file" id="input-prod-image" accept="image/png, image/jpeg, image/webp" multiple class="hidden" />
 
-            <!-- Interactive Image Gallery Thumbnails Grid -->
-            <div class="mt-4">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-slate-700">Galeri Foto Produk (${primaryState.images.length} Foto):</span>
-                <span class="text-[11px] text-slate-400">Foto pertama adalah Foto Sampul Utama di Etalase</span>
-              </div>
-              <div id="image-gallery-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                ${renderGalleryThumbnails()}
-              </div>
+            <!-- Shopee 9-Slot Grid Container Responsif: Mobile grid-cols-3, Tablet grid-cols-4/5, Desktop grid-cols-5 -->
+            <div id="image-gallery-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-2.5 sm:gap-3">
+              ${renderGalleryThumbnails()}
             </div>
           </div>
 
@@ -437,23 +508,20 @@ const ProductForm = (() => {
 
         <!-- KARTU 3: BAHAN & OPSI FINISHING / TOPING (DAFTAR BERTINGKAT) -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-          <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">3</div>
-            <div>
-              <h2 class="font-bold text-slate-900">Bahan & Opsi Finishing (Daftar Bertingkat) / Toping & Finishing</h2>
-              <p class="text-xs text-slate-500">Repeater bahan dan opsi finishing dengan harga jual & harga modal HPP.</p>
-            </div>
+          <div class="border-b border-slate-100 pb-2 mb-4">
+            <h2 class="text-sm font-bold text-slate-900">Pilihan Varian, Bahan &amp; Opsi Tambahan Bertingkat</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pengaturan variasi produk, pilihan wajib, opsi ekstra bertingkat, serta modal HPP.</p>
           </div>
 
-          <!-- POIN C & N: TABEL BAHAN -->
+          <!-- TABEL VARIAN / BAHAN UTAMA -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-bold text-slate-800">Poin C & N: Pilihan Bahan & Harga Modal HPP</h3>
-                <p class="text-xs text-slate-500">Minimal 1 bahan wajib terisi. Tambahkan pilihan bahan alternatif.</p>
+                <h3 class="text-sm font-bold text-slate-800">Pilihan Varian &amp; Bahan Utama</h3>
+                <p class="text-xs text-slate-500">Minimal 1 varian/bahan wajib diisi. Tambahkan pilihan variasi rasa, ukuran, atau spesifikasi bahan.</p>
               </div>
               <button type="button" id="btn-add-material" class="px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold flex items-center gap-1 transition">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Bahan
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Varian / Bahan
               </button>
             </div>
 
@@ -462,10 +530,10 @@ const ProductForm = (() => {
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
                   <tr>
                     <th class="p-3 w-12 text-center">#</th>
-                    <th class="p-3">Nama Bahan <span class="text-red-500">*</span></th>
+                    <th class="p-3">Nama Varian / Bahan <span class="text-red-500">*</span></th>
                     <th class="p-3 w-40">Harga Jual (Rp) <span class="text-red-500">*</span></th>
                     ${isKombStep ? '<th class="p-3 w-32 bg-amber-50 text-amber-900">Kelipatan Order *</th>' : ''}
-                    <th class="p-3 w-40">Poin N: HPP Modal (Rp)</th>
+                    <th class="p-3 w-40" title="Modal pokok digunakan untuk kalkulasi margin laba bersih di dashboard">Biaya Modal / HPP (Rp)</th>
                     <th class="p-3 w-16 text-center">Aksi</th>
                   </tr>
                 </thead>
@@ -476,15 +544,15 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <!-- POIN D & N: FINISHING UTAMA -->
+          <!-- OPSI UTAMA / PILIHAN WAJIB PEMBELI -->
           <div class="space-y-3 pt-4 border-t border-slate-100">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-bold text-slate-800">Poin D: Finishing Utama (Pilihan Wajib Pemesan)</h3>
-                <p class="text-xs text-slate-500">Pemesan wajib memilih 1 dari opsi ini (misal: Tanpa Finishing, Mata Ayam, dll).</p>
+                <h3 class="text-sm font-bold text-slate-800">Opsi Utama / Pilihan Wajib Pembeli</h3>
+                <p class="text-xs text-slate-500">Pemesan wajib memilih salah satu opsi ini (misal: 'Standar / Tanpa Finishing', 'Level Kepedasan', 'Model Lengan').</p>
               </div>
               <button type="button" id="btn-add-finishing-main" class="px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold flex items-center gap-1 transition">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Opsi Finishing
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Pilihan Opsi
               </button>
             </div>
 
@@ -493,9 +561,9 @@ const ProductForm = (() => {
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
                   <tr>
                     <th class="p-3 w-12 text-center">#</th>
-                    <th class="p-3">Nama Finishing <span class="text-red-500">*</span></th>
+                    <th class="p-3">Nama Opsi / Finishing <span class="text-red-500">*</span></th>
                     <th class="p-3 w-40">Biaya Tambahan (Rp)</th>
-                    <th class="p-3 w-40">Poin N: Modal HPP (Rp)</th>
+                    <th class="p-3 w-40">Modal HPP Ekstra (Rp)</th>
                     <th class="p-3 w-16 text-center">Aksi</th>
                   </tr>
                 </thead>
@@ -506,30 +574,27 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <!-- POIN E, F, G: FINISHING OPSIONAL BERTINGKAT -->
+          <!-- OPSI TAMBAHAN BERTINGKAT / ADD-ONS -->
           <div class="space-y-4 pt-4 border-t border-slate-100">
-            <h3 class="text-sm font-bold text-slate-800">Poin E, F, G: Finishing Tambahan / Opsional Bertingkat</h3>
-            <p class="text-xs text-slate-500 -mt-2">Opsi opsional yang dapat dicentang pemesan (misal: Laminasi Glossy, Potong DieCut, Packing Selongsong).</p>
+            <h3 class="text-sm font-bold text-slate-800">Opsi Tambahan Bertingkat (Add-ons / Layanan Ekstra)</h3>
+            <p class="text-xs text-slate-500 -mt-2">Pilihan opsional yang dapat dicentang pemesan (misal: Topping Ekstra, Kemasan Kado, Laminasi Khusus, Garansi Tambahan).</p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <!-- Tier 1 -->
-              ${renderFinishingExtraCard('extra_1', 'Poin E: Tambahan Tingkat 1', 'Contoh: Laminasi Doff / Glossy')}
+              ${renderFinishingExtraCard('extra_1', 'Opsi Tambahan Tingkat 1 (Level 1)', 'Contoh: Topping Keju / Laminasi Glossy')}
               <!-- Tier 2 -->
-              ${renderFinishingExtraCard('extra_2', 'Poin F: Tambahan Tingkat 2', 'Contoh: DieCut Bentuk Khusus')}
+              ${renderFinishingExtraCard('extra_2', 'Opsi Tambahan Tingkat 2 (Level 2)', 'Contoh: Kemasan Box Kado / Cutting Presisi')}
               <!-- Tier 3 -->
-              ${renderFinishingExtraCard('extra_3', 'Poin G: Tambahan Tingkat 3', 'Contoh: Packing Tabung Selongsong')}
+              ${renderFinishingExtraCard('extra_3', 'Opsi Tambahan Tingkat 3 (Level 3)', 'Contoh: Kartu Ucapan / Bubble Wrap Ekstra')}
             </div>
           </div>
         </div>
 
         <!-- KARTU 4: TIPE HARGA -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-          <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">4</div>
-            <div>
-              <h2 class="font-bold text-slate-900">Tipe Harga (Rumus Hitung)</h2>
-              <p class="text-xs text-slate-500">Pilih salah satu dari 7 tipe formula perhitungan harga percetakan.</p>
-            </div>
+          <div class="border-b border-slate-100 pb-2 mb-4">
+            <h2 class="text-sm font-bold text-slate-900">Tipe Harga (Rumus Hitung)</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pilih salah satu formula perhitungan harga yang sesuai model bisnis Anda.</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -547,19 +612,16 @@ const ProductForm = (() => {
 
         <!-- KARTU 5: MANAJEMEN STOK & DISKON PROMO BULANAN -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-          <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">5</div>
-            <div>
-              <h2 class="font-bold text-slate-900">Manajemen Stok & Diskon Promo Bulanan</h2>
-              <p class="text-xs text-slate-500">Batas stok fisik, minimal/maksimal pesanan, serta konfigurasi promo bulanan.</p>
-            </div>
+          <div class="border-b border-slate-100 pb-2 mb-4">
+            <h2 class="text-sm font-bold text-slate-900">Manajemen Stok &amp; Diskon Promo Bulanan</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Batas stok fisik, minimal/maksimal pesanan, serta konfigurasi promo bulanan.</p>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Poin H: Stok Produk -->
+            <!-- Batas Stok Produk -->
             <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
               <div class="flex items-center justify-between">
-                <label class="text-sm font-semibold text-slate-800">Poin H: Batas Stok Fisik</label>
+                <label class="text-sm font-semibold text-slate-800">Batas Stok Fisik Produk</label>
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-slate-500">Tanpa Batas</span>
                   <input 
@@ -583,12 +645,12 @@ const ProductForm = (() => {
               </div>
             </div>
 
-            <!-- Poin I: Opsi Promo Bulanan -->
+            <!-- Program Promo & Diskon Spesial -->
             <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="text-sm font-semibold text-slate-800">Poin I: Opsi Promo Bulanan</label>
-                  <span class="text-[11px] text-slate-400 block">Aktifkan diskon bulanan pada produk ini.</span>
+                  <label class="text-sm font-semibold text-slate-800">Program Promo &amp; Diskon Spesial</label>
+                  <span class="text-[11px] text-slate-400 block">Aktifkan diskon berkala pada produk ini.</span>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -608,11 +670,11 @@ const ProductForm = (() => {
                   <input 
                     type="text" 
                     id="input-monthly-promo-label" 
-                    value="${escapeHtml(primaryState.monthly_promo_label || 'Promo Bulanan')}"
-                    placeholder="Promo Bulanan"
+                    value="${escapeHtml(primaryState.monthly_promo_label || 'Promo Spesial')}"
+                    placeholder="Promo Spesial"
                     class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:border-emerald-500 outline-none font-semibold"
                   />
-                  <span class="text-[10px] text-slate-400 block mt-0.5">Label bawaan "Promo Bulanan" (dapat diubah sesuai keinginan seller).</span>
+                  <span class="text-[10px] text-slate-400 block mt-0.5">Label bawaan "Promo Spesial" (dapat diubah sesuai keinginan seller).</span>
                 </div>
 
                 <!-- Dropdown [%] atau [IDR] & Nilai (Auto-Convert Interaktif) -->
@@ -646,11 +708,11 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <!-- Poin J & K: Minimal & Maksimal Pesanan -->
+          <!-- Batasan Minimal & Maksimal Pesanan -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
             <div>
               <label for="input-min-order" class="block text-sm font-semibold text-slate-800 mb-1">
-                Poin J: Minimal Pesanan <span class="text-red-500">*</span>
+                Minimal Pemesanan (Min. Order) <span class="text-red-500">*</span>
               </label>
               <input 
                 type="number" 
@@ -662,7 +724,7 @@ const ProductForm = (() => {
             </div>
             <div>
               <label for="input-max-order" class="block text-sm font-semibold text-slate-800 mb-1">
-                Poin K: Maksimal Pesanan (Opsional)
+                Maksimal Pemesanan (Max. Order)
               </label>
               <input 
                 type="number" 
@@ -678,12 +740,9 @@ const ProductForm = (() => {
 
         <!-- KARTU 6: DESAIN / MODEL CARD PRODUK -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-          <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">6</div>
-            <div>
-              <h2 class="font-bold text-slate-900">Desain / Model Card Produk</h2>
-              <p class="text-xs text-slate-500">Pilih model card, atur estetika visual kartu & badge, label khusus, serta teks footer kartu (khusus Versi 3).</p>
-            </div>
+          <div class="border-b border-slate-100 pb-2 mb-4">
+            <h2 class="text-sm font-bold text-slate-900">Desain / Model Kartu Produk</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pilih model kartu katalog, estetika visual badge, label fitur, serta konfigurasi footer strip.</p>
           </div>
 
           <!-- Variasi Desain Card di Grid Katalog -->
@@ -1880,38 +1939,95 @@ const ProductForm = (() => {
   }
 
   function renderGalleryThumbnails() {
-    if (!primaryState.images || primaryState.images.length === 0) {
-      return `
-        <div class="col-span-full py-6 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-xl">
-          Belum ada foto yang diunggah. Silakan klik tombol di atas untuk memilih foto.
+    const images = Array.isArray(primaryState.images) ? primaryState.images : [];
+    const isLandscape = primaryState.image_aspect_ratio === '4:3';
+    const aspectClass = isLandscape ? 'aspect-[4/3]' : 'aspect-square';
+
+    let html = '';
+
+    images.slice(0, 9).forEach((imgSrc, idx) => {
+      const isMain = idx === 0;
+      const slotNum = idx + 1;
+      const canMoveLeft = idx > 0;
+      const canMoveRight = idx < images.length - 1;
+
+      html += `
+        <div class="relative ${aspectClass} rounded-2xl ${isMain ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-slate-200 hover:border-slate-300'} bg-slate-100 overflow-hidden group shadow-2xs select-none transition-all duration-200" data-index="${idx}">
+          <!-- Gambar Slot -->
+          <img src="${imgSrc}" class="w-full h-full object-cover select-none" alt="Foto ${slotNum}" loading="lazy" />
+
+          <!-- Top Bar: Badge Cover / Counter & Tombol Hapus -->
+          <div class="absolute top-1.5 inset-x-1.5 flex items-center justify-between pointer-events-none z-10">
+            ${isMain ? `
+              <span class="pointer-events-auto bg-emerald-600 text-white text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow flex items-center gap-1 tracking-tight">
+                <i data-lucide="star" class="w-2.5 h-2.5 fill-white"></i> Foto Utama
+              </span>
+            ` : `
+              <span class="pointer-events-auto bg-slate-900/80 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow font-mono">
+                ${slotNum}/9
+              </span>
+            `}
+
+            <!-- Tombol Hapus (Target Sentuh Nyaman min 28-32px) -->
+            <button type="button" class="btn-delete-gallery-img pointer-events-auto w-7 h-7 flex items-center justify-center rounded-lg bg-black/60 hover:bg-red-600 active:bg-red-700 text-white backdrop-blur-xs transition shadow cursor-pointer ml-auto" data-idx="${idx}" title="Hapus foto ini">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Bottom Bar: Overlay Navigasi Slide & Jadikan Cover -->
+          <div class="absolute bottom-0 inset-x-0 pt-6 pb-1.5 px-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between gap-1 z-10 sm:opacity-90 sm:group-hover:opacity-100 transition-opacity">
+            <!-- Geser Kiri -->
+            ${canMoveLeft ? `
+              <button type="button" class="btn-move-left-image w-6 h-6 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-md bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-xs transition cursor-pointer shrink-0" data-idx="${idx}" title="Geser ke kiri (urutan sebelumnya)">
+                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : `
+              <div class="w-6 shrink-0"></div>
+            `}
+
+            <!-- Tombol Jadikan Cover (Jika Bukan Foto #1) -->
+            ${!isMain ? `
+              <button type="button" class="btn-set-main-image flex-1 bg-white/95 hover:bg-emerald-500 text-slate-800 hover:text-white active:scale-95 text-[9px] sm:text-[10px] font-bold py-1 px-1 rounded-md shadow transition text-center truncate flex items-center justify-center gap-1 cursor-pointer" data-idx="${idx}" title="Jadikan foto ini sebagai Foto Utama / Cover">
+                <i data-lucide="check" class="w-3 h-3 shrink-0"></i>
+                <span class="truncate">Cover</span>
+              </button>
+            ` : `
+              <span class="text-[9px] font-bold text-white/90 uppercase tracking-widest text-center truncate">1/9</span>
+            `}
+
+            <!-- Geser Kanan -->
+            ${canMoveRight ? `
+              <button type="button" class="btn-move-right-image w-6 h-6 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-md bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-xs transition cursor-pointer shrink-0" data-idx="${idx}" title="Geser ke kanan (urutan berikutnya)">
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : `
+              <div class="w-6 shrink-0"></div>
+            `}
+          </div>
+        </div>
+      `;
+    });
+
+    // Kotak Slot Terakhir (Jika foto < 9): Menjadi tombol tambah / dropzone
+    if (images.length < 9) {
+      const isFirstSlot = images.length === 0;
+
+      html += `
+        <div id="btn-slot-add-photo" class="relative ${aspectClass} rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-2.5 select-none shadow-2xs" title="Unggah foto produk baru (${images.length}/9)">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-700 shadow-xs mb-1 transition-transform group-hover:scale-110">
+            <i data-lucide="camera" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800 transition leading-tight">
+            ${isFirstSlot ? '+ Foto Utama' : '+ Tambah Foto'}
+          </span>
+          <span class="text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition font-mono mt-0.5">
+            (${images.length}/9)
+          </span>
         </div>
       `;
     }
 
-    return primaryState.images.map((imgSrc, idx) => {
-      const isMain = idx === 0;
-      return `
-        <div class="relative aspect-square rounded-xl border ${isMain ? 'border-emerald-500 ring-2 ring-emerald-400/30' : 'border-slate-200'} bg-slate-100 overflow-hidden group shadow-xs" data-index="${idx}">
-          <img src="${imgSrc}" class="w-full h-full object-cover" alt="Foto ${idx + 1}" />
-          
-          <!-- Badge Utama -->
-          ${isMain ? `
-            <span class="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow">
-              Foto Utama
-            </span>
-          ` : `
-            <button type="button" class="btn-set-main-image absolute bottom-1.5 left-1.5 right-1.5 bg-white/90 hover:bg-emerald-50 text-emerald-800 text-[10px] font-bold py-1 rounded shadow-xs opacity-0 group-hover:opacity-100 transition text-center" data-idx="${idx}">
-              Jadikan Utama
-            </button>
-          `}
-
-          <!-- Tombol Hapus -->
-          <button type="button" class="btn-delete-gallery-img absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white p-1 rounded-md opacity-80 group-hover:opacity-100 transition shadow" data-idx="${idx}" title="Hapus foto ini">
-            <i data-lucide="x" class="w-3 h-3"></i>
-          </button>
-        </div>
-      `;
-    }).join('');
+    return html;
   }
 
   function renderPriceTypeOptions(selectedId) {
@@ -2106,6 +2222,109 @@ const ProductForm = (() => {
     `;
   }
 
+  /**
+   * Mengompres berkas gambar menggunakan HTML5 Canvas
+   * Menghasilkan string Base64 ringan (rata-rata 70-160 KB) dengan rasio aspek terjaga
+   */
+  async function compressProductImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+    if (typeof window !== 'undefined' && typeof window.autoCompressImage === 'function') {
+      return window.autoCompressImage(file, maxWidth, maxHeight, quality);
+    }
+    if (typeof DB !== 'undefined' && typeof DB.autoCompressImage === 'function') {
+      return DB.autoCompressImage(file, maxWidth, maxHeight, quality);
+    }
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type || !file.type.startsWith('image/')) {
+        return reject(new Error('Format berkas bukan merupakan gambar yang didukung'));
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Gagal membaca data berkas gambar'));
+      reader.onload = ev => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Gagal menginisialisasi objek gambar'));
+        img.onload = () => {
+          let width = img.naturalWidth || img.width;
+          let height = img.naturalHeight || img.height;
+
+          // Turunkan skala jika melebihi batas resolusi maksimum, pertahankan rasio aspek
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+
+          // Inisialisasi elemen Canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+
+          // Rendering berkualitas tinggi
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Ekspor ke format WebP dengan fallback ke JPEG
+          let dataUrl = '';
+          try {
+            dataUrl = canvas.toDataURL('image/webp', quality);
+            if (!dataUrl || !dataUrl.startsWith('data:image/webp')) {
+              dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+          } catch (e) {
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+
+          resolve(dataUrl);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /**
+   * Modul generator deskripsi produk interaktif berbasis konteks formulir
+   */
+  async function generateAIDescription(context) {
+    const { name, categoryName, subCategoryName, materials } = context;
+
+    // Simulasi delay pemrosesan AI (600ms) untuk responsivitas visual yang mulus
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    const catBadge = subCategoryName ? `${categoryName} > ${subCategoryName}` : (categoryName || 'Katalog Pilihan');
+
+    // Rangkum daftar bahan dari repeater
+    let matsText = 'Material pilihan berkualitas tinggi dengan durabilitas prima';
+    if (Array.isArray(materials) && materials.length > 0) {
+      const validNames = materials.map(m => m.name).filter(Boolean);
+      if (validNames.length > 0) {
+        matsText = validNames.join(', ');
+      }
+    }
+
+    return `✨ ${name} — Kualitas Terbaik & Desain Profesional
+
+Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan teliti dan presisi tinggi menggunakan standar industri modern, produk ini dirancang untuk memberikan performa maksimal, estetika memikat, dan daya tahan optimal.
+
+📋 SPESIFIKASI PRODUK:
+• Kategori: ${catBadge}
+• Pilihan Varian / Bahan: ${matsText}
+• Standar Pengerjaan: Rapi, presisi, dan melalui tahap inspeksi kualitas (Quality Control) teliti sebelum dikemas.
+
+💡 KEUNGGULAN PRODUK:
+✔ Material pilihan berkualitas unggul, kuat, dan awet untuk pemakaian jangka panjang
+✔ Hasil visual tajam, warna solid, dan detail rapi sesuai ekspektasi
+✔ Fleksibel untuk berbagai keperluan personal, operasional bisnis, maupun promosi komersial
+✔ Harga transparan dengan jaminan kepuasan pelanggan
+
+📦 PANDUAN & KETENTUAN PEMESANAN:
+1. Pastikan memilih varian bahan dan opsi finishing yang tepat sebelum melakukan checkout pesanan.
+2. Setiap pesanan diproses secara higienis, aman, dan dikemas dengan proteksi terbaik agar sampai dalam kondisi sempurna.
+3. Memerlukan konsultasi khusus atau pesanan dalam kuantitas besar? Hubungi layanan pelanggan kami melalui fitur chat yang tersedia.`;
+  }
+
   function bindFormEvents() {
     // Back & Cancel
     const backBtn = document.getElementById('btn-back-to-list');
@@ -2134,12 +2353,217 @@ const ProductForm = (() => {
       });
     }
 
-    // Description
+    // Description & Interactive AI Generator
     const descInput = document.getElementById('input-prod-desc');
     if (descInput) {
       descInput.addEventListener('input', e => {
         primaryState.description = e.target.value;
       });
+    }
+
+    const btnAiGen = document.getElementById('btn-ai-generate-desc');
+    const aiPreviewBox = document.getElementById('ai-description-preview-box');
+    const aiPreviewText = document.getElementById('ai-description-preview-text');
+    const btnAiApply = document.getElementById('btn-ai-desc-apply');
+    const btnAiCancel = document.getElementById('btn-ai-desc-cancel');
+
+    let currentGeneratedAIText = '';
+
+    if (btnAiGen) {
+      btnAiGen.addEventListener('click', async () => {
+        const nameInput = document.getElementById('input-prod-name');
+        const prodName = (nameInput ? nameInput.value : primaryState.name || '').trim();
+
+        if (!prodName) {
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Silakan isi Judul / Nama Produk terlebih dahulu!', 'warning');
+          } else {
+            alert('Silakan isi Judul / Nama Produk terlebih dahulu!');
+          }
+          if (nameInput) nameInput.focus();
+          return;
+        }
+
+        const catSelect = document.getElementById('select-prod-cat');
+        const subCatSelect = document.getElementById('select-prod-sub-cat');
+        const catId = catSelect ? catSelect.value : primaryState.category_id;
+
+        const allCats = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+        const matchedCat = allCats.find(c => c && String(c.id) === String(catId));
+        const categoryName = matchedCat ? matchedCat.name : (catSelect?.options[catSelect.selectedIndex]?.text || '');
+
+        let subCategoryName = '';
+        if (subCatSelect && subCatSelect.selectedIndex > 0) {
+          subCategoryName = subCatSelect.options[subCatSelect.selectedIndex].text;
+        }
+
+        btnAiGen.disabled = true;
+        btnAiGen.classList.add('opacity-75', 'cursor-not-allowed');
+        const originalBtnHTML = btnAiGen.innerHTML;
+        btnAiGen.innerHTML = `
+          <svg class="animate-spin w-3.5 h-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <span>Sedang Merangkai Deskripsi...</span>
+        `;
+
+        try {
+          const generated = await generateAIDescription({
+            name: prodName,
+            categoryName: categoryName || 'Katalog Produk',
+            subCategoryName: subCategoryName,
+            materials: materialsState
+          });
+
+          currentGeneratedAIText = generated;
+
+          if (aiPreviewText && aiPreviewBox) {
+            aiPreviewText.textContent = generated;
+            aiPreviewBox.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+            aiPreviewBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Deskripsi AI berhasil dirangkai! Silakan tinjau pratinjau di bawah.', 'success');
+          }
+        } catch (err) {
+          console.error('[ProductForm] Gagal merangkai deskripsi AI:', err);
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Gagal merangkai deskripsi AI.', 'error');
+          }
+        } finally {
+          btnAiGen.disabled = false;
+          btnAiGen.classList.remove('opacity-75', 'cursor-not-allowed');
+          btnAiGen.innerHTML = originalBtnHTML;
+          if (window.lucide) window.lucide.createIcons();
+        }
+      });
+    }
+
+    if (btnAiApply) {
+      btnAiApply.addEventListener('click', () => {
+        if (!currentGeneratedAIText) return;
+
+        if (descInput) {
+          descInput.value = currentGeneratedAIText;
+        }
+        primaryState.description = currentGeneratedAIText;
+
+        if (aiPreviewBox) {
+          aiPreviewBox.classList.add('hidden');
+        }
+
+        if (typeof App !== 'undefined' && App.showToast) {
+          App.showToast('Deskripsi AI berhasil diterapkan ke formulir!', 'success');
+        }
+      });
+    }
+
+    if (btnAiCancel) {
+      btnAiCancel.addEventListener('click', () => {
+        if (aiPreviewBox) {
+          aiPreviewBox.classList.add('hidden');
+        }
+        if (aiPreviewText) {
+          aiPreviewText.textContent = '';
+        }
+        currentGeneratedAIText = '';
+      });
+    }
+
+    // Helper: Penentuan Otomatis Model Kartu Berdasarkan Kategori Produk
+    function getSuggestedCardVariantForCategory(categoryId) {
+      if (!categoryId) return 'A';
+      const categories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+      const cat = categories.find(c => String(c.id) === String(categoryId));
+      if (!cat) return 'A';
+
+      const text = `${cat.name || ''} ${cat.slug || ''} ${cat.description || ''}`.toLowerCase();
+
+      // 1. Ritel, Fashion, Merchandise, Kuliner/F&B -> Model 3 ('C')
+      const model3Keywords = ['ritel', 'retail', 'fashion', 'baju', 'kaos', 'pakaian', 'distro', 'hijab', 'merchandise', 'souvenir', 'kuliner', 'fnb', 'makanan', 'minuman', 'snack', 'kue', 'bakery', 'roti', 'kopi', 'coffee', 'mug', 'ganci'];
+      if (model3Keywords.some(k => text.includes(k))) {
+        return 'C';
+      }
+
+      // 2. Jasa, Layanan Profesional, Desain -> Model 2 ('B')
+      const model2Keywords = ['jasa', 'layanan', 'desain', 'design', 'profesional', 'service', 'branding', 'logo', 'kursus', 'konsultasi'];
+      if (model2Keywords.some(k => text.includes(k))) {
+        return 'B';
+      }
+
+      // 3. Fisik Reguler, Cetak Dimensi (PxL) / Default -> Model 1 ('A')
+      return 'A';
+    }
+
+    function applyCardVariant(variantCode, isManual = false) {
+      primaryState.card_variant = variantCode;
+      if (isManual) {
+        primaryState.card_variant_manual_override = true;
+      }
+
+      const parentLabels = document.querySelectorAll('input[name="card_variant_radio"]');
+      parentLabels.forEach(rad => {
+        rad.checked = (rad.value === variantCode);
+        const labelWrapper = rad.closest('label');
+        if (labelWrapper) {
+          if (rad.checked) {
+            labelWrapper.className = 'p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20 cursor-pointer transition space-y-1 block';
+          } else {
+            labelWrapper.className = 'p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition space-y-1 block';
+          }
+          const textSpan = labelWrapper.querySelector('span');
+          if (textSpan) {
+            textSpan.className = `font-bold text-xs ${rad.checked ? 'text-emerald-800' : 'text-slate-800'}`;
+          }
+        }
+      });
+
+      const badgeLabel = document.getElementById('label-active-card-preview');
+      if (badgeLabel) badgeLabel.textContent = `Card Model ${variantCode === 'A' ? '1' : (variantCode === 'B' ? '2' : '3')}`;
+      const cfgLabel = document.getElementById('label-active-card-cfg');
+      if (cfgLabel) cfgLabel.textContent = `(Model ${variantCode === 'A' ? '1' : (variantCode === 'B' ? '2' : '3')})`;
+
+      // Update Active Mode Badge
+      const activeModeBadge = document.getElementById('label-active-mode-badge');
+      if (activeModeBadge) {
+        const map = {
+          'A': '1: Modern Standard (Rasio 1:1)',
+          'B': '2: Minimalis Bold (Teks Tebal 1 Baris)',
+          'C': '3: Showcase Estetik (Rasio 4:3 + Footer)'
+        };
+        activeModeBadge.textContent = `Model Aktif: Model ${map[variantCode] || variantCode}`;
+        activeModeBadge.className = `px-3 py-1 rounded-full text-xs font-bold ${variantCode === 'C' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 ring-2 ring-emerald-500/20' : 'bg-slate-100 text-slate-700 border border-slate-300'}`;
+      }
+
+      // Toggle Footer Section Visibility (Khusus Card Model 3 / C)
+      const footerSection = document.getElementById('section-card-footer-config');
+      const footerBadge = document.getElementById('badge-footer-active');
+      if (footerSection) {
+        if (variantCode === 'C') {
+          footerSection.className = 'p-4 sm:p-5 rounded-2xl border-2 border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20 space-y-4 transition-all';
+          if (footerBadge) {
+            footerBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-600 text-white';
+            footerBadge.textContent = 'Khusus Model 3';
+          }
+        } else {
+          footerSection.className = 'p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4 transition-all hidden';
+          if (footerBadge) {
+            footerBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-200 text-slate-600';
+            footerBadge.textContent = 'Khusus Model 3';
+          }
+        }
+      }
+
+      // Auto-sinkronisasi rasio aspek foto sesuai Model Kartu:
+      // Model 3 (Showcase 4:3) -> '4:3', Model 1 & 2 -> '1:1'
+      const autoRatio = (variantCode === 'C') ? '4:3' : '1:1';
+      setPhotoAspectRatio(autoRatio, false);
+
+      loadCardConfigInputs(variantCode);
+      updateProductCardLivePreview();
     }
 
     // Category Select Listener
@@ -2158,7 +2582,14 @@ const ProductForm = (() => {
             ${subs.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}
           `;
         }
-        updateProductCardLivePreview();
+
+        // Otomatis tentukan default model kartu jika belum di-override manual oleh merchant
+        if (!primaryState.card_variant_manual_override && primaryState.category_id) {
+          const suggestedVariant = getSuggestedCardVariantForCategory(primaryState.category_id);
+          applyCardVariant(suggestedVariant, false);
+        } else {
+          updateProductCardLivePreview();
+        }
       });
     }
 
@@ -2199,55 +2630,7 @@ const ProductForm = (() => {
     // Card Variant Radios
     document.querySelectorAll('input[name="card_variant_radio"]').forEach(r => {
       r.addEventListener('change', e => {
-        primaryState.card_variant = e.target.value;
-        primaryState.card_variant_override = true;
-        const parentLabels = document.querySelectorAll('input[name="card_variant_radio"]');
-        parentLabels.forEach(rad => {
-          const labelWrapper = rad.closest('label');
-          if (rad.checked) {
-            labelWrapper.className = 'p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20 cursor-pointer transition space-y-1 block';
-          } else {
-            labelWrapper.className = 'p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition space-y-1 block';
-          }
-          const textSpan = labelWrapper.querySelector('span');
-          if (textSpan) {
-            textSpan.className = `font-bold text-xs ${rad.checked ? 'text-emerald-800' : 'text-slate-800'}`;
-          }
-        });
-        const badgeLabel = document.getElementById('label-active-card-preview');
-        if (badgeLabel) badgeLabel.textContent = `Card Variasi ${e.target.value}`;
-        const cfgLabel = document.getElementById('label-active-card-cfg');
-        if (cfgLabel) cfgLabel.textContent = `(${e.target.value})`;
-        
-        // Update Active Mode Badge
-        const activeModeBadge = document.getElementById('label-active-mode-badge');
-        if (activeModeBadge) {
-          const map = { 'A': '1 (Standar Persegi)', 'B': '2 (Teks Besar Ringkas)', 'C': '3 (Pendek Lanskap + Footer)' };
-          activeModeBadge.textContent = `Mode Aktif: Versi ${map[e.target.value] || e.target.value}`;
-          activeModeBadge.className = `px-3 py-1 rounded-full text-xs font-bold ${e.target.value === 'C' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 ring-2 ring-emerald-500/20' : 'bg-slate-100 text-slate-700 border border-slate-300'}`;
-        }
-
-        // Toggle Footer Section Visibility (Khusus Card Versi 3 / C)
-        const footerSection = document.getElementById('section-card-footer-config');
-        const footerBadge = document.getElementById('badge-footer-active');
-        if (footerSection) {
-          if (e.target.value === 'C') {
-            footerSection.className = 'p-4 sm:p-5 rounded-2xl border-2 border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20 space-y-4 transition-all';
-            if (footerBadge) {
-              footerBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-600 text-white';
-              footerBadge.textContent = 'Khusus Card Versi 3';
-            }
-          } else {
-            footerSection.className = 'p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4 transition-all hidden';
-            if (footerBadge) {
-              footerBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-200 text-slate-600';
-              footerBadge.textContent = 'Khusus Card Versi 3';
-            }
-          }
-        }
-
-        loadCardConfigInputs(primaryState.card_variant);
-        updateProductCardLivePreview();
+        applyCardVariant(e.target.value, true);
       });
     });
 
@@ -2808,56 +3191,44 @@ const ProductForm = (() => {
       });
     }
 
-    // Multi-Image Upload & Client-side 500 KB Validation
+    // Selektor Rasio Aspek Foto (1:1 vs 4:3)
+    document.querySelectorAll('input[name="photo_aspect_ratio"]').forEach(rad => {
+      rad.addEventListener('change', e => {
+        if (e.target.checked) {
+          setPhotoAspectRatio(e.target.value, true);
+        }
+      });
+    });
+
+    // Multi-Image Upload dengan Canvas Auto-Compression (Silent Upload)
     const fileInput = document.getElementById('input-prod-image');
-    const errorBanner = document.getElementById('file-size-error-banner');
-    const errorMsg = document.getElementById('file-size-error-msg');
-
     if (fileInput) {
-      fileInput.addEventListener('change', e => {
-        const files = Array.from(e.target.files);
+      fileInput.addEventListener('change', async e => {
+        const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
+        await handleImageFilesSelected(files);
+      });
+    }
 
-        const maxBytes = 500 * 1024; // 500 KB
-        let oversizeFiles = [];
-
-        files.forEach(file => {
-          if (file.size > maxBytes) {
-            oversizeFiles.push(`${file.name} (${(file.size / 1024).toFixed(0)} KB)`);
-          }
+    // Drag and Drop Upload ke Grid Galeri
+    const galleryContainer = document.getElementById('image-gallery-container');
+    if (galleryContainer) {
+      ['dragenter', 'dragover'].forEach(evt => {
+        galleryContainer.addEventListener(evt, e => {
+          e.preventDefault();
+          galleryContainer.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/20', 'rounded-2xl');
         });
-
-        if (oversizeFiles.length > 0) {
-          errorMsg.textContent = `Beberapa berkas melebihi batas 500 KB: ${oversizeFiles.join(', ')}`;
-          errorBanner.classList.remove('hidden');
-          if (window.lucide) window.lucide.createIcons();
-        } else {
-          errorBanner.classList.add('hidden');
-        }
-
-        const validFiles = files.filter(f => f.size <= maxBytes);
-        if (validFiles.length === 0) {
-          fileInput.value = '';
-          return;
-        }
-
-        let loadedCount = 0;
-        validFiles.forEach(file => {
-          const reader = new FileReader();
-          reader.onload = ev => {
-            if (!Array.isArray(primaryState.images)) primaryState.images = [];
-            primaryState.images.push(ev.target.result);
-            if (!primaryState.image_url) primaryState.image_url = ev.target.result;
-            loadedCount++;
-            if (loadedCount === validFiles.length) {
-              refreshGalleryDOM();
-              updateProductCardLivePreview();
-            }
-          };
-          reader.readAsDataURL(file);
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        galleryContainer.addEventListener(evt, e => {
+          e.preventDefault();
+          galleryContainer.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/20', 'rounded-2xl');
         });
-
-        fileInput.value = '';
+      });
+      galleryContainer.addEventListener('drop', async e => {
+        if (e.dataTransfer && e.dataTransfer.files) {
+          await handleImageFilesSelected(Array.from(e.dataTransfer.files));
+        }
       });
     }
 
@@ -2882,8 +3253,97 @@ const ProductForm = (() => {
     });
   }
 
+  function setPhotoAspectRatio(ratio, isManual = false) {
+    primaryState.image_aspect_ratio = ratio;
+    if (isManual) {
+      primaryState.image_aspect_ratio_manual = true;
+    }
+
+    const rads = document.querySelectorAll('input[name="photo_aspect_ratio"]');
+    rads.forEach(rad => {
+      rad.checked = (rad.value === ratio);
+      const labelWrapper = rad.closest('label');
+      if (labelWrapper) {
+        if (rad.checked) {
+          labelWrapper.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500 bg-emerald-50/50 text-emerald-800 font-bold ring-1 ring-emerald-500/30 text-xs cursor-pointer transition select-none';
+        } else {
+          labelWrapper.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium text-xs cursor-pointer transition select-none';
+        }
+      }
+    });
+
+    refreshGalleryDOM();
+  }
+
+  async function handleImageFilesSelected(files) {
+    if (!files || files.length === 0) return;
+
+    const errorBanner = document.getElementById('file-size-error-banner');
+    const errorMsg = document.getElementById('file-size-error-msg');
+    const fileInput = document.getElementById('input-prod-image');
+
+    // Validasi format berkas gambar
+    const imageFiles = files.filter(f => f.type && f.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+      if (errorMsg && errorBanner) {
+        errorMsg.textContent = 'Berkas yang dipilih bukan berkas gambar yang didukung (JPG, PNG, WEBP).';
+        errorBanner.classList.remove('hidden');
+      }
+      if (fileInput) fileInput.value = '';
+      return;
+    }
+
+    if (errorBanner) errorBanner.classList.add('hidden');
+
+    if (!Array.isArray(primaryState.images)) primaryState.images = [];
+
+    // Maksimal 9 foto produk
+    const remainingSlots = 9 - primaryState.images.length;
+    if (remainingSlots <= 0) {
+      if (errorMsg && errorBanner) {
+        errorMsg.textContent = 'Maksimal 9 foto produk telah tercapai. Hapus beberapa foto untuk menambahkan foto baru.';
+        errorBanner.classList.remove('hidden');
+      }
+      if (fileInput) fileInput.value = '';
+      return;
+    }
+
+    const toProcess = imageFiles.slice(0, remainingSlots);
+
+    try {
+      for (const file of toProcess) {
+        const compressedDataUrl = await compressProductImage(file, 1200, 1200, 0.8);
+        primaryState.images.push(compressedDataUrl);
+        if (!primaryState.image_url) {
+          primaryState.image_url = compressedDataUrl;
+        }
+      }
+
+      refreshGalleryDOM();
+      updateProductCardLivePreview();
+    } catch (err) {
+      console.error('[ProductForm] Gagal memproses gambar:', err);
+      if (errorMsg && errorBanner) {
+        errorMsg.textContent = `Gagal memproses gambar: ${err.message || 'Format tidak valid'}`;
+        errorBanner.classList.remove('hidden');
+      }
+    } finally {
+      if (fileInput) fileInput.value = '';
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+
   function bindGalleryButtons() {
-    // Set Main Image
+    // Tombol Tambah Slot Foto
+    const addSlotBtn = document.getElementById('btn-slot-add-photo');
+    const fileInput = document.getElementById('input-prod-image');
+    if (addSlotBtn && fileInput) {
+      addSlotBtn.addEventListener('click', () => {
+        fileInput.click();
+      });
+    }
+
+    // Set Main Image (Cover)
     document.querySelectorAll('.btn-set-main-image').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -2893,10 +3353,41 @@ const ProductForm = (() => {
         primaryState.images.unshift(targetImg);
         primaryState.image_url = primaryState.images[0];
         refreshGalleryDOM();
+        updateProductCardLivePreview();
       });
     });
 
-    // Delete Gallery Image
+    // Geser Urutan ke Kiri (◀)
+    document.querySelectorAll('.btn-move-left-image').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-idx'));
+        if (isNaN(idx) || idx <= 0 || idx >= primaryState.images.length) return;
+        const temp = primaryState.images[idx];
+        primaryState.images[idx] = primaryState.images[idx - 1];
+        primaryState.images[idx - 1] = temp;
+        primaryState.image_url = primaryState.images[0];
+        refreshGalleryDOM();
+        updateProductCardLivePreview();
+      });
+    });
+
+    // Geser Urutan ke Kanan (▶)
+    document.querySelectorAll('.btn-move-right-image').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-idx'));
+        if (isNaN(idx) || idx < 0 || idx >= primaryState.images.length - 1) return;
+        const temp = primaryState.images[idx];
+        primaryState.images[idx] = primaryState.images[idx + 1];
+        primaryState.images[idx + 1] = temp;
+        primaryState.image_url = primaryState.images[0];
+        refreshGalleryDOM();
+        updateProductCardLivePreview();
+      });
+    });
+
+    // Hapus Foto dari Galeri (✕)
     document.querySelectorAll('.btn-delete-gallery-img').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -2905,6 +3396,7 @@ const ProductForm = (() => {
         primaryState.images.splice(idx, 1);
         primaryState.image_url = primaryState.images.length > 0 ? primaryState.images[0] : null;
         refreshGalleryDOM();
+        updateProductCardLivePreview();
       });
     });
   }
@@ -2926,6 +3418,8 @@ const ProductForm = (() => {
     const variantRad = document.querySelector('input[name="card_variant_radio"]:checked');
     if (variantRad) primaryState.card_variant = variantRad.value;
     primaryState.card_variant_override = true;
+    const aspectRad = document.querySelector('input[name="photo_aspect_ratio"]:checked');
+    if (aspectRad) primaryState.image_aspect_ratio = aspectRad.value;
     primaryState.monthly_promo_label = document.getElementById('input-monthly-promo-label')?.value || 'Promo Bulanan';
     primaryState.discount_type = document.getElementById('select-monthly-discount-type')?.value || 'percent';
     primaryState.discount_value = parseFloat(document.getElementById('input-discount-val')?.value) || 0;
@@ -3014,67 +3508,67 @@ const ProductForm = (() => {
     syncStateFromDOM();
     const errors = [];
 
-    // Poin 1: Informasi Pokok Produk
+    // 1. Informasi Pokok Produk
     if (!primaryState.name || primaryState.name.trim() === '') {
-      errors.push('Poin 1: Judul / Nama produk wajib diisi.');
+      errors.push('Nama / judul produk wajib diisi.');
     }
     if (!primaryState.description || primaryState.description.trim() === '') {
-      errors.push('Poin 1: Deskripsi produk wajib diisi.');
+      errors.push('Deskripsi produk wajib diisi.');
     }
 
-    // Poin 2: Upload Gambar Produk (Wajib minimal 1)
+    // 2. Upload Gambar Produk (Wajib minimal 1)
     if (!primaryState.images || primaryState.images.length === 0) {
-      errors.push('Poin 2: Upload gambar produk wajib minimal 1 gambar.');
+      errors.push('Foto produk wajib diunggah minimal 1 gambar.');
     }
 
-    // Poin 3: Bahan & Opsi Finishing
+    // 3. Varian / Bahan & Opsi Tambahan
     if (!materialsState || materialsState.length === 0) {
-      errors.push('Poin 3: Minimal harus mengisi 1 jenis bahan.');
+      errors.push('Minimal harus mengisi 1 pilihan varian / bahan dasar.');
     } else {
       let hasEmptyMatName = false;
       materialsState.forEach(m => {
         if (!m.name || m.name.trim() === '') hasEmptyMatName = true;
       });
       if (hasEmptyMatName) {
-        errors.push('Poin 3: Semua baris bahan wajib memiliki Nama Bahan.');
+        errors.push('Semua baris varian/bahan wajib memiliki nama yang jelas.');
       }
     }
 
     if (!finishingsState.main || finishingsState.main.length === 0) {
-      errors.push('Poin 3: Minimal harus mengisi 1 pilihan finishing utama.');
+      errors.push('Minimal harus mengisi 1 pilihan opsi utama / pilihan wajib.');
     } else {
       let hasEmptyFinName = false;
       finishingsState.main.forEach(f => {
         if (!f.name || f.name.trim() === '') hasEmptyFinName = true;
       });
       if (hasEmptyFinName) {
-        errors.push('Poin 3: Semua baris finishing utama wajib memiliki Nama Finishing.');
+        errors.push('Semua baris opsi utama wajib memiliki nama.');
       }
     }
 
-    // Poin 4: Tipe Harga
+    // 4. Tipe Perhitungan Harga
     if (!primaryState.price_type || primaryState.price_type < 1 || primaryState.price_type > 7) {
-      errors.push('Poin 4: Tipe harga wajib dipilih dari 1 s/d 7.');
+      errors.push('Tipe perhitungan harga wajib dipilih.');
     }
 
-    // Poin 5: Manajemen Stok & Promo
+    // 5. Manajemen Stok & Promo
     if (!primaryState.is_unlimited_stock && (primaryState.stock === null || isNaN(primaryState.stock))) {
-      errors.push('Poin 5: Masukkan jumlah stok fisik jika batas stok aktif.');
+      errors.push('Masukkan jumlah stok fisik yang valid jika batas stok aktif.');
     }
 
     if (primaryState.has_monthly_discount) {
       if (primaryState.discount_type === 'percent' && (primaryState.discount_value <= 0 || primaryState.discount_value > 100)) {
-        errors.push('Poin 5: Persentase diskon harus di antara 1% dan 100%.');
+        errors.push('Persentase diskon harus di antara 1% dan 100%.');
       } else if (primaryState.discount_type === 'nominal' && primaryState.discount_value <= 0) {
-        errors.push('Poin 5: Nominal potongan diskon IDR harus lebih besar dari 0.');
+        errors.push('Nominal potongan diskon IDR harus lebih besar dari 0.');
       }
     }
 
     if (primaryState.min_order < 1) {
-      errors.push('Poin 5: Minimal pesanan minimal bernilai 1.');
+      errors.push('Minimal pesanan minimal bernilai 1.');
     }
     if (primaryState.max_order !== null && primaryState.max_order < primaryState.min_order) {
-      errors.push('Poin 5: Maksimal pesanan tidak boleh lebih kecil dari minimal pesanan.');
+      errors.push('Maksimal pesanan tidak boleh lebih kecil dari minimal pesanan.');
     }
 
     // Validasi Label Khusus: jika "Tampilkan di Kartu" dicentang, wajibkan minimal 1 slot terisi

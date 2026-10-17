@@ -40,7 +40,7 @@ const PromoManager = (() => {
         <div id="${id}-dropzone" class="border-2 border-dashed border-slate-300 rounded-3xl p-6 text-center hover:bg-slate-50 transition cursor-pointer bg-white group">
           <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 group-hover:text-emerald-500 mx-auto mb-2 transition"></i>
           <span class="text-xs font-bold text-slate-700 block">Pilih Berkas Gambar atau Tarik & Lepas Gambar ke Sini</span>
-          <span class="text-[11px] text-slate-400 mt-1 block">Format didukung: JPG, PNG, WEBP (Maksimal 500 KB per berkas)</span>
+          <span class="text-[11px] text-slate-400 mt-1 block">Format didukung: JPG, PNG, WEBP (Otomatis dikompres &amp; dioptimasi)</span>
           <input type="file" id="${id}-file-input" accept="image/png, image/jpeg, image/webp" ${isMulti ? 'multiple' : ''} class="hidden" />
         </div>
 
@@ -150,36 +150,38 @@ const PromoManager = (() => {
       });
     }
 
-    const processFiles = (files) => {
+    const processFiles = async (files) => {
       if (!files || files.length === 0) return;
-      const fileArr = Array.from(files);
+      const fileArr = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
+      if (fileArr.length === 0) return;
+
+      const compressFn = window.autoCompressImage || (typeof DB !== 'undefined' && DB.autoCompressImage);
 
       for (const file of fileArr) {
-        if (file.size > 500 * 1024) {
-          toastWarning('Ukuran gambar melebihi batas 500 KB!');
-          return;
-        }
-      }
+        try {
+          const result = compressFn ? await compressFn(file, 1200, 1200, 0.8) : await new Promise(res => {
+            const r = new FileReader();
+            r.onload = ev => res(ev.target.result);
+            r.readAsDataURL(file);
+          });
 
-      let readRemaining = fileArr.length;
-      fileArr.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const result = ev.target.result;
           if (!isMulti) {
             images = [result];
+            break;
           } else {
             if (images.length < 10) images.push(result);
           }
-          readRemaining--;
-          if (readRemaining === 0) {
-            renderThumbs();
-            if (onChange) onChange(images);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+        } catch (err) {
+          console.error('[PromoManager] Gagal mengompres gambar:', err);
+        }
+      }
+
+      renderThumbs();
+      if (onChange) onChange(images);
       if (fileInput) fileInput.value = '';
+      if (typeof window.App !== 'undefined' && window.App.showToast) {
+        window.App.showToast('Gambar berhasil dioptimasi & ditambahkan.', 'success');
+      }
     };
 
     if (fileInput) {
@@ -343,7 +345,7 @@ const PromoManager = (() => {
               <div>
                 <div class="flex items-center justify-between mb-1">
                   <label class="block text-[10px] font-bold text-slate-700">URL / Berkas Gambar (Tampilan):</label>
-                  <label class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer" title="Unggah file foto gambar maks 500 KB">
+                  <label class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer" title="Unggah file foto gambar (Auto-Compress)">
                     <i data-lucide="upload" class="w-3 h-3"></i>
                     <span>Upload Foto</span>
                     <input type="file" accept="image/*" class="slide-file-upload-input hidden" data-index="${idx}" />
@@ -547,18 +549,19 @@ const PromoManager = (() => {
     });
 
     container.querySelectorAll('.slide-file-upload-input').forEach(fileInp => {
-      fileInp.addEventListener('change', (e) => {
+      fileInp.addEventListener('change', async (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
-        if (file.size > 500 * 1024) {
-          const toastFn = window.AdminApp?.showToast || window.App?.showToast || alert;
-          toastFn('Ukuran berkas gambar melebihi batas 500 KB. Harap pilih gambar di bawah 500 KB.', 'warning');
-          return;
-        }
-        const idx = parseInt(fileInp.getAttribute('data-index'), 10);
-        const reader = new FileReader();
-        reader.onload = (loadEvt) => {
-          const base64 = loadEvt.target.result;
+
+        try {
+          const compressFn = window.autoCompressImage || (typeof DB !== 'undefined' && DB.autoCompressImage);
+          const base64 = compressFn ? await compressFn(file, 1200, 1200, 0.8) : await new Promise(res => {
+            const r = new FileReader();
+            r.onload = ev => res(ev.target.result);
+            r.readAsDataURL(file);
+          });
+
+          const idx = parseInt(fileInp.getAttribute('data-index'), 10);
           if (currentCarouselSlides[idx]) {
             currentCarouselSlides[idx].image_url = base64;
             const row = fileInp.closest('.carousel-slide-item');
@@ -570,8 +573,13 @@ const PromoManager = (() => {
             }
             updateSponsorPreviews();
           }
-        };
-        reader.readAsDataURL(file);
+          const toastFn = window.AdminApp?.showToast || window.App?.showToast;
+          if (toastFn) toastFn('Slide berhasil dioptimasi & diperbarui.', 'success');
+        } catch (err) {
+          console.error('[PromoManager] Gagal mengompres slide:', err);
+        } finally {
+          fileInp.value = '';
+        }
       });
     });
 
@@ -1179,7 +1187,7 @@ const PromoManager = (() => {
 
               <!-- Upload Gambar Banner Varian 1 -->
               <div id="promo-variant1-uploader-container" class="${!isVariant2 ? 'block' : 'hidden'} space-y-2 pt-2 border-t border-slate-200">
-                <label class="block font-bold text-slate-700 text-xs">Gambar Banner Promo Varian 1 (Maksimal 500 KB):</label>
+                <label class="block font-bold text-slate-700 text-xs">Gambar Banner Promo Varian 1 (Auto-Compress):</label>
                 <p class="text-[11px] text-slate-400 mb-2">Unggah foto promo atau tempel URL link gambar langsung. Jika belum diunggah, otomatis menggunakan ikon placeholder bersih.</p>
                 ${renderUnifiedUploaderHtml({
                   id: 'promo-uploader',
@@ -2468,7 +2476,7 @@ const PromoManager = (() => {
                   <span>Panduan Dimensi 2-Kolom (col-span-2) & CTA Fleksibel:</span>
                 </div>
                 <p class="text-[11px] text-indigo-800">
-                  Banner membentang selebar <strong>2 kolom etalase</strong> dengan tinggi proporsional sejajar kartu produk sekitar. Mendukung <strong>hingga 10 slide foto</strong> (resolusi ideal <strong>1200×800 px</strong> lanskap atau <strong>800×600 px</strong>, maksimal 500 KB per foto). Pilihan mode putar otomatis (interval waktu) atau manual (panah hover desktop & swipe sentuh mobile), serta tombol CTA melayang kustom per slide.
+                  Banner membentang selebar <strong>2 kolom etalase</strong> dengan tinggi proporsional sejajar kartu produk sekitar. Mendukung <strong>hingga 10 slide foto</strong> (resolusi ideal <strong>1200×800 px</strong> lanskap atau <strong>800×600 px</strong>, otomatis dikompres &amp; dioptimasi). Pilihan mode putar otomatis (interval waktu) atau manual (panah hover desktop & swipe sentuh mobile), serta tombol CTA melayang kustom per slide.
                 </p>
               </div>
 
@@ -2506,7 +2514,7 @@ const PromoManager = (() => {
                 <div class="flex items-center justify-between">
                   <div>
                     <label class="block font-bold text-slate-800 text-xs">Slide Foto Sponsor (Maksimal 10 Foto):</label>
-                    <p class="text-[11px] text-slate-400">Unggah berkas foto atau tempel URL tautan gambar slide (maks 500 KB / foto).</p>
+                    <p class="text-[11px] text-slate-400">Unggah berkas foto atau tempel URL tautan gambar slide (otomatis dikompres &amp; dioptimasi).</p>
                   </div>
                   <span id="carousel-slide-counter-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${currentCarouselSlides.length >= 10 ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}">
                     ${currentCarouselSlides.length} / 10 Slide
@@ -2555,7 +2563,7 @@ const PromoManager = (() => {
                   <span>Saran Ukuran & Skala Gambar Carousel:</span>
                 </div>
                 <p class="text-[11px] text-blue-800">
-                  Gunakan rasio <strong>3:4 Portrait</strong> (resolusi ideal <strong>600×800 px</strong>, maksimal 500 KB). Gambar akan mengisi tinggi kartu secara proporsional sesuai baris grid, <strong>tanpa tombol CTA</strong> dengan indikator titik dots dinamis.
+                  Gunakan rasio <strong>3:4 Portrait</strong> (resolusi ideal <strong>600×800 px</strong>, otomatis dikompres). Gambar akan mengisi tinggi kartu secara proporsional sesuai baris grid, <strong>tanpa tombol CTA</strong> dengan indikator titik dots dinamis.
                 </p>
               </div>
 
@@ -2706,7 +2714,7 @@ const PromoManager = (() => {
                   <span>Format Skala Banner (Rasio 3:4 Portrait Murni):</span>
                 </div>
                 <p class="text-[11px] text-amber-800">
-                  Gunakan rasio <strong>3:4 Portrait</strong> murni (resolusi ideal <strong>600×800 px</strong>, maksimal 500 KB). Gambar banner terkunci portrait tanpa melar horizontal, dengan 2 tombol aksi stacked di bawahnya.
+                  Gunakan rasio <strong>3:4 Portrait</strong> murni (resolusi ideal <strong>600×800 px</strong>, otomatis dikompres). Gambar banner terkunci portrait tanpa melar horizontal, dengan 2 tombol aksi stacked di bawahnya.
                 </p>
               </div>
 

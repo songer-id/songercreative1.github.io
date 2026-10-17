@@ -51,25 +51,6 @@ const AdminApp = (() => {
   // 1. INITIALIZATION & AUTHENTICATION
   // ----------------------------------------------------------------------------
   function init() {
-    // Global File Upload Guard (Max 500KB)
-    document.addEventListener('change', function (e) {
-      if (e.target && e.target.type === 'file') {
-        const files = e.target.files;
-        if (files) {
-          for (let i = 0; i < files.length; i++) {
-            if (files[i].size > 500 * 1024) { // 500 KB limit
-              if (typeof showToast === 'function') showToast('Ukuran gambar terlalu besar! Maksimal ukuran file adalah 500 KB agar tidak memenuhi penyimpanan lokal.', 'error');
-              else alert('Ukuran gambar terlalu besar! Maksimal ukuran file adalah 500 KB agar tidak memenuhi penyimpanan lokal.');
-              e.target.value = '';
-              e.stopPropagation();
-              e.preventDefault();
-              return false;
-            }
-          }
-        }
-      }
-    }, true);
-
     // 1. Check existing session
     const savedLogin = sessionStorage.getItem('pos_admin_logged_in');
     const savedStoreSlug = sessionStorage.getItem('pos_admin_store_slug');
@@ -517,7 +498,7 @@ const AdminApp = (() => {
       });
     }
 
-    // Official Sidebar Navigation Items (7 Menu Resmi)
+    // Official Sidebar Navigation Items (8 Menu Resmi)
     const navDashboard = document.getElementById('admin-nav-dashboard');
     const navThemeBranding = document.getElementById('admin-nav-theme-branding');
     const navOrders = document.getElementById('admin-nav-orders');
@@ -525,6 +506,7 @@ const AdminApp = (() => {
     const navAddProduct = document.getElementById('admin-nav-add-product');
     const navCategories = document.getElementById('admin-nav-categories');
     const navPos = document.getElementById('admin-nav-pos');
+    const navCustomers = document.getElementById('admin-nav-customers');
     const navAccount = document.getElementById('admin-nav-account');
     const navSettingsTheme = document.getElementById('admin-nav-settings-theme');
     const navSettingsPrint = document.getElementById('admin-nav-settings-print');
@@ -547,6 +529,7 @@ const AdminApp = (() => {
     if (navAddProduct) navAddProduct.addEventListener('click', () => handleNavClick('create-product'));
     if (navCategories) navCategories.addEventListener('click', () => handleNavClick('categories'));
     if (navPos) navPos.addEventListener('click', () => handleNavClick('pos'));
+    if (navCustomers) navCustomers.addEventListener('click', () => handleNavClick('customers'));
     if (navAccount) navAccount.addEventListener('click', () => handleNavClick('account'));
     if (navSettingsTheme) navSettingsTheme.addEventListener('click', (e) => { e.preventDefault(); window.open('theme-editor.html', '_blank'); });
     if (navSettingsPrint) navSettingsPrint.addEventListener('click', () => {
@@ -600,7 +583,7 @@ const AdminApp = (() => {
     const btnPrintReceipt = document.getElementById('btn-print-receipt-action');
 
     if (btnCloseReceipt) btnCloseReceipt.addEventListener('click', closeReceiptModal);
-    if (btnDoneReceipt) btnDoneReceipt.addEventListener('click', closeReceiptModal);
+    if (btnDoneReceipt) btnDoneReceipt.addEventListener('click', handleCompleteReceiptWithoutPrint);
     if (btnPrintReceipt) btnPrintReceipt.addEventListener('click', executeThermalPrint);
 
     // Order Detail Modal Buttons
@@ -629,6 +612,7 @@ const AdminApp = (() => {
       'dashboard': document.getElementById('view-dashboard'),
       'orders': document.getElementById('view-orders'),
       'pos': document.getElementById('view-pos-cashier'),
+      'customers': document.getElementById('view-customers'),
       'products': document.getElementById('view-product-list'),
       'list': document.getElementById('view-product-list'),
       'create-product': document.getElementById('view-product-form'),
@@ -737,6 +721,11 @@ const AdminApp = (() => {
       if (views.reviews) views.reviews.classList.remove('hidden');
       if (typeof window.ReviewManager !== 'undefined' || typeof ReviewManager !== 'undefined') {
         (window.ReviewManager || ReviewManager).init();
+      }
+    } else if (viewName === 'customers') {
+      if (views.customers) views.customers.classList.remove('hidden');
+      if (typeof window.CustomerManager !== 'undefined' || typeof CustomerManager !== 'undefined') {
+        (window.CustomerManager || CustomerManager).init();
       }
     } else if (viewName === 'theme-branding' || viewName === 'branding-hero') {
       if (views['theme-branding']) views['theme-branding'].classList.remove('hidden');
@@ -901,6 +890,7 @@ const AdminApp = (() => {
     const navAddProduct = document.getElementById('admin-nav-add-product');
     const navCategories = document.getElementById('admin-nav-categories');
     const navPos = document.getElementById('admin-nav-pos');
+    const navCustomers = document.getElementById('admin-nav-customers');
     const navAccount = document.getElementById('admin-nav-account');
     const navSettingsTheme = document.getElementById('admin-nav-settings-theme');
     const navSettingsPrint = document.getElementById('admin-nav-settings-print');
@@ -921,6 +911,7 @@ const AdminApp = (() => {
       { key: 'create', el: navAddProduct },
       { key: 'categories', el: navCategories },
       { key: 'pos', el: navPos },
+      { key: 'customers', el: navCustomers },
       { key: 'account', el: navAccount },
       { key: 'settings', el: navSettingsTheme },
       { key: 'promos', el: navPromos },
@@ -2263,11 +2254,61 @@ const AdminApp = (() => {
     previewContainer.textContent = fullReceiptText;
   }
 
-  function executeThermalPrint() {
-    if (!posActiveReceiptData) return;
+  function handleCompleteReceiptWithoutPrint() {
+    if (!posActiveReceiptData) {
+      closeReceiptModal();
+      return;
+    }
+
+    const savedInvoiceNumber = posActiveReceiptData.invoice_number;
 
     // 1. Save order to Local Storage Database
     DB.saveOrder(posActiveReceiptData);
+
+    // 1B. Record Customer in CRM Pelanggan
+    if (typeof window.CustomerManager !== 'undefined' && typeof CustomerManager.recordCustomerOrder === 'function') {
+      try {
+        CustomerManager.recordCustomerOrder(posActiveReceiptData);
+      } catch (err) {
+        console.warn('[CRM] Gagal mencatat pesanan pelanggan:', err);
+      }
+    }
+
+    // 2. Clear Cashier Basket
+    posCart = [];
+    posAppliedVoucher = null;
+    posVoucherDiscount = 0;
+    const cashInput = document.getElementById('pos-cash-input');
+    if (cashInput) cashInput.value = '';
+    const custName = document.getElementById('pos-customer-name');
+    if (custName) custName.value = '';
+    const custPhone = document.getElementById('pos-customer-phone');
+    if (custPhone) custPhone.value = '';
+
+    renderPosCartItems();
+    updatePosFinancialSummary();
+
+    // 3. Close modal
+    closeReceiptModal();
+    showToast(`Transaksi ${savedInvoiceNumber} berhasil disimpan!`, 'success');
+  }
+
+  function executeThermalPrint() {
+    if (!posActiveReceiptData) return;
+
+    const savedInvoiceNumber = posActiveReceiptData.invoice_number;
+
+    // 1. Save order to Local Storage Database
+    DB.saveOrder(posActiveReceiptData);
+
+    // 1B. Record Customer in CRM Pelanggan
+    if (typeof window.CustomerManager !== 'undefined' && typeof CustomerManager.recordCustomerOrder === 'function') {
+      try {
+        CustomerManager.recordCustomerOrder(posActiveReceiptData);
+      } catch (err) {
+        console.warn('[CRM] Gagal mencatat pesanan pelanggan:', err);
+      }
+    }
 
     // 2. Prepare print container
     const printContainer = document.getElementById('thermal-print-container');
@@ -2295,7 +2336,7 @@ const AdminApp = (() => {
 
     // 5. Close modal
     closeReceiptModal();
-    showToast(`Transaksi ${posActiveReceiptData.invoice_number} berhasil disimpan dan dicetak!`, 'success');
+    showToast(`Transaksi ${savedInvoiceNumber} berhasil disimpan dan dicetak!`, 'success');
   }
 
   function closeReceiptModal() {
@@ -2617,54 +2658,47 @@ const AdminApp = (() => {
     const formatIDR = (num) => 'Rp' + Math.round(num || 0).toLocaleString('id-ID');
 
     // 6-Month historical chart calculation
+    // 6-Month historical chart calculation
     const trends = metrics.monthlyTrends || [];
     const maxRev = Math.max(...trends.map(t => t.revenue), 1000000);
     const chartMaxY = Math.ceil(maxRev / 2000000) * 2000000;
 
     // SVG coordinate mapping
     const svgWidth = 600;
-    const svgHeight = 220;
-    const padX = 60;
-    const padTop = 30;
+    const svgHeight = 240;
+    const padX = 55;
+    const padTop = 25;
     const padBottom = 40;
     const plotHeight = svgHeight - padTop - padBottom;
-    const plotWidth = svgWidth - padX - 30;
+    const plotWidth = svgWidth - padX - 25;
     const stepX = plotWidth / (trends.length - 1 || 1);
+    const bW = 22; // Proporsional 22px width
 
     // Build SVG bar & area elements
     let barsHtml = '';
     let xLabelsHtml = '';
     trends.forEach((t, i) => {
       const cx = padX + i * stepX;
-      const barH = (t.revenue / chartMaxY) * plotHeight;
+      const barH = Math.max(4, (t.revenue / chartMaxY) * plotHeight);
       const barY = padTop + (plotHeight - barH);
-      const bW = 28;
-      const profitH = (t.profit / chartMaxY) * plotHeight;
-      const profitY = padTop + (plotHeight - profitH);
 
       const isCurrentMonth = i === trends.length - 1;
       const fillId = isCurrentMonth ? 'url(#barGradActive)' : 'url(#barGradNormal)';
 
       barsHtml += `
-        <g class="chart-bar-group cursor-pointer group" data-month="${t.month}" data-rev="${t.revenue}" data-ord="${t.orders}" data-prof="${t.profit}">
-          <!-- Background hover track -->
-          <rect x="${cx - bW / 2 - 6}" y="${padTop}" width="${bW + 12}" height="${plotHeight}" fill="rgba(241, 245, 249, 0.6)" rx="8" class="opacity-0 group-hover:opacity-100 transition-opacity" />
-          <!-- Revenue Bar -->
-          <rect x="${cx - bW / 2}" y="${barY}" width="${bW}" height="${barH}" fill="${fillId}" rx="6" ry="6" class="transition-all duration-300 group-hover:opacity-90">
-            <title>${t.month} ${t.year}: Omzet ${formatIDR(t.revenue)} (${t.orders} Pesanan) | Laba Est. ${formatIDR(t.profit)}</title>
-          </rect>
-          <!-- Profit Accent Dot/Line -->
-          <rect x="${cx - bW / 2 + 4}" y="${profitY}" width="${bW - 8}" height="3" fill="#f59e0b" rx="1.5" class="opacity-80" />
-          <!-- Label Value Above Bar -->
-          <text x="${cx}" y="${barY - 8}" font-size="9" font-weight="700" fill="${isCurrentMonth ? '#059669' : '#64748b'}" text-anchor="middle" class="font-mono">
-            ${(t.revenue / 1000000).toFixed(1)}Jt
-          </text>
+        <g class="chart-bar-group cursor-pointer group">
+          <title>${t.month} ${t.year}: Omzet ${formatIDR(t.revenue)} (${t.orders} Pesanan) • Laba Est. ${formatIDR(t.profit)}</title>
+          <!-- Background hover vertical track -->
+          <rect x="${cx - 16}" y="${padTop}" width="32" height="${plotHeight}" fill="#f1f5f9" class="opacity-0 group-hover:opacity-70 transition-opacity" rx="4" />
+          <!-- Main bar with smooth top radius rx=4 ry=4 and flat bottom -->
+          <rect x="${cx - bW / 2}" y="${barY}" width="${bW}" height="${barH}" fill="${fillId}" rx="4" ry="4" class="transition-all duration-300 group-hover:opacity-90" />
+          ${barH > 8 ? `<rect x="${cx - bW / 2}" y="${barY + barH - 4}" width="${bW}" height="4" fill="${fillId}" />` : ''}
         </g>
       `;
 
       xLabelsHtml += `
-        <text x="${cx}" y="${svgHeight - 14}" font-size="10" font-weight="${isCurrentMonth ? '800' : '600'}" fill="${isCurrentMonth ? '#0f172a' : '#64748b'}" text-anchor="middle">
-          ${t.month} ${isCurrentMonth ? '●' : ''}
+        <text x="${cx}" y="${svgHeight - 14}" font-size="11" font-weight="${isCurrentMonth ? '700' : '500'}" fill="${isCurrentMonth ? '#0f172a' : '#64748b'}" text-anchor="middle" class="font-sans">
+          ${t.month}
         </text>
       `;
     });
@@ -2677,7 +2711,7 @@ const AdminApp = (() => {
       const val = chartMaxY * ratio;
       const label = val >= 1000000 ? `${(val / 1000000).toFixed(0)}Jt` : val.toLocaleString('id-ID');
       yGridHtml += `
-        <line x1="${padX}" y1="${yPos}" x2="${svgWidth - 20}" y2="${yPos}" stroke="#e2e8f0" stroke-dasharray="3,3" stroke-width="1" />
+        <line x1="${padX}" y1="${yPos}" x2="${svgWidth - 20}" y2="${yPos}" stroke="#f1f5f9" stroke-width="1" />
         <text x="${padX - 8}" y="${yPos + 3}" font-size="9" font-weight="600" fill="#94a3b8" text-anchor="end" class="font-mono">${label}</text>
       `;
     });
@@ -2687,7 +2721,7 @@ const AdminApp = (() => {
     const webOrders = metrics.webOrdersCount !== undefined ? metrics.webOrdersCount : (metrics.webOrdersMonth !== undefined ? metrics.webOrdersMonth : 0);
     const posOrders = metrics.posOrdersCount !== undefined ? metrics.posOrdersCount : (metrics.posOrdersMonth !== undefined ? metrics.posOrdersMonth : 0);
     const estProfit = metrics.estimatedNetProfit !== undefined ? metrics.estimatedNetProfit : Math.round(totalRev * 0.42);
-    const topProdName = metrics.bestsellerName || (metrics.topProduct ? metrics.topProduct.name : 'Spanduk Banner Fleksi Outdoor');
+    const topProdName = metrics.bestsellerName || (metrics.topProduct ? metrics.topProduct.name : 'Produk Populer');
     const topProdSold = metrics.bestsellerCount !== undefined ? metrics.bestsellerCount : (metrics.topProduct ? metrics.topProduct.sold_count : 32);
 
     // Hitung Pendapatan Iklan Sponsor dari Slot Sponsor yang Aktif
@@ -2699,117 +2733,118 @@ const AdminApp = (() => {
       return sum + p;
     }, 0);
     const activeSponsorCount = activeSponsors.length;
+    const profitColorClass = estProfit > 0 ? 'text-slate-900' : 'text-slate-800';
 
     container.innerHTML = `
       <div class="space-y-6 max-w-7xl mx-auto pb-12">
         
-        <!-- Dashboard Header & Real-time Indicator (Clean No-CTA) -->
+        <!-- Dashboard Header & Real-time Indicator (Clean Modern) -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
           <div>
             <div class="flex items-center gap-2 text-xs text-slate-500 mb-0.5">
-              <span>Admin Panel</span> <span>/</span> <span class="text-slate-800 font-bold">Ringkasan Bisnis</span>
+              <span>Admin Center</span> <span>/</span> <span class="text-slate-800 font-bold">Ringkasan Bisnis</span>
             </div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <span>Dashboard Toko Percetakan</span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Live Sinkron
-              </span>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">
+              Ringkasan Bisnis &amp; Penjualan
             </h1>
-            <p class="text-xs text-slate-500 mt-0.5">Ringkasan metrik penjualan, tren omzet 6 bulan, dan analitik performa toko Anda.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Ringkasan performa omzet penjualan, metrik operasional, dan analitik toko Anda.</p>
           </div>
         </div>
 
-        <!-- 1. METRIC CARDS (5 CARDS: OMZET, PESANAN, LABA, PRODUK TERLARIS & PENDAPATAN IKLAN SPONSOR) -->
+        <!-- 1. METRIC CARDS (5 CARDS: STRIPE / SHOPIFY MODERN STANDARD) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           
-          <!-- Metric 1: Total Omzet Bulan Ini -->
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group hover:border-emerald-300 transition">
+          <!-- Metric 1: Total Omzet -->
+          <div class="border border-slate-200/80 bg-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden transition hover:border-slate-300">
             <div class="flex items-start justify-between">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Omzet (Bulan Ini)</span>
-                <div class="text-2xl font-black text-slate-900 mt-1 font-mono">${formatIDR(totalRev)}</div>
+                <span class="text-xs font-semibold text-slate-500 block">Total Omzet</span>
+                <div class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mt-1 font-mono">${formatIDR(totalRev)}</div>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                <i data-lucide="wallet" class="w-5 h-5"></i>
+              <div class="w-9 h-9 rounded-xl bg-slate-50 text-slate-500 border border-slate-100 flex items-center justify-center shrink-0">
+                <i data-lucide="wallet" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="flex items-center gap-1.5 text-xs text-slate-500 pt-2 border-t border-slate-100">
-              <span class="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+              <span class="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
                 <i data-lucide="trending-up" class="w-3 h-3 mr-0.5 inline"></i> +18.4%
               </span>
-              <span class="text-[11px] text-slate-400">vs bulan September</span>
+              <span class="text-[11px] text-slate-400">vs bulan lalu</span>
             </div>
           </div>
 
-          <!-- Metric 2: Total Pesanan Masuk -->
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group hover:border-blue-300 transition">
+          <!-- Metric 2: Pesanan Masuk -->
+          <div class="border border-slate-200/80 bg-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden transition hover:border-slate-300">
             <div class="flex items-start justify-between">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Pesanan Masuk</span>
-                <div class="text-2xl font-black text-slate-900 mt-1 font-mono">${totalOrders} Pesanan</div>
+                <span class="text-xs font-semibold text-slate-500 block">Pesanan Masuk</span>
+                <div class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mt-1 font-mono">${totalOrders} Pesanan</div>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+              <div class="w-9 h-9 rounded-xl bg-slate-50 text-slate-500 border border-slate-100 flex items-center justify-center shrink-0">
+                <i data-lucide="shopping-bag" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="flex items-center gap-1.5 text-xs text-slate-500 pt-2 border-t border-slate-100 font-medium">
-              <span class="text-emerald-700 font-bold">${webOrders} Web WA</span>
+              <span class="text-emerald-700 font-semibold">${webOrders} Web WA</span>
               <span class="text-slate-300">•</span>
-              <span class="text-indigo-700 font-bold">${posOrders} Kasir POS</span>
+              <span class="text-slate-700 font-semibold">${posOrders} Kasir POS</span>
             </div>
           </div>
 
-          <!-- Metric 3: Estimasi Laba Bersih -->
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group hover:border-amber-300 transition">
+          <!-- Metric 3: Estimasi Laba -->
+          <div class="border border-slate-200/80 bg-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden transition hover:border-slate-300">
             <div class="flex items-start justify-between">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Estimasi Laba Bersih</span>
-                <div class="text-2xl font-black text-amber-600 mt-1 font-mono">${formatIDR(estProfit)}</div>
+                <span class="text-xs font-semibold text-slate-500 block">Estimasi Laba</span>
+                <div class="text-xl sm:text-2xl font-bold tracking-tight ${profitColorClass} mt-1 font-mono">${formatIDR(estProfit)}</div>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
-                <i data-lucide="coins" class="w-5 h-5"></i>
+              <div class="w-9 h-9 rounded-xl bg-slate-50 text-slate-500 border border-slate-100 flex items-center justify-center shrink-0">
+                <i data-lucide="coins" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-              <span class="text-[11px] text-slate-400">Total Omzet - Estimasi HPP Modal</span>
-              <span class="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">~42% Margin</span>
+              <span class="text-[11px] text-slate-400">Margin operasional</span>
+              <span class="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-mono">
+                ${totalRev > 0 ? Math.round((estProfit / totalRev) * 100) : 0}% Margin
+              </span>
             </div>
           </div>
 
-          <!-- Metric 4: Produk Terlaris Bulan Ini -->
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group hover:border-rose-300 transition">
+          <!-- Metric 4: Produk Terpopuler -->
+          <div class="border border-slate-200/80 bg-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden transition hover:border-slate-300">
             <div class="flex items-start justify-between">
               <div class="min-w-0 pr-2">
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Produk Terlaris</span>
-                <div class="text-sm sm:text-base font-black text-slate-900 mt-1 truncate" title="${escapeHtml(topProdName)}">
+                <span class="text-xs font-semibold text-slate-500 block">Produk Terpopuler</span>
+                <div class="text-base sm:text-lg font-bold tracking-tight text-slate-900 mt-1 truncate" title="${escapeHtml(topProdName)}">
                   ${escapeHtml(topProdName)}
                 </div>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
-                <i data-lucide="flame" class="w-5 h-5"></i>
+              <div class="w-9 h-9 rounded-xl bg-slate-50 text-slate-500 border border-slate-100 flex items-center justify-center shrink-0">
+                <i data-lucide="flame" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="flex items-center gap-1.5 text-xs text-slate-500 pt-2 border-t border-slate-100">
-              <span class="text-rose-600 font-bold font-mono">${topProdSold} Pcs Terjual</span>
+              <span class="inline-flex items-center text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md font-mono">
+                ${topProdSold} Terjual
+              </span>
               <span class="text-[11px] text-slate-400">bulan ini</span>
             </div>
           </div>
 
-          <!-- Metric 5: Pendapatan Iklan Sponsor (Slot Sponsor Aktif) -->
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group hover:border-purple-300 transition">
+          <!-- Metric 5: Sponsor Aktif -->
+          <div class="border border-slate-200/80 bg-white rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden transition hover:border-slate-300">
             <div class="flex items-start justify-between">
               <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Pendapatan Iklan Sponsor</span>
-                <div class="text-2xl font-black text-purple-700 mt-1 font-mono">${formatIDR(sponsorRevenue)}</div>
+                <span class="text-xs font-semibold text-slate-500 block">Sponsor Aktif</span>
+                <div class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mt-1 font-mono">${formatIDR(sponsorRevenue)}</div>
               </div>
-              <div class="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0">
-                <i data-lucide="megaphone" class="w-5 h-5"></i>
+              <div class="w-9 h-9 rounded-xl bg-slate-50 text-slate-500 border border-slate-100 flex items-center justify-center shrink-0">
+                <i data-lucide="megaphone" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="flex items-center gap-1.5 text-xs text-slate-500 pt-2 border-t border-slate-100 font-medium">
-              <span class="inline-flex items-center text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-md">
-                <i data-lucide="sparkles" class="w-3 h-3 mr-0.5 inline"></i> ${activeSponsorCount} Slot Aktif
+              <span class="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                ${activeSponsorCount} Slot Aktif
               </span>
               <span class="text-[11px] text-slate-400">Monetisasi etalase</span>
             </div>
@@ -2817,25 +2852,21 @@ const AdminApp = (() => {
 
         </div>
 
-        <!-- 2. DIAGRAM PENJUALAN BULANAN (SVG CHART ANALYTICS) -->
-        <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
+        <!-- 2. DIAGRAM PENJUALAN BULANAN (SVG CHART ANALYTICS MODERN) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
               <div class="flex items-center gap-2">
-                <i data-lucide="bar-chart-3" class="w-5 h-5 text-emerald-600"></i>
-                <h3 class="font-extrabold text-base text-slate-900 tracking-tight">Tren Penjualan 6 Bulan Terakhir</h3>
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-600"></i>
+                <h3 class="font-bold text-sm text-slate-900 tracking-tight">Tren Penjualan 6 Bulan Terakhir</h3>
               </div>
-              <p class="text-xs text-slate-500 mt-0.5">Grafik batang analitik performa omzet dan estimasi laba kotor toko berjalan.</p>
+              <p class="text-xs text-slate-500 mt-0.5">Grafik batang performa omzet dan estimasi laba kotor toko berjalan.</p>
             </div>
             <!-- Legend Indicators -->
-            <div class="flex items-center gap-4 text-xs font-semibold">
+            <div class="flex items-center gap-4 text-xs font-medium">
               <div class="flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-md bg-emerald-500 inline-block"></span>
-                <span class="text-slate-700">Total Omzet Penjualan</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <span class="w-3 h-1.5 rounded-full bg-amber-500 inline-block"></span>
-                <span class="text-slate-700">Estimasi Laba Kotor</span>
+                <span class="w-2.5 h-2.5 rounded-sm bg-emerald-600 inline-block"></span>
+                <span class="text-slate-600 text-xs">Total Omzet Penjualan</span>
               </div>
             </div>
           </div>
@@ -2845,12 +2876,12 @@ const AdminApp = (() => {
             <svg viewBox="0 0 ${svgWidth} ${svgHeight}" class="w-full h-56 sm:h-64 select-none">
               <defs>
                 <linearGradient id="barGradNormal" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#34d399" />
-                  <stop offset="100%" stop-color="#059669" />
+                  <stop offset="0%" stop-color="#33b589" />
+                  <stop offset="100%" stop-color="#249670" />
                 </linearGradient>
                 <linearGradient id="barGradActive" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#10b981" />
-                  <stop offset="100%" stop-color="#047857" />
+                  <stop offset="0%" stop-color="#38c495" />
+                  <stop offset="100%" stop-color="#1e7e5e" />
                 </linearGradient>
               </defs>
 
@@ -4804,29 +4835,32 @@ const AdminApp = (() => {
           fileInput.click();
         });
 
-        fileInput.addEventListener('change', (e) => {
+        fileInput.addEventListener('change', async (e) => {
           const files = Array.from(e.target.files || []);
           if (files.length === 0) return;
+
+          const compressFn = window.autoCompressImage || (typeof DB !== 'undefined' && DB.autoCompressImage);
 
           for (const file of files) {
             if (currentHeroBanners.length >= 5) {
               App.showToast('Maksimal 5 gambar banner tercapai.', 'warning');
               break;
             }
-            if (file.size > 500 * 1024) {
-              App.showToast(`Ukuran berkas "${file.name}" (${(file.size / 1024).toFixed(0)} KB) melebihi batas maksimal 500 KB!`, 'error');
-              continue;
-            }
-            const reader = new FileReader();
-            reader.onload = (evt) => {
+            try {
+              const base64 = compressFn ? await compressFn(file, 1600, 900, 0.8) : await new Promise(res => {
+                const r = new FileReader();
+                r.onload = ev => res(ev.target.result);
+                r.readAsDataURL(file);
+              });
               if (currentHeroBanners.length < 5) {
-                currentHeroBanners.push(evt.target.result);
+                currentHeroBanners.push(base64);
                 renderHeroBannerThumbs();
                 syncHeroFormVisibility();
                 updateStorefrontLivePreview();
               }
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+              console.error('[AdminApp] Gagal memproses banner:', err);
+            }
           }
           fileInput.value = '';
         });
@@ -4848,30 +4882,33 @@ const AdminApp = (() => {
           });
         });
 
-        dropzone.addEventListener('drop', (e) => {
+        dropzone.addEventListener('drop', async (e) => {
           const dt = e.dataTransfer;
           const files = Array.from(dt.files || []);
           if (files.length === 0) return;
+
+          const compressFn = window.autoCompressImage || (typeof DB !== 'undefined' && DB.autoCompressImage);
 
           for (const file of files) {
             if (currentHeroBanners.length >= 5) {
               App.showToast('Maksimal 5 gambar banner tercapai.', 'warning');
               break;
             }
-            if (file.size > 500 * 1024) {
-              App.showToast(`Ukuran berkas "${file.name}" (${(file.size / 1024).toFixed(0)} KB) melebihi 500 KB!`, 'error');
-              continue;
-            }
-            const reader = new FileReader();
-            reader.onload = (evt) => {
+            try {
+              const base64 = compressFn ? await compressFn(file, 1600, 900, 0.8) : await new Promise(res => {
+                const r = new FileReader();
+                r.onload = ev => res(ev.target.result);
+                r.readAsDataURL(file);
+              });
               if (currentHeroBanners.length < 5) {
-                currentHeroBanners.push(evt.target.result);
+                currentHeroBanners.push(base64);
                 renderHeroBannerThumbs();
                 syncHeroFormVisibility();
                 updateStorefrontLivePreview();
               }
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+              console.error('[AdminApp] Gagal memproses banner drop:', err);
+            }
           }
         });
       }

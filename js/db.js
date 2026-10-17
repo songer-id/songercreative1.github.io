@@ -1074,9 +1074,9 @@ const DB = (() => {
   };
 
   const CARD_VARIANTS = {
-    'A': { code: 'A', version: 'v1', label: 'Versi 1: Standar Persegi', desc: 'Rasio 1:1, judul 2 baris, rating, label khusus & ikon tiket harga' },
-    'B': { code: 'B', version: 'v2', label: 'Versi 2: Teks Besar Ringkas', desc: 'Rasio 1:1, judul 1 baris tebal besar, rating, label khusus & ikon tiket harga' },
-    'C': { code: 'C', version: 'v3', label: 'Versi 3: Pendek Lanskap 4:3', desc: 'Rasio 4:3 lebih pendek, tanpa ikon tiket + strip footer proses cepat' }
+    'A': { code: 'A', version: 'v1', label: 'Model 1: Modern Standard (Rasio 1:1)', desc: 'Fokus foto produk persegi, harga coret, rating & label promo informatif' },
+    'B': { code: 'B', version: 'v2', label: 'Model 2: Minimalis Bold (Teks Judul Tebal 1 Baris)', desc: 'Fokus kejelasan nama layanan/jasa, teks ringkas tebal, dan harga transparan' },
+    'C': { code: 'C', version: 'v3', label: 'Model 3: Showcase Estetik (Rasio 4:3 + Strip Footer Info)', desc: 'Dilengkapi 2 strip footer informatif (Proses Cepat & Info Varian/Spesifikasi)' }
   };
 
   const PRICE_TYPES = {
@@ -4786,6 +4786,8 @@ const DB = (() => {
         avatar_url: customerData.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
         phone: phone,
         address: customerData.address || '',
+        segment: customerData.segment || (existingIdx > -1 && customers[existingIdx].segment ? customers[existingIdx].segment : 'retail'),
+        notes: customerData.notes !== undefined ? customerData.notes : (existingIdx > -1 && customers[existingIdx].notes ? customers[existingIdx].notes : ''),
         auth_provider: customerData.auth_provider || (customerData.avatar_url ? 'google' : 'manual'),
         tenant_id: tid,
         updated_at: new Date().toISOString()
@@ -4801,6 +4803,18 @@ const DB = (() => {
       setTable(`pos_customers_${tid}`, customers);
       this.setActiveCustomer(tid, customerRecord);
       return customerRecord;
+    },
+
+    deleteCustomer(tenantId, customerId) {
+      const tid = tenantId || (currentTenant ? currentTenant.tenant_id : 'tenant-songer-001');
+      let customers = this.getCustomers(tid);
+      customers = customers.filter(c => c.id !== customerId);
+      setTable(`pos_customers_${tid}`, customers);
+      return true;
+    },
+
+    generateUUID() {
+      return generateUUID();
     },
 
     getActiveCustomer(tenantId = null) {
@@ -4854,13 +4868,81 @@ const DB = (() => {
       });
       const totalSpent = completed.reduce((sum, o) => sum + (o.total || 0), 0);
       return Math.floor(totalSpent / 10000);
+    },
+
+    // --- 13. GLOBAL CLIENT-SIDE IMAGE AUTO-COMPRESS HELPER ---
+    autoCompressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+      return autoCompressImage(file, maxWidth, maxHeight, quality);
     }
   };
 })();
 
-// Explicit global exposure to guarantee DB and DEMO_PRODUCTS_MASTER are always reachable
+/**
+ * Global Client-Side Auto-Compress Image Helper
+ * Mengompres berkas gambar menggunakan HTML5 Canvas
+ * Menghasilkan string Base64 ringan (WebP / JPEG fallback) dengan rasio aspek terjaga
+ */
+async function autoCompressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      return reject(new Error('Berkas tidak ditemukan.'));
+    }
+    // Jika input sudah berupa string Base64 atau URL, langsung kembalikan
+    if (typeof file === 'string') {
+      return resolve(file);
+    }
+    if (!file.type || !file.type.startsWith('image/')) {
+      return reject(new Error('Format berkas bukan merupakan gambar yang didukung.'));
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal membaca data berkas gambar.'));
+    reader.onload = ev => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Gagal menginisialisasi objek gambar.'));
+      img.onload = () => {
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+
+        // Pertahankan rasio aspek: turunkan skala jika melebihi batas, pertahankan jika <= batas
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let dataUrl = '';
+        try {
+          dataUrl = canvas.toDataURL('image/webp', quality);
+          if (!dataUrl || !dataUrl.startsWith('data:image/webp')) {
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+        } catch (e) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+
+        resolve(dataUrl);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Explicit global exposure to guarantee DB, autoCompressImage, and DEMO_PRODUCTS_MASTER are always reachable
 if (typeof window !== 'undefined') {
+  window.autoCompressImage = autoCompressImage;
   window.DB = DB;
   window.DEMO_PRODUCTS_MASTER = DEMO_PRODUCTS_MASTER;
 }
+
 

@@ -144,7 +144,7 @@ const CategoryManager = (() => {
                   <input type="text" id="cat-input-image-url" placeholder="Masukkan URL tautan gambar atau unggah berkas..." class="w-full px-3 py-1.5 rounded-xl border border-slate-300 font-mono text-[11px] outline-none focus:border-emerald-500" />
                   <label class="w-full py-1.5 px-3 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-[11px] cursor-pointer border border-slate-300 transition flex items-center justify-center gap-1.5 shadow-2xs">
                     <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                    <span>Unggah Berkas Gambar (Maks 500 KB)</span>
+                    <span>Unggah Berkas Gambar (Auto-Compress)</span>
                     <input type="file" id="cat-input-image-file" accept="image/png, image/webp, image/jpeg" class="hidden" />
                   </label>
                 </div>
@@ -1290,22 +1290,30 @@ const CategoryManager = (() => {
     const catUrlIn = document.getElementById('cat-input-image-url');
     const catImgPrev = document.getElementById('cat-img-preview');
     if (catFileIn) {
-      catFileIn.addEventListener('change', e => {
-        const file = e.target.files[0];
+      catFileIn.addEventListener('change', async e => {
+        const file = e.target.files && e.target.files[0];
         if (!file) return;
 
-        if (file.size > 500 * 1024) {
-          App.showToast(`Ukuran berkas (${(file.size / 1024).toFixed(0)} KB) melebihi batas 500 KB!`, 'error');
+        try {
+          const compressFn = window.autoCompressImage || (typeof DB !== 'undefined' && DB.autoCompressImage);
+          const compressedDataUrl = compressFn ? await compressFn(file, 800, 800, 0.8) : await new Promise(res => {
+            const r = new FileReader();
+            r.onload = ev => res(ev.target.result);
+            r.readAsDataURL(file);
+          });
+          if (catUrlIn) catUrlIn.value = compressedDataUrl;
+          if (catImgPrev) catImgPrev.src = compressedDataUrl;
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Foto kategori berhasil dioptimasi & dipasang.', 'success');
+          }
+        } catch (err) {
+          console.error('[CategoryManager] Gagal mengompres gambar:', err);
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Gagal memproses gambar kategori.', 'error');
+          }
+        } finally {
           catFileIn.value = '';
-          return;
         }
-
-        const reader = new FileReader();
-        reader.onload = evt => {
-          if (catUrlIn) catUrlIn.value = evt.target.result;
-          if (catImgPrev) catImgPrev.src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
       });
     }
 

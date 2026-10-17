@@ -100,7 +100,7 @@ const ProductList = (() => {
           <!-- Header & Action Row -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Daftar Produk Percetakan</h1>
+              <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Daftar Produk</h1>
               <p class="text-xs text-slate-500 mt-0.5">Kelola katalog produk, kategori order invoice, dan varian card etalase.</p>
             </div>
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -154,7 +154,7 @@ const ProductList = (() => {
               <i data-lucide="layers" class="w-5 h-5"></i>
             </div>
             <div>
-              <div class="text-[11px] font-medium text-slate-500">KombStep (Poin N)</div>
+              <div class="text-[11px] font-medium text-slate-500">Varian Bertingkat</div>
               <div id="metric-step-count" class="text-xl font-bold text-purple-600">${kombStepCount} Produk</div>
             </div>
           </div>
@@ -223,10 +223,10 @@ const ProductList = (() => {
             <!-- Filter Card Variant -->
             <div class="w-full md:w-36">
               <select id="filter-card-variant" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 outline-none bg-white">
-                <option value="all" ${filterState.card_variant === 'all' ? 'selected' : ''}>Semua Card</option>
-                <option value="A" ${filterState.card_variant === 'A' ? 'selected' : ''}>Card A (Cetak)</option>
-                <option value="B" ${filterState.card_variant === 'B' ? 'selected' : ''}>Card B (Desain)</option>
-                <option value="C" ${filterState.card_variant === 'C' ? 'selected' : ''}>Card C (Retail)</option>
+                <option value="all" ${filterState.card_variant === 'all' ? 'selected' : ''}>Semua Model</option>
+                <option value="A" ${filterState.card_variant === 'A' ? 'selected' : ''}>Model 1 (Modern 1:1)</option>
+                <option value="B" ${filterState.card_variant === 'B' ? 'selected' : ''}>Model 2 (Minimalis Bold)</option>
+                <option value="C" ${filterState.card_variant === 'C' ? 'selected' : ''}>Model 3 (Showcase 4:3)</option>
               </select>
             </div>
 
@@ -428,7 +428,7 @@ const ProductList = (() => {
     `;
 
     const cardVariant = prod.card_variant || 'A';
-    const cardVariantLabel = cardVariant === 'A' ? 'Cetak Kustom' : cardVariant === 'B' ? 'Jasa Desain' : 'Retail Shopee';
+    const cardVariantLabel = cardVariant === 'A' ? 'Model 1: Modern Standard (1:1)' : cardVariant === 'B' ? 'Model 2: Minimalis Bold' : 'Model 3: Showcase Estetik (4:3)';
     const cardVariantClass = cardVariant === 'A' ? 'bg-blue-50 text-blue-700 border-blue-200' : cardVariant === 'B' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
     const categoryName = escapeHtml(prod.category_name || (prod.category && prod.category.name) || 'Umum');
@@ -470,7 +470,7 @@ const ProductList = (() => {
           <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${badgeColor}">
             ${ptMeta.label || ptMeta.code || 'Tipe ' + priceType}
           </span>
-          <div class="text-[10px] text-slate-400 mt-1 font-medium">Card ${cardVariant}: ${cardVariantLabel}</div>
+          <div class="text-[10px] text-slate-400 mt-1 font-medium">${cardVariantLabel}</div>
         </td>
 
         <!-- Varian Bahan -->
