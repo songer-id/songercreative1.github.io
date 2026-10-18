@@ -405,6 +405,19 @@ const AdminApp = (() => {
     const sidebarEl = document.getElementById('admin-main-sidebar');
 
     const openMobileSidebar = () => {
+      // Aturan Saling Tutup: Jika Drawer Live Preview sedang terbuka, otomatis tutup
+      const mobileSheet = document.getElementById('mobile-preview-sheet');
+      const mobileBackdrop = document.getElementById('mobile-preview-backdrop');
+      if (mobileSheet && !mobileSheet.classList.contains('translate-y-full')) {
+        mobileSheet.classList.add('translate-y-full');
+      }
+      if (mobileBackdrop && !mobileBackdrop.classList.contains('hidden')) {
+        mobileBackdrop.classList.add('hidden');
+      }
+      if (window.ProductForm && typeof window.ProductForm.closeMobilePreview === 'function') {
+        window.ProductForm.closeMobilePreview();
+      }
+
       if (sidebarEl) sidebarEl.classList.remove('-translate-x-full');
       if (backdropSidebar) backdropSidebar.classList.remove('hidden');
     };

@@ -702,3 +702,13 @@ body {
     box-shadow: -4px 0 15px -3px rgba(0, 0, 0, 0.05);
   }
 }
+
+/* ==========================================================================
+   PRODUCT FORM LIVE PREVIEW SIDEBAR (DOCK UNDER TOPBAR)
+   ========================================================================== */
+#desktop-preview-sidebar {
+  top: 4rem !important; /* 64px - persis di bawah garis batas navbar h-16 */
+  height: calc(100vh - 4rem) !important;
+  box-shadow: none !important;
+  z-index: 30 !important;
+}
