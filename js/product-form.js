@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Songer Creative - Advanced Product Form Controller
  * Mega Refactor Stage 4:
  *  - Removed Order Category from Product Form (determined in cashier/orders)
@@ -8661,11 +8661,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const maxOrderQtyInp = document.getElementById('input-max-order-qty');
       if (maxOrderQtyInp) primaryState.max_order_qty = maxOrderQtyInp.value ? parseInt(maxOrderQtyInp.value) : null;
       primaryState.max_order = primaryState.max_order_qty;
-    }
-
-    const singleMultipleInp = document.getElementById('input-order-multiple-single');
-    if (singleMultipleInp) {
-      primaryState.order_multiple_value = parseInt(singleMultipleInp.value) || 1;
     }
 
     // Max Order Period
