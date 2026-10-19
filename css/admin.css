@@ -833,3 +833,71 @@ body {
   border-color: #10b981;
   background-color: #ecfdf5;
 }
+
+/* ==========================================================================
+   NEW HIERARCHICAL VARIATION STRIPS (GAMBAR 1-5) & COMBO MATRIX TABLE
+   ========================================================================== */
+.variation-option-row {
+  transition: all 0.15s ease-in-out;
+}
+
+.variation-option-row:hover .border-slate-400 {
+  border-color: #059669;
+}
+
+/* Mobile 2-column grid ergonomics for option strips (< 640px) */
+@media (max-width: 639px) {
+  .variation-option-row .grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .variation-option-row input,
+  .variation-option-row select {
+    font-size: 11px !important;
+    padding: 0.5rem 0.5rem !important;
+    min-height: 36px !important;
+  }
+}
+
+/* Combination Matrix Table Styling */
+.combo-matrix-table {
+  border-collapse: collapse !important;
+  width: 100%;
+  min-width: 800px;
+}
+
+.combo-matrix-table th,
+.combo-matrix-table td {
+  border: 1px solid #cbd5e1;
+  vertical-align: middle;
+}
+
+.combo-matrix-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Capsule elements touch target & precision */
+.capsule-scope-select,
+.combo-min-order,
+.combo-max-order,
+.btn-open-wholesale-modal,
+.btn-open-multiple-modal {
+  min-height: 36px;
+  touch-action: manipulation;
+}
+
+/* Toggle Switch Reliability */
+input.toggle-same-price:checked ~ div,
+input.toggle-same-cost:checked ~ div {
+  background-color: #059669 !important;
+}
+
+input.toggle-same-price:checked ~ div::after,
+input.toggle-same-cost:checked ~ div::after {
+  transform: translateX(1rem) !important;
+}
+
+/* Sub-navbar horizontal mobile dimatikan permanen demi clean UI & mencegah bentrok dengan Step 2 subnav */
+#admin-mobile-nav {
+  display: none !important;
+}

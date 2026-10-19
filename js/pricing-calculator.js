@@ -1,28 +1,32 @@
 /**
  * ==============================================================================
  * POS BY SONGER CREATIVE - CORE PRICING ENGINE
- * Universal Pricing & Cost Calculation Engine (Storefront, PDP & Kasir POS)
+ * Universal Pricing & Cost Calculation Engine (Storefront, PDP, Kasir POS & Product Form)
  * Locations:
  *  - D:\pos-songer-creative\src\lib\pricing-calculator.js (Node.js Backend)
  *  - D:\pos-songer-creative\js\pricing-calculator.js      (Browser Client)
  * ==============================================================================
  * 
- * ATURAN FORMULA HARGA (6 RUMUS AKTIF):
- *  B1. Meter:       Luas m² = ((P x L) / 10000). Minimal hitungan 1.0 m².
- *                   Gross = (Luas m² x Harga Bahan) + Total Biaya Finishing.
- *  B2. KombF:       (Harga Bahan + Total Biaya Finishing).
- *  B4. Paket:       Harga Paket Bundle (Finishing default gratis, finishing ekstra berbayar).
- *  B5. Kg:          (Bobot riil kg x Harga per Kg) + Total Biaya Finishing.
- *  B6. Lt:          (Volume cairan liter x Harga per Liter) + Total Biaya Finishing.
- *  B7. KombStep:    Wajib kelipatan kuantitas (step_quantity).
- *                   Gross = (Harga Bahan x Math.ceil(Qty / step_quantity)) + (Total Finishing x Qty).
- *  (B3. Fixed:      Dinonaktifkan sementara dari pilihan).
- * 
- * DISKON & KALKULASI HPP:
- *  - Diskon Bulanan (% atau Nominal IDR)
- *  - Diskon Bertingkat Kuantitas (ProductDiscountTier)
- *  - Perhitungan HPP Modal Bahan & Modal Finishing
- *  - Margin Laba Kotor & Persentase Keuntungan
+ * ATURAN FORMULA HARGA (6 RUMUS AKTIF + VARIASI 1-4 & LAYANAN EXTRAS):
+ *  1. Nilai Utama per Unit = Nilai Variasi 1 + Nilai Variasi 2 + Nilai Variasi 3 + Nilai Variasi 4
+ *     HPP Utama per Unit   = HPP Variasi 1 + HPP Variasi 2 + HPP Variasi 3 + HPP Variasi 4
+ *  2. Multiplier Satuan:
+ *     - B1. Meter:       Luas m² = ((P x L) / 10000). Minimal hitungan 1.0 m².
+ *                        Gross Utama = (Luas m² x Nilai Variasi 1) + Variasi (2+3+4).
+ *     - B5. Kg:          (Bobot riil kg x Nilai Variasi 1) + Variasi (2+3+4).
+ *     - B6. Lt:          (Volume cairan liter x Nilai Variasi 1) + Variasi (2+3+4).
+ *     - B7. KombStep:    Wajib kelipatan kuantitas (step_quantity).
+ *                        Gross Utama = (Variasi 1 x Batches) + (Variasi (2+3+4) x Qty).
+ *     - B2. KombF/Norm:  (Variasi 1 + Variasi 2 + Variasi 3 + Variasi 4) x Qty.
+ *  3. Layanan Extras (Di Luar Qty Utama / finishings.extra_3):
+ *     - 'checkbox'/'checklist': 1 x Harga Satuan Ekstra.
+ *     - 'qty': Harga Satuan Ekstra x Qty Mandiri Ekstra.
+ *     - 'direct'/'langsung proses': otomatis ditambahkan flat 1 x Harga Satuan Ekstra.
+ *  4. Total Gross = Subtotal Kombinasi Utama + Total Nilai Ekstra.
+ *  5. Diskon:
+ *     - Diskon Grosir: Mode Normal vs Mode Bertingkat (Tiered Wholesale).
+ *     - Diskon Promo Bulanan (% atau Nominal IDR).
+ *  6. Grand Total = max(0, Total Gross - Diskon).
  */
 
 (function (root, factory) {
@@ -67,7 +71,7 @@
   }
 
   /**
-   * Menghitung rincian harga utama sebuah produk berdasarkan variasi & opsi yang dipilih
+   * Menghitung rincian harga utama sebuah produk berdasarkan variasi 1-4 & layanan extras
    * 
    * @param {Object} product - Objek data produk
    * @param {Object} options - Pilihan kustomisasi pembeli/kasir
@@ -92,7 +96,7 @@
     }
     let qty = Math.max(1, parseInt(options.qty, 10) || 1);
 
-    // 1. Identifikasi Bahan (Material) Terpilih
+    // 1. Variasi 1: Opsi Terpilih dari product.materials
     const materials = Array.isArray(product.materials) ? product.materials : [];
     let selectedMaterial = null;
     if (options.materialId) {
@@ -102,58 +106,79 @@
       selectedMaterial = materials.find(m => m.is_default) || materials[0];
     }
 
-    const materialPrice = selectedMaterial ? (parseFloat(selectedMaterial.price) || 0) : (parseFloat(product.base_price) || 0);
-    const materialCostPrice = selectedMaterial ? (parseFloat(selectedMaterial.cost_price) || 0) : 0;
-    const materialName = selectedMaterial ? selectedMaterial.name : 'Standar';
+    const v1Price = selectedMaterial ? (parseFloat(selectedMaterial.price) || 0) : (parseFloat(product.base_price || product.price) || 0);
+    const v1Cost = selectedMaterial ? (parseFloat(selectedMaterial.cost_price) || 0) : (parseFloat(product.cost_price) || 0);
+    const v1Name = selectedMaterial ? selectedMaterial.name : 'Standar';
 
-    // 2. Identifikasi Finishing Utama & Finishing Tambahan
-    let finishings = [];
-    if (Array.isArray(product.finishings)) {
-      finishings = product.finishings;
-    } else if (product.finishings && typeof product.finishings === 'object') {
-      finishings = [
-        ...(product.finishings.main || []),
-        ...(product.finishings.extra_1 || []),
-        ...(product.finishings.extra_2 || []),
-        ...(product.finishings.extra_3 || [])
-      ];
-    }
-    let selectedMainFinishing = null;
-    if (options.finishingId) {
-      selectedMainFinishing = finishings.find(f => String(f.id) === String(options.finishingId));
-    } else if (finishings.length > 0) {
-      selectedMainFinishing = finishings.find(f => f.is_default) || finishings[0] || null;
-    }
+    // Normalisasi Daftar Finishings per Tingkat (Mendukung Objek Bertingkat maupun Array Flat)
+    let t2List = [];
+    let t3List = [];
+    let t4List = [];
+    let extraServicesList = [];
 
-    let extraFinishings = [];
-    if (Array.isArray(options.extraFinishingIds) && options.extraFinishingIds.length > 0) {
-      extraFinishings = finishings.filter(f => 
-        options.extraFinishingIds.some(eid => String(eid) === String(f.id))
-      );
+    if (product.finishings && typeof product.finishings === 'object' && !Array.isArray(product.finishings)) {
+      t2List = Array.isArray(product.finishings.main) ? product.finishings.main : [];
+      t3List = Array.isArray(product.finishings.extra_1) ? product.finishings.extra_1 : [];
+      t4List = Array.isArray(product.finishings.extra_2) ? product.finishings.extra_2 : [];
+      extraServicesList = Array.isArray(product.finishings.extra_3) ? product.finishings.extra_3 : [];
+    } else if (Array.isArray(product.finishings)) {
+      t2List = product.finishings.filter(f => f.tier === 'main' || !f.tier);
+      t3List = product.finishings.filter(f => f.tier === 'extra_1');
+      t4List = product.finishings.filter(f => f.tier === 'extra_2');
+      extraServicesList = product.finishings.filter(f => f.tier === 'extra_3');
     }
 
-    // Hitung total harga & HPP finishing per unit
-    let unitFinishingPrice = 0;
-    let unitFinishingCost = 0;
-
-    if (selectedMainFinishing) {
-      // Pada tipe Paket (B4), finishing yang is_included = true adalah gratis
-      const mainPrice = (priceType === 4 && selectedMainFinishing.is_included) ? 0 : (parseFloat(selectedMainFinishing.price) || 0);
-      unitFinishingPrice += mainPrice;
-      unitFinishingCost += parseFloat(selectedMainFinishing.cost_price) || 0;
+    // 2. Variasi 2: finishings.main (dengan validasi Scope Umum vs Spesifik)
+    let selectedV2 = null;
+    if (t2List.length > 0) {
+      const v2Id = options.variation2Id || options.finishingId;
+      if (v2Id) {
+        selectedV2 = t2List.find(f => String(f.id) === String(v2Id));
+      }
+      if (!selectedV2 && (product.has_variation_2 || t2List.some(f => f.is_default))) {
+        selectedV2 = t2List.find(f => f.is_default) || t2List[0];
+      }
     }
+    const v2Price = selectedV2 ? (parseFloat(selectedV2.price) || 0) : 0;
+    const v2Cost = selectedV2 ? (parseFloat(selectedV2.cost_price) || 0) : 0;
 
-    extraFinishings.forEach(extra => {
-      const extraPrice = (priceType === 4 && extra.is_included) ? 0 : (parseFloat(extra.price) || 0);
-      unitFinishingPrice += extraPrice;
-      unitFinishingCost += parseFloat(extra.cost_price) || 0;
-    });
+    // 3. Variasi 3: finishings.extra_1
+    let selectedV3 = null;
+    if (t3List.length > 0 && (product.has_variation_3 || options.variation3Id)) {
+      const v3Id = options.variation3Id;
+      if (v3Id) {
+        selectedV3 = t3List.find(f => String(f.id) === String(v3Id));
+      }
+      if (!selectedV3 && product.has_variation_3) {
+        selectedV3 = t3List.find(f => f.is_default) || t3List[0];
+      }
+    }
+    const v3Price = selectedV3 ? (parseFloat(selectedV3.price) || 0) : 0;
+    const v3Cost = selectedV3 ? (parseFloat(selectedV3.cost_price) || 0) : 0;
 
-    // 3. Kalkulasi Berdasarkan 6 Tipe Rumus Cetak
+    // 4. Variasi 4: finishings.extra_2
+    let selectedV4 = null;
+    if (t4List.length > 0 && (product.has_variation_4 || options.variation4Id)) {
+      const v4Id = options.variation4Id;
+      if (v4Id) {
+        selectedV4 = t4List.find(f => String(f.id) === String(v4Id));
+      }
+      if (!selectedV4 && product.has_variation_4) {
+        selectedV4 = t4List.find(f => f.is_default) || t4List[0];
+      }
+    }
+    const v4Price = selectedV4 ? (parseFloat(selectedV4.price) || 0) : 0;
+    const v4Cost = selectedV4 ? (parseFloat(selectedV4.cost_price) || 0) : 0;
+
+    // Akumulasi Biaya Variasi Pendukung (Variasi 2 s/d 4)
+    const supportingVariationsPrice = v2Price + v3Price + v4Price;
+    const supportingVariationsCost = v2Cost + v3Cost + v4Cost;
+
+    // Kalkulasi Berdasarkan Multiplier Satuan / Tipe Rumus Cetak
     let unitGrossPrice = 0;
     let unitCostPrice = 0;
-    let totalGrossPrice = 0;
-    let totalCostPrice = 0;
+    let subtotalMainCombination = 0;
+    let totalCostMainCombination = 0;
     let billedAreaM2 = null;
     let rawAreaM2 = null;
     let isMinAreaApplied = false;
@@ -161,9 +186,7 @@
     let stepQuantity = Math.max(1, parseInt(product.step_quantity, 10) || 1);
 
     switch (priceType) {
-      // ------------------------------------------------------------------------
-      // B1. METER (P x L cm) - Minimal 1.0 m²
-      // ------------------------------------------------------------------------
+      // B1. Meter (P x L cm) - Minimal 1.0 m²
       case 1: {
         let lengthCm = parseFloat(options.lengthCm);
         let widthCm = parseFloat(options.widthCm);
@@ -186,45 +209,15 @@
         billedAreaM2 = areaData.billedAreaM2;
         isMinAreaApplied = areaData.isMinApplied;
 
-        // Harga per unit pcs cetak
-        const itemMaterialCost = billedAreaM2 * materialPrice;
-        const itemHppCost = billedAreaM2 * materialCostPrice;
+        unitGrossPrice = (billedAreaM2 * v1Price) + supportingVariationsPrice;
+        unitCostPrice = (billedAreaM2 * v1Cost) + supportingVariationsCost;
 
-        unitGrossPrice = itemMaterialCost + unitFinishingPrice;
-        unitCostPrice = itemHppCost + unitFinishingCost;
-
-        totalGrossPrice = unitGrossPrice * qty;
-        totalCostPrice = unitCostPrice * qty;
+        subtotalMainCombination = unitGrossPrice * qty;
+        totalCostMainCombination = unitCostPrice * qty;
         break;
       }
 
-      // ------------------------------------------------------------------------
-      // B2. KOMBF (Kombinasi Bahan + Finishing Flat)
-      // ------------------------------------------------------------------------
-      case 2: {
-        unitGrossPrice = materialPrice + unitFinishingPrice;
-        unitCostPrice = materialCostPrice + unitFinishingCost;
-
-        totalGrossPrice = unitGrossPrice * qty;
-        totalCostPrice = unitCostPrice * qty;
-        break;
-      }
-
-      // ------------------------------------------------------------------------
-      // B4. PAKET (Bundle Promo dengan Opsi Finishing Termasuk / Ekstra)
-      // ------------------------------------------------------------------------
-      case 4: {
-        unitGrossPrice = materialPrice + unitFinishingPrice;
-        unitCostPrice = materialCostPrice + unitFinishingCost;
-
-        totalGrossPrice = unitGrossPrice * qty;
-        totalCostPrice = unitCostPrice * qty;
-        break;
-      }
-
-      // ------------------------------------------------------------------------
-      // B5. KG (Bobot Riil Kilogram)
-      // ------------------------------------------------------------------------
+      // B5. Kg (Bobot Riil Kilogram)
       case 5: {
         let weightKg = parseFloat(options.weightKg);
         if (isNaN(weightKg) || !weightKg) {
@@ -234,17 +227,15 @@
           else weightKg = wInput;
         }
         weightKg = Math.max(0.001, weightKg);
-        unitGrossPrice = (weightKg * materialPrice) + unitFinishingPrice;
-        unitCostPrice = (weightKg * materialCostPrice) + unitFinishingCost;
+        unitGrossPrice = (weightKg * v1Price) + supportingVariationsPrice;
+        unitCostPrice = (weightKg * v1Cost) + supportingVariationsCost;
 
-        totalGrossPrice = unitGrossPrice * qty;
-        totalCostPrice = unitCostPrice * qty;
+        subtotalMainCombination = unitGrossPrice * qty;
+        totalCostMainCombination = unitCostPrice * qty;
         break;
       }
 
-      // ------------------------------------------------------------------------
-      // B6. LT (Volume Cairan Liter)
-      // ------------------------------------------------------------------------
+      // B6. Lt (Volume Cairan Liter)
       case 6: {
         let volumeLt = parseFloat(options.volumeLt);
         if (isNaN(volumeLt) || !volumeLt) {
@@ -254,136 +245,201 @@
           else volumeLt = vInput;
         }
         volumeLt = Math.max(0.001, volumeLt);
-        unitGrossPrice = (volumeLt * materialPrice) + unitFinishingPrice;
-        unitCostPrice = (volumeLt * materialCostPrice) + unitFinishingCost;
+        unitGrossPrice = (volumeLt * v1Price) + supportingVariationsPrice;
+        unitCostPrice = (volumeLt * v1Cost) + supportingVariationsCost;
 
-        totalGrossPrice = unitGrossPrice * qty;
-        totalCostPrice = unitCostPrice * qty;
+        subtotalMainCombination = unitGrossPrice * qty;
+        totalCostMainCombination = unitCostPrice * qty;
         break;
       }
 
-      // ------------------------------------------------------------------------
-      // B7. KOMBSTEP (Wajib Kelipatan Kuantitas)
-      // ------------------------------------------------------------------------
+      // B7. KombStep (Wajib Kelipatan Kuantitas)
       case 7: {
         stepBatches = Math.ceil(qty / stepQuantity);
-        const effectiveStepUnits = stepBatches * stepQuantity;
+        subtotalMainCombination = (v1Price * stepBatches) + (supportingVariationsPrice * qty);
+        totalCostMainCombination = (v1Cost * stepBatches) + (supportingVariationsCost * qty);
 
-        totalGrossPrice = (materialPrice * stepBatches) + (unitFinishingPrice * qty);
-        totalCostPrice = (materialCostPrice * stepBatches) + (unitFinishingCost * qty);
-
-        unitGrossPrice = totalGrossPrice / qty;
-        unitCostPrice = totalCostPrice / qty;
+        unitGrossPrice = subtotalMainCombination / qty;
+        unitCostPrice = totalCostMainCombination / qty;
         break;
       }
 
-      // Default fallback
+      // Default, B2 KombF & Normal: (Nilai Variasi 1 + Variasi 2 + Variasi 3 + Variasi 4)
       default: {
-        unitGrossPrice = materialPrice + unitFinishingPrice;
-        unitCostPrice = materialCostPrice + unitFinishingCost;
-        totalGrossPrice = unitGrossPrice * qty;
-        totalCostPrice = unitCostPrice * qty;
+        unitGrossPrice = v1Price + supportingVariationsPrice;
+        unitCostPrice = v1Cost + supportingVariationsCost;
+
+        subtotalMainCombination = unitGrossPrice * qty;
+        totalCostMainCombination = unitCostPrice * qty;
+        break;
       }
     }
 
-    // 4. Kalkulasi Diskon (Tier Diskon Qty vs Diskon Bulanan Toko)
+    // 5. Layanan Extras (Terpisah di Luar Kuantitas Utama / finishings.extra_3)
+    let totalExtraServicesPrice = 0;
+    let totalExtraServicesCost = 0;
+    const appliedExtraServices = [];
+
+    if (extraServicesList.length > 0) {
+      extraServicesList.forEach(ex => {
+        const extraType = String(ex.extra_type || 'checklist').toLowerCase().trim();
+        const exPrice = parseFloat(ex.price) || 0;
+        const exCost = parseFloat(ex.cost_price) || 0;
+        let appliedQty = 0;
+
+        if (extraType === 'direct' || extraType === 'langsung proses') {
+          // Otomatis terhitung setelah kuantitas utama tercapai (flat 1x)
+          appliedQty = 1;
+        } else {
+          // Periksa pilihan pembeli
+          if (Array.isArray(options.selectedExtraServices)) {
+            const found = options.selectedExtraServices.find(item => String(item.id || item) === String(ex.id));
+            if (found) {
+              if (typeof found === 'object' && found.checked === false) {
+                appliedQty = 0;
+              } else {
+                appliedQty = extraType === 'qty' ? Math.max(1, parseInt(found.qty, 10) || 1) : 1;
+              }
+            }
+          } else if (options.selectedExtraServices && typeof options.selectedExtraServices === 'object') {
+            const val = options.selectedExtraServices[ex.id];
+            if (val !== undefined && val !== null && val !== false) {
+              appliedQty = extraType === 'qty' ? Math.max(1, parseInt(val, 10) || 1) : 1;
+            }
+          } else if (Array.isArray(options.extraFinishingIds) && options.extraFinishingIds.some(eid => String(eid) === String(ex.id))) {
+            appliedQty = 1;
+          }
+        }
+
+        if (appliedQty > 0) {
+          const itemSubtotal = exPrice * appliedQty;
+          const itemCost = exCost * appliedQty;
+          totalExtraServicesPrice += itemSubtotal;
+          totalExtraServicesCost += itemCost;
+          appliedExtraServices.push({
+            id: ex.id,
+            name: ex.name,
+            extra_type: extraType,
+            unit_price: exPrice,
+            cost_price: exCost,
+            qty: appliedQty,
+            subtotal: itemSubtotal
+          });
+        }
+      });
+    }
+
+    // Total Gross Keseluruhan
+    const totalGrossBeforeDiscount = subtotalMainCombination + totalExtraServicesPrice;
+    const totalCostOverall = totalCostMainCombination + totalExtraServicesCost;
+
+    // 6. Kalkulasi Diskon (Harga Grosir Normal / Bertingkat vs Diskon Promo Bulanan)
     let discountAmount = 0;
     let appliedDiscountNote = '';
 
-    // A. Cek Tier Diskon Kuantitas (ProductDiscountTier / wholesale_tiers)
-    let discountTiers = Array.isArray(product.discount_tiers) ? product.discount_tiers : [];
-    if (discountTiers.length === 0 && Array.isArray(product.wholesale_tiers) && product.wholesale_tiers.length > 0) {
-      discountTiers = product.wholesale_tiers.map(wt => ({
-        min_qty: parseInt(wt.min_qty) || 1,
-        max_qty: wt.max_qty ? parseInt(wt.max_qty) : null,
-        discount_type: 'fixed_price',
-        discount_value: parseFloat(wt.price) || 0
-      }));
-    }
-    if (discountTiers.length > 0) {
-      // Urutkan dari min_qty terbesar
-      const sortedTiers = [...discountTiers].sort((a, b) => b.min_qty - a.min_qty);
-      const eligibleTier = sortedTiers.find(t => qty >= t.min_qty);
+    const wholesaleTiers = Array.isArray(product.wholesale_tiers) ? product.wholesale_tiers : [];
+    if (product.has_wholesale && wholesaleTiers.length > 0) {
+      const mode = product.wholesale_mode || 'normal';
+      if (mode === 'tiered') {
+        // Mode Bertingkat (Tiered Wholesale)
+        const matchingTiers = wholesaleTiers.filter(t => {
+          const minQ = parseInt(t.min_qty) || 1;
+          const maxQ = (t.max_qty !== null && t.max_qty !== undefined && t.max_qty !== '' && parseInt(t.max_qty) > 0) ? parseInt(t.max_qty) : Infinity;
+          return qty >= minQ && qty <= maxQ;
+        });
 
-      if (eligibleTier) {
-        if (eligibleTier.discount_type === 'fixed_price') {
-          const tierFixedTotal = parseFloat(eligibleTier.discount_value) * qty;
-          discountAmount = Math.max(0, totalGrossPrice - tierFixedTotal);
-          appliedDiscountNote = `Grosir: Min ${eligibleTier.min_qty} pcs @ ${formatIDR(eligibleTier.discount_value)}`;
-        } else if (eligibleTier.discount_type === 'percent') {
-          discountAmount = totalGrossPrice * (parseFloat(eligibleTier.discount_value) / 100);
-          appliedDiscountNote = `Grosir: Diskon ${eligibleTier.discount_value}% (Qty ≥ ${eligibleTier.min_qty})`;
-        } else if (eligibleTier.discount_type === 'nominal') {
-          discountAmount = parseFloat(eligibleTier.discount_value) * qty;
-          appliedDiscountNote = `Grosir: Potongan ${formatIDR(eligibleTier.discount_value)}/pcs`;
+        if (matchingTiers.length > 0) {
+          const tier = matchingTiers.sort((a, b) => (parseInt(b.min_qty) || 0) - (parseInt(a.min_qty) || 0))[0];
+          const discountPerPcs = parseFloat(tier.price) || 0;
+          discountAmount = discountPerPcs * qty;
+          appliedDiscountNote = `Grosir Bertingkat: Potongan ${formatIDR(discountPerPcs)}/pcs (Qty ${tier.min_qty} - ${tier.max_qty || 'dst'})`;
+        }
+      } else {
+        // Mode Normal: Rentang min s.d max
+        const tier1 = wholesaleTiers[0];
+        if (tier1) {
+          const minQ = parseInt(tier1.min_qty) || (parseInt(product.min_order) || 1);
+          const maxQ = (tier1.max_qty !== null && tier1.max_qty !== undefined && tier1.max_qty !== '' && parseInt(tier1.max_qty) > 0) ? parseInt(tier1.max_qty) : Infinity;
+          if (qty >= minQ && qty <= maxQ) {
+            const discountPerPcs = parseFloat(tier1.price) || 0;
+            discountAmount = discountPerPcs * qty;
+            appliedDiscountNote = `Grosir: Potongan ${formatIDR(discountPerPcs)}/pcs (Pembelian ${minQ} s.d ${tier1.max_qty || 'ke atas'})`;
+          }
         }
       }
     }
 
-    // B. Jika tidak terkena Tier Qty, cek Diskon Bulanan Produk
+    // Jika tidak ada diskon grosir, periksa Diskon Promo Bulanan
     if (discountAmount === 0 && product.has_monthly_discount) {
       const discVal = parseFloat(product.discount_value) || 0;
       if (product.discount_type === 'percent') {
-        discountAmount = totalGrossPrice * (discVal / 100);
+        discountAmount = subtotalMainCombination * (discVal / 100);
         appliedDiscountNote = `Promo Bulanan: Diskon ${discVal}%`;
       } else if (product.discount_type === 'nominal') {
-        discountAmount = Math.min(totalGrossPrice, discVal * qty);
+        discountAmount = Math.min(subtotalMainCombination, discVal * qty);
         appliedDiscountNote = `Promo Bulanan: Potongan ${formatIDR(discVal)}/pcs`;
       }
     }
 
     // Batasi diskon agar tidak melebihi harga kotor
-    discountAmount = Math.min(totalGrossPrice, Math.max(0, Math.round(discountAmount)));
-    const netPrice = Math.max(0, Math.round(totalGrossPrice - discountAmount));
+    discountAmount = Math.min(totalGrossBeforeDiscount, Math.max(0, Math.round(discountAmount)));
+    const netPrice = Math.max(0, Math.round(totalGrossBeforeDiscount - discountAmount));
 
-    // 5. Kalkulasi Profit & Margin Finansial
-    const profitMargin = netPrice - totalCostPrice;
+    // 7. Margin Laba Finansial
+    const profitMargin = netPrice - totalCostOverall;
     const profitMarginPercent = netPrice > 0 ? parseFloat(((profitMargin / netPrice) * 100).toFixed(2)) : 0;
 
     return {
       success: true,
       priceType,
       qty,
-      grossPrice: Math.round(totalGrossPrice),
+      grossPrice: Math.round(totalGrossBeforeDiscount),
+      subtotalMainCombination: Math.round(subtotalMainCombination),
+      totalExtraServicesPrice: Math.round(totalExtraServicesPrice),
       discountAmount,
       netPrice,
-      totalCostPrice: Math.round(totalCostPrice),
+      totalCostPrice: Math.round(totalCostOverall),
       profitMargin: Math.round(profitMargin),
       profitMarginPercent,
       unitGrossPrice: Math.round(unitGrossPrice),
       unitNetPrice: Math.round(netPrice / qty),
       unitCostPrice: Math.round(unitCostPrice),
       appliedDiscountNote,
-      // Metadata khusus
       billedAreaM2,
       rawAreaM2,
       isMinAreaApplied,
       stepQuantity,
       stepBatches,
-      // Breakdown komponen
       breakdown: {
         material: {
           id: selectedMaterial ? selectedMaterial.id : null,
-          name: materialName,
-          price: materialPrice,
-          costPrice: materialCostPrice
+          name: v1Name,
+          price: v1Price,
+          costPrice: v1Cost
         },
-        mainFinishing: selectedMainFinishing ? {
-          id: selectedMainFinishing.id,
-          name: selectedMainFinishing.name,
-          price: selectedMainFinishing.price,
-          costPrice: selectedMainFinishing.cost_price,
-          isIncluded: selectedMainFinishing.is_included || false
+        mainFinishing: selectedV2 ? {
+          id: selectedV2.id,
+          name: selectedV2.name,
+          price: v2Price,
+          costPrice: v2Cost,
+          isIncluded: selectedV2.is_included || false
         } : null,
-        extraFinishings: extraFinishings.map(f => ({
-          id: f.id,
-          name: f.name,
-          price: f.price,
-          costPrice: f.cost_price,
-          isIncluded: f.is_included || false
+        extraFinishings: appliedExtraServices.map(ex => ({
+          id: ex.id,
+          name: ex.name,
+          price: ex.unit_price,
+          costPrice: ex.cost_price,
+          isIncluded: false
         })),
-        unitFinishingPrice,
-        unitFinishingCost
+        variations: {
+          variation_1: { id: selectedMaterial ? selectedMaterial.id : null, name: v1Name, price: v1Price, cost_price: v1Cost },
+          variation_2: selectedV2 ? { id: selectedV2.id, name: selectedV2.name, price: v2Price, cost_price: v2Cost } : null,
+          variation_3: selectedV3 ? { id: selectedV3.id, name: selectedV3.name, price: v3Price, cost_price: v3Cost } : null,
+          variation_4: selectedV4 ? { id: selectedV4.id, name: selectedV4.name, price: v4Price, cost_price: v4Cost } : null
+        },
+        extra_services: appliedExtraServices,
+        unitSupportingPrice: supportingVariationsPrice,
+        unitSupportingCost: supportingVariationsCost
       }
     };
   }

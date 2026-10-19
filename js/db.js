@@ -2645,7 +2645,14 @@ const DB = (() => {
         max_order_qty: productData.max_order_qty !== undefined ? productData.max_order_qty : (productData.max_order || null),
         max_order_period: productData.max_order_period || null,
         has_wholesale: Boolean(productData.has_wholesale),
+        wholesale_mode: productData.wholesale_mode || 'normal',
         wholesale_tiers: Array.isArray(productData.wholesale_tiers) ? productData.wholesale_tiers : [],
+        has_variation_2: productData.has_variation_2 !== undefined ? Boolean(productData.has_variation_2) : false,
+        has_variation_3: productData.has_variation_3 !== undefined ? Boolean(productData.has_variation_3) : false,
+        has_variation_4: productData.has_variation_4 !== undefined ? Boolean(productData.has_variation_4) : false,
+        has_extra_service: productData.has_extra_service !== undefined ? Boolean(productData.has_extra_service) : false,
+        variation_scopes: productData.variation_scopes || {},
+        specific_options_map: productData.specific_options_map || {},
         has_order_multiple: Boolean(productData.has_order_multiple),
         order_multiple_type: productData.order_multiple_type || 'all',
         order_multiple_value: parseInt(productData.order_multiple_value) || 1,
@@ -2715,11 +2722,15 @@ const DB = (() => {
           ? parseFloat(m.cost_price)
           : Math.round(mPrice * 0.6);
         return {
-          id: generateUUID(),
+          id: m.id || generateUUID(),
           product_id: newId,
           name: m.name.trim(),
+          description: m.description ? m.description.trim() : '',
           price: mPrice,
           cost_price: mCost,
+          stock: (m.stock !== undefined && m.stock !== null && m.stock !== '' && m.stock !== 'Unlimited') ? parseInt(m.stock) : null,
+          min_order: m.min_order ? Math.max(1, parseInt(m.min_order) || 1) : 1,
+          max_order: (m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Unlimited') ? parseInt(m.max_order) : null,
           step_multiplier: newProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
           created_at: now
         };
@@ -2731,12 +2742,16 @@ const DB = (() => {
           ? parseFloat(f.cost_price)
           : Math.round(fPrice * 0.5);
         return {
-          id: generateUUID(),
+          id: f.id || generateUUID(),
           product_id: newId,
           tier: f.tier || 'main',
           name: f.name.trim(),
+          description: f.description ? f.description.trim() : '',
           price: fPrice,
           cost_price: fCost,
+          stock: (f.stock !== undefined && f.stock !== null && f.stock !== '' && f.stock !== 'Unlimited') ? parseInt(f.stock) : null,
+          parent_id: f.parent_id || '',
+          extra_type: f.extra_type || (f.tier === 'extra_3' ? 'checklist' : null),
           created_at: now
         };
       });
@@ -2807,7 +2822,14 @@ const DB = (() => {
         max_order_qty: productData.max_order_qty !== undefined ? productData.max_order_qty : (productData.max_order || products[index].max_order_qty || null),
         max_order_period: productData.max_order_period !== undefined ? productData.max_order_period : (products[index].max_order_period || null),
         has_wholesale: productData.has_wholesale !== undefined ? Boolean(productData.has_wholesale) : Boolean(products[index].has_wholesale),
+        wholesale_mode: productData.wholesale_mode || products[index].wholesale_mode || 'normal',
         wholesale_tiers: Array.isArray(productData.wholesale_tiers) ? productData.wholesale_tiers : (products[index].wholesale_tiers || []),
+        has_variation_2: productData.has_variation_2 !== undefined ? Boolean(productData.has_variation_2) : Boolean(products[index].has_variation_2),
+        has_variation_3: productData.has_variation_3 !== undefined ? Boolean(productData.has_variation_3) : Boolean(products[index].has_variation_3),
+        has_variation_4: productData.has_variation_4 !== undefined ? Boolean(productData.has_variation_4) : Boolean(products[index].has_variation_4),
+        has_extra_service: productData.has_extra_service !== undefined ? Boolean(productData.has_extra_service) : Boolean(products[index].has_extra_service),
+        variation_scopes: productData.variation_scopes !== undefined ? productData.variation_scopes : (products[index].variation_scopes || {}),
+        specific_options_map: productData.specific_options_map !== undefined ? productData.specific_options_map : (products[index].specific_options_map || {}),
         has_order_multiple: productData.has_order_multiple !== undefined ? Boolean(productData.has_order_multiple) : Boolean(products[index].has_order_multiple),
         order_multiple_type: productData.order_multiple_type || products[index].order_multiple_type || 'all',
         order_multiple_value: parseInt(productData.order_multiple_value) || products[index].order_multiple_value || 1,
@@ -2880,8 +2902,12 @@ const DB = (() => {
           id: m.id || generateUUID(),
           product_id: id,
           name: m.name.trim(),
+          description: m.description ? m.description.trim() : '',
           price: mPrice,
           cost_price: mCost,
+          stock: (m.stock !== undefined && m.stock !== null && m.stock !== '' && m.stock !== 'Unlimited') ? parseInt(m.stock) : null,
+          min_order: m.min_order ? Math.max(1, parseInt(m.min_order) || 1) : 1,
+          max_order: (m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Unlimited') ? parseInt(m.max_order) : null,
           step_multiplier: updatedProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
           created_at: now
         };
@@ -2897,8 +2923,12 @@ const DB = (() => {
           product_id: id,
           tier: f.tier || 'main',
           name: f.name.trim(),
+          description: f.description ? f.description.trim() : '',
           price: fPrice,
           cost_price: fCost,
+          stock: (f.stock !== undefined && f.stock !== null && f.stock !== '' && f.stock !== 'Unlimited') ? parseInt(f.stock) : null,
+          parent_id: f.parent_id || '',
+          extra_type: f.extra_type || (f.tier === 'extra_3' ? 'checklist' : null),
           created_at: now
         };
       });
