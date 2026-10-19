@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    POS BY SONGER CREATIVE - ADMIN & POS KASIR DEDICATED STYLESHEET
    Dedicated styling for Admin Panel, Dokani Sidebar, POS Kasir, and Thermal Receipt.
    ========================================================================== */
@@ -906,4 +906,9 @@ input.toggle-same-cost:checked ~ div::after {
 .variation-option-row input[data-field="cost_price"],
 .variation-option-row input[data-field="stock"] {
   min-width: 95px !important;
+}
+#view-product-form .variation-option-row input.mat-input,
+#view-product-form .variation-option-row input.fin-input,
+#view-product-form .variation-option-row select.fin-input {
+  border-radius: 0px !important;
 }
