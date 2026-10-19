@@ -3435,156 +3435,7 @@ const ProductForm = (() => {
       `;
     }
 
-    // Helper render Tabel Matriks Kombinasi di Bagian Bawah (Persis Gambar 1, 2, 3, 4)
-    function renderCombinationMatrixTable() {
-      const isVar2Active = Boolean(primaryState.has_variation_2 && finishingsState.main && finishingsState.main.length > 0);
-      const isVar3Active = Boolean(isVar2Active && primaryState.has_variation_3 && finishingsState.extra_1 && finishingsState.extra_1.length > 0);
-      const isVar4Active = Boolean(isVar3Active && primaryState.has_variation_4 && finishingsState.extra_2 && finishingsState.extra_2.length > 0);
 
-      const labelVar1 = primaryState.variation_labels?.label_tier_1 || 'Variasi 1';
-      const labelVar2 = primaryState.variation_labels?.label_tier_2 || 'Variasi 2';
-      const labelVar3 = primaryState.variation_labels?.label_extra_1 || 'Variasi 3';
-      const labelVar4 = primaryState.variation_labels?.label_extra_2 || 'Variasi 4';
-
-      const rows = materialsState.map((mat, idx) => {
-        const var1Name = mat.name || `Opsi ${idx + 1}`;
-        const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
-        const maxOrderVal = mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '' ? mat.max_order : 'Unlimited';
-
-        function renderScopeCell(tier) {
-          const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
-          const specificList = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id][tier]) || [];
-          const count = specificList.length;
-
-          return `
-            <div class="flex flex-col items-center gap-1">
-              <select class="combo-scope-select px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold bg-white text-slate-700 outline-none cursor-pointer focus:border-emerald-500 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}">
-                <option value="umum" ${scope === 'umum' ? 'selected' : ''}>Umum</option>
-                <option value="spesifik" ${scope === 'spesifik' ? 'selected' : ''}>Spesifik</option>
-              </select>
-              ${scope === 'spesifik' ? `
-                <button type="button" class="btn-open-specific-modal px-2.5 py-1 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold cursor-pointer transition flex items-center gap-1 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
-                  <span>${count > 0 ? `${count} Dipilih` : 'Pilih Opsi'}</span>
-                  <i class="bi bi-gear-fill text-[9px]"></i>
-                </button>
-              ` : ''}
-            </div>
-          `;
-        }
-
-        return `
-          <tr class="hover:bg-slate-50 transition border-b border-slate-200" data-mat-id="${mat.id}">
-            <!-- Kolom Variasi 1 (Foto Opsi + Teks Real-Time) -->
-            <td class="p-3 align-middle text-center min-w-[120px]">
-              <div class="flex flex-col items-center gap-1.5">
-                <input type="file" accept="image/*" class="hidden combo-var1-file-input" data-id="${mat.id}" id="combo-img-${mat.id}" />
-                <label for="combo-img-${mat.id}" class="w-12 h-10 border border-dashed border-emerald-500 rounded flex items-center justify-center cursor-pointer text-emerald-600 bg-emerald-50/40 hover:bg-emerald-50 transition overflow-hidden shadow-2xs" title="Unggah Foto Opsi">
-                  ${mat.image_url ? `<img src="${mat.image_url}" class="w-full h-full object-cover" />` : `<i class="bi bi-image text-sm"></i>`}
-                </label>
-                <span class="combo-var1-label text-xs font-bold text-slate-800 break-all" data-id="${mat.id}">${escapeHtml(var1Name)}</span>
-              </div>
-            </td>
-
-            <!-- Kolom Variasi 2 (Jika Aktif) -->
-            ${isVar2Active ? `<td class="p-3 align-middle text-center min-w-[130px]">${renderScopeCell('main')}</td>` : ''}
-
-            <!-- Kolom Variasi 3 (Jika Aktif) -->
-            ${isVar3Active ? `<td class="p-3 align-middle text-center min-w-[130px]">${renderScopeCell('extra_1')}</td>` : ''}
-
-            <!-- Kolom Variasi 4 (Jika Aktif) -->
-            ${isVar4Active ? `<td class="p-3 align-middle text-center min-w-[130px]">${renderScopeCell('extra_2')}</td>` : ''}
-
-            <!-- Kolom Min. Order -->
-            <td class="p-3 align-middle text-center min-w-[90px]">
-              <input 
-                type="number" 
-                min="1" 
-                class="combo-min-order-input w-20 px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
-                data-mat-id="${mat.id}" 
-                value="${minOrderVal}" 
-              />
-            </td>
-
-            <!-- Kolom Max. Order -->
-            <td class="p-3 align-middle text-center min-w-[110px]">
-              <input 
-                type="text" 
-                class="combo-max-order-input w-24 px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
-                data-mat-id="${mat.id}" 
-                value="${maxOrderVal}" 
-                placeholder="Unlimited"
-              />
-            </td>
-
-            <!-- Kolom Harga Grosir -->
-            <td class="p-3 align-middle text-center min-w-[140px]">
-              ${!primaryState.has_wholesale ? `
-                <div class="px-3 py-1.5 rounded-full bg-slate-200 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
-              ` : `
-                <button type="button" class="btn-open-wholesale-modal px-3 py-1.5 rounded-full bg-white border border-emerald-500 text-emerald-700 hover:bg-emerald-50 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition" data-mat-id="${mat.id}">
-                  <i class="bi bi-tag-fill text-xs"></i>
-                  <span>${primaryState.wholesale_mode === 'tiered' ? 'Mode Bertingkat' : 'Mode Normal'}</span>
-                </button>
-              `}
-            </td>
-
-            <!-- Kolom Kelipatan Order -->
-            <td class="p-3 align-middle text-center min-w-[140px]">
-              ${!primaryState.has_order_multiple ? `
-                <div class="px-3 py-1.5 rounded-full bg-slate-200 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
-              ` : `
-                <button type="button" class="btn-open-multiple-modal px-3 py-1.5 rounded-full bg-white border border-emerald-500 text-emerald-700 hover:bg-emerald-50 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition" data-mat-id="${mat.id}">
-                  <i class="bi bi-layers-fill text-xs"></i>
-                  <span>${primaryState.order_multiple_type === 'per_variant' ? 'Mode Spesifik' : 'Mode Global'}</span>
-                </button>
-              `}
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      return `
-        <!-- Tabel Matriks Kombinasi Utama (Persis Gambar 1–4) -->
-        <div class="mt-6 space-y-3" id="combination-matrix-section">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <span>Tabel Kombinasi Variasi & Pengaturan Pembelian</span>
-              <span class="text-xs font-normal text-slate-500">(${materialsState.length} Baris Varian)</span>
-            </h4>
-          </div>
-
-          <div class="overflow-x-auto rounded-lg border border-slate-300 bg-white shadow-xs scrollbar-thin">
-            <table class="combo-matrix-table w-full text-left text-xs border-collapse">
-              <thead class="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold">
-                <tr>
-                  <th class="p-3 text-center min-w-[120px]">${escapeHtml(labelVar1)}</th>
-                  ${isVar2Active ? `<th class="p-3 text-center min-w-[130px]">${escapeHtml(labelVar2)}</th>` : ''}
-                  ${isVar3Active ? `<th class="p-3 text-center min-w-[130px]">${escapeHtml(labelVar3)}</th>` : ''}
-                  ${isVar4Active ? `<th class="p-3 text-center min-w-[130px]">${escapeHtml(labelVar4)}</th>` : ''}
-                  <th class="p-3 text-center min-w-[90px]">Min. Order</th>
-                  <th class="p-3 text-center min-w-[110px]">Max. Order</th>
-                  <th class="p-3 text-center min-w-[140px]">
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                      <span>Harga Grosir</span>
-                      <input type="checkbox" id="chk-combo-header-wholesale" class="accent-emerald-600 rounded cursor-pointer" ${primaryState.has_wholesale ? 'checked' : ''} />
-                    </label>
-                  </th>
-                  <th class="p-3 text-center min-w-[140px]">
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                      <span>Kelipatan Order</span>
-                      <input type="checkbox" id="chk-combo-header-order-multiple" class="accent-emerald-600 rounded cursor-pointer" ${primaryState.has_order_multiple ? 'checked' : ''} />
-                    </label>
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="combo-matrix-table-body" class="divide-y divide-slate-200">
-                ${rows}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
 
     // Helper render seluruh variasi bertumpuk & pemicu berjenjang
     function renderHierarchicalVariationsSection() {
@@ -4000,6 +3851,162 @@ const ProductForm = (() => {
     return '';
   }
 
+  // Helper render Tabel Matriks Kombinasi di Bagian Bawah (Persis Gambar 1, 2, 3, 4)
+  function renderCombinationMatrixTable() {
+    const isVar2Active = Boolean(primaryState.has_variation_2 && finishingsState.main && finishingsState.main.length > 0);
+    const isVar3Active = Boolean(isVar2Active && primaryState.has_variation_3 && finishingsState.extra_1 && finishingsState.extra_1.length > 0);
+    const isVar4Active = Boolean(isVar3Active && primaryState.has_variation_4 && finishingsState.extra_2 && finishingsState.extra_2.length > 0);
+
+    const labelVar1 = primaryState.variation_labels?.label_tier_1 || 'Variasi 1';
+    const labelVar2 = primaryState.variation_labels?.label_tier_2 || 'Variasi 2';
+    const labelVar3 = primaryState.variation_labels?.label_extra_1 || 'Variasi 3';
+    const labelVar4 = primaryState.variation_labels?.label_extra_2 || 'Variasi 4';
+
+    // FILTER materialsState: Hanya tampilkan baris yang namanya tidak kosong!
+    // Sehingga jika penjual hanya membuat 2 variasi (misal: "A" dan "ba"), tabel kombinasi bawah HANYA menampilkan tepat 2 baris tersebut.
+    const validMaterials = materialsState.filter(m => m && m.name && m.name.trim() !== '');
+    const displayMaterials = validMaterials.length > 0 ? validMaterials : (materialsState.length > 0 ? [materialsState[0]] : []);
+
+    const rows = displayMaterials.map((mat, idx) => {
+      const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
+      const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
+      const maxOrderVal = mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '' ? mat.max_order : 'Unlimited';
+
+      function renderScopeCell(tier) {
+        const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
+        const specificList = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id][tier]) || [];
+        const count = specificList.length;
+
+        return `
+          <div class="flex flex-col items-center gap-1">
+            <select class="combo-scope-select px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold bg-white text-slate-700 outline-none cursor-pointer focus:border-emerald-500 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}">
+              <option value="umum" ${scope === 'umum' ? 'selected' : ''}>Umum</option>
+              <option value="spesifik" ${scope === 'spesifik' ? 'selected' : ''}>Spesifik</option>
+            </select>
+            ${scope === 'spesifik' ? `
+              <button type="button" class="btn-open-specific-modal px-2.5 py-1 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold cursor-pointer transition flex items-center gap-1 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+                <span>${count > 0 ? `${count} Dipilih` : 'Pilih Opsi'}</span>
+                <i class="bi bi-gear-fill text-[9px]"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      return `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-200" data-mat-id="${mat.id}">
+          <!-- Kolom Variasi 1 (Foto Opsi + Teks Real-Time) -->
+          <td class="p-3 align-middle text-center min-w-[120px]">
+            <div class="flex flex-col items-center gap-1.5">
+              <input type="file" accept="image/*" class="hidden combo-var1-file-input" data-id="${mat.id}" id="combo-img-${mat.id}" />
+              <label for="combo-img-${mat.id}" class="w-12 h-10 border border-dashed border-emerald-500 rounded flex items-center justify-center cursor-pointer text-emerald-600 bg-emerald-50/40 hover:bg-emerald-50 transition overflow-hidden shadow-2xs" title="Unggah Foto Opsi">
+                ${mat.image_url ? `<img src="${mat.image_url}" class="w-full h-full object-cover" />` : `<i class="bi bi-image text-sm"></i>`}
+              </label>
+              <span class="combo-var1-label text-xs font-bold text-slate-800 break-all" data-id="${mat.id}">${escapeHtml(var1Name)}</span>
+            </div>
+          </td>
+
+          <!-- Kolom Variasi 2 (Jika Aktif) -->
+          ${isVar2Active ? `<td class="p-3 align-middle text-center min-w-[130px]">${renderScopeCell('main')}</td>` : ''}
+
+          <!-- Kolom Variasi 3 (Jika Aktif) -->
+          ${isVar3Active ? `<td class="p-3 align-middle text-center min-w-[130px]">${renderScopeCell('extra_1')}</td>` : ''}
+
+          <!-- Kolom Variasi 4 (Jika Aktif) -->
+          ${isVar4Active ? `<td class="p-3 align-middle text-center min-w-[130px]">${renderScopeCell('extra_2')}</td>` : ''}
+
+          <!-- Kolom Min. Order -->
+          <td class="p-3 align-middle text-center min-w-[90px]">
+            <input 
+              type="number" 
+              min="1" 
+              class="combo-min-order-input w-20 px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
+              data-mat-id="${mat.id}" 
+              value="${minOrderVal}" 
+            />
+          </td>
+
+          <!-- Kolom Max. Order -->
+          <td class="p-3 align-middle text-center min-w-[110px]">
+            <input 
+              type="text" 
+              class="combo-max-order-input w-24 px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
+              data-mat-id="${mat.id}" 
+              value="${maxOrderVal}" 
+              placeholder="Unlimited"
+            />
+          </td>
+
+          <!-- Kolom Harga Grosir -->
+          <td class="p-3 align-middle text-center min-w-[140px]">
+            ${!primaryState.has_wholesale ? `
+              <div class="px-3 py-1.5 rounded-full bg-slate-200 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
+            ` : `
+              <button type="button" class="btn-open-wholesale-modal px-3 py-1.5 rounded-full bg-white border border-emerald-500 text-emerald-700 hover:bg-emerald-50 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition" data-mat-id="${mat.id}">
+                <i class="bi bi-tag-fill text-xs"></i>
+                <span>${primaryState.wholesale_mode === 'tiered' ? 'Mode Bertingkat' : 'Mode Normal'}</span>
+              </button>
+            `}
+          </td>
+
+          <!-- Kolom Kelipatan Order -->
+          <td class="p-3 align-middle text-center min-w-[140px]">
+            ${!primaryState.has_order_multiple ? `
+              <div class="px-3 py-1.5 rounded-full bg-slate-200 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
+            ` : `
+              <button type="button" class="btn-open-multiple-modal px-3 py-1.5 rounded-full bg-white border border-emerald-500 text-emerald-700 hover:bg-emerald-50 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition" data-mat-id="${mat.id}">
+                <i class="bi bi-layers-fill text-xs"></i>
+                <span>${primaryState.order_multiple_type === 'per_variant' ? 'Mode Spesifik' : 'Mode Global'}</span>
+              </button>
+            `}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <!-- Tabel Matriks Kombinasi Utama (Persis Gambar 1â€“4) -->
+      <div class="mt-6 space-y-3" id="combination-matrix-section">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <span>Tabel Kombinasi Variasi & Pengaturan Pembelian</span>
+            <span class="text-xs font-normal text-slate-500">(${displayMaterials.length} Baris Varian)</span>
+          </h4>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-slate-300 bg-white shadow-xs scrollbar-thin">
+          <table class="combo-matrix-table w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold">
+              <tr>
+                <th class="p-3 text-center min-w-[120px]">${escapeHtml(labelVar1)}</th>
+                ${isVar2Active ? `<th class="p-3 text-center min-w-[130px]">${escapeHtml(labelVar2)}</th>` : ''}
+                ${isVar3Active ? `<th class="p-3 text-center min-w-[130px]">${escapeHtml(labelVar3)}</th>` : ''}
+                ${isVar4Active ? `<th class="p-3 text-center min-w-[130px]">${escapeHtml(labelVar4)}</th>` : ''}
+                <th class="p-3 text-center min-w-[90px]">Min. Order</th>
+                <th class="p-3 text-center min-w-[110px]">Max. Order</th>
+                <th class="p-3 text-center min-w-[140px]">
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <span>Harga Grosir</span>
+                    <input type="checkbox" id="chk-combo-header-wholesale" class="accent-emerald-600 rounded cursor-pointer" ${primaryState.has_wholesale ? 'checked' : ''} />
+                  </label>
+                </th>
+                <th class="p-3 text-center min-w-[140px]">
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <span>Kelipatan Order</span>
+                    <input type="checkbox" id="chk-combo-header-order-multiple" class="accent-emerald-600 rounded cursor-pointer" ${primaryState.has_order_multiple ? 'checked' : ''} />
+                  </label>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="combo-matrix-table-body" class="divide-y divide-slate-200">
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
   // Modals Markup Helpers
   function renderWholesaleModalMarkup() {
     return `
@@ -4375,7 +4382,7 @@ const ProductForm = (() => {
               data-field="name" 
               value="${escapeHtml(mat.name || '')}" 
               placeholder="${placeholderName}" 
-              class="mat-input col-span-2 sm:col-span-4 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30" 
+              class="mat-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30" 
             />
             <!-- Kolom 2: Keterangan -->
             <input 
@@ -4393,7 +4400,7 @@ const ProductForm = (() => {
               value="${priceVal}" 
               placeholder="Harga Jual" 
               ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-              class="mat-input col-span-1 sm:col-span-2 px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              class="mat-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
             <!-- Kolom 4: Modal/Hpp -->
             <input 
@@ -4403,17 +4410,17 @@ const ProductForm = (() => {
               value="${costVal}" 
               placeholder="Modal/Hpp" 
               ${isSameCost && idx > 0 ? 'readonly' : ''} 
-              class="mat-input col-span-1 sm:col-span-2 px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              class="mat-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
-            <!-- Kolom 5: Jumlah Stok -->
+            <!-- Kolom 5: Stok -->
             <input 
               type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
               min="0" 
               data-field="stock" 
               value="${stockVal}" 
-              placeholder="Jumlah Stok" 
+              placeholder="Stok" 
               ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-              class="mat-input col-span-2 sm:col-span-1 px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              class="mat-input col-span-2 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
             />
           </div>
 
@@ -4507,7 +4514,7 @@ const ProductForm = (() => {
                 value="${priceVal}" 
                 placeholder="Harga Satuan" 
                 ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-                class="fin-input col-span-1 sm:col-span-2 px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
 
               <!-- Bagian 5: Modal/Hpp -->
@@ -4518,18 +4525,18 @@ const ProductForm = (() => {
                 value="${costVal}" 
                 placeholder="Modal/Hpp" 
                 ${isSameCost && idx > 0 ? 'readonly' : ''} 
-                class="fin-input col-span-1 sm:col-span-2 px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
 
-              <!-- Bagian 6: Jumlah Stok -->
+              <!-- Bagian 6: Stok -->
               <input 
                 type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
                 min="0" 
                 data-field="stock" 
                 value="${stockVal}" 
-                placeholder="Jumlah Stok" 
+                placeholder="Stok" 
                 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-                class="fin-input col-span-2 sm:col-span-2 px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
               />
             </div>
 
@@ -4584,7 +4591,7 @@ const ProductForm = (() => {
               data-field="name" 
               value="${escapeHtml(fin.name || '')}" 
               placeholder="${placeholderName}" 
-              class="fin-input col-span-2 sm:col-span-4 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30" 
+              class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30" 
             />
             <!-- Kolom 2: Keterangan -->
             <input 
@@ -4602,7 +4609,7 @@ const ProductForm = (() => {
               value="${priceVal}" 
               placeholder="Harga Jual" 
               ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-              class="fin-input col-span-1 sm:col-span-2 px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
             <!-- Kolom 4: Modal/Hpp -->
             <input 
@@ -4612,17 +4619,17 @@ const ProductForm = (() => {
               value="${costVal}" 
               placeholder="Modal/Hpp" 
               ${isSameCost && idx > 0 ? 'readonly' : ''} 
-              class="fin-input col-span-1 sm:col-span-2 px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
-            <!-- Kolom 5: Jumlah Stok -->
+            <!-- Kolom 5: Stok -->
             <input 
               type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
               min="0" 
               data-field="stock" 
               value="${stockVal}" 
-              placeholder="Jumlah Stok" 
+              placeholder="Stok" 
               ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-              class="fin-input col-span-2 sm:col-span-1 px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
             />
           </div>
 
@@ -4917,9 +4924,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!hasVariant) {
           if (cardModelPlaceholder) cardModelPlaceholder.classList.remove('hidden');
           if (cardModelUnlocked) cardModelUnlocked.classList.add('hidden');
+          setSidebarState(false);
         } else {
           if (cardModelPlaceholder) cardModelPlaceholder.classList.add('hidden');
           if (cardModelUnlocked) cardModelUnlocked.classList.remove('hidden');
+          // Jika Jenis Produk, Etalase ON, dan Model Kartu sudah dipilih -> Otomatis Buka Sidebar Live Preview
+          setSidebarState(true);
         }
       }
 

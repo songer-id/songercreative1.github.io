@@ -901,3 +901,9 @@ input.toggle-same-cost:checked ~ div::after {
 #admin-mobile-nav {
   display: none !important;
 }
+/* Input Angka Tabel Variasi: Minimum Width 95px agar teks & placeholder "Stok" terbaca penuh */
+.variation-option-row input[data-field="price"],
+.variation-option-row input[data-field="cost_price"],
+.variation-option-row input[data-field="stock"] {
+  min-width: 95px !important;
+}
