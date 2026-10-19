@@ -450,7 +450,7 @@ const ProductForm = (() => {
       status: prod.status || 'published',
       show_shipping_for_non_physical: prod.show_shipping_for_non_physical || false,
       has_layer_3: false,
-      show_badge: prod.show_badge !== undefined ? prod.show_badge : true,
+      show_badge: prod.card_variant === 'B' ? false : (prod.show_badge !== undefined ? prod.show_badge : true),
       order_category: prod.order_category || 'Ctk',
       category_id: prod.category_id || null,
       sub_category_id: prod.sub_category_id || null,
@@ -499,7 +499,7 @@ const ProductForm = (() => {
       monthly_promo_label: prod.monthly_promo_label || 'Promo Bulanan',
       promo_start_date: prod.promo_start_date || null,
       promo_end_date: prod.promo_end_date || null,
-      custom_labels: Array.isArray(prod.custom_labels) ? [...prod.custom_labels] : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : []),
+      custom_labels: prod.card_variant === 'B' ? [] : (Array.isArray(prod.custom_labels) ? [...prod.custom_labels] : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])),
       shipping_config: prod.shipping_config || {
         is_cod: false,
         couriers: ['pickup', 'instant', 'reguler'],
@@ -819,7 +819,7 @@ const ProductForm = (() => {
                     </div>
 
                     <!-- Input 6: Tambahkan Label Khusus -->
-                    <div id="section-step1-input6-labels" class="${primaryState.card_variant === 'B' ? 'hidden' : 'space-y-4'}">
+                    <div id="section-step1-input6-labels" class="space-y-4">
                       <hr class="border-slate-100" />
                       <div class="pb-2 border-b border-slate-100 flex items-center justify-between gap-3">
                         <div>
@@ -827,15 +827,16 @@ const ProductForm = (() => {
                             Tambahkan Label Khusus
                           </label>
                           <p class="text-xs text-slate-500 mt-0.5">Label promosi khusus di kartu etalase (misal: Free Ongkir, Best Seller, Siap 1 Jam).</p>
+                          <p id="label-custom-disabled-notice" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-xs font-semibold text-amber-600 mt-1">Jenis Kartu Produk tidak mendukung Label Khusus</p>
                         </div>
                         <!-- TOGGLE SWITCH ON/OFF -->
-                        <label class="relative inline-flex items-center cursor-pointer select-none">
-                          <input type="checkbox" id="toggle-enable-custom-labels" class="sr-only peer" ${primaryState.show_badge !== false ? 'checked' : ''}>
+                        <label class="relative inline-flex items-center select-none ${primaryState.card_variant === 'B' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}">
+                          <input type="checkbox" id="toggle-enable-custom-labels" class="sr-only peer" ${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false) ? 'checked' : ''} ${primaryState.card_variant === 'B' ? 'disabled' : ''}>
                           <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
 
-                      <div id="container-custom-labels-inputs" class="${primaryState.show_badge !== false ? 'space-y-4' : 'hidden'}">
+                      <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false) ? 'space-y-4' : 'hidden'}">
                         <p class="text-xs text-slate-500">Saran: Gunakan 1–2 kata singkat per label (maks. 10–12 karakter) agar seluruh label muat di kartu.</p>
 
                         <div class="space-y-2">
@@ -5008,7 +5009,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (!primaryState.name || primaryState.name.trim() === '') {
             s1Errors.push('Nama Produk wajib diisi.');
           }
-          if (primaryState.show_badge !== false) {
+          if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
             const l1 = (document.getElementById('input-custom-label-1')?.value || primaryState.custom_labels?.[0] || '').trim();
             if (!l1) {
               s1Errors.push('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.');
@@ -5026,6 +5027,63 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       currentStep = step;
       updateStepVisibility();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // SINKRONISASI TAMPILAN LABEL KHUSUS BERDASARKAN VARIAN KARTU (MODEL 2 = OFF & READONLY/DISABLED)
+    function syncCustomLabelsUIForVariant(variantCode) {
+      const v = variantCode || primaryState.card_variant || 'A';
+      const toggle = document.getElementById('toggle-enable-custom-labels');
+      const toggleWrapper = toggle?.closest('label');
+      const notice = document.getElementById('label-custom-disabled-notice');
+      const container = document.getElementById('container-custom-labels-inputs');
+      const badgeContainerDesk = document.getElementById('cfg-badge-container-desk');
+      const badgeContainerMob = document.getElementById('cfg-badge-container-mob');
+
+      if (v === 'B') {
+        primaryState.show_badge = false;
+        primaryState.custom_labels = [];
+        if (toggle) {
+          toggle.checked = false;
+          toggle.disabled = true;
+        }
+        if (toggleWrapper) {
+          toggleWrapper.classList.add('opacity-50', 'cursor-not-allowed');
+          toggleWrapper.classList.remove('cursor-pointer');
+        }
+        if (notice) {
+          notice.textContent = 'Jenis Kartu Produk tidak mendukung Label Khusus';
+          notice.classList.remove('hidden');
+          notice.classList.add('block');
+        }
+        if (container) {
+          container.classList.add('hidden');
+        }
+        const inp1 = document.getElementById('input-custom-label-1');
+        const inp2 = document.getElementById('input-custom-label-2');
+        const inp3 = document.getElementById('input-custom-label-3');
+        if (inp1) inp1.value = '';
+        if (inp2) inp2.value = '';
+        if (inp3) inp3.value = '';
+        if (badgeContainerDesk) badgeContainerDesk.classList.add('hidden');
+        if (badgeContainerMob) badgeContainerMob.classList.add('hidden');
+      } else {
+        if (toggle) {
+          toggle.disabled = false;
+        }
+        if (toggleWrapper) {
+          toggleWrapper.classList.remove('opacity-50', 'cursor-not-allowed');
+          toggleWrapper.classList.add('cursor-pointer');
+        }
+        if (notice) {
+          notice.classList.add('hidden');
+          notice.classList.remove('block');
+        }
+        if (toggle && toggle.checked && container) {
+          container.classList.remove('hidden');
+        }
+        if (badgeContainerDesk) badgeContainerDesk.classList.remove('hidden');
+        if (badgeContainerMob) badgeContainerMob.classList.remove('hidden');
+      }
     }
 
     // GATING BERTAHAP DI STEP 1 (CLEAN SHOPEE-STYLE TANPA GEMBOK)
@@ -5087,6 +5145,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           setSidebarState(true);
         }
       }
+
+      // Otomasi Nilai Label OFF & Nonaktif Khusus Model 2 (Kartu Minimalis)
+      syncCustomLabelsUIForVariant(primaryState.card_variant);
 
       updateProductCardLivePreview();
     }
@@ -7115,6 +7176,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const warn2 = document.getElementById('warn-label-2');
       const warn3 = document.getElementById('warn-label-3');
 
+      if (primaryState.card_variant === 'B') {
+        syncCustomLabelsUIForVariant('B');
+        return;
+      }
+
       if (toggle) {
         primaryState.show_badge = toggle.checked;
       }
@@ -7232,6 +7298,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const toggleLabels = document.getElementById('toggle-enable-custom-labels');
     if (toggleLabels) {
       toggleLabels.addEventListener('change', () => {
+        if (primaryState.card_variant === 'B') {
+          syncCustomLabelsUIForVariant('B');
+          return;
+        }
         primaryState.show_badge = toggleLabels.checked;
         updateCustomLabelsLockState();
       });
@@ -7646,22 +7716,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         else panelF3Mob.classList.add('hidden');
       }
 
-      // Hide / Show Label Khusus section and customization checkbox for Model 2 (B)
+      // Pastikan section-step1-input6-labels tetap terlihat di formulir
       const sectionLabels = document.getElementById('section-step1-input6-labels');
       if (sectionLabels) {
-        if (variantCode === 'B') sectionLabels.classList.add('hidden');
-        else sectionLabels.classList.remove('hidden');
+        sectionLabels.classList.remove('hidden');
       }
-      const badgeContainerDesk = document.getElementById('cfg-badge-container-desk');
-      if (badgeContainerDesk) {
-        if (variantCode === 'B') badgeContainerDesk.classList.add('hidden');
-        else badgeContainerDesk.classList.remove('hidden');
-      }
-      const badgeContainerMob = document.getElementById('cfg-badge-container-mob');
-      if (badgeContainerMob) {
-        if (variantCode === 'B') badgeContainerMob.classList.add('hidden');
-        else badgeContainerMob.classList.remove('hidden');
-      }
+
+      // Otomasi Nilai Label OFF & Nonaktif Khusus Model 2 (Kartu Minimalis)
+      syncCustomLabelsUIForVariant(variantCode);
 
       // Enforce mutual exclusivity for Model 2: Rating vs Sales
       if (variantCode === 'B') {
@@ -8925,16 +8987,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const skuInp = document.getElementById('input-prod-sku');
     if (skuInp) primaryState.sku = skuInp.value.trim();
     const barcodeInp = document.getElementById('input-prod-barcode');
-    if (barcodeInp) primaryState.barcode = barcodeInp.value.trim();    // Custom Labels
-    const toggleBadge = document.getElementById('toggle-enable-custom-labels');
-    if (toggleBadge) {
-      primaryState.show_badge = toggleBadge.checked;
-    }
-    const l1 = document.getElementById('input-custom-label-1')?.value?.trim();
-    const l2 = document.getElementById('input-custom-label-2')?.value?.trim();
-    const l3 = document.getElementById('input-custom-label-3')?.value?.trim();
-    if (l1 !== undefined || l2 !== undefined || l3 !== undefined) {
-      primaryState.custom_labels = [l1, l2, l3].filter(Boolean);
+    if (barcodeInp) primaryState.barcode = barcodeInp.value.trim();
+
+    // Custom Labels
+    if (primaryState.card_variant === 'B') {
+      primaryState.show_badge = false;
+      primaryState.custom_labels = [];
+    } else {
+      const toggleBadge = document.getElementById('toggle-enable-custom-labels');
+      if (toggleBadge) {
+        primaryState.show_badge = toggleBadge.checked;
+      }
+      const l1 = document.getElementById('input-custom-label-1')?.value?.trim();
+      const l2 = document.getElementById('input-custom-label-2')?.value?.trim();
+      const l3 = document.getElementById('input-custom-label-3')?.value?.trim();
+      if (l1 !== undefined || l2 !== undefined || l3 !== undefined) {
+        primaryState.custom_labels = [l1, l2, l3].filter(Boolean);
+      }
     }
 
     // Map price_type based on pricing_model
@@ -8976,7 +9045,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (!primaryState.name || primaryState.name.trim() === '') {
       errors.push('Nama / judul produk wajib diisi.');
     }
-    if (primaryState.show_badge !== false) {
+    if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
       const l1Val = (primaryState.custom_labels && primaryState.custom_labels[0]) ? primaryState.custom_labels[0].trim() : '';
       if (!l1Val) {
         errors.push('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.');
