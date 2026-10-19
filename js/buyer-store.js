@@ -3390,29 +3390,46 @@ const BuyerStore = (() => {
     `;
   }
 
-  // CARD PRODUK VERSI 2: MINIMALIS 1 BARIS (Variasi B)
-  // - Gambar: Rasio persegi 1:1 (aspect-square w-full object-cover rounded-t-2xl)
+  // CARD PRODUK VERSI 2: KARTU MINIMALIS 1 BARIS (Variasi B)
+  // - Gambar: Rasio potrait 3:4 (aspect-[3/4] w-full object-cover rounded-t-lg)
   // - Badge Diskon Gambar: Pojok kanan atas - % [diskon] (tanpa ikon tiket)
-  // - Judul Produk: Wajib 1 baris teks besar tebal (truncate text-sm sm:text-base font-bold text-slate-900)
-  // - Baris Fitur/Label: Rating bintang (★ 4.9) + Label Countdown (jika aktif) atau Label Khusus
-  // - Baris Harga: Harga Coret di Atas, Harga Final + Ikon Tiket Cek di Bawah Sejajar Horizontal dengan Label Terjual
-  // - Footer Tambahan: Tidak ada (clean bottom tanpa cart button)
+  // - Judul Produk: 1 baris teks rapi (block truncate text-xs sm:text-sm font-semibold text-slate-800)
+  // - Tanpa Countdown & Tanpa Label Khusus
+  // - Metrik Eksklusif: Terjual ATAU Rating
+  // - Baris Harga: Rapi & Ringkas dengan Otomasi Kepadatan Ruang
   function renderCardVariantB(prod, rawConfig = {}) {
     const config = (prod && prod.card_config) ? { ...rawConfig, ...prod.card_config } : rawConfig;
     const minPrice = getProductStartingPrice(prod);
     const effDiscount = prod.effective_discount || (typeof DB !== 'undefined' && DB.getProductEffectiveDiscount ? DB.getProductEffectiveDiscount(prod) : { has_discount: false });
 
     const bgColor = config.bg_color || '#ffffff';
-    const borderColor = config.border_color || '#e9d5ff';
+    const borderColor = config.border_color || '#e2e8f0';
     const borderRadius = config.border_radius || '16px';
     const titleColor = config.title_color || '#0f172a';
     const priceColor = config.price_color || '#059669';
 
-    const showRating = config.show_rating !== false;
-    const showSales = config.show_sales_count !== false;
+    // Model 2 Metric: Eksklusif Terjual ATAU Rating (Hanya salah satu)
+    let showRating = false;
+    let showSales = false;
+    if (config.metric_display_mode === 'rating') {
+      showRating = true;
+    } else if (config.metric_display_mode === 'sales') {
+      showSales = true;
+    } else if (config.metric_display_mode === 'none') {
+      showRating = false;
+      showSales = false;
+    } else {
+      if (config.show_rating !== false && config.show_sales_count === false) {
+        showRating = true;
+      } else if (config.show_sales_count !== false) {
+        showSales = true;
+      } else if (config.show_rating !== false) {
+        showRating = true;
+      }
+    }
+
     const showStrike = config.show_strikethrough_price !== false;
     const showTicketIcon = config.show_ticket_icon !== false;
-    const showBadge = (prod.show_badge !== false && prod.show_custom_labels !== false && config.show_badge !== false && config.show_category_badge !== false);
     const showDiscBadge = config.show_discount_badge !== false;
 
     // Discount badge styling on image
@@ -3422,37 +3439,41 @@ const BuyerStore = (() => {
     const discBadgeBorder = config.discount_badge_border_color || discBadgeBg;
     const discBadgeStyle = `background-color: ${discBadgeBg}; color: ${discBadgeText}; border: 1px solid ${discBadgeBorder}; border-radius: ${discBadgeRadius};`;
 
-    const badgeRadius = config.badge_radius || '6px';
-    const badgeTextColor = config.badge_text_color || '#6b21a8';
-    const badgeBgColor = config.badge_bg_color || '#faf5ff';
-    const badgeBorderColor = config.badge_border_color || '#e9d5ff';
-    const badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
-
-    const customBadges = getProductCustomBadges(prod, effDiscount);
-
-    // Evaluasi Countdown Promo Produk Spesifik
-    const countdownInfo = (typeof DB !== 'undefined' && DB.getProductCountdownInfo) ? DB.getProductCountdownInfo(prod, effDiscount) : { is_active: false };
-    const countdownRadius = config.countdown_radius || '9999px';
-    const countdownBg = prod.countdown_bg_color || config.countdown_bg_color || '#059669';
-    const countdownTextColor = prod.countdown_text_color || config.countdown_text_color || '#ffffff';
-    const countdownIconColor = prod.countdown_icon_color || config.countdown_icon_color || countdownTextColor;
-    const countdownBorder = prod.countdown_border_color || config.countdown_border_color || '#059669';
-    const countdownStyle = `background-color: ${countdownBg}; color: ${countdownTextColor}; border: 1px solid ${countdownBorder}; border-radius: ${countdownRadius};`;
-
     const hasActiveDiscount = Boolean(effDiscount && effDiscount.has_discount);
-    const effFinalPrice = hasActiveDiscount ? effDiscount.discounted_price : minPrice;
+    const finalPrice = hasActiveDiscount ? effDiscount.discounted_price : minPrice;
+    const origPrice = hasActiveDiscount ? (effDiscount.original_price || minPrice) : minPrice;
+
+    // Smart Fit Automation
+    const isExtremePrice = hasActiveDiscount && showTicketIcon && finalPrice >= 10000000;
     const isNarrowPriceRow = Boolean(
       hasActiveDiscount &&
       showTicketIcon &&
-      (effFinalPrice >= 1000000 || (showStrike && (effDiscount.original_price || 0) >= 1000000))
+      (finalPrice >= 1000000 || (showStrike && origPrice >= 1000000))
     );
+
+    let selectedMetricHtml = '';
+    if (!isExtremePrice) {
+      if (showRating) {
+        selectedMetricHtml = `
+          <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5 shrink-0 whitespace-nowrap">
+            ★ ${prod.rating_avg ? prod.rating_avg.toFixed(1) : '4.9'}
+          </span>
+        `;
+      } else if (showSales) {
+        selectedMetricHtml = `
+          <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap text-right shrink-0">
+            ${formatSalesCount(prod.sales_count, isNarrowPriceRow)}
+          </span>
+        `;
+      }
+    }
 
     return `
       <div class="h-full flex flex-col justify-between overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-xs hover:shadow-lg transition-all cursor-pointer group relative" onclick="window.location.href='product.html?id=${prod.id}'" style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: ${borderRadius};" data-id="${prod.id}">
-        <!-- Image Box - Rasio 1:1 Persegi -->
-        <a href="product.html?id=${prod.id}" class="block relative w-full aspect-square bg-slate-100 overflow-hidden cursor-pointer shrink-0 rounded-t-2xl">
+        <!-- Image Box - Rasio 3:4 Portrait -->
+        <a href="product.html?id=${prod.id}" class="block relative w-full aspect-[3/4] bg-slate-100 overflow-hidden cursor-pointer shrink-0 rounded-t-lg">
           ${renderProductImage(prod)}
-          ${(effDiscount.has_discount && showDiscBadge) ? `
+          ${(hasActiveDiscount && showDiscBadge) ? `
             <div class="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
               <span>- % ${effDiscount.percent}</span>
             </div>
@@ -3460,61 +3481,40 @@ const BuyerStore = (() => {
         </a>
 
         <!-- Body -->
-        <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between space-y-2.5">
-          <div class="space-y-1">
-            <!-- Judul Produk: Wajib 1 Baris Teks Besar Tebal -->
-            <a href="product.html?id=${prod.id}" class="block truncate text-sm sm:text-base font-bold text-slate-900 group-hover:opacity-80 transition leading-snug" style="${titleColor ? `color: ${titleColor};` : ''}" title="${escapeHtml(prod.name)}">
-              ${escapeHtml(prod.name)}
-            </a>
+        <div class="p-2.5 sm:p-3 flex-1 flex flex-col justify-between space-y-1.5">
+          <!-- Judul Produk: 1 Baris Teks -->
+          <a href="product.html?id=${prod.id}" class="block truncate text-xs sm:text-sm font-semibold text-slate-800 group-hover:opacity-80 transition leading-snug" style="${titleColor ? `color: ${titleColor};` : ''}" title="${escapeHtml(prod.name)}">
+            ${escapeHtml(prod.name)}
+          </a>
 
-            <!-- Baris Fitur/Label: Rating Bintang + Label Countdown (jika aktif) atau Label Khusus -->
-            <div class="flex items-center gap-1.5 pt-0.5 flex-wrap min-w-0">
-              ${showRating ? `
-                <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5 shrink-0">
-                  ★ ${prod.rating_avg ? prod.rating_avg.toFixed(1) : '4.9'}
+          <!-- Baris Harga: Normal vs Diskon -->
+          ${!hasActiveDiscount ? `
+            <div class="flex items-center justify-between gap-1.5 pt-1 mt-auto">
+              <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="color: ${priceColor};">
+                ${formatIDR(finalPrice)}
+              </span>
+              ${selectedMetricHtml}
+            </div>
+          ` : `
+            <div class="pt-1 flex flex-col justify-end mt-auto space-y-0.5">
+              ${showStrike ? `
+                <span class="text-[10px] line-through text-slate-400 font-normal leading-none">
+                  ${formatIDR(origPrice)}
                 </span>
               ` : ''}
-              ${countdownInfo.is_active ? `
-                <span class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 leading-none whitespace-nowrap shadow-xs" style="${countdownStyle}" title="${escapeHtml(countdownInfo.label_full)}">
-                  <i data-lucide="ticket-percent" class="w-3 h-3 shrink-0" style="color: ${countdownIconColor};"></i>
-                  <span>${escapeHtml(countdownInfo.label_compact)}</span>
-                </span>
-              ` : (showBadge ? customBadges.map(b => `
-                <span class="inline-flex items-center text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 leading-none" style="${badgeStyle}">
-                  ${escapeHtml(b)}
-                </span>
-              `).join('') : '')}
-            </div>
-          </div>
-
-          <!-- Baris Harga: Harga Coret di Atas, Harga Final + Ikon Tiket Cek di Bawah Sejajar Horizontal dengan Label Terjual -->
-          <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
-            <div class="flex flex-col justify-end min-w-0">
-              ${(effDiscount.has_discount && showStrike) ? `
-                <span class="text-[10px] sm:text-[11px] line-through text-slate-400 font-normal leading-none mb-1">
-                  ${formatIDR(effDiscount.original_price)}
-                </span>
-              ` : ''}
-              <div class="flex items-center gap-1 min-w-0 leading-none">
-                <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="color: ${priceColor};">
-                  ${formatIDR(effDiscount.has_discount ? effDiscount.discounted_price : minPrice)}
-                </span>
-                ${(effDiscount.has_discount && showTicketIcon) ? `
-                  <i data-lucide="ticket-check" class="w-3.5 h-3.5 inline shrink-0" style="color: ${priceColor};"></i>
-                ` : ''}
+              <div class="flex items-center justify-between gap-1.5 leading-none">
+                <div class="flex items-center gap-1 min-w-0">
+                  <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="color: ${priceColor};">
+                    ${formatIDR(finalPrice)}
+                  </span>
+                  ${showTicketIcon ? `
+                    <i data-lucide="ticket-check" class="w-3.5 h-3.5 inline shrink-0" style="color: ${priceColor};"></i>
+                  ` : ''}
+                </div>
+                ${selectedMetricHtml}
               </div>
             </div>
-            ${showSales ? `
-              <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                  ${formatSalesCount(prod.sales_count, false)}
-                </span>
-                <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                  ${formatSalesCount(prod.sales_count, isNarrowPriceRow)}
-                </span>
-              </div>
-            ` : ''}
-          </div>
+          `}
         </div>
       </div>
     `;

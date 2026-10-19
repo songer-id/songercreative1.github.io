@@ -4651,16 +4651,16 @@ const AdminApp = (() => {
                   </p>
 
                   <div class="grid grid-cols-1 gap-2.5">
-                    <!-- [v1] Versi 1: Compact Klasik -->
+                    <!-- [v1] Versi 1: Kartu Klasik -->
                     <label class="card-style-choice-card p-3 rounded-2xl border-2 ${(cardProductVersion === 'v1' || !cardProductVersion) ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-start gap-3" data-card-ver="v1">
                       <input type="radio" name="card_product_version_radio" value="v1" ${(cardProductVersion === 'v1' || !cardProductVersion) ? 'checked' : ''} class="mt-0.5 text-emerald-600 focus:ring-emerald-500 shrink-0" />
                       <div class="space-y-1 flex-1">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-slate-900 text-xs">Versi 1: Compact Klasik</span>
+                          <span class="font-bold text-slate-900 text-xs">Kartu Klasik</span>
                           <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600">Default</span>
                         </div>
                         <p class="text-[10px] text-slate-500 leading-relaxed">
-                          Format kartu ringkas dan padat. Menampilkan gambar produk, nama produk 2 baris, badge harga tebal, dan tombol beli instan.
+                          Format seimbang dengan penonjolan ulasan kepuasan pembeli. Cocok untuk: Berbagai macam produk ritel umum.
                         </p>
                         <div class="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center gap-2">
                           <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-bold shrink-0">v1</div>
@@ -4672,37 +4672,37 @@ const AdminApp = (() => {
                       </div>
                     </label>
 
-                    <!-- [v2] Versi 2: Modern Minimalis -->
+                    <!-- [v2] Versi 2: Kartu Minimalis -->
                     <label class="card-style-choice-card p-3 rounded-2xl border-2 ${cardProductVersion === 'v2' ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-start gap-3" data-card-ver="v2">
                       <input type="radio" name="card_product_version_radio" value="v2" ${cardProductVersion === 'v2' ? 'checked' : ''} class="mt-0.5 text-emerald-600 focus:ring-emerald-500 shrink-0" />
                       <div class="space-y-1 flex-1">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-slate-900 text-xs">Versi 2: Modern Minimalis</span>
+                          <span class="font-bold text-slate-900 text-xs">Kartu Minimalis</span>
                           <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600">Modern</span>
                         </div>
                         <p class="text-[10px] text-slate-500 leading-relaxed">
-                          Desain bersih dengan badge diskon mengambang, bayangan lembut halus, info kategori tipis, dan tombol keranjang melayang.
+                          Tata letak ringkas dan lugas tanpa ornamen berlebih Dengan Skala Gambar 3:4. Cocok Untuk: Produk Fashion, Pakaian Dan Lainnya.
                         </p>
                         <div class="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center gap-2">
                           <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold shrink-0">v2</div>
                           <div class="text-[10px] text-slate-600 truncate flex-1">
-                            <span class="font-bold block truncate">Spanduk Flexy 280gr</span>
-                            <span class="text-slate-900 font-bold">Rp 25.000/m</span>
+                            <span class="font-bold block truncate">Kemeja Formal Pria</span>
+                            <span class="text-slate-900 font-bold">Rp 125.000</span>
                           </div>
                         </div>
                       </div>
                     </label>
 
-                    <!-- [v3] Versi 3: Shopify Showcase Elegan -->
+                    <!-- [v3] Versi 3: Kartu Detail -->
                     <label class="card-style-choice-card p-3 rounded-2xl border-2 ${cardProductVersion === 'v3' ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-start gap-3" data-card-ver="v3">
                       <input type="radio" name="card_product_version_radio" value="v3" ${cardProductVersion === 'v3' ? 'checked' : ''} class="mt-0.5 text-emerald-600 focus:ring-emerald-500 shrink-0" />
                       <div class="space-y-1 flex-1">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-slate-900 text-xs">Versi 3: Shopify Showcase Elegan</span>
+                          <span class="font-bold text-slate-900 text-xs">Kartu Detail</span>
                           <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700">Premium</span>
                         </div>
                         <p class="text-[10px] text-slate-500 leading-relaxed">
-                          Format etalase bergaya Shopify. Efek hover zoom halus, rating bintang, label status siap kirim/pre-order, dan tombol aksi ganda.
+                          Tampilan etalase modern dengan footer spesifikasi dinamis, Untuk mempercepat keputusan pembeli. Cocok untuk: Jasa Atau Layanan spesifik.
                         </p>
                         <div class="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center gap-2">
                           <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 text-xs font-bold shrink-0">v3</div>

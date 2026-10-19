@@ -196,9 +196,9 @@ const CategoryManager = (() => {
             <div>
               <label class="block font-semibold text-slate-700 mb-1">Default Template Card Grid</label>
               <select id="sub-input-card-variant" class="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none focus:border-emerald-500 bg-white font-medium">
-                <option value="A">Variasi A: Cetak / Spesifikasi Kustom (Banner, Stiker, Brosur)</option>
-                <option value="B">Variasi B: Jasa Kreatif / Desain Portofolio (Logo, Desain Medsos)</option>
-                <option value="C">Variasi C: Retail / Souvenir (Shopee Style - Ganci, Mug, Kaos)</option>
+                <option value="A">Kartu Klasik (Format seimbang produk umum)</option>
+                <option value="B">Kartu Minimalis (Rasio 3:4, Fashion/Pakaian)</option>
+                <option value="C">Kartu Detail (Footer spesifikasi dinamis)</option>
               </select>
             </div>
           </div>
@@ -745,7 +745,7 @@ const CategoryManager = (() => {
                   <div class="flex items-center gap-2">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     <span class="font-medium text-slate-800">${escapeHtml(s.name)}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-700">Card ${s.default_card_variant || 'A'}</span>
+                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-700">${s.default_card_variant === 'B' ? 'Kartu Minimalis' : (s.default_card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
                   </div>
                   <div class="flex items-center gap-1">
                     <button type="button" class="btn-edit-sub text-slate-400 hover:text-emerald-600 p-1" data-id="${s.id}" data-cat-id="${cat.id}" data-name="${escapeHtml(s.name)}" data-variant="${s.default_card_variant}">

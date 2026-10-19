@@ -351,7 +351,7 @@ const ProductForm = (() => {
       countdown_border_color: '#059669',
       image_url: null,
       images: [],
-      image_aspect_ratio: (initialCardVariant === 'C' ? '4:3' : '1:1'),
+      image_aspect_ratio: (initialCardVariant === 'C' ? '4:3' : (initialCardVariant === 'B' ? '3:4' : '1:1')),
       description: '',
       is_active: true,
       has_variants: false,
@@ -525,7 +525,7 @@ const ProductForm = (() => {
       countdown_border_color: prod.countdown_border_color || '#059669',
       image_url: imgs.length > 0 ? imgs[0] : null,
       images: imgs,
-      image_aspect_ratio: prod.image_aspect_ratio || (prod.card_variant === 'C' ? '4:3' : '1:1'),
+      image_aspect_ratio: prod.image_aspect_ratio || (prod.card_variant === 'C' ? '4:3' : (prod.card_variant === 'B' ? '3:4' : '1:1')),
       description: prod.description || '',
       is_active: prod.is_active
     };
@@ -712,36 +712,36 @@ const ProductForm = (() => {
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <!-- Model 1 (Universal Standard) -->
+                      <!-- Model 1: Kartu Klasik -->
                       <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'A' ? 'text-emerald-900' : 'text-slate-800'}">Model 1 (Universal Standard)</span>
+                          <span class="font-bold text-xs ${primaryState.card_variant === 'A' ? 'text-emerald-900' : 'text-slate-800'}">Model 1: Kartu Klasik</span>
                           <input type="radio" name="card_variant_radio" value="A" ${primaryState.card_variant === 'A' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Format kartu seimbang untuk katalog ritel serbaguna dengan penonjolan ulasan kepuasan pembeli.
+                          Format seimbang dengan penonjolan ulasan kepuasan pembeli. Cocok untuk: Berbagai macam produk ritel umum.
                         </p>
                       </label>
 
-                      <!-- Model 2 (Bold & Clean) -->
+                      <!-- Model 2: Kartu Minimalis -->
                       <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'B' ? 'text-emerald-900' : 'text-slate-800'}">Model 2 (Bold & Clean)</span>
+                          <span class="font-bold text-xs ${primaryState.card_variant === 'B' ? 'text-emerald-900' : 'text-slate-800'}">Model 2: Kartu Minimalis</span>
                           <input type="radio" name="card_variant_radio" value="B" ${primaryState.card_variant === 'B' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Tata letak ringkas tanpa ornamen berlebih, mengedepankan nama penawaran dan transparansi biaya.
+                          Tata letak ringkas dan lugas tanpa ornamen berlebih Dengan Skala Gambar 3:4. Cocok Untuk: Produk Fashion, Pakaian Dan Lainnya.
                         </p>
                       </label>
 
-                      <!-- Model 3 (Informative Showcase) -->
+                      <!-- Model 3: Kartu Detail -->
                       <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'C' ? 'text-emerald-900' : 'text-slate-800'}">Model 3 (Informative Showcase)</span>
+                          <span class="font-bold text-xs ${primaryState.card_variant === 'C' ? 'text-emerald-900' : 'text-slate-800'}">Model 3: Kartu Detail</span>
                           <input type="radio" name="card_variant_radio" value="C" ${primaryState.card_variant === 'C' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Tampilan etalase modern dengan footer spesifikasi dinamis guna mempercepat keputusan transaksi pembeli.
+                          Tampilan etalase modern dengan footer spesifikasi dinamis, Untuk mempercepat keputusan pembeli. Cocok untuk: Jasa Atau Layanan spesifik.
                         </p>
                       </label>
                     </div>
@@ -819,7 +819,7 @@ const ProductForm = (() => {
                     </div>
 
                     <!-- Input 6: Tambahkan Label Khusus -->
-                    <div id="section-step1-input6-labels" class="space-y-4">
+                    <div id="section-step1-input6-labels" class="${primaryState.card_variant === 'B' ? 'hidden' : 'space-y-4'}">
                       <hr class="border-slate-100" />
                       <div class="pb-2 border-b border-slate-100 flex items-center justify-between gap-3">
                         <div>
@@ -1052,7 +1052,7 @@ const ProductForm = (() => {
                   <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" id="cfg-show-ticket-icon" class="w-3.5 h-3.5 text-emerald-600 rounded" /> Ikon Tiket
                   </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
+                  <label id="cfg-badge-container-desk" class="${primaryState.card_variant === 'B' ? 'hidden' : 'flex'} items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" id="cfg-show-badge" class="w-3.5 h-3.5 text-emerald-600 rounded" /> Label Khusus
                   </label>
                 </div>
@@ -1124,7 +1124,7 @@ const ProductForm = (() => {
                 <div class="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
                   <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
                     <input type="checkbox" id="cfg-save-as-default-toggle" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-desk">Gunakan desain ini Sebagai Default kartu (${primaryState.card_variant === 'B' ? 'Model 2' : (primaryState.card_variant === 'C' ? 'Model 3' : 'Model 1')})</span>
+                    <span id="label-save-as-default-desk">Gunakan desain ini Sebagai Default kartu (${primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik')})</span>
                   </label>
                   <button type="button" id="btn-save-card-design" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
@@ -1268,7 +1268,7 @@ const ProductForm = (() => {
                     <input type="checkbox" id="cfg-show-ticket-icon-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
                     <span>Ikon Tiket</span>
                   </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
+                  <label id="cfg-badge-container-mob" class="${primaryState.card_variant === 'B' ? 'hidden' : 'flex'} items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" id="cfg-show-badge-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
                     <span>Label Khusus</span>
                   </label>
@@ -1341,7 +1341,7 @@ const ProductForm = (() => {
                 <div class="pt-3 border-t border-slate-200 flex flex-col gap-2.5">
                   <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
                     <input type="checkbox" id="cfg-save-as-default-toggle-mob" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-mob">Gunakan desain ini Sebagai Default kartu (${primaryState.card_variant === 'B' ? 'Model 2' : (primaryState.card_variant === 'C' ? 'Model 3' : 'Model 1')})</span>
+                    <span id="label-save-as-default-mob">Gunakan desain ini Sebagai Default kartu (${primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik')})</span>
                   </label>
                   <button type="button" id="btn-save-card-design-mob" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
@@ -1544,8 +1544,13 @@ const ProductForm = (() => {
     setVal('cfg-btn-color', cfg.btn_color || '#059669');
     setVal('cfg-btn-text', cfg.btn_color || '#059669');
     
-    setChk('cfg-show-rating', cfg.show_rating !== false);
-    setChk('cfg-show-sales', cfg.show_sales !== false && cfg.show_sales_count !== false);
+    let showRatingVal = cfg.show_rating !== false;
+    let showSalesVal = cfg.show_sales !== false && cfg.show_sales_count !== false;
+    if (variantCode === 'B' && showRatingVal && showSalesVal) {
+      showSalesVal = false;
+    }
+    setChk('cfg-show-rating', showRatingVal);
+    setChk('cfg-show-sales', showSalesVal);
     setChk('cfg-show-strike', cfg.show_strikethrough_price !== false);
     setChk('cfg-show-discount-badge', cfg.show_discount_badge !== false);
     setChk('cfg-show-ticket-icon', cfg.show_ticket_icon !== false);
@@ -1735,7 +1740,7 @@ const ProductForm = (() => {
     // Update label varian di atas box
     const badgeLabel = document.getElementById('label-active-card-preview');
     if (badgeLabel) {
-      badgeLabel.textContent = variant === 'A' ? 'Versi 1: Standar Persegi' : variant === 'B' ? 'Versi 2: Teks Besar Ringkas' : 'Versi 3: Pendek Lanskap 4:3';
+      badgeLabel.textContent = variant === 'A' ? 'Model 1: Kartu Klasik' : variant === 'B' ? 'Model 2: Kartu Minimalis' : 'Model 3: Kartu Detail';
     }
 
     // 2. Hitung harga dasar dari input materials
@@ -1966,65 +1971,70 @@ const ProductForm = (() => {
     let cardHtml = '';
 
     if (variant === 'B') {
-      // CARD PRODUK VERSI 2: MINIMALIS 1 BARIS
+      // CARD PRODUK MODEL 2: KARTU MINIMALIS (3:4 PORTRAIT, 1 BARIS, TANPA COUNTDOWN/LABEL, SMART FIT)
+      const isExtremePrice = effHasDiscount && cfg.show_ticket_icon && effFinalPrice >= 10000000;
+      const isNarrowPriceRow = Boolean(
+        effHasDiscount &&
+        cfg.show_ticket_icon &&
+        (effFinalPrice >= 1000000 || (cfg.show_strike && origStrikePrice >= 1000000))
+      );
+
+      let selectedMetricHtml = '';
+      if (!isExtremePrice) {
+        if (cfg.show_rating) {
+          selectedMetricHtml = `
+            <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5 shrink-0 whitespace-nowrap">
+              ★ 4.9
+            </span>
+          `;
+        } else if (cfg.show_sales) {
+          selectedMetricHtml = `
+            <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap text-right shrink-0">
+              ${isNarrowPriceRow ? '1RB+ ter' : '1RB+ terjual'}
+            </span>
+          `;
+        }
+      }
+
       cardHtml = `
-        <div class="h-full flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group relative bg-white" style="${cardStyle}">
-          ${renderCardPhoto('aspect-square')}
+        <div class="h-full flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group relative bg-white rounded-2xl" style="${cardStyle}">
+          ${renderCardPhoto('aspect-[3/4] rounded-t-lg')}
 
           <!-- Body -->
-          <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between space-y-2">
-            <div class="space-y-1">
-              <!-- Judul Wajib 1 Baris Teks Besar Tebal -->
-              <h4 class="truncate text-sm sm:text-base font-bold text-slate-900 leading-tight" style="${titleStyle}" title="${escapeHtml(name)}">
-                ${escapeHtml(name)}
-              </h4>
+          <div class="p-2.5 sm:p-3 flex-1 flex flex-col justify-between space-y-1.5">
+            <!-- Judul Produk: 1 Baris Teks -->
+            <h4 class="truncate text-xs sm:text-sm font-semibold text-slate-800 leading-snug" style="${titleStyle}" title="${escapeHtml(name)}">
+              ${escapeHtml(name)}
+            </h4>
 
-              <!-- Rating Bintang Berdampingan Langsung dengan Countdown (Jika Aktif) atau Label Khusus (Jika Nonaktif) -->
-              <div class="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                ${cfg.show_rating ? `
-                  <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5"><i class="bi bi-star-fill text-amber-400 text-[10px]"></i> 4.9</span>
-                ` : ''}
-                ${isCountdownActive ? `
-                  <span class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 leading-none shrink-0 shadow-2xs" style="${countdownStyle}">
-                    <i data-lucide="ticket-percent" class="w-3 h-3 shrink-0" style="color: ${countdownIconColor};"></i>
-                    <span>Diskon Rp1,700RB b.... 1Hari</span>
-                  </span>
-                ` : (cfg.show_badge ? customBadges.map(b => `
-                  <span class="inline-flex items-center text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 leading-none" style="${badgeStyle}">
-                    ${escapeHtml(b)}
-                  </span>
-                `).join('') : '')}
+            <!-- Baris Harga: Normal vs Diskon -->
+            ${!effHasDiscount ? `
+              <div class="flex items-center justify-between gap-1.5 pt-1 mt-auto">
+                <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="${priceStyle}">
+                  ${formatIDR(effFinalPrice)}
+                </span>
+                ${selectedMetricHtml}
               </div>
-            </div>
-
-            <!-- Baris Harga: Harga Coret di Atas, Harga Final + Ikon Tiket Cek di Bawah (Hanya jika Diskon Aktif) -->
-            <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
-              <div class="flex flex-col justify-end min-w-0">
-                ${(effHasDiscount && cfg.show_strike) ? `
-                  <span class="text-[10px] sm:text-[11px] line-through text-slate-400 font-normal leading-none mb-1">
+            ` : `
+              <div class="pt-1 flex flex-col justify-end mt-auto space-y-0.5">
+                ${cfg.show_strike ? `
+                  <span class="text-[10px] line-through text-slate-400 font-normal leading-none">
                     ${formatIDR(origStrikePrice)}
                   </span>
                 ` : ''}
-                <div class="flex items-center gap-1 min-w-0 leading-none">
-                  <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="${priceStyle}">
-                    ${formatIDR(effFinalPrice)}
-                  </span>
-                  ${(effHasDiscount && cfg.show_ticket_icon) ? `
-                    <i data-lucide="ticket-check" class="w-3.5 h-3.5 inline shrink-0" style="color: ${cfg.price_color};"></i>
-                  ` : ''}
+                <div class="flex items-center justify-between gap-1.5 leading-none">
+                  <div class="flex items-center gap-1 min-w-0">
+                    <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="${priceStyle}">
+                      ${formatIDR(effFinalPrice)}
+                    </span>
+                    ${cfg.show_ticket_icon ? `
+                      <i data-lucide="ticket-check" class="w-3.5 h-3.5 inline shrink-0" style="color: ${cfg.price_color};"></i>
+                    ` : ''}
+                  </div>
+                  ${selectedMetricHtml}
                 </div>
               </div>
-              ${cfg.show_sales ? `
-                <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                    1RB+ terjual
-                  </span>
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                    ${(effHasDiscount && cfg.show_ticket_icon && (effFinalPrice >= 1000000 || origStrikePrice >= 1000000)) ? '1RB+ ter' : '1RB+ terjual'}
-                  </span>
-                </div>
-              ` : ''}
-            </div>
+            `}
           </div>
         </div>
       `;
@@ -2406,7 +2416,8 @@ const ProductForm = (() => {
   function renderGalleryThumbnails() {
     const images = Array.isArray(primaryState.images) ? primaryState.images : [];
     const isLandscape = primaryState.image_aspect_ratio === '4:3';
-    const aspectClass = isLandscape ? 'aspect-[4/3]' : 'aspect-square';
+    const isPortrait = primaryState.image_aspect_ratio === '3:4' || primaryState.card_variant === 'B';
+    const aspectClass = isLandscape ? 'aspect-[4/3]' : (isPortrait ? 'aspect-[3/4]' : 'aspect-square');
 
     let html = '';
 
@@ -7424,7 +7435,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           subCategoryName = subCatSelect.options[subCatSelect.selectedIndex].text;
         }
 
-        const variantName = primaryState.card_variant === 'B' ? 'Model 2 (Bold & Clean)' : (primaryState.card_variant === 'C' ? 'Model 3 (Informative Showcase)' : 'Model 1 (Universal Standard)');
+        const variantName = primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
         let startPriceText = '';
         if (materialsState.length > 0 && materialsState[0].price > 0) {
           startPriceText = formatIDR(materialsState[0].price);
@@ -7571,19 +7582,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       const text = `${cat.name || ''} ${cat.slug || ''} ${cat.description || ''}`.toLowerCase();
 
-      // 1. Ritel, Fashion, Merchandise, Kuliner/F&B -> Model 3 ('C')
-      const model3Keywords = ['ritel', 'retail', 'fashion', 'baju', 'kaos', 'pakaian', 'distro', 'hijab', 'merchandise', 'souvenir', 'kuliner', 'fnb', 'makanan', 'minuman', 'snack', 'kue', 'bakery', 'roti', 'kopi', 'coffee', 'mug', 'ganci'];
-      if (model3Keywords.some(k => text.includes(k))) {
-        return 'C';
-      }
-
-      // 2. Jasa, Layanan Profesional, Desain -> Model 2 ('B')
-      const model2Keywords = ['jasa', 'layanan', 'desain', 'design', 'profesional', 'service', 'branding', 'logo', 'kursus', 'konsultasi'];
+      // 1. Fashion, Pakaian, Apparel, Distro, Hijab -> Model 2 ('B' - Kartu Minimalis 3:4)
+      const model2Keywords = ['fashion', 'baju', 'kaos', 'pakaian', 'distro', 'hijab', 'kemeja', 'celana', 'apparel', 'outfit', 'jaket'];
       if (model2Keywords.some(k => text.includes(k))) {
         return 'B';
       }
 
-      // 3. Produk Fisik Reguler & Ritel / Default -> Model 1 ('A')
+      // 2. Jasa, Layanan Spesifik, Custom Showcase -> Model 3 ('C' - Kartu Detail)
+      const model3Keywords = ['jasa', 'layanan', 'desain', 'design', 'profesional', 'service', 'branding', 'logo', 'kursus', 'konsultasi', 'cetak', 'spesifikasi', 'custom'];
+      if (model3Keywords.some(k => text.includes(k))) {
+        return 'C';
+      }
+
+      // 3. Produk Fisik Reguler & Ritel Umum / Default -> Model 1 ('A' - Kartu Klasik)
       return 'A';
     }
 
@@ -7611,9 +7622,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
 
       const badgeLabel = document.getElementById('label-active-card-preview');
-      if (badgeLabel) badgeLabel.textContent = variantCode === 'A' ? 'Model 1' : variantCode === 'B' ? 'Model 2' : 'Model 3';
+      if (badgeLabel) badgeLabel.textContent = variantCode === 'A' ? 'Model 1: Kartu Klasik' : variantCode === 'B' ? 'Model 2: Kartu Minimalis' : 'Model 3: Kartu Detail';
       const cfgLabel = document.getElementById('label-active-card-cfg');
-      if (cfgLabel) cfgLabel.textContent = `(Model ${variantCode === 'A' ? '1' : (variantCode === 'B' ? '2' : '3')})`;
+      if (cfgLabel) cfgLabel.textContent = `(${variantCode === 'A' ? 'Model 1: Kartu Klasik' : (variantCode === 'B' ? 'Model 2: Kartu Minimalis' : 'Model 3: Kartu Detail')})`;
 
       // Toggle Footer Section Visibility (Khusus Card Model 3 / C)
       const footerSection = document.getElementById('section-card-footer-config');
@@ -7635,12 +7646,40 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         else panelF3Mob.classList.add('hidden');
       }
 
-      const autoRatio = (variantCode === 'C') ? '4:3' : '1:1';
+      // Hide / Show Label Khusus section and customization checkbox for Model 2 (B)
+      const sectionLabels = document.getElementById('section-step1-input6-labels');
+      if (sectionLabels) {
+        if (variantCode === 'B') sectionLabels.classList.add('hidden');
+        else sectionLabels.classList.remove('hidden');
+      }
+      const badgeContainerDesk = document.getElementById('cfg-badge-container-desk');
+      if (badgeContainerDesk) {
+        if (variantCode === 'B') badgeContainerDesk.classList.add('hidden');
+        else badgeContainerDesk.classList.remove('hidden');
+      }
+      const badgeContainerMob = document.getElementById('cfg-badge-container-mob');
+      if (badgeContainerMob) {
+        if (variantCode === 'B') badgeContainerMob.classList.add('hidden');
+        else badgeContainerMob.classList.remove('hidden');
+      }
+
+      // Enforce mutual exclusivity for Model 2: Rating vs Sales
+      if (variantCode === 'B') {
+        const ratingEl = document.getElementById('cfg-show-rating');
+        const salesEl = document.getElementById('cfg-show-sales');
+        if (ratingEl?.checked && salesEl?.checked) {
+          salesEl.checked = false;
+          const salesElMob = document.getElementById('cfg-show-sales-mob');
+          if (salesElMob) salesElMob.checked = false;
+        }
+      }
+
+      const autoRatio = (variantCode === 'C') ? '4:3' : (variantCode === 'B' ? '3:4' : '1:1');
       setPhotoAspectRatio(autoRatio, false);
 
       const ratioText = document.getElementById('gallery-ratio-text');
       if (ratioText) {
-        ratioText.textContent = autoRatio === '4:3' ? '4:3 (Lanskap)' : '1:1 (Persegi)';
+        ratioText.textContent = autoRatio === '4:3' ? '4:3 (Lanskap)' : (autoRatio === '3:4' ? '3:4 (Potrait)' : '1:1 (Persegi)');
       }
 
       updateTitleRecommendationBadge(variantCode);
@@ -7649,7 +7688,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // Update label dinamis default kartu di desktop & mobile
       const lblSaveDesk = document.getElementById('label-save-as-default-desk');
       const lblSaveMob = document.getElementById('label-save-as-default-mob');
-      const modelNameText = variantCode === 'B' ? 'Model 2' : (variantCode === 'C' ? 'Model 3' : 'Model 1');
+      const modelNameText = variantCode === 'B' ? 'Model 2: Kartu Minimalis' : (variantCode === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
       if (lblSaveDesk) lblSaveDesk.textContent = `Gunakan desain ini Sebagai Default kartu (${modelNameText})`;
       if (lblSaveMob) lblSaveMob.textContent = `Gunakan desain ini Sebagai Default kartu (${modelNameText})`;
 
@@ -7789,6 +7828,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (el) {
         el.addEventListener('change', (e) => {
           if (elMob) elMob.checked = e.target.checked;
+          if (primaryState.card_variant === 'B') {
+            if (feat === 'show-rating' && e.target.checked) {
+              const salesEl = document.getElementById('cfg-show-sales');
+              const salesElMob = document.getElementById('cfg-show-sales-mob');
+              if (salesEl) salesEl.checked = false;
+              if (salesElMob) salesElMob.checked = false;
+            } else if (feat === 'show-sales' && e.target.checked) {
+              const ratingEl = document.getElementById('cfg-show-rating');
+              const ratingElMob = document.getElementById('cfg-show-rating-mob');
+              if (ratingEl) ratingEl.checked = false;
+              if (ratingElMob) ratingElMob.checked = false;
+            }
+          }
           if (feat === 'show-badge') {
             const bA = document.getElementById('cfg-show-badge-blok-a');
             if (bA) bA.checked = e.target.checked;
@@ -7801,6 +7853,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (elMob) {
         elMob.addEventListener('change', (e) => {
           if (el) el.checked = e.target.checked;
+          if (primaryState.card_variant === 'B') {
+            if (feat === 'show-rating' && e.target.checked) {
+              const salesEl = document.getElementById('cfg-show-sales');
+              const salesElMob = document.getElementById('cfg-show-sales-mob');
+              if (salesEl) salesEl.checked = false;
+              if (salesElMob) salesElMob.checked = false;
+            } else if (feat === 'show-sales' && e.target.checked) {
+              const ratingEl = document.getElementById('cfg-show-rating');
+              const ratingElMob = document.getElementById('cfg-show-rating-mob');
+              if (ratingEl) ratingEl.checked = false;
+              if (ratingElMob) ratingElMob.checked = false;
+            }
+          }
           if (feat === 'show-badge') {
             const bA = document.getElementById('cfg-show-badge-blok-a');
             if (bA) bA.checked = e.target.checked;
@@ -7850,7 +7915,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const btnSaveCardMob = document.getElementById('btn-save-card-design-mob');
 
     function setCardCustomizationView(isCustomMode) {
-      const modelName = primaryState.card_variant === 'B' ? 'Model 2' : (primaryState.card_variant === 'C' ? 'Model 3' : 'Model 1');
+      const modelName = primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
       if (isCustomMode) {
         // [Ubah Kartu]: Menampilkan panel kustomisasi warna/elemen
         panelCustDesk?.classList.remove('hidden');
@@ -7937,7 +8002,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (saveDefToggle) saveDefToggle.checked = false;
       if (saveDefToggleMob) saveDefToggleMob.checked = false;
       if (typeof App !== 'undefined' && App.showToast) {
-        const mLabel = primaryState.card_variant === 'B' ? 'Model 2' : (primaryState.card_variant === 'C' ? 'Model 3' : 'Model 1');
+        const mLabel = primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
         App.showToast(`Desain kartu ${mLabel} berhasil disimpan!`, 'success');
       }
       updateProductCardLivePreview();
