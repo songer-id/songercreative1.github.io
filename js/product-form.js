@@ -2819,31 +2819,48 @@ const ProductForm = (() => {
 
               <hr class="border-slate-100" />
 
-              <!-- Maksimal Jumlah Pembelian -->
+              <!-- Maksimal Jumlah Pembelian (Combobox: Nilai Rekomendasi + Input Manual) -->
               <div class="space-y-3">
                 <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
-                  <label for="select-max-order-type" class="block text-xs font-bold text-slate-800">
+                  <label for="input-normal-max-order" class="block text-xs font-bold text-slate-800">
                     Maksimal Jumlah Pembelian
                   </label>
                   <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
                     <i class="bi bi-question-circle text-xs"></i>
                     <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan atau per periode.
+                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan. Pilih 'Tanpa Max Order' untuk pembelian tanpa batas.
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <select id="select-max-order-type" class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white">
-                    <option value="unlimited" ${primaryState.max_order_type === 'unlimited' ? 'selected' : ''}>Tanpa Batas</option>
-                    <option value="per_order" ${primaryState.max_order_type === 'per_order' ? 'selected' : ''}>Per pesanan</option>
-                    <option value="per_period" ${primaryState.max_order_type === 'per_period' ? 'selected' : ''}>Per Periode</option>
-                  </select>
+                <div class="custom-combobox-wrapper relative w-full sm:w-64">
+                  <input 
+                    type="text" 
+                    id="input-normal-max-order" 
+                    class="custom-combobox-input w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white text-slate-800" 
+                    placeholder="Ketik atau pilih" 
+                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited') ? 'Tanpa Max Order' : primaryState.max_order}" 
+                    autocomplete="off" 
+                  />
+                  <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
+                    <div class="max-h-48 overflow-y-auto">
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Tanpa Max Order">
+                        <span>Tanpa Max Order</span>
+                      </div>
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="10">
+                        <span>10</span>
+                      </div>
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="50">
+                        <span>50</span>
+                      </div>
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="100">
+                        <span>100</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <div id="max-order-conditional-wrapper">
-                  ${renderMaxOrderSection()}
-                </div>
+                <span class="text-[10px] text-slate-400 block">Ketik angka maks. batas pesanan atau pilih "Tanpa Max Order"</span>
               </div>
 
               <hr class="border-slate-100" />
@@ -2865,7 +2882,20 @@ const ProductForm = (() => {
                 </div>
 
                 <div id="wholesale-table-wrapper" class="${primaryState.has_wholesale ? 'block' : 'hidden'} pt-1 space-y-3">
-                  ${renderWholesaleTable()}
+                  <!-- Mode Grosir: Normal vs Bertingkat (Inline) -->
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
+                      <input type="radio" name="inline_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
+                      <span>Mode Normal</span>
+                    </label>
+                    <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode === 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
+                      <input type="radio" name="inline_wholesale_mode" value="tiered" ${primaryState.wholesale_mode === 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
+                      <span>Mode Bertingkat</span>
+                    </label>
+                  </div>
+                  <div id="inline-wholesale-body" class="space-y-3">
+                    ${renderWholesaleTable()}
+                  </div>
                 </div>
               </div>
 
@@ -3241,6 +3271,73 @@ const ProductForm = (() => {
     `;
   }
 
+  // Rekomendasi Nama Kelompok Variasi (Persis Gambar 1)
+  function getVariationLabelRecommendations(tier) {
+    if (tier === 'tier1') {
+      return ['Bahan Utama', 'Ukuran', 'Warna', 'Jenis'];
+    }
+    if (tier === 'extra_3') {
+      return ['Layanan Prioritas', 'Langsung Proses', 'Packaging Tambahan'];
+    }
+    return ['Finishing', 'Ukuran', 'Warna', 'Toping'];
+  }
+
+  // Helper Binding Custom Combobox Popover (Rekomendasi + Input Manual)
+  function bindCustomComboboxes(root = document) {
+    if (!root) return;
+    root.querySelectorAll('.custom-combobox-wrapper').forEach(wrapper => {
+      const input = wrapper.querySelector('.custom-combobox-input');
+      const popover = wrapper.querySelector('.custom-combobox-popover');
+      if (!input || !popover) return;
+
+      const show = () => {
+        document.querySelectorAll('.custom-combobox-popover').forEach(p => {
+          if (p !== popover) p.classList.add('hidden');
+        });
+        popover.classList.remove('hidden');
+      };
+
+      input.onfocus = show;
+      input.onclick = (e) => {
+        e.stopPropagation();
+        show();
+      };
+
+      input.oninput = (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        popover.querySelectorAll('.combobox-item').forEach(item => {
+          const val = (item.getAttribute('data-value') || '').toLowerCase();
+          if (!q || val.includes(q)) {
+            item.classList.remove('hidden');
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+        popover.classList.remove('hidden');
+      };
+
+      popover.querySelectorAll('.combobox-item').forEach(item => {
+        item.onclick = (e) => {
+          e.stopPropagation();
+          const chosenVal = item.getAttribute('data-value');
+          input.value = chosenVal;
+          popover.classList.add('hidden');
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+      });
+    });
+
+    if (!window._comboboxGlobalClickListener) {
+      window._comboboxGlobalClickListener = true;
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-combobox-wrapper')) {
+          document.querySelectorAll('.custom-combobox-popover').forEach(p => p.classList.add('hidden'));
+        }
+      });
+    }
+  }
+
   function renderPricingModelSection() {
     const model = primaryState.pricing_model || 'normal';
 
@@ -3265,15 +3362,28 @@ const ProductForm = (() => {
             <div class="space-y-2 pr-8 sm:pr-0">
               <div class="text-base font-bold text-slate-900">${title}</div>
               <div class="flex items-center gap-2 flex-wrap">
-                <input 
-                  type="text" 
-                  id="${inputLabelId}" 
-                  data-tier="${tier}" 
-                  data-label-key="${labelKey}" 
-                  value="${escapeHtml(labelVal)}" 
-                  placeholder="${placeholderLabel}" 
-                  class="input-variation-label w-full sm:w-64 px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-emerald-500 shadow-2xs" 
-                />
+                <div class="custom-combobox-wrapper relative w-full sm:w-64">
+                  <input 
+                    type="text" 
+                    id="${inputLabelId}" 
+                    data-tier="${tier}" 
+                    data-label-key="${labelKey}" 
+                    value="${escapeHtml(labelVal)}" 
+                    placeholder="${placeholderLabel}" 
+                    autocomplete="off" 
+                    class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-emerald-500 shadow-2xs" 
+                  />
+                  <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
+                    <div class="max-h-48 overflow-y-auto">
+                      ${getVariationLabelRecommendations(tier).map(rec => `
+                        <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
+                          <span>${escapeHtml(rec)}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
                 <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" title="${escapeHtml(tooltipText)}">
                   <i class="bi bi-question-circle-fill text-sm"></i>
                   <div class="hidden group-hover:block absolute left-6 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
@@ -3344,15 +3454,28 @@ const ProductForm = (() => {
             <div class="space-y-2 pr-8 sm:pr-0">
               <div class="text-base font-bold text-slate-900">Layanan Extras</div>
               <div class="flex items-center gap-2 flex-wrap">
-                <input 
-                  type="text" 
-                  id="input-var-label-extra3" 
-                  data-tier="extra_3" 
-                  data-label-key="label_extra_3" 
-                  value="${escapeHtml(labelVal)}" 
-                  placeholder="Cth. Langsung Proses, Dll" 
-                  class="input-variation-label w-full sm:w-64 px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-emerald-500 shadow-2xs" 
-                />
+                <div class="custom-combobox-wrapper relative w-full sm:w-64">
+                  <input 
+                    type="text" 
+                    id="input-var-label-extra3" 
+                    data-tier="extra_3" 
+                    data-label-key="label_extra_3" 
+                    value="${escapeHtml(labelVal)}" 
+                    placeholder="Cth. Langsung Proses, Dll" 
+                    autocomplete="off" 
+                    class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-emerald-500 shadow-2xs" 
+                  />
+                  <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
+                    <div class="max-h-48 overflow-y-auto">
+                      ${getVariationLabelRecommendations('extra_3').map(rec => `
+                        <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
+                          <span>${escapeHtml(rec)}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
                 <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" title="Ubah nama label layanan ekstra di luar perhitungan qty. Contoh: Langsung Proses, Layanan Prioritas, Packaging Kayu">
                   <i class="bi bi-question-circle-fill text-sm"></i>
                   <div class="hidden group-hover:block absolute left-6 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
@@ -3557,6 +3680,25 @@ const ProductForm = (() => {
                   ${calculateMarginBadge(firstMat.price || 0, firstMat.cost_price || 0)}
                 </div>
               </div>
+            </div>
+
+            <!-- Area Layanan Extra (Produk Tunggal tanpa Variasi) -->
+            <div class="space-y-4 pt-2">
+              ${!primaryState.has_extra_service ? `
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-slate-100 p-2.5 rounded-lg border border-slate-200">
+                  <button type="button" id="btn-trigger-extra-service-normal" class="btn-trigger-extra-action px-3.5 py-1.5 rounded-md bg-[#33b589] hover:bg-emerald-600 text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs">
+                    <i class="bi bi-plus-lg text-xs"></i>
+                    <span>Layanan Extra</span>
+                  </button>
+                  <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                    <i class="bi bi-exclamation-circle-fill text-slate-400 text-xs shrink-0"></i>
+                    <span>Terhitung Setelah Jumlah Qty Cth. Layanan Prioritas, Langsung Di proses Dll</span>
+                  </div>
+                </div>
+              ` : `
+                <!-- Kartu Layanan Extras (Jika Aktif di Produk Tunggal) -->
+                ${renderExtraServiceCard()}
+              `}
             </div>
           ` : `
             <!-- Mode Variasi Bertingkat (Variasi 1 s/d 4 + Layanan Ekstra) -->
@@ -3895,15 +4037,35 @@ const ProductForm = (() => {
             />
           </td>
 
-          <!-- Kolom Max. Order -->
-          <td class="p-3 align-middle text-center min-w-[110px]">
-            <input 
-              type="text" 
-              class="combo-max-order-input w-24 px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
-              data-mat-id="${mat.id}" 
-              value="${maxOrderVal}" 
-              placeholder="Unlimited"
-            />
+          <!-- Kolom Max. Order (Custom Combobox Popover) -->
+          <td class="p-3 align-middle text-center min-w-[125px]">
+            <div class="custom-combobox-wrapper relative inline-block w-28 sm:w-32">
+              <input 
+                type="text" 
+                class="combo-max-order-input custom-combobox-input w-full px-2.5 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
+                data-mat-id="${mat.id}" 
+                value="${(mat.max_order === null || mat.max_order === 0 || mat.max_order === undefined || mat.max_order === '' || mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Max Order') ? 'Tanpa Max Order' : mat.max_order}" 
+                placeholder="Ketik atau pilih" 
+                autocomplete="off" 
+              />
+              <div class="custom-combobox-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-44 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
+                <div class="max-h-48 overflow-y-auto">
+                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Tanpa Max Order">
+                    <span>Tanpa Max Order</span>
+                  </div>
+                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="10">
+                    <span>10</span>
+                  </div>
+                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="50">
+                    <span>50</span>
+                  </div>
+                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="100">
+                    <span>100</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </td>
 
           <!-- Kolom Harga Grosir -->
@@ -4344,13 +4506,14 @@ const ProductForm = (() => {
 
       return `
         <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${mat.id}" data-tier="tier1" data-idx="${idx}">
-          <div class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
+          <div style="border-radius: 0px !important;" class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
             <!-- Kolom 1: Nama Opsi -->
             <input 
               type="text" 
               data-field="name" 
               value="${escapeHtml(mat.name || '')}" 
               placeholder="${placeholderName}" 
+              style="border-radius: 0px !important;" 
               class="mat-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
             />
             <!-- Kolom 2: Keterangan -->
@@ -4359,6 +4522,7 @@ const ProductForm = (() => {
               data-field="description" 
               value="${escapeHtml(mat.description || '')}" 
               placeholder="Keterangan" 
+              style="border-radius: 0px !important;" 
               class="mat-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
             />
             <!-- Kolom 3: Harga Jual -->
@@ -4369,7 +4533,8 @@ const ProductForm = (() => {
               value="${priceVal}" 
               placeholder="Harga Jual" 
               ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-              class="mat-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              style="border-radius: 0px !important;" 
+              class="mat-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
             <!-- Kolom 4: Modal/Hpp -->
             <input 
@@ -4379,7 +4544,8 @@ const ProductForm = (() => {
               value="${costVal}" 
               placeholder="Modal/Hpp" 
               ${isSameCost && idx > 0 ? 'readonly' : ''} 
-              class="mat-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              style="border-radius: 0px !important;" 
+              class="mat-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
             <!-- Kolom 5: Stok -->
             <input 
@@ -4389,30 +4555,13 @@ const ProductForm = (() => {
               value="${stockVal}" 
               placeholder="Stok" 
               ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-              class="mat-input col-span-2 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              style="border-radius: 0px !important;" 
+              class="mat-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
             />
           </div>
 
-          <!-- Tombol Aksi di Luar Kotak: Panah Urutan Atas/Bawah & Hapus -->
-          <div class="flex items-center justify-end sm:justify-start gap-1 shrink-0 self-end sm:self-center">
-            <button 
-              type="button" 
-              class="btn-swap-mat btn-swap-up p-1.5 text-slate-400 hover:text-slate-700 transition cursor-pointer text-xs leading-none" 
-              data-tier="tier1" 
-              data-id="${mat.id}" 
-              data-idx="${idx}" 
-              data-dir="up" 
-              title="Pindah Ke Atas"
-            >▲</button>
-            <button 
-              type="button" 
-              class="btn-swap-mat btn-swap-down p-1.5 text-slate-400 hover:text-slate-700 transition cursor-pointer text-xs leading-none" 
-              data-tier="tier1" 
-              data-id="${mat.id}" 
-              data-idx="${idx}" 
-              data-dir="down" 
-              title="Pindah Ke Bawah"
-            >▼</button>
+          <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
+          <div class="flex items-center justify-end sm:justify-start gap-2 sm:gap-2.5 shrink-0 self-end sm:self-center">
             <button 
               type="button" 
               class="btn-delete-mat p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
@@ -4421,6 +4570,16 @@ const ProductForm = (() => {
               ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
             >
               <i class="bi bi-trash3-fill"></i>
+            </button>
+            <button 
+              type="button" 
+              class="btn-move-row btn-move-mat p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
+              data-tier="tier1" 
+              data-id="${mat.id}" 
+              data-idx="${idx}" 
+              title="Geser / Pindah Urutan Opsi"
+            >
+              <i class="bi bi-arrows-move"></i>
             </button>
           </div>
         </div>
@@ -4450,9 +4609,9 @@ const ProductForm = (() => {
 
         return `
           <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${fin.id}" data-tier="${tier}" data-idx="${idx}">
-            <div class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
+            <div style="border-radius: 0px !important;" class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
               <!-- Bagian 1: Kotak Upload Gambar Kecil -->
-              <div class="col-span-2 sm:col-span-1 flex items-center justify-center p-1 bg-slate-50">
+              <div style="border-radius: 0px !important;" class="extra-img-cell col-span-2 sm:col-span-1 flex items-center justify-center p-1 bg-slate-50">
                 <input type="file" accept="image/*" class="hidden extra-file-input" data-id="${fin.id}" id="extra-file-${fin.id}" />
                 <label for="extra-file-${fin.id}" class="w-8 h-8 rounded border border-slate-300 flex items-center justify-center cursor-pointer overflow-hidden hover:border-emerald-500 text-emerald-600 bg-white" title="Unggah Foto Opsi">
                   ${fin.image_url ? `<img src="${fin.image_url}" class="w-full h-full object-cover" />` : `<i class="bi bi-image text-sm"></i>`}
@@ -4465,14 +4624,15 @@ const ProductForm = (() => {
                 data-field="name" 
                 value="${escapeHtml(fin.name || '')}" 
                 placeholder="${placeholderName}" 
+                style="border-radius: 0px !important;" 
                 class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
               />
 
-              <!-- Bagian 3: Dropdown Tipe Interaksi (Chekclis / Qty / Langsung Proses) -->
-              <select data-field="extra_type" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs bg-white outline-none focus:bg-emerald-50 font-medium text-slate-700 rounded-none">
-                <option value="checklist" ${extraType === 'checklist' ? 'selected' : ''}>Chekclis</option>
-                <option value="qty" ${extraType === 'qty' ? 'selected' : ''}>Qty</option>
-                <option value="direct" ${extraType === 'direct' ? 'selected' : ''}>Langsung Proses</option>
+              <!-- Bagian 3: Dropdown Tipe Input (Pilihan Ganda vs Input Qty) -->
+              <select data-field="extra_type" style="border-radius: 0px !important;" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs bg-white outline-none focus:bg-emerald-50 font-medium text-slate-700 rounded-none">
+                <option value="" disabled ${!extraType ? 'selected' : ''}>Tipe Input</option>
+                <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' ? 'selected' : ''}>Pilihan Ganda</option>
+                <option value="qty" ${extraType === 'qty' ? 'selected' : ''}>Input Qty</option>
               </select>
 
               <!-- Bagian 4: Harga Satuan -->
@@ -4483,7 +4643,8 @@ const ProductForm = (() => {
                 value="${priceVal}" 
                 placeholder="Harga Satuan" 
                 ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                style="border-radius: 0px !important;" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
 
               <!-- Bagian 5: Modal/Hpp -->
@@ -4494,7 +4655,8 @@ const ProductForm = (() => {
                 value="${costVal}" 
                 placeholder="Modal/Hpp" 
                 ${isSameCost && idx > 0 ? 'readonly' : ''} 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                style="border-radius: 0px !important;" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
 
               <!-- Bagian 6: Stok -->
@@ -4505,30 +4667,13 @@ const ProductForm = (() => {
                 value="${stockVal}" 
                 placeholder="Stok" 
                 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+                style="border-radius: 0px !important;" 
+                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
               />
             </div>
 
-            <!-- Tombol Aksi di Luar Kotak -->
-            <div class="flex items-center justify-end sm:justify-start gap-1 shrink-0 self-end sm:self-center">
-              <button 
-                type="button" 
-                class="btn-swap-fin btn-swap-up p-1.5 text-slate-400 hover:text-slate-700 transition cursor-pointer text-xs leading-none" 
-                data-tier="${tier}" 
-                data-id="${fin.id}" 
-                data-idx="${idx}" 
-                data-dir="up" 
-                title="Pindah Ke Atas"
-              >▲</button>
-              <button 
-                type="button" 
-                class="btn-swap-fin btn-swap-down p-1.5 text-slate-400 hover:text-slate-700 transition cursor-pointer text-xs leading-none" 
-                data-tier="${tier}" 
-                data-id="${fin.id}" 
-                data-idx="${idx}" 
-                data-dir="down" 
-                title="Pindah Ke Bawah"
-              >▼</button>
+            <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
+            <div class="flex items-center justify-end sm:justify-start gap-2 sm:gap-2.5 shrink-0 self-end sm:self-center">
               <button 
                 type="button" 
                 class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
@@ -4537,6 +4682,16 @@ const ProductForm = (() => {
                 ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
               >
                 <i class="bi bi-trash3-fill"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
+                data-tier="${tier}" 
+                data-id="${fin.id}" 
+                data-idx="${idx}" 
+                title="Geser / Pindah Urutan Opsi"
+              >
+                <i class="bi bi-arrows-move"></i>
               </button>
             </div>
           </div>
@@ -4560,6 +4715,7 @@ const ProductForm = (() => {
               data-field="name" 
               value="${escapeHtml(fin.name || '')}" 
               placeholder="${placeholderName}" 
+              style="border-radius: 0px !important;" 
               class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
             />
             <!-- Kolom 2: Keterangan -->
@@ -4568,6 +4724,7 @@ const ProductForm = (() => {
               data-field="description" 
               value="${escapeHtml(fin.description || '')}" 
               placeholder="Keterangan" 
+              style="border-radius: 0px !important;" 
               class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
             />
             <!-- Kolom 3: Harga Jual -->
@@ -4578,7 +4735,8 @@ const ProductForm = (() => {
               value="${priceVal}" 
               placeholder="Harga Jual" 
               ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-              class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              style="border-radius: 0px !important;" 
+              class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
             <!-- Kolom 4: Modal/Hpp -->
             <input 
@@ -4588,7 +4746,8 @@ const ProductForm = (() => {
               value="${costVal}" 
               placeholder="Modal/Hpp" 
               ${isSameCost && idx > 0 ? 'readonly' : ''} 
-              class="fin-input col-span-1 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              style="border-radius: 0px !important;" 
+              class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
             />
             <!-- Kolom 5: Stok -->
             <input 
@@ -4598,30 +4757,13 @@ const ProductForm = (() => {
               value="${stockVal}" 
               placeholder="Stok" 
               ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-              class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-3 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              style="border-radius: 0px !important;" 
+              class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
             />
           </div>
 
-          <!-- Tombol Aksi di Luar Kotak: Panah Urutan Atas/Bawah & Hapus -->
-          <div class="flex items-center justify-end sm:justify-start gap-1 shrink-0 self-end sm:self-center">
-            <button 
-              type="button" 
-              class="btn-swap-fin btn-swap-up p-1.5 text-slate-400 hover:text-slate-700 transition cursor-pointer text-xs leading-none" 
-              data-tier="${tier}" 
-              data-id="${fin.id}" 
-              data-idx="${idx}" 
-              data-dir="up" 
-              title="Pindah Ke Atas"
-            >▲</button>
-            <button 
-              type="button" 
-              class="btn-swap-fin btn-swap-down p-1.5 text-slate-400 hover:text-slate-700 transition cursor-pointer text-xs leading-none" 
-              data-tier="${tier}" 
-              data-id="${fin.id}" 
-              data-idx="${idx}" 
-              data-dir="down" 
-              title="Pindah Ke Bawah"
-            >▼</button>
+          <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
+          <div class="flex items-center justify-end sm:justify-start gap-2 sm:gap-2.5 shrink-0 self-end sm:self-center">
             <button 
               type="button" 
               class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
@@ -4630,6 +4772,16 @@ const ProductForm = (() => {
               ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
             >
               <i class="bi bi-trash3-fill"></i>
+            </button>
+            <button 
+              type="button" 
+              class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
+              data-tier="${tier}" 
+              data-id="${fin.id}" 
+              data-idx="${idx}" 
+              title="Geser / Pindah Urutan Opsi"
+            >
+              <i class="bi bi-arrows-move"></i>
             </button>
           </div>
         </div>
@@ -5274,16 +5426,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    // Pemicu Layanan Extras
-    const btnTriggerExtra = document.getElementById('btn-trigger-extra-service');
-    if (btnTriggerExtra) {
-      btnTriggerExtra.onclick = () => {
+    // Pemicu Layanan Extras (Berlaku untuk Mode Variasi maupun Mode Normal / Produk Tunggal)
+    const triggerExtraBtns = document.querySelectorAll('#btn-trigger-extra-service, #btn-trigger-extra-service-normal, .btn-trigger-extra-action');
+    triggerExtraBtns.forEach(btn => {
+      btn.onclick = () => {
         primaryState.has_extra_service = true;
         primaryState.has_layer_5 = true;
         if (!finishingsState.extra_3 || finishingsState.extra_3.length < 2) {
           finishingsState.extra_3 = [
-            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: 'checklist' },
-            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: 'qty' }
+            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: '' },
+            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: '' }
           ];
         }
         const container = document.getElementById('pricing-model-interactive-container');
@@ -5292,7 +5444,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         updateProductCardLivePreview();
         if (window.lucide) window.lucide.createIcons();
       };
-    }
+    });
 
     // Tutup Layanan Extras
     const btnCloseExtra = document.getElementById('btn-close-extra-service');
@@ -5455,14 +5607,48 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // Tukar Urutan (Swap Up / Swap Down)
-      container.querySelectorAll('.btn-swap-mat').forEach(btn => {
+      // Geser / Drag & Drop dan Tukar Urutan Baris Variasi 1
+      let draggedMatIdx = null;
+      container.querySelectorAll('.variation-option-row').forEach(row => {
+        row.setAttribute('draggable', 'true');
+        row.ondragstart = (e) => {
+          draggedMatIdx = parseInt(row.getAttribute('data-idx'));
+          e.dataTransfer.effectAllowed = 'move';
+          row.classList.add('opacity-50');
+        };
+        row.ondragend = () => {
+          row.classList.remove('opacity-50');
+          container.querySelectorAll('.variation-option-row').forEach(r => r.classList.remove('ring-2', 'ring-emerald-500'));
+        };
+        row.ondragover = (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          row.classList.add('ring-2', 'ring-emerald-500');
+        };
+        row.ondragleave = () => {
+          row.classList.remove('ring-2', 'ring-emerald-500');
+        };
+        row.ondrop = (e) => {
+          e.preventDefault();
+          const targetIdx = parseInt(row.getAttribute('data-idx'));
+          if (draggedMatIdx !== null && !isNaN(targetIdx) && draggedMatIdx !== targetIdx) {
+            const item = materialsState.splice(draggedMatIdx, 1)[0];
+            materialsState.splice(targetIdx, 0, item);
+            container.innerHTML = renderMaterialsRows(false);
+            bindMaterialRowEvents();
+            refreshCombinationMatrixTable();
+            updateProductCardLivePreview();
+          }
+        };
+      });
+
+      // Klik Tombol Geser (bi-arrows-move) untuk Tukar Urutan (Fallback Mobile)
+      container.querySelectorAll('.btn-move-mat').forEach(btn => {
         btn.onclick = (e) => {
-          const dir = btn.getAttribute('data-dir');
+          e.stopPropagation();
           const idx = parseInt(btn.getAttribute('data-idx'));
           if (isNaN(idx) || materialsState.length <= 1) return;
-          const targetIdx = dir === 'up' ? idx - 1 : idx + 1;
-          if (targetIdx < 0 || targetIdx >= materialsState.length) return;
+          const targetIdx = idx === materialsState.length - 1 ? idx - 1 : idx + 1;
           const temp = materialsState[idx];
           materialsState[idx] = materialsState[targetIdx];
           materialsState[targetIdx] = temp;
@@ -5588,15 +5774,49 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // Tukar Urutan (Swap Up / Swap Down)
-      container.querySelectorAll('.btn-swap-fin').forEach(btn => {
+      // Geser / Drag & Drop dan Tukar Urutan Baris Finishing / Extras
+      let draggedFinIdx = null;
+      container.querySelectorAll('.variation-option-row').forEach(row => {
+        row.setAttribute('draggable', 'true');
+        row.ondragstart = (e) => {
+          draggedFinIdx = parseInt(row.getAttribute('data-idx'));
+          e.dataTransfer.effectAllowed = 'move';
+          row.classList.add('opacity-50');
+        };
+        row.ondragend = () => {
+          row.classList.remove('opacity-50');
+          container.querySelectorAll('.variation-option-row').forEach(r => r.classList.remove('ring-2', 'ring-emerald-500'));
+        };
+        row.ondragover = (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          row.classList.add('ring-2', 'ring-emerald-500');
+        };
+        row.ondragleave = () => {
+          row.classList.remove('ring-2', 'ring-emerald-500');
+        };
+        row.ondrop = (e) => {
+          e.preventDefault();
+          const targetIdx = parseInt(row.getAttribute('data-idx'));
+          const currentList = finishingsState[tier];
+          if (currentList && draggedFinIdx !== null && !isNaN(targetIdx) && draggedFinIdx !== targetIdx) {
+            const item = currentList.splice(draggedFinIdx, 1)[0];
+            currentList.splice(targetIdx, 0, item);
+            container.innerHTML = renderFinishingRows(tier);
+            bindFinishingTierRows(tier);
+            updateProductCardLivePreview();
+          }
+        };
+      });
+
+      // Klik Tombol Geser (bi-arrows-move) untuk Tukar Urutan (Fallback Mobile)
+      container.querySelectorAll('.btn-move-fin').forEach(btn => {
         btn.onclick = (e) => {
-          const dir = btn.getAttribute('data-dir');
+          e.stopPropagation();
           const idx = parseInt(btn.getAttribute('data-idx'));
           const currentList = finishingsState[tier];
           if (!currentList || currentList.length <= 1 || isNaN(idx)) return;
-          const targetIdx = dir === 'up' ? idx - 1 : idx + 1;
-          if (targetIdx < 0 || targetIdx >= currentList.length) return;
+          const targetIdx = idx === currentList.length - 1 ? idx - 1 : idx + 1;
           const temp = currentList[idx];
           currentList[idx] = currentList[targetIdx];
           currentList[targetIdx] = temp;
@@ -5629,7 +5849,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       // Input Per Baris (Auto-Append & Ketentuan Tambahan Real-Time)
       container.querySelectorAll('.fin-input').forEach(inp => {
-        inp.oninput = (e) => {
+        inp.onchange = inp.oninput = (e) => {
           const row = e.target.closest('.variation-option-row');
           if (!row) return;
           const id = row.getAttribute('data-id');
@@ -5680,7 +5900,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               price: primaryState.same_price_tiers?.[tier] ? (currentList[0]?.price ?? '') : '',
               cost_price: primaryState.same_cost_tiers?.[tier] ? (currentList[0]?.cost_price ?? '') : '',
               stock: primaryState.stock_mode_tiers?.[tier] === 'unlimited' ? null : (primaryState.stock_mode_tiers?.[tier] === 'same' ? (currentList[0]?.stock ?? '') : ''),
-              extra_type: tier === 'extra_3' ? 'checklist' : undefined,
+              extra_type: tier === 'extra_3' ? '' : undefined,
               parent_id: ''
             };
             currentList.push(newFin);
@@ -5743,13 +5963,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // 3. Max. Order per Baris (Mendukung 'Unlimited')
+      // 3. Max. Order per Baris (Combobox: Mendukung 'Tanpa Max Order' / Angka)
       document.querySelectorAll('.combo-max-order-input').forEach(inp => {
         inp.oninput = (e) => {
           const matId = inp.getAttribute('data-mat-id');
           const item = materialsState.find(m => m.id === matId);
-          const val = e.target.value.trim();
-          if (item) item.max_order = (val.toLowerCase() === 'unlimited' || val === '') ? null : (parseInt(val) || null);
+          if (item) {
+            const raw = e.target.value.trim();
+            if (!raw || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
+              item.max_order = null;
+            } else {
+              item.max_order = parseInt(raw) || null;
+            }
+          }
+        };
+        inp.onblur = (e) => {
+          const matId = inp.getAttribute('data-mat-id');
+          const item = materialsState.find(m => m.id === matId);
+          if (item && (!item.max_order || item.max_order === 0)) {
+            inp.value = 'Tanpa Max Order';
+          }
         };
       });
 
@@ -6156,7 +6389,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    // Maksimal Pembelian
+    // Maksimal Pembelian (Combobox Normal Mode)
+    const normalMaxInp = document.getElementById('input-normal-max-order');
+    if (normalMaxInp) {
+      normalMaxInp.oninput = (e) => {
+        const raw = e.target.value.trim();
+        if (!raw || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
+          primaryState.max_order = null;
+          primaryState.max_order_qty = null;
+          primaryState.max_order_type = 'unlimited';
+        } else {
+          const num = parseInt(raw) || null;
+          primaryState.max_order = num;
+          primaryState.max_order_qty = num;
+          primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+        }
+      };
+      normalMaxInp.onblur = (e) => {
+        if (!primaryState.max_order || primaryState.max_order === 0) {
+          normalMaxInp.value = 'Tanpa Max Order';
+        }
+      };
+    }
+
     const selMaxOrderType = document.getElementById('select-max-order-type');
     if (selMaxOrderType) {
       selMaxOrderType.onchange = e => {
@@ -6166,6 +6421,212 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         bindStep2InteractiveEvents();
       };
     }
+
+    // Helper Binding Harga Grosir Interaktif (Berfungsi untuk Inline & Modal)
+    function bindInlineWholesaleEvents() {
+      const wholesaleWrap = document.getElementById('wholesale-table-wrapper');
+      if (!wholesaleWrap) return;
+
+      wholesaleWrap.querySelectorAll('input[name="inline_wholesale_mode"]').forEach(rad => {
+        rad.onchange = (e) => {
+          primaryState.wholesale_mode = e.target.value;
+          const body = document.getElementById('inline-wholesale-body');
+          if (body) {
+            body.innerHTML = renderWholesaleTable();
+            bindInlineWholesaleEvents();
+          }
+        };
+      });
+
+      const inpMin = wholesaleWrap.querySelector('#modal-wholesale-normal-min');
+      const inpMax = wholesaleWrap.querySelector('#modal-wholesale-normal-max');
+      const inpDisc = wholesaleWrap.querySelector('#modal-wholesale-normal-discount');
+      const chkNoMax = wholesaleWrap.querySelector('#chk-wholesale-no-max');
+      const noteNormal = wholesaleWrap.querySelector('#wholesale-normal-note');
+
+      function syncNormalWholesale() {
+        const minVal = parseInt(inpMin?.value) || 1;
+        const noMax = chkNoMax?.checked;
+        const maxVal = noMax ? null : (parseInt(inpMax?.value) || minVal);
+        const discVal = parseFloat(inpDisc?.value) || 0;
+        primaryState.wholesale_tiers = [{
+          id: DB.generateUUID(),
+          min_qty: minVal,
+          max_qty: maxVal,
+          price: discVal
+        }];
+        if (noteNormal) {
+          noteNormal.innerHTML = `Setiap pembelian <b>${minVal}</b> hingga <b>${noMax ? 'seterusnya (tanpa batas)' : (maxVal || minVal)}</b> maka mendapatkan potongan <b>Rp${discVal.toLocaleString('id-ID')}</b> per pcs.`;
+        }
+      }
+
+      if (chkNoMax && inpMax) {
+        chkNoMax.onchange = (e) => {
+          inpMax.disabled = e.target.checked;
+          if (e.target.checked) {
+            inpMax.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+            inpMax.value = '';
+          } else {
+            inpMax.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+          }
+          syncNormalWholesale();
+        };
+      }
+      if (inpMin) inpMin.oninput = syncNormalWholesale;
+      if (inpMax) inpMax.oninput = syncNormalWholesale;
+      if (inpDisc) inpDisc.oninput = syncNormalWholesale;
+
+      const btnAddTier = wholesaleWrap.querySelector('#btn-add-wholesale-tier');
+      if (btnAddTier) {
+        btnAddTier.onclick = () => {
+          if (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0) {
+            primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
+          }
+          const lastTier = primaryState.wholesale_tiers[primaryState.wholesale_tiers.length - 1];
+          const nextMin = (parseInt(lastTier.max_qty) || 50) + 1;
+          primaryState.wholesale_tiers.push({
+            id: DB.generateUUID(),
+            min_qty: nextMin,
+            max_qty: nextMin + 50,
+            price: (lastTier.price || 500) + 500
+          });
+          const body = document.getElementById('inline-wholesale-body');
+          if (body) {
+            body.innerHTML = renderWholesaleTable();
+            bindInlineWholesaleEvents();
+          }
+        };
+      }
+
+      wholesaleWrap.querySelectorAll('.btn-delete-wholesale-tier').forEach(btn => {
+        btn.onclick = () => {
+          if ((primaryState.wholesale_tiers || []).length <= 1) return;
+          const tierId = btn.getAttribute('data-tier-id');
+          primaryState.wholesale_tiers = primaryState.wholesale_tiers.filter(t => t.id !== tierId);
+          const body = document.getElementById('inline-wholesale-body');
+          if (body) {
+            body.innerHTML = renderWholesaleTable();
+            bindInlineWholesaleEvents();
+          }
+        };
+      });
+
+      wholesaleWrap.querySelectorAll('.tiered-max-input').forEach(inp => {
+        inp.oninput = (e) => {
+          const row = e.target.closest('tr');
+          const idx = parseInt(row?.getAttribute('data-idx'));
+          const maxVal = parseInt(e.target.value) || 0;
+          if (primaryState.wholesale_tiers && primaryState.wholesale_tiers[idx]) {
+            primaryState.wholesale_tiers[idx].max_qty = maxVal;
+            if (primaryState.wholesale_tiers[idx + 1]) {
+              primaryState.wholesale_tiers[idx + 1].min_qty = maxVal + 1;
+              const nextRow = wholesaleWrap.querySelector(`tr[data-idx="${idx + 1}"] input[data-field="min_qty"]`);
+              if (nextRow) nextRow.value = maxVal + 1;
+            }
+          }
+        };
+      });
+
+      wholesaleWrap.querySelectorAll('.tiered-price-input').forEach(inp => {
+        inp.oninput = (e) => {
+          const row = e.target.closest('tr');
+          const idx = parseInt(row?.getAttribute('data-idx'));
+          const priceVal = parseFloat(e.target.value) || 0;
+          if (primaryState.wholesale_tiers && primaryState.wholesale_tiers[idx]) {
+            primaryState.wholesale_tiers[idx].price = priceVal;
+          }
+        };
+      });
+    }
+
+    // Helper Binding Kelipatan Pesanan Interaktif (Produk Tunggal)
+    function bindInlineMultipleEvents() {
+      const multipleWrap = document.getElementById('order-multiple-wrapper');
+      if (!multipleWrap) return;
+
+      const singleMultipleInp = multipleWrap.querySelector('#input-order-multiple-single');
+      if (singleMultipleInp) {
+        singleMultipleInp.oninput = singleMultipleInp.onchange = (e) => {
+          primaryState.order_multiple_value = parseInt(e.target.value) || 1;
+        };
+      }
+
+      multipleWrap.querySelectorAll('input[name="order_multiple_type_radio"]').forEach(rad => {
+        rad.onchange = (e) => {
+          primaryState.order_multiple_type = e.target.value;
+          multipleWrap.innerHTML = renderOrderMultipleSection();
+          bindInlineMultipleEvents();
+        };
+      });
+    }
+
+    // Tombol Toggle Harga Grosir (Produk Tunggal / Mode Normal)
+    const btnToggleWholesale = document.getElementById('btn-toggle-wholesale');
+    const wholesaleWrap = document.getElementById('wholesale-table-wrapper');
+    if (btnToggleWholesale) {
+      btnToggleWholesale.onclick = () => {
+        primaryState.has_wholesale = !primaryState.has_wholesale;
+        if (primaryState.has_wholesale && (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0)) {
+          primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
+        }
+        if (wholesaleWrap) {
+          wholesaleWrap.classList.toggle('hidden', !primaryState.has_wholesale);
+          wholesaleWrap.classList.toggle('block', primaryState.has_wholesale);
+          if (primaryState.has_wholesale) {
+            wholesaleWrap.innerHTML = `
+              <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
+                  <input type="radio" name="inline_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
+                  <span>Mode Normal</span>
+                </label>
+                <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode === 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
+                  <input type="radio" name="inline_wholesale_mode" value="tiered" ${primaryState.wholesale_mode === 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
+                  <span>Mode Bertingkat</span>
+                </label>
+              </div>
+              <div id="inline-wholesale-body" class="space-y-3">
+                ${renderWholesaleTable()}
+              </div>
+            `;
+            bindInlineWholesaleEvents();
+          }
+        }
+        btnToggleWholesale.innerHTML = `
+          <i class="bi ${primaryState.has_wholesale ? 'bi-check2' : 'bi-plus-lg'}"></i>
+          <span>${primaryState.has_wholesale ? 'Harga Grosir Aktif' : 'Harga Grosir'}</span>
+        `;
+      };
+    }
+    if (primaryState.has_wholesale && wholesaleWrap && !wholesaleWrap.classList.contains('hidden')) {
+      bindInlineWholesaleEvents();
+    }
+
+    // Tombol Toggle Kelipatan Pesanan (Produk Tunggal / Mode Normal)
+    const btnToggleMultiple = document.getElementById('btn-toggle-order-multiple');
+    const multipleWrap = document.getElementById('order-multiple-wrapper');
+    if (btnToggleMultiple) {
+      btnToggleMultiple.onclick = () => {
+        primaryState.has_order_multiple = !primaryState.has_order_multiple;
+        if (multipleWrap) {
+          multipleWrap.classList.toggle('hidden', !primaryState.has_order_multiple);
+          multipleWrap.classList.toggle('block', primaryState.has_order_multiple);
+          if (primaryState.has_order_multiple) {
+            multipleWrap.innerHTML = renderOrderMultipleSection();
+            bindInlineMultipleEvents();
+          }
+        }
+        btnToggleMultiple.innerHTML = `
+          <i class="bi ${primaryState.has_order_multiple ? 'bi-check2' : 'bi-plus-lg'}"></i>
+          <span>${primaryState.has_order_multiple ? 'Kelipatan Pesanan Aktif' : 'Kelipatan Pesanan'}</span>
+        `;
+      };
+    }
+    if (primaryState.has_order_multiple && multipleWrap && !multipleWrap.classList.contains('hidden')) {
+      bindInlineMultipleEvents();
+    }
+
+    // Bind Semua Custom Comboboxes Popovers
+    bindCustomComboboxes(document.getElementById('card-step2-sales'));
 
     // Card 3: Pengiriman
     const toggleCod = document.getElementById('toggle-is-cod');
@@ -8180,12 +8641,32 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const minOrderInp = document.getElementById('input-min-order');
     if (minOrderInp) primaryState.min_order = Math.max(1, parseInt(minOrderInp.value) || 1);
 
-    // Max Order
-    const maxOrderTypeSel = document.getElementById('select-max-order-type');
-    if (maxOrderTypeSel) primaryState.max_order_type = maxOrderTypeSel.value;
-    const maxOrderQtyInp = document.getElementById('input-max-order-qty');
-    if (maxOrderQtyInp) primaryState.max_order_qty = maxOrderQtyInp.value ? parseInt(maxOrderQtyInp.value) : null;
-    primaryState.max_order = primaryState.max_order_qty;
+    // Max Order (Combobox / Select Sync)
+    const normalMaxInp = document.getElementById('input-normal-max-order');
+    if (normalMaxInp) {
+      const raw = normalMaxInp.value.trim();
+      if (!raw || raw.toLowerCase() === 'tanpa max order' || raw === '0') {
+        primaryState.max_order = null;
+        primaryState.max_order_qty = null;
+        primaryState.max_order_type = 'unlimited';
+      } else {
+        const num = parseInt(raw) || null;
+        primaryState.max_order = num;
+        primaryState.max_order_qty = num;
+        primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+      }
+    } else {
+      const maxOrderTypeSel = document.getElementById('select-max-order-type');
+      if (maxOrderTypeSel) primaryState.max_order_type = maxOrderTypeSel.value;
+      const maxOrderQtyInp = document.getElementById('input-max-order-qty');
+      if (maxOrderQtyInp) primaryState.max_order_qty = maxOrderQtyInp.value ? parseInt(maxOrderQtyInp.value) : null;
+      primaryState.max_order = primaryState.max_order_qty;
+    }
+
+    const singleMultipleInp = document.getElementById('input-order-multiple-single');
+    if (singleMultipleInp) {
+      primaryState.order_multiple_value = parseInt(singleMultipleInp.value) || 1;
+    }
 
     // Max Order Period
     const pStartDate = document.getElementById('input-period-start-date')?.value;

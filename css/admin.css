@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    POS BY SONGER CREATIVE - ADMIN & POS KASIR DEDICATED STYLESHEET
    Dedicated styling for Admin Panel, Dokani Sidebar, POS Kasir, and Thermal Receipt.
    ========================================================================== */
@@ -739,8 +739,8 @@ body {
   border-radius: 0.5rem !important; /* 8px (rounded-lg) */
 }
 
-#view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.rounded-full),
-#view-product-form select,
+#view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.rounded-full):not(.mat-input):not(.fin-input),
+#view-product-form select:not(.fin-input),
 #view-product-form textarea,
 #view-product-form button.rounded-xl,
 #view-product-form button.rounded-2xl,
@@ -903,12 +903,28 @@ input.toggle-same-cost:checked ~ div::after {
 }
 /* Input Angka Tabel Variasi: Minimum Width 95px agar teks & placeholder "Stok" terbaca penuh */
 .variation-option-row input[data-field="price"],
-.variation-option-row input[data-field="cost_price"],
+.variation-option-row input[data-field="cost_price"] {
+  min-width: 100px !important;
+}
 .variation-option-row input[data-field="stock"] {
   min-width: 95px !important;
 }
+#view-product-form .variation-option-row > div.grid,
 #view-product-form .variation-option-row input.mat-input,
 #view-product-form .variation-option-row input.fin-input,
-#view-product-form .variation-option-row select.fin-input {
+#view-product-form .variation-option-row select.fin-input,
+#view-product-form .variation-option-row .extra-img-cell {
   border-radius: 0px !important;
+}
+
+/* Custom Combobox Popover (Rekomendasi + Input Manual) */
+.custom-combobox-wrapper {
+  position: relative;
+}
+.custom-combobox-popover {
+  animation: comboboxFadeIn 0.15s ease-out;
+}
+@keyframes comboboxFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

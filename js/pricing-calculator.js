@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ==============================================================================
  * POS BY SONGER CREATIVE - CORE PRICING ENGINE
  * Universal Pricing & Cost Calculation Engine (Storefront, PDP, Kasir POS & Product Form)
@@ -282,7 +282,7 @@
 
     if (extraServicesList.length > 0) {
       extraServicesList.forEach(ex => {
-        const extraType = String(ex.extra_type || 'checklist').toLowerCase().trim();
+        const extraType = String(ex.extra_type || 'pilihan_ganda').toLowerCase().trim();
         const exPrice = parseFloat(ex.price) || 0;
         const exCost = parseFloat(ex.cost_price) || 0;
         let appliedQty = 0;
