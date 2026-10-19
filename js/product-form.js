@@ -2271,75 +2271,95 @@ const ProductForm = (() => {
             <div class="space-y-1.5 pt-2 border-t border-slate-100">
               <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_tier_1 || 'Variasi 1')}:</span>
               <div class="flex flex-wrap gap-1.5">
-                ${(materialsState && materialsState.length > 0) ? materialsState.map((m, idx) => `
-                  <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                    ${escapeHtml(m.name || `Opsi ${idx + 1}`)}
-                  </span>
-                `).join('') : `
-                  <span class="text-[10px] text-slate-400 italic">Belum ada bahan ditambahkan</span>
-                `}
+                ${(() => {
+                  const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+                  if (validMaterials.length > 0) {
+                    return validMaterials.map((m, idx) => `
+                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
+                        ${escapeHtml(m.name.trim())}
+                      </span>
+                    `).join('');
+                  }
+                  return `<span class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Opsi 1</span>`;
+                })()}
               </div>
             </div>
 
             <!-- Variasi 2 (Jika Aktif) -->
-            ${primaryState.has_variation_2 && finishingsState.main && finishingsState.main.length > 0 ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_tier_2 || 'Variasi 2')}:</span>
-                <div class="flex flex-wrap gap-1.5">
-                  ${finishingsState.main.map((f, idx) => `
-                    <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                      ${escapeHtml(f.name || `Opsi ${idx + 1}`)}
-                    </span>
-                  `).join('')}
+            ${(() => {
+              const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+              if (!primaryState.has_variation_2 || validV2.length === 0) return '';
+              return `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_tier_2 || 'Variasi 2')}:</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${validV2.map((f, idx) => `
+                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
+                        ${escapeHtml(f.name.trim())}
+                      </span>
+                    `).join('')}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
+              `;
+            })()}
 
             <!-- Variasi 3 (Jika Aktif) -->
-            ${primaryState.has_variation_3 && finishingsState.extra_1 && finishingsState.extra_1.length > 0 ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_1 || 'Variasi 3')}:</span>
-                <div class="flex flex-wrap gap-1.5">
-                  ${finishingsState.extra_1.map((f, idx) => `
-                    <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                      ${escapeHtml(f.name || `Opsi ${idx + 1}`)}
-                    </span>
-                  `).join('')}
+            ${(() => {
+              const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+              if (!primaryState.has_variation_3 || validV3.length === 0) return '';
+              return `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_1 || 'Variasi 3')}:</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${validV3.map((f, idx) => `
+                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
+                        ${escapeHtml(f.name.trim())}
+                      </span>
+                    `).join('')}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
+              `;
+            })()}
 
             <!-- Variasi 4 (Jika Aktif) -->
-            ${primaryState.has_variation_4 && finishingsState.extra_2 && finishingsState.extra_2.length > 0 ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_2 || 'Variasi 4')}:</span>
-                <div class="flex flex-wrap gap-1.5">
-                  ${finishingsState.extra_2.map((f, idx) => `
-                    <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                      ${escapeHtml(f.name || `Opsi ${idx + 1}`)}
-                    </span>
-                  `).join('')}
+            ${(() => {
+              const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+              if (!primaryState.has_variation_4 || validV4.length === 0) return '';
+              return `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_2 || 'Variasi 4')}:</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${validV4.map((f, idx) => `
+                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
+                        ${escapeHtml(f.name.trim())}
+                      </span>
+                    `).join('')}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
+              `;
+            })()}
 
             <!-- Layanan Extras (Jika Aktif) -->
-            ${primaryState.has_extra_service && finishingsState.extra_3 && finishingsState.extra_3.length > 0 ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">${escapeHtml(primaryState.variation_labels?.label_extra_3 || 'Layanan Extras')}:</span>
-                <div class="space-y-1">
-                  ${finishingsState.extra_3.map(ex => `
-                    <div class="flex items-center justify-between text-[10px] p-1.5 rounded-lg bg-emerald-50/60 border border-emerald-100">
-                      <span class="font-semibold text-slate-800">${escapeHtml(ex.name || 'Layanan Tambahan')}</span>
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold uppercase">${escapeHtml(ex.extra_type || 'Chekclis')}</span>
-                        <span class="font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
+            ${(() => {
+              const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+              if (!primaryState.has_extra_service || validExtras.length === 0) return '';
+              return `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">${escapeHtml(primaryState.variation_labels?.label_extra_3 || 'Layanan Extras')}:</span>
+                  <div class="space-y-1">
+                    ${validExtras.map(ex => `
+                      <div class="flex items-center justify-between text-[10px] p-1.5 rounded-lg bg-emerald-50/60 border border-emerald-100">
+                        <span class="font-semibold text-slate-800">${escapeHtml(ex.name.trim())}</span>
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold uppercase">${escapeHtml(ex.extra_type ? (ex.extra_type === 'qty' ? 'Input Qty' : 'Pilihan Ganda') : 'Jenis Input')}</span>
+                          <span class="font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
+                        </div>
                       </div>
-                    </div>
-                  `).join('')}
+                    `).join('')}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
+              `;
+            })()}
 
             <!-- Estimasi Pengiriman -->
             <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
@@ -3981,7 +4001,7 @@ const ProductForm = (() => {
     const rows = displayMaterials.map((mat, idx) => {
       const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
       const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
-      const maxOrderVal = mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '' ? mat.max_order : 'Unlimited';
+      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '' && mat.max_order !== 'Unlimited') ? mat.max_order : '';
 
       function renderScopeCell(tier) {
         const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
@@ -4044,15 +4064,15 @@ const ProductForm = (() => {
                 type="text" 
                 class="combo-max-order-input custom-combobox-input w-full px-2.5 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
                 data-mat-id="${mat.id}" 
-                value="${(mat.max_order === null || mat.max_order === 0 || mat.max_order === undefined || mat.max_order === '' || mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Max Order') ? 'Tanpa Max Order' : mat.max_order}" 
+                value="${maxOrderVal}" 
                 placeholder="Ketik atau pilih" 
                 autocomplete="off" 
               />
               <div class="custom-combobox-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-44 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
                 <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
                 <div class="max-h-48 overflow-y-auto">
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Tanpa Max Order">
-                    <span>Tanpa Max Order</span>
+                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Tanpa Batas">
+                    <span>Tanpa Batas</span>
                   </div>
                   <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="10">
                     <span>10</span>
@@ -4062,6 +4082,9 @@ const ProductForm = (() => {
                   </div>
                   <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="100">
                     <span>100</span>
+                  </div>
+                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="500">
+                    <span>500</span>
                   </div>
                 </div>
               </div>
@@ -4148,7 +4171,7 @@ const ProductForm = (() => {
               <i class="bi bi-tag-fill text-emerald-600"></i>
               <span>Pengaturan Harga Grosir</span>
             </h3>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-wholesale-config">âœ•</button>
+            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-wholesale-config"><i class="bi bi-x-lg"></i></button>
           </div>
 
           <!-- Mode Grosir: Normal vs Bertingkat -->
@@ -4185,7 +4208,7 @@ const ProductForm = (() => {
               <i class="bi bi-layers-fill text-emerald-600"></i>
               <span>Pengaturan Kelipatan Order</span>
             </h3>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-order-multiple-config">âœ•</button>
+            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-order-multiple-config"><i class="bi bi-x-lg"></i></button>
           </div>
 
           <div id="modal-order-multiple-body" class="space-y-3">
@@ -4210,7 +4233,7 @@ const ProductForm = (() => {
               <h3 class="text-sm font-bold text-slate-900" id="specific-modal-title">Pilih Opsi Spesifik</h3>
               <p class="text-[11px] text-slate-500" id="specific-modal-subtitle">Pilih opsi yang berlaku untuk baris ini</p>
             </div>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-specific-options">âœ•</button>
+            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-specific-options"><i class="bi bi-x-lg"></i></button>
           </div>
 
           <div class="flex items-center justify-between py-1 text-xs font-semibold text-slate-700">
@@ -4605,7 +4628,7 @@ const ProductForm = (() => {
         const priceVal = (isSamePrice && idx > 0) ? firstPrice : (fin.price !== undefined && fin.price !== null && fin.price !== '' ? fin.price : '');
         const costVal = (isSameCost && idx > 0) ? firstCost : (fin.cost_price !== undefined && fin.cost_price !== null && fin.cost_price !== '' ? fin.cost_price : '');
         const stockVal = stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : ''));
-        const extraType = fin.extra_type || 'checklist';
+        const extraType = fin.extra_type || '';
 
         return `
           <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${fin.id}" data-tier="${tier}" data-idx="${idx}">
@@ -4630,7 +4653,7 @@ const ProductForm = (() => {
 
               <!-- Bagian 3: Dropdown Tipe Input (Pilihan Ganda vs Input Qty) -->
               <select data-field="extra_type" style="border-radius: 0px !important;" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs bg-white outline-none focus:bg-emerald-50 font-medium text-slate-700 rounded-none">
-                <option value="" disabled ${!extraType ? 'selected' : ''}>Tipe Input</option>
+                <option value="" disabled ${!extraType ? 'selected' : ''}>Jenis Input</option>
                 <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' ? 'selected' : ''}>Pilihan Ganda</option>
                 <option value="qty" ${extraType === 'qty' ? 'selected' : ''}>Input Qty</option>
               </select>
@@ -5963,15 +5986,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // 3. Max. Order per Baris (Combobox: Mendukung 'Tanpa Max Order' / Angka)
+      // 3. Max. Order per Baris (Combobox: Mendukung 'Tanpa Batas' / 'Tanpa Max Order' / Angka)
       document.querySelectorAll('.combo-max-order-input').forEach(inp => {
         inp.oninput = (e) => {
           const matId = inp.getAttribute('data-mat-id');
           const item = materialsState.find(m => m.id === matId);
           if (item) {
             const raw = e.target.value.trim();
-            if (!raw || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
+            if (!raw) {
               item.max_order = null;
+            } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
+              item.max_order = 'Tanpa Batas';
             } else {
               item.max_order = parseInt(raw) || null;
             }
@@ -5980,11 +6005,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         inp.onblur = (e) => {
           const matId = inp.getAttribute('data-mat-id');
           const item = materialsState.find(m => m.id === matId);
-          if (item && (!item.max_order || item.max_order === 0)) {
-            inp.value = 'Tanpa Max Order';
+          if (item) {
+            const raw = (inp.value || '').trim();
+            if (raw === '0') {
+              inp.value = 'Tanpa Batas';
+              item.max_order = 'Tanpa Batas';
+            }
           }
         };
       });
+      bindCustomComboboxes(document.getElementById('combination-matrix-section'));
 
       // 4. Dropdown Scope (Umum vs Spesifik)
       document.querySelectorAll('.combo-scope-select').forEach(sel => {
@@ -6306,8 +6336,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (title) title.textContent = `Pilih ${tierLabels[tier] || 'Opsi Spesifik'}`;
       if (subtitle) subtitle.textContent = `Pilihan yang berlaku khusus untuk: ${matName}`;
 
-      const optionsList = finishingsState[tier] || [];
-      const currentSelected = (primaryState.specific_options_map && primaryState.specific_options_map[matId] && primaryState.specific_options_map[matId][tier]) || [];
+      const optionsList = (finishingsState[tier] || []).filter(f => f && f.name && f.name.trim() !== '');
+      const validOptIds = optionsList.map(o => o.id);
+      const rawSelected = (primaryState.specific_options_map && primaryState.specific_options_map[matId] && primaryState.specific_options_map[matId][tier]) || [];
+      const currentSelected = rawSelected.filter(id => validOptIds.includes(id));
 
       if (countEl) countEl.textContent = `${currentSelected.length} dipilih`;
       if (chkSelectAll) chkSelectAll.checked = optionsList.length > 0 && currentSelected.length === optionsList.length;
@@ -6318,7 +6350,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const isChecked = currentSelected.includes(opt.id);
         return `
           <label class="flex items-center justify-between p-2 rounded-md bg-white border border-slate-200 hover:border-emerald-500 cursor-pointer transition select-none text-xs">
-            <span class="font-medium text-slate-800">${escapeHtml(opt.name || `Opsi ${oIdx + 1}`)}</span>
+            <span class="font-medium text-slate-800">${escapeHtml(opt.name.trim())}</span>
             <input type="checkbox" class="specific-opt-checkbox accent-emerald-600 rounded w-4 h-4 cursor-pointer" data-opt-id="${opt.id}" ${isChecked ? 'checked' : ''} />
           </label>
         `;
@@ -8748,13 +8780,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (costInp) item.cost_price = costInp.value === '' ? '' : (parseFloat(costInp.value) || 0);
           if (stockInp) item.stock = (stockInp.value === '' || stockInp.value === 'Unlimited') ? null : (parseInt(stockInp.value) || 0);
           if (parentSel) item.parent_id = parentSel.value || '';
-          if (extraTypeSel) item.extra_type = extraTypeSel.value || 'checklist';
+          if (extraTypeSel) item.extra_type = extraTypeSel.value || '';
         }
       });
     });
 
     // Combination Table Matrix DOM sync
-    const comboRows = document.querySelectorAll('.combo-matrix-row');
+    const comboRows = document.querySelectorAll('.combo-matrix-row, #combo-matrix-table-body tr');
     comboRows.forEach(row => {
       const matId = row.getAttribute('data-mat-id');
       const mat = materialsState.find(m => m.id === matId);
@@ -8762,7 +8794,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const minInp = row.querySelector('.combo-min-order-input');
         const maxInp = row.querySelector('.combo-max-order-input');
         if (minInp) mat.min_order = Math.max(1, parseInt(minInp.value) || 1);
-        if (maxInp) mat.max_order = (maxInp.value === '' || maxInp.value === 'Unlimited') ? null : (parseInt(maxInp.value) || null);
+        if (maxInp) {
+          const raw = maxInp.value.trim();
+          if (!raw) {
+            mat.max_order = null;
+          } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
+            mat.max_order = 'Tanpa Batas';
+          } else {
+            mat.max_order = parseInt(raw) || null;
+          }
+        }
       }
     });
 
