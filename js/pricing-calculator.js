@@ -78,7 +78,18 @@
       throw new Error('[PricingCalculator] Data produk wajib disertakan.');
     }
 
-    const priceType = parseInt(product.price_type, 10) || 1;
+    let priceType = parseInt(product.price_type, 10);
+    if (isNaN(priceType) || !priceType) {
+      if (product.pricing_model === 'size') {
+        priceType = product.size_pricing_type === 'fixed' ? 2 : 1;
+      } else if (product.pricing_model === 'weight') {
+        priceType = 5;
+      } else if (product.pricing_model === 'volume') {
+        priceType = 6;
+      } else {
+        priceType = 2;
+      }
+    }
     let qty = Math.max(1, parseInt(options.qty, 10) || 1);
 
     // 1. Identifikasi Bahan (Material) Terpilih
@@ -154,8 +165,22 @@
       // B1. METER (P x L cm) - Minimal 1.0 m²
       // ------------------------------------------------------------------------
       case 1: {
-        const lengthCm = parseFloat(options.lengthCm) || 100;
-        const widthCm = parseFloat(options.widthCm) || 100;
+        let lengthCm = parseFloat(options.lengthCm);
+        let widthCm = parseFloat(options.widthCm);
+        if (isNaN(lengthCm) || !lengthCm) {
+          const lInput = parseFloat(options.length) || 100;
+          if (product.size_unit === 'M') lengthCm = lInput * 100;
+          else if (product.size_unit === 'Dm') lengthCm = lInput * 10;
+          else if (product.size_unit === 'Mm') lengthCm = lInput / 10;
+          else lengthCm = lInput;
+        }
+        if (isNaN(widthCm) || !widthCm) {
+          const wInput = parseFloat(options.width) || 100;
+          if (product.size_unit === 'M') widthCm = wInput * 100;
+          else if (product.size_unit === 'Dm') widthCm = wInput * 10;
+          else if (product.size_unit === 'Mm') widthCm = wInput / 10;
+          else widthCm = wInput;
+        }
         const areaData = calculateBilledArea(lengthCm, widthCm, 1.0);
         rawAreaM2 = areaData.rawAreaM2;
         billedAreaM2 = areaData.billedAreaM2;
@@ -201,7 +226,14 @@
       // B5. KG (Bobot Riil Kilogram)
       // ------------------------------------------------------------------------
       case 5: {
-        const weightKg = Math.max(0.1, parseFloat(options.weightKg) || 1.0);
+        let weightKg = parseFloat(options.weightKg);
+        if (isNaN(weightKg) || !weightKg) {
+          const wInput = parseFloat(options.weight) || 1.0;
+          if (product.weight_unit === 'gram') weightKg = wInput / 1000;
+          else if (product.weight_unit === 'ons') weightKg = wInput * 0.1;
+          else weightKg = wInput;
+        }
+        weightKg = Math.max(0.001, weightKg);
         unitGrossPrice = (weightKg * materialPrice) + unitFinishingPrice;
         unitCostPrice = (weightKg * materialCostPrice) + unitFinishingCost;
 
@@ -214,7 +246,14 @@
       // B6. LT (Volume Cairan Liter)
       // ------------------------------------------------------------------------
       case 6: {
-        const volumeLt = Math.max(0.1, parseFloat(options.volumeLt) || 1.0);
+        let volumeLt = parseFloat(options.volumeLt);
+        if (isNaN(volumeLt) || !volumeLt) {
+          const vInput = parseFloat(options.volume) || 1.0;
+          if (product.volume_unit === 'ml') volumeLt = vInput / 1000;
+          else if (product.volume_unit === 'galon') volumeLt = vInput * 3.785;
+          else volumeLt = vInput;
+        }
+        volumeLt = Math.max(0.001, volumeLt);
         unitGrossPrice = (volumeLt * materialPrice) + unitFinishingPrice;
         unitCostPrice = (volumeLt * materialCostPrice) + unitFinishingCost;
 
@@ -251,8 +290,16 @@
     let discountAmount = 0;
     let appliedDiscountNote = '';
 
-    // A. Cek Tier Diskon Kuantitas (ProductDiscountTier)
-    const discountTiers = Array.isArray(product.discount_tiers) ? product.discount_tiers : [];
+    // A. Cek Tier Diskon Kuantitas (ProductDiscountTier / wholesale_tiers)
+    let discountTiers = Array.isArray(product.discount_tiers) ? product.discount_tiers : [];
+    if (discountTiers.length === 0 && Array.isArray(product.wholesale_tiers) && product.wholesale_tiers.length > 0) {
+      discountTiers = product.wholesale_tiers.map(wt => ({
+        min_qty: parseInt(wt.min_qty) || 1,
+        max_qty: wt.max_qty ? parseInt(wt.max_qty) : null,
+        discount_type: 'fixed_price',
+        discount_value: parseFloat(wt.price) || 0
+      }));
+    }
     if (discountTiers.length > 0) {
       // Urutkan dari min_qty terbesar
       const sortedTiers = [...discountTiers].sort((a, b) => b.min_qty - a.min_qty);

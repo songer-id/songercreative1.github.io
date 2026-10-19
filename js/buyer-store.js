@@ -3205,6 +3205,32 @@ const BuyerStore = (() => {
     return `${valPrefix} ${labelSuffix}`;
   }
 
+  // --- HELPER OTOMASI KAPASITAS BARIS LABEL PINTAR (2 vs 3 Label) ---
+  function getSmartVisibleBadges(productName, labelsArray) {
+    const validLabels = (Array.isArray(labelsArray) ? labelsArray : [])
+      .map(l => String(l || '').trim())
+      .filter(Boolean);
+    if (validLabels.length === 0) return [];
+
+    const nameLen = (productName || '').trim().length;
+    const isShortName = nameLen <= 28;
+    const totalLabelChars = validLabels.slice(0, 3).join('').length;
+
+    // Aturan 1: Jika productName hanya 1 baris (<= 28 karakter)
+    if (isShortName) {
+      if (totalLabelChars > 24) {
+        return validLabels.slice(0, 2);
+      }
+      return validLabels.slice(0, 3);
+    } else {
+      // Aturan 2: Jika productName mencapai 2 baris (> 28 karakter)
+      if (validLabels.length >= 3 && totalLabelChars <= 16) {
+        return validLabels.slice(0, 3);
+      }
+      return validLabels.slice(0, 2);
+    }
+  }
+
   function getProductCustomBadges(prod, effDiscount) {
     if (prod.show_custom_labels === false || prod.show_badge === false) {
       return [];
@@ -3229,7 +3255,7 @@ const BuyerStore = (() => {
       }
     }
 
-    return labels.slice(0, 2);
+    return getSmartVisibleBadges(prod.name, labels);
   }
 
   // --- 1. PRODUCT CARD VARIANTS RENDERERS (WIREFRAME COMPLIANT) ---
@@ -6601,7 +6627,9 @@ const BuyerStore = (() => {
     getSanitizedCanonicalUrl,
     inferBusinessSchemaType,
     openProductDetailModal,
-    closeProductDetailModal
+    closeProductDetailModal,
+    getSmartVisibleBadges,
+    getProductCustomBadges
   };
 })();
 

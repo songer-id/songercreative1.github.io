@@ -712,3 +712,124 @@ body {
   box-shadow: none !important;
   z-index: 30 !important;
 }
+
+/* ==========================================================================
+   PRODUCT FORM STEP 2 FIXED SUB-NAVBAR & ANCHOR CARDS (SHOPEE-STYLE)
+   ========================================================================== */
+#step2-subnav-fixed,
+#step2-subnav-sticky {
+  top: 4rem !important; /* right below h-16 navbar */
+  z-index: 30 !important;
+}
+
+#step-pane-2 section[id^="card-step2-"],
+#step-pane-2 div[id^="card-step2-"],
+.step2-anchor-card {
+  scroll-margin-top: 8.5rem !important;
+}
+
+/* ==========================================================================
+   PRODUCT FORM ENTERPRISE SAAS BORDER-RADIUS PRECISION (8PX CARDS, 6PX INPUTS)
+   ========================================================================== */
+#view-product-form .rounded-2xl,
+#view-product-form .rounded-3xl,
+#view-product-form [id^="card-step2-"],
+#view-product-form .bg-white.border.border-slate-200.shadow-xs,
+#view-product-form .bg-white.border.border-slate-200.shadow-sm {
+  border-radius: 0.5rem !important; /* 8px (rounded-lg) */
+}
+
+#view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.rounded-full),
+#view-product-form select,
+#view-product-form textarea,
+#view-product-form button.rounded-xl,
+#view-product-form button.rounded-2xl,
+#view-product-form .input-custom-label-slot,
+#view-product-form .btn-primary-brand {
+  border-radius: 0.375rem !important; /* 6px (rounded-md) */
+}
+
+/* Mobile FAB Live Preview position (centered at bottom) */
+#btn-fab-live-preview {
+  position: fixed !important;
+  bottom: 1rem !important; /* 16px bottom-4 */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  z-index: 40 !important;
+}
+
+/* ==========================================================================
+   HIERARCHICAL VARIATIONS (VARIASI 1-4 + LAYANAN EKSTRA) - TAHAP 1
+   ========================================================================== */
+.variation-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.variation-table {
+  border-collapse: collapse !important;
+  border: 1px solid #334155 !important; /* border-slate-700 */
+  background-color: #ffffff;
+  width: 100%;
+}
+
+.variation-table th,
+.variation-table td {
+  border: 1px solid #334155 !important; /* border-slate-700 */
+}
+
+.variation-table thead tr:first-child th {
+  background-color: #ffffff;
+  color: #1e293b;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.variation-table thead tr:nth-child(2) th {
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.variation-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.variation-table .mat-input,
+.variation-table .fin-input {
+  border: 1px solid #94a3b8;
+  background-color: #ffffff;
+  transition: all 0.15s ease-in-out;
+}
+
+.variation-table .mat-input:focus,
+.variation-table .fin-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 1px #10b981;
+  outline: none;
+}
+
+.variation-img-btn {
+  width: 2.5rem; /* 40px w-10 */
+  height: 2rem;  /* 32px h-8 */
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  color: #94a3b8;
+  background-color: #f8fafc;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.variation-img-btn:hover {
+  color: #059669;
+  border-color: #10b981;
+  background-color: #ecfdf5;
+}
