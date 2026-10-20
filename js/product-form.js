@@ -14,10 +14,13 @@ const ProductForm = (() => {
 
   let currentStep = 1; // 1 | 2 | 3
   let isLivePreviewOpen = true; // Desktop preview sidebar open/collapsed state
+  let isPreviewTestMode = false;
 
   // State untuk Mode Uji Coba Interaktif Mini PDP Step 2
   const previewTestState = {
-    sidebarTab: 'test', // 'preview' | 'test'
+    sidebarTab: 'preview', // 'preview' | 'test'
+    isDrawerOpen: false,
+    drawerActionType: 'buy', // 'buy' | 'cart'
     selectedTier1Id: null,
     selectedTier2Id: null,
     selectedTier3Id: null,
@@ -279,7 +282,10 @@ const ProductForm = (() => {
     };
 
     currentStep = 1;
-    previewTestState.sidebarTab = 'test';
+    isPreviewTestMode = false;
+    previewTestState.sidebarTab = 'preview';
+    previewTestState.isDrawerOpen = false;
+    previewTestState.drawerActionType = 'buy';
     previewTestState.selectedTier1Id = null;
     previewTestState.selectedTier2Id = null;
     previewTestState.selectedTier3Id = null;
@@ -428,7 +434,10 @@ const ProductForm = (() => {
     formMode = 'edit';
     currentEditingId = id;
     currentStep = 1;
-    previewTestState.sidebarTab = 'test';
+    isPreviewTestMode = false;
+    previewTestState.sidebarTab = 'preview';
+    previewTestState.isDrawerOpen = false;
+    previewTestState.drawerActionType = 'buy';
     previewTestState.selectedTier1Id = null;
     previewTestState.selectedTier2Id = null;
     previewTestState.selectedTier3Id = null;
@@ -1760,14 +1769,32 @@ const ProductForm = (() => {
   // -------------------------------------------------------------
 
   function getVariationLabel(tierKey, fallback) {
+    let key = '';
+    let selector = '';
+    if (tierKey === 'tier1') {
+      key = 'label_tier_1';
+      selector = '#input-var-label-tier1, [data-label-key="label_tier_1"]';
+    } else if (tierKey === 'tier2') {
+      key = 'label_tier_2';
+      selector = '#input-var-label-main, #input-var-label-tier2, [data-label-key="label_tier_2"]';
+    } else if (tierKey === 'tier3') {
+      key = 'label_extra_1';
+      selector = '#input-var-label-extra_1, #input-var-label-extra1, [data-label-key="label_extra_1"]';
+    } else if (tierKey === 'tier4') {
+      key = 'label_extra_2';
+      selector = '#input-var-label-extra_2, #input-var-label-extra2, [data-label-key="label_extra_2"]';
+    } else if (tierKey === 'extras') {
+      key = 'label_extra_3';
+      selector = '#input-var-label-extra3, #input-var-label-extra_3, #input-var-label-extra-services, [data-label-key="label_extra_3"]';
+    }
+
+    const domInp = selector ? document.querySelector(selector) : null;
+    const domVal = domInp ? domInp.value.trim() : '';
+    if (domVal) return domVal;
+
     const lbls = primaryState.variation_labels || {};
-    let val = '';
-    if (tierKey === 'tier1') val = lbls.label_tier_1;
-    else if (tierKey === 'tier2') val = lbls.label_tier_2;
-    else if (tierKey === 'tier3') val = lbls.label_extra_1;
-    else if (tierKey === 'tier4') val = lbls.label_extra_2;
-    else if (tierKey === 'extras') val = lbls.label_extra_3;
-    return (val && val.trim()) ? val.trim() : fallback;
+    const stateVal = (key && lbls[key]) ? String(lbls[key]).trim() : '';
+    return stateVal || fallback;
   }
 
   function getPreviewStockDisplay(selectedMat, validMaterials) {
@@ -2012,6 +2039,7 @@ const ProductForm = (() => {
           e.preventDefault();
           previewTestState.sidebarTab = 'preview';
           isPreviewTestMode = false;
+          previewTestState.isDrawerOpen = false;
           updatePreviewSidebarHeader();
           updateProductCardLivePreview();
         };
@@ -2187,30 +2215,7 @@ const ProductForm = (() => {
         </div>
       `
     });
-  }
-
-  function closeShopeeCheckoutDrawer() {
-    const drawerElements = [];
-    document.querySelectorAll('.mini-pdp-drawer-root').forEach(root => {
-      const sheet = root.querySelector('.mini-pdp-drawer-sheet');
-      const backdrop = root.querySelector('.mini-pdp-drawer-backdrop');
-      if (sheet && backdrop) {
-        drawerElements.push({ root, sheet, backdrop });
-      }
-    });
-
-    drawerElements.forEach(({ root, sheet, backdrop }) => {
-      backdrop.classList.remove('opacity-100');
-      backdrop.classList.add('opacity-0');
-      sheet.classList.remove('translate-y-0');
-      sheet.classList.add('translate-y-full');
-      setTimeout(() => {
-        root.classList.add('hidden');
-      }, 280);
-    });
-  }
-
-  function openShopeeCheckoutDrawer(actionType) {
+  }  function buildShopeeDrawerHtml(actionType) {
     const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
     const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
@@ -2323,18 +2328,6 @@ const ProductForm = (() => {
       maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
     }
 
-    let stepMultiplier = 1;
-    if (primaryState.has_order_multiple) {
-      if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
-        stepMultiplier = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
-      } else {
-        stepMultiplier = parseInt(primaryState.order_multiple_value) || 1;
-      }
-    } else if (selectedMat && selectedMat.step_multiplier) {
-      stepMultiplier = parseInt(selectedMat.step_multiplier) || 1;
-    }
-    if (stepMultiplier < 1) stepMultiplier = 1;
-
     if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
       previewTestState.qty = minOrderQty;
     }
@@ -2357,14 +2350,10 @@ const ProductForm = (() => {
     if (primaryState.card_variant === 'B') accentColor = '#0f172a';
     else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || '#047857';
 
-    // RENDER DRAWER HTML BERDASARKAN KONDISI KASUS A vs KASUS B
-    let drawerHtml = '';
-
     if (!hasVariations) {
-      // KASUS A: PRODUK TUNGGAL (Tinggi ~40% kartu Mini PDP)
-      drawerHtml = `
-        <div class="h-[40%] min-h-[200px] max-h-[42%] flex flex-col justify-between bg-white rounded-t-2xl shadow-2xl border-t border-slate-200">
-          <!-- Bagian Atas Drawer (40%) -->
+      // KASUS A: PRODUK TUNGGAL
+      return `
+        <div class="flex flex-col w-full shrink-0 overflow-hidden bg-white">
           <div class="flex items-start gap-2.5 p-3 border-b border-slate-100 relative shrink-0">
             <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
               ${coverImg ? `<img src="${coverImg}" class="w-full h-full object-cover" alt="Cover" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
@@ -2388,35 +2377,26 @@ const ProductForm = (() => {
             </button>
           </div>
 
-          <!-- Bagian Tengah: Baris Jumlah di kiri & Input Qty di kanan -->
-          <div class="p-3 flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-700">Jumlah</span>
-            <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white shadow-2xs">
-              <button type="button" class="btn-shopee-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
-                <i class="bi bi-dash text-xs"></i>
-              </button>
-              <span class="w-10 text-center text-xs font-bold text-slate-800 font-mono select-none">
-                ${curQty}
-              </span>
-              <button type="button" class="btn-shopee-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
-                <i class="bi bi-plus text-xs"></i>
-              </button>
+          <div class="p-3 flex items-center justify-between shrink-0 bg-white">
+            <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
+            <div class="inline-flex items-center border border-slate-300 rounded-md overflow-hidden bg-white shadow-2xs">
+              <button type="button" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">-</button>
+              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty w-12 h-7 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
+              <button type="button" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">+</button>
             </div>
           </div>
 
-          <!-- Bagian Paling Bawah: [ Beli Sekarang ] penuh -->
-          <div class="p-2.5 pt-0 shrink-0">
-            <button type="button" class="btn-shopee-submit w-full py-2 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
-              Beli Sekarang
+          <div class="p-2.5 pt-0 shrink-0 bg-white">
+            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+              ${actionType === 'buy' ? 'Beli Sekarang' : 'Masukkan ke Keranjang'}
             </button>
           </div>
         </div>
       `;
     } else {
-      // KASUS B: PRODUK MEMILIKI VARIASI (Tinggi hingga 75% max-height kartu Mini PDP)
-      drawerHtml = `
-        <div class="max-h-[75%] min-h-[260px] flex flex-col justify-between bg-white rounded-t-2xl shadow-2xl border-t border-slate-200">
-          <!-- Bagian Paling Atas Drawer: Gambar Varian, Teks Harga & Stok, Silang ✕ -->
+      // KASUS B: PRODUK MEMILIKI VARIASI
+      return `
+        <div class="flex flex-col w-full overflow-hidden max-h-full bg-white">
           <div class="flex items-start gap-2.5 p-3 border-b border-slate-100 relative shrink-0">
             <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
               ${variantImg ? `<img src="${variantImg}" class="w-full h-full object-cover" alt="Varian" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
@@ -2431,6 +2411,7 @@ const ProductForm = (() => {
                 `}
               ` : `
                 <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${priceRangeText}</div>
+                <div class="text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
               ${wholesaleInfo.bannerText ? `
@@ -2444,8 +2425,7 @@ const ProductForm = (() => {
             </button>
           </div>
 
-          <!-- Bagian Tengah Drawer: Deretan Pilihan Variasi yang Aktif -->
-          <div class="overflow-y-auto max-h-[28vh] p-3 space-y-3 flex-1">
+          <div class="overflow-y-auto max-h-[190px] p-3 space-y-3 flex-1 min-h-0">
             <!-- Variasi 1 -->
             <div class="space-y-1.5">
               <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}:</span>
@@ -2461,7 +2441,7 @@ const ProductForm = (() => {
               </div>
             </div>
 
-            <!-- Variasi 2 (Jika Aktif) -->
+            <!-- Variasi 2 -->
             ${(primaryState.has_variation_2 && validV2.length > 0) ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}:</span>
@@ -2479,7 +2459,7 @@ const ProductForm = (() => {
               </div>
             ` : ''}
 
-            <!-- Variasi 3 (Jika Aktif) -->
+            <!-- Variasi 3 -->
             ${(primaryState.has_variation_3 && validV3.length > 0) ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}:</span>
@@ -2497,7 +2477,7 @@ const ProductForm = (() => {
               </div>
             ` : ''}
 
-            <!-- Variasi 4 (Jika Aktif) -->
+            <!-- Variasi 4 -->
             ${(primaryState.has_variation_4 && validV4.length > 0) ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}:</span>
@@ -2516,227 +2496,83 @@ const ProductForm = (() => {
             ` : ''}
           </div>
 
-          <!-- Bagian Bawah Drawer: Baris Jumlah Pesanan & Input Qty -->
-          <div class="p-3 pt-2 border-t border-slate-100 flex items-center justify-between shrink-0">
+          <div class="p-3 pt-2 border-t border-slate-100 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
-            <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white shadow-2xs">
-              <button type="button" class="btn-shopee-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
-                <i class="bi bi-dash text-xs"></i>
-              </button>
-              <span class="w-10 text-center text-xs font-bold text-slate-800 font-mono select-none">
-                ${curQty}
-              </span>
-              <button type="button" class="btn-shopee-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
-                <i class="bi bi-plus text-xs"></i>
-              </button>
+            <div class="inline-flex items-center border border-slate-300 rounded-md overflow-hidden bg-white shadow-2xs">
+              <button type="button" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">-</button>
+              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty w-12 h-7 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
+              <button type="button" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">+</button>
             </div>
           </div>
 
-          <!-- Bagian Paling Bawah Drawer: Tombol Aksi Beli Sekarang / Masukkan ke Keranjang -->
-          <div class="p-2.5 pt-0 shrink-0">
-            <button type="button" class="btn-shopee-submit w-full py-2 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+          <div class="p-2.5 pt-0 shrink-0 bg-white">
+            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
               ${actionType === 'buy' ? 'Beli Sekarang' : 'Masukkan ke Keranjang'}
             </button>
           </div>
         </div>
       `;
     }
+  }
 
-    const drawerElements = [];
+  function closeShopeeCheckoutDrawer() {
+    previewTestState.isDrawerOpen = false;
     document.querySelectorAll('.mini-pdp-drawer-root').forEach(root => {
       const sheet = root.querySelector('.mini-pdp-drawer-sheet');
       const backdrop = root.querySelector('.mini-pdp-drawer-backdrop');
-      if (sheet && backdrop) {
-        drawerElements.push({ root, sheet, backdrop });
+      if (backdrop) {
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
       }
-    });
-
-    drawerElements.forEach(({ root, sheet, backdrop }) => {
-      sheet.innerHTML = drawerHtml;
-      root.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        backdrop.classList.remove('opacity-0');
-        backdrop.classList.add('opacity-100');
-        sheet.classList.remove('translate-y-full');
-        sheet.classList.add('translate-y-0');
-      });
-
-      // Bind events inside drawer
-      sheet.querySelectorAll('.btn-close-shopee-drawer').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          closeShopeeCheckoutDrawer();
-        };
-      });
-
-      backdrop.onclick = (e) => {
-        e.preventDefault();
-        closeShopeeCheckoutDrawer();
-      };
-
-      // Qty Minus
-      sheet.querySelectorAll('.btn-shopee-qty-minus').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          let curQ = previewTestState.qty || minOrderQty;
-          let nextQ = curQ - stepMultiplier;
-          if (nextQ < minOrderQty) nextQ = minOrderQty;
-          previewTestState.qty = nextQ;
-          openShopeeCheckoutDrawer(actionType);
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Qty Plus
-      sheet.querySelectorAll('.btn-shopee-qty-plus').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          let curQ = previewTestState.qty || minOrderQty;
-          let nextQ = curQ + stepMultiplier;
-          if (nextQ > maxOrderQty && maxOrderQty !== Infinity) nextQ = maxOrderQty;
-          previewTestState.qty = nextQ;
-          openShopeeCheckoutDrawer(actionType);
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Tier 1
-      sheet.querySelectorAll('.btn-shopee-tier1').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          const id = btn.getAttribute('data-id');
-          previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
-          openShopeeCheckoutDrawer(actionType);
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Tier 2
-      sheet.querySelectorAll('.btn-shopee-tier2').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          const id = btn.getAttribute('data-id');
-          previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
-          openShopeeCheckoutDrawer(actionType);
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Tier 3
-      sheet.querySelectorAll('.btn-shopee-tier3').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          const id = btn.getAttribute('data-id');
-          previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
-          openShopeeCheckoutDrawer(actionType);
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Tier 4
-      sheet.querySelectorAll('.btn-shopee-tier4').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          const id = btn.getAttribute('data-id');
-          previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
-          openShopeeCheckoutDrawer(actionType);
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Tombol Submit Drawer (Beli Sekarang / Masukkan ke Keranjang)
-      sheet.querySelectorAll('.btn-shopee-submit').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          if (hasVariations && !checkAllVariationsSelected()) {
-            const valRes = validatePreviewVariantSelection();
-            if (!valRes.valid) {
-              if (typeof App !== 'undefined' && App.showToast) {
-                App.showToast(valRes.message, 'warning');
-              } else {
-                alert(valRes.message);
-              }
-              return;
-            }
-          }
-
-          closeShopeeCheckoutDrawer();
-
-          const chosenVariants = [];
-          if (selectedMat && selectedMat.name) chosenVariants.push(selectedMat.name.trim());
-          if (primaryState.has_variation_2 && validV2.length > 0) {
-            const f = validV2.find((item, idx) => (item.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
-            if (f && f.name) chosenVariants.push(f.name.trim());
-          }
-          if (primaryState.has_variation_3 && validV3.length > 0) {
-            const f = validV3.find((item, idx) => (item.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
-            if (f && f.name) chosenVariants.push(f.name.trim());
-          }
-          if (primaryState.has_variation_4 && validV4.length > 0) {
-            const f = validV4.find((item, idx) => (item.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
-            if (f && f.name) chosenVariants.push(f.name.trim());
-          }
-          let variantText = chosenVariants.length > 0 ? chosenVariants.join(' - ') : 'Standar';
-
-          if (actionType === 'buy') {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast('Order Berhasil', 'success');
-            }
-            showPreviewTestModal({
-              type: 'buy',
-              title: 'Order Berhasil',
-              message: 'Simulasi checkout langsung pembeli berhasil diselesaikan!',
-              bodyHtml: `
-                <div class="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-2">
-                  <div class="font-extrabold text-slate-900 truncate">${escapeHtml(name)}</div>
-                  <div class="text-[11px] text-slate-600 flex justify-between">
-                    <span>Varian:</span>
-                    <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
-                  </div>
-                  <div class="text-[11px] text-slate-600 flex justify-between">
-                    <span>Jumlah:</span>
-                    <span class="font-bold text-slate-800">${curQty} pcs</span>
-                  </div>
-                  <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
-                    <i class="bi bi-shield-check text-emerald-700"></i>
-                    <span>Validasi seluruh aturan batas order & harga lulus 100%</span>
-                  </div>
-                </div>
-              `
-            });
-          } else {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast('Berhasil dimasukkan ke keranjang', 'success');
-            }
-            showPreviewTestModal({
-              type: 'cart',
-              title: 'Berhasil dimasukkan ke keranjang',
-              message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
-              bodyHtml: `
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
-                  <div class="font-bold text-slate-900 truncate">${escapeHtml(name)}</div>
-                  <div class="text-[11px] text-slate-600 flex justify-between">
-                    <span>Pilihan Varian:</span>
-                    <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
-                  </div>
-                  <div class="text-[11px] text-slate-600 flex justify-between">
-                    <span>Kuantitas:</span>
-                    <span class="font-bold text-slate-800">${curQty} pcs</span>
-                  </div>
-                </div>
-              `
-            });
-          }
-        };
-      });
+      if (sheet) {
+        sheet.classList.remove('translate-y-0');
+        sheet.classList.add('translate-y-full');
+      }
+      setTimeout(() => {
+        root.classList.add('hidden');
+        root.classList.remove('flex');
+      }, 250);
     });
   }
 
+  function openShopeeCheckoutDrawer(actionType) {
+    const isAlreadyOpen = previewTestState.isDrawerOpen;
+    previewTestState.isDrawerOpen = true;
+    previewTestState.drawerActionType = actionType || 'buy';
+    updateProductCardLivePreview();
+
+    if (!isAlreadyOpen) {
+      document.querySelectorAll('.mini-pdp-drawer-root').forEach(root => {
+        const sheet = root.querySelector('.mini-pdp-drawer-sheet');
+        const backdrop = root.querySelector('.mini-pdp-drawer-backdrop');
+        if (sheet && backdrop) {
+          sheet.classList.add('translate-y-full');
+          backdrop.classList.remove('opacity-100');
+          backdrop.classList.add('opacity-0');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              backdrop.classList.remove('opacity-0');
+              backdrop.classList.add('opacity-100');
+              sheet.classList.remove('translate-y-full');
+              sheet.classList.add('translate-y-0');
+            });
+          });
+        }
+      });
+    }
+  }
+
   function bindMiniPdpInteractiveEvents() {
+    const isTestMode = Boolean(previewTestState.sidebarTab === 'test');
     const containers = [
       document.getElementById('card-live-preview-box') || document.getElementById('product-card-preview-container'),
       document.getElementById('mobile-card-preview-container')
     ].filter(Boolean);
+
+    if (!isTestMode) {
+      // Di Mode Preview: Kunci seluruh interaksi, tidak ada event handler yang dipasang!
+      return;
+    }
 
     containers.forEach(container => {
       // 1. Variasi 1 chips
@@ -2779,7 +2615,7 @@ const ProductForm = (() => {
         };
       });
 
-      // 5. Layanan Extras
+      // 5. Layanan Extras chips
       container.querySelectorAll('.btn-preview-extra').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
@@ -2898,10 +2734,6 @@ const ProductForm = (() => {
             }
             return;
           }
-          if (previewTestState.sidebarTab === 'preview') {
-            previewTestState.sidebarTab = 'test';
-            updatePreviewSidebarHeader();
-          }
 
           const hasVariations = Boolean(primaryState.has_variants && (materialsState || []).some(m => m && m.name && m.name.trim() !== ''));
 
@@ -2911,10 +2743,8 @@ const ProductForm = (() => {
           } else {
             // KASUS B.1: Produk MEMILIKI Variasi
             if (checkAllVariationsSelected()) {
-              // Variasi SUDAH Dipilih Lengkap -> JANGAN buka drawer! Langsung masukkan ke keranjang
               addVariantProductToCartDirect();
             } else {
-              // Variasi BELUM Dipilih Lengkap -> LANGSUNG BUKA DRAWER VARIASI (actionType = 'cart')
               openShopeeCheckoutDrawer('cart');
             }
           }
@@ -2934,15 +2764,237 @@ const ProductForm = (() => {
             }
             return;
           }
-          if (previewTestState.sidebarTab === 'preview') {
-            previewTestState.sidebarTab = 'test';
-            updatePreviewSidebarHeader();
-          }
 
-          // Baik produk tunggal maupun variasi (sudah/belum dipilih), Beli Sekarang WAJIB membuka drawer!
           openShopeeCheckoutDrawer('buy');
         };
       });
+
+      // BIND EVENTS DI DALAM DRAWER (JIKA SEDANG DIBUKA)
+      if (previewTestState.isDrawerOpen) {
+        const actionType = previewTestState.drawerActionType || 'buy';
+        const hasVariations = Boolean(primaryState.has_variants && (materialsState || []).some(m => m && m.name && m.name.trim() !== ''));
+        const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+        const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+        const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+        const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+        const selectedMat = (hasVariations && previewTestState.selectedTier1Id)
+          ? (validMaterials.find(m => m.id === previewTestState.selectedTier1Id) || null)
+          : null;
+
+        let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
+        if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+          minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
+        }
+        let maxOrderQty = Infinity;
+        if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+          maxOrderQty = parseInt(primaryState.max_order_qty);
+        } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+          maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
+        }
+        if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+          maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
+        }
+
+        let stepMultiplier = 1;
+        if (primaryState.has_order_multiple) {
+          if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
+            stepMultiplier = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
+          } else {
+            stepMultiplier = parseInt(primaryState.order_multiple_value) || 1;
+          }
+        } else if (selectedMat && selectedMat.step_multiplier) {
+          stepMultiplier = parseInt(selectedMat.step_multiplier) || 1;
+        }
+        if (stepMultiplier < 1) stepMultiplier = 1;
+
+        // Tutup Drawer (✕ dan Backdrop)
+        container.querySelectorAll('.btn-close-shopee-drawer').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            closeShopeeCheckoutDrawer();
+          };
+        });
+
+        container.querySelectorAll('.mini-pdp-drawer-backdrop').forEach(bd => {
+          bd.onclick = (e) => {
+            e.preventDefault();
+            closeShopeeCheckoutDrawer();
+          };
+        });
+
+        // Qty Minus
+        container.querySelectorAll('.btn-shopee-qty-minus, .btn-preview-qty-minus').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            let curQ = previewTestState.qty || minOrderQty;
+            let nextQ = curQ - stepMultiplier;
+            if (nextQ < minOrderQty) nextQ = minOrderQty;
+            previewTestState.qty = nextQ;
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Qty Plus
+        container.querySelectorAll('.btn-shopee-qty-plus, .btn-preview-qty-plus').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            let curQ = previewTestState.qty || minOrderQty;
+            let nextQ = curQ + stepMultiplier;
+            if (nextQ > maxOrderQty && maxOrderQty !== Infinity) nextQ = maxOrderQty;
+            previewTestState.qty = nextQ;
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Input Qty Manual
+        container.querySelectorAll('.input-preview-test-qty, #input-preview-test-qty').forEach(inp => {
+          inp.oninput = (e) => {
+            let val = parseInt(e.target.value);
+            if (!isNaN(val) && val > 0) {
+              if (maxOrderQty !== Infinity && val > maxOrderQty) val = maxOrderQty;
+              previewTestState.qty = val;
+            }
+          };
+          inp.onchange = inp.onblur = (e) => {
+            let val = parseInt(e.target.value);
+            if (isNaN(val) || val < minOrderQty) val = minOrderQty;
+            if (maxOrderQty !== Infinity && val > maxOrderQty) val = maxOrderQty;
+            previewTestState.qty = val;
+            updateProductCardLivePreview();
+          };
+          inp.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              inp.blur();
+            }
+          };
+        });
+
+        // Variasi di dalam Drawer
+        container.querySelectorAll('.btn-shopee-tier1').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
+            updateProductCardLivePreview();
+          };
+        });
+
+        container.querySelectorAll('.btn-shopee-tier2').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
+            updateProductCardLivePreview();
+          };
+        });
+
+        container.querySelectorAll('.btn-shopee-tier3').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
+            updateProductCardLivePreview();
+          };
+        });
+
+        container.querySelectorAll('.btn-shopee-tier4').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Submit Button di dalam Drawer
+        container.querySelectorAll('.btn-shopee-submit').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            if (hasVariations && !checkAllVariationsSelected()) {
+              const valRes = validatePreviewVariantSelection();
+              if (!valRes.valid) {
+                if (typeof App !== 'undefined' && App.showToast) {
+                  App.showToast(valRes.message, 'warning');
+                } else {
+                  alert(valRes.message);
+                }
+                return;
+              }
+            }
+
+            closeShopeeCheckoutDrawer();
+
+            const name = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
+            const curQty = previewTestState.qty || minOrderQty;
+            const chosenVariants = [];
+            if (selectedMat && selectedMat.name) chosenVariants.push(selectedMat.name.trim());
+            if (primaryState.has_variation_2 && validV2.length > 0) {
+              const f = validV2.find((item, idx) => (item.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
+              if (f && f.name) chosenVariants.push(f.name.trim());
+            }
+            if (primaryState.has_variation_3 && validV3.length > 0) {
+              const f = validV3.find((item, idx) => (item.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
+              if (f && f.name) chosenVariants.push(f.name.trim());
+            }
+            if (primaryState.has_variation_4 && validV4.length > 0) {
+              const f = validV4.find((item, idx) => (item.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
+              if (f && f.name) chosenVariants.push(f.name.trim());
+            }
+            let variantText = chosenVariants.length > 0 ? chosenVariants.join(' - ') : 'Standar';
+
+            if (actionType === 'buy') {
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Order Berhasil', 'success');
+              }
+              showPreviewTestModal({
+                type: 'buy',
+                title: 'Order Berhasil',
+                message: 'Simulasi checkout langsung pembeli berhasil diselesaikan!',
+                bodyHtml: `
+                  <div class="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-2">
+                    <div class="font-extrabold text-slate-900 truncate">${escapeHtml(name)}</div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Varian:</span>
+                      <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Jumlah:</span>
+                      <span class="font-bold text-slate-800">${curQty} pcs</span>
+                    </div>
+                    <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
+                      <i class="bi bi-shield-check text-emerald-700"></i>
+                      <span>Validasi seluruh aturan batas order & harga lulus 100%</span>
+                    </div>
+                  </div>
+                `
+              });
+            } else {
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Berhasil dimasukkan ke keranjang', 'success');
+              }
+              showPreviewTestModal({
+                type: 'cart',
+                title: 'Berhasil dimasukkan ke keranjang',
+                message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
+                bodyHtml: `
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
+                    <div class="font-bold text-slate-900 truncate">${escapeHtml(name)}</div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Pilihan Varian:</span>
+                      <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Kuantitas:</span>
+                      <span class="font-bold text-slate-800">${curQty} pcs</span>
+                    </div>
+                  </div>
+                `
+              });
+            }
+          };
+        });
+      }
     });
   }
 
@@ -3581,188 +3633,200 @@ const ProductForm = (() => {
 
       const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
 
-      const miniPdpHtml = `
-        <div class="mini-pdp-card w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative">
-          <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
-          <div class="relative w-full aspect-square bg-slate-100 overflow-hidden">
-            ${hasPhoto && img ? `
-              <img src="${img}" class="w-full h-full object-cover" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
-            ` : `
-              <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
-                <span class="text-[10px] font-semibold text-slate-400">Foto Cover</span>
-              </div>
-            `}
-            ${effHasDiscount ? `
-              <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-white bg-red-500 shadow-sm leading-none">
-                Diskon ${effDiscPercent}%
-              </span>
-            ` : ''}
-            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900/60 backdrop-blur-xs text-white">
-              1 / ${Math.max(1, (primaryState.images || []).length)} Foto
-            </span>
-          </div>
+      const isTestMode = Boolean(previewTestState.sidebarTab === 'test');
+      if (!isTestMode) {
+        previewTestState.isDrawerOpen = false;
+      }
+      const isDrawerOpen = Boolean(isTestMode && previewTestState.isDrawerOpen);
+      const drawerHtml = isDrawerOpen ? buildShopeeDrawerHtml(previewTestState.drawerActionType || 'buy') : '';
 
-          <div class="p-3.5 space-y-3">
-            <!-- Judul, Harga, Stok & Grosir -->
-            <div>
-              <h3 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2 leading-snug">
-                ${escapeHtml(name)}
-              </h3>
-              <div class="flex items-baseline gap-2 mt-1.5 flex-wrap">
-                <span class="text-sm sm:text-base font-extrabold" style="color: ${accentColor};">
-                  ${formatIDR(finalUnitPrice)}
+      const miniPdpHtml = `
+        <div class="mini-pdp-card w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
+          <!-- AREA KONTEN UTAMA MINI PDP (SCROLLABLE) -->
+          <div class="flex-1 overflow-y-auto ${!isTestMode ? 'pointer-events-none select-none' : ''}">
+            <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
+            <div class="relative w-full aspect-square bg-slate-100 overflow-hidden shrink-0">
+              ${hasPhoto && img ? `
+                <img src="${img}" class="w-full h-full object-cover" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
+              ` : `
+                <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                  <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
+                  <span class="text-[10px] font-semibold text-slate-400">Foto Cover</span>
+                </div>
+              `}
+              ${effHasDiscount ? `
+                <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-white bg-red-500 shadow-sm leading-none">
+                  Diskon ${effDiscPercent}%
                 </span>
-                ${(effHasDiscount || wholesaleInfo.hasDiscount) ? `
-                  <span class="text-[11px] line-through text-slate-400 font-normal">
-                    ${formatIDR(step2StrikePrice || displayBasePrice)}
+              ` : ''}
+              <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900/60 backdrop-blur-xs text-white">
+                1 / ${Math.max(1, (primaryState.images || []).length)} Foto
+              </span>
+            </div>
+
+            <div class="p-3.5 space-y-3">
+              <!-- Judul, Harga, Stok & Grosir -->
+              <div>
+                <h3 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2 leading-snug">
+                  ${escapeHtml(name)}
+                </h3>
+                <div class="flex items-baseline gap-2 mt-1.5 flex-wrap">
+                  <span class="text-sm sm:text-base font-extrabold" style="color: ${accentColor};">
+                    ${formatIDR(finalUnitPrice)}
                   </span>
+                  ${(effHasDiscount || wholesaleInfo.hasDiscount) ? `
+                    <span class="text-[11px] line-through text-slate-400 font-normal">
+                      ${formatIDR(step2StrikePrice || displayBasePrice)}
+                    </span>
+                  ` : ''}
+                  <span class="text-[10px] text-slate-500 font-medium">/ unit</span>
+                </div>
+                <div class="text-[11px] text-slate-500 font-medium mt-1">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
+                ${wholesaleInfo.bannerText ? `
+                  <div class="mt-1.5 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
+                    <i class="bi bi-tag-fill text-amber-600"></i>
+                    <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
+                  </div>
                 ` : ''}
-                <span class="text-[10px] text-slate-500 font-medium">/ unit</span>
               </div>
-              <div class="text-[11px] text-slate-500 font-medium mt-1">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
-              ${wholesaleInfo.bannerText ? `
-                <div class="mt-1.5 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
-                  <i class="bi bi-tag-fill text-amber-600"></i>
-                  <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
+
+              <!-- Variasi 1 (Bahan Utama / Varian) -->
+              ${primaryState.has_variants ? `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}:</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${validMaterials.length > 0 ? validMaterials.map((m, idx) => {
+                      const isSelected = previewTestState.selectedTier1Id === m.id;
+                      return `
+                        <button type="button" class="btn-preview-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}">
+                          <span>${escapeHtml(m.name.trim())}</span>
+                        </button>
+                      `;
+                    }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
+                  </div>
                 </div>
               ` : ''}
-            </div>
 
-            <!-- Variasi 1 (Bahan Utama / Varian) -->
-            ${primaryState.has_variants ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}:</span>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validMaterials.length > 0 ? validMaterials.map((m, idx) => {
-                    const isSelected = previewTestState.selectedTier1Id === m.id;
-                    return `
-                      <button type="button" class="btn-preview-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}">
-                        <span>${escapeHtml(m.name.trim())}</span>
-                      </button>
-                    `;
-                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
+              <!-- Variasi 2 (Jika Aktif) -->
+              ${(primaryState.has_variation_2 && validV2.length > 0) ? `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}:</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${validV2.map((f, idx) => {
+                      const fId = f.id || `v2_${idx}`;
+                      const isSelected = previewTestState.selectedTier2Id === fId;
+                      return `
+                        <button type="button" class="btn-preview-tier2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                          <span>${escapeHtml(f.name.trim())}</span>
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
+              ` : ''}
 
-            <!-- Variasi 2 (Jika Aktif) -->
-            ${(primaryState.has_variation_2 && validV2.length > 0) ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}:</span>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validV2.map((f, idx) => {
-                    const fId = f.id || `v2_${idx}`;
-                    const isSelected = previewTestState.selectedTier2Id === fId;
-                    return `
-                      <button type="button" class="btn-preview-tier2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
-                        <span>${escapeHtml(f.name.trim())}</span>
-                      </button>
-                    `;
-                  }).join('')}
+              <!-- Variasi 3 (Jika Aktif) -->
+              ${(primaryState.has_variation_3 && validV3.length > 0) ? `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}:</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${validV3.map((f, idx) => {
+                      const fId = f.id || `v3_${idx}`;
+                      const isSelected = previewTestState.selectedTier3Id === fId;
+                      return `
+                        <button type="button" class="btn-preview-tier3 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                          <span>${escapeHtml(f.name.trim())}</span>
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
+              ` : ''}
 
-            <!-- Variasi 3 (Jika Aktif) -->
-            ${(primaryState.has_variation_3 && validV3.length > 0) ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}:</span>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validV3.map((f, idx) => {
-                    const fId = f.id || `v3_${idx}`;
-                    const isSelected = previewTestState.selectedTier3Id === fId;
-                    return `
-                      <button type="button" class="btn-preview-tier3 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
-                        <span>${escapeHtml(f.name.trim())}</span>
-                      </button>
-                    `;
-                  }).join('')}
+              <!-- Variasi 4 (Jika Aktif) -->
+              ${(primaryState.has_variation_4 && validV4.length > 0) ? `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}:</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${validV4.map((f, idx) => {
+                      const fId = f.id || `v4_${idx}`;
+                      const isSelected = previewTestState.selectedTier4Id === fId;
+                      return `
+                        <button type="button" class="btn-preview-tier4 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                          <span>${escapeHtml(f.name.trim())}</span>
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
                 </div>
-              </div>
-            ` : ''}
+              ` : ''}
 
-            <!-- Variasi 4 (Jika Aktif) -->
-            ${(primaryState.has_variation_4 && validV4.length > 0) ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}:</span>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validV4.map((f, idx) => {
-                    const fId = f.id || `v4_${idx}`;
-                    const isSelected = previewTestState.selectedTier4Id === fId;
-                    return `
-                      <button type="button" class="btn-preview-tier4 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
-                        <span>${escapeHtml(f.name.trim())}</span>
-                      </button>
-                    `;
-                  }).join('')}
+              <!-- Layanan Extras (Jika Aktif) -->
+              ${(primaryState.has_extra_service && validExtras.length > 0) ? `
+                <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('extras', 'Layanan Extras'))}:</span>
+                  <div class="space-y-1.5">
+                    ${validExtras.map((ex, idx) => {
+                      const exId = ex.id || `ex_${idx}`;
+                      const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+                      const xt = String(ex.extra_type || '').toLowerCase();
+                      const isDirect = (xt === 'direct' || xt === 'langsung proses');
+                      return `
+                        <button type="button" class="btn-preview-extra w-full flex items-center justify-between text-[10px] p-2 rounded-lg transition cursor-pointer ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${exId}">
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="truncate">${escapeHtml(ex.name.trim())}</span>
+                          </div>
+                          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                            <span class="text-[9px] px-1.5 py-0.5 rounded ${isSelected || isDirect ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200/80 text-slate-600'} font-bold uppercase">${escapeHtml(ex.extra_type ? (ex.extra_type === 'qty' ? 'Input Qty' : (isDirect ? 'Direct' : 'Pilihan Ganda')) : 'Opsi')}</span>
+                            <span class="font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
+                          </div>
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
                 </div>
+              ` : ''}
+
+              <!-- Estimasi Pengiriman -->
+              <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
+                <i class="bi bi-truck text-xs" style="color: ${accentColor};"></i>
+                <span class="font-medium">${primaryState.product_type === 'non_physical' ? 'Layanan Digital / Tanpa Pengiriman Fisik' : 'Estimasi Pengiriman: 1-2 Hari Kerja'}</span>
               </div>
-            ` : ''}
 
-            <!-- Layanan Extras (Jika Aktif) -->
-            ${(primaryState.has_extra_service && validExtras.length > 0) ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('extras', 'Layanan Extras'))}:</span>
-                <div class="space-y-1.5">
-                  ${validExtras.map((ex, idx) => {
-                    const exId = ex.id || `ex_${idx}`;
-                    const isSelected = Boolean(previewTestState.selectedExtras[exId]);
-                    const xt = String(ex.extra_type || '').toLowerCase();
-                    const isDirect = (xt === 'direct' || xt === 'langsung proses');
-                    return `
-                      <button type="button" class="btn-preview-extra w-full flex items-center justify-between text-[10px] p-2 rounded-lg transition cursor-pointer ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'}" data-id="${exId}">
-                        <div class="flex items-center gap-1.5 min-w-0">
-                          <span class="truncate">${escapeHtml(ex.name.trim())}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                          <span class="text-[9px] px-1.5 py-0.5 rounded ${isSelected || isDirect ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200/80 text-slate-600'} font-bold uppercase">${escapeHtml(ex.extra_type ? (ex.extra_type === 'qty' ? 'Input Qty' : (isDirect ? 'Direct' : 'Pilihan Ganda')) : 'Opsi')}</span>
-                          <span class="font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
-                        </div>
-                      </button>
-                    `;
-                  }).join('')}
-                </div>
+              <!-- Deskripsi Singkat -->
+              <div class="space-y-1 pt-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Deskripsi Produk:</span>
+                <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
+                  ${escapeHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
+                </p>
               </div>
-            ` : ''}
-
-            <!-- Estimasi Pengiriman -->
-            <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
-              <i class="bi bi-truck text-xs" style="color: ${accentColor};"></i>
-              <span class="font-medium">${primaryState.product_type === 'non_physical' ? 'Layanan Digital / Tanpa Pengiriman Fisik' : 'Estimasi Pengiriman: 1-2 Hari Kerja'}</span>
-            </div>
-
-            <!-- Deskripsi Singkat -->
-            <div class="space-y-1 pt-1">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Deskripsi Produk:</span>
-              <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
-                ${escapeHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
-              </p>
-            </div>
-
-            <!-- TIGA TOMBOL INTERAKSI UTAMA: CHAT WA, KERANJANG, BELI SEKARANG -->
-            <div class="pt-2 flex items-center gap-2">
-              <!-- 1. Tombol Ikon Chat (WhatsApp) -->
-              <button type="button" class="btn-preview-chat-wa w-10 h-10 rounded-xl border border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs" title="Chat WhatsApp ke Penjual">
-                <i class="bi bi-whatsapp text-lg"></i>
-              </button>
-
-              <!-- 2. Tombol Ikon Cart (+ / Add to Cart) -->
-              <button type="button" class="btn-preview-add-cart w-10 h-10 rounded-xl border border-slate-300 hover:border-emerald-500 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs" title="Tambah ke Keranjang (+ Cart)">
-                <i class="bi bi-cart-plus text-lg"></i>
-              </button>
-
-              <!-- 3. Tombol Beli Sekarang -->
-              <button type="button" class="btn-preview-buy-now flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]" style="background-color: ${accentColor};">
-                <span>Beli Sekarang</span>
-              </button>
             </div>
           </div>
 
-          <!-- DRAWER ROOT SCOPED INSIDE MINI PDP CARD -->
-          <div class="mini-pdp-drawer-root absolute inset-0 z-30 hidden flex flex-col justify-end pointer-events-none">
-            <div class="mini-pdp-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity opacity-0 pointer-events-auto"></div>
-            <div class="mini-pdp-drawer-sheet relative z-10 w-full bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 transform translate-y-full transition-transform duration-300 ease-out flex flex-col pointer-events-auto overflow-hidden"></div>
+          <!-- BAR TOMBOL AKSI BAWAH (MENEMPEL TETAP DI DASAR KARTU MINI PDP, TIDAK IKUT TERGESER SAAT KONTEN DI-SCROLL) -->
+          <div class="p-2.5 px-3 border-t border-slate-100 bg-white shrink-0 z-10 flex items-center gap-2 ${!isTestMode ? 'pointer-events-none select-none opacity-85' : ''}">
+            <!-- 1. Tombol Ikon Chat (WhatsApp) -->
+            <button type="button" class="btn-preview-chat-wa w-10 h-10 rounded-xl border border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs ${!isTestMode ? 'pointer-events-none select-none' : ''}" title="Chat WhatsApp ke Penjual">
+              <i class="bi bi-whatsapp text-lg"></i>
+            </button>
+
+            <!-- 2. Tombol Ikon Cart (+ / Add to Cart) -->
+            <button type="button" class="btn-preview-add-cart w-10 h-10 rounded-xl border border-slate-300 hover:border-emerald-500 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs ${!isTestMode ? 'pointer-events-none select-none' : ''}" title="Tambah ke Keranjang (+ Cart)">
+              <i class="bi bi-cart-plus text-lg"></i>
+            </button>
+
+            <!-- 3. Tombol Beli Sekarang -->
+            <button type="button" class="btn-preview-buy-now flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="background-color: ${accentColor};">
+              <span>Beli Sekarang</span>
+            </button>
+          </div>
+
+          <!-- DRAWER ROOT SCOPED INSIDE MINI PDP CARD (TERBUKA STABIL SAAT isDrawerOpen === true) -->
+          <div class="mini-pdp-drawer-root absolute inset-0 z-30 ${isDrawerOpen ? 'flex' : 'hidden'} flex-col justify-end overflow-hidden ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}">
+            <div class="mini-pdp-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}"></div>
+            <div class="mini-pdp-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 transform ${isDrawerOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300 ease-out flex flex-col ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'} overflow-hidden">
+              ${isDrawerOpen ? drawerHtml : ''}
+            </div>
           </div>
         </div>
       `;
@@ -6348,6 +6412,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (currentStep === 1) {
         previewTestState.sidebarTab = 'preview';
         isPreviewTestMode = false;
+        previewTestState.isDrawerOpen = false;
       }
       updatePreviewSidebarHeader();
 
@@ -6393,6 +6458,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       hideWizardErrorBanner();
       currentStep = step;
       if (step === 2) {
+        isPreviewTestMode = false;
+        previewTestState.sidebarTab = 'preview';
+        previewTestState.isDrawerOpen = false;
         if (!previewTestState.qty || previewTestState.qty < (primaryState.min_order || 1)) {
           previewTestState.qty = primaryState.min_order || 1;
         }

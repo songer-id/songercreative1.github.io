@@ -997,17 +997,49 @@ input.toggle-same-cost:checked ~ div::after {
 .mini-pdp-card {
   position: relative !important;
   overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 540px !important;
+  max-height: calc(100vh - 11rem) !important;
 }
+
+@media (max-height: 720px) {
+  .mini-pdp-card {
+    height: 470px !important;
+    max-height: calc(100vh - 8rem) !important;
+  }
+}
+
 .mini-pdp-drawer-root {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
   max-width: 100% !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
   pointer-events: none;
 }
+
+.mini-pdp-drawer-root.hidden {
+  display: none !important;
+}
+
 .mini-pdp-drawer-sheet {
   width: 100% !important;
   max-width: 100% !important;
 }
+
+/* Hide default number input spinner for clean manual Qty input */
+.input-preview-test-qty::-webkit-inner-spin-button,
+.input-preview-test-qty::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-preview-test-qty {
+  -moz-appearance: textfield;
+}
+
 
