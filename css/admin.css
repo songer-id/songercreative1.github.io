@@ -930,9 +930,10 @@ input.toggle-same-cost:checked ~ div::after {
 }
 
 /* ==========================================================================
-   PRODUCT FORM STEP 2 LIVE PREVIEW INTERACTIVE TEST MODE & SIMULATION MODAL
+   PRODUCT FORM STEP 2 LIVE PREVIEW INTERACTIVE TEST MODE & SHOPEE DRAWER
    ========================================================================== */
-#modal-preview-simulation {
+#modal-preview-simulation,
+.animate-modal-pop {
   animation: fadeInModal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes fadeInModal {
@@ -943,7 +944,11 @@ input.toggle-same-cost:checked ~ div::after {
 .btn-preview-tier2,
 .btn-preview-tier3,
 .btn-preview-tier4,
-.btn-preview-extra {
+.btn-preview-extra,
+.btn-shopee-tier1,
+.btn-shopee-tier2,
+.btn-shopee-tier3,
+.btn-shopee-tier4 {
   user-select: none;
   -webkit-user-select: none;
 }

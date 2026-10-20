@@ -17,6 +17,7 @@ const ProductForm = (() => {
 
   // State untuk Mode Uji Coba Interaktif Mini PDP Step 2
   const previewTestState = {
+    sidebarTab: 'test', // 'preview' | 'test'
     selectedTier1Id: null,
     selectedTier2Id: null,
     selectedTier3Id: null,
@@ -278,6 +279,7 @@ const ProductForm = (() => {
     };
 
     currentStep = 1;
+    previewTestState.sidebarTab = 'test';
     previewTestState.selectedTier1Id = null;
     previewTestState.selectedTier2Id = null;
     previewTestState.selectedTier3Id = null;
@@ -426,6 +428,7 @@ const ProductForm = (() => {
     formMode = 'edit';
     currentEditingId = id;
     currentStep = 1;
+    previewTestState.sidebarTab = 'test';
     previewTestState.selectedTier1Id = null;
     previewTestState.selectedTier2Id = null;
     previewTestState.selectedTier3Id = null;
@@ -635,7 +638,7 @@ const ProductForm = (() => {
         <div class="w-full relative">
           
           <!-- WIZARD FORM COLUMN -->
-          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[360px] xl:pr-[400px]' : ''} space-y-6 transition-all duration-300">
+          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[360px]' : ''} space-y-6 transition-all duration-300">
             
             <!-- Visual Error Summary Container -->
             <div id="form-error-banner" class="hidden p-4 rounded-md border border-red-200 bg-red-50 text-red-800 text-sm animate-shake">
@@ -959,17 +962,21 @@ const ProductForm = (() => {
         </div>
 
         <!-- DESKTOP FIXED OFF-CANVAS PREVIEW SIDEBAR (DOCK KANAN SEJATI) -->
-        <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[340px] xl:w-[380px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}">
+        <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[300px] xl:w-[340px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden relative overflow-hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}">
           
-          <!-- Sticky Header Sidebar -->
-          <div class="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50/90 shrink-0">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
-                <i data-lucide="eye" class="w-4 h-4 text-emerald-600"></i>
-              </div>
-              <span id="sidebar-preview-title" class="text-xs font-extrabold text-slate-800 leading-tight block">Preview<br>Kartu Produk</span>
+          <!-- Sticky Header Sidebar: Dua Ikon [Preview] vs [Uji Coba] -->
+          <div class="p-2.5 px-3 border-b border-slate-200 bg-slate-50/95 shrink-0 flex items-center justify-between gap-2">
+            <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full max-w-[210px]">
+              <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                <i class="bi bi-eye"></i>
+                <span>Preview</span>
+              </button>
+              <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+                <span>Uji Coba</span>
+              </button>
             </div>
-            <button type="button" id="btn-toggle-preview-sidebar" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer" title="Tutup Panel Preview">
+            <button type="button" id="btn-toggle-preview-sidebar" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer shrink-0" title="Tutup Panel Preview">
               <i data-lucide="chevrons-right" class="w-4 h-4"></i>
             </button>
           </div>
@@ -1158,6 +1165,19 @@ const ProductForm = (() => {
             </div>
           </div>
 
+          <!-- Shopee-Style Checkout Drawer Container (Scoped inside Desktop Sidebar) -->
+          <div id="preview-shopee-drawer-root" class="absolute inset-0 z-40 hidden flex flex-col justify-end pointer-events-none">
+            <div id="preview-shopee-drawer-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity opacity-0 pointer-events-auto"></div>
+            <div id="preview-shopee-drawer-sheet" class="relative z-10 w-full bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 transform translate-y-full transition-transform duration-300 ease-out flex flex-col pointer-events-auto overflow-hidden">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Scoped Preview Simulation Modal (Scoped inside Desktop Sidebar) -->
+          <div id="preview-scoped-modal-root" class="absolute inset-0 z-50 hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs">
+            <!-- Rendered dynamically -->
+          </div>
+
         </aside>
 
         <!-- FLOATING STRIP BUTTON TO EXPAND DESKTOP SIDEBAR WHEN CLOSED -->
@@ -1173,18 +1193,19 @@ const ProductForm = (() => {
 
         <!-- MOBILE BOTTOM SHEET / DRAWER -->
         <div id="mobile-preview-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden transition-opacity"></div>
-        <div id="mobile-preview-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[88vh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out">
-          <div class="p-4 pb-2 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/80">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
+        <div id="mobile-preview-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[88vh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out relative overflow-hidden">
+          <div class="p-2.5 px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/95 gap-2">
+            <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full max-w-[210px]">
+              <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
                 <i class="bi bi-eye"></i>
-              </div>
-              <div>
-                <span id="mobile-preview-title" class="text-xs sm:text-sm font-extrabold text-slate-800 leading-tight block">Preview<br>Kartu Produk</span>
-                <p class="text-[10px] text-slate-400 mt-0.5">Pratinjau tampilan di etalase web toko pembeli.</p>
-              </div>
+                <span>Preview</span>
+              </button>
+              <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+                <span>Uji Coba</span>
+              </button>
             </div>
-            <button type="button" id="btn-close-mobile-preview" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer">
+            <button type="button" id="btn-close-mobile-preview" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer shrink-0">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
@@ -1374,6 +1395,20 @@ const ProductForm = (() => {
               </div>
             </div>
           </div>
+
+          <!-- Shopee-Style Checkout Drawer Container (Mobile Scoped) -->
+          <div id="preview-shopee-drawer-root-mob" class="absolute inset-0 z-40 hidden flex flex-col justify-end pointer-events-none">
+            <div id="preview-shopee-drawer-backdrop-mob" class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity opacity-0 pointer-events-auto"></div>
+            <div id="preview-shopee-drawer-sheet-mob" class="relative z-10 w-full bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 transform translate-y-full transition-transform duration-300 ease-out flex flex-col pointer-events-auto overflow-hidden">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Scoped Preview Simulation Modal (Mobile Scoped) -->
+          <div id="preview-scoped-modal-root-mob" class="absolute inset-0 z-50 hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs">
+            <!-- Rendered dynamically -->
+          </div>
+
         </div>
 
         <!-- MODAL MINI: TAMBAH KATEGORI / SUB-KATEGORI BARU CEPAT -->
@@ -1795,76 +1830,672 @@ const ProductForm = (() => {
     return { valid: true };
   }
 
+  function syncPreviewModeHeaderButtons() {
+    const isTest = previewTestState.sidebarTab === 'test';
+    ['btn-preview-mode-passive', 'btn-preview-mode-passive-mob'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        if (!isTest) {
+          btn.className = 'flex-1 py-1 px-2 rounded-lg text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer bg-white text-emerald-800 shadow-2xs';
+        } else {
+          btn.className = 'flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-slate-600 hover:text-slate-900';
+        }
+      }
+    });
+    ['btn-preview-mode-test', 'btn-preview-mode-test-mob'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        if (isTest) {
+          btn.className = 'flex-1 py-1 px-2 rounded-lg text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer bg-emerald-600 text-white shadow-2xs';
+        } else {
+          btn.className = 'flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-slate-600 hover:text-slate-900';
+        }
+      }
+    });
+  }
+
   function showPreviewTestModal(config) {
-    let modal = document.getElementById('modal-preview-simulation');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'modal-preview-simulation';
-      modal.className = 'fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 transition-opacity';
-      document.body.appendChild(modal);
-    }
+    const roots = [
+      document.getElementById('preview-scoped-modal-root'),
+      document.getElementById('preview-scoped-modal-root-mob')
+    ].filter(Boolean);
 
     let iconHtml = '';
     if (config.type === 'whatsapp') {
       iconHtml = `
-        <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
           <i class="bi bi-whatsapp"></i>
         </div>
       `;
     } else if (config.type === 'cart') {
       iconHtml = `
-        <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
           <i class="bi bi-cart-check-fill"></i>
         </div>
       `;
     } else {
       iconHtml = `
-        <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
           <i class="bi bi-check2-circle"></i>
         </div>
       `;
     }
 
-    modal.innerHTML = `
-      <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 text-center space-y-4 border border-slate-100 relative">
-        <button type="button" class="btn-close-sim-modal absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-base p-1 cursor-pointer">
+    const modalInner = `
+      <div class="bg-white rounded-2xl shadow-xl max-w-[270px] w-full p-4 text-center space-y-3 border border-slate-100 relative animate-modal-pop pointer-events-auto">
+        <button type="button" class="btn-close-sim-modal absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-sm p-1 cursor-pointer">
           <i class="bi bi-x-lg"></i>
         </button>
 
         ${iconHtml}
 
         <div class="space-y-1">
-          <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+          <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
             Simulasi Pratinjau
           </span>
-          <h3 class="text-base font-extrabold text-slate-900">${config.title}</h3>
-          ${config.message ? `<p class="text-xs text-slate-500 leading-relaxed">${config.message}</p>` : ''}
+          <h3 class="text-sm font-extrabold text-slate-900 leading-tight">${config.title}</h3>
+          ${config.message ? `<p class="text-[11px] text-slate-500 leading-relaxed">${config.message}</p>` : ''}
         </div>
 
         ${config.bodyHtml || ''}
 
-        <div class="pt-2 flex items-center gap-2">
+        <div class="pt-1 flex items-center gap-2">
           ${config.secondaryBtnHtml || ''}
-          <button type="button" class="btn-close-sim-modal flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+          <button type="button" class="btn-close-sim-modal flex-1 py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
             Tutup
           </button>
         </div>
       </div>
     `;
 
-    modal.classList.remove('hidden');
+    roots.forEach(root => {
+      root.innerHTML = modalInner;
+      root.classList.remove('hidden');
 
-    modal.querySelectorAll('.btn-close-sim-modal').forEach(btn => {
-      btn.onclick = () => modal.classList.add('hidden');
+      root.querySelectorAll('.btn-close-sim-modal').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          root.classList.add('hidden');
+        };
+      });
+
+      root.onclick = (e) => {
+        if (e.target === root) root.classList.add('hidden');
+      };
+
+      if (config.onMounted) {
+        config.onMounted(root);
+      }
     });
+  }
 
-    modal.onclick = (e) => {
-      if (e.target === modal) modal.classList.add('hidden');
-    };
+  function closeShopeeCheckoutDrawer() {
+    const drawerElements = [
+      { root: document.getElementById('preview-shopee-drawer-root'), sheet: document.getElementById('preview-shopee-drawer-sheet'), backdrop: document.getElementById('preview-shopee-drawer-backdrop') },
+      { root: document.getElementById('preview-shopee-drawer-root-mob'), sheet: document.getElementById('preview-shopee-drawer-sheet-mob'), backdrop: document.getElementById('preview-shopee-drawer-backdrop-mob') }
+    ];
 
-    if (config.onMounted) {
-      config.onMounted(modal);
+    drawerElements.forEach(({ root, sheet, backdrop }) => {
+      if (root && sheet && backdrop) {
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+        sheet.classList.remove('translate-y-0');
+        sheet.classList.add('translate-y-full');
+        setTimeout(() => {
+          root.classList.add('hidden');
+        }, 280);
+      }
+    });
+  }
+
+  function openShopeeCheckoutDrawer(actionType) {
+    const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+    const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+    const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
+
+    // 2.A: Jika Produk Tunggal dan actionType === 'cart' -> langsung masukkan ke keranjang, tidak perlu drawer
+    if (!hasVariations && actionType === 'cart') {
+      const prodName = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
+      const curQ = previewTestState.qty || 1;
+      if (typeof App !== 'undefined' && App.showToast) {
+        App.showToast('Berhasil dimasukkan ke keranjang', 'success');
+      }
+      showPreviewTestModal({
+        type: 'cart',
+        title: 'Berhasil dimasukkan ke keranjang',
+        message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
+        bodyHtml: `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
+            <div class="font-bold text-slate-900 truncate">${escapeHtml(prodName)}</div>
+            <div class="text-[11px] text-slate-600 flex justify-between">
+              <span>Kuantitas:</span>
+              <span class="font-bold text-slate-800">${curQ} pcs</span>
+            </div>
+          </div>
+        `
+      });
+      return;
     }
+
+    // 2.B: Jika Produk Memiliki Variasi -> Validasi kelengkapan varian
+    if (hasVariations) {
+      const valRes = validatePreviewVariantSelection();
+      if (!valRes.valid) {
+        if (typeof App !== 'undefined' && App.showToast) {
+          App.showToast(valRes.message, 'warning');
+        } else {
+          alert(valRes.message);
+        }
+        return;
+      }
+    }
+
+    // Hitung data harga, varian, gambar, stok, dan aturan batas order
+    const name = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
+    const coverImg = (primaryState.images && primaryState.images.length > 0)
+      ? primaryState.images[0]
+      : (primaryState.image_url || null);
+
+    const selectedMat = hasVariations
+      ? (validMaterials.find(m => m.id === previewTestState.selectedTier1Id) || (validMaterials[0] || null))
+      : null;
+
+    const variantImg = (selectedMat && (selectedMat.image_url || selectedMat.image))
+      ? (selectedMat.image_url || selectedMat.image)
+      : coverImg;
+
+    // Hitung harga dasar kombinasi
+    let v1Price = 0;
+    if (hasVariations) {
+      if (selectedMat) {
+        v1Price = parseFloat(selectedMat.price) || 0;
+      } else if (validMaterials.length > 0) {
+        v1Price = parseFloat(validMaterials[0].price) || 0;
+      }
+    } else {
+      const singlePriceInp = document.getElementById('input-single-price');
+      v1Price = singlePriceInp ? (parseFloat(singlePriceInp.value) || 0) : (parseFloat(materialsState[0]?.price) || 0);
+    }
+
+    let v2Price = 0;
+    if (primaryState.has_variation_2 && validV2.length > 0) {
+      const selV2 = validV2.find((f, idx) => (f.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
+      if (selV2) v2Price = parseFloat(selV2.price) || 0;
+    }
+
+    let v3Price = 0;
+    if (primaryState.has_variation_3 && validV3.length > 0) {
+      const selV3 = validV3.find((f, idx) => (f.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
+      if (selV3) v3Price = parseFloat(selV3.price) || 0;
+    }
+
+    let v4Price = 0;
+    if (primaryState.has_variation_4 && validV4.length > 0) {
+      const selV4 = validV4.find((f, idx) => (f.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
+      if (selV4) v4Price = parseFloat(selV4.price) || 0;
+    }
+
+    let extrasActivePrice = 0;
+    if (primaryState.has_extra_service && validExtras.length > 0) {
+      validExtras.forEach((ex, idx) => {
+        const exId = ex.id || `ex_${idx}`;
+        const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+        const xt = String(ex.extra_type || '').toLowerCase();
+        const isDirect = (xt === 'direct' || xt === 'langsung proses');
+        if (isSelected || isDirect) {
+          extrasActivePrice += parseFloat(ex.price) || 0;
+        }
+      });
+    }
+
+    const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
+    const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extrasActivePrice) : (parseFloat(primaryState.price || 0) + extrasActivePrice);
+
+    // Diskon Bulanan
+    const hasDiscount = Boolean(primaryState.has_discount);
+    const discPercent = parseFloat(primaryState.discount_percent) || 0;
+    const simDiscCb = document.getElementById('cfg-simulate-countdown-preview');
+    const simDiscCbMob = document.getElementById('cfg-simulate-countdown-preview-mob');
+    const isSimulateDisc = Boolean((simDiscCb && simDiscCb.checked) || (simDiscCbMob && simDiscCbMob.checked));
+    const effHasDiscount = hasDiscount || isSimulateDisc;
+
+    let unitPriceAfterDiscount = displayBasePrice;
+    if (effHasDiscount) {
+      if (hasDiscount && discPercent > 0) {
+        unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
+      } else {
+        unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
+      }
+    }
+
+    // Aturan Min / Max / Kelipatan
+    let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
+    if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+      minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
+    }
+
+    let maxOrderQty = Infinity;
+    if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+      maxOrderQty = parseInt(primaryState.max_order_qty);
+    } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+      maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
+    }
+    if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+      maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
+    }
+
+    let stepMultiplier = 1;
+    if (primaryState.has_order_multiple) {
+      if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
+        stepMultiplier = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
+      } else {
+        stepMultiplier = parseInt(primaryState.order_multiple_value) || 1;
+      }
+    } else if (selectedMat && selectedMat.step_multiplier) {
+      stepMultiplier = parseInt(selectedMat.step_multiplier) || 1;
+    }
+    if (stepMultiplier < 1) stepMultiplier = 1;
+
+    if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
+      previewTestState.qty = minOrderQty;
+    }
+    if (previewTestState.qty > maxOrderQty && maxOrderQty !== Infinity) {
+      previewTestState.qty = maxOrderQty;
+    }
+    const curQty = previewTestState.qty;
+
+    const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+    let finalUnitPrice = unitPriceAfterDiscount;
+    if (wholesaleInfo.hasDiscount) {
+      finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+    }
+
+    // Stok info
+    const stockText = primaryState.is_unlimited_stock ? 'Tersedia' : ((primaryState.stock !== null && parseInt(primaryState.stock) > 0) ? `${primaryState.stock} tersisa` : 'Habis');
+
+    let accentColor = '#059669';
+    if (primaryState.card_variant === 'B') accentColor = '#0f172a';
+    else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || '#047857';
+
+    // RENDER DRAWER HTML BERDASARKAN KONDISI 2.A vs 2.B
+    let drawerHtml = '';
+
+    if (!hasVariations) {
+      // 2.A: PRODUK TUNGGAL (Tinggi ~40%)
+      drawerHtml = `
+        <div class="h-[40%] min-h-[220px] max-h-[42%] flex flex-col justify-between bg-white rounded-t-2xl shadow-2xl border-t border-slate-200">
+          <!-- Bagian Atas Drawer (40%) -->
+          <div class="flex items-start gap-3 p-3.5 border-b border-slate-100 relative shrink-0">
+            <div class="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+              ${variantImg ? `<img src="${variantImg}" class="w-full h-full object-cover" alt="Cover" />` : `<i class="bi bi-box-seam text-2xl text-slate-300"></i>`}
+            </div>
+            <div class="flex-1 pr-6 min-w-0">
+              ${effHasDiscount ? `
+                <div class="text-base font-extrabold text-red-600 leading-tight">${formatIDR(finalUnitPrice)}</div>
+                <div class="text-xs line-through text-slate-400 font-normal mt-0.5">${formatIDR(displayBasePrice)}</div>
+              ` : `
+                <div class="text-base font-extrabold leading-tight" style="color: ${accentColor};">${formatIDR(finalUnitPrice)}</div>
+              `}
+              <div class="text-[11px] text-slate-500 font-medium mt-1">Stok: <span class="font-semibold text-slate-700">${stockText}</span></div>
+            </div>
+            <button type="button" class="btn-close-shopee-drawer absolute top-3 right-3 text-slate-400 hover:text-slate-700 text-sm p-1 cursor-pointer" title="Tutup">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <!-- Bagian Kedua: Baris Jumlah di kiri & Input Qty di kanan (space-between) -->
+          <div class="p-3.5 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700">Jumlah</span>
+            <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white shadow-2xs">
+              <button type="button" class="btn-shopee-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
+                <i class="bi bi-dash text-xs"></i>
+              </button>
+              <span class="w-10 text-center text-xs font-bold text-slate-800 font-mono select-none">
+                ${curQty}
+              </span>
+              <button type="button" class="btn-shopee-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
+                <i class="bi bi-plus text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bagian Paling Bawah Drawer: [ Beli Sekarang ] penuh -->
+          <div class="p-3 pt-0 shrink-0">
+            <button type="button" class="btn-shopee-submit w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+              Beli Sekarang
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      // 2.B: PRODUK MEMILIKI VARIASI (Tinggi hingga 75% max-height)
+      drawerHtml = `
+        <div class="max-h-[75%] min-h-[340px] flex flex-col justify-between bg-white rounded-t-2xl shadow-2xl border-t border-slate-200">
+          <!-- Bagian Paling Atas Drawer: Gambar Varian, Teks Harga & Stok, Silang ✕ -->
+          <div class="flex items-start gap-3 p-3.5 border-b border-slate-100 relative shrink-0">
+            <div class="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+              ${variantImg ? `<img src="${variantImg}" class="w-full h-full object-cover" alt="Varian" />` : `<i class="bi bi-box-seam text-2xl text-slate-300"></i>`}
+            </div>
+            <div class="flex-1 pr-6 min-w-0">
+              ${effHasDiscount ? `
+                <div class="text-base font-extrabold text-red-600 leading-tight">${formatIDR(finalUnitPrice)}</div>
+                <div class="text-xs line-through text-slate-400 font-normal mt-0.5">${formatIDR(displayBasePrice)}</div>
+              ` : `
+                <div class="text-base font-extrabold leading-tight" style="color: ${accentColor};">${formatIDR(finalUnitPrice)}</div>
+              `}
+              <div class="text-[11px] text-slate-500 font-medium mt-1">Stok: <span class="font-semibold text-slate-700">${stockText}</span></div>
+              ${wholesaleInfo.hasDiscount ? `
+                <div class="text-[9px] font-bold text-emerald-700 mt-0.5 truncate">${escapeHtml(wholesaleInfo.note)}</div>
+              ` : ''}
+            </div>
+            <button type="button" class="btn-close-shopee-drawer absolute top-3 right-3 text-slate-400 hover:text-slate-700 text-sm p-1 cursor-pointer" title="Tutup">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <!-- Bagian Tengah Drawer: Deretan Pilihan Variasi yang Aktif -->
+          <div class="overflow-y-auto max-h-[35vh] p-3.5 space-y-3.5 flex-1">
+            <!-- Variasi 1 -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                <span>${escapeHtml(primaryState.variation_labels?.label_tier_1 || 'Variasi 1')}:</span>
+                <span class="text-slate-400 font-normal lowercase">${previewTestState.selectedTier1Id ? 'terpilih' : 'pilih salah satu'}</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${validMaterials.map((m) => {
+                  const isSelected = previewTestState.selectedTier1Id === m.id;
+                  return `
+                    <button type="button" class="btn-shopee-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor};` : ''}" data-id="${m.id}">
+                      ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                      <span>${escapeHtml(m.name.trim())}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Variasi 2 (Jika Aktif) -->
+            ${(primaryState.has_variation_2 && validV2.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <span>${escapeHtml(primaryState.variation_labels?.label_tier_2 || 'Variasi 2')}:</span>
+                  <span class="text-slate-400 font-normal lowercase">${previewTestState.selectedTier2Id ? 'terpilih' : 'pilih salah satu'}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validV2.map((f, idx) => {
+                    const fId = f.id || `v2_${idx}`;
+                    const isSelected = previewTestState.selectedTier2Id === fId;
+                    return `
+                      <button type="button" class="btn-shopee-tier2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor};` : ''}" data-id="${fId}">
+                        ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                        <span>${escapeHtml(f.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Variasi 3 (Jika Aktif) -->
+            ${(primaryState.has_variation_3 && validV3.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <span>${escapeHtml(primaryState.variation_labels?.label_extra_1 || 'Variasi 3')}:</span>
+                  <span class="text-slate-400 font-normal lowercase">${previewTestState.selectedTier3Id ? 'terpilih' : 'pilih salah satu'}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validV3.map((f, idx) => {
+                    const fId = f.id || `v3_${idx}`;
+                    const isSelected = previewTestState.selectedTier3Id === fId;
+                    return `
+                      <button type="button" class="btn-shopee-tier3 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor};` : ''}" data-id="${fId}">
+                        ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                        <span>${escapeHtml(f.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Variasi 4 (Jika Aktif) -->
+            ${(primaryState.has_variation_4 && validV4.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <span>${escapeHtml(primaryState.variation_labels?.label_extra_2 || 'Variasi 4')}:</span>
+                  <span class="text-slate-400 font-normal lowercase">${previewTestState.selectedTier4Id ? 'terpilih' : 'pilih salah satu'}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validV4.map((f, idx) => {
+                    const fId = f.id || `v4_${idx}`;
+                    const isSelected = previewTestState.selectedTier4Id === fId;
+                    return `
+                      <button type="button" class="btn-shopee-tier4 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor};` : ''}" data-id="${fId}">
+                        ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                        <span>${escapeHtml(f.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Bagian Bawah Drawer: Baris Jumlah Pesanan & Input Qty -->
+          <div class="p-3.5 pt-2 border-t border-slate-100 flex items-center justify-between shrink-0">
+            <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
+            <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white shadow-2xs">
+              <button type="button" class="btn-shopee-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
+                <i class="bi bi-dash text-xs"></i>
+              </button>
+              <span class="w-10 text-center text-xs font-bold text-slate-800 font-mono select-none">
+                ${curQty}
+              </span>
+              <button type="button" class="btn-shopee-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">
+                <i class="bi bi-plus text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bagian Paling Bawah Drawer: Tombol Aksi Beli Sekarang / Tambah ke Keranjang -->
+          <div class="p-3 pt-0 shrink-0">
+            <button type="button" class="btn-shopee-submit w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+              ${actionType === 'buy' ? 'Beli Sekarang' : 'Tambah ke Keranjang'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    const drawerElements = [
+      { root: document.getElementById('preview-shopee-drawer-root'), sheet: document.getElementById('preview-shopee-drawer-sheet'), backdrop: document.getElementById('preview-shopee-drawer-backdrop') },
+      { root: document.getElementById('preview-shopee-drawer-root-mob'), sheet: document.getElementById('preview-shopee-drawer-sheet-mob'), backdrop: document.getElementById('preview-shopee-drawer-backdrop-mob') }
+    ];
+
+    drawerElements.forEach(({ root, sheet, backdrop }) => {
+      if (root && sheet && backdrop) {
+        sheet.innerHTML = drawerHtml;
+        root.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          backdrop.classList.remove('opacity-0');
+          backdrop.classList.add('opacity-100');
+          sheet.classList.remove('translate-y-full');
+          sheet.classList.add('translate-y-0');
+        });
+
+        // Bind events inside this drawer instance
+        sheet.querySelectorAll('.btn-close-shopee-drawer').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            closeShopeeCheckoutDrawer();
+          };
+        });
+
+        backdrop.onclick = (e) => {
+          e.preventDefault();
+          closeShopeeCheckoutDrawer();
+        };
+
+        // Qty Minus
+        sheet.querySelectorAll('.btn-shopee-qty-minus').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            let curQ = previewTestState.qty || minOrderQty;
+            let nextQ = curQ - stepMultiplier;
+            if (nextQ < minOrderQty) nextQ = minOrderQty;
+            previewTestState.qty = nextQ;
+            openShopeeCheckoutDrawer(actionType);
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Qty Plus
+        sheet.querySelectorAll('.btn-shopee-qty-plus').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            let curQ = previewTestState.qty || minOrderQty;
+            let nextQ = curQ + stepMultiplier;
+            if (nextQ > maxOrderQty && maxOrderQty !== Infinity) nextQ = maxOrderQty;
+            previewTestState.qty = nextQ;
+            openShopeeCheckoutDrawer(actionType);
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Variant 1
+        sheet.querySelectorAll('.btn-shopee-tier1').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
+            openShopeeCheckoutDrawer(actionType);
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Variant 2
+        sheet.querySelectorAll('.btn-shopee-tier2').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
+            openShopeeCheckoutDrawer(actionType);
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Variant 3
+        sheet.querySelectorAll('.btn-shopee-tier3').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
+            openShopeeCheckoutDrawer(actionType);
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Variant 4
+        sheet.querySelectorAll('.btn-shopee-tier4').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
+            openShopeeCheckoutDrawer(actionType);
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Tombol Submit Drawer (Beli Sekarang / Tambah ke Keranjang)
+        sheet.querySelectorAll('.btn-shopee-submit').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            if (hasVariations) {
+              const valRes = validatePreviewVariantSelection();
+              if (!valRes.valid) {
+                if (typeof App !== 'undefined' && App.showToast) {
+                  App.showToast(valRes.message, 'warning');
+                } else {
+                  alert(valRes.message);
+                }
+                return;
+              }
+            }
+
+            closeShopeeCheckoutDrawer();
+
+            const chosenVariants = [];
+            if (selectedMat && selectedMat.name) chosenVariants.push(selectedMat.name.trim());
+            if (primaryState.has_variation_2 && validV2.length > 0) {
+              const f = validV2.find((item, idx) => (item.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
+              if (f && f.name) chosenVariants.push(f.name.trim());
+            }
+            if (primaryState.has_variation_3 && validV3.length > 0) {
+              const f = validV3.find((item, idx) => (item.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
+              if (f && f.name) chosenVariants.push(f.name.trim());
+            }
+            if (primaryState.has_variation_4 && validV4.length > 0) {
+              const f = validV4.find((item, idx) => (item.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
+              if (f && f.name) chosenVariants.push(f.name.trim());
+            }
+            let variantText = chosenVariants.length > 0 ? chosenVariants.join(' - ') : 'Standar';
+
+            if (actionType === 'buy') {
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Order Berhasil', 'success');
+              }
+              showPreviewTestModal({
+                type: 'buy',
+                title: 'Order Berhasil',
+                message: 'Simulasi checkout langsung pembeli berhasil diselesaikan!',
+                bodyHtml: `
+                  <div class="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-2">
+                    <div class="font-extrabold text-slate-900 truncate">${escapeHtml(name)}</div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Varian:</span>
+                      <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Jumlah:</span>
+                      <span class="font-bold text-slate-800">${curQty} pcs</span>
+                    </div>
+                    <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
+                      <i class="bi bi-shield-check text-emerald-700"></i>
+                      <span>Validasi seluruh aturan batas order & harga lulus 100%</span>
+                    </div>
+                  </div>
+                `
+              });
+            } else {
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Berhasil dimasukkan ke keranjang', 'success');
+              }
+              showPreviewTestModal({
+                type: 'cart',
+                title: 'Berhasil dimasukkan ke keranjang',
+                message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
+                bodyHtml: `
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
+                    <div class="font-bold text-slate-900 truncate">${escapeHtml(name)}</div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Pilihan Varian:</span>
+                      <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-600 flex justify-between">
+                      <span>Kuantitas:</span>
+                      <span class="font-bold text-slate-800">${curQty} pcs</span>
+                    </div>
+                  </div>
+                `
+              });
+            }
+          };
+        });
+      }
+    });
   }
 
   function bindMiniPdpInteractiveEvents() {
@@ -2114,87 +2745,29 @@ const ProductForm = (() => {
         };
       });
 
-      // 9. Tombol Cart (+ / Add to Cart)
+      // 9. Tombol Cart (+ / Add to Cart) -> Buka Shopee Drawer untuk varian atau langsung simpan untuk produk tunggal
       container.querySelectorAll('.btn-preview-add-cart').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
-          const valRes = validatePreviewVariantSelection();
-          if (!valRes.valid) {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast(valRes.message, 'warning');
-            } else {
-              alert(valRes.message);
-            }
-            return;
+          if (previewTestState.sidebarTab === 'preview') {
+            previewTestState.sidebarTab = 'test';
+            syncPreviewModeHeaderButtons();
+            updateProductCardLivePreview();
           }
-
-          const { prodName, variantText, qty } = getContextSummary();
-          if (typeof App !== 'undefined' && App.showToast) {
-            App.showToast('Berhasil dimasukkan ke keranjang', 'success');
-          }
-
-          showPreviewTestModal({
-            type: 'cart',
-            title: 'Berhasil dimasukkan ke keranjang',
-            message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
-            bodyHtml: `
-              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
-                <div class="font-bold text-slate-900 truncate">${escapeHtml(prodName)}</div>
-                <div class="text-[11px] text-slate-600 flex justify-between">
-                  <span>Pilihan Varian:</span>
-                  <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
-                </div>
-                <div class="text-[11px] text-slate-600 flex justify-between">
-                  <span>Kuantitas:</span>
-                  <span class="font-bold text-slate-800">${qty} pcs</span>
-                </div>
-              </div>
-            `
-          });
+          openShopeeCheckoutDrawer('cart');
         };
       });
 
-      // 10. Tombol Beli Sekarang
+      // 10. Tombol Beli Sekarang -> Buka Shopee Drawer
       container.querySelectorAll('.btn-preview-buy-now').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
-          const valRes = validatePreviewVariantSelection();
-          if (!valRes.valid) {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast(valRes.message, 'warning');
-            } else {
-              alert(valRes.message);
-            }
-            return;
+          if (previewTestState.sidebarTab === 'preview') {
+            previewTestState.sidebarTab = 'test';
+            syncPreviewModeHeaderButtons();
+            updateProductCardLivePreview();
           }
-
-          const { prodName, variantText, qty } = getContextSummary();
-          if (typeof App !== 'undefined' && App.showToast) {
-            App.showToast('Order Berhasil', 'success');
-          }
-
-          showPreviewTestModal({
-            type: 'buy',
-            title: 'Order Berhasil',
-            message: 'Simulasi checkout langsung pembeli berhasil diselesaikan!',
-            bodyHtml: `
-              <div class="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-2">
-                <div class="font-extrabold text-slate-900 truncate">${escapeHtml(prodName)}</div>
-                <div class="text-[11px] text-slate-600 flex justify-between">
-                  <span>Varian:</span>
-                  <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
-                </div>
-                <div class="text-[11px] text-slate-600 flex justify-between">
-                  <span>Jumlah:</span>
-                  <span class="font-bold text-slate-800">${qty} pcs</span>
-                </div>
-                <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
-                  <i class="bi bi-shield-check text-emerald-700"></i>
-                  <span>Validasi seluruh aturan batas order & harga lulus 100%</span>
-                </div>
-              </div>
-            `
-          });
+          openShopeeCheckoutDrawer('buy');
         };
       });
     });
@@ -2326,7 +2899,8 @@ const ProductForm = (() => {
     else if (curPt === 5) unitLabel = '/ kg';
     else if (curPt === 6) unitLabel = '/ lt';
 
-    // Dynamic Header Preview Title (Step 1: Kartu Produk, Step 2: Detail Produk)
+    // Dynamic Header Preview Mode & Title Sync
+    syncPreviewModeHeaderButtons();
     const sidebarTitle = document.getElementById('sidebar-preview-title');
     const mobileTitle = document.getElementById('mobile-preview-title');
     if (sidebarTitle) {
@@ -2833,16 +3407,8 @@ const ProductForm = (() => {
       const subtotalOrder = finalUnitPrice * curQty;
 
       const miniPdpHtml = `
-        <div class="w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans">
-          <!-- Banner Mode Uji Coba Interaktif -->
-          <div class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white px-3 py-1.5 text-[10px] font-bold flex items-center justify-between shadow-2xs select-none">
-            <span class="flex items-center gap-1.5">
-              <i class="bi bi-play-circle-fill text-amber-300"></i> Mode Uji Coba Pembeli
-            </span>
-            <span class="text-[9px] font-medium bg-black/20 px-2 py-0.5 rounded-full">Simulasi Interaktif</span>
-          </div>
-
-          <!-- Foto Utama Mini PDP -->
+        <div class="w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative">
+          <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
           <div class="relative w-full aspect-square bg-slate-100 overflow-hidden">
             ${hasPhoto && img ? `
               <img src="${img}" class="w-full h-full object-cover" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
@@ -3288,7 +3854,7 @@ const ProductForm = (() => {
 
     return `
       <!-- 1. FIXED SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE) -->
-      <div id="step2-subnav-fixed" class="fixed top-16 left-0 lg:left-[4.5rem] ${isLivePreviewOpen && primaryState.is_active ? 'lg:right-[340px] xl:right-[380px]' : 'right-0'} z-30 bg-white border-b border-slate-200/80 transition-all duration-300">
+      <div id="step2-subnav-fixed" class="fixed top-16 left-0 lg:left-[4.5rem] ${isLivePreviewOpen && primaryState.is_active ? 'lg:right-[300px] xl:right-[340px]' : 'right-0'} z-30 bg-white border-b border-slate-200/80 transition-all duration-300">
         <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
           <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
             Informasi Produk
@@ -7510,11 +8076,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           btnExpandSidebar.classList.remove('lg:flex');
         }
         if (wizardCol) {
-          wizardCol.classList.add('lg:pr-[360px]', 'xl:pr-[400px]');
+          wizardCol.classList.add('lg:pr-[320px]', 'xl:pr-[360px]');
         }
         const subnavFixed = document.getElementById('step2-subnav-fixed');
         if (subnavFixed) {
-          subnavFixed.classList.add('lg:right-[340px]', 'xl:right-[380px]');
+          subnavFixed.classList.add('lg:right-[300px]', 'xl:right-[340px]');
           subnavFixed.classList.remove('right-0');
         }
       } else {
@@ -7532,11 +8098,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
         }
         if (wizardCol) {
-          wizardCol.classList.remove('lg:pr-[360px]', 'xl:pr-[400px]');
+          wizardCol.classList.remove('lg:pr-[320px]', 'xl:pr-[360px]');
         }
         const subnavFixed = document.getElementById('step2-subnav-fixed');
         if (subnavFixed) {
-          subnavFixed.classList.remove('lg:right-[340px]', 'xl:right-[380px]');
+          subnavFixed.classList.remove('lg:right-[300px]', 'xl:right-[340px]');
           subnavFixed.classList.add('right-0');
         }
       }
@@ -7605,6 +8171,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (btnExpandSidebar) {
       btnExpandSidebar.addEventListener('click', () => setSidebarState(true));
     }
+
+    // Dual Header Buttons: [Preview] vs [Uji Coba]
+    ['btn-preview-mode-passive', 'btn-preview-mode-passive-mob'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          previewTestState.sidebarTab = 'preview';
+          syncPreviewModeHeaderButtons();
+          updateProductCardLivePreview();
+        };
+      }
+    });
+
+    ['btn-preview-mode-test', 'btn-preview-mode-test-mob'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          previewTestState.sidebarTab = 'test';
+          syncPreviewModeHeaderButtons();
+          updateProductCardLivePreview();
+        };
+      }
+    });
     // Mobile Bottom Sheet / Drawer
     const btnFabLivePreview = document.getElementById('btn-fab-live-preview');
     const btnCloseMobilePreview = document.getElementById('btn-close-mobile-preview');
