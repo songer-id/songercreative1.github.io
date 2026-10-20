@@ -3741,6 +3741,55 @@ const ProductForm = (() => {
 
       const isAllVariationsSelected = checkAllVariationsSelected();
 
+      // Hitung harga dasar kombinasi aktif (jika variasi dipilih atau produk tunggal)
+      const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
+      const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extrasActivePrice) : (parseFloat(primaryState.price || 0) + extrasActivePrice || effFinalPrice);
+
+      let unitPriceAfterDiscount = displayBasePrice;
+      let step2StrikePrice = displayBasePrice;
+      if (effHasDiscount) {
+        if (hasDiscount && discPercent > 0) {
+          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
+        } else {
+          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
+          step2StrikePrice = displayBasePrice * 2;
+        }
+      }
+
+      // Quantity & Grosir
+      let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
+      if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+        minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
+      }
+      let maxOrderQty = Infinity;
+      if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+        maxOrderQty = parseInt(primaryState.max_order_qty);
+      } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+        maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
+      }
+      if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+        maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
+      }
+      if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
+        previewTestState.qty = minOrderQty;
+      }
+      if (previewTestState.qty > maxOrderQty && maxOrderQty !== Infinity) {
+        previewTestState.qty = maxOrderQty;
+      }
+      const curQty = previewTestState.qty;
+
+      const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+
+      let finalUnitPrice = unitPriceAfterDiscount;
+      if (wholesaleInfo && wholesaleInfo.hasDiscount) {
+        finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+      }
+      if (primaryState.has_variants && !isAllVariationsSelected) {
+        finalUnitPrice = effMinPrice || effFinalPrice;
+      }
+
+      const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
+
       let displayPriceString = '';
       let displayStrikePriceString = '';
 
