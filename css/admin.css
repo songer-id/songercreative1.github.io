@@ -1051,24 +1051,61 @@ input.toggle-same-cost:checked ~ div::after {
   scrollbar-width: none !important;
 }
 
-.mini-pdp-var-chip {
-  max-width: 100%;
-}
-
-/* Drawer Extras Accordion & Chip Styling */
-.btn-shopee-extra {
+/* Styling Chip Opsi Variasi Mini PDP & Drawer Checkout */
+.mini-pdp-var-chip,
+.btn-preview-tier1,
+.btn-preview-tier2,
+.btn-preview-tier3,
+.btn-preview-tier4,
+.btn-shopee-tier1,
+.btn-shopee-tier2,
+.btn-shopee-tier3,
+.btn-shopee-tier4 {
+  border-radius: 4px !important;
   transition: all 0.15s ease-in-out;
 }
-.btn-shopee-extra:not(.is-active) {
-  background-color: #f1f5f9;
-  border-color: #e2e8f0;
-  color: #334155;
+
+.mini-pdp-var-chip:not(.is-active),
+.btn-preview-tier1:not(.is-active),
+.btn-preview-tier2:not(.is-active),
+.btn-preview-tier3:not(.is-active),
+.btn-preview-tier4:not(.is-active),
+.btn-shopee-tier1:not(.is-active),
+.btn-shopee-tier2:not(.is-active),
+.btn-shopee-tier3:not(.is-active),
+.btn-shopee-tier4:not(.is-active) {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid transparent !important;
 }
-.btn-shopee-extra.is-active {
+
+.mini-pdp-var-chip.is-active,
+.btn-preview-tier1.is-active,
+.btn-preview-tier2.is-active,
+.btn-preview-tier3.is-active,
+.btn-preview-tier4.is-active,
+.btn-shopee-tier1.is-active,
+.btn-shopee-tier2.is-active,
+.btn-shopee-tier3.is-active,
+.btn-shopee-tier4.is-active {
+  background-color: #ffffff !important;
+  color: #33b589 !important;
+  border: 1px solid #33b589 !important;
+  font-weight: 600 !important;
+}
+
+/* Drawer Extras Accordion & Item Row Styling */
+.extra-item-row {
+  border-radius: 6px;
+  transition: all 0.15s ease-in-out;
+}
+.extra-item-row.is-active {
   background-color: #ffffff !important;
   border-color: #33b589 !important;
-  color: #33b589 !important;
-  font-weight: 600 !important;
+}
+.extra-item-row:not(.is-active) {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
 }
 
 

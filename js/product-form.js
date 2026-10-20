@@ -26,6 +26,7 @@ const ProductForm = (() => {
     selectedTier3Id: null,
     selectedTier4Id: null,
     selectedExtras: {},
+    extraQty: {},
     qty: 1
   };
 
@@ -291,6 +292,7 @@ const ProductForm = (() => {
     previewTestState.selectedTier3Id = null;
     previewTestState.selectedTier4Id = null;
     previewTestState.selectedExtras = {};
+    previewTestState.extraQty = {};
     previewTestState.qty = 1;
     primaryState = {
       name: '',
@@ -443,6 +445,7 @@ const ProductForm = (() => {
     previewTestState.selectedTier3Id = null;
     previewTestState.selectedTier4Id = null;
     previewTestState.selectedExtras = {};
+    previewTestState.extraQty = {};
     previewTestState.qty = prod.min_order || 1;
 
     const imgs = Array.isArray(prod.images) && prod.images.length > 0 
@@ -984,15 +987,18 @@ const ProductForm = (() => {
                   <span class="leading-tight text-[11px] font-bold">Preview<br><span class="text-[10px] text-slate-500 font-semibold">Kartu Produk</span></span>
                 </div>
               ` : `
-                <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-                  <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-                    <i class="bi bi-eye"></i>
-                    <span>Preview</span>
-                  </button>
-                  <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-                    <i class="bi bi-lightning-charge-fill text-amber-300"></i>
-                    <span>Uji Coba</span>
-                  </button>
+                <div class="flex flex-col gap-1 w-full">
+                  <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+                    <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                      <i class="bi bi-eye"></i>
+                      <span>Preview</span>
+                    </button>
+                    <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                      <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+                      <span>Uji Coba</span>
+                    </button>
+                  </div>
+                  <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
                 </div>
               `}
             </div>
@@ -1218,15 +1224,18 @@ const ProductForm = (() => {
                   <span class="leading-tight text-[11px] font-bold">Preview<br><span class="text-[10px] text-slate-500 font-semibold">Kartu Produk</span></span>
                 </div>
               ` : `
-                <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-                  <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-                    <i class="bi bi-eye"></i>
-                    <span>Preview</span>
-                  </button>
-                  <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-                    <i class="bi bi-lightning-charge-fill text-amber-300"></i>
-                    <span>Uji Coba</span>
-                  </button>
+                <div class="flex flex-col gap-1 w-full">
+                  <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+                    <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                      <i class="bi bi-eye"></i>
+                      <span>Preview</span>
+                    </button>
+                    <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                      <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+                      <span>Uji Coba</span>
+                    </button>
+                  </div>
+                  <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
                 </div>
               `}
             </div>
@@ -1799,6 +1808,52 @@ const ProductForm = (() => {
     return stateVal || fallback;
   }
 
+  function ensureExtraServiceNoneAtBottom() {
+    if (!finishingsState.extra_3) finishingsState.extra_3 = [];
+    const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
+    const defaultNoneName = `Tanpa ${extraTitle}`;
+
+    let noneIdx = finishingsState.extra_3.findIndex(f => f && (f.is_default_none || (f.name && f.name.startsWith('Tanpa '))));
+    let noneItem = null;
+    if (noneIdx !== -1) {
+      noneItem = finishingsState.extra_3.splice(noneIdx, 1)[0];
+    } else {
+      noneItem = {
+        id: DB.generateUUID(),
+        tier: 'extra_3',
+        name: defaultNoneName,
+        description: '',
+        price: 0,
+        cost_price: 0,
+        stock: '',
+        extra_type: 'pilihan_ganda',
+        is_default_none: true
+      };
+    }
+
+    noneItem.name = defaultNoneName;
+    noneItem.price = 0;
+    noneItem.cost_price = 0;
+    noneItem.extra_type = 'pilihan_ganda';
+    noneItem.is_default_none = true;
+
+    if (finishingsState.extra_3.length === 0) {
+      finishingsState.extra_3.push({
+        id: DB.generateUUID(),
+        tier: 'extra_3',
+        name: '',
+        description: '',
+        price: '',
+        cost_price: '',
+        stock: '',
+        extra_type: 'pilihan_ganda'
+      });
+    }
+
+    finishingsState.extra_3.push(noneItem);
+    return noneItem;
+  }
+
   function getPreviewStockDisplay(selectedMat, validMaterials) {
     if (!primaryState.has_variants) {
       const unlCheck = document.getElementById('toggle-unlimited-stock');
@@ -1996,28 +2051,34 @@ const ProductForm = (() => {
     const isTest = previewTestState.sidebarTab === 'test';
 
     const step2DeskHtml = `
-      <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-        <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-          <i class="bi bi-eye"></i>
-          <span>Preview</span>
-        </button>
-        <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-          <i class="bi bi-lightning-charge-fill text-amber-300"></i>
-          <span>Uji Coba</span>
-        </button>
+      <div class="flex flex-col gap-1 w-full">
+        <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+          <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+            <i class="bi bi-eye"></i>
+            <span>Preview</span>
+          </button>
+          <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+            <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+            <span>Uji Coba</span>
+          </button>
+        </div>
+        <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
       </div>
     `;
 
     const step2MobHtml = `
-      <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-        <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-          <i class="bi bi-eye"></i>
-          <span>Preview</span>
-        </button>
-        <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
-          <i class="bi bi-lightning-charge-fill text-amber-300"></i>
-          <span>Uji Coba</span>
-        </button>
+      <div class="flex flex-col gap-1 w-full">
+        <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+          <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+            <i class="bi bi-eye"></i>
+            <span>Preview</span>
+          </button>
+          <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+            <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+            <span>Uji Coba</span>
+          </button>
+        </div>
+        <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
       </div>
     `;
 
@@ -2225,18 +2286,16 @@ const ProductForm = (() => {
 
     const extraLabel = getVariationLabel('extras', 'Layanan Extras');
     const defaultNoneName = `Tanpa ${extraLabel}`;
-    if (primaryState.has_extra_service && finishingsState.extra_3 && finishingsState.extra_3.length > 0) {
-      finishingsState.extra_3[0].name = defaultNoneName;
-      finishingsState.extra_3[0].price = 0;
-      finishingsState.extra_3[0].cost_price = 0;
-      finishingsState.extra_3[0].extra_type = 'pilihan_ganda';
-      finishingsState.extra_3[0].is_default_none = true;
+    if (primaryState.has_extra_service) {
+      ensureExtraServiceNoneAtBottom();
     }
     const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
 
-    const noneId = validExtras[0]?.id || 'ex_0';
-    if (!previewTestState.selectedExtras || Object.keys(previewTestState.selectedExtras).length === 0) {
-      previewTestState.selectedExtras = { [noneId]: true };
+    if (!previewTestState.selectedExtras) {
+      previewTestState.selectedExtras = {};
+    }
+    if (!previewTestState.extraQty) {
+      previewTestState.extraQty = {};
     }
     const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
     const isAllVariationsSelected = checkAllVariationsSelected();
@@ -2288,12 +2347,21 @@ const ProductForm = (() => {
     let extrasActivePrice = 0;
     if (primaryState.has_extra_service && validExtras.length > 0) {
       validExtras.forEach((ex, idx) => {
+        if (ex.is_default_none) return;
         const exId = ex.id || `ex_${idx}`;
-        const isSelected = Boolean(previewTestState.selectedExtras[exId]);
         const xt = String(ex.extra_type || '').toLowerCase();
-        const isDirect = (xt === 'direct' || xt === 'langsung proses');
-        if (isSelected || isDirect) {
-          extrasActivePrice += parseFloat(ex.price) || 0;
+        const price = parseFloat(ex.price) || 0;
+        if (xt === 'qty') {
+          const qty = parseInt(previewTestState.extraQty?.[exId]) || 0;
+          if (qty > 0) {
+            extrasActivePrice += price * qty;
+          }
+        } else {
+          const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+          const isDirect = (xt === 'direct' || xt === 'langsung proses');
+          if (isSelected || isDirect) {
+            extrasActivePrice += price;
+          }
         }
       });
     }
@@ -2410,13 +2478,31 @@ const ProductForm = (() => {
     if (primaryState.card_variant === 'B') accentColor = '#0f172a';
     else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || '#047857';
 
+    const noneItem = validExtras.find(ex => ex.is_default_none);
+    const noneId = noneItem?.id;
+    const isNoneSelected = noneId && Boolean(previewTestState.selectedExtras[noneId]);
+
     const activeExtrasSelected = validExtras.filter((ex, idx) => {
+      if (ex.is_default_none) return false;
       const exId = ex.id || `ex_${idx}`;
-      return idx > 0 && Boolean(previewTestState.selectedExtras[exId]);
+      const xt = String(ex.extra_type || '').toLowerCase();
+      if (xt === 'qty') {
+        return (previewTestState.extraQty?.[exId] || 0) > 0;
+      }
+      return Boolean(previewTestState.selectedExtras[exId]);
     });
-    let extrasStatusText = defaultNoneName;
+
+    let extrasStatusText = isNoneSelected ? defaultNoneName : 'Pilih layanan';
     if (activeExtrasSelected.length === 1) {
-      extrasStatusText = activeExtrasSelected[0].name.trim();
+      const singleEx = activeExtrasSelected[0];
+      const singleId = singleEx.id;
+      const xt = String(singleEx.extra_type || '').toLowerCase();
+      if (xt === 'qty') {
+        const q = previewTestState.extraQty?.[singleId] || 1;
+        extrasStatusText = `${singleEx.name.trim()} (${q}x)`;
+      } else {
+        extrasStatusText = singleEx.name.trim();
+      }
     } else if (activeExtrasSelected.length > 1) {
       extrasStatusText = `${activeExtrasSelected.length} dipilih`;
     }
@@ -2435,39 +2521,58 @@ const ProductForm = (() => {
         </div>
 
         ${isAccordionOpen ? `
-          <div class="flex flex-wrap gap-1.5 pt-1">
+          <div class="flex flex-col gap-1.5 pt-1">
             ${validExtras.map((ex, idx) => {
               const exId = ex.id || `ex_${idx}`;
+              const isNoneOption = Boolean(ex.is_default_none);
+              const xt = String(ex.extra_type || '').toLowerCase();
+              const isQtyType = !isNoneOption && xt === 'qty';
+              const extraItemQty = parseInt(previewTestState.extraQty?.[exId]) || 0;
               const isSelected = Boolean(previewTestState.selectedExtras[exId]);
-              const itemImg = ex.image_url || ex.image;
-              const isNoneOption = (idx === 0);
-              const priceVal = parseFloat(ex.price) || 0;
-              const priceBadge = (isNoneOption || priceVal === 0) 
-                ? '' 
-                : `<span class="text-[10px] ${isSelected ? 'text-[#33b589]' : 'text-slate-500'} font-semibold">+${formatIDR(priceVal)}</span>`;
+              const isItemActive = isQtyType ? (extraItemQty > 0) : isSelected;
 
-              if (itemImg) {
-                return `
-                  <button type="button" class="btn-shopee-extra inline-flex items-center gap-1.5 p-1 pr-2.5 rounded-lg border text-[11px] transition cursor-pointer ${
-                    isSelected 
-                      ? 'bg-white border-[#33b589] border-2 text-[#33b589] font-semibold shadow-2xs is-active' 
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 font-normal'
-                  }" data-id="${exId}">
-                    <img src="${itemImg}" class="w-5 h-5 rounded-md object-cover shrink-0 bg-slate-100" alt="${escapeHtml(ex.name)}" />
-                    <span class="truncate max-w-[130px]">${escapeHtml(ex.name.trim())}</span>
-                    ${priceBadge}
-                  </button>
-                `;
-              }
+              const itemImg = ex.image_url || ex.image;
+              const priceVal = parseFloat(ex.price) || 0;
+              const priceBadge = (!isNoneOption && priceVal > 0) 
+                ? `<span class="text-[10px] text-[#33b589] font-bold shrink-0">+${formatIDR(priceVal)}</span>` 
+                : '';
+
               return `
-                <button type="button" class="btn-shopee-extra px-2.5 py-1.5 rounded-lg border text-[11px] transition cursor-pointer inline-flex items-center gap-1.5 ${
-                  isSelected 
-                    ? 'bg-white border-[#33b589] border-2 text-[#33b589] font-semibold shadow-2xs is-active' 
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 font-normal'
-                }" data-id="${exId}">
-                  <span>${escapeHtml(ex.name.trim())}</span>
-                  ${priceBadge}
-                </button>
+                <div class="extra-item-row flex items-center justify-between p-2 rounded border transition ${
+                  isItemActive 
+                    ? 'bg-white border-[#33b589] shadow-2xs is-active' 
+                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                }" data-id="${exId}" data-type="${xt}">
+                  <!-- Sisi Kiri: Foto Kecil (jika ada) + Nama Opsi + (+Rp[Harga Jual]) -->
+                  <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer select-none extra-item-trigger" data-id="${exId}" data-type="${xt}">
+                    ${itemImg ? `
+                      <img src="${itemImg}" class="w-6 h-6 rounded object-cover shrink-0 bg-slate-100 border border-slate-200" alt="${escapeHtml(ex.name)}" />
+                    ` : ''}
+                    <div class="flex items-baseline gap-1.5 min-w-0 flex-wrap">
+                      <span class="text-xs font-medium text-slate-800 truncate">${escapeHtml(ex.name.trim())}</span>
+                      ${priceBadge}
+                    </div>
+                  </div>
+
+                  <!-- Pemisah Garis Tipis & Sisi Kanan: Kontrol Input Sesuai Tipe -->
+                  <div class="pl-2 border-l border-slate-200 shrink-0 flex items-center justify-end">
+                    ${isQtyType ? `
+                      <!-- Stepper Qty: [- [input] +] -->
+                      <div class="inline-flex items-center border border-slate-300 rounded overflow-hidden bg-white shadow-2xs">
+                        <button type="button" class="btn-extra-qty-minus w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${extraItemQty <= 0 ? 'opacity-40 cursor-not-allowed' : ''}" data-id="${exId}">-</button>
+                        <input type="number" class="input-extra-qty w-9 h-6 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" data-id="${exId}" value="${extraItemQty}" min="0" />
+                        <button type="button" class="btn-extra-qty-plus w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer" data-id="${exId}">+</button>
+                      </div>
+                    ` : `
+                      <!-- Radio Button Bulat: Putih dengan titik/border hijau #33b589 saat aktif -->
+                      <button type="button" class="btn-extra-radio w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer transition ${isItemActive ? 'border-[#33b589] bg-white' : 'border-slate-300 bg-white hover:border-slate-400'}" data-id="${exId}">
+                        ${isItemActive ? `
+                          <div class="w-2.5 h-2.5 rounded-full bg-[#33b589]"></div>
+                        ` : ''}
+                      </button>
+                    `}
+                  </div>
+                </div>
               `;
             }).join('')}
           </div>
@@ -2566,14 +2671,14 @@ const ProductForm = (() => {
                   const itemImg = m.image_url || m.image;
                   if (itemImg) {
                     return `
-                      <button type="button" class="btn-shopee-tier1 mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded-md border text-[11px] font-medium transition cursor-pointer ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-tier="tier1" data-id="${m.id}">
+                      <button type="button" class="btn-shopee-tier1 mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded border text-[11px] font-medium transition cursor-pointer ${isSelected ? 'is-active' : ''}" data-tier="tier1" data-id="${m.id}">
                         <img src="${itemImg}" class="w-5 h-5 rounded-xs object-cover shrink-0 bg-slate-100" alt="${escapeHtml(m.name)}" />
                         <span class="truncate max-w-[120px]">${escapeHtml(m.name)}</span>
                       </button>
                     `;
                   }
                   return `
-                    <button type="button" class="btn-shopee-tier1 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-tier="tier1" data-id="${m.id}">
+                    <button type="button" class="btn-shopee-tier1 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier1" data-id="${m.id}">
                       <span>${escapeHtml(m.name.trim())}</span>
                     </button>
                   `;
@@ -2590,7 +2695,7 @@ const ProductForm = (() => {
                     const fId = f.id || `v2_${idx}`;
                     const isSelected = previewTestState.selectedTier2Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier2 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier2 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2608,7 +2713,7 @@ const ProductForm = (() => {
                     const fId = f.id || `v3_${idx}`;
                     const isSelected = previewTestState.selectedTier3Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier3 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier3 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2626,7 +2731,7 @@ const ProductForm = (() => {
                     const fId = f.id || `v4_${idx}`;
                     const isSelected = previewTestState.selectedTier4Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier4 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier4 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2835,8 +2940,13 @@ const ProductForm = (() => {
         if (primaryState.has_extra_service) {
           const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
           validExtras.forEach((ex, idx) => {
+            if (ex.is_default_none) return;
             const exId = ex.id || `ex_${idx}`;
-            if (idx > 0 && previewTestState.selectedExtras[exId]) {
+            const xt = String(ex.extra_type || '').toLowerCase();
+            if (xt === 'qty') {
+              const q = previewTestState.extraQty?.[exId] || 0;
+              if (q > 0) chosenExtras.push(`${ex.name.trim()} (${q}x)`);
+            } else if (previewTestState.selectedExtras?.[exId]) {
               chosenExtras.push(ex.name.trim());
             }
           });
@@ -3093,28 +3203,89 @@ const ProductForm = (() => {
           };
         });
 
-        // Layanan Extras di dalam Drawer (Termasuk Mutex Opsi Tanpa)
-        container.querySelectorAll('.btn-shopee-extra').forEach(btn => {
-          btn.onclick = (e) => {
-            e.preventDefault();
-            const id = btn.getAttribute('data-id');
-            const validEx = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
-            const noneId = validEx[0]?.id || 'ex_0';
+        // Layanan Extras di dalam Drawer
+        const noneItem = (finishingsState.extra_3 || []).find(ex => ex && ex.is_default_none);
+        const noneId = noneItem?.id;
 
+        // 1. Klik trigger / radio (pilihan_ganda dan opsi Tanpa, atau mengaktifkan qty 1x)
+        container.querySelectorAll('.extra-item-trigger, .btn-extra-radio').forEach(el => {
+          el.onclick = (e) => {
+            e.preventDefault();
+            const id = el.getAttribute('data-id');
+            const type = el.getAttribute('data-type');
             if (!previewTestState.selectedExtras) previewTestState.selectedExtras = {};
+            if (!previewTestState.extraQty) previewTestState.extraQty = {};
 
             if (id === noneId) {
               previewTestState.selectedExtras = { [noneId]: true };
-            } else {
-              previewTestState.selectedExtras[noneId] = false;
-              previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
-
-              const hasAnyOther = Object.entries(previewTestState.selectedExtras).some(([k, v]) => v && k !== noneId);
-              if (!hasAnyOther) {
-                previewTestState.selectedExtras = { [noneId]: true };
+              previewTestState.extraQty = {};
+            } else if (type === 'qty') {
+              if ((previewTestState.extraQty[id] || 0) === 0) {
+                previewTestState.extraQty[id] = 1;
+                if (noneId) delete previewTestState.selectedExtras[noneId];
               }
+            } else {
+              // pilihan_ganda
+              if (noneId) delete previewTestState.selectedExtras[noneId];
+              previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
             }
             updateProductCardLivePreview();
+          };
+        });
+
+        // 2. Qty Minus untuk Extras
+        container.querySelectorAll('.btn-extra-qty-minus').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            if (!previewTestState.extraQty) previewTestState.extraQty = {};
+            const cur = previewTestState.extraQty[id] || 0;
+            previewTestState.extraQty[id] = Math.max(0, cur - 1);
+            updateProductCardLivePreview();
+          };
+        });
+
+        // 3. Qty Plus untuk Extras
+        container.querySelectorAll('.btn-extra-qty-plus').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            if (!previewTestState.extraQty) previewTestState.extraQty = {};
+            const cur = previewTestState.extraQty[id] || 0;
+            previewTestState.extraQty[id] = cur + 1;
+            if (noneId) delete previewTestState.selectedExtras[noneId];
+            updateProductCardLivePreview();
+          };
+        });
+
+        // 4. Input Qty Manual untuk Extras
+        container.querySelectorAll('.input-extra-qty').forEach(inp => {
+          inp.onclick = (e) => e.stopPropagation();
+          inp.oninput = (e) => {
+            const id = inp.getAttribute('data-id');
+            let val = parseInt(e.target.value);
+            if (!previewTestState.extraQty) previewTestState.extraQty = {};
+            if (!isNaN(val) && val >= 0) {
+              previewTestState.extraQty[id] = val;
+              if (val > 0 && noneId) delete previewTestState.selectedExtras[noneId];
+            }
+          };
+          inp.onchange = inp.onblur = (e) => {
+            const id = inp.getAttribute('data-id');
+            let val = parseInt(e.target.value);
+            if (isNaN(val) || val < 0) val = 0;
+            if (!previewTestState.extraQty) previewTestState.extraQty = {};
+            previewTestState.extraQty[id] = val;
+            if (val > 0 && noneId) delete previewTestState.selectedExtras[noneId];
+            updateProductCardLivePreview();
+          };
+          inp.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              inp.blur();
+            }
           };
         });
 
@@ -3771,12 +3942,21 @@ const ProductForm = (() => {
       let extrasActivePrice = 0;
       if (primaryState.has_extra_service && validExtras.length > 0) {
         validExtras.forEach((ex, idx) => {
+          if (ex.is_default_none) return;
           const exId = ex.id || `ex_${idx}`;
-          const isSelected = Boolean(previewTestState.selectedExtras[exId]);
           const xt = String(ex.extra_type || '').toLowerCase();
-          const isDirect = (xt === 'direct' || xt === 'langsung proses');
-          if (isSelected || isDirect) {
-            extrasActivePrice += parseFloat(ex.price) || 0;
+          const price = parseFloat(ex.price) || 0;
+          if (xt === 'qty') {
+            const qty = parseInt(previewTestState.extraQty?.[exId]) || 0;
+            if (qty > 0) {
+              extrasActivePrice += price * qty;
+            }
+          } else {
+            const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+            const isDirect = (xt === 'direct' || xt === 'langsung proses');
+            if (isSelected || isDirect) {
+              extrasActivePrice += price;
+            }
           }
         });
       }
@@ -3928,105 +4108,130 @@ const ProductForm = (() => {
       const miniPdpHtml = `
         <div class="mini-pdp-card w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
           <!-- AREA KONTEN UTAMA MINI PDP (SCROLLABLE) -->
-          <div class="flex-1 overflow-y-auto ${!isTestMode ? 'pointer-events-none select-none' : ''}">
-            <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
-            <div class="relative w-full aspect-square bg-slate-100 overflow-hidden shrink-0">
-              ${displayMainImg ? `
-                <img src="${displayMainImg}" class="w-full h-full object-cover transition-all duration-300" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
-              ` : `
-                <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                  <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
-                  <span class="text-[10px] font-semibold text-slate-400">Foto Cover</span>
-                </div>
-              `}
-              ${effHasDiscount ? `
-                <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-white bg-red-500 shadow-sm leading-none">
-                  Diskon ${effDiscPercent}%
-                </span>
-              ` : ''}
-              <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900/60 backdrop-blur-xs text-white">
-                1 / ${Math.max(1, (primaryState.images || []).length)} Foto
-              </span>
-            </div>
-
-            <div class="p-3.5 space-y-3">
-              <!-- URUTAN 1: Baris Harga (Rentang Harga) & Teks Terjual -->
-              <div class="flex items-baseline justify-between gap-2 pt-1">
-                <div class="flex items-baseline gap-2 flex-wrap min-w-0">
-                  <span class="text-sm sm:text-base font-extrabold truncate" style="color: ${accentColor};">
-                    ${displayPriceString}
+          <div class="flex-1 overflow-y-auto">
+            <div class="mini-pdp-scroll-content ${!isTestMode ? 'pointer-events-none select-none' : ''}">
+              <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
+              <div class="relative w-full aspect-square bg-slate-100 overflow-hidden shrink-0">
+                ${displayMainImg ? `
+                  <img src="${displayMainImg}" class="w-full h-full object-cover transition-all duration-300" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
+                ` : `
+                  <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                    <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
+                    <span class="text-[10px] font-semibold text-slate-400">Foto Cover</span>
+                  </div>
+                `}
+                ${effHasDiscount ? `
+                  <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-white bg-red-500 shadow-sm leading-none">
+                    Diskon ${effDiscPercent}%
                   </span>
-                  ${effHasDiscount ? `
-                    <span class="text-[11px] line-through text-slate-400 font-normal shrink-0">
-                      ${displayStrikePriceString}
+                ` : ''}
+                <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900/60 backdrop-blur-xs text-white">
+                  1 / ${Math.max(1, (primaryState.images || []).length)} Foto
+                </span>
+              </div>
+
+              <div class="p-3.5 space-y-3">
+                <!-- URUTAN 1: Baris Harga (Rentang Harga) & Teks Terjual -->
+                <div class="flex items-baseline justify-between gap-2 pt-1">
+                  <div class="flex items-baseline gap-2 flex-wrap min-w-0">
+                    <span class="text-sm sm:text-base font-extrabold truncate" style="color: ${accentColor};">
+                      ${displayPriceString}
                     </span>
+                    ${effHasDiscount ? `
+                      <span class="text-[11px] line-through text-slate-400 font-normal shrink-0">
+                        ${displayStrikePriceString}
+                      </span>
+                    ` : ''}
+                  </div>
+                  <span class="text-[11px] text-slate-500 font-normal whitespace-nowrap shrink-0">1RB+ terjual</span>
+                </div>
+
+                <!-- URUTAN 2: Judul / Nama Produk -->
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">
+                  ${escapeHtml(name)}
+                </h3>
+
+                <!-- Stok & Grosir -->
+                <div class="space-y-1">
+                  <div class="text-[11px] text-slate-500 font-medium">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
+                  ${wholesaleInfo.bannerText ? `
+                    <div class="mt-1 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
+                      <i class="bi bi-tag-fill text-amber-600"></i>
+                      <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
+                    </div>
                   ` : ''}
                 </div>
-                <span class="text-[11px] text-slate-500 font-normal whitespace-nowrap shrink-0">1RB+ terjual</span>
-              </div>
 
-              <!-- URUTAN 2: Judul / Nama Produk -->
-              <h3 class="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">
-                ${escapeHtml(name)}
-              </h3>
-
-              <!-- Stok & Grosir -->
-              <div class="space-y-1">
-                <div class="text-[11px] text-slate-500 font-medium">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
-                ${wholesaleInfo.bannerText ? `
-                  <div class="mt-1 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
-                    <i class="bi bi-tag-fill text-amber-600"></i>
-                    <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
+                <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
+                ${primaryState.has_variants ? `
+                  <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                    <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}</div>
+                    ${validMaterials.length > 0 ? (
+                      hasAnyTier1Image ? `
+                        <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+                          ${validMaterials.map((m, idx) => {
+                            const isSelected = previewTestState.selectedTier1Id === m.id;
+                            const itemImg = m.image_url || m.image;
+                            const peekStyle = validMaterials.length >= 7 
+                              ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;' 
+                              : 'width: 36px; height: 36px;';
+                            return `
+                              <button type="button" class="btn-preview-tier1 mini-pdp-var-chip rounded overflow-hidden border transition cursor-pointer relative shrink-0 flex items-center justify-center ${isSelected ? 'is-active border-2 shadow-xs' : 'border-transparent bg-slate-100 hover:bg-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${peekStyle} ${isSelected ? 'border-color: #33b589 !important;' : ''}" data-id="${m.id}" data-idx="${idx}" title="${escapeHtml(m.name)}">
+                                ${itemImg ? `
+                                  <img src="${itemImg}" class="w-full h-full object-cover" alt="${escapeHtml(m.name)}" />
+                                ` : `
+                                  <div class="w-full h-full flex flex-col items-center justify-center p-0.5 bg-slate-100 text-slate-600">
+                                    <span class="text-[8px] font-bold line-clamp-2 leading-none text-center">${escapeHtml(m.name.trim())}</span>
+                                  </div>
+                                `}
+                              </button>
+                            `;
+                          }).join('')}
+                        </div>
+                      ` : `
+                        <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+                          ${validMaterials.map((m, idx) => {
+                            const isSelected = previewTestState.selectedTier1Id === m.id;
+                            return `
+                              <button type="button" class="btn-preview-tier1 mini-pdp-var-chip px-2.5 py-1.5 rounded text-[10px] font-semibold transition cursor-pointer flex items-center justify-center shrink-0 whitespace-nowrap ${isSelected ? 'is-active' : ''} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${m.id}" data-idx="${idx}">
+                                <span>${escapeHtml(m.name.trim())}</span>
+                              </button>
+                            `;
+                          }).join('')}
+                        </div>
+                      `
+                    ) : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
                   </div>
                 ` : ''}
-              </div>
 
-              <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
-              ${primaryState.has_variants ? `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}</div>
-                  ${validMaterials.length > 0 ? (
-                    hasAnyTier1Image ? `
-                      <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-                        ${validMaterials.map((m, idx) => {
-                          const isSelected = previewTestState.selectedTier1Id === m.id;
-                          const itemImg = m.image_url || m.image;
-                          const peekStyle = validMaterials.length >= 7 
-                            ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;' 
-                            : 'width: 36px; height: 36px;';
-                          return `
-                            <button type="button" class="btn-preview-tier1 rounded-md overflow-hidden border transition cursor-pointer relative shrink-0 flex items-center justify-center ${isSelected ? 'border-2 shadow-xs' : 'border-slate-200 hover:border-slate-400 bg-slate-50'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${peekStyle} ${isSelected ? `border-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}" title="${escapeHtml(m.name)}">
-                              ${itemImg ? `
-                                <img src="${itemImg}" class="w-full h-full object-cover" alt="${escapeHtml(m.name)}" />
-                              ` : `
-                                <div class="w-full h-full flex flex-col items-center justify-center p-0.5 bg-slate-100 text-slate-600">
-                                  <span class="text-[8px] font-bold line-clamp-2 leading-none text-center">${escapeHtml(m.name.trim())}</span>
-                                </div>
-                              `}
-                            </button>
-                          `;
-                        }).join('')}
+                <!-- URUTAN 4: Variasi ke-2 & Ringkasan Variasi 3, 4, Extras (Maksimal 2 Variasi di Awal) -->
+                ${primaryState.has_variation_2 ? `
+                  <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                    ${hasExtraTiers ? `
+                      <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
+                        <div class="truncate">
+                          <span class="font-bold text-slate-800">Pilihan Variasi</span>
+                          <span class="font-normal text-slate-500"> (${summaryParts.join(', ')})</span>
+                        </div>
+                        <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                       </div>
                     ` : `
-                      <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-                        ${validMaterials.map((m, idx) => {
-                          const isSelected = previewTestState.selectedTier1Id === m.id;
-                          return `
-                            <button type="button" class="btn-preview-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center shrink-0 whitespace-nowrap ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}">
-                              <span>${escapeHtml(m.name.trim())}</span>
-                            </button>
-                          `;
-                        }).join('')}
-                      </div>
-                    `
-                  ) : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
-                </div>
-              ` : ''}
-
-              <!-- URUTAN 4: Variasi ke-2 & Ringkasan Variasi 3, 4, Extras (Maksimal 2 Variasi di Awal) -->
-              ${primaryState.has_variation_2 ? `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  ${hasExtraTiers ? `
+                      <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
+                    `}
+                    <div class="flex flex-wrap gap-1.5">
+                      ${validV2.length > 0 ? validV2.map((f, idx) => {
+                        const fId = f.id || `v2_${idx}`;
+                        const isSelected = previewTestState.selectedTier2Id === fId;
+                        return `
+                          <button type="button" class="btn-preview-tier2 mini-pdp-var-chip px-2.5 py-1.5 rounded text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${fId}">
+                            <span>${escapeHtml(f.name.trim())}</span>
+                          </button>
+                        `;
+                      }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
+                    </div>
+                  </div>
+                ` : (hasExtraTiers ? `
+                  <div class="space-y-1.5 pt-2 border-t border-slate-100">
                     <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                       <div class="truncate">
                         <span class="font-bold text-slate-800">Pilihan Variasi</span>
@@ -4034,44 +4239,21 @@ const ProductForm = (() => {
                       </div>
                       <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                     </div>
-                  ` : `
-                    <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
-                  `}
-                  <div class="flex flex-wrap gap-1.5">
-                    ${validV2.length > 0 ? validV2.map((f, idx) => {
-                      const fId = f.id || `v2_${idx}`;
-                      const isSelected = previewTestState.selectedTier2Id === fId;
-                      return `
-                        <button type="button" class="btn-preview-tier2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
-                          <span>${escapeHtml(f.name.trim())}</span>
-                        </button>
-                      `;
-                    }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
                   </div>
-                </div>
-              ` : (hasExtraTiers ? `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
-                    <div class="truncate">
-                      <span class="font-bold text-slate-800">Pilihan Variasi</span>
-                      <span class="font-normal text-slate-500"> (${summaryParts.join(', ')})</span>
-                    </div>
-                    <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
-                  </div>
-                </div>
-              ` : '')}
+                ` : '')}
 
-              <!-- URUTAN 5: Estimasi Pengiriman & Deskripsi Produk -->
-              <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
-                <i class="bi bi-truck text-xs" style="color: ${accentColor};"></i>
-                <span class="font-medium">${primaryState.product_type === 'non_physical' ? 'Layanan Digital / Tanpa Pengiriman Fisik' : 'Estimasi Pengiriman: 1-2 Hari Kerja'}</span>
-              </div>
+                <!-- URUTAN 5: Estimasi Pengiriman & Deskripsi Produk -->
+                <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
+                  <i class="bi bi-truck text-xs" style="color: ${accentColor};"></i>
+                  <span class="font-medium">${primaryState.product_type === 'non_physical' ? 'Layanan Digital / Tanpa Pengiriman Fisik' : 'Estimasi Pengiriman: 1-2 Hari Kerja'}</span>
+                </div>
 
-              <div class="space-y-1 pt-1">
-                <span class="text-xs font-medium text-slate-600 block">Deskripsi Produk</span>
-                <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
-                  ${escapeHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
-                </p>
+                <div class="space-y-1 pt-1">
+                  <span class="text-xs font-medium text-slate-600 block">Deskripsi Produk</span>
+                  <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
+                    ${escapeHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -6343,16 +6525,14 @@ const ProductForm = (() => {
 
     // Khusus Layanan Extras (Di Luar Qty) - 6 Bagian sesuai Gambar 5
     if (tier === 'extra_3') {
+      ensureExtraServiceNoneAtBottom();
       const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
       const defaultNoneName = `Tanpa ${extraTitle}`;
-      if (list.length === 0) {
-        list.push({ id: DB.generateUUID(), tier: 'extra_3', name: defaultNoneName, description: '', price: 0, cost_price: 0, stock: '', extra_type: 'pilihan_ganda', is_default_none: true });
-        list.push({ id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: 'pilihan_ganda' });
-      }
+      const isExtraProtected = list.length <= 2;
 
       return list.map((fin, idx) => {
-        const isFirstRow = (idx === 0);
-        if (isFirstRow) {
+        const isLastRow = (idx === list.length - 1 && fin.is_default_none);
+        if (isLastRow) {
           fin.name = defaultNoneName;
           fin.price = 0;
           fin.cost_price = 0;
@@ -6360,18 +6540,18 @@ const ProductForm = (() => {
           fin.is_default_none = true;
         }
 
-        const placeholderName = isFirstRow ? defaultNoneName : `Opsi ${idx + 1}`;
-        const priceVal = isFirstRow ? 0 : ((isSamePrice && idx > 0) ? firstPrice : (fin.price !== undefined && fin.price !== null && fin.price !== '' ? fin.price : ''));
-        const costVal = isFirstRow ? 0 : ((isSameCost && idx > 0) ? firstCost : (fin.cost_price !== undefined && fin.cost_price !== null && fin.cost_price !== '' ? fin.cost_price : ''));
-        const stockVal = isFirstRow ? '' : (stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : '')));
-        const extraType = isFirstRow ? 'pilihan_ganda' : (fin.extra_type || '');
+        const placeholderName = isLastRow ? defaultNoneName : `Opsi ${idx + 1}`;
+        const priceVal = isLastRow ? 0 : ((isSamePrice && idx > 0) ? firstPrice : (fin.price !== undefined && fin.price !== null && fin.price !== '' ? fin.price : ''));
+        const costVal = isLastRow ? 0 : ((isSameCost && idx > 0) ? firstCost : (fin.cost_price !== undefined && fin.cost_price !== null && fin.cost_price !== '' ? fin.cost_price : ''));
+        const stockVal = isLastRow ? '' : (stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : '')));
+        const extraType = isLastRow ? 'pilihan_ganda' : (fin.extra_type || '');
 
         return `
           <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${fin.id}" data-tier="${tier}" data-idx="${idx}">
             <div style="border-radius: 0px !important;" class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
               <!-- Bagian 1: Kotak Upload Gambar Kecil -->
               <div style="border-radius: 0px !important;" class="extra-img-cell col-span-2 sm:col-span-1 flex items-center justify-center p-1 bg-slate-50">
-                ${isFirstRow ? `
+                ${isLastRow ? `
                   <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-300 bg-slate-100 cursor-not-allowed" title="Opsi default tanpa foto">
                     <i class="bi bi-dash-lg text-sm"></i>
                   </div>
@@ -6387,18 +6567,18 @@ const ProductForm = (() => {
               <input 
                 type="text" 
                 data-field="name" 
-                value="${escapeHtml(isFirstRow ? defaultNoneName : (fin.name || ''))}" 
+                value="${escapeHtml(isLastRow ? defaultNoneName : (fin.name || ''))}" 
                 placeholder="${placeholderName}" 
-                ${isFirstRow ? 'readonly' : ''} 
+                ${isLastRow ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none font-medium rounded-none ${isFirstRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-emerald-50/30'}" 
+                class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-emerald-50/30'}" 
               />
 
               <!-- Bagian 3: Dropdown Tipe Input (Pilihan Ganda vs Input Qty) -->
-              <select data-field="extra_type" ${isFirstRow ? 'disabled' : ''} style="border-radius: 0px !important;" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs outline-none font-medium rounded-none ${isFirstRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50 text-slate-700'}">
+              <select data-field="extra_type" ${isLastRow ? 'disabled' : ''} style="border-radius: 0px !important;" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50 text-slate-700'}">
                 <option value="" disabled ${!extraType ? 'selected' : ''}>Jenis Input</option>
-                <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' || isFirstRow ? 'selected' : ''}>Pilihan Ganda</option>
-                <option value="qty" ${extraType === 'qty' && !isFirstRow ? 'selected' : ''}>Input Qty</option>
+                <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' || isLastRow ? 'selected' : ''}>Pilihan Ganda</option>
+                <option value="qty" ${extraType === 'qty' && !isLastRow ? 'selected' : ''}>Input Qty</option>
               </select>
 
               <!-- Bagian 4: Harga Satuan -->
@@ -6406,11 +6586,11 @@ const ProductForm = (() => {
                 type="number" 
                 min="0" 
                 data-field="price" 
-                value="${isFirstRow ? 0 : priceVal}" 
+                value="${isLastRow ? 0 : priceVal}" 
                 placeholder="Harga Satuan" 
-                ${(isFirstRow || (isSamePrice && idx > 0)) ? 'readonly' : ''} 
+                ${(isLastRow || (isSamePrice && idx > 0)) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isFirstRow || (isSamePrice && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-emerald-50/30'}" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isLastRow || (isSamePrice && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-emerald-50/30'}" 
               />
 
               <!-- Bagian 5: Modal/Hpp -->
@@ -6418,11 +6598,11 @@ const ProductForm = (() => {
                 type="number" 
                 min="0" 
                 data-field="cost_price" 
-                value="${isFirstRow ? 0 : costVal}" 
+                value="${isLastRow ? 0 : costVal}" 
                 placeholder="Modal/Hpp" 
-                ${(isFirstRow || (isSameCost && idx > 0)) ? 'readonly' : ''} 
+                ${(isLastRow || (isSameCost && idx > 0)) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isFirstRow || (isSameCost && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50/30'}" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50/30'}" 
               />
 
               <!-- Bagian 6: Stok -->
@@ -6432,9 +6612,9 @@ const ProductForm = (() => {
                 data-field="stock" 
                 value="${stockVal}" 
                 placeholder="Stok" 
-                ${isFirstRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
+                ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isFirstRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-emerald-50/30'}" 
+                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-emerald-50/30'}" 
               />
             </div>
 
@@ -6445,17 +6625,17 @@ const ProductForm = (() => {
                 class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
                 data-tier="${tier}" 
                 data-id="${fin.id}" 
-                ${isFirstRow ? 'disabled title="Opsi default tidak dapat dihapus"' : (isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"')}
+                ${isLastRow ? 'disabled title="Opsi default tidak dapat dihapus"' : (isExtraProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"')}
               >
                 <i class="bi bi-trash3-fill"></i>
               </button>
               <button 
                 type="button" 
-                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition text-xs leading-none ${isFirstRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
+                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition text-xs leading-none ${isLastRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
                 data-tier="${tier}" 
                 data-id="${fin.id}" 
                 data-idx="${idx}" 
-                ${isFirstRow ? 'disabled title="Opsi default tetap di baris pertama"' : 'title="Geser / Pindah Urutan Opsi"'}
+                ${isLastRow ? 'disabled title="Opsi default tetap di baris terakhir"' : 'title="Geser / Pindah Urutan Opsi"'}
               >
                 <i class="bi bi-arrows-move"></i>
               </button>
@@ -7142,16 +7322,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (comboVar1Th && labelKey === 'label_tier_1') comboVar1Th.textContent = val || 'Variasi 1';
       }
 
-      // Jika mengubah label Layanan Extras, update nama opsi default 'Tanpa [Judul Extras]' pada baris pertama
+      // Jika mengubah label Layanan Extras, update nama opsi default 'Tanpa [Judul Extras]' pada baris terakhir
       if (labelKey === 'label_extra_3' || tier === 'extra_3') {
         const extraTitle = val || 'Layanan Extras';
         const defaultNoneName = `Tanpa ${extraTitle}`;
-        if (finishingsState.extra_3 && finishingsState.extra_3.length > 0) {
-          finishingsState.extra_3[0].name = defaultNoneName;
-        }
-        const row0NameInp = document.querySelector('#finishings-extra_3-rows-container .variation-option-row[data-idx="0"] input[data-field="name"]');
-        if (row0NameInp) {
-          row0NameInp.value = defaultNoneName;
+        ensureExtraServiceNoneAtBottom();
+        const lastIdx = (finishingsState.extra_3 || []).length - 1;
+        const lastRowNameInp = document.querySelector(`#finishings-extra_3-rows-container .variation-option-row[data-idx="${lastIdx}"] input[data-field="name"]`);
+        if (lastRowNameInp) {
+          lastRowNameInp.value = defaultNoneName;
         }
       }
 
@@ -7305,20 +7484,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       btn.onclick = () => {
         primaryState.has_extra_service = true;
         primaryState.has_layer_5 = true;
-        const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
-        const defaultNoneName = `Tanpa ${extraTitle}`;
-        if (!finishingsState.extra_3 || finishingsState.extra_3.length < 2) {
-          finishingsState.extra_3 = [
-            { id: DB.generateUUID(), tier: 'extra_3', name: defaultNoneName, description: '', price: 0, cost_price: 0, stock: '', extra_type: 'pilihan_ganda', is_default_none: true },
-            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: 'pilihan_ganda' }
-          ];
-        } else {
-          finishingsState.extra_3[0].name = defaultNoneName;
-          finishingsState.extra_3[0].price = 0;
-          finishingsState.extra_3[0].cost_price = 0;
-          finishingsState.extra_3[0].extra_type = 'pilihan_ganda';
-          finishingsState.extra_3[0].is_default_none = true;
-        }
+        ensureExtraServiceNoneAtBottom();
         const container = document.getElementById('pricing-model-interactive-container');
         if (container) container.innerHTML = renderPricingModelSection();
         bindStep2InteractiveEvents();
@@ -7648,11 +7814,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // Hapus Opsi (Proteksi minimal 1 opsi & proteksi opsi default Tanpa pada extra_3)
       container.querySelectorAll('.btn-delete-fin').forEach(btn => {
         btn.onclick = (e) => {
-          if ((finishingsState[tier] || []).length <= 1) return;
+          if (tier === 'extra_3') {
+            if ((finishingsState[tier] || []).length <= 2) return;
+          } else {
+            if ((finishingsState[tier] || []).length <= 1) return;
+          }
           const row = e.target.closest('.variation-option-row');
           if (!row) return;
           const idx = parseInt(row.getAttribute('data-idx'));
-          if (tier === 'extra_3' && idx === 0) return;
+          if (tier === 'extra_3' && (idx >= finishingsState[tier].length - 1 || finishingsState[tier][idx]?.is_default_none)) return;
           const id = row.getAttribute('data-id');
           finishingsState[tier] = finishingsState[tier].filter(f => f.id !== id);
           container.innerHTML = renderFinishingRows(tier);
@@ -7665,7 +7835,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       let draggedFinIdx = null;
       container.querySelectorAll('.variation-option-row').forEach(row => {
         const rIdx = parseInt(row.getAttribute('data-idx'));
-        if (tier === 'extra_3' && rIdx === 0) {
+        if (tier === 'extra_3' && (rIdx >= list.length - 1 || list[rIdx]?.is_default_none)) {
           row.removeAttribute('draggable');
           return;
         }
@@ -7690,7 +7860,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         row.ondrop = (e) => {
           e.preventDefault();
           const targetIdx = parseInt(row.getAttribute('data-idx'));
-          if (tier === 'extra_3' && (targetIdx === 0 || draggedFinIdx === 0)) return;
+          if (tier === 'extra_3' && (targetIdx >= list.length - 1 || draggedFinIdx >= list.length - 1)) return;
           const currentList = finishingsState[tier];
           if (currentList && draggedFinIdx !== null && !isNaN(targetIdx) && draggedFinIdx !== targetIdx) {
             const item = currentList.splice(draggedFinIdx, 1)[0];
@@ -7707,14 +7877,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         btn.onclick = (e) => {
           e.stopPropagation();
           const idx = parseInt(btn.getAttribute('data-idx'));
-          if (tier === 'extra_3' && idx === 0) return;
           const currentList = finishingsState[tier];
           if (!currentList || currentList.length <= 1 || isNaN(idx)) return;
-          let targetIdx = idx === currentList.length - 1 ? idx - 1 : idx + 1;
-          if (tier === 'extra_3' && targetIdx === 0) {
-            targetIdx = currentList.length > 2 ? 2 : 1;
-            if (targetIdx === idx) return;
+          if (tier === 'extra_3' && (idx >= currentList.length - 1 || currentList[idx]?.is_default_none)) return;
+
+          let targetIdx = idx === (tier === 'extra_3' ? currentList.length - 2 : currentList.length - 1) ? idx - 1 : idx + 1;
+          if (tier === 'extra_3' && targetIdx >= currentList.length - 1) {
+            targetIdx = idx - 1;
           }
+          if (targetIdx < 0 || targetIdx === idx) return;
+
           const temp = currentList[idx];
           currentList[idx] = currentList[targetIdx];
           currentList[targetIdx] = temp;
@@ -7756,7 +7928,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const currentList = finishingsState[tier];
           const item = (currentList || []).find(f => f.id === id);
 
-          if (tier === 'extra_3' && idx === 0) {
+          if (tier === 'extra_3' && (idx === currentList.length - 1 || item?.is_default_none)) {
             const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
             if (item) {
               item.name = `Tanpa ${extraTitle}`;
@@ -7800,8 +7972,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             }
           }
 
-          // Auto-Append Baris Baru jika Mengetik di Baris Paling Terakhir
-          if (idx === currentList.length - 1 && e.target.value.trim() !== '') {
+          // Auto-Append Baris Baru jika Mengetik di Baris Paling Terakhir (atau baris sebelum Tanpa pada extra_3)
+          const isTriggerRow = (tier === 'extra_3')
+            ? (idx === currentList.length - 2)
+            : (idx === currentList.length - 1);
+
+          if (isTriggerRow && e.target.value.trim() !== '') {
             const newFin = {
               id: DB.generateUUID(),
               tier: tier,
@@ -7813,7 +7989,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               extra_type: tier === 'extra_3' ? '' : undefined,
               parent_id: ''
             };
-            currentList.push(newFin);
+            if (tier === 'extra_3') {
+              currentList.splice(currentList.length - 1, 0, newFin);
+            } else {
+              currentList.push(newFin);
+            }
             container.innerHTML = renderFinishingRows(tier);
             bindFinishingTierRows(tier);
             // Restore focus

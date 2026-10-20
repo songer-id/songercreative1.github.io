@@ -323,24 +323,24 @@ const ProductList = (() => {
       </div>
     `;
 
-    if (window.lucide) window.lucide.createIcons();
-    bindListEvents();
+      if (window.lucide) window.lucide.createIcons();
+      bindListEvents();
 
-    // Restore search focus and cursor position seamlessly
-    if (isSearchFocused) {
-      const searchInp = document.getElementById('search-product-input');
-      if (searchInp) {
-        searchInp.focus();
-        try {
-          searchInp.setSelectionRange(cursorStart, cursorEnd);
-        } catch (e) {}
+      // Restore search focus and cursor position seamlessly
+      if (isSearchFocused) {
+        const searchInp = document.getElementById('search-product-input');
+        if (searchInp) {
+          searchInp.focus();
+          try {
+            searchInp.setSelectionRange(cursorStart, cursorEnd);
+          } catch (e) { }
+        }
       }
-    }
 
-    console.log('ProductList rendered successfully, count:', products.length);
-  } catch (fatalErr) {
-    console.error('[ProductList] Fatal render error:', fatalErr);
-    container.innerHTML = `
+      console.log('ProductList rendered successfully, count:', products.length);
+    } catch (fatalErr) {
+      console.error('[ProductList] Fatal render error:', fatalErr);
+      container.innerHTML = `
       <div class="max-w-md mx-auto my-12 bg-white p-6 rounded-2xl border border-red-200 shadow-sm text-center space-y-4">
         <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mx-auto">
           <i data-lucide="alert-triangle" class="w-6 h-6"></i>
@@ -355,16 +355,16 @@ const ProductList = (() => {
         </div>
       </div>
     `;
-    if (window.lucide) window.lucide.createIcons();
-    const btnFatal = document.getElementById('btn-fatal-reset-demo');
-    if (btnFatal) {
-      btnFatal.addEventListener('click', () => {
-        DB.forceResetDemoData();
-        renderList();
-      });
+      if (window.lucide) window.lucide.createIcons();
+      const btnFatal = document.getElementById('btn-fatal-reset-demo');
+      if (btnFatal) {
+        btnFatal.addEventListener('click', () => {
+          DB.forceResetDemoData();
+          renderList();
+        });
+      }
     }
   }
-}
 
   function renderProductRowsSafe(productsList) {
     if (!Array.isArray(productsList) || productsList.length === 0) {
