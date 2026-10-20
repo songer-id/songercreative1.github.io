@@ -928,3 +928,22 @@ input.toggle-same-cost:checked ~ div::after {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   PRODUCT FORM STEP 2 LIVE PREVIEW INTERACTIVE TEST MODE & SIMULATION MODAL
+   ========================================================================== */
+#modal-preview-simulation {
+  animation: fadeInModal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.btn-preview-tier1,
+.btn-preview-tier2,
+.btn-preview-tier3,
+.btn-preview-tier4,
+.btn-preview-extra {
+  user-select: none;
+  -webkit-user-select: none;
+}

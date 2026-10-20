@@ -15,6 +15,16 @@ const ProductForm = (() => {
   let currentStep = 1; // 1 | 2 | 3
   let isLivePreviewOpen = true; // Desktop preview sidebar open/collapsed state
 
+  // State untuk Mode Uji Coba Interaktif Mini PDP Step 2
+  const previewTestState = {
+    selectedTier1Id: null,
+    selectedTier2Id: null,
+    selectedTier3Id: null,
+    selectedTier4Id: null,
+    selectedExtras: {},
+    qty: 1
+  };
+
   // Primary metadata state
   let primaryState = {
     name: '',
@@ -268,6 +278,12 @@ const ProductForm = (() => {
     };
 
     currentStep = 1;
+    previewTestState.selectedTier1Id = null;
+    previewTestState.selectedTier2Id = null;
+    previewTestState.selectedTier3Id = null;
+    previewTestState.selectedTier4Id = null;
+    previewTestState.selectedExtras = {};
+    previewTestState.qty = 1;
     primaryState = {
       name: '',
       product_type: '', // Default '' (kosong, seller wajib memilih sendiri!)
@@ -410,6 +426,12 @@ const ProductForm = (() => {
     formMode = 'edit';
     currentEditingId = id;
     currentStep = 1;
+    previewTestState.selectedTier1Id = null;
+    previewTestState.selectedTier2Id = null;
+    previewTestState.selectedTier3Id = null;
+    previewTestState.selectedTier4Id = null;
+    previewTestState.selectedExtras = {};
+    previewTestState.qty = prod.min_order || 1;
 
     const imgs = Array.isArray(prod.images) && prod.images.length > 0 
       ? [...prod.images] 
@@ -613,7 +635,7 @@ const ProductForm = (() => {
         <div class="w-full relative">
           
           <!-- WIZARD FORM COLUMN -->
-          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[400px] xl:pr-[440px]' : ''} space-y-6 transition-all duration-300">
+          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[360px] xl:pr-[400px]' : ''} space-y-6 transition-all duration-300">
             
             <!-- Visual Error Summary Container -->
             <div id="form-error-banner" class="hidden p-4 rounded-md border border-red-200 bg-red-50 text-red-800 text-sm animate-shake">
@@ -937,7 +959,7 @@ const ProductForm = (() => {
         </div>
 
         <!-- DESKTOP FIXED OFF-CANVAS PREVIEW SIDEBAR (DOCK KANAN SEJATI) -->
-        <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[380px] xl:w-[420px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}">
+        <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[340px] xl:w-[380px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}">
           
           <!-- Sticky Header Sidebar -->
           <div class="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50/90 shrink-0">
@@ -1688,6 +1710,496 @@ const ProductForm = (() => {
     }
   }
 
+  // -------------------------------------------------------------
+  // HELPER MODE UJI COBA INTERAKTIF LIVE PREVIEW STEP 2
+  // -------------------------------------------------------------
+  function getPreviewWholesaleDiscount(qty, unitPrice) {
+    if (!primaryState.has_wholesale) return { hasDiscount: false, discountPerPcs: 0, note: '' };
+    const tiers = Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : [];
+    if (tiers.length === 0) return { hasDiscount: false, discountPerPcs: 0, note: '' };
+
+    const mode = primaryState.wholesale_mode || 'normal';
+    if (mode === 'tiered') {
+      const matchingTiers = tiers.filter(t => {
+        const minQ = parseInt(t.min_qty) || 1;
+        const maxQ = (t.max_qty !== null && t.max_qty !== undefined && t.max_qty !== '' && parseInt(t.max_qty) > 0) ? parseInt(t.max_qty) : Infinity;
+        return qty >= minQ && qty <= maxQ;
+      });
+      if (matchingTiers.length > 0) {
+        const tier = matchingTiers.sort((a, b) => (parseInt(b.min_qty) || 0) - (parseInt(a.min_qty) || 0))[0];
+        const discountPerPcs = parseFloat(tier.price) || 0;
+        return {
+          hasDiscount: discountPerPcs > 0,
+          discountPerPcs,
+          tier,
+          note: `Harga Grosir Aktif: Potongan ${formatIDR(discountPerPcs)}/pcs (Qty ${tier.min_qty} - ${tier.max_qty || 'dst'})`
+        };
+      }
+    } else {
+      const tier1 = tiers[0];
+      if (tier1) {
+        const minQ = parseInt(tier1.min_qty) || (parseInt(primaryState.min_order) || 1);
+        const maxQ = (tier1.max_qty !== null && tier1.max_qty !== undefined && tier1.max_qty !== '' && parseInt(tier1.max_qty) > 0) ? parseInt(tier1.max_qty) : Infinity;
+        if (qty >= minQ && qty <= maxQ) {
+          const discountPerPcs = parseFloat(tier1.price) || 0;
+          return {
+            hasDiscount: discountPerPcs > 0,
+            discountPerPcs,
+            tier: tier1,
+            note: `Harga Grosir Aktif: Potongan ${formatIDR(discountPerPcs)}/pcs (Min ${minQ} pcs)`
+          };
+        }
+      }
+    }
+    return { hasDiscount: false, discountPerPcs: 0, note: '' };
+  }
+
+  function validatePreviewVariantSelection() {
+    const missingTiers = [];
+
+    const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+    if (primaryState.has_variants && validMaterials.length > 0) {
+      if (!previewTestState.selectedTier1Id) {
+        missingTiers.push(primaryState.variation_labels?.label_tier_1 || 'Variasi 1');
+      }
+    }
+
+    const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+    if (primaryState.has_variation_2 && validV2.length > 0) {
+      if (!previewTestState.selectedTier2Id) {
+        missingTiers.push(primaryState.variation_labels?.label_tier_2 || 'Variasi 2');
+      }
+    }
+
+    const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+    if (primaryState.has_variation_3 && validV3.length > 0) {
+      if (!previewTestState.selectedTier3Id) {
+        missingTiers.push(primaryState.variation_labels?.label_extra_1 || 'Variasi 3');
+      }
+    }
+
+    const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+    if (primaryState.has_variation_4 && validV4.length > 0) {
+      if (!previewTestState.selectedTier4Id) {
+        missingTiers.push(primaryState.variation_labels?.label_extra_2 || 'Variasi 4');
+      }
+    }
+
+    if (missingTiers.length > 0) {
+      return {
+        valid: false,
+        message: 'Pilih varian produk terlebih dahulu'
+      };
+    }
+
+    return { valid: true };
+  }
+
+  function showPreviewTestModal(config) {
+    let modal = document.getElementById('modal-preview-simulation');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-preview-simulation';
+      modal.className = 'fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 transition-opacity';
+      document.body.appendChild(modal);
+    }
+
+    let iconHtml = '';
+    if (config.type === 'whatsapp') {
+      iconHtml = `
+        <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+          <i class="bi bi-whatsapp"></i>
+        </div>
+      `;
+    } else if (config.type === 'cart') {
+      iconHtml = `
+        <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+          <i class="bi bi-cart-check-fill"></i>
+        </div>
+      `;
+    } else {
+      iconHtml = `
+        <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+      `;
+    }
+
+    modal.innerHTML = `
+      <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 text-center space-y-4 border border-slate-100 relative">
+        <button type="button" class="btn-close-sim-modal absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-base p-1 cursor-pointer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+
+        ${iconHtml}
+
+        <div class="space-y-1">
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+            Simulasi Pratinjau
+          </span>
+          <h3 class="text-base font-extrabold text-slate-900">${config.title}</h3>
+          ${config.message ? `<p class="text-xs text-slate-500 leading-relaxed">${config.message}</p>` : ''}
+        </div>
+
+        ${config.bodyHtml || ''}
+
+        <div class="pt-2 flex items-center gap-2">
+          ${config.secondaryBtnHtml || ''}
+          <button type="button" class="btn-close-sim-modal flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+            Tutup
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+
+    modal.querySelectorAll('.btn-close-sim-modal').forEach(btn => {
+      btn.onclick = () => modal.classList.add('hidden');
+    });
+
+    modal.onclick = (e) => {
+      if (e.target === modal) modal.classList.add('hidden');
+    };
+
+    if (config.onMounted) {
+      config.onMounted(modal);
+    }
+  }
+
+  function bindMiniPdpInteractiveEvents() {
+    const containers = [
+      document.getElementById('card-live-preview-box') || document.getElementById('product-card-preview-container'),
+      document.getElementById('mobile-card-preview-container')
+    ].filter(Boolean);
+
+    containers.forEach(container => {
+      // 1. Variasi 1 chips
+      container.querySelectorAll('.btn-preview-tier1').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
+          updateProductCardLivePreview();
+        };
+      });
+
+      // 2. Variasi 2 chips
+      container.querySelectorAll('.btn-preview-tier2').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
+          updateProductCardLivePreview();
+        };
+      });
+
+      // 3. Variasi 3 chips
+      container.querySelectorAll('.btn-preview-tier3').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
+          updateProductCardLivePreview();
+        };
+      });
+
+      // 4. Variasi 4 chips
+      container.querySelectorAll('.btn-preview-tier4').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
+          updateProductCardLivePreview();
+        };
+      });
+
+      // 5. Layanan Extras
+      container.querySelectorAll('.btn-preview-extra').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
+          updateProductCardLivePreview();
+        };
+      });
+
+      // 6. Tombol Minus Qty
+      container.querySelectorAll('.btn-preview-qty-minus').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+          const selectedMat = primaryState.has_variants
+            ? validMaterials.find(m => m.id === previewTestState.selectedTier1Id)
+            : (validMaterials[0] || null);
+
+          let minQ = Math.max(1, parseInt(primaryState.min_order) || 1);
+          if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+            minQ = Math.max(minQ, parseInt(selectedMat.min_order));
+          }
+
+          let step = 1;
+          if (primaryState.has_order_multiple) {
+            if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
+              step = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
+            } else {
+              step = parseInt(primaryState.order_multiple_value) || 1;
+            }
+          } else if (selectedMat && selectedMat.step_multiplier) {
+            step = parseInt(selectedMat.step_multiplier) || 1;
+          }
+          if (step < 1) step = 1;
+
+          let curQ = previewTestState.qty || minQ;
+          let nextQ = curQ - step;
+          if (nextQ < minQ) {
+            if (curQ <= minQ) {
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast(`Minimal pemesanan adalah ${minQ} pcs`, 'warning');
+              }
+              return;
+            }
+            nextQ = minQ;
+          }
+          previewTestState.qty = nextQ;
+          updateProductCardLivePreview();
+        };
+      });
+
+      // 7. Tombol Plus Qty
+      container.querySelectorAll('.btn-preview-qty-plus').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+          const selectedMat = primaryState.has_variants
+            ? validMaterials.find(m => m.id === previewTestState.selectedTier1Id)
+            : (validMaterials[0] || null);
+
+          let minQ = Math.max(1, parseInt(primaryState.min_order) || 1);
+          if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+            minQ = Math.max(minQ, parseInt(selectedMat.min_order));
+          }
+
+          let maxQ = Infinity;
+          if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+            maxQ = parseInt(primaryState.max_order_qty);
+          } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+            maxQ = parseInt(primaryState.max_order_period.max_qty);
+          }
+          if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+            maxQ = Math.min(maxQ, parseInt(primaryState.stock));
+          }
+
+          let step = 1;
+          if (primaryState.has_order_multiple) {
+            if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
+              step = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
+            } else {
+              step = parseInt(primaryState.order_multiple_value) || 1;
+            }
+          } else if (selectedMat && selectedMat.step_multiplier) {
+            step = parseInt(selectedMat.step_multiplier) || 1;
+          }
+          if (step < 1) step = 1;
+
+          let curQ = previewTestState.qty || minQ;
+          let nextQ = curQ + step;
+          if (nextQ > maxQ) {
+            if (curQ >= maxQ) {
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast(`Maksimal pemesanan adalah ${maxQ} pcs`, 'warning');
+              }
+              return;
+            }
+            nextQ = maxQ;
+          }
+          previewTestState.qty = nextQ;
+          updateProductCardLivePreview();
+        };
+      });
+
+      // Helper ambil ringkasan teks varian dan produk
+      const getContextSummary = () => {
+        const prodName = (document.getElementById('input-prod-name')?.value || primaryState.name || '').trim() || 'Produk';
+        const chosenVars = [];
+        const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+        if (primaryState.has_variants) {
+          const m = validMaterials.find(item => item.id === previewTestState.selectedTier1Id);
+          if (m) chosenVars.push(m.name.trim());
+        }
+        if (primaryState.has_variation_2) {
+          const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+          const f = validV2.find((item, idx) => (item.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
+          if (f) chosenVars.push(f.name.trim());
+        }
+        if (primaryState.has_variation_3) {
+          const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+          const f = validV3.find((item, idx) => (item.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
+          if (f) chosenVars.push(f.name.trim());
+        }
+        if (primaryState.has_variation_4) {
+          const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+          const f = validV4.find((item, idx) => (item.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
+          if (f) chosenVars.push(f.name.trim());
+        }
+
+        let variantText = chosenVars.length > 0 
+          ? chosenVars.join(', ') 
+          : (primaryState.has_variants ? 'Belum Dipilih' : 'Standar');
+
+        const chosenExtras = [];
+        if (primaryState.has_extra_service) {
+          const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+          validExtras.forEach((ex, idx) => {
+            const exId = ex.id || `ex_${idx}`;
+            if (previewTestState.selectedExtras[exId]) {
+              chosenExtras.push(ex.name.trim());
+            }
+          });
+        }
+        if (chosenExtras.length > 0) {
+          variantText += ` + Ekstra: ${chosenExtras.join(', ')}`;
+        }
+
+        return {
+          prodName,
+          variantText,
+          qty: previewTestState.qty || 1
+        };
+      };
+
+      // 8. Tombol Chat WhatsApp
+      container.querySelectorAll('.btn-preview-chat-wa').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const { prodName, variantText, qty } = getContextSummary();
+          const chatMsg = `Halo Kak, saya ingin memesan produk ${prodName} (Varian: ${variantText}) sejumlah ${qty} pcs.`;
+
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast(`Simulasi WhatsApp: "${chatMsg}"`, 'info');
+          }
+
+          showPreviewTestModal({
+            type: 'whatsapp',
+            title: 'Simulasi Chat WhatsApp ke Seller',
+            message: 'Teks pesan otomatis yang siap dikirim pembeli ke nomor WhatsApp toko Anda:',
+            bodyHtml: `
+              <div class="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left text-xs text-emerald-950 space-y-2">
+                <div class="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
+                  <i class="bi bi-chat-left-dots-fill"></i> Pesan Otomatis:
+                </div>
+                <p class="leading-relaxed bg-white p-3 rounded-lg border border-emerald-100 shadow-2xs font-sans text-xs select-all">
+                  "${escapeHtml(chatMsg)}"
+                </p>
+              </div>
+            `,
+            secondaryBtnHtml: `
+              <button type="button" id="btn-copy-wa-sim" class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                <i class="bi bi-clipboard"></i> Salin Pesan
+              </button>
+            `,
+            onMounted: (modal) => {
+              const copyBtn = modal.querySelector('#btn-copy-wa-sim');
+              if (copyBtn) {
+                copyBtn.onclick = () => {
+                  navigator.clipboard.writeText(chatMsg).then(() => {
+                    if (typeof App !== 'undefined' && App.showToast) {
+                      App.showToast('Pesan WhatsApp berhasil disalin!', 'success');
+                    }
+                  }).catch(() => {});
+                };
+              }
+            }
+          });
+        };
+      });
+
+      // 9. Tombol Cart (+ / Add to Cart)
+      container.querySelectorAll('.btn-preview-add-cart').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const valRes = validatePreviewVariantSelection();
+          if (!valRes.valid) {
+            if (typeof App !== 'undefined' && App.showToast) {
+              App.showToast(valRes.message, 'warning');
+            } else {
+              alert(valRes.message);
+            }
+            return;
+          }
+
+          const { prodName, variantText, qty } = getContextSummary();
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Berhasil dimasukkan ke keranjang', 'success');
+          }
+
+          showPreviewTestModal({
+            type: 'cart',
+            title: 'Berhasil dimasukkan ke keranjang',
+            message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
+            bodyHtml: `
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
+                <div class="font-bold text-slate-900 truncate">${escapeHtml(prodName)}</div>
+                <div class="text-[11px] text-slate-600 flex justify-between">
+                  <span>Pilihan Varian:</span>
+                  <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
+                </div>
+                <div class="text-[11px] text-slate-600 flex justify-between">
+                  <span>Kuantitas:</span>
+                  <span class="font-bold text-slate-800">${qty} pcs</span>
+                </div>
+              </div>
+            `
+          });
+        };
+      });
+
+      // 10. Tombol Beli Sekarang
+      container.querySelectorAll('.btn-preview-buy-now').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const valRes = validatePreviewVariantSelection();
+          if (!valRes.valid) {
+            if (typeof App !== 'undefined' && App.showToast) {
+              App.showToast(valRes.message, 'warning');
+            } else {
+              alert(valRes.message);
+            }
+            return;
+          }
+
+          const { prodName, variantText, qty } = getContextSummary();
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Order Berhasil', 'success');
+          }
+
+          showPreviewTestModal({
+            type: 'buy',
+            title: 'Order Berhasil',
+            message: 'Simulasi checkout langsung pembeli berhasil diselesaikan!',
+            bodyHtml: `
+              <div class="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-2">
+                <div class="font-extrabold text-slate-900 truncate">${escapeHtml(prodName)}</div>
+                <div class="text-[11px] text-slate-600 flex justify-between">
+                  <span>Varian:</span>
+                  <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
+                </div>
+                <div class="text-[11px] text-slate-600 flex justify-between">
+                  <span>Jumlah:</span>
+                  <span class="font-bold text-slate-800">${qty} pcs</span>
+                </div>
+                <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
+                  <i class="bi bi-shield-check text-emerald-700"></i>
+                  <span>Validasi seluruh aturan batas order & harga lulus 100%</span>
+                </div>
+              </div>
+            `
+          });
+        };
+      });
+    });
+  }
+
   function updateProductCardLivePreview() {
     const previewContainer = document.getElementById('card-live-preview-box') || document.getElementById('product-card-preview-container');
     const mobilePreviewContainer = document.getElementById('mobile-card-preview-container');
@@ -2182,7 +2694,7 @@ const ProductForm = (() => {
     }
 
 
-    // SIMULASI MINI PDP DETAIL PRODUK (KHUSUS STEP 2)
+    // SIMULASI MINI PDP DETAIL PRODUK (KHUSUS STEP 2 - MODE UJI COBA INTERAKTIF)
     if (currentStep === 2) {
       let accentColor = '#059669'; // Default Model 1 Emerald
       if (variant === 'B') {
@@ -2194,51 +2706,142 @@ const ProductForm = (() => {
         accentColor = cfg.btn_color;
       }
 
-      // 1. Hitung harga utama per unit (Akumulasi Variasi 1 s/d Variasi 4)
+      // Daftar bahan / opsi variasi yang valid
+      const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+      const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+      const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+      const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+      const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+
+      // 1. Ambil opsi terpilih untuk Variasi 1 s/d 4
+      const selectedMat = primaryState.has_variants
+        ? validMaterials.find(m => m.id === previewTestState.selectedTier1Id)
+        : (validMaterials[0] || null);
+
       let v1Price = 0;
-      if (materialsState && materialsState.length > 0) {
-        v1Price = parseFloat(materialsState[0].price) || 0;
-      }
-      let v2Price = 0;
-      if (primaryState.has_variation_2 && finishingsState.main && finishingsState.main.length > 0) {
-        v2Price = parseFloat(finishingsState.main[0].price) || 0;
-      }
-      let v3Price = 0;
-      if (primaryState.has_variation_3 && finishingsState.extra_1 && finishingsState.extra_1.length > 0) {
-        v3Price = parseFloat(finishingsState.extra_1[0].price) || 0;
-      }
-      let v4Price = 0;
-      if (primaryState.has_variation_4 && finishingsState.extra_2 && finishingsState.extra_2.length > 0) {
-        v4Price = parseFloat(finishingsState.extra_2[0].price) || 0;
+      if (primaryState.has_variants) {
+        if (selectedMat) {
+          v1Price = parseFloat(selectedMat.price) || 0;
+        } else if (validMaterials.length > 0) {
+          v1Price = parseFloat(validMaterials[0].price) || 0;
+        }
+      } else {
+        const singlePriceInp = document.getElementById('input-single-price');
+        v1Price = singlePriceInp ? (parseFloat(singlePriceInp.value) || 0) : (parseFloat(materialsState[0]?.price) || 0);
       }
 
-      // Layanan Extras Direct / Otomatis
-      let extraDirectPrice = 0;
-      if (primaryState.has_extra_service && finishingsState.extra_3 && finishingsState.extra_3.length > 0) {
-        finishingsState.extra_3.forEach(ex => {
+      let v2Price = 0;
+      let selectedV2 = null;
+      if (primaryState.has_variation_2 && validV2.length > 0) {
+        selectedV2 = validV2.find((f, idx) => (f.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
+        if (selectedV2) {
+          v2Price = parseFloat(selectedV2.price) || 0;
+        }
+      }
+
+      let v3Price = 0;
+      let selectedV3 = null;
+      if (primaryState.has_variation_3 && validV3.length > 0) {
+        selectedV3 = validV3.find((f, idx) => (f.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
+        if (selectedV3) {
+          v3Price = parseFloat(selectedV3.price) || 0;
+        }
+      }
+
+      let v4Price = 0;
+      let selectedV4 = null;
+      if (primaryState.has_variation_4 && validV4.length > 0) {
+        selectedV4 = validV4.find((f, idx) => (f.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
+        if (selectedV4) {
+          v4Price = parseFloat(selectedV4.price) || 0;
+        }
+      }
+
+      // Layanan Extras: Hitung yang diklik aktif oleh seller, atau bertipe direct
+      let extrasActivePrice = 0;
+      if (primaryState.has_extra_service && validExtras.length > 0) {
+        validExtras.forEach((ex, idx) => {
+          const exId = ex.id || `ex_${idx}`;
+          const isSelected = Boolean(previewTestState.selectedExtras[exId]);
           const xt = String(ex.extra_type || '').toLowerCase();
-          if (xt === 'direct' || xt === 'langsung proses') {
-            extraDirectPrice += parseFloat(ex.price) || 0;
+          const isDirect = (xt === 'direct' || xt === 'langsung proses');
+          if (isSelected || isDirect) {
+            extrasActivePrice += parseFloat(ex.price) || 0;
           }
         });
       }
 
+      // Base combination unit price
       const comboUnitBase = (v1Price + v2Price + v3Price + v4Price);
-      const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extraDirectPrice) : basePrice;
+      const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extrasActivePrice) : (basePrice + extrasActivePrice);
 
+      // Hitung Diskon Bulanan jika aktif
+      let unitPriceAfterDiscount = displayBasePrice;
       let step2StrikePrice = displayBasePrice;
-      let step2FinalPrice = displayBasePrice;
       if (effHasDiscount) {
         if (hasDiscount && discPercent > 0) {
-          step2FinalPrice = Math.round(displayBasePrice * (1 - (discPercent / 100)));
+          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
         } else {
-          step2FinalPrice = Math.round(displayBasePrice * 0.5);
+          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
           step2StrikePrice = displayBasePrice * 2;
         }
       }
 
+      // Hitung Batas Qty: Min, Max, dan Step Kelipatan
+      let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
+      if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+        minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
+      }
+
+      let maxOrderQty = Infinity;
+      if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+        maxOrderQty = parseInt(primaryState.max_order_qty);
+      } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+        maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
+      }
+      if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+        maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
+      }
+
+      let stepMultiplier = 1;
+      if (primaryState.has_order_multiple) {
+        if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
+          stepMultiplier = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
+        } else {
+          stepMultiplier = parseInt(primaryState.order_multiple_value) || 1;
+        }
+      } else if (selectedMat && selectedMat.step_multiplier) {
+        stepMultiplier = parseInt(selectedMat.step_multiplier) || 1;
+      }
+      if (stepMultiplier < 1) stepMultiplier = 1;
+
+      // Normalisasi nilai Qty sekarang
+      if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
+        previewTestState.qty = minOrderQty;
+      }
+      if (previewTestState.qty > maxOrderQty && maxOrderQty !== Infinity) {
+        previewTestState.qty = maxOrderQty;
+      }
+      const curQty = previewTestState.qty;
+
+      // Cek apakah memenuhi syarat Harga Grosir
+      const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      let finalUnitPrice = unitPriceAfterDiscount;
+      if (wholesaleInfo.hasDiscount) {
+        finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+      }
+      const subtotalOrder = finalUnitPrice * curQty;
+
       const miniPdpHtml = `
         <div class="w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans">
+          <!-- Banner Mode Uji Coba Interaktif -->
+          <div class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white px-3 py-1.5 text-[10px] font-bold flex items-center justify-between shadow-2xs select-none">
+            <span class="flex items-center gap-1.5">
+              <i class="bi bi-play-circle-fill text-amber-300"></i> Mode Uji Coba Pembeli
+            </span>
+            <span class="text-[9px] font-medium bg-black/20 px-2 py-0.5 rounded-full">Simulasi Interaktif</span>
+          </div>
+
           <!-- Foto Utama Mini PDP -->
           <div class="relative w-full aspect-square bg-slate-100 overflow-hidden">
             ${hasPhoto && img ? `
@@ -2267,110 +2870,163 @@ const ProductForm = (() => {
               </h3>
               <div class="flex items-baseline gap-2 mt-1.5 flex-wrap">
                 <span class="text-sm sm:text-base font-extrabold" style="color: ${accentColor};">
-                  ${formatIDR(step2FinalPrice)}
+                  ${formatIDR(finalUnitPrice)}
                 </span>
-                ${effHasDiscount ? `
+                ${(effHasDiscount || wholesaleInfo.hasDiscount) ? `
                   <span class="text-[11px] line-through text-slate-400 font-normal">
-                    ${formatIDR(step2StrikePrice)}
+                    ${formatIDR(step2StrikePrice || displayBasePrice)}
                   </span>
                 ` : ''}
                 <span class="text-[10px] text-slate-500 font-medium">/ unit</span>
               </div>
+              ${wholesaleInfo.hasDiscount ? `
+                <div class="mt-1 flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200 animate-pulse">
+                  <i class="bi bi-tag-fill text-emerald-600"></i>
+                  <span>${escapeHtml(wholesaleInfo.note)}</span>
+                </div>
+              ` : ''}
             </div>
 
-            <!-- Variasi 1 (Bahan Utama) -->
-            <div class="space-y-1.5 pt-2 border-t border-slate-100">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_tier_1 || 'Variasi 1')}:</span>
-              <div class="flex flex-wrap gap-1.5">
-                ${(() => {
-                  const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
-                  if (validMaterials.length > 0) {
-                    return validMaterials.map((m, idx) => `
-                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                        ${escapeHtml(m.name.trim())}
-                      </span>
-                    `).join('');
-                  }
-                  return `<span class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Opsi 1</span>`;
-                })()}
+            <!-- Variasi 1 (Bahan Utama / Varian) -->
+            ${primaryState.has_variants ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_tier_1 || 'Variasi 1')}:</span>
+                  <span class="text-[9px] text-slate-400 font-medium">${previewTestState.selectedTier1Id ? '✓ Terpilih' : 'Wajib Dipilih'}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validMaterials.length > 0 ? validMaterials.map((m, idx) => {
+                    const isSelected = previewTestState.selectedTier1Id === m.id;
+                    return `
+                      <button type="button" class="btn-preview-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; ring-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}">
+                        ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                        <span>${escapeHtml(m.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Variasi 2 (Jika Aktif) -->
+            ${(primaryState.has_variation_2 && validV2.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_tier_2 || 'Variasi 2')}:</span>
+                  <span class="text-[9px] text-slate-400 font-medium">${previewTestState.selectedTier2Id ? '✓ Terpilih' : 'Wajib Dipilih'}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validV2.map((f, idx) => {
+                    const fId = f.id || `v2_${idx}`;
+                    const isSelected = previewTestState.selectedTier2Id === fId;
+                    return `
+                      <button type="button" class="btn-preview-tier2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; ring-color: ${accentColor};` : ''}" data-id="${fId}">
+                        ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                        <span>${escapeHtml(f.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Variasi 3 (Jika Aktif) -->
+            ${(primaryState.has_variation_3 && validV3.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_1 || 'Variasi 3')}:</span>
+                  <span class="text-[9px] text-slate-400 font-medium">${previewTestState.selectedTier3Id ? '✓ Terpilih' : 'Wajib Dipilih'}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validV3.map((f, idx) => {
+                    const fId = f.id || `v3_${idx}`;
+                    const isSelected = previewTestState.selectedTier3Id === fId;
+                    return `
+                      <button type="button" class="btn-preview-tier3 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; ring-color: ${accentColor};` : ''}" data-id="${fId}">
+                        ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                        <span>${escapeHtml(f.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Variasi 4 (Jika Aktif) -->
+            ${(primaryState.has_variation_4 && validV4.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_2 || 'Variasi 4')}:</span>
+                  <span class="text-[9px] text-slate-400 font-medium">${previewTestState.selectedTier4Id ? '✓ Terpilih' : 'Wajib Dipilih'}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validV4.map((f, idx) => {
+                    const fId = f.id || `v4_${idx}`;
+                    const isSelected = previewTestState.selectedTier4Id === fId;
+                    return `
+                      <button type="button" class="btn-preview-tier4 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center gap-1 ${isSelected ? 'text-white shadow-2xs font-bold ring-2 ring-emerald-500/50' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; ring-color: ${accentColor};` : ''}" data-id="${fId}">
+                        ${isSelected ? '<i class="bi bi-check2 text-xs"></i>' : ''}
+                        <span>${escapeHtml(f.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Layanan Extras (Jika Aktif - Interaktif Klik Tambah/Hapus) -->
+            ${(primaryState.has_extra_service && validExtras.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">${escapeHtml(primaryState.variation_labels?.label_extra_3 || 'Layanan Extras')}:</span>
+                <div class="space-y-1.5">
+                  ${validExtras.map((ex, idx) => {
+                    const exId = ex.id || `ex_${idx}`;
+                    const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+                    const xt = String(ex.extra_type || '').toLowerCase();
+                    const isDirect = (xt === 'direct' || xt === 'langsung proses');
+                    return `
+                      <button type="button" class="btn-preview-extra w-full flex items-center justify-between text-[10px] p-2 rounded-lg transition cursor-pointer ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'}" data-id="${exId}">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                          <i class="bi ${isSelected || isDirect ? 'bi-check-circle-fill text-emerald-600' : 'bi-circle text-slate-300'} text-xs shrink-0"></i>
+                          <span class="truncate">${escapeHtml(ex.name.trim())}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                          <span class="text-[9px] px-1.5 py-0.5 rounded ${isSelected || isDirect ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200/80 text-slate-600'} font-bold uppercase">${escapeHtml(ex.extra_type ? (ex.extra_type === 'qty' ? 'Input Qty' : (isDirect ? 'Direct' : 'Pilihan Ganda')) : 'Opsi')}</span>
+                          <span class="font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
+                        </div>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Kuantitas Pesanan Interaktif (- dan +) -->
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">Kuantitas:</span>
+                <span class="text-[9px] text-slate-400 block leading-tight">
+                  ${primaryState.has_order_multiple ? `Kelipatan ${stepMultiplier} pcs • ` : ''}Min ${minOrderQty} pcs${maxOrderQty !== Infinity ? ` • Maks ${maxOrderQty} pcs` : ''}
+                </span>
+              </div>
+              <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white shadow-2xs shrink-0">
+                <button type="button" class="btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition font-bold cursor-pointer select-none ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}" title="Kurangi Kuantitas">
+                  <i class="bi bi-dash text-xs"></i>
+                </button>
+                <span class="w-10 text-center text-xs font-bold text-slate-800 font-mono select-none">
+                  ${curQty}
+                </span>
+                <button type="button" class="btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition font-bold cursor-pointer select-none ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}" title="Tambah Kuantitas">
+                  <i class="bi bi-plus text-xs"></i>
+                </button>
               </div>
             </div>
 
-            <!-- Variasi 2 (Jika Aktif) -->
-            ${(() => {
-              const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
-              if (!primaryState.has_variation_2 || validV2.length === 0) return '';
-              return `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_tier_2 || 'Variasi 2')}:</span>
-                  <div class="flex flex-wrap gap-1.5">
-                    ${validV2.map((f, idx) => `
-                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                        ${escapeHtml(f.name.trim())}
-                      </span>
-                    `).join('')}
-                  </div>
-                </div>
-              `;
-            })()}
-
-            <!-- Variasi 3 (Jika Aktif) -->
-            ${(() => {
-              const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
-              if (!primaryState.has_variation_3 || validV3.length === 0) return '';
-              return `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_1 || 'Variasi 3')}:</span>
-                  <div class="flex flex-wrap gap-1.5">
-                    ${validV3.map((f, idx) => `
-                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                        ${escapeHtml(f.name.trim())}
-                      </span>
-                    `).join('')}
-                  </div>
-                </div>
-              `;
-            })()}
-
-            <!-- Variasi 4 (Jika Aktif) -->
-            ${(() => {
-              const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
-              if (!primaryState.has_variation_4 || validV4.length === 0) return '';
-              return `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(primaryState.variation_labels?.label_extra_2 || 'Variasi 4')}:</span>
-                  <div class="flex flex-wrap gap-1.5">
-                    ${validV4.map((f, idx) => `
-                      <span class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${idx === 0 ? 'text-white shadow-2xs' : 'bg-slate-100 text-slate-700 border border-slate-200'}" style="${idx === 0 ? `background-color: ${accentColor};` : ''}">
-                        ${escapeHtml(f.name.trim())}
-                      </span>
-                    `).join('')}
-                  </div>
-                </div>
-              `;
-            })()}
-
-            <!-- Layanan Extras (Jika Aktif) -->
-            ${(() => {
-              const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
-              if (!primaryState.has_extra_service || validExtras.length === 0) return '';
-              return `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">${escapeHtml(primaryState.variation_labels?.label_extra_3 || 'Layanan Extras')}:</span>
-                  <div class="space-y-1">
-                    ${validExtras.map(ex => `
-                      <div class="flex items-center justify-between text-[10px] p-1.5 rounded-lg bg-emerald-50/60 border border-emerald-100">
-                        <span class="font-semibold text-slate-800">${escapeHtml(ex.name.trim())}</span>
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold uppercase">${escapeHtml(ex.extra_type ? (ex.extra_type === 'qty' ? 'Input Qty' : 'Pilihan Ganda') : 'Jenis Input')}</span>
-                          <span class="font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
-                        </div>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              `;
-            })()}
+            <!-- Subtotal Bar -->
+            <div class="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-slate-50 border border-slate-200">
+              <span class="text-slate-600 font-medium text-[11px]">Subtotal (${curQty} pcs):</span>
+              <span class="font-extrabold text-slate-900" style="color: ${accentColor};">${formatIDR(subtotalOrder)}</span>
+            </div>
 
             <!-- Estimasi Pengiriman -->
             <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
@@ -2386,10 +3042,20 @@ const ProductForm = (() => {
               </p>
             </div>
 
-            <!-- Tombol Beli / Keranjang -->
-            <div class="pt-2 flex gap-2">
-              <button type="button" class="flex-1 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition flex items-center justify-center gap-1.5 cursor-default pointer-events-none" style="background-color: ${accentColor};">
-                <i class="bi bi-cart-plus text-xs"></i>
+            <!-- TIGA TOMBOL INTERAKSI UTAMA: CHAT WA, KERANJANG, BELI SEKARANG -->
+            <div class="pt-2 flex items-center gap-2">
+              <!-- 1. Tombol Ikon Chat (WhatsApp) -->
+              <button type="button" class="btn-preview-chat-wa w-10 h-10 rounded-xl border border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs" title="Chat WhatsApp ke Penjual">
+                <i class="bi bi-whatsapp text-lg"></i>
+              </button>
+
+              <!-- 2. Tombol Ikon Cart (+ / Add to Cart) -->
+              <button type="button" class="btn-preview-add-cart w-10 h-10 rounded-xl border border-slate-300 hover:border-emerald-500 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs" title="Tambah ke Keranjang (+ Cart)">
+                <i class="bi bi-cart-plus text-lg"></i>
+              </button>
+
+              <!-- 3. Tombol Beli Sekarang -->
+              <button type="button" class="btn-preview-buy-now flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]" style="background-color: ${accentColor};">
                 <span>Beli Sekarang</span>
               </button>
             </div>
@@ -2403,6 +3069,7 @@ const ProductForm = (() => {
         mobilePreviewBox.innerHTML = miniPdpHtml;
       }
       if (window.lucide) window.lucide.createIcons();
+      bindMiniPdpInteractiveEvents();
       return;
     }
 
@@ -2621,7 +3288,7 @@ const ProductForm = (() => {
 
     return `
       <!-- 1. FIXED SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE) -->
-      <div id="step2-subnav-fixed" class="fixed top-16 left-0 lg:left-[4.5rem] ${isLivePreviewOpen && primaryState.is_active ? 'lg:right-[380px] xl:right-[420px]' : 'right-0'} z-30 bg-white border-b border-slate-200/80 transition-all duration-300">
+      <div id="step2-subnav-fixed" class="fixed top-16 left-0 lg:left-[4.5rem] ${isLivePreviewOpen && primaryState.is_active ? 'lg:right-[340px] xl:right-[380px]' : 'right-0'} z-30 bg-white border-b border-slate-200/80 transition-all duration-300">
         <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
           <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
             Informasi Produk
@@ -3282,7 +3949,7 @@ const ProductForm = (() => {
       <div class="bg-white/95 backdrop-blur-md rounded-lg border border-slate-200 shadow-sm p-4 flex items-center justify-between flex-wrap gap-3 mt-6">
         <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
           <i class="bi bi-arrow-left"></i>
-          <span>Kembali</span>
+          <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>
         </button>
 
         <div class="flex items-center gap-3">
@@ -5025,6 +5692,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       hideWizardErrorBanner();
       currentStep = step;
+      if (step === 2) {
+        if (!previewTestState.qty || previewTestState.qty < (primaryState.min_order || 1)) {
+          previewTestState.qty = primaryState.min_order || 1;
+        }
+      }
       updateStepVisibility();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -5214,7 +5886,21 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   function bindStep2InteractiveEvents() {
     // Tombol Aksi Bawah Step 2
     const btn2Prev = document.getElementById('btn-step-2-prev');
-    if (btn2Prev) btn2Prev.onclick = () => goToStep(1);
+    if (btn2Prev) {
+      btn2Prev.onclick = () => {
+        if (formMode === 'edit') {
+          if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
+            App.navigate('list');
+          } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
+            AdminApp.navigateTo('products');
+          } else {
+            window.location.hash = '#products';
+          }
+        } else {
+          goToStep(1);
+        }
+      };
+    }
 
     const btnDraft = document.getElementById('btn-save-draft');
     if (btnDraft) btnDraft.onclick = () => handleFormSubmit(true);
@@ -6824,11 +7510,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           btnExpandSidebar.classList.remove('lg:flex');
         }
         if (wizardCol) {
-          wizardCol.classList.add('lg:pr-[400px]', 'xl:pr-[440px]');
+          wizardCol.classList.add('lg:pr-[360px]', 'xl:pr-[400px]');
         }
         const subnavFixed = document.getElementById('step2-subnav-fixed');
         if (subnavFixed) {
-          subnavFixed.classList.add('lg:right-[380px]', 'xl:right-[420px]');
+          subnavFixed.classList.add('lg:right-[340px]', 'xl:right-[380px]');
           subnavFixed.classList.remove('right-0');
         }
       } else {
@@ -6846,11 +7532,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
         }
         if (wizardCol) {
-          wizardCol.classList.remove('lg:pr-[400px]', 'xl:pr-[440px]');
+          wizardCol.classList.remove('lg:pr-[360px]', 'xl:pr-[400px]');
         }
         const subnavFixed = document.getElementById('step2-subnav-fixed');
         if (subnavFixed) {
-          subnavFixed.classList.remove('lg:right-[380px]', 'xl:right-[420px]');
+          subnavFixed.classList.remove('lg:right-[340px]', 'xl:right-[380px]');
           subnavFixed.classList.add('right-0');
         }
       }
@@ -7108,14 +7794,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const btnStep1Cancel = document.getElementById('btn-step-1-cancel');
     if (btnStep1Cancel) {
       btnStep1Cancel.addEventListener('click', () => {
-        if (typeof App !== 'undefined' && App.navigate) {
+        if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
           App.navigate('list');
-        } else if (typeof AdminApp !== 'undefined' && AdminApp.navigateTo) {
+        } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
           AdminApp.navigateTo('products');
         } else {
-          const btnBack = document.getElementById('btn-back-to-list');
-          if (btnBack) btnBack.click();
-          else window.history.back();
+          window.location.hash = '#products';
         }
       });
     }
@@ -9242,7 +9926,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           DB.updateProduct(currentEditingId, primaryState, validMaterials, allFinishings);
           App.showToast(isDraft ? 'Perubahan draf berhasil disimpan!' : 'Perubahan produk berhasil diperbarui!', 'success');
         }
-        App.navigate('list');
+        if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
+          App.navigate('list');
+        } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
+          AdminApp.navigateTo('products');
+        } else {
+          window.location.hash = '#products';
+        }
       } catch (err) {
         console.error(err);
         alert('Gagal menyimpan produk: ' + err.message);
