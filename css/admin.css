@@ -952,3 +952,44 @@ input.toggle-same-cost:checked ~ div::after {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* Kunci Posisi Fixed Sidebar Preview Desktop */
+@media (min-width: 1024px) {
+  #desktop-preview-sidebar {
+    position: fixed !important;
+    right: 0 !important;
+    left: auto !important;
+    top: 4rem !important;
+    bottom: 0 !important;
+    height: calc(100vh - 4rem) !important;
+    width: 300px !important;
+    z-index: 35 !important;
+    box-shadow: none !important;
+  }
+  #desktop-preview-sidebar.translate-x-full {
+    transform: translateX(100%) !important;
+  }
+  #desktop-preview-sidebar.translate-x-0 {
+    transform: translateX(0) !important;
+  }
+  /* Sembunyikan mutlak Mobile Preview Drawer & FAB di layar Desktop */
+  #mobile-preview-sheet,
+  #mobile-preview-backdrop,
+  #btn-fab-live-preview {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  #desktop-preview-sidebar {
+    width: 340px !important;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  #desktop-preview-sidebar,
+  #btn-expand-preview-sidebar {
+    display: none !important;
+  }
+}
+
