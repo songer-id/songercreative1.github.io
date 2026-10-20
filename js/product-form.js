@@ -2284,16 +2284,37 @@ const ProductForm = (() => {
     const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
     const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extrasActivePrice) : (parseFloat(primaryState.price || 0) + extrasActivePrice);
 
-    // Rentang harga jika belum dipilih semua
-    const prices = validMaterials.map(m => parseFloat(m.price) || 0).filter(p => p > 0);
-    let priceRangeText = '';
-    if (prices.length > 0) {
-      const minP = Math.min(...prices);
-      const maxP = Math.max(...prices);
-      priceRangeText = (minP === maxP) ? formatIDR(minP) : `${formatIDR(minP)} - ${formatIDR(maxP)}`;
-    } else {
-      priceRangeText = formatIDR(displayBasePrice);
+    // Hitung seluruh kemungkinan harga unit kombinasi dari Variasi 1 s/d Variasi 4 yang aktif:
+    const p1List = validMaterials.map(m => parseFloat(m.price) || 0);
+    const minV1 = p1List.length > 0 ? Math.min(...p1List) : (parseFloat(primaryState.price) || 0);
+    const maxV1 = p1List.length > 0 ? Math.max(...p1List) : (parseFloat(primaryState.price) || 0);
+
+    let minV2 = 0, maxV2 = 0;
+    if (primaryState.has_variation_2 && validV2.length > 0) {
+      const p2List = validV2.map(f => parseFloat(f.price) || 0);
+      minV2 = Math.min(...p2List);
+      maxV2 = Math.max(...p2List);
     }
+
+    let minV3 = 0, maxV3 = 0;
+    if (primaryState.has_variation_3 && validV3.length > 0) {
+      const p3List = validV3.map(f => parseFloat(f.price) || 0);
+      minV3 = Math.min(...p3List);
+      maxV3 = Math.max(...p3List);
+    }
+
+    let minV4 = 0, maxV4 = 0;
+    if (primaryState.has_variation_4 && validV4.length > 0) {
+      const p4List = validV4.map(f => parseFloat(f.price) || 0);
+      minV4 = Math.min(...p4List);
+      maxV4 = Math.max(...p4List);
+    }
+
+    const rawMinUnit = minV1 + minV2 + minV3 + minV4;
+    const rawMaxUnit = maxV1 + maxV2 + maxV3 + maxV4;
+
+    const baseMin = rawMinUnit + extrasActivePrice;
+    const baseMax = rawMaxUnit + extrasActivePrice;
 
     // Diskon Bulanan
     const hasDiscount = Boolean(primaryState.has_discount);
@@ -2303,12 +2324,34 @@ const ProductForm = (() => {
     const isSimulateDisc = Boolean((simDiscCb && simDiscCb.checked) || (simDiscCbMob && simDiscCbMob.checked));
     const effHasDiscount = hasDiscount || isSimulateDisc;
 
+    let effMinPrice = baseMin;
+    let effMaxPrice = baseMax;
+
+    if (effHasDiscount) {
+      if (hasDiscount && discPercent > 0) {
+        effMinPrice = Math.round(baseMin * (1 - (discPercent / 100)));
+        effMaxPrice = Math.round(baseMax * (1 - (discPercent / 100)));
+      } else {
+        effMinPrice = Math.round(baseMin * 0.5);
+        effMaxPrice = Math.round(baseMax * 0.5);
+      }
+    }
+
+    let drawerPriceRangeString = '';
+    if (effMinPrice !== effMaxPrice) {
+      drawerPriceRangeString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID') + ' - Rp' + Math.round(effMaxPrice).toLocaleString('id-ID');
+    } else {
+      drawerPriceRangeString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID');
+    }
+
     let unitPriceAfterDiscount = displayBasePrice;
+    let step2StrikePrice = displayBasePrice;
     if (effHasDiscount) {
       if (hasDiscount && discPercent > 0) {
         unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
       } else {
         unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
+        step2StrikePrice = displayBasePrice * 2;
       }
     }
 
@@ -2360,10 +2403,10 @@ const ProductForm = (() => {
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${effHasDiscount ? `
-                <div class="text-sm font-extrabold text-red-600 leading-tight">${formatIDR(finalUnitPrice)}</div>
-                <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">${formatIDR(displayBasePrice)}</div>
+                <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(displayBasePrice).toLocaleString('id-ID')}</div>
               ` : `
-                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${formatIDR(finalUnitPrice)}</div>
+                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
               ${wholesaleInfo.bannerText ? `
@@ -2376,6 +2419,26 @@ const ProductForm = (() => {
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
+
+          ${(primaryState.has_extra_service && validExtras.length > 0) ? `
+            <div class="p-3 border-b border-slate-100 space-y-1.5">
+              <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('extras', 'Layanan Extras'))}</div>
+              <div class="flex flex-wrap gap-1.5">
+                ${validExtras.map((ex, idx) => {
+                  const exId = ex.id || `ex_${idx}`;
+                  const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+                  const xt = String(ex.extra_type || '').toLowerCase();
+                  const isDirect = (xt === 'direct' || xt === 'langsung proses');
+                  return `
+                    <button type="button" class="btn-shopee-extra px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'}" data-id="${exId}">
+                      <span>${escapeHtml(ex.name.trim())}</span>
+                      <span class="text-[9px] font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
 
           <div class="p-3 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
@@ -2404,13 +2467,13 @@ const ProductForm = (() => {
             <div class="flex-1 pr-6 min-w-0">
               ${isAllVariationsSelected ? `
                 ${effHasDiscount ? `
-                  <div class="text-sm font-extrabold text-red-600 leading-tight">${formatIDR(finalUnitPrice)}</div>
-                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">${formatIDR(displayBasePrice)}</div>
+                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID')}</div>
                 ` : `
-                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${formatIDR(finalUnitPrice)}</div>
+                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
                 `}
               ` : `
-                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${priceRangeText}</div>
+                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
                 <div class="text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
@@ -2425,15 +2488,24 @@ const ProductForm = (() => {
             </button>
           </div>
 
-          <div class="overflow-y-auto max-h-[190px] p-3 space-y-3 flex-1 min-h-0">
+          <div class="overflow-y-auto max-h-[260px] p-3 space-y-3 flex-1 min-h-0">
             <!-- Variasi 1 -->
             <div class="space-y-1.5">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}:</span>
+              <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}</div>
               <div class="flex flex-wrap gap-1.5">
                 ${validMaterials.map((m) => {
                   const isSelected = previewTestState.selectedTier1Id === m.id;
+                  const itemImg = m.image_url || m.image;
+                  if (itemImg) {
+                    return `
+                      <button type="button" class="btn-shopee-tier1 mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded-md border text-[11px] font-medium transition cursor-pointer ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-tier="tier1" data-id="${m.id}">
+                        <img src="${itemImg}" class="w-5 h-5 rounded-xs object-cover shrink-0 bg-slate-100" alt="${escapeHtml(m.name)}" />
+                        <span class="truncate max-w-[120px]">${escapeHtml(m.name)}</span>
+                      </button>
+                    `;
+                  }
                   return `
-                    <button type="button" class="btn-shopee-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${m.id}">
+                    <button type="button" class="btn-shopee-tier1 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-tier="tier1" data-id="${m.id}">
                       <span>${escapeHtml(m.name.trim())}</span>
                     </button>
                   `;
@@ -2444,13 +2516,13 @@ const ProductForm = (() => {
             <!-- Variasi 2 -->
             ${(primaryState.has_variation_2 && validV2.length > 0) ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}:</span>
+                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
                 <div class="flex flex-wrap gap-1.5">
                   ${validV2.map((f, idx) => {
                     const fId = f.id || `v2_${idx}`;
                     const isSelected = previewTestState.selectedTier2Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier2 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2462,13 +2534,13 @@ const ProductForm = (() => {
             <!-- Variasi 3 -->
             ${(primaryState.has_variation_3 && validV3.length > 0) ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}:</span>
+                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}</div>
                 <div class="flex flex-wrap gap-1.5">
                   ${validV3.map((f, idx) => {
                     const fId = f.id || `v3_${idx}`;
                     const isSelected = previewTestState.selectedTier3Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier3 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier3 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2480,14 +2552,35 @@ const ProductForm = (() => {
             <!-- Variasi 4 -->
             ${(primaryState.has_variation_4 && validV4.length > 0) ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}:</span>
+                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}</div>
                 <div class="flex flex-wrap gap-1.5">
                   ${validV4.map((f, idx) => {
                     const fId = f.id || `v4_${idx}`;
                     const isSelected = previewTestState.selectedTier4Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier4 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier4 px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Layanan Extras -->
+            ${(primaryState.has_extra_service && validExtras.length > 0) ? `
+              <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('extras', 'Layanan Extras'))}</div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${validExtras.map((ex, idx) => {
+                    const exId = ex.id || `ex_${idx}`;
+                    const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+                    const xt = String(ex.extra_type || '').toLowerCase();
+                    const isDirect = (xt === 'direct' || xt === 'langsung proses');
+                    return `
+                      <button type="button" class="btn-shopee-extra px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'}" data-id="${exId}">
+                        <span>${escapeHtml(ex.name.trim())}</span>
+                        <span class="text-[9px] font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
                       </button>
                     `;
                   }).join('')}
@@ -2622,6 +2715,23 @@ const ProductForm = (() => {
           const id = btn.getAttribute('data-id');
           previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
           updateProductCardLivePreview();
+        };
+      });
+
+      // 5b. Ringkasan Variasi 3, 4, Extras (Buka Drawer)
+      container.querySelectorAll('.btn-open-all-variations-drawer').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const check = canActivateTestMode();
+          if (!check.allowed) {
+            if (typeof App !== 'undefined' && App.showToast) {
+              App.showToast(check.reason, 'warning');
+            } else {
+              alert(check.reason);
+            }
+            return;
+          }
+          openShopeeCheckoutDrawer('buy');
         };
       });
 
@@ -2903,6 +3013,16 @@ const ProductForm = (() => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
             previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Layanan Extras di dalam Drawer
+        container.querySelectorAll('.btn-shopee-extra').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
             updateProductCardLivePreview();
           };
         });
@@ -3570,68 +3690,88 @@ const ProductForm = (() => {
         });
       }
 
-      // Base combination unit price
-      const comboUnitBase = (v1Price + v2Price + v3Price + v4Price);
-      const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extrasActivePrice) : (basePrice + extrasActivePrice);
+      // Hitung seluruh kemungkinan harga unit kombinasi dari Variasi 1 s/d Variasi 4 yang aktif:
+      const p1List = validMaterials.map(m => parseFloat(m.price) || 0);
+      const minV1 = p1List.length > 0 ? Math.min(...p1List) : (parseFloat(primaryState.price) || 0);
+      const maxV1 = p1List.length > 0 ? Math.max(...p1List) : (parseFloat(primaryState.price) || 0);
 
-      // Hitung Diskon Bulanan jika aktif
-      let unitPriceAfterDiscount = displayBasePrice;
-      let step2StrikePrice = displayBasePrice;
+      let minV2 = 0, maxV2 = 0;
+      if (primaryState.has_variation_2 && validV2.length > 0) {
+        const p2List = validV2.map(f => parseFloat(f.price) || 0);
+        minV2 = Math.min(...p2List);
+        maxV2 = Math.max(...p2List);
+      }
+
+      let minV3 = 0, maxV3 = 0;
+      if (primaryState.has_variation_3 && validV3.length > 0) {
+        const p3List = validV3.map(f => parseFloat(f.price) || 0);
+        minV3 = Math.min(...p3List);
+        maxV3 = Math.max(...p3List);
+      }
+
+      let minV4 = 0, maxV4 = 0;
+      if (primaryState.has_variation_4 && validV4.length > 0) {
+        const p4List = validV4.map(f => parseFloat(f.price) || 0);
+        minV4 = Math.min(...p4List);
+        maxV4 = Math.max(...p4List);
+      }
+
+      const rawMinUnit = minV1 + minV2 + minV3 + minV4;
+      const rawMaxUnit = maxV1 + maxV2 + maxV3 + maxV4;
+
+      const baseMin = rawMinUnit + extrasActivePrice;
+      const baseMax = rawMaxUnit + extrasActivePrice;
+
+      let effMinPrice = baseMin;
+      let effMaxPrice = baseMax;
+      let effMinStrike = baseMin;
+      let effMaxStrike = baseMax;
+
       if (effHasDiscount) {
         if (hasDiscount && discPercent > 0) {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
+          effMinPrice = Math.round(baseMin * (1 - (discPercent / 100)));
+          effMaxPrice = Math.round(baseMax * (1 - (discPercent / 100)));
         } else {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
-          step2StrikePrice = displayBasePrice * 2;
+          effMinPrice = Math.round(baseMin * 0.5);
+          effMaxPrice = Math.round(baseMax * 0.5);
+          effMinStrike = baseMin * 2;
+          effMaxStrike = baseMax * 2;
         }
       }
 
-      // Hitung Batas Qty: Min, Max, dan Step Kelipatan
-      let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
-      if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
-        minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
-      }
+      const isAllVariationsSelected = checkAllVariationsSelected();
 
-      let maxOrderQty = Infinity;
-      if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
-        maxOrderQty = parseInt(primaryState.max_order_qty);
-      } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
-        maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
-      }
-      if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
-        maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
-      }
+      let displayPriceString = '';
+      let displayStrikePriceString = '';
 
-      let stepMultiplier = 1;
-      if (primaryState.has_order_multiple) {
-        if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
-          stepMultiplier = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
+      if (primaryState.has_variants && !isAllVariationsSelected) {
+        if (effMinPrice !== effMaxPrice) {
+          displayPriceString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID') + ' - Rp' + Math.round(effMaxPrice).toLocaleString('id-ID');
         } else {
-          stepMultiplier = parseInt(primaryState.order_multiple_value) || 1;
+          displayPriceString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID');
         }
-      } else if (selectedMat && selectedMat.step_multiplier) {
-        stepMultiplier = parseInt(selectedMat.step_multiplier) || 1;
+        if (effMinStrike !== effMaxStrike) {
+          displayStrikePriceString = 'Rp' + Math.round(effMinStrike).toLocaleString('id-ID') + ' - Rp' + Math.round(effMaxStrike).toLocaleString('id-ID');
+        } else {
+          displayStrikePriceString = 'Rp' + Math.round(effMinStrike).toLocaleString('id-ID');
+        }
+      } else {
+        displayPriceString = 'Rp' + Math.round(finalUnitPrice).toLocaleString('id-ID');
+        displayStrikePriceString = 'Rp' + Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID');
       }
-      if (stepMultiplier < 1) stepMultiplier = 1;
 
-      // Normalisasi nilai Qty sekarang
-      if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
-        previewTestState.qty = minOrderQty;
-      }
-      if (previewTestState.qty > maxOrderQty && maxOrderQty !== Infinity) {
-        previewTestState.qty = maxOrderQty;
-      }
-      const curQty = previewTestState.qty;
+      const hasAnyTier1Image = validMaterials.some(m => m && (m.image_url || m.image));
 
-      // Cek apakah memenuhi syarat Harga Grosir
-      const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
-      let finalUnitPrice = unitPriceAfterDiscount;
-      if (wholesaleInfo.hasDiscount) {
-        finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
-      }
-      const subtotalOrder = finalUnitPrice * curQty;
+      const hasTier3 = Boolean(primaryState.has_variation_3 && validV3.length > 0);
+      const hasTier4 = Boolean(primaryState.has_variation_4 && validV4.length > 0);
+      const hasExtras = Boolean(primaryState.has_extra_service && validExtras.length > 0);
 
-      const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
+      const summaryParts = [];
+      if (hasTier3) summaryParts.push(`${validV3.length} ${getVariationLabel('tier3', 'Variasi 3')}`);
+      if (hasTier4) summaryParts.push(`${validV4.length} ${getVariationLabel('tier4', 'Variasi 4')}`);
+      if (hasExtras) summaryParts.push(`${validExtras.length} ${getVariationLabel('extras', 'Layanan Extras')}`);
+
+      const hasExtraTiers = summaryParts.length > 0;
 
       const isTestMode = Boolean(previewTestState.sidebarTab === 'test');
       if (!isTestMode) {
@@ -3665,52 +3805,93 @@ const ProductForm = (() => {
             </div>
 
             <div class="p-3.5 space-y-3">
-              <!-- Judul, Harga, Stok & Grosir -->
-              <div>
-                <h3 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2 leading-snug">
-                  ${escapeHtml(name)}
-                </h3>
-                <div class="flex items-baseline gap-2 mt-1.5 flex-wrap">
-                  <span class="text-sm sm:text-base font-extrabold" style="color: ${accentColor};">
-                    ${formatIDR(finalUnitPrice)}
+              <!-- URUTAN 1: Baris Harga (Rentang Harga) & Teks Terjual -->
+              <div class="flex items-baseline justify-between gap-2 pt-1">
+                <div class="flex items-baseline gap-2 flex-wrap min-w-0">
+                  <span class="text-sm sm:text-base font-extrabold truncate" style="color: ${accentColor};">
+                    ${displayPriceString}
                   </span>
-                  ${(effHasDiscount || wholesaleInfo.hasDiscount) ? `
-                    <span class="text-[11px] line-through text-slate-400 font-normal">
-                      ${formatIDR(step2StrikePrice || displayBasePrice)}
+                  ${effHasDiscount ? `
+                    <span class="text-[11px] line-through text-slate-400 font-normal shrink-0">
+                      ${displayStrikePriceString}
                     </span>
                   ` : ''}
-                  <span class="text-[10px] text-slate-500 font-medium">/ unit</span>
                 </div>
-                <div class="text-[11px] text-slate-500 font-medium mt-1">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
+                <span class="text-[11px] text-slate-500 font-normal whitespace-nowrap shrink-0">1RB+ terjual</span>
+              </div>
+
+              <!-- URUTAN 2: Judul / Nama Produk -->
+              <h3 class="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">
+                ${escapeHtml(name)}
+              </h3>
+
+              <!-- Stok & Grosir -->
+              <div class="space-y-1">
+                <div class="text-[11px] text-slate-500 font-medium">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
                 ${wholesaleInfo.bannerText ? `
-                  <div class="mt-1.5 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
+                  <div class="mt-1 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
                     <i class="bi bi-tag-fill text-amber-600"></i>
                     <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
                   </div>
                 ` : ''}
               </div>
 
-              <!-- Variasi 1 (Bahan Utama / Varian) -->
+              <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
               ${primaryState.has_variants ? `
                 <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}:</span>
-                  <div class="flex flex-wrap gap-1.5">
-                    ${validMaterials.length > 0 ? validMaterials.map((m, idx) => {
-                      const isSelected = previewTestState.selectedTier1Id === m.id;
-                      return `
-                        <button type="button" class="btn-preview-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}">
-                          <span>${escapeHtml(m.name.trim())}</span>
-                        </button>
-                      `;
-                    }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
-                  </div>
+                  <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}</div>
+                  ${validMaterials.length > 0 ? (
+                    hasAnyTier1Image ? `
+                      <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+                        ${validMaterials.map((m, idx) => {
+                          const isSelected = previewTestState.selectedTier1Id === m.id;
+                          const itemImg = m.image_url || m.image;
+                          const peekStyle = validMaterials.length >= 7 
+                            ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;' 
+                            : 'width: 36px; height: 36px;';
+                          return `
+                            <button type="button" class="btn-preview-tier1 rounded-md overflow-hidden border transition cursor-pointer relative shrink-0 flex items-center justify-center ${isSelected ? 'border-2 shadow-xs' : 'border-slate-200 hover:border-slate-400 bg-slate-50'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${peekStyle} ${isSelected ? `border-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}" title="${escapeHtml(m.name)}">
+                              ${itemImg ? `
+                                <img src="${itemImg}" class="w-full h-full object-cover" alt="${escapeHtml(m.name)}" />
+                              ` : `
+                                <div class="w-full h-full flex flex-col items-center justify-center p-0.5 bg-slate-100 text-slate-600">
+                                  <span class="text-[8px] font-bold line-clamp-2 leading-none text-center">${escapeHtml(m.name.trim())}</span>
+                                </div>
+                              `}
+                            </button>
+                          `;
+                        }).join('')}
+                      </div>
+                    ` : `
+                      <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+                        ${validMaterials.map((m, idx) => {
+                          const isSelected = previewTestState.selectedTier1Id === m.id;
+                          return `
+                            <button type="button" class="btn-preview-tier1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center shrink-0 whitespace-nowrap ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${m.id}" data-idx="${idx}">
+                              <span>${escapeHtml(m.name.trim())}</span>
+                            </button>
+                          `;
+                        }).join('')}
+                      </div>
+                    `
+                  ) : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
                 </div>
               ` : ''}
 
-              <!-- Variasi 2 (Jika Aktif) -->
+              <!-- URUTAN 4: Variasi ke-2 & Ringkasan Variasi 3, 4, Extras (Maksimal 2 Variasi di Awal) -->
               ${(primaryState.has_variation_2 && validV2.length > 0) ? `
                 <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}:</span>
+                  ${hasExtraTiers ? `
+                    <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
+                      <div class="truncate">
+                        <span class="font-bold text-slate-800">Pilihan Variasi</span>
+                        <span class="font-normal text-slate-500"> (${summaryParts.join(', ')})</span>
+                      </div>
+                      <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
+                    </div>
+                  ` : `
+                    <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
+                  `}
                   <div class="flex flex-wrap gap-1.5">
                     ${validV2.map((f, idx) => {
                       const fId = f.id || `v2_${idx}`;
@@ -3723,79 +3904,26 @@ const ProductForm = (() => {
                     }).join('')}
                   </div>
                 </div>
-              ` : ''}
-
-              <!-- Variasi 3 (Jika Aktif) -->
-              ${(primaryState.has_variation_3 && validV3.length > 0) ? `
+              ` : (hasExtraTiers ? `
                 <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}:</span>
-                  <div class="flex flex-wrap gap-1.5">
-                    ${validV3.map((f, idx) => {
-                      const fId = f.id || `v3_${idx}`;
-                      const isSelected = previewTestState.selectedTier3Id === fId;
-                      return `
-                        <button type="button" class="btn-preview-tier3 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
-                          <span>${escapeHtml(f.name.trim())}</span>
-                        </button>
-                      `;
-                    }).join('')}
+                  <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
+                    <div class="truncate">
+                      <span class="font-bold text-slate-800">Pilihan Variasi</span>
+                      <span class="font-normal text-slate-500"> (${summaryParts.join(', ')})</span>
+                    </div>
+                    <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                   </div>
                 </div>
-              ` : ''}
+              ` : '')}
 
-              <!-- Variasi 4 (Jika Aktif) -->
-              ${(primaryState.has_variation_4 && validV4.length > 0) ? `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}:</span>
-                  <div class="flex flex-wrap gap-1.5">
-                    ${validV4.map((f, idx) => {
-                      const fId = f.id || `v4_${idx}`;
-                      const isSelected = previewTestState.selectedTier4Id === fId;
-                      return `
-                        <button type="button" class="btn-preview-tier4 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'text-white shadow-2xs font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${isSelected ? `background-color: ${accentColor}; border-color: ${accentColor};` : ''}" data-id="${fId}">
-                          <span>${escapeHtml(f.name.trim())}</span>
-                        </button>
-                      `;
-                    }).join('')}
-                  </div>
-                </div>
-              ` : ''}
-
-              <!-- Layanan Extras (Jika Aktif) -->
-              ${(primaryState.has_extra_service && validExtras.length > 0) ? `
-                <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">${escapeHtml(getVariationLabel('extras', 'Layanan Extras'))}:</span>
-                  <div class="space-y-1.5">
-                    ${validExtras.map((ex, idx) => {
-                      const exId = ex.id || `ex_${idx}`;
-                      const isSelected = Boolean(previewTestState.selectedExtras[exId]);
-                      const xt = String(ex.extra_type || '').toLowerCase();
-                      const isDirect = (xt === 'direct' || xt === 'langsung proses');
-                      return `
-                        <button type="button" class="btn-preview-extra w-full flex items-center justify-between text-[10px] p-2 rounded-lg transition cursor-pointer ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${exId}">
-                          <div class="flex items-center gap-1.5 min-w-0">
-                            <span class="truncate">${escapeHtml(ex.name.trim())}</span>
-                          </div>
-                          <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                            <span class="text-[9px] px-1.5 py-0.5 rounded ${isSelected || isDirect ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200/80 text-slate-600'} font-bold uppercase">${escapeHtml(ex.extra_type ? (ex.extra_type === 'qty' ? 'Input Qty' : (isDirect ? 'Direct' : 'Pilihan Ganda')) : 'Opsi')}</span>
-                            <span class="font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
-                          </div>
-                        </button>
-                      `;
-                    }).join('')}
-                  </div>
-                </div>
-              ` : ''}
-
-              <!-- Estimasi Pengiriman -->
+              <!-- URUTAN 5: Estimasi Pengiriman & Deskripsi Produk -->
               <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
                 <i class="bi bi-truck text-xs" style="color: ${accentColor};"></i>
                 <span class="font-medium">${primaryState.product_type === 'non_physical' ? 'Layanan Digital / Tanpa Pengiriman Fisik' : 'Estimasi Pengiriman: 1-2 Hari Kerja'}</span>
               </div>
 
-              <!-- Deskripsi Singkat -->
               <div class="space-y-1 pt-1">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Deskripsi Produk:</span>
+                <span class="text-xs font-medium text-slate-600 block">Deskripsi Produk</span>
                 <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
                   ${escapeHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
                 </p>
