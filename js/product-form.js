@@ -669,13 +669,7 @@ const ProductForm = (() => {
               <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6">
                 <!-- Header Card -->
                 <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-                  <div>
-                    <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <i class="bi bi-info-circle text-emerald-600"></i>
-                      <span>Informasi Produk</span>
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Lengkapi identitas visual, format etalase, dan media utama penawaran produk Anda.</p>
-                  </div>
+                  <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
                 </div>
 
                 <!-- Input 1: Jenis Produk / Layanan ([Fisik] | [Non Fisik]) -->
@@ -749,36 +743,36 @@ const ProductForm = (() => {
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <!-- Model 1: Kartu Klasik -->
+                      <!-- Kartu Klasik -->
                       <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'A' ? 'text-emerald-900' : 'text-slate-800'}">Model 1: Kartu Klasik</span>
+                          <span class="font-bold text-xs ${primaryState.card_variant === 'A' ? 'text-emerald-900' : 'text-slate-800'}">Kartu Klasik</span>
                           <input type="radio" name="card_variant_radio" value="A" ${primaryState.card_variant === 'A' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Format seimbang dengan penonjolan ulasan kepuasan pembeli. Cocok untuk: Berbagai macam produk ritel umum.
+                          Format seimbang dengan penonjolan ulasan kepuasan pembeli. Cocok untuk berbagai produk ritel umum.
                         </p>
                       </label>
 
-                      <!-- Model 2: Kartu Minimalis -->
+                      <!-- Kartu Minimalis -->
                       <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'B' ? 'text-emerald-900' : 'text-slate-800'}">Model 2: Kartu Minimalis</span>
+                          <span class="font-bold text-xs ${primaryState.card_variant === 'B' ? 'text-emerald-900' : 'text-slate-800'}">Kartu Minimalis</span>
                           <input type="radio" name="card_variant_radio" value="B" ${primaryState.card_variant === 'B' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Tata letak ringkas dan lugas tanpa ornamen berlebih Dengan Skala Gambar 3:4. Cocok Untuk: Produk Fashion, Pakaian Dan Lainnya.
+                          Tata letak ringkas dengan rasio foto produk 3:4. Cocok untuk produk pakaian dan fashion.
                         </p>
                       </label>
 
-                      <!-- Model 3: Kartu Detail -->
+                      <!-- Kartu Detail -->
                       <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'C' ? 'text-emerald-900' : 'text-slate-800'}">Model 3: Kartu Detail</span>
+                          <span class="font-bold text-xs ${primaryState.card_variant === 'C' ? 'text-emerald-900' : 'text-slate-800'}">Kartu Detail</span>
                           <input type="radio" name="card_variant_radio" value="C" ${primaryState.card_variant === 'C' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Tampilan etalase modern dengan footer spesifikasi dinamis, Untuk mempercepat keputusan pembeli. Cocok untuk: Jasa Atau Layanan spesifik.
+                          Tampilan etalase modern dengan footer spesifikasi dinamis. Cocok untuk jasa atau produk dengan detail varian.
                         </p>
                       </label>
                     </div>
@@ -1113,14 +1107,14 @@ const ProductForm = (() => {
                   </label>
                 </div>
 
-                <!-- Footer Model 3 Styling (Tampil jika Model 3 Aktif di Desktop Sidebar) -->
+                <!-- Footer Kartu Detail Styling (Tampil jika Kartu Detail Aktif di Desktop Sidebar) -->
                 <div id="cfg-panel-footer-model3" class="${primaryState.card_variant === 'C' ? '' : 'hidden'} pt-2.5 border-t border-slate-100 space-y-2.5">
                   <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
                       <i data-lucide="layers" class="w-3 h-3 text-emerald-600"></i>
-                      Footer Dua Strip (Model 3)
+                      Footer Dua Strip (Kartu Detail)
                     </span>
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono">Model 3</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono">Kartu Detail</span>
                   </div>
                   <!-- Strip 1 -->
                   <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
@@ -1180,7 +1174,7 @@ const ProductForm = (() => {
                 <div class="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
                   <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
                     <input type="checkbox" id="cfg-save-as-default-toggle" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-desk">Gunakan desain ini Sebagai Default kartu (${primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik')})</span>
+                    <span id="label-save-as-default-desk">Gunakan Thema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
                   </label>
                   <button type="button" id="btn-save-card-design" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
@@ -1352,14 +1346,14 @@ const ProductForm = (() => {
                   </label>
                 </div>
 
-                <!-- Footer Model 3 Styling Mobile (Tampil jika Model 3 Aktif) -->
+                <!-- Footer Kartu Detail Styling Mobile (Tampil jika Kartu Detail Aktif) -->
                 <div id="cfg-panel-footer-model3-mob" class="${primaryState.card_variant === 'C' ? '' : 'hidden'} pt-2.5 border-t border-slate-200 space-y-2.5">
                   <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
                       <i data-lucide="layers" class="w-3 h-3 text-emerald-600"></i>
-                      Footer Dua Strip (Model 3)
+                      Footer Dua Strip (Kartu Detail)
                     </span>
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono">Model 3</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono">Kartu Detail</span>
                   </div>
                   <!-- Strip 1 -->
                   <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
@@ -1419,7 +1413,7 @@ const ProductForm = (() => {
                 <div class="pt-3 border-t border-slate-200 flex flex-col gap-2.5">
                   <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
                     <input type="checkbox" id="cfg-save-as-default-toggle-mob" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-mob">Gunakan desain ini Sebagai Default kartu (${primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik')})</span>
+                    <span id="label-save-as-default-mob">Gunakan Thema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
                   </label>
                   <button type="button" id="btn-save-card-design-mob" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
@@ -3433,7 +3427,7 @@ const ProductForm = (() => {
     // Update label varian di atas box
     const badgeLabel = document.getElementById('label-active-card-preview');
     if (badgeLabel) {
-      badgeLabel.textContent = variant === 'A' ? 'Model 1: Kartu Klasik' : variant === 'B' ? 'Model 2: Kartu Minimalis' : 'Model 3: Kartu Detail';
+      badgeLabel.textContent = variant === 'A' ? 'Kartu Klasik' : variant === 'B' ? 'Kartu Minimalis' : 'Kartu Detail';
     }
 
     // 2. Hitung harga dasar dari input materials
@@ -4540,12 +4534,7 @@ const ProductForm = (() => {
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
         <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6" id="card-step2-info">
           <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-            <div>
-              <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                <i class="bi bi-info-circle text-emerald-600"></i>
-                <span>Informasi Produk</span>
-              </h2>
-            </div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
           </div>
 
           <!-- Input Nama Produk -->
@@ -4653,13 +4642,7 @@ const ProductForm = (() => {
         ${missingCard1.length > 0 ? renderFlashbackCard('Informasi Penjualan', 'bi-shop', missingCard1, 'card-step2-sales') : `
           <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6" id="card-step2-sales">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-              <div>
-                <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <i class="bi bi-shop text-emerald-600"></i>
-                  <span>Informasi Penjualan</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Konfigurasi jenis harga produk, kuota stok fisik, batas pembelian, harga grosir bertingkat, dan kelipatan pemesanan.</p>
-              </div>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Penjualan</h2>
             </div>
 
 
@@ -4851,12 +4834,8 @@ const ProductForm = (() => {
         <!-- CARD 3: PENGIRIMAN (GATED) -->
         ${missingCard2.length > 0 ? renderFlashbackCard('Pengiriman', 'bi-truck', missingCard2, 'card-step2-shipping') : `
           <div id="card-step2-shipping" class="${isPhysical ? 'block' : 'hidden'} bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-5">
-            <div class="border-b border-slate-100 pb-2">
-              <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                <i class="bi bi-truck text-emerald-600"></i>
-                <span>Pengiriman & Dimensi Paket</span>
-              </h2>
-              <p class="text-xs text-slate-500 mt-0.5">Pengaturan opsi pengiriman dan perkiraan berat paket produk.</p>
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Pengiriman & Dimensi Paket</h2>
             </div>
 
             <div class="space-y-3">
@@ -4945,14 +4924,8 @@ const ProductForm = (() => {
         <!-- CARD 4: PROGRAM PROMO (GATED) -->
         ${missingCard3.length > 0 ? renderFlashbackCard('Program Promo', 'bi-tag', missingCard3, 'card-step2-promo') : `
           <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4" id="card-step2-promo">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <i class="bi bi-tag text-emerald-600"></i>
-                  <span>Program Promo</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Program Diskon (persen % atau nominal IDR) & Jadwal Tanggal Otomatis.</p>
-              </div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input 
                   type="checkbox" 
@@ -5042,14 +5015,10 @@ const ProductForm = (() => {
         <!-- CARD 5: DESKRIPSI PRODUK (GATED) -->
         ${missingCard4.length > 0 ? renderFlashbackCard('Deskripsi Produk', 'bi-file-text', missingCard4, 'card-step2-description') : `
           <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4" id="card-step2-description">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <i class="bi bi-file-text text-emerald-600"></i>
-                  <span>Deskripsi Produk & AI Generator</span> <span class="text-red-500">*</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Jelaskan fitur, bahan, dan nilai lebih produk kepada pembeli.</p>
-              </div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">
+                Deskripsi Produk <span class="text-red-500">*</span>
+              </h2>
               <button 
                 type="button" 
                 id="btn-ai-generate-desc" 
@@ -5097,15 +5066,11 @@ const ProductForm = (() => {
         <!-- CARD 6: LAINNYA (GATED) -->
         ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
           <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-5" id="card-step2-others">
-            <div class="border-b border-slate-100 pb-2">
-              <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                <i class="bi bi-sliders text-emerald-600"></i>
-                <span>Lainnya & Konfigurasi Tambahan</span>
-              </h2>
-              <p class="text-xs text-slate-500 mt-0.5">Pengaturan pre-order, kondisi produk, SKU & footer khusus.</p>
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Lainnya & Konfigurasi Tambahan</h2>
             </div>
 
-            <!-- Footer Strip Khusus Model 3 -->
+            <!-- Footer Strip Khusus Kartu Detail -->
             <div 
               id="section-card-footer-config" 
               class="${primaryState.card_variant === 'C' ? 'block' : 'hidden'} p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 space-y-4"
@@ -5115,7 +5080,7 @@ const ProductForm = (() => {
                   <i class="bi bi-layout-text-window-reverse"></i>
                 </div>
                 <div>
-                  <h4 class="text-xs font-bold text-slate-900">Dua Strip Footer Kartu Etalase (Khusus Model 3)</h4>
+                  <h4 class="text-xs font-bold text-slate-900">Dua Strip Footer Kartu Etalase (Khusus Kartu Detail)</h4>
                   <p class="text-[10px] text-slate-500">Merapikan tinggi kartu etalase agar seragam presisi.</p>
                 </div>
               </div>
@@ -9527,7 +9492,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           subCategoryName = subCatSelect.options[subCatSelect.selectedIndex].text;
         }
 
-        const variantName = primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
+        const variantName = primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik');
         let startPriceText = '';
         if (materialsState.length > 0 && materialsState[0].price > 0) {
           startPriceText = formatIDR(materialsState[0].price);
@@ -9714,9 +9679,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
 
       const badgeLabel = document.getElementById('label-active-card-preview');
-      if (badgeLabel) badgeLabel.textContent = variantCode === 'A' ? 'Model 1: Kartu Klasik' : variantCode === 'B' ? 'Model 2: Kartu Minimalis' : 'Model 3: Kartu Detail';
+      if (badgeLabel) badgeLabel.textContent = variantCode === 'A' ? 'Kartu Klasik' : variantCode === 'B' ? 'Kartu Minimalis' : 'Kartu Detail';
       const cfgLabel = document.getElementById('label-active-card-cfg');
-      if (cfgLabel) cfgLabel.textContent = `(${variantCode === 'A' ? 'Model 1: Kartu Klasik' : (variantCode === 'B' ? 'Model 2: Kartu Minimalis' : 'Model 3: Kartu Detail')})`;
+      if (cfgLabel) cfgLabel.textContent = `(${variantCode === 'A' ? 'Kartu Klasik' : (variantCode === 'B' ? 'Kartu Minimalis' : 'Kartu Detail')})`;
 
       // Toggle Footer Section Visibility (Khusus Card Model 3 / C)
       const footerSection = document.getElementById('section-card-footer-config');
@@ -9772,9 +9737,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // Update label dinamis default kartu di desktop & mobile
       const lblSaveDesk = document.getElementById('label-save-as-default-desk');
       const lblSaveMob = document.getElementById('label-save-as-default-mob');
-      const modelNameText = variantCode === 'B' ? 'Model 2: Kartu Minimalis' : (variantCode === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
-      if (lblSaveDesk) lblSaveDesk.textContent = `Gunakan desain ini Sebagai Default kartu (${modelNameText})`;
-      if (lblSaveMob) lblSaveMob.textContent = `Gunakan desain ini Sebagai Default kartu (${modelNameText})`;
+      const modelNameText = variantCode === 'B' ? 'Kartu Minimalis' : (variantCode === 'C' ? 'Kartu Detail' : 'Kartu Klasik');
+      if (lblSaveDesk) lblSaveDesk.textContent = `Gunakan Thema Sebagai Default ${modelNameText}`;
+      if (lblSaveMob) lblSaveMob.textContent = `Gunakan Thema Sebagai Default ${modelNameText}`;
 
       // Pastikan checkbox default selalu false (unchecked) setiap kali model diubah
       const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
@@ -9999,7 +9964,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const btnSaveCardMob = document.getElementById('btn-save-card-design-mob');
 
     function setCardCustomizationView(isCustomMode) {
-      const modelName = primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
+      const modelName = primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik');
       if (isCustomMode) {
         // [Ubah Kartu]: Menampilkan panel kustomisasi warna/elemen
         panelCustDesk?.classList.remove('hidden');
@@ -10021,8 +9986,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         const deskLbl = document.getElementById('label-save-as-default-desk');
         const mobLbl = document.getElementById('label-save-as-default-mob');
-        if (deskLbl) deskLbl.textContent = `Gunakan desain ini Sebagai Default kartu (${modelName})`;
-        if (mobLbl) mobLbl.textContent = `Gunakan desain ini Sebagai Default kartu (${modelName})`;
+        if (deskLbl) deskLbl.textContent = `Gunakan Thema Sebagai Default ${modelName}`;
+        if (mobLbl) mobLbl.textContent = `Gunakan Thema Sebagai Default ${modelName}`;
       } else {
         // [Default]: Menyembunyikan panel kustomisasi
         panelCustDesk?.classList.add('hidden');
@@ -10086,7 +10051,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (saveDefToggle) saveDefToggle.checked = false;
       if (saveDefToggleMob) saveDefToggleMob.checked = false;
       if (typeof App !== 'undefined' && App.showToast) {
-        const mLabel = primaryState.card_variant === 'B' ? 'Model 2: Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Model 3: Kartu Detail' : 'Model 1: Kartu Klasik');
+        const mLabel = primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik');
         App.showToast(`Desain kartu ${mLabel} berhasil disimpan!`, 'success');
       }
       updateProductCardLivePreview();
