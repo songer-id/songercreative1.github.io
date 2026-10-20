@@ -993,3 +993,21 @@ input.toggle-same-cost:checked ~ div::after {
   }
 }
 
+/* Scoped Mini PDP Shopee Checkout Drawer (Strictly contained inside Mini PDP card) */
+.mini-pdp-card {
+  position: relative !important;
+  overflow: hidden !important;
+}
+.mini-pdp-drawer-root {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  pointer-events: none;
+}
+.mini-pdp-drawer-sheet {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
