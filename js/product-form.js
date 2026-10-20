@@ -7620,8 +7620,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const activeInp = container.querySelector(`.variation-option-row[data-id="${id}"] input[data-field="${field}"]`);
             if (activeInp) {
               activeInp.focus();
-              const valLen = activeInp.value.length;
-              activeInp.setSelectionRange(valLen, valLen);
+              try {
+                const valLen = String(activeInp.value || '').length;
+                if (typeof activeInp.setSelectionRange === 'function' && ['text', 'search', 'url', 'tel', 'password'].includes(activeInp.type)) {
+                  activeInp.setSelectionRange(valLen, valLen);
+                }
+              } catch (_) {}
             }
           }
 
@@ -7816,8 +7820,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const activeInp = container.querySelector(`.variation-option-row[data-id="${id}"] [data-field="${field}"]`);
             if (activeInp) {
               activeInp.focus();
-              const valLen = activeInp.value.length;
-              if (activeInp.setSelectionRange) activeInp.setSelectionRange(valLen, valLen);
+              try {
+                const valLen = String(activeInp.value || '').length;
+                if (typeof activeInp.setSelectionRange === 'function' && ['text', 'search', 'url', 'tel', 'password'].includes(activeInp.type)) {
+                  activeInp.setSelectionRange(valLen, valLen);
+                }
+              } catch (_) {}
             }
           }
 
