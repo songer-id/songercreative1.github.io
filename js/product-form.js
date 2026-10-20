@@ -5270,6 +5270,7 @@ const ProductForm = (() => {
                       `).join('')}
                     </div>
                   </div>
+                  <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
                 <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" title="${escapeHtml(tooltipText)}">
                   <i class="bi bi-question-circle-fill text-sm"></i>
@@ -5362,6 +5363,7 @@ const ProductForm = (() => {
                       `).join('')}
                     </div>
                   </div>
+                  <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
                 <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" title="Ubah nama label layanan ekstra di luar perhitungan qty. Contoh: Langsung Proses, Layanan Prioritas, Packaging Kayu">
                   <i class="bi bi-question-circle-fill text-sm"></i>
@@ -5544,8 +5546,9 @@ const ProductForm = (() => {
                     min="0"
                     value="${firstMat.price !== undefined && firstMat.price !== null && firstMat.price !== '' ? firstMat.price : ''}" 
                     class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-emerald-500 outline-none bg-white"
-                    placeholder="0"
+                    placeholder="Minimal 100"
                   />
+                  <div id="single-price-error-msg" class="field-error-msg hidden mt-1 rounded"></div>
                 </div>
                 <div>
                   <label for="input-single-cost" class="block text-xs font-bold text-slate-800 mb-1">
@@ -5557,8 +5560,10 @@ const ProductForm = (() => {
                     min="0"
                     value="${firstMat.cost_price !== undefined && firstMat.cost_price !== null && firstMat.cost_price !== '' ? firstMat.cost_price : ''}" 
                     class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-emerald-500 outline-none bg-white"
-                    placeholder="0"
+                    placeholder='Tulis Angka "0" Jika tidak memberikan harga'
+                    title='Tulis Angka "0" Jika tidak memberikan harga'
                   />
+                  <div id="single-cost-error-msg" class="field-error-msg hidden mt-1 rounded"></div>
                 </div>
               </div>
               <div class="flex items-center justify-between pt-1 text-xs">
@@ -5865,6 +5870,10 @@ const ProductForm = (() => {
     const validMaterials = materialsState.filter(m => m && m.name && m.name.trim() !== '');
     const displayMaterials = validMaterials.length > 0 ? validMaterials : (materialsState.length > 0 ? [materialsState[0]] : []);
 
+    const totalDisplayRows = displayMaterials.length;
+    const uploadedCount = displayMaterials.filter(m => m.image_url && m.image_url.trim() !== '').length;
+    const isImageRuleViolated = (uploadedCount > 0 && uploadedCount < totalDisplayRows);
+
     const rows = displayMaterials.map((mat, idx) => {
       const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
       const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
@@ -5897,9 +5906,11 @@ const ProductForm = (() => {
           <td class="p-3 align-middle text-center min-w-[120px]">
             <div class="flex flex-col items-center gap-1.5">
               <input type="file" accept="image/*" class="hidden combo-var1-file-input" data-id="${mat.id}" id="combo-img-${mat.id}" />
-              <label for="combo-img-${mat.id}" class="w-12 h-10 border border-dashed border-emerald-500 rounded flex items-center justify-center cursor-pointer text-emerald-600 bg-emerald-50/40 hover:bg-emerald-50 transition overflow-hidden shadow-2xs" title="Unggah Foto Opsi">
+              <label for="combo-img-${mat.id}" class="w-12 h-10 border border-dashed ${(!mat.image_url && isImageRuleViolated) ? 'border-red-500 bg-red-50 text-red-600 ring-2 ring-red-400/20' : 'border-emerald-500 text-emerald-600 bg-emerald-50/40 hover:bg-emerald-50'} rounded flex items-center justify-center cursor-pointer transition overflow-hidden shadow-2xs" title="${(!mat.image_url && isImageRuleViolated) ? 'Foto wajib diunggah karena opsi lain memiliki foto' : 'Unggah Foto Opsi'}">
                 ${mat.image_url ? `<img src="${mat.image_url}" class="w-full h-full object-cover" />` : `<i class="bi bi-image text-sm"></i>`}
               </label>
+              ${(!mat.image_url && isImageRuleViolated) ? `<span class="text-[10px] text-red-600 font-bold">Wajib diisi</span>` : ''}
+              ${mat.image_url ? `<button type="button" class="btn-clear-combo-img text-[10px] text-red-500 hover:text-red-700 underline cursor-pointer" data-id="${mat.id}">Hapus Foto</button>` : ''}
               <span class="combo-var1-label text-xs font-bold text-slate-800 break-all" data-id="${mat.id}">${escapeHtml(var1Name)}</span>
             </div>
           </td>
@@ -5986,7 +5997,7 @@ const ProductForm = (() => {
     }).join('');
 
     return `
-      <!-- Tabel Matriks Kombinasi Utama (Persis Gambar 1â€“4) -->
+      <!-- Tabel Matriks Kombinasi Utama -->
       <div class="mt-6 space-y-3" id="combination-matrix-section">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -5994,6 +6005,16 @@ const ProductForm = (() => {
             <span class="text-xs font-normal text-slate-500">(${displayMaterials.length} Baris Varian)</span>
           </h4>
         </div>
+
+        ${isImageRuleViolated ? `
+          <div id="combo-image-rule-warning" class="p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-900 text-xs flex items-center gap-2.5 shadow-2xs">
+            <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-base"></i>
+            <div>
+              <span class="font-bold block">Peringatan: Foto Opsi Variasi Belum Seragam</span>
+              <span class="text-[11px] text-amber-800">Jika salah satu opsi variasi memiliki foto, seluruh baris opsi di tabel ini wajib memiliki foto juga (atau kosongkan semua foto).</span>
+            </div>
+          </div>
+        ` : ''}
 
         <div class="overflow-x-auto rounded-lg border border-slate-300 bg-white shadow-xs scrollbar-thin">
           <table class="combo-matrix-table w-full text-left text-xs border-collapse">
@@ -6375,7 +6396,254 @@ const ProductForm = (() => {
   }
 
   // ==========================================================================
-  // RENDER STEP 3: PROMO PRODUK, PENGIRIMAN & DESKRIPSI AI
+  // HELPER VALIDASI REAL-TIME INPUT OPSI & KELOMPOK VARIASI
+  // ==========================================================================
+
+  function checkOptionNameDuplicate(tier, nameVal, currentIdx) {
+    if (!nameVal || typeof nameVal !== 'string') return false;
+    const clean = nameVal.trim().toLowerCase();
+    if (!clean) return false;
+
+    if (tier === 'tier1') {
+      return materialsState.some((m, idx) => {
+        if (idx === currentIdx) return false;
+        if (idx === materialsState.length - 1 && (!m.name || m.name.trim() === '')) return false;
+        return (m.name || '').trim().toLowerCase() === clean;
+      });
+    }
+
+    const list = finishingsState[tier] || [];
+    return list.some((f, idx) => {
+      if (idx === currentIdx) return false;
+      if (f.is_default_none) return false;
+      const isTriggerRow = (tier === 'extra_3') ? (idx === list.length - 2) : (idx === list.length - 1);
+      if (isTriggerRow && (!f.name || f.name.trim() === '')) return false;
+      return (f.name || '').trim().toLowerCase() === clean;
+    });
+  }
+
+  function refreshOptionDuplicateErrors(tier) {
+    const selector = tier === 'tier1' ? '.mat-input[data-field="name"]' : `#finishings-${tier}-rows-container .fin-input[data-field="name"]`;
+    document.querySelectorAll(selector).forEach(inp => {
+      if (!inp.readOnly && !inp.disabled) {
+        validateOptionField(inp, false);
+      }
+    });
+  }
+
+  function validateOptionField(inp, isBlur = false) {
+    if (!inp) return true;
+    const row = inp.closest('.variation-option-row');
+    if (!row) return true;
+
+    const tier = row.getAttribute('data-tier');
+    const idx = parseInt(row.getAttribute('data-idx'));
+    const field = inp.getAttribute('data-field');
+    const cellWrapper = inp.closest('.flex-col') || inp.parentElement;
+    const errorEl = cellWrapper ? cellWrapper.querySelector('.field-error-msg') : null;
+
+    function setError(msg) {
+      if (!errorEl) return;
+      if (msg) {
+        errorEl.textContent = msg;
+        errorEl.classList.remove('hidden');
+      } else {
+        errorEl.textContent = '';
+        errorEl.classList.add('hidden');
+      }
+    }
+
+    if (tier === 'extra_3') {
+      const list = finishingsState.extra_3 || [];
+      if (idx === list.length - 1 || list[idx]?.is_default_none) {
+        setError('');
+        return true;
+      }
+    }
+
+    let isUntouchedTriggerRow = false;
+    if (tier === 'tier1') {
+      if (materialsState.length > 1 && idx === materialsState.length - 1) {
+        const item = materialsState[idx];
+        const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined));
+        if (!hasAnyVal) isUntouchedTriggerRow = true;
+      }
+    } else {
+      const list = finishingsState[tier] || [];
+      const triggerIdx = (tier === 'extra_3') ? list.length - 2 : list.length - 1;
+      if (list.length > (tier === 'extra_3' ? 2 : 1) && idx === triggerIdx) {
+        const item = list[idx];
+        const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined) || item?.extra_type);
+        if (!hasAnyVal) isUntouchedTriggerRow = true;
+      }
+    }
+
+    if (isUntouchedTriggerRow) {
+      setError('');
+      return true;
+    }
+
+    const val = (inp.value || '').trim();
+
+    if (field === 'name') {
+      if (!val) {
+        if (isBlur) {
+          setError('Wajib di isi');
+          return false;
+        }
+        return false;
+      }
+      if (checkOptionNameDuplicate(tier, val, idx)) {
+        setError('Nama opsi sudah digunakan');
+        return false;
+      }
+      setError('');
+      return true;
+    }
+
+    if (field === 'extra_type') {
+      if (!val) {
+        if (isBlur) {
+          setError('Wajib di isi');
+          return false;
+        }
+        return false;
+      }
+      setError('');
+      return true;
+    }
+
+    if (field === 'price') {
+      if (inp.readOnly) {
+        setError('');
+        return true;
+      }
+      if (val === '') {
+        if (isBlur) {
+          setError('Wajib di isi');
+          return false;
+        }
+        return false;
+      }
+      const numVal = parseFloat(val);
+      if (isNaN(numVal) || numVal < 100) {
+        if (isBlur || (!isNaN(numVal) && numVal < 100 && val.length >= 3)) {
+          setError('Nilai minimal 100');
+          return false;
+        }
+        return false;
+      }
+      setError('');
+      return true;
+    }
+
+    if (field === 'cost_price') {
+      if (inp.readOnly) {
+        setError('');
+        return true;
+      }
+      if (val === '') {
+        if (isBlur) {
+          setError('Wajib di isi');
+          return false;
+        }
+        return false;
+      }
+      const numVal = parseFloat(val);
+      if (isNaN(numVal) || numVal < 0) {
+        if (isBlur) {
+          setError('Wajib di isi');
+          return false;
+        }
+        return false;
+      }
+      setError('');
+      return true;
+    }
+
+    if (field === 'stock') {
+      if (inp.readOnly || val.toLowerCase() === 'unlimited') {
+        setError('');
+        return true;
+      }
+      if (val === '') {
+        if (isBlur) {
+          setError('Wajib di isi');
+          return false;
+        }
+        return false;
+      }
+      const numVal = parseInt(val);
+      if (isNaN(numVal) || numVal < 0) {
+        if (isBlur) {
+          setError('Wajib di isi');
+          return false;
+        }
+        return false;
+      }
+      setError('');
+      return true;
+    }
+
+    return true;
+  }
+
+  function validateVariationGroupLabels() {
+    const isVarMode = Boolean(primaryState.has_variants || primaryState.has_variations);
+    const groups = [];
+    if (isVarMode) {
+      const v1Val = (primaryState.variation_labels?.label_tier_1 || document.getElementById('input-var-label-tier1')?.value || 'Variasi 1').trim();
+      const el1 = document.getElementById('input-var-label-tier1')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
+      groups.push({ key: 'tier1', label: v1Val, errorEl: el1 });
+    }
+    if (isVarMode && primaryState.has_variation_2) {
+      const v2Val = (primaryState.variation_labels?.label_tier_2 || document.getElementById('input-var-label-tier2')?.value || 'Variasi 2').trim();
+      const el2 = document.getElementById('input-var-label-tier2')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
+      groups.push({ key: 'tier2', label: v2Val, errorEl: el2 });
+    }
+    if (isVarMode && primaryState.has_variation_2 && primaryState.has_variation_3) {
+      const v3Val = (primaryState.variation_labels?.label_extra_1 || document.getElementById('input-var-label-tier3')?.value || 'Variasi 3').trim();
+      const el3 = document.getElementById('input-var-label-tier3')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
+      groups.push({ key: 'extra_1', label: v3Val, errorEl: el3 });
+    }
+    if (isVarMode && primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+      const v4Val = (primaryState.variation_labels?.label_extra_2 || document.getElementById('input-var-label-tier4')?.value || 'Variasi 4').trim();
+      const el4 = document.getElementById('input-var-label-tier4')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
+      groups.push({ key: 'extra_2', label: v4Val, errorEl: el4 });
+    }
+    if (isVarMode && primaryState.has_extra_service) {
+      const vExtraVal = (primaryState.variation_labels?.label_extra_3 || document.getElementById('input-var-label-extra3')?.value || 'Layanan Extras').trim();
+      const elExtra = document.getElementById('input-var-label-extra3')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
+      groups.push({ key: 'extra_3', label: vExtraVal, errorEl: elExtra });
+    }
+
+    let hasDuplicate = false;
+    groups.forEach((g) => {
+      if (g.errorEl) {
+        g.errorEl.textContent = '';
+        g.errorEl.classList.add('hidden');
+      }
+    });
+
+    for (let i = 0; i < groups.length; i++) {
+      for (let j = i + 1; j < groups.length; j++) {
+        if (groups[i].label.toLowerCase() === groups[j].label.toLowerCase()) {
+          hasDuplicate = true;
+          const msg = 'Nama judul kelompok variasi tidak boleh sama';
+          if (groups[i].errorEl) {
+            groups[i].errorEl.textContent = msg;
+            groups[i].errorEl.classList.remove('hidden');
+          }
+          if (groups[j].errorEl) {
+            groups[j].errorEl.textContent = msg;
+            groups[j].errorEl.classList.remove('hidden');
+          }
+        }
+      }
+    }
+
+    return { hasDuplicate, groups };
+  }
 
 
   function renderMaterialsRows(isKombStep) {
@@ -6398,56 +6666,70 @@ const ProductForm = (() => {
         <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${mat.id}" data-tier="tier1" data-idx="${idx}">
           <div style="border-radius: 0px !important;" class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
             <!-- Kolom 1: Nama Opsi -->
-            <input 
-              type="text" 
-              data-field="name" 
-              value="${escapeHtml(mat.name || '')}" 
-              placeholder="${placeholderName}" 
-              style="border-radius: 0px !important;" 
-              class="mat-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
-            />
+            <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
+              <input 
+                type="text" 
+                data-field="name" 
+                value="${escapeHtml(mat.name || '')}" 
+                placeholder="${placeholderName}" 
+                style="border-radius: 0px !important;" 
+                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
             <!-- Kolom 2: Keterangan -->
-            <input 
-              type="text" 
-              data-field="description" 
-              value="${escapeHtml(mat.description || '')}" 
-              placeholder="Keterangan" 
-              style="border-radius: 0px !important;" 
-              class="mat-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
-            />
+            <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
+              <input 
+                type="text" 
+                data-field="description" 
+                value="${escapeHtml(mat.description || '')}" 
+                placeholder="Keterangan" 
+                style="border-radius: 0px !important;" 
+                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
+              />
+            </div>
             <!-- Kolom 3: Harga Jual -->
-            <input 
-              type="number" 
-              min="0" 
-              data-field="price" 
-              value="${priceVal}" 
-              placeholder="Harga Jual" 
-              ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-              style="border-radius: 0px !important;" 
-              class="mat-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
-            />
+            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+              <input 
+                type="number" 
+                min="0" 
+                data-field="price" 
+                value="${priceVal}" 
+                placeholder="Harga Jual" 
+                ${isSamePrice && idx > 0 ? 'readonly' : ''} 
+                style="border-radius: 0px !important;" 
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
             <!-- Kolom 4: Modal/Hpp -->
-            <input 
-              type="number" 
-              min="0" 
-              data-field="cost_price" 
-              value="${costVal}" 
-              placeholder="Modal/Hpp" 
-              ${isSameCost && idx > 0 ? 'readonly' : ''} 
-              style="border-radius: 0px !important;" 
-              class="mat-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
-            />
+            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+              <input 
+                type="number" 
+                min="0" 
+                data-field="cost_price" 
+                value="${costVal}" 
+                placeholder='Tulis Angka "0" Jika tidak memberikan harga' 
+                ${isSameCost && idx > 0 ? 'readonly' : ''} 
+                style="border-radius: 0px !important;" 
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
             <!-- Kolom 5: Stok -->
-            <input 
-              type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
-              min="0" 
-              data-field="stock" 
-              value="${stockVal}" 
-              placeholder="Stok" 
-              ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-              style="border-radius: 0px !important;" 
-              class="mat-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
-            />
+            <div class="col-span-2 sm:col-span-2 min-w-[95px] flex flex-col justify-center">
+              <input 
+                type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
+                min="0" 
+                data-field="stock" 
+                value="${stockVal}" 
+                placeholder="Stok" 
+                ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
+                style="border-radius: 0px !important;" 
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
           </div>
 
           <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
@@ -6529,58 +6811,73 @@ const ProductForm = (() => {
               </div>
 
               <!-- Bagian 2: Nama Opsi -->
-              <input 
-                type="text" 
-                data-field="name" 
-                value="${escapeHtml(isLastRow ? defaultNoneName : (fin.name || ''))}" 
-                placeholder="${placeholderName}" 
-                ${isLastRow ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-emerald-50/30'}" 
-              />
+              <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
+                <input 
+                  type="text" 
+                  data-field="name" 
+                  value="${escapeHtml(isLastRow ? defaultNoneName : (fin.name || ''))}" 
+                  placeholder="${placeholderName}" 
+                  ${isLastRow ? 'readonly' : ''} 
+                  style="border-radius: 0px !important;" 
+                  class="fin-input w-full px-3 py-2 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-emerald-50/30'}" 
+                />
+                ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
+              </div>
 
               <!-- Bagian 3: Dropdown Tipe Input (Pilihan Ganda vs Input Qty) -->
-              <select data-field="extra_type" ${isLastRow ? 'disabled' : ''} style="border-radius: 0px !important;" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50 text-slate-700'}">
-                <option value="" disabled ${!extraType ? 'selected' : ''}>Jenis Input</option>
-                <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' || isLastRow ? 'selected' : ''}>Pilihan Ganda</option>
-                <option value="qty" ${extraType === 'qty' && !isLastRow ? 'selected' : ''}>Input Qty</option>
-              </select>
+              <div class="col-span-2 sm:col-span-2 flex flex-col justify-center">
+                <select data-field="extra_type" ${isLastRow ? 'disabled' : ''} style="border-radius: 0px !important;" class="fin-input w-full px-2 py-1.5 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50 text-slate-700'}">
+                  <option value="" disabled ${!extraType ? 'selected' : ''}>Jenis Input</option>
+                  <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' || isLastRow ? 'selected' : ''}>Pilihan Ganda</option>
+                  <option value="qty" ${extraType === 'qty' && !isLastRow ? 'selected' : ''}>Input Qty</option>
+                </select>
+                ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
+              </div>
 
               <!-- Bagian 4: Harga Satuan -->
-              <input 
-                type="number" 
-                min="0" 
-                data-field="price" 
-                value="${isLastRow ? 0 : priceVal}" 
-                placeholder="Harga Satuan" 
-                ${(isLastRow || (isSamePrice && idx > 0)) ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isLastRow || (isSamePrice && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-emerald-50/30'}" 
-              />
+              <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+                <input 
+                  type="number" 
+                  min="0" 
+                  data-field="price" 
+                  value="${isLastRow ? 0 : priceVal}" 
+                  placeholder="Harga Satuan" 
+                  ${(isLastRow || (isSamePrice && idx > 0)) ? 'readonly' : ''} 
+                  style="border-radius: 0px !important;" 
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isLastRow || (isSamePrice && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-emerald-50/30'}" 
+                />
+                ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
+              </div>
 
               <!-- Bagian 5: Modal/Hpp -->
-              <input 
-                type="number" 
-                min="0" 
-                data-field="cost_price" 
-                value="${isLastRow ? 0 : costVal}" 
-                placeholder="Modal/Hpp" 
-                ${(isLastRow || (isSameCost && idx > 0)) ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50/30'}" 
-              />
+              <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+                <input 
+                  type="number" 
+                  min="0" 
+                  data-field="cost_price" 
+                  value="${isLastRow ? 0 : costVal}" 
+                  placeholder='Tulis Angka "0" Jika tidak memberikan harga' 
+                  ${(isLastRow || (isSameCost && idx > 0)) ? 'readonly' : ''} 
+                  style="border-radius: 0px !important;" 
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50/30'}" 
+                />
+                ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
+              </div>
 
               <!-- Bagian 6: Stok -->
-              <input 
-                type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
-                min="0" 
-                data-field="stock" 
-                value="${stockVal}" 
-                placeholder="Stok" 
-                ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-emerald-50/30'}" 
-              />
+              <div class="col-span-2 sm:col-span-2 min-w-[95px] flex flex-col justify-center">
+                <input 
+                  type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
+                  min="0" 
+                  data-field="stock" 
+                  value="${stockVal}" 
+                  placeholder="Stok" 
+                  ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
+                  style="border-radius: 0px !important;" 
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-emerald-50/30'}" 
+                />
+                ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
+              </div>
             </div>
 
             <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
@@ -6621,56 +6918,70 @@ const ProductForm = (() => {
         <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${fin.id}" data-tier="${tier}" data-idx="${idx}">
           <div class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
             <!-- Kolom 1: Nama Opsi -->
-            <input 
-              type="text" 
-              data-field="name" 
-              value="${escapeHtml(fin.name || '')}" 
-              placeholder="${placeholderName}" 
-              style="border-radius: 0px !important;" 
-              class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
-            />
+            <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
+              <input 
+                type="text" 
+                data-field="name" 
+                value="${escapeHtml(fin.name || '')}" 
+                placeholder="${placeholderName}" 
+                style="border-radius: 0px !important;" 
+                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
             <!-- Kolom 2: Keterangan -->
-            <input 
-              type="text" 
-              data-field="description" 
-              value="${escapeHtml(fin.description || '')}" 
-              placeholder="Keterangan" 
-              style="border-radius: 0px !important;" 
-              class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
-            />
+            <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
+              <input 
+                type="text" 
+                data-field="description" 
+                value="${escapeHtml(fin.description || '')}" 
+                placeholder="Keterangan" 
+                style="border-radius: 0px !important;" 
+                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
+              />
+            </div>
             <!-- Kolom 3: Harga Jual -->
-            <input 
-              type="number" 
-              min="0" 
-              data-field="price" 
-              value="${priceVal}" 
-              placeholder="Harga Jual" 
-              ${isSamePrice && idx > 0 ? 'readonly' : ''} 
-              style="border-radius: 0px !important;" 
-              class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
-            />
+            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+              <input 
+                type="number" 
+                min="0" 
+                data-field="price" 
+                value="${priceVal}" 
+                placeholder="Harga Jual" 
+                ${isSamePrice && idx > 0 ? 'readonly' : ''} 
+                style="border-radius: 0px !important;" 
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
             <!-- Kolom 4: Modal/Hpp -->
-            <input 
-              type="number" 
-              min="0" 
-              data-field="cost_price" 
-              value="${costVal}" 
-              placeholder="Modal/Hpp" 
-              ${isSameCost && idx > 0 ? 'readonly' : ''} 
-              style="border-radius: 0px !important;" 
-              class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
-            />
+            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+              <input 
+                type="number" 
+                min="0" 
+                data-field="cost_price" 
+                value="${costVal}" 
+                placeholder='Tulis Angka "0" Jika tidak memberikan harga' 
+                ${isSameCost && idx > 0 ? 'readonly' : ''} 
+                style="border-radius: 0px !important;" 
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
             <!-- Kolom 5: Stok -->
-            <input 
-              type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
-              min="0" 
-              data-field="stock" 
-              value="${stockVal}" 
-              placeholder="Stok" 
-              ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
-              style="border-radius: 0px !important;" 
-              class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
-            />
+            <div class="col-span-2 sm:col-span-2 min-w-[95px] flex flex-col justify-center">
+              <input 
+                type="${stockMode === 'unlimited' ? 'text' : 'number'}" 
+                min="0" 
+                data-field="stock" 
+                value="${stockVal}" 
+                placeholder="Stok" 
+                ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
+                style="border-radius: 0px !important;" 
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              />
+              <span class="field-error-msg hidden"></span>
+            </div>
           </div>
 
           <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
@@ -7257,6 +7568,52 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const singlePrice = document.getElementById('input-single-price');
     const singleCost = document.getElementById('input-single-cost');
     const singleBadge = document.getElementById('single-margin-badge');
+    const singlePriceErr = document.getElementById('single-price-error-msg');
+    const singleCostErr = document.getElementById('single-cost-error-msg');
+
+    function validateSinglePrice(isBlur = false) {
+      if (!singlePrice) return true;
+      const raw = (singlePrice.value || '').trim();
+      if (!raw) {
+        if (isBlur) {
+          if (singlePriceErr) { singlePriceErr.textContent = 'Wajib di isi'; singlePriceErr.classList.remove('hidden'); }
+          return false;
+        }
+        return false;
+      }
+      const num = parseFloat(raw);
+      if (isNaN(num) || num < 100) {
+        if (isBlur || (!isNaN(num) && num < 100 && raw.length >= 3)) {
+          if (singlePriceErr) { singlePriceErr.textContent = 'Nilai minimal 100'; singlePriceErr.classList.remove('hidden'); }
+          return false;
+        }
+        return false;
+      }
+      if (singlePriceErr) { singlePriceErr.textContent = ''; singlePriceErr.classList.add('hidden'); }
+      return true;
+    }
+
+    function validateSingleCost(isBlur = false) {
+      if (!singleCost) return true;
+      const raw = (singleCost.value || '').trim();
+      if (raw === '') {
+        if (isBlur) {
+          if (singleCostErr) { singleCostErr.textContent = 'Wajib di isi'; singleCostErr.classList.remove('hidden'); }
+          return false;
+        }
+        return false;
+      }
+      const num = parseFloat(raw);
+      if (isNaN(num) || num < 0) {
+        if (isBlur) {
+          if (singleCostErr) { singleCostErr.textContent = 'Wajib di isi'; singleCostErr.classList.remove('hidden'); }
+          return false;
+        }
+        return false;
+      }
+      if (singleCostErr) { singleCostErr.textContent = ''; singleCostErr.classList.add('hidden'); }
+      return true;
+    }
 
     function updateSingleMargin() {
       const p = parseFloat(singlePrice?.value) || 0;
@@ -7267,11 +7624,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         materialsState[0].name = primaryState.name || 'Produk Standar';
       }
       if (singleBadge) singleBadge.innerHTML = calculateMarginBadge(p, c);
+      validateSinglePrice(false);
+      validateSingleCost(false);
       updateProductCardLivePreview();
     }
 
-    if (singlePrice) singlePrice.oninput = updateSingleMargin;
-    if (singleCost) singleCost.oninput = updateSingleMargin;
+    if (singlePrice) {
+      singlePrice.oninput = updateSingleMargin;
+      singlePrice.onblur = () => validateSinglePrice(true);
+    }
+    if (singleCost) {
+      singleCost.oninput = updateSingleMargin;
+      singleCost.onblur = () => validateSingleCost(true);
+    }
 
     // Kustomisasi Label Input pada Setiap Variasi Real-Time Sync
     function handleVariationLabelInput(inp, val) {
@@ -7299,12 +7664,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
       }
 
+      validateVariationGroupLabels();
       updateProductCardLivePreview();
     }
 
     document.querySelectorAll('.input-variation-label').forEach(inp => {
       inp.oninput = (e) => {
         handleVariationLabelInput(inp, e.target.value.trim());
+      };
+      inp.onblur = () => {
+        validateVariationGroupLabels();
       };
     });
 
@@ -7315,6 +7684,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!inp) return;
         handleVariationLabelInput(inp, inp.value.trim());
       });
+      document.addEventListener('blur', (e) => {
+        const inp = e.target.closest('.input-variation-label');
+        if (!inp) return;
+        validateVariationGroupLabels();
+      }, true);
     }
 
     // =====================================================================
@@ -7673,6 +8047,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       // Input Per Baris (Auto-Append, Real-time propagation, & Sync to Combo Table)
       container.querySelectorAll('.mat-input').forEach(inp => {
+        inp.onblur = (e) => {
+          validateOptionField(e.target, true);
+          const field = e.target.getAttribute('data-field');
+          if (field === 'name') {
+            refreshOptionDuplicateErrors('tier1');
+          }
+        };
+
         inp.oninput = (e) => {
           const row = e.target.closest('.variation-option-row');
           if (!row) return;
@@ -7702,6 +8084,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (comboLabel) {
               comboLabel.textContent = e.target.value || `Opsi ${idx + 1}`;
             }
+            refreshOptionDuplicateErrors('tier1');
             // Update status tombol Tambah Variasi 2 jika nama mulai terisi
             const btnVar2 = document.getElementById('btn-trigger-variasi-2');
             if (btnVar2) {
@@ -7711,6 +8094,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                 btnVar2.title = 'Tambah Variasi 2';
               }
             }
+          } else {
+            validateOptionField(e.target, false);
           }
 
           // Ketentuan Tambahan Real-Time Propagation dari Baris 0
@@ -7884,6 +8269,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       // Input Per Baris (Auto-Append & Ketentuan Tambahan Real-Time)
       container.querySelectorAll('.fin-input').forEach(inp => {
+        inp.onblur = (e) => {
+          validateOptionField(e.target, true);
+          const field = e.target.getAttribute('data-field');
+          if (field === 'name') {
+            refreshOptionDuplicateErrors(tier);
+          }
+        };
+
         inp.onchange = inp.oninput = (e) => {
           const row = e.target.closest('.variation-option-row');
           if (!row) return;
@@ -7918,6 +8311,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             } else {
               item[field] = e.target.value;
             }
+          }
+
+          if (field === 'name') {
+            refreshOptionDuplicateErrors(tier);
+          } else {
+            validateOptionField(e.target, false);
           }
 
           // Ketentuan Tambahan Propagation dari Baris 0
@@ -8009,6 +8408,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             updateProductCardLivePreview();
           } catch (err) {
             console.warn('Gagal memproses gambar:', err);
+          }
+        };
+      });
+
+      // 1b. Hapus Foto Variasi 1 dari Tabel Kombinasi
+      document.querySelectorAll('.btn-clear-combo-img').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-id');
+          const item = materialsState.find(m => m.id === id);
+          if (item) {
+            item.image_url = '';
+            refreshCombinationMatrixTable();
+            updateProductCardLivePreview();
           }
         };
       });
@@ -11045,42 +11458,127 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // 2. Validasi Step 2: Informasi Penjualan
     if (primaryState.pricing_model === 'normal' && !primaryState.has_variants) {
       const firstMat = materialsState[0];
-      if (!firstMat || isNaN(firstMat.price) || firstMat.price < 0) {
-        errors.push('Harga jual produk wajib diisi angka valid.');
+      const pVal = parseFloat(firstMat?.price);
+      if (isNaN(pVal) || pVal < 100) {
+        errors.push('Harga Jual produk wajib diisi dengan nilai minimal 100.');
+        validateSinglePrice(true);
       }
-    } else {
+      const cVal = firstMat?.cost_price;
+      if (cVal === '' || cVal === undefined || cVal === null || isNaN(parseFloat(cVal)) || parseFloat(cVal) < 0) {
+        errors.push('Modal/HPP produk wajib diisi (tulis angka 0 jika tanpa harga/modal).');
+        validateSingleCost(true);
+      }
+      if (!primaryState.is_unlimited_stock) {
+        const sVal = firstMat?.stock;
+        if (sVal === '' || sVal === undefined || sVal === null || isNaN(parseInt(sVal)) || parseInt(sVal) < 0) {
+          errors.push('Stok produk wajib diisi.');
+        }
+      }
+    } else if (primaryState.has_variants) {
+      // Periksa Duplikasi Label Judul Kelompok Variasi
+      const groupLabelCheck = validateVariationGroupLabels();
+      if (groupLabelCheck.hasDuplicate) {
+        errors.push('Nama judul kelompok variasi tidak boleh sama persis satu sama lain.');
+      }
+
+      // Validasi Baris Opsi Variasi 1
       if (!materialsState || materialsState.length === 0) {
         errors.push('Minimal harus mengisi 1 pilihan varian / bahan dasar.');
-      } else if (primaryState.has_variants) {
+      } else {
         const validMats = materialsState.filter(m => m.name && m.name.trim() !== '');
         if (validMats.length < 1) {
           errors.push('Variasi 1 wajib memiliki minimal 1 opsi yang terisi namanya.');
         }
-      }
-    }
 
-    if (primaryState.has_variation_2) {
-      const validT2 = (finishingsState.main || []).filter(f => f.name && f.name.trim() !== '');
-      if (validT2.length < 1) {
-        errors.push('Variasi 2 wajib memiliki minimal 1 opsi yang terisi namanya.');
+        materialsState.forEach((m, idx) => {
+          const isUntouched = (materialsState.length > 1 && idx === materialsState.length - 1 && (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined) && (m.cost_price === '' || m.cost_price === undefined) && (m.stock === '' || m.stock === undefined));
+          if (isUntouched) return;
+
+          if (!m.name || !m.name.trim()) {
+            errors.push(`Variasi 1: Opsi ke-${idx + 1} wajib diisi namanya.`);
+          } else if (checkOptionNameDuplicate('tier1', m.name, idx)) {
+            errors.push(`Variasi 1: Nama opsi "${m.name}" kembar / duplikat.`);
+          }
+
+          const pNum = parseFloat(m.price);
+          if (isNaN(pNum) || pNum < 100) {
+            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Harga jual wajib diisi minimal 100.`);
+          }
+
+          if (m.cost_price === '' || m.cost_price === undefined || m.cost_price === null || isNaN(parseFloat(m.cost_price)) || parseFloat(m.cost_price) < 0) {
+            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Modal/HPP wajib diisi (tulis angka 0 jika tanpa harga/modal).`);
+          }
+
+          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
+          if (stockMode !== 'unlimited') {
+            if (m.stock === '' || m.stock === undefined || m.stock === null || isNaN(parseInt(m.stock)) || parseInt(m.stock) < 0) {
+              errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Stok wajib diisi.`);
+            }
+          }
+        });
       }
-    }
-    if (primaryState.has_variation_3) {
-      const validT3 = (finishingsState.extra_1 || []).filter(f => f.name && f.name.trim() !== '');
-      if (validT3.length < 1) {
-        errors.push('Variasi 3 wajib memiliki minimal 1 opsi yang terisi namanya.');
-      }
-    }
-    if (primaryState.has_variation_4) {
-      const validT4 = (finishingsState.extra_2 || []).filter(f => f.name && f.name.trim() !== '');
-      if (validT4.length < 1) {
-        errors.push('Variasi 4 wajib memiliki minimal 1 opsi yang terisi namanya.');
-      }
-    }
-    if (primaryState.has_extra_service) {
-      const validExtra = (finishingsState.extra_3 || []).filter(f => f.name && f.name.trim() !== '');
-      if (validExtra.length < 1) {
-        errors.push('Layanan Extras wajib memiliki minimal 1 opsi yang terisi namanya.');
+
+      // Validasi Baris Variasi 2, 3, 4 & Layanan Extras
+      const activeTiers = [];
+      if (primaryState.has_variation_2) activeTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2' });
+      if (primaryState.has_variation_3) activeTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3' });
+      if (primaryState.has_variation_4) activeTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4' });
+      if (primaryState.has_extra_service) activeTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras' });
+
+      activeTiers.forEach(({ tier, label }) => {
+        const list = finishingsState[tier] || [];
+        const isExtra3 = (tier === 'extra_3');
+        const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
+        if (validList.length < 1) {
+          errors.push(`${label} wajib memiliki minimal 1 opsi yang terisi namanya.`);
+        }
+
+        list.forEach((f, idx) => {
+          if (isExtra3 && (idx === list.length - 1 || f.is_default_none)) return;
+          const triggerIdx = isExtra3 ? list.length - 2 : list.length - 1;
+          const isUntouched = (list.length > (isExtra3 ? 2 : 1) && idx === triggerIdx && (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined) && (f.cost_price === '' || f.cost_price === undefined) && (f.stock === '' || f.stock === undefined) && !f.extra_type);
+          if (isUntouched) return;
+
+          if (!f.name || !f.name.trim()) {
+            errors.push(`${label}: Opsi ke-${idx + 1} wajib diisi namanya.`);
+          } else if (checkOptionNameDuplicate(tier, f.name, idx)) {
+            errors.push(`${label}: Nama opsi "${f.name}" kembar / duplikat.`);
+          }
+
+          if (isExtra3 && (!f.extra_type || f.extra_type.trim() === '')) {
+            errors.push(`${label} (Opsi ${f.name || idx + 1}): Jenis input wajib dipilih.`);
+          }
+
+          const pNum = parseFloat(f.price);
+          if (isNaN(pNum) || pNum < 100) {
+            errors.push(`${label} (Opsi ${f.name || idx + 1}): Harga satuan/jual wajib diisi minimal 100.`);
+          }
+
+          if (f.cost_price === '' || f.cost_price === undefined || f.cost_price === null || isNaN(parseFloat(f.cost_price)) || parseFloat(f.cost_price) < 0) {
+            errors.push(`${label} (Opsi ${f.name || idx + 1}): Modal/HPP wajib diisi (tulis angka 0 jika tanpa harga/modal).`);
+          }
+
+          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
+          if (stockMode !== 'unlimited') {
+            if (f.stock === '' || f.stock === undefined || f.stock === null || isNaN(parseInt(f.stock)) || parseInt(f.stock) < 0) {
+              errors.push(`${label} (Opsi ${f.name || idx + 1}): Stok wajib diisi.`);
+            }
+          }
+        });
+      });
+
+      // Pemicu tampilan error inline merah di DOM tabel opsi
+      document.querySelectorAll('.mat-input, .fin-input').forEach(inp => {
+        validateOptionField(inp, true);
+      });
+
+      // Aturan Seragam Gambar pada Tabel Kombinasi Variasi
+      const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
+      const displayMats = validMats.length > 0 ? validMats : (materialsState.length > 0 ? [materialsState[0]] : []);
+      const totalDisplayRows = displayMats.length;
+      const uploadedCount = displayMats.filter(m => m.image_url && m.image_url.trim() !== '').length;
+      if (uploadedCount > 0 && uploadedCount < totalDisplayRows) {
+        errors.push('Foto pada Tabel Kombinasi Variasi belum seragam. Seluruh baris opsi wajib memiliki foto, atau kosongkan semua foto.');
       }
     }
 
