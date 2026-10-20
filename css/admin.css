@@ -1055,4 +1055,20 @@ input.toggle-same-cost:checked ~ div::after {
   max-width: 100%;
 }
 
+/* Drawer Extras Accordion & Chip Styling */
+.btn-shopee-extra {
+  transition: all 0.15s ease-in-out;
+}
+.btn-shopee-extra:not(.is-active) {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+.btn-shopee-extra.is-active {
+  background-color: #ffffff !important;
+  border-color: #33b589 !important;
+  color: #33b589 !important;
+  font-weight: 600 !important;
+}
+
 

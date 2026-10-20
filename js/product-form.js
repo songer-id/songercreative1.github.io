@@ -1774,23 +1774,25 @@ const ProductForm = (() => {
     if (tierKey === 'tier1') {
       key = 'label_tier_1';
       selector = '#input-var-label-tier1, [data-label-key="label_tier_1"]';
-    } else if (tierKey === 'tier2') {
+    } else if (tierKey === 'tier2' || tierKey === 'main') {
       key = 'label_tier_2';
       selector = '#input-var-label-main, #input-var-label-tier2, [data-label-key="label_tier_2"]';
-    } else if (tierKey === 'tier3') {
+    } else if (tierKey === 'tier3' || tierKey === 'extra_1') {
       key = 'label_extra_1';
       selector = '#input-var-label-extra_1, #input-var-label-extra1, [data-label-key="label_extra_1"]';
-    } else if (tierKey === 'tier4') {
+    } else if (tierKey === 'tier4' || tierKey === 'extra_2') {
       key = 'label_extra_2';
       selector = '#input-var-label-extra_2, #input-var-label-extra2, [data-label-key="label_extra_2"]';
-    } else if (tierKey === 'extras') {
+    } else if (tierKey === 'extras' || tierKey === 'extra_3') {
       key = 'label_extra_3';
       selector = '#input-var-label-extra3, #input-var-label-extra_3, #input-var-label-extra-services, [data-label-key="label_extra_3"]';
     }
 
     const domInp = selector ? document.querySelector(selector) : null;
-    const domVal = domInp ? domInp.value.trim() : '';
-    if (domVal) return domVal;
+    if (domInp) {
+      const domVal = domInp.value ? domInp.value.trim() : '';
+      return domVal || fallback;
+    }
 
     const lbls = primaryState.variation_labels || {};
     const stateVal = (key && lbls[key]) ? String(lbls[key]).trim() : '';
@@ -2220,7 +2222,22 @@ const ProductForm = (() => {
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
     const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
     const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+
+    const extraLabel = getVariationLabel('extras', 'Layanan Extras');
+    const defaultNoneName = `Tanpa ${extraLabel}`;
+    if (primaryState.has_extra_service && finishingsState.extra_3 && finishingsState.extra_3.length > 0) {
+      finishingsState.extra_3[0].name = defaultNoneName;
+      finishingsState.extra_3[0].price = 0;
+      finishingsState.extra_3[0].cost_price = 0;
+      finishingsState.extra_3[0].extra_type = 'pilihan_ganda';
+      finishingsState.extra_3[0].is_default_none = true;
+    }
     const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+
+    const noneId = validExtras[0]?.id || 'ex_0';
+    if (!previewTestState.selectedExtras || Object.keys(previewTestState.selectedExtras).length === 0) {
+      previewTestState.selectedExtras = { [noneId]: true };
+    }
     const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
     const isAllVariationsSelected = checkAllVariationsSelected();
 
@@ -2393,6 +2410,71 @@ const ProductForm = (() => {
     if (primaryState.card_variant === 'B') accentColor = '#0f172a';
     else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || '#047857';
 
+    const activeExtrasSelected = validExtras.filter((ex, idx) => {
+      const exId = ex.id || `ex_${idx}`;
+      return idx > 0 && Boolean(previewTestState.selectedExtras[exId]);
+    });
+    let extrasStatusText = defaultNoneName;
+    if (activeExtrasSelected.length === 1) {
+      extrasStatusText = activeExtrasSelected[0].name.trim();
+    } else if (activeExtrasSelected.length > 1) {
+      extrasStatusText = `${activeExtrasSelected.length} dipilih`;
+    }
+    const isAccordionOpen = Boolean(previewTestState.isExtrasAccordionOpen);
+
+    const extrasAccordionHtml = `
+      <div class="space-y-1.5 pt-2 border-t border-slate-100">
+        <div class="btn-toggle-extras-accordion flex items-center justify-between gap-2 py-1 cursor-pointer select-none group" data-action="toggle-extras" title="Klik untuk membuka / menutup opsi ekstra">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-xs font-medium text-slate-600">${escapeHtml(extraLabel)}</span>
+            <span class="text-[11px] text-slate-500 font-normal truncate">(${escapeHtml(extrasStatusText)})</span>
+          </div>
+          <div class="flex items-center gap-1 text-slate-400 group-hover:text-slate-600 transition shrink-0">
+            <i class="bi ${isAccordionOpen ? 'bi-chevron-down' : 'bi-chevron-right'} text-xs"></i>
+          </div>
+        </div>
+
+        ${isAccordionOpen ? `
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            ${validExtras.map((ex, idx) => {
+              const exId = ex.id || `ex_${idx}`;
+              const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+              const itemImg = ex.image_url || ex.image;
+              const isNoneOption = (idx === 0);
+              const priceVal = parseFloat(ex.price) || 0;
+              const priceBadge = (isNoneOption || priceVal === 0) 
+                ? '' 
+                : `<span class="text-[10px] ${isSelected ? 'text-[#33b589]' : 'text-slate-500'} font-semibold">+${formatIDR(priceVal)}</span>`;
+
+              if (itemImg) {
+                return `
+                  <button type="button" class="btn-shopee-extra inline-flex items-center gap-1.5 p-1 pr-2.5 rounded-lg border text-[11px] transition cursor-pointer ${
+                    isSelected 
+                      ? 'bg-white border-[#33b589] border-2 text-[#33b589] font-semibold shadow-2xs is-active' 
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 font-normal'
+                  }" data-id="${exId}">
+                    <img src="${itemImg}" class="w-5 h-5 rounded-md object-cover shrink-0 bg-slate-100" alt="${escapeHtml(ex.name)}" />
+                    <span class="truncate max-w-[130px]">${escapeHtml(ex.name.trim())}</span>
+                    ${priceBadge}
+                  </button>
+                `;
+              }
+              return `
+                <button type="button" class="btn-shopee-extra px-2.5 py-1.5 rounded-lg border text-[11px] transition cursor-pointer inline-flex items-center gap-1.5 ${
+                  isSelected 
+                    ? 'bg-white border-[#33b589] border-2 text-[#33b589] font-semibold shadow-2xs is-active' 
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 font-normal'
+                }" data-id="${exId}">
+                  <span>${escapeHtml(ex.name.trim())}</span>
+                  ${priceBadge}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
     if (!hasVariations) {
       // KASUS A: PRODUK TUNGGAL
       return `
@@ -2420,23 +2502,9 @@ const ProductForm = (() => {
             </button>
           </div>
 
-          ${(primaryState.has_extra_service && validExtras.length > 0) ? `
-            <div class="p-3 border-b border-slate-100 space-y-1.5">
-              <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('extras', 'Layanan Extras'))}</div>
-              <div class="flex flex-wrap gap-1.5">
-                ${validExtras.map((ex, idx) => {
-                  const exId = ex.id || `ex_${idx}`;
-                  const isSelected = Boolean(previewTestState.selectedExtras[exId]);
-                  const xt = String(ex.extra_type || '').toLowerCase();
-                  const isDirect = (xt === 'direct' || xt === 'langsung proses');
-                  return `
-                    <button type="button" class="btn-shopee-extra px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'}" data-id="${exId}">
-                      <span>${escapeHtml(ex.name.trim())}</span>
-                      <span class="text-[9px] font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
-                    </button>
-                  `;
-                }).join('')}
-              </div>
+          ${primaryState.has_extra_service ? `
+            <div class="p-3 border-b border-slate-100">
+              ${extrasAccordionHtml}
             </div>
           ` : ''}
 
@@ -2514,11 +2582,11 @@ const ProductForm = (() => {
             </div>
 
             <!-- Variasi 2 -->
-            ${(primaryState.has_variation_2 && validV2.length > 0) ? `
+            ${primaryState.has_variation_2 ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
                 <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
                 <div class="flex flex-wrap gap-1.5">
-                  ${validV2.map((f, idx) => {
+                  ${validV2.length > 0 ? validV2.map((f, idx) => {
                     const fId = f.id || `v2_${idx}`;
                     const isSelected = previewTestState.selectedTier2Id === fId;
                     return `
@@ -2526,17 +2594,17 @@ const ProductForm = (() => {
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
-                  }).join('')}
+                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
                 </div>
               </div>
             ` : ''}
 
             <!-- Variasi 3 -->
-            ${(primaryState.has_variation_3 && validV3.length > 0) ? `
+            ${primaryState.has_variation_3 ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
                 <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}</div>
                 <div class="flex flex-wrap gap-1.5">
-                  ${validV3.map((f, idx) => {
+                  ${validV3.length > 0 ? validV3.map((f, idx) => {
                     const fId = f.id || `v3_${idx}`;
                     const isSelected = previewTestState.selectedTier3Id === fId;
                     return `
@@ -2544,17 +2612,17 @@ const ProductForm = (() => {
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
-                  }).join('')}
+                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
                 </div>
               </div>
             ` : ''}
 
             <!-- Variasi 4 -->
-            ${(primaryState.has_variation_4 && validV4.length > 0) ? `
+            ${primaryState.has_variation_4 ? `
               <div class="space-y-1.5 pt-2 border-t border-slate-100">
                 <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}</div>
                 <div class="flex flex-wrap gap-1.5">
-                  ${validV4.map((f, idx) => {
+                  ${validV4.length > 0 ? validV4.map((f, idx) => {
                     const fId = f.id || `v4_${idx}`;
                     const isSelected = previewTestState.selectedTier4Id === fId;
                     return `
@@ -2562,30 +2630,14 @@ const ProductForm = (() => {
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
-                  }).join('')}
+                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
                 </div>
               </div>
             ` : ''}
 
             <!-- Layanan Extras -->
-            ${(primaryState.has_extra_service && validExtras.length > 0) ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('extras', 'Layanan Extras'))}</div>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validExtras.map((ex, idx) => {
-                    const exId = ex.id || `ex_${idx}`;
-                    const isSelected = Boolean(previewTestState.selectedExtras[exId]);
-                    const xt = String(ex.extra_type || '').toLowerCase();
-                    const isDirect = (xt === 'direct' || xt === 'langsung proses');
-                    return `
-                      <button type="button" class="btn-shopee-extra px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${isSelected || isDirect ? 'bg-emerald-50 border-2 border-emerald-500 shadow-2xs text-emerald-950 font-bold' : 'bg-slate-50 hover:bg-emerald-50/40 border border-slate-200 text-slate-700'}" data-id="${exId}">
-                        <span>${escapeHtml(ex.name.trim())}</span>
-                        <span class="text-[9px] font-bold text-emerald-700">+${formatIDR(ex.price || 0)}</span>
-                      </button>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
+            ${primaryState.has_extra_service ? `
+              ${extrasAccordionHtml}
             ` : ''}
           </div>
 
@@ -2713,7 +2765,22 @@ const ProductForm = (() => {
         btn.onclick = (e) => {
           e.preventDefault();
           const id = btn.getAttribute('data-id');
-          previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
+          const validEx = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+          const noneId = validEx[0]?.id || 'ex_0';
+
+          if (!previewTestState.selectedExtras) previewTestState.selectedExtras = {};
+
+          if (id === noneId) {
+            previewTestState.selectedExtras = { [noneId]: true };
+          } else {
+            previewTestState.selectedExtras[noneId] = false;
+            previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
+
+            const hasAnyOther = Object.entries(previewTestState.selectedExtras).some(([k, v]) => v && k !== noneId);
+            if (!hasAnyOther) {
+              previewTestState.selectedExtras = { [noneId]: true };
+            }
+          }
           updateProductCardLivePreview();
         };
       });
@@ -2769,7 +2836,7 @@ const ProductForm = (() => {
           const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
           validExtras.forEach((ex, idx) => {
             const exId = ex.id || `ex_${idx}`;
-            if (previewTestState.selectedExtras[exId]) {
+            if (idx > 0 && previewTestState.selectedExtras[exId]) {
               chosenExtras.push(ex.name.trim());
             }
           });
@@ -3017,12 +3084,36 @@ const ProductForm = (() => {
           };
         });
 
-        // Layanan Extras di dalam Drawer
+        // Toggle Akordeon Layanan Extras di Drawer
+        container.querySelectorAll('.btn-toggle-extras-accordion').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            previewTestState.isExtrasAccordionOpen = !previewTestState.isExtrasAccordionOpen;
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Layanan Extras di dalam Drawer (Termasuk Mutex Opsi Tanpa)
         container.querySelectorAll('.btn-shopee-extra').forEach(btn => {
           btn.onclick = (e) => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
-            previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
+            const validEx = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+            const noneId = validEx[0]?.id || 'ex_0';
+
+            if (!previewTestState.selectedExtras) previewTestState.selectedExtras = {};
+
+            if (id === noneId) {
+              previewTestState.selectedExtras = { [noneId]: true };
+            } else {
+              previewTestState.selectedExtras[noneId] = false;
+              previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
+
+              const hasAnyOther = Object.entries(previewTestState.selectedExtras).some(([k, v]) => v && k !== noneId);
+              if (!hasAnyOther) {
+                previewTestState.selectedExtras = { [noneId]: true };
+              }
+            }
             updateProductCardLivePreview();
           };
         });
@@ -3811,14 +3902,19 @@ const ProductForm = (() => {
 
       const hasAnyTier1Image = validMaterials.some(m => m && (m.image_url || m.image));
 
-      const hasTier3 = Boolean(primaryState.has_variation_3 && validV3.length > 0);
-      const hasTier4 = Boolean(primaryState.has_variation_4 && validV4.length > 0);
-      const hasExtras = Boolean(primaryState.has_extra_service && validExtras.length > 0);
+      const selectedMatImg = (selectedMat && (selectedMat.image_url || selectedMat.image))
+        ? (selectedMat.image_url || selectedMat.image)
+        : null;
+      const displayMainImg = selectedMatImg || img;
+
+      const hasTier3 = Boolean(primaryState.has_variation_3);
+      const hasTier4 = Boolean(primaryState.has_variation_4);
+      const hasExtras = Boolean(primaryState.has_extra_service);
 
       const summaryParts = [];
-      if (hasTier3) summaryParts.push(`${validV3.length} ${getVariationLabel('tier3', 'Variasi 3')}`);
-      if (hasTier4) summaryParts.push(`${validV4.length} ${getVariationLabel('tier4', 'Variasi 4')}`);
-      if (hasExtras) summaryParts.push(`${validExtras.length} ${getVariationLabel('extras', 'Layanan Extras')}`);
+      if (hasTier3) summaryParts.push(`${validV3.length > 0 ? validV3.length + ' ' : ''}${getVariationLabel('tier3', 'Variasi 3')}`);
+      if (hasTier4) summaryParts.push(`${validV4.length > 0 ? validV4.length + ' ' : ''}${getVariationLabel('tier4', 'Variasi 4')}`);
+      if (hasExtras) summaryParts.push(`${validExtras.length > 0 ? validExtras.length + ' ' : ''}${getVariationLabel('extras', 'Layanan Extras')}`);
 
       const hasExtraTiers = summaryParts.length > 0;
 
@@ -3835,8 +3931,8 @@ const ProductForm = (() => {
           <div class="flex-1 overflow-y-auto ${!isTestMode ? 'pointer-events-none select-none' : ''}">
             <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
             <div class="relative w-full aspect-square bg-slate-100 overflow-hidden shrink-0">
-              ${hasPhoto && img ? `
-                <img src="${img}" class="w-full h-full object-cover" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
+              ${displayMainImg ? `
+                <img src="${displayMainImg}" class="w-full h-full object-cover transition-all duration-300" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
               ` : `
                 <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
                   <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
@@ -3928,7 +4024,7 @@ const ProductForm = (() => {
               ` : ''}
 
               <!-- URUTAN 4: Variasi ke-2 & Ringkasan Variasi 3, 4, Extras (Maksimal 2 Variasi di Awal) -->
-              ${(primaryState.has_variation_2 && validV2.length > 0) ? `
+              ${primaryState.has_variation_2 ? `
                 <div class="space-y-1.5 pt-2 border-t border-slate-100">
                   ${hasExtraTiers ? `
                     <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
@@ -3942,7 +4038,7 @@ const ProductForm = (() => {
                     <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
                   `}
                   <div class="flex flex-wrap gap-1.5">
-                    ${validV2.map((f, idx) => {
+                    ${validV2.length > 0 ? validV2.map((f, idx) => {
                       const fId = f.id || `v2_${idx}`;
                       const isSelected = previewTestState.selectedTier2Id === fId;
                       return `
@@ -3950,7 +4046,7 @@ const ProductForm = (() => {
                           <span>${escapeHtml(f.name.trim())}</span>
                         </button>
                       `;
-                    }).join('')}
+                    }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
                   </div>
                 </div>
               ` : (hasExtraTiers ? `
@@ -6247,39 +6343,62 @@ const ProductForm = (() => {
 
     // Khusus Layanan Extras (Di Luar Qty) - 6 Bagian sesuai Gambar 5
     if (tier === 'extra_3') {
+      const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
+      const defaultNoneName = `Tanpa ${extraTitle}`;
+      if (list.length === 0) {
+        list.push({ id: DB.generateUUID(), tier: 'extra_3', name: defaultNoneName, description: '', price: 0, cost_price: 0, stock: '', extra_type: 'pilihan_ganda', is_default_none: true });
+        list.push({ id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: 'pilihan_ganda' });
+      }
+
       return list.map((fin, idx) => {
-        const placeholderName = `Opsi ${idx + 1}`;
-        const priceVal = (isSamePrice && idx > 0) ? firstPrice : (fin.price !== undefined && fin.price !== null && fin.price !== '' ? fin.price : '');
-        const costVal = (isSameCost && idx > 0) ? firstCost : (fin.cost_price !== undefined && fin.cost_price !== null && fin.cost_price !== '' ? fin.cost_price : '');
-        const stockVal = stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : ''));
-        const extraType = fin.extra_type || '';
+        const isFirstRow = (idx === 0);
+        if (isFirstRow) {
+          fin.name = defaultNoneName;
+          fin.price = 0;
+          fin.cost_price = 0;
+          fin.extra_type = 'pilihan_ganda';
+          fin.is_default_none = true;
+        }
+
+        const placeholderName = isFirstRow ? defaultNoneName : `Opsi ${idx + 1}`;
+        const priceVal = isFirstRow ? 0 : ((isSamePrice && idx > 0) ? firstPrice : (fin.price !== undefined && fin.price !== null && fin.price !== '' ? fin.price : ''));
+        const costVal = isFirstRow ? 0 : ((isSameCost && idx > 0) ? firstCost : (fin.cost_price !== undefined && fin.cost_price !== null && fin.cost_price !== '' ? fin.cost_price : ''));
+        const stockVal = isFirstRow ? '' : (stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : '')));
+        const extraType = isFirstRow ? 'pilihan_ganda' : (fin.extra_type || '');
 
         return `
           <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${fin.id}" data-tier="${tier}" data-idx="${idx}">
             <div style="border-radius: 0px !important;" class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
               <!-- Bagian 1: Kotak Upload Gambar Kecil -->
               <div style="border-radius: 0px !important;" class="extra-img-cell col-span-2 sm:col-span-1 flex items-center justify-center p-1 bg-slate-50">
-                <input type="file" accept="image/*" class="hidden extra-file-input" data-id="${fin.id}" id="extra-file-${fin.id}" />
-                <label for="extra-file-${fin.id}" class="w-8 h-8 rounded border border-slate-300 flex items-center justify-center cursor-pointer overflow-hidden hover:border-emerald-500 text-emerald-600 bg-white" title="Unggah Foto Opsi">
-                  ${fin.image_url ? `<img src="${fin.image_url}" class="w-full h-full object-cover" />` : `<i class="bi bi-image text-sm"></i>`}
-                </label>
+                ${isFirstRow ? `
+                  <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-300 bg-slate-100 cursor-not-allowed" title="Opsi default tanpa foto">
+                    <i class="bi bi-dash-lg text-sm"></i>
+                  </div>
+                ` : `
+                  <input type="file" accept="image/*" class="hidden extra-file-input" data-id="${fin.id}" id="extra-file-${fin.id}" />
+                  <label for="extra-file-${fin.id}" class="w-8 h-8 rounded border border-slate-300 flex items-center justify-center cursor-pointer overflow-hidden hover:border-emerald-500 text-emerald-600 bg-white" title="Unggah Foto Opsi">
+                    ${fin.image_url ? `<img src="${fin.image_url}" class="w-full h-full object-cover" />` : `<i class="bi bi-image text-sm"></i>`}
+                  </label>
+                `}
               </div>
 
               <!-- Bagian 2: Nama Opsi -->
               <input 
                 type="text" 
                 data-field="name" 
-                value="${escapeHtml(fin.name || '')}" 
+                value="${escapeHtml(isFirstRow ? defaultNoneName : (fin.name || ''))}" 
                 placeholder="${placeholderName}" 
+                ${isFirstRow ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
+                class="fin-input col-span-2 sm:col-span-3 px-3 py-2 text-xs outline-none font-medium rounded-none ${isFirstRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-emerald-50/30'}" 
               />
 
               <!-- Bagian 3: Dropdown Tipe Input (Pilihan Ganda vs Input Qty) -->
-              <select data-field="extra_type" style="border-radius: 0px !important;" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs bg-white outline-none focus:bg-emerald-50 font-medium text-slate-700 rounded-none">
+              <select data-field="extra_type" ${isFirstRow ? 'disabled' : ''} style="border-radius: 0px !important;" class="fin-input col-span-2 sm:col-span-2 px-2 py-1.5 text-xs outline-none font-medium rounded-none ${isFirstRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50 text-slate-700'}">
                 <option value="" disabled ${!extraType ? 'selected' : ''}>Jenis Input</option>
-                <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' ? 'selected' : ''}>Pilihan Ganda</option>
-                <option value="qty" ${extraType === 'qty' ? 'selected' : ''}>Input Qty</option>
+                <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' || isFirstRow ? 'selected' : ''}>Pilihan Ganda</option>
+                <option value="qty" ${extraType === 'qty' && !isFirstRow ? 'selected' : ''}>Input Qty</option>
               </select>
 
               <!-- Bagian 4: Harga Satuan -->
@@ -6287,11 +6406,11 @@ const ProductForm = (() => {
                 type="number" 
                 min="0" 
                 data-field="price" 
-                value="${priceVal}" 
+                value="${isFirstRow ? 0 : priceVal}" 
                 placeholder="Harga Satuan" 
-                ${isSamePrice && idx > 0 ? 'readonly' : ''} 
+                ${(isFirstRow || (isSamePrice && idx > 0)) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isFirstRow || (isSamePrice && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-emerald-50/30'}" 
               />
 
               <!-- Bagian 5: Modal/Hpp -->
@@ -6299,11 +6418,11 @@ const ProductForm = (() => {
                 type="number" 
                 min="0" 
                 data-field="cost_price" 
-                value="${costVal}" 
+                value="${isFirstRow ? 0 : costVal}" 
                 placeholder="Modal/Hpp" 
-                ${isSameCost && idx > 0 ? 'readonly' : ''} 
+                ${(isFirstRow || (isSameCost && idx > 0)) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="fin-input col-span-1 sm:col-span-2 min-w-[100px] px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isFirstRow || (isSameCost && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50/30'}" 
               />
 
               <!-- Bagian 6: Stok -->
@@ -6313,9 +6432,9 @@ const ProductForm = (() => {
                 data-field="stock" 
                 value="${stockVal}" 
                 placeholder="Stok" 
-                ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
+                ${isFirstRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+                class="fin-input col-span-2 sm:col-span-2 min-w-[95px] px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isFirstRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-emerald-50/30'}" 
               />
             </div>
 
@@ -6326,17 +6445,17 @@ const ProductForm = (() => {
                 class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
                 data-tier="${tier}" 
                 data-id="${fin.id}" 
-                ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
+                ${isFirstRow ? 'disabled title="Opsi default tidak dapat dihapus"' : (isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"')}
               >
                 <i class="bi bi-trash3-fill"></i>
               </button>
               <button 
                 type="button" 
-                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
+                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition text-xs leading-none ${isFirstRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
                 data-tier="${tier}" 
                 data-id="${fin.id}" 
                 data-idx="${idx}" 
-                title="Geser / Pindah Urutan Opsi"
+                ${isFirstRow ? 'disabled title="Opsi default tetap di baris pertama"' : 'title="Geser / Pindah Urutan Opsi"'}
               >
                 <i class="bi bi-arrows-move"></i>
               </button>
@@ -7009,22 +7128,50 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (singlePrice) singlePrice.oninput = updateSingleMargin;
     if (singleCost) singleCost.oninput = updateSingleMargin;
 
-    // Kustomisasi Label Input pada Setiap Variasi
+    // Kustomisasi Label Input pada Setiap Variasi Real-Time Sync
+    function handleVariationLabelInput(inp, val) {
+      const labelKey = inp.getAttribute('data-label-key');
+      const tier = inp.getAttribute('data-tier');
+      if (!primaryState.variation_labels) primaryState.variation_labels = {};
+      if (labelKey) primaryState.variation_labels[labelKey] = val;
+
+      // Update header pada tabel kombinasi bawah jika label berubah
+      const comboSection = document.getElementById('combination-matrix-section');
+      if (comboSection) {
+        const comboVar1Th = comboSection.querySelector('th:first-child');
+        if (comboVar1Th && labelKey === 'label_tier_1') comboVar1Th.textContent = val || 'Variasi 1';
+      }
+
+      // Jika mengubah label Layanan Extras, update nama opsi default 'Tanpa [Judul Extras]' pada baris pertama
+      if (labelKey === 'label_extra_3' || tier === 'extra_3') {
+        const extraTitle = val || 'Layanan Extras';
+        const defaultNoneName = `Tanpa ${extraTitle}`;
+        if (finishingsState.extra_3 && finishingsState.extra_3.length > 0) {
+          finishingsState.extra_3[0].name = defaultNoneName;
+        }
+        const row0NameInp = document.querySelector('#finishings-extra_3-rows-container .variation-option-row[data-idx="0"] input[data-field="name"]');
+        if (row0NameInp) {
+          row0NameInp.value = defaultNoneName;
+        }
+      }
+
+      updateProductCardLivePreview();
+    }
+
     document.querySelectorAll('.input-variation-label').forEach(inp => {
       inp.oninput = (e) => {
-        const val = e.target.value.trim();
-        const labelKey = inp.getAttribute('data-label-key');
-        if (!primaryState.variation_labels) primaryState.variation_labels = {};
-        if (labelKey) primaryState.variation_labels[labelKey] = val;
-        // Update header pada tabel kombinasi bawah jika label berubah
-        const comboSection = document.getElementById('combination-matrix-section');
-        if (comboSection) {
-          const comboVar1Th = comboSection.querySelector('th:first-child');
-          if (comboVar1Th && labelKey === 'label_tier_1') comboVar1Th.textContent = val || 'Variasi 1';
-        }
-        updateProductCardLivePreview();
+        handleVariationLabelInput(inp, e.target.value.trim());
       };
     });
+
+    if (!window._variationLabelInputListenerBound) {
+      window._variationLabelInputListenerBound = true;
+      document.addEventListener('input', (e) => {
+        const inp = e.target.closest('.input-variation-label');
+        if (!inp) return;
+        handleVariationLabelInput(inp, inp.value.trim());
+      });
+    }
 
     // =====================================================================
     // RANTAI AKTIVASI & PENONAKTIFAN BERJENJANG (VARIASI 2, 3, 4 + LAYANAN EKSTRA)
@@ -7158,11 +7305,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       btn.onclick = () => {
         primaryState.has_extra_service = true;
         primaryState.has_layer_5 = true;
+        const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
+        const defaultNoneName = `Tanpa ${extraTitle}`;
         if (!finishingsState.extra_3 || finishingsState.extra_3.length < 2) {
           finishingsState.extra_3 = [
-            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: '' },
-            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: '' }
+            { id: DB.generateUUID(), tier: 'extra_3', name: defaultNoneName, description: '', price: 0, cost_price: 0, stock: '', extra_type: 'pilihan_ganda', is_default_none: true },
+            { id: DB.generateUUID(), tier: 'extra_3', name: '', description: '', price: '', cost_price: '', stock: '', extra_type: 'pilihan_ganda' }
           ];
+        } else {
+          finishingsState.extra_3[0].name = defaultNoneName;
+          finishingsState.extra_3[0].price = 0;
+          finishingsState.extra_3[0].cost_price = 0;
+          finishingsState.extra_3[0].extra_type = 'pilihan_ganda';
+          finishingsState.extra_3[0].is_default_none = true;
         }
         const container = document.getElementById('pricing-model-interactive-container');
         if (container) container.innerHTML = renderPricingModelSection();
@@ -7486,12 +7641,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const list = finishingsState[tier];
       if (!list) return;
 
-      // Hapus Opsi (Proteksi minimal 1 opsi)
+      // Hapus Opsi (Proteksi minimal 1 opsi & proteksi opsi default Tanpa pada extra_3)
       container.querySelectorAll('.btn-delete-fin').forEach(btn => {
         btn.onclick = (e) => {
           if ((finishingsState[tier] || []).length <= 1) return;
           const row = e.target.closest('.variation-option-row');
           if (!row) return;
+          const idx = parseInt(row.getAttribute('data-idx'));
+          if (tier === 'extra_3' && idx === 0) return;
           const id = row.getAttribute('data-id');
           finishingsState[tier] = finishingsState[tier].filter(f => f.id !== id);
           container.innerHTML = renderFinishingRows(tier);
@@ -7503,6 +7660,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // Geser / Drag & Drop dan Tukar Urutan Baris Finishing / Extras
       let draggedFinIdx = null;
       container.querySelectorAll('.variation-option-row').forEach(row => {
+        const rIdx = parseInt(row.getAttribute('data-idx'));
+        if (tier === 'extra_3' && rIdx === 0) {
+          row.removeAttribute('draggable');
+          return;
+        }
         row.setAttribute('draggable', 'true');
         row.ondragstart = (e) => {
           draggedFinIdx = parseInt(row.getAttribute('data-idx'));
@@ -7524,6 +7686,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         row.ondrop = (e) => {
           e.preventDefault();
           const targetIdx = parseInt(row.getAttribute('data-idx'));
+          if (tier === 'extra_3' && (targetIdx === 0 || draggedFinIdx === 0)) return;
           const currentList = finishingsState[tier];
           if (currentList && draggedFinIdx !== null && !isNaN(targetIdx) && draggedFinIdx !== targetIdx) {
             const item = currentList.splice(draggedFinIdx, 1)[0];
@@ -7540,9 +7703,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         btn.onclick = (e) => {
           e.stopPropagation();
           const idx = parseInt(btn.getAttribute('data-idx'));
+          if (tier === 'extra_3' && idx === 0) return;
           const currentList = finishingsState[tier];
           if (!currentList || currentList.length <= 1 || isNaN(idx)) return;
-          const targetIdx = idx === currentList.length - 1 ? idx - 1 : idx + 1;
+          let targetIdx = idx === currentList.length - 1 ? idx - 1 : idx + 1;
+          if (tier === 'extra_3' && targetIdx === 0) {
+            targetIdx = currentList.length > 2 ? 2 : 1;
+            if (targetIdx === idx) return;
+          }
           const temp = currentList[idx];
           currentList[idx] = currentList[targetIdx];
           currentList[targetIdx] = temp;
@@ -7583,6 +7751,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const idx = parseInt(row.getAttribute('data-idx'));
           const currentList = finishingsState[tier];
           const item = (currentList || []).find(f => f.id === id);
+
+          if (tier === 'extra_3' && idx === 0) {
+            const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
+            if (item) {
+              item.name = `Tanpa ${extraTitle}`;
+              item.price = 0;
+              item.cost_price = 0;
+              item.extra_type = 'pilihan_ganda';
+              item.is_default_none = true;
+            }
+            return;
+          }
 
           if (item) {
             if (field === 'price') {
