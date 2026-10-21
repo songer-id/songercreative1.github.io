@@ -4387,12 +4387,12 @@ const ProductForm = (() => {
                     ` : `
                       <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
                     `}
-                    <div class="flex flex-wrap gap-1.5">
+                    <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap">
                       ${validV2.length > 0 ? validV2.map((f, idx) => {
                         const fId = f.id || `v2_${idx}`;
                         const isSelected = previewTestState.selectedTier2Id === fId;
                         return `
-                          <button type="button" class="btn-preview-tier2 mini-pdp-var-chip px-2.5 py-1.5 rounded text-[10px] font-semibold transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${fId}">
+                          <button type="button" class="btn-preview-tier2 mini-pdp-var-chip px-2.5 py-1.5 rounded text-[10px] font-semibold transition cursor-pointer flex items-center justify-center shrink-0 whitespace-nowrap ${isSelected ? 'is-active' : ''} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${fId}">
                             <span>${escapeHtml(f.name.trim())}</span>
                           </button>
                         `;
@@ -5595,7 +5595,7 @@ const ProductForm = (() => {
       const isSameCost = Boolean(primaryState.same_cost_tiers && primaryState.same_cost_tiers[tier]);
       const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
 
-      const closeBtnId = isTier1 ? 'btn-close-variasi-1' : `btn-close-variasi-${tierNum}`;
+      const closeBtnId = isTier1 ? 'btn-close-var-tier-1' : `btn-close-variasi-${tierNum}`;
       const inputLabelId = isTier1 ? 'input-var-label-tier1' : `input-var-label-${tier}`;
       const rowsHtml = isTier1 ? renderMaterialsRows(false) : renderFinishingRows(tier);
       const containerId = isTier1 ? 'materials-rows-container' : `finishings-${tier}-rows-container`;
@@ -5646,9 +5646,10 @@ const ProductForm = (() => {
               <button 
                 type="button" 
                 id="${closeBtnId}" 
-                class="btn-close-variation-card absolute top-3 right-3 sm:static text-slate-400 hover:text-red-500 text-lg cursor-pointer p-1 leading-none font-bold" 
+                class="btn-close-variation-card btn-remove-variation-tier absolute top-3 right-3 sm:static text-slate-400 hover:text-red-500 text-lg cursor-pointer p-1 leading-none font-bold" 
                 data-tier="${tier}" 
                 data-tier-num="${tierNum}" 
+                data-tier-index="${tierNum}" 
                 title="Tutup ${title}"
               >✕</button>
 
@@ -7749,8 +7750,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (badgeContainerDesk) badgeContainerDesk.classList.add('hidden');
         if (badgeContainerMob) badgeContainerMob.classList.add('hidden');
       } else {
+        primaryState.show_badge = true;
         if (toggle) {
           toggle.disabled = false;
+          toggle.checked = true;
         }
         if (toggleWrapper) {
           toggleWrapper.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -7760,7 +7763,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           notice.classList.add('hidden');
           notice.classList.remove('block');
         }
-        if (toggle && toggle.checked && container) {
+        if (container) {
           container.classList.remove('hidden');
         }
         if (badgeContainerDesk) badgeContainerDesk.classList.remove('hidden');
@@ -7891,6 +7894,422 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         cardEls.forEach(el => observer.observe(el));
       }
     }
+
+  // =====================================================================
+  // LOGIKA PERGESERAN OTOMATIS (SHIFT-UP) VARIASI 1–4 SAAT DI-CLOSE (✕)
+  // =====================================================================
+  let rebuildCombinationMatrix = () => {
+    const section = document.getElementById('combination-matrix-section');
+    if (section && typeof renderCombinationMatrixTable === 'function') {
+      section.outerHTML = renderCombinationMatrixTable();
+      if (typeof bindCombinationMatrixEvents === 'function') {
+        bindCombinationMatrixEvents();
+      }
+    }
+  };
+
+  function closeAndShiftVariationTier(closedTierIndex) {
+    // 1. Panggil syncStateFromDOM() terlebih dahulu agar seluruh ketikan terbaru di DOM tersimpan ke state
+    if (typeof syncStateFromDOM === 'function') {
+      syncStateFromDOM();
+    }
+
+    // Pastikan nilai ketentuan tambahan (toggle price, cost, stock) tersinkronisasi jika ada di DOM
+    ['tier1', 'main', 'extra_1', 'extra_2'].forEach(t => {
+      const chkPrice = document.querySelector(`.toggle-same-price[data-tier="${t}"]`);
+      if (chkPrice && primaryState.same_price_tiers) {
+        primaryState.same_price_tiers[t] = chkPrice.checked;
+      }
+      const chkCost = document.querySelector(`.toggle-same-cost[data-tier="${t}"]`);
+      if (chkCost && primaryState.same_cost_tiers) {
+        primaryState.same_cost_tiers[t] = chkCost.checked;
+      }
+      const radStock = document.querySelector(`input[name="stock_mode_${t}"]:checked`);
+      if (radStock && primaryState.stock_mode_tiers) {
+        primaryState.stock_mode_tiers[t] = radStock.value;
+      }
+    });
+
+    // 2. Representasi Data Setiap Tingkat Variasi (Slot 1 s/d 4)
+    const slots = [
+      {
+        slot: 1,
+        isActive: Boolean(primaryState.has_variants),
+        label: primaryState.variation_labels?.label_tier_1 || '',
+        items: (materialsState || []).map(m => ({
+          id: m.id || DB.generateUUID(),
+          name: m.name || '',
+          description: m.description || '',
+          price: m.price !== undefined ? m.price : '',
+          cost_price: m.cost_price !== undefined ? m.cost_price : '',
+          stock: m.stock !== undefined ? m.stock : '',
+          image: m.image || m.image_url || '',
+          image_url: m.image_url || m.image || '',
+          step_multiplier: m.step_multiplier || 1,
+          min_order: m.min_order || 1,
+          max_order: m.max_order !== undefined ? m.max_order : null
+        })),
+        same_price: Boolean(primaryState.same_price_tiers?.tier1),
+        same_cost: Boolean(primaryState.same_cost_tiers?.tier1),
+        stock_mode: primaryState.stock_mode_tiers?.tier1 || '',
+        scope: 'umum'
+      },
+      {
+        slot: 2,
+        isActive: Boolean(primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0)),
+        label: primaryState.variation_labels?.label_tier_2 || '',
+        items: (finishingsState.main || []).map(f => ({
+          id: f.id || DB.generateUUID(),
+          tier: 'main',
+          name: f.name || '',
+          description: f.description || '',
+          price: f.price !== undefined ? f.price : '',
+          cost_price: f.cost_price !== undefined ? f.cost_price : '',
+          stock: f.stock !== undefined ? f.stock : '',
+          image: f.image || f.image_url || '',
+          image_url: f.image_url || f.image || '',
+          parent_id: f.parent_id || ''
+        })),
+        same_price: Boolean(primaryState.same_price_tiers?.main),
+        same_cost: Boolean(primaryState.same_cost_tiers?.main),
+        stock_mode: primaryState.stock_mode_tiers?.main || '',
+        scope: primaryState.variation_scopes?.main || primaryState.scope_main || 'umum'
+      },
+      {
+        slot: 3,
+        isActive: Boolean(primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0)),
+        label: primaryState.variation_labels?.label_extra_1 || '',
+        items: (finishingsState.extra_1 || []).map(f => ({
+          id: f.id || DB.generateUUID(),
+          tier: 'extra_1',
+          name: f.name || '',
+          description: f.description || '',
+          price: f.price !== undefined ? f.price : '',
+          cost_price: f.cost_price !== undefined ? f.cost_price : '',
+          stock: f.stock !== undefined ? f.stock : '',
+          image: f.image || f.image_url || '',
+          image_url: f.image_url || f.image || '',
+          parent_id: f.parent_id || ''
+        })),
+        same_price: Boolean(primaryState.same_price_tiers?.extra_1),
+        same_cost: Boolean(primaryState.same_cost_tiers?.extra_1),
+        stock_mode: primaryState.stock_mode_tiers?.extra_1 || '',
+        scope: primaryState.variation_scopes?.extra_1 || primaryState.scope_extra_1 || 'umum'
+      },
+      {
+        slot: 4,
+        isActive: Boolean(primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0)),
+        label: primaryState.variation_labels?.label_extra_2 || '',
+        items: (finishingsState.extra_2 || []).map(f => ({
+          id: f.id || DB.generateUUID(),
+          tier: 'extra_2',
+          name: f.name || '',
+          description: f.description || '',
+          price: f.price !== undefined ? f.price : '',
+          cost_price: f.cost_price !== undefined ? f.cost_price : '',
+          stock: f.stock !== undefined ? f.stock : '',
+          image: f.image || f.image_url || '',
+          image_url: f.image_url || f.image || '',
+          parent_id: f.parent_id || ''
+        })),
+        same_price: Boolean(primaryState.same_price_tiers?.extra_2),
+        same_cost: Boolean(primaryState.same_cost_tiers?.extra_2),
+        stock_mode: primaryState.stock_mode_tiers?.extra_2 || '',
+        scope: primaryState.variation_scopes?.extra_2 || primaryState.scope_extra_2 || 'umum'
+      }
+    ];
+
+    const targetIdx = Number(closedTierIndex);
+    // Ambil daftar seluruh tingkat variasi yang sedang aktif, kecualikan closedTierIndex
+    const remainingSlotsData = slots.filter(s => s.isActive && s.slot !== targetIdx);
+
+    if (!primaryState.variation_labels) primaryState.variation_labels = {};
+    if (!primaryState.same_price_tiers) primaryState.same_price_tiers = {};
+    if (!primaryState.same_cost_tiers) primaryState.same_cost_tiers = {};
+    if (!primaryState.stock_mode_tiers) primaryState.stock_mode_tiers = {};
+    if (!primaryState.variation_scopes) primaryState.variation_scopes = {};
+
+    if (remainingSlotsData.length === 0) {
+      // 0 Variasi tersisa: Kembali ke Produk Tunggal (Tanpa Variasi)
+      primaryState.has_variants = false;
+      primaryState.has_variation_2 = false;
+      primaryState.has_layer_2 = false;
+      primaryState.has_variation_3 = false;
+      primaryState.has_layer_3 = false;
+      primaryState.has_variation_4 = false;
+      primaryState.has_layer_4 = false;
+
+      finishingsState.main = [];
+      finishingsState.extra_1 = [];
+      finishingsState.extra_2 = [];
+
+      primaryState.same_price_tiers.tier1 = false;
+      primaryState.same_price_tiers.main = false;
+      primaryState.same_price_tiers.extra_1 = false;
+      primaryState.same_price_tiers.extra_2 = false;
+
+      primaryState.same_cost_tiers.tier1 = false;
+      primaryState.same_cost_tiers.main = false;
+      primaryState.same_cost_tiers.extra_1 = false;
+      primaryState.same_cost_tiers.extra_2 = false;
+
+      primaryState.stock_mode_tiers.tier1 = '';
+      primaryState.stock_mode_tiers.main = '';
+      primaryState.stock_mode_tiers.extra_1 = '';
+      primaryState.stock_mode_tiers.extra_2 = '';
+
+      materialsState = [{
+        id: DB.generateUUID(),
+        name: primaryState.name || 'Produk Standar',
+        price: materialsState[0]?.price || 0,
+        cost_price: materialsState[0]?.cost_price || 0,
+        step_multiplier: 1
+      }];
+
+      const singleSettings = document.getElementById('single-product-purchase-settings');
+      if (singleSettings && primaryState.pricing_model === 'normal') {
+        singleSettings.classList.remove('hidden');
+        singleSettings.className = 'space-y-6';
+      }
+    } else {
+      // Ada variasi tersisa: Geser naik (Shift-Up) ke Slot 1, 2, 3, dst.
+      // Slot 1: Selalu terisi
+      const d1 = remainingSlotsData[0];
+      primaryState.has_variants = true;
+      primaryState.variation_labels.label_tier_1 = d1.label || '';
+      primaryState.same_price_tiers.tier1 = d1.same_price;
+      primaryState.same_cost_tiers.tier1 = d1.same_cost;
+      primaryState.stock_mode_tiers.tier1 = d1.stock_mode;
+
+      let m1Items = d1.items.map(it => ({
+        id: it.id || DB.generateUUID(),
+        name: it.name || '',
+        description: it.description || '',
+        price: it.price !== undefined ? it.price : '',
+        cost_price: it.cost_price !== undefined ? it.cost_price : '',
+        stock: it.stock !== undefined ? it.stock : '',
+        image: it.image || it.image_url || '',
+        image_url: it.image_url || it.image || '',
+        step_multiplier: it.step_multiplier || 1,
+        min_order: it.min_order || 1,
+        max_order: it.max_order !== undefined ? it.max_order : null
+      }));
+      while (m1Items.length < 2) {
+        m1Items.push({
+          id: DB.generateUUID(),
+          name: '',
+          description: '',
+          price: d1.same_price ? (m1Items[0]?.price ?? '') : '',
+          cost_price: d1.same_cost ? (m1Items[0]?.cost_price ?? '') : '',
+          stock: d1.stock_mode === 'unlimited' ? null : (d1.stock_mode === 'same' ? (m1Items[0]?.stock ?? '') : ''),
+          image: '',
+          image_url: '',
+          step_multiplier: 1,
+          min_order: 1,
+          max_order: null
+        });
+      }
+      materialsState = m1Items;
+
+      // Slot 2
+      if (remainingSlotsData.length >= 2) {
+        const d2 = remainingSlotsData[1];
+        primaryState.has_variation_2 = true;
+        primaryState.has_layer_2 = true;
+        primaryState.variation_labels.label_tier_2 = d2.label || '';
+        primaryState.same_price_tiers.main = d2.same_price;
+        primaryState.same_cost_tiers.main = d2.same_cost;
+        primaryState.stock_mode_tiers.main = d2.stock_mode;
+        primaryState.variation_scopes.main = d2.scope || 'umum';
+        primaryState.scope_main = d2.scope || 'umum';
+
+        let f2Items = d2.items.map(it => ({
+          id: it.id || DB.generateUUID(),
+          tier: 'main',
+          name: it.name || '',
+          description: it.description || '',
+          price: it.price !== undefined ? it.price : '',
+          cost_price: it.cost_price !== undefined ? it.cost_price : '',
+          stock: it.stock !== undefined ? it.stock : '',
+          image: it.image || it.image_url || '',
+          image_url: it.image_url || it.image || '',
+          parent_id: (it.parent_id && m1Items.some(m => m.id === it.parent_id)) ? it.parent_id : ''
+        }));
+        while (f2Items.length < 2) {
+          f2Items.push({
+            id: DB.generateUUID(),
+            tier: 'main',
+            name: '',
+            description: '',
+            price: d2.same_price ? (f2Items[0]?.price ?? '') : '',
+            cost_price: d2.same_cost ? (f2Items[0]?.cost_price ?? '') : '',
+            stock: d2.stock_mode === 'unlimited' ? null : (d2.stock_mode === 'same' ? (f2Items[0]?.stock ?? '') : ''),
+            image: '',
+            image_url: '',
+            parent_id: ''
+          });
+        }
+        finishingsState.main = f2Items;
+      } else {
+        primaryState.has_variation_2 = false;
+        primaryState.has_layer_2 = false;
+        primaryState.variation_labels.label_tier_2 = '';
+        primaryState.same_price_tiers.main = false;
+        primaryState.same_cost_tiers.main = false;
+        primaryState.stock_mode_tiers.main = '';
+        finishingsState.main = [];
+      }
+
+      // Slot 3
+      if (remainingSlotsData.length >= 3) {
+        const d3 = remainingSlotsData[2];
+        primaryState.has_variation_3 = true;
+        primaryState.has_layer_3 = true;
+        primaryState.variation_labels.label_extra_1 = d3.label || '';
+        primaryState.same_price_tiers.extra_1 = d3.same_price;
+        primaryState.same_cost_tiers.extra_1 = d3.same_cost;
+        primaryState.stock_mode_tiers.extra_1 = d3.stock_mode;
+        primaryState.variation_scopes.extra_1 = d3.scope || 'umum';
+        primaryState.scope_extra_1 = d3.scope || 'umum';
+
+        let f3Items = d3.items.map(it => ({
+          id: it.id || DB.generateUUID(),
+          tier: 'extra_1',
+          name: it.name || '',
+          description: it.description || '',
+          price: it.price !== undefined ? it.price : '',
+          cost_price: it.cost_price !== undefined ? it.cost_price : '',
+          stock: it.stock !== undefined ? it.stock : '',
+          image: it.image || it.image_url || '',
+          image_url: it.image_url || it.image || '',
+          parent_id: ''
+        }));
+        while (f3Items.length < 2) {
+          f3Items.push({
+            id: DB.generateUUID(),
+            tier: 'extra_1',
+            name: '',
+            description: '',
+            price: d3.same_price ? (f3Items[0]?.price ?? '') : '',
+            cost_price: d3.same_cost ? (f3Items[0]?.cost_price ?? '') : '',
+            stock: d3.stock_mode === 'unlimited' ? null : (d3.stock_mode === 'same' ? (f3Items[0]?.stock ?? '') : ''),
+            image: '',
+            image_url: '',
+            parent_id: ''
+          });
+        }
+        finishingsState.extra_1 = f3Items;
+      } else {
+        primaryState.has_variation_3 = false;
+        primaryState.has_layer_3 = false;
+        primaryState.variation_labels.label_extra_1 = '';
+        primaryState.same_price_tiers.extra_1 = false;
+        primaryState.same_cost_tiers.extra_1 = false;
+        primaryState.stock_mode_tiers.extra_1 = '';
+        finishingsState.extra_1 = [];
+      }
+
+      // Slot 4
+      if (remainingSlotsData.length >= 4) {
+        const d4 = remainingSlotsData[3];
+        primaryState.has_variation_4 = true;
+        primaryState.has_layer_4 = true;
+        primaryState.variation_labels.label_extra_2 = d4.label || '';
+        primaryState.same_price_tiers.extra_2 = d4.same_price;
+        primaryState.same_cost_tiers.extra_2 = d4.same_cost;
+        primaryState.stock_mode_tiers.extra_2 = d4.stock_mode;
+        primaryState.variation_scopes.extra_2 = d4.scope || 'umum';
+        primaryState.scope_extra_2 = d4.scope || 'umum';
+
+        let f4Items = d4.items.map(it => ({
+          id: it.id || DB.generateUUID(),
+          tier: 'extra_2',
+          name: it.name || '',
+          description: it.description || '',
+          price: it.price !== undefined ? it.price : '',
+          cost_price: it.cost_price !== undefined ? it.cost_price : '',
+          stock: it.stock !== undefined ? it.stock : '',
+          image: it.image || it.image_url || '',
+          image_url: it.image_url || it.image || '',
+          parent_id: ''
+        }));
+        while (f4Items.length < 2) {
+          f4Items.push({
+            id: DB.generateUUID(),
+            tier: 'extra_2',
+            name: '',
+            description: '',
+            price: d4.same_price ? (f4Items[0]?.price ?? '') : '',
+            cost_price: d4.same_cost ? (f4Items[0]?.cost_price ?? '') : '',
+            stock: d4.stock_mode === 'unlimited' ? null : (d4.stock_mode === 'same' ? (f4Items[0]?.stock ?? '') : ''),
+            image: '',
+            image_url: '',
+            parent_id: ''
+          });
+        }
+        finishingsState.extra_2 = f4Items;
+      } else {
+        primaryState.has_variation_4 = false;
+        primaryState.has_layer_4 = false;
+        primaryState.variation_labels.label_extra_2 = '';
+        primaryState.same_price_tiers.extra_2 = false;
+        primaryState.same_cost_tiers.extra_2 = false;
+        primaryState.stock_mode_tiers.extra_2 = '';
+        finishingsState.extra_2 = [];
+      }
+
+      const singleSettings = document.getElementById('single-product-purchase-settings');
+      if (singleSettings) {
+        singleSettings.classList.add('hidden');
+      }
+    }
+
+    // Sinkronkan preview test state jika item terpilih berubah
+    if (typeof previewTestState !== 'undefined') {
+      if (materialsState && materialsState.length > 0) {
+        if (!materialsState.some(m => m.id === previewTestState.selectedTier1Id)) {
+          previewTestState.selectedTier1Id = materialsState[0].id;
+        }
+      } else {
+        previewTestState.selectedTier1Id = null;
+      }
+      if (finishingsState.main && finishingsState.main.length > 0) {
+        if (!finishingsState.main.some(f => f.id === previewTestState.selectedTier2Id)) {
+          previewTestState.selectedTier2Id = finishingsState.main[0].id;
+        }
+      } else {
+        previewTestState.selectedTier2Id = null;
+      }
+    }
+
+    // 3. Render ulang bagian kartu variasi & pricing model section
+    const container = document.getElementById('pricing-model-interactive-container');
+    if (container && typeof renderPricingModelSection === 'function') {
+      container.innerHTML = renderPricingModelSection();
+    }
+    if (typeof bindStep2InteractiveEvents === 'function') {
+      bindStep2InteractiveEvents();
+    }
+
+    // 4. Bangun ulang matriks kombinasi
+    rebuildCombinationMatrix();
+
+    // 5. Perbarui validasi judul kembar & rekomendasi combobox
+    if (typeof refreshVariationTitleDuplicateErrors === 'function') {
+      refreshVariationTitleDuplicateErrors();
+    }
+    if (typeof updateVariationTitleComboboxRecommendations === 'function') {
+      updateVariationTitleComboboxRecommendations();
+    }
+
+    // 6. Panggil updateProductCardLivePreview()
+    if (typeof updateProductCardLivePreview === 'function') {
+      updateProductCardLivePreview();
+    }
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  }
 
     // BIND EVENT INTERAKTIF STEP 2
   function bindStep2InteractiveEvents() {
@@ -8023,40 +8442,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    // Tombol Tutup Variasi 1 (Kembali ke Produk Tunggal & Reset Varian Turunan)
-    const btnCloseVar1 = document.getElementById('btn-close-variasi-1');
+    // Tombol Tutup Variasi 1 (Pergeseran Otomatis / Shift-Up)
+    const btnCloseVar1 = document.getElementById('btn-close-var-tier-1') || document.getElementById('btn-close-variasi-1');
     if (btnCloseVar1) {
-      btnCloseVar1.onclick = () => {
-        primaryState.has_variants = false;
-        primaryState.has_variation_2 = false;
-        primaryState.has_layer_2 = false;
-        finishingsState.main = [];
-        primaryState.has_variation_3 = false;
-        primaryState.has_layer_3 = false;
-        finishingsState.extra_1 = [];
-        primaryState.has_variation_4 = false;
-        primaryState.has_layer_4 = false;
-        finishingsState.extra_2 = [];
-
-        materialsState = [{
-          id: DB.generateUUID(),
-          name: primaryState.name || 'Produk Standar',
-          price: materialsState[0]?.price || 0,
-          cost_price: materialsState[0]?.cost_price || 0,
-          step_multiplier: 1
-        }];
-
-        const singleSettings = document.getElementById('single-product-purchase-settings');
-        if (singleSettings && primaryState.pricing_model === 'normal') {
-          singleSettings.classList.remove('hidden');
-          singleSettings.className = 'space-y-6';
-        }
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
+      btnCloseVar1.onclick = () => closeAndShiftVariationTier(1);
     }
 
     // Single Price & Cost Inputs (Produk Tunggal)
@@ -8280,26 +8669,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    // Tutup Variasi 2 (Cascade nonaktifkan 3 & 4)
-    const btnCloseVar2 = document.getElementById('btn-close-variasi-2');
+    // Tutup Variasi 2 (Pergeseran Otomatis / Shift-Up)
+    const btnCloseVar2 = document.getElementById('btn-close-variasi-2') || document.getElementById('btn-close-var-tier-2');
     if (btnCloseVar2) {
-      btnCloseVar2.onclick = () => {
-        primaryState.has_variation_2 = false;
-        primaryState.has_layer_2 = false;
-        finishingsState.main = [];
-        primaryState.has_variation_3 = false;
-        primaryState.has_layer_3 = false;
-        finishingsState.extra_1 = [];
-        primaryState.has_variation_4 = false;
-        primaryState.has_layer_4 = false;
-        finishingsState.extra_2 = [];
-
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
+      btnCloseVar2.onclick = () => closeAndShiftVariationTier(2);
     }
 
     // Pemicu Variasi 3
@@ -8322,23 +8695,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    // Tutup Variasi 3 (Cascade nonaktifkan 4)
-    const btnCloseVar3 = document.getElementById('btn-close-variasi-3');
+    // Tutup Variasi 3 (Pergeseran Otomatis / Shift-Up)
+    const btnCloseVar3 = document.getElementById('btn-close-variasi-3') || document.getElementById('btn-close-var-tier-3');
     if (btnCloseVar3) {
-      btnCloseVar3.onclick = () => {
-        primaryState.has_variation_3 = false;
-        primaryState.has_layer_3 = false;
-        finishingsState.extra_1 = [];
-        primaryState.has_variation_4 = false;
-        primaryState.has_layer_4 = false;
-        finishingsState.extra_2 = [];
-
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
+      btnCloseVar3.onclick = () => closeAndShiftVariationTier(3);
     }
 
     // Pemicu Variasi 4
@@ -8361,21 +8721,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    // Tutup Variasi 4
-    const btnCloseVar4 = document.getElementById('btn-close-variasi-4');
+    // Tutup Variasi 4 (Pergeseran Otomatis / Shift-Up)
+    const btnCloseVar4 = document.getElementById('btn-close-variasi-4') || document.getElementById('btn-close-var-tier-4');
     if (btnCloseVar4) {
-      btnCloseVar4.onclick = () => {
-        primaryState.has_variation_4 = false;
-        primaryState.has_layer_4 = false;
-        finishingsState.extra_2 = [];
-
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
+      btnCloseVar4.onclick = () => closeAndShiftVariationTier(4);
     }
+
+    // Delegasi Event untuk seluruh tombol Tutup Variasi (.btn-close-variation-card & .btn-remove-variation-tier)
+    document.querySelectorAll('.btn-close-variation-card, .btn-remove-variation-tier').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const tierIdx = parseInt(btn.getAttribute('data-tier-index') || btn.getAttribute('data-tier-num'), 10);
+        if (!isNaN(tierIdx)) {
+          closeAndShiftVariationTier(tierIdx);
+        }
+      };
+    });
 
     // Pemicu Layanan Extras (Berlaku untuk Mode Variasi maupun Mode Normal / Produk Tunggal)
     const triggerExtraBtns = document.querySelectorAll('#btn-trigger-extra-service, #btn-trigger-extra-service-normal, .btn-trigger-extra-action');
@@ -8974,6 +9336,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
     const refreshCombinationMatrixDOM = refreshCombinationMatrixTable;
+    rebuildCombinationMatrix = refreshCombinationMatrixTable;
 
     function bindCombinationMatrixEvents() {
       // 1. Upload Foto Variasi 1 dari Tabel Kombinasi

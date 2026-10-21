@@ -1206,6 +1206,13 @@ input.toggle-same-cost:checked ~ div::after {
   scroll-margin-top: 80px;
 }
 
+.btn-remove-variation-tier {
+  transition: color 0.15s ease-in-out, transform 0.1s ease-in-out;
+}
+.btn-remove-variation-tier:active {
+  transform: scale(0.92);
+}
+
 /* --------------------------------------------------------------------------
    VARIATION ROW PROFIT ESTIMATION & MOBILE STYLING
    -------------------------------------------------------------------------- */
