@@ -1252,19 +1252,28 @@ input.toggle-same-cost:checked ~ div::after {
 }
 
 /* --------------------------------------------------------------------------
-   CUSTOM DIMENSION (P x L) INPUTS
+   CUSTOM DIMENSION (P x L) INPUTS & SANDBOX
    -------------------------------------------------------------------------- */
+.option-dim-calc-wrapper {
+  transition: all 0.15s ease-in-out;
+}
 .input-shopee-dim-p::-webkit-outer-spin-button,
 .input-shopee-dim-p::-webkit-inner-spin-button,
 .input-shopee-dim-l::-webkit-outer-spin-button,
-.input-shopee-dim-l::-webkit-inner-spin-button {
+.input-shopee-dim-l::-webkit-inner-spin-button,
+.input-option-dim-add::-webkit-outer-spin-button,
+.input-option-dim-add::-webkit-inner-spin-button,
+#sandbox-input-dim-p::-webkit-outer-spin-button,
+#sandbox-input-dim-p::-webkit-inner-spin-button,
+#sandbox-input-dim-l::-webkit-outer-spin-button,
+#sandbox-input-dim-l::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 .input-shopee-dim-p,
-.input-shopee-dim-l {
+.input-shopee-dim-l,
+.input-option-dim-add,
+#sandbox-input-dim-p,
+#sandbox-input-dim-l {
   -moz-appearance: textfield;
 }
-
-
-
