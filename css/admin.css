@@ -1155,3 +1155,14 @@ input.toggle-same-cost:checked ~ div::after {
 .custom-combobox-popover {
   z-index: 60 !important;
 }
+
+/* Custom Label Clear Button (X) */
+.btn-clear-custom-label {
+  display: none;
+}
+.btn-clear-custom-label.flex {
+  display: flex !important;
+}
+.btn-clear-custom-label:hover {
+  color: #0f172a;
+}
