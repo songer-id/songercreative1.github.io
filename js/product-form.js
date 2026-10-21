@@ -27,6 +27,7 @@ const ProductForm = (() => {
     selectedTier4Id: null,
     selectedExtras: {},
     extraQty: {},
+    extrasQty: {},
     qty: 1
   };
 
@@ -2291,6 +2292,9 @@ const ProductForm = (() => {
     if (!previewTestState.extraQty) {
       previewTestState.extraQty = {};
     }
+    if (!previewTestState.extrasQty) {
+      previewTestState.extrasQty = previewTestState.extraQty;
+    }
     const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
     const isAllVariationsSelected = checkAllVariationsSelected();
 
@@ -2346,7 +2350,7 @@ const ProductForm = (() => {
         const xt = String(ex.extra_type || '').toLowerCase();
         const price = parseFloat(ex.price) || 0;
         if (xt === 'qty') {
-          const qty = parseInt(previewTestState.extraQty?.[exId]) || 0;
+          const qty = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
           if (qty > 0) {
             extrasActivePrice += price * qty;
           }
@@ -2481,7 +2485,8 @@ const ProductForm = (() => {
       const exId = ex.id || `ex_${idx}`;
       const xt = String(ex.extra_type || '').toLowerCase();
       if (xt === 'qty') {
-        return (previewTestState.extraQty?.[exId] || 0) > 0;
+        const q = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
+        return q > 0;
       }
       return Boolean(previewTestState.selectedExtras[exId]);
     });
@@ -2521,7 +2526,7 @@ const ProductForm = (() => {
               const isNoneOption = Boolean(ex.is_default_none);
               const xt = String(ex.extra_type || '').toLowerCase();
               const isQtyType = !isNoneOption && xt === 'qty';
-              const extraItemQty = parseInt(previewTestState.extraQty?.[exId]) || 0;
+              const extraItemQty = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
               const isSelected = Boolean(previewTestState.selectedExtras[exId]);
               const isItemActive = isQtyType ? (extraItemQty > 0) : isSelected;
 
@@ -2614,6 +2619,11 @@ const ProductForm = (() => {
               <input type="number" id="input-preview-test-qty" class="input-preview-test-qty w-12 h-7 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
               <button type="button" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">+</button>
             </div>
+          </div>
+
+          <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
+            <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
+            <span class="text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice * curQty).toLocaleString('id-ID')}</span>
           </div>
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
@@ -2747,6 +2757,11 @@ const ProductForm = (() => {
               <input type="number" id="input-preview-test-qty" class="input-preview-test-qty w-12 h-7 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
               <button type="button" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">+</button>
             </div>
+          </div>
+
+          <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
+            <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
+            <span class="text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice * curQty).toLocaleString('id-ID')}</span>
           </div>
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
@@ -3201,27 +3216,60 @@ const ProductForm = (() => {
         const noneItem = (finishingsState.extra_3 || []).find(ex => ex && ex.is_default_none);
         const noneId = noneItem?.id;
 
-        // 1. Klik trigger / radio (pilihan_ganda dan opsi Tanpa, atau mengaktifkan qty 1x)
+        function getExtraQty(id) {
+          if (!previewTestState.extrasQty) previewTestState.extrasQty = previewTestState.extraQty || {};
+          if (!previewTestState.extraQty) previewTestState.extraQty = previewTestState.extrasQty;
+          return parseInt((previewTestState.extrasQty && previewTestState.extrasQty[id] !== undefined) ? previewTestState.extrasQty[id] : (previewTestState.extraQty?.[id] || 0)) || 0;
+        }
+
+        function setExtraQty(id, val) {
+          if (!previewTestState.extrasQty) previewTestState.extrasQty = {};
+          if (!previewTestState.extraQty) previewTestState.extraQty = previewTestState.extrasQty;
+          if (!previewTestState.selectedExtras) previewTestState.selectedExtras = {};
+          const num = Math.max(0, parseInt(val) || 0);
+          previewTestState.extrasQty[id] = num;
+          previewTestState.extraQty[id] = num;
+          if (num > 0) {
+            previewTestState.selectedExtras[id] = true;
+            if (noneId) delete previewTestState.selectedExtras[noneId];
+          } else {
+            delete previewTestState.selectedExtras[id];
+            const hasOther = Object.entries(previewTestState.selectedExtras).some(([k, v]) => v && k !== noneId);
+            const hasOtherQty = Object.values(previewTestState.extrasQty).some(q => q > 0);
+            if (!hasOther && !hasOtherQty && noneId) {
+              previewTestState.selectedExtras[noneId] = true;
+            }
+          }
+          return num;
+        }
+
+        // 1. Klik trigger / radio (pilihan_ganda dan opsi Tanpa, atau toggle qty 1 / 0)
         container.querySelectorAll('.extra-item-trigger, .btn-extra-radio').forEach(el => {
           el.onclick = (e) => {
             e.preventDefault();
             const id = el.getAttribute('data-id');
             const type = el.getAttribute('data-type');
             if (!previewTestState.selectedExtras) previewTestState.selectedExtras = {};
-            if (!previewTestState.extraQty) previewTestState.extraQty = {};
-
             if (id === noneId) {
               previewTestState.selectedExtras = { [noneId]: true };
               previewTestState.extraQty = {};
+              previewTestState.extrasQty = {};
             } else if (type === 'qty') {
-              if ((previewTestState.extraQty[id] || 0) === 0) {
-                previewTestState.extraQty[id] = 1;
-                if (noneId) delete previewTestState.selectedExtras[noneId];
+              const cur = getExtraQty(id);
+              if (cur <= 0) {
+                setExtraQty(id, 1);
+              } else {
+                setExtraQty(id, 0);
               }
             } else {
               // pilihan_ganda
               if (noneId) delete previewTestState.selectedExtras[noneId];
               previewTestState.selectedExtras[id] = !previewTestState.selectedExtras[id];
+              const hasAny = Object.entries(previewTestState.selectedExtras).some(([k, v]) => v && k !== noneId);
+              const hasQty = Object.values(previewTestState.extrasQty || {}).some(q => q > 0);
+              if (!hasAny && !hasQty && noneId) {
+                previewTestState.selectedExtras[noneId] = true;
+              }
             }
             updateProductCardLivePreview();
           };
@@ -3233,9 +3281,8 @@ const ProductForm = (() => {
             e.preventDefault();
             e.stopPropagation();
             const id = btn.getAttribute('data-id');
-            if (!previewTestState.extraQty) previewTestState.extraQty = {};
-            const cur = previewTestState.extraQty[id] || 0;
-            previewTestState.extraQty[id] = Math.max(0, cur - 1);
+            const cur = getExtraQty(id);
+            setExtraQty(id, cur - 1);
             updateProductCardLivePreview();
           };
         });
@@ -3246,10 +3293,8 @@ const ProductForm = (() => {
             e.preventDefault();
             e.stopPropagation();
             const id = btn.getAttribute('data-id');
-            if (!previewTestState.extraQty) previewTestState.extraQty = {};
-            const cur = previewTestState.extraQty[id] || 0;
-            previewTestState.extraQty[id] = cur + 1;
-            if (noneId) delete previewTestState.selectedExtras[noneId];
+            const cur = getExtraQty(id);
+            setExtraQty(id, cur + 1);
             updateProductCardLivePreview();
           };
         });
@@ -3259,20 +3304,25 @@ const ProductForm = (() => {
           inp.onclick = (e) => e.stopPropagation();
           inp.oninput = (e) => {
             const id = inp.getAttribute('data-id');
-            let val = parseInt(e.target.value);
-            if (!previewTestState.extraQty) previewTestState.extraQty = {};
-            if (!isNaN(val) && val >= 0) {
-              previewTestState.extraQty[id] = val;
-              if (val > 0 && noneId) delete previewTestState.selectedExtras[noneId];
+            const raw = e.target.value;
+            if (raw === '') {
+              setExtraQty(id, 0);
+            } else {
+              const val = parseInt(raw);
+              if (!isNaN(val)) {
+                setExtraQty(id, val);
+              }
             }
+            updateProductCardLivePreview();
           };
           inp.onchange = inp.onblur = (e) => {
             const id = inp.getAttribute('data-id');
-            let val = parseInt(e.target.value);
-            if (isNaN(val) || val < 0) val = 0;
-            if (!previewTestState.extraQty) previewTestState.extraQty = {};
-            previewTestState.extraQty[id] = val;
-            if (val > 0 && noneId) delete previewTestState.selectedExtras[noneId];
+            const val = parseInt(e.target.value);
+            if (isNaN(val) || val <= 0) {
+              setExtraQty(id, 0);
+            } else {
+              setExtraQty(id, val);
+            }
             updateProductCardLivePreview();
           };
           inp.onkeydown = (e) => {
@@ -3378,6 +3428,63 @@ const ProductForm = (() => {
     const previewContainer = document.getElementById('card-live-preview-box') || document.getElementById('product-card-preview-container');
     const mobilePreviewContainer = document.getElementById('mobile-card-preview-container');
     if (!previewContainer && !mobilePreviewContainer) return;
+
+    // KUNCI POSISI SCROLL: Simpan posisi scroll dari semua kontainer scrollable pratinjau sebelum innerHTML diperbarui
+    const scrollMap = new Map();
+    const scrollSelectors = [
+      '#desktop-preview-sidebar',
+      '#desktop-preview-sidebar > .flex-1.overflow-y-auto',
+      '#desktop-preview-sidebar .overflow-y-auto',
+      '#mobile-preview-sheet',
+      '#mobile-preview-sheet > .overflow-y-auto',
+      '#mobile-preview-sheet .overflow-y-auto',
+      '.mini-pdp-card > .overflow-y-auto',
+      '.mini-pdp-card .overflow-y-auto',
+      '.mini-pdp-drawer-sheet > div > .overflow-y-auto',
+      '.mini-pdp-drawer-sheet .overflow-y-auto',
+      '#card-live-preview-box',
+      '#product-card-preview-container',
+      '#mobile-card-preview-container'
+    ];
+
+    scrollSelectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach((el, idx) => {
+        const key = `${selector}__${idx}`;
+        scrollMap.set(key, { top: el.scrollTop, left: el.scrollLeft });
+      });
+    });
+
+    const activeEl = document.activeElement;
+    let focusedExtraId = null;
+    let selStart = null, selEnd = null;
+    if (activeEl && activeEl.classList.contains('input-extra-qty')) {
+      focusedExtraId = activeEl.getAttribute('data-id');
+      selStart = activeEl.selectionStart;
+      selEnd = activeEl.selectionEnd;
+    }
+
+    const restoreAllScrolls = () => {
+      scrollSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach((el, idx) => {
+          const key = `${selector}__${idx}`;
+          if (scrollMap.has(key)) {
+            const pos = scrollMap.get(key);
+            el.scrollTop = pos.top;
+            el.scrollLeft = pos.left;
+          }
+        });
+      });
+      if (focusedExtraId) {
+        document.querySelectorAll(`.input-extra-qty[data-id="${focusedExtraId}"]`).forEach(inp => {
+          inp.focus();
+          try {
+            if (selStart !== null && selEnd !== null) {
+              inp.setSelectionRange(selStart, selEnd);
+            }
+          } catch (_) {}
+        });
+      }
+    };
 
     const variantRadio = document.querySelector('input[name="card_variant_radio"]:checked');
     const variant = variantRadio ? variantRadio.value : (primaryState.card_variant || '');
@@ -4287,6 +4394,8 @@ const ProductForm = (() => {
       }
       if (window.lucide) window.lucide.createIcons();
       bindMiniPdpInteractiveEvents();
+      restoreAllScrolls();
+      requestAnimationFrame(restoreAllScrolls);
       return;
     }
 
@@ -4296,6 +4405,8 @@ const ProductForm = (() => {
       mobilePreviewBox.innerHTML = cardHtml;
     }
     if (window.lucide) window.lucide.createIcons();
+    restoreAllScrolls();
+    requestAnimationFrame(restoreAllScrolls);
   }
 
   function renderGalleryThumbnails() {
@@ -4744,28 +4855,19 @@ const ProductForm = (() => {
                     id="input-normal-max-order" 
                     class="custom-combobox-input w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white text-slate-800" 
                     placeholder="Ketik atau pilih" 
-                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited') ? 'Tanpa Max Order' : primaryState.max_order}" 
+                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited') ? 'Unlimited' : primaryState.max_order}" 
                     autocomplete="off" 
                   />
                   <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
                     <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
                     <div class="max-h-48 overflow-y-auto">
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Tanpa Max Order">
-                        <span>Tanpa Max Order</span>
-                      </div>
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="10">
-                        <span>10</span>
-                      </div>
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="50">
-                        <span>50</span>
-                      </div>
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="100">
-                        <span>100</span>
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Unlimited">
+                        <span>Unlimited</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <span class="text-[10px] text-slate-400 block">Ketik angka maks. batas pesanan atau pilih "Tanpa Max Order"</span>
+                <span class="text-[10px] text-slate-400 block">Ketik angka maks. batas pesanan atau pilih "Unlimited"</span>
               </div>
 
               <hr class="border-slate-100" />
@@ -5181,6 +5283,19 @@ const ProductForm = (() => {
         document.querySelectorAll('.custom-combobox-popover').forEach(p => {
           if (p !== popover) p.classList.add('hidden');
         });
+        // Smart flip: jika berada di baris-baris bawah atau dekat dasar viewport
+        const rect = wrapper.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const tr = wrapper.closest('tr');
+        const isTable = Boolean(wrapper.closest('#combination-matrix-section'));
+        const isNearBottomRow = tr && (!tr.nextElementSibling || !tr.nextElementSibling.nextElementSibling);
+        if ((spaceBelow < 90 && rect.top > 80) || (isTable && isNearBottomRow)) {
+          popover.classList.remove('top-full', 'mt-1');
+          popover.classList.add('bottom-full', 'mb-1');
+        } else {
+          popover.classList.remove('bottom-full', 'mb-1');
+          popover.classList.add('top-full', 'mt-1');
+        }
         popover.classList.remove('hidden');
       };
 
@@ -5546,7 +5661,7 @@ const ProductForm = (() => {
                     min="0"
                     value="${firstMat.price !== undefined && firstMat.price !== null && firstMat.price !== '' ? firstMat.price : ''}" 
                     class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-emerald-500 outline-none bg-white"
-                    placeholder="Minimal 100"
+                    placeholder="Harga Jual"
                   />
                   <div id="single-price-error-msg" class="field-error-msg hidden mt-1 rounded"></div>
                 </div>
@@ -5560,8 +5675,8 @@ const ProductForm = (() => {
                     min="0"
                     value="${firstMat.cost_price !== undefined && firstMat.cost_price !== null && firstMat.cost_price !== '' ? firstMat.cost_price : ''}" 
                     class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-emerald-500 outline-none bg-white"
-                    placeholder='Tulis Angka "0" Jika tidak memberikan harga'
-                    title='Tulis Angka "0" Jika tidak memberikan harga'
+                    placeholder="Biaya Modal"
+                    title="Biaya Modal"
                   />
                   <div id="single-cost-error-msg" class="field-error-msg hidden mt-1 rounded"></div>
                 </div>
@@ -5877,7 +5992,7 @@ const ProductForm = (() => {
     const rows = displayMaterials.map((mat, idx) => {
       const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
       const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
-      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '' && mat.max_order !== 'Unlimited') ? mat.max_order : '';
+      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Tanpa Batas' ? 'Unlimited' : mat.max_order) : '';
 
       function renderScopeCell(tier) {
         const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
@@ -5946,23 +6061,11 @@ const ProductForm = (() => {
                 placeholder="Ketik atau pilih" 
                 autocomplete="off" 
               />
-              <div class="custom-combobox-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-44 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+              <div class="custom-combobox-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-36 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
                 <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
                 <div class="max-h-48 overflow-y-auto">
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Tanpa Batas">
-                    <span>Tanpa Batas</span>
-                  </div>
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="10">
-                    <span>10</span>
-                  </div>
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="50">
-                    <span>50</span>
-                  </div>
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="100">
-                    <span>100</span>
-                  </div>
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="500">
-                    <span>500</span>
+                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Unlimited">
+                    <span>Unlimited</span>
                   </div>
                 </div>
               </div>
@@ -6526,14 +6629,41 @@ const ProductForm = (() => {
         return false;
       }
       const numVal = parseFloat(val);
-      if (isNaN(numVal) || numVal < 100) {
-        if (isBlur || (!isNaN(numVal) && numVal < 100 && val.length >= 3)) {
-          setError('Nilai minimal 100');
+      if (isNaN(numVal) || numVal < 0) {
+        if (isBlur) {
+          setError('Wajib di isi');
           return false;
         }
         return false;
       }
       setError('');
+
+      // Periksa ulang HPP pada baris yang sama terhadap harga jual ini
+      const costInp = row.querySelector('input[data-field="cost_price"]');
+      if (costInp && !costInp.readOnly) {
+        const costValStr = (costInp.value || '').trim();
+        if (costValStr !== '') {
+          const costNum = parseFloat(costValStr);
+          const costWrapper = costInp.closest('.flex-col') || costInp.parentElement;
+          const costErrorEl = costWrapper ? costWrapper.querySelector('.field-error-msg') : null;
+          if (!isNaN(costNum) && numVal > 0 && costNum > numVal) {
+            costInp.classList.add('text-red-600', 'font-bold');
+            costInp.classList.remove('text-slate-700', 'text-slate-900');
+            if (costErrorEl) {
+              costErrorEl.textContent = 'Hpp melebihi Harga Jual';
+              costErrorEl.classList.remove('hidden');
+            }
+          } else {
+            costInp.classList.remove('text-red-600', 'font-bold');
+            costInp.classList.add('text-slate-700');
+            if (costErrorEl && costErrorEl.textContent.includes('Hpp')) {
+              costErrorEl.textContent = '';
+              costErrorEl.classList.add('hidden');
+            }
+          }
+        }
+      }
+
       return true;
     }
 
@@ -6543,22 +6673,41 @@ const ProductForm = (() => {
         return true;
       }
       if (val === '') {
+        inp.classList.remove('text-red-600', 'font-bold');
+        inp.classList.add('text-slate-700');
         if (isBlur) {
-          setError('Wajib di isi');
+          setError('Wajib Di Isi Min. "0"');
           return false;
         }
         return false;
       }
       const numVal = parseFloat(val);
       if (isNaN(numVal) || numVal < 0) {
+        inp.classList.remove('text-red-600', 'font-bold');
+        inp.classList.add('text-slate-700');
         if (isBlur) {
-          setError('Wajib di isi');
+          setError('Wajib Di Isi Min. "0"');
           return false;
         }
         return false;
       }
-      setError('');
-      return true;
+
+      // Validasi Real-Time HPP > Harga Jual
+      const priceInp = row.querySelector('input[data-field="price"]');
+      const priceValStr = (priceInp?.value || '').trim();
+      const priceNum = parseFloat(priceValStr);
+
+      if (!isNaN(priceNum) && priceNum > 0 && numVal > priceNum) {
+        inp.classList.add('text-red-600', 'font-bold');
+        inp.classList.remove('text-slate-700', 'text-slate-900');
+        setError('Hpp melebihi Harga Jual');
+        return false;
+      } else {
+        inp.classList.remove('text-red-600', 'font-bold');
+        inp.classList.add('text-slate-700');
+        setError('');
+        return true;
+      }
     }
 
     if (field === 'stock') {
@@ -6709,7 +6858,7 @@ const ProductForm = (() => {
                 min="0" 
                 data-field="cost_price" 
                 value="${costVal}" 
-                placeholder='Tulis Angka "0" Jika tidak memberikan harga' 
+                placeholder="Biaya Modal" 
                 ${isSameCost && idx > 0 ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
                 class="mat-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
@@ -6856,7 +7005,7 @@ const ProductForm = (() => {
                   min="0" 
                   data-field="cost_price" 
                   value="${isLastRow ? 0 : costVal}" 
-                  placeholder='Tulis Angka "0" Jika tidak memberikan harga' 
+                  placeholder="Biaya Modal" 
                   ${(isLastRow || (isSameCost && idx > 0)) ? 'readonly' : ''} 
                   style="border-radius: 0px !important;" 
                   class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50/30'}" 
@@ -6961,7 +7110,7 @@ const ProductForm = (() => {
                 min="0" 
                 data-field="cost_price" 
                 value="${costVal}" 
-                placeholder='Tulis Angka "0" Jika tidak memberikan harga' 
+                placeholder="Biaya Modal" 
                 ${isSameCost && idx > 0 ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
                 class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
@@ -7582,14 +7731,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         return false;
       }
       const num = parseFloat(raw);
-      if (isNaN(num) || num < 100) {
-        if (isBlur || (!isNaN(num) && num < 100 && raw.length >= 3)) {
-          if (singlePriceErr) { singlePriceErr.textContent = 'Nilai minimal 100'; singlePriceErr.classList.remove('hidden'); }
+      if (isNaN(num) || num < 0) {
+        if (isBlur) {
+          if (singlePriceErr) { singlePriceErr.textContent = 'Wajib di isi'; singlePriceErr.classList.remove('hidden'); }
           return false;
         }
         return false;
       }
       if (singlePriceErr) { singlePriceErr.textContent = ''; singlePriceErr.classList.add('hidden'); }
+      validateSingleCost(false);
       return true;
     }
 
@@ -7597,22 +7747,44 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (!singleCost) return true;
       const raw = (singleCost.value || '').trim();
       if (raw === '') {
+        singleCost.classList.remove('text-red-600', 'font-bold');
+        singleCost.classList.add('text-slate-900');
         if (isBlur) {
-          if (singleCostErr) { singleCostErr.textContent = 'Wajib di isi'; singleCostErr.classList.remove('hidden'); }
+          if (singleCostErr) { singleCostErr.textContent = 'Wajib Di Isi Min. "0"'; singleCostErr.classList.remove('hidden'); }
           return false;
         }
         return false;
       }
       const num = parseFloat(raw);
       if (isNaN(num) || num < 0) {
+        singleCost.classList.remove('text-red-600', 'font-bold');
+        singleCost.classList.add('text-slate-900');
         if (isBlur) {
-          if (singleCostErr) { singleCostErr.textContent = 'Wajib di isi'; singleCostErr.classList.remove('hidden'); }
+          if (singleCostErr) { singleCostErr.textContent = 'Wajib Di Isi Min. "0"'; singleCostErr.classList.remove('hidden'); }
           return false;
         }
         return false;
       }
-      if (singleCostErr) { singleCostErr.textContent = ''; singleCostErr.classList.add('hidden'); }
-      return true;
+
+      // Validasi Real-Time HPP > Harga Jual
+      const pVal = parseFloat(singlePrice?.value || '0');
+      if (!isNaN(pVal) && pVal > 0 && num > pVal) {
+        singleCost.classList.add('text-red-600', 'font-bold');
+        singleCost.classList.remove('text-slate-900');
+        if (singleCostErr) {
+          singleCostErr.textContent = 'Hpp melebihi Harga Jual';
+          singleCostErr.classList.remove('hidden');
+        }
+        return false;
+      } else {
+        singleCost.classList.remove('text-red-600', 'font-bold');
+        singleCost.classList.add('text-slate-900');
+        if (singleCostErr) {
+          singleCostErr.textContent = '';
+          singleCostErr.classList.add('hidden');
+        }
+        return true;
+      }
     }
 
     function updateSingleMargin() {
@@ -8445,7 +8617,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (!raw) {
               item.max_order = null;
             } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
-              item.max_order = 'Tanpa Batas';
+              item.max_order = 'Unlimited';
             } else {
               item.max_order = parseInt(raw) || null;
             }
@@ -8456,9 +8628,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const item = materialsState.find(m => m.id === matId);
           if (item) {
             const raw = (inp.value || '').trim();
-            if (raw === '0') {
-              inp.value = 'Tanpa Batas';
-              item.max_order = 'Tanpa Batas';
+            if (raw === '0' || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw.toLowerCase() === 'unlimited') {
+              inp.value = 'Unlimited';
+              item.max_order = 'Unlimited';
             }
           }
         };
@@ -8887,8 +9059,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
       };
       normalMaxInp.onblur = (e) => {
-        if (!primaryState.max_order || primaryState.max_order === 0) {
-          normalMaxInp.value = 'Tanpa Max Order';
+        if (!primaryState.max_order || primaryState.max_order === 0 || String(primaryState.max_order).toLowerCase() === 'unlimited' || String(primaryState.max_order).toLowerCase() === 'tanpa max order') {
+          normalMaxInp.value = 'Unlimited';
         }
       };
     }
@@ -11458,14 +11630,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // 2. Validasi Step 2: Informasi Penjualan
     if (primaryState.pricing_model === 'normal' && !primaryState.has_variants) {
       const firstMat = materialsState[0];
-      const pVal = parseFloat(firstMat?.price);
-      if (isNaN(pVal) || pVal < 100) {
-        errors.push('Harga Jual produk wajib diisi dengan nilai minimal 100.');
+      const pRaw = (firstMat?.price !== undefined && firstMat?.price !== null) ? String(firstMat.price).trim() : '';
+      const pVal = parseFloat(pRaw);
+      if (pRaw === '' || isNaN(pVal) || pVal < 0) {
+        errors.push('Harga Jual produk wajib diisi.');
         validateSinglePrice(true);
       }
-      const cVal = firstMat?.cost_price;
-      if (cVal === '' || cVal === undefined || cVal === null || isNaN(parseFloat(cVal)) || parseFloat(cVal) < 0) {
-        errors.push('Modal/HPP produk wajib diisi (tulis angka 0 jika tanpa harga/modal).');
+      const cRaw = (firstMat?.cost_price !== undefined && firstMat?.cost_price !== null) ? String(firstMat.cost_price).trim() : '';
+      const cVal = parseFloat(cRaw);
+      if (cRaw === '' || isNaN(cVal) || cVal < 0) {
+        errors.push('Modal/HPP produk wajib diisi (minimal "0").');
+        validateSingleCost(true);
+      } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
+        errors.push('Hpp melebihi Harga Jual produk.');
         validateSingleCost(true);
       }
       if (!primaryState.is_unlimited_stock) {
@@ -11500,13 +11677,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             errors.push(`Variasi 1: Nama opsi "${m.name}" kembar / duplikat.`);
           }
 
-          const pNum = parseFloat(m.price);
-          if (isNaN(pNum) || pNum < 100) {
-            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Harga jual wajib diisi minimal 100.`);
+          const pRaw = (m.price !== undefined && m.price !== null) ? String(m.price).trim() : '';
+          const pNum = parseFloat(pRaw);
+          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Harga jual wajib diisi.`);
           }
 
-          if (m.cost_price === '' || m.cost_price === undefined || m.cost_price === null || isNaN(parseFloat(m.cost_price)) || parseFloat(m.cost_price) < 0) {
-            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Modal/HPP wajib diisi (tulis angka 0 jika tanpa harga/modal).`);
+          const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
+          const cNum = parseFloat(cRaw);
+          if (cRaw === '' || isNaN(cNum) || cNum < 0) {
+            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Modal/HPP wajib diisi (minimal "0").`);
+          } else if (!isNaN(pNum) && pNum > 0 && cNum > pNum) {
+            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Hpp melebihi Harga Jual.`);
           }
 
           const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
@@ -11549,13 +11731,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             errors.push(`${label} (Opsi ${f.name || idx + 1}): Jenis input wajib dipilih.`);
           }
 
-          const pNum = parseFloat(f.price);
-          if (isNaN(pNum) || pNum < 100) {
-            errors.push(`${label} (Opsi ${f.name || idx + 1}): Harga satuan/jual wajib diisi minimal 100.`);
+          const pRaw = (f.price !== undefined && f.price !== null) ? String(f.price).trim() : '';
+          const pNum = parseFloat(pRaw);
+          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+            errors.push(`${label} (Opsi ${f.name || idx + 1}): Harga satuan/jual wajib diisi.`);
           }
 
-          if (f.cost_price === '' || f.cost_price === undefined || f.cost_price === null || isNaN(parseFloat(f.cost_price)) || parseFloat(f.cost_price) < 0) {
-            errors.push(`${label} (Opsi ${f.name || idx + 1}): Modal/HPP wajib diisi (tulis angka 0 jika tanpa harga/modal).`);
+          const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
+          const cNum = parseFloat(cRaw);
+          if (cRaw === '' || isNaN(cNum) || cNum < 0) {
+            errors.push(`${label} (Opsi ${f.name || idx + 1}): Modal/HPP wajib diisi (minimal "0").`);
+          } else if (!isNaN(pNum) && pNum > 0 && cNum > pNum) {
+            errors.push(`${label} (Opsi ${f.name || idx + 1}): Hpp melebihi Harga Jual.`);
           }
 
           const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';

@@ -1140,5 +1140,18 @@ input.toggle-same-cost:checked ~ div::after {
   display: none !important;
 }
 
+/* --------------------------------------------------------------------------
+   COMBINATION MATRIX & CUSTOM COMBOBOX POPOVER FIXES
+   -------------------------------------------------------------------------- */
+#combination-matrix-section .overflow-x-auto {
+  padding-bottom: 75px !important;
+  margin-bottom: -55px !important;
+}
 
+.custom-combobox-wrapper {
+  position: relative !important;
+}
 
+.custom-combobox-popover {
+  z-index: 60 !important;
+}
