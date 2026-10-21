@@ -1251,4 +1251,20 @@ input.toggle-same-cost:checked ~ div::after {
   aspect-ratio: 4 / 3 !important;
 }
 
+/* --------------------------------------------------------------------------
+   CUSTOM DIMENSION (P x L) INPUTS
+   -------------------------------------------------------------------------- */
+.input-shopee-dim-p::-webkit-outer-spin-button,
+.input-shopee-dim-p::-webkit-inner-spin-button,
+.input-shopee-dim-l::-webkit-outer-spin-button,
+.input-shopee-dim-l::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-shopee-dim-p,
+.input-shopee-dim-l {
+  -moz-appearance: textfield;
+}
+
+
 

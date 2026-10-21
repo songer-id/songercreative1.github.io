@@ -28,7 +28,10 @@ const ProductForm = (() => {
     selectedExtras: {},
     extraQty: {},
     extrasQty: {},
-    qty: 1
+    qty: 1,
+    dimLength: '',
+    dimWidth: '',
+    dimError: false
   };
 
   // Primary metadata state
@@ -46,6 +49,8 @@ const ProductForm = (() => {
     has_variation_3: false,
     has_variation_4: false,
     has_extra_service: false,
+    has_custom_dimension: false,
+    custom_dimension_label: '',
     variation_scopes: {
       main: 'umum',
       extra_1: 'umum',
@@ -295,6 +300,9 @@ const ProductForm = (() => {
     previewTestState.selectedExtras = {};
     previewTestState.extraQty = {};
     previewTestState.qty = 1;
+    previewTestState.dimLength = '';
+    previewTestState.dimWidth = '';
+    previewTestState.dimError = false;
     primaryState = {
       name: '',
       product_type: '', // Default '' (kosong, seller wajib memilih sendiri!)
@@ -390,6 +398,8 @@ const ProductForm = (() => {
       has_layer_4: false,
       has_extra_service: false,
       has_layer_5: false,
+      has_custom_dimension: false,
+      custom_dimension_label: '',
       variation_scopes: {
         main: 'umum',
         extra_1: 'umum',
@@ -591,6 +601,8 @@ const ProductForm = (() => {
     primaryState.has_layer_4 = primaryState.has_variation_4;
     primaryState.has_extra_service = Boolean(prod.has_extra_service || prod.has_layer_5 || finishingsState.extra_3.length > 0);
     primaryState.has_layer_5 = primaryState.has_extra_service;
+    primaryState.has_custom_dimension = prod.has_custom_dimension !== undefined ? Boolean(prod.has_custom_dimension) : false;
+    primaryState.custom_dimension_label = prod.custom_dimension_label || '';
 
     primaryState.variation_scopes = prod.variation_scopes || {
       main: prod.scope_main || 'umum',
@@ -1822,6 +1834,23 @@ const ProductForm = (() => {
     return stateVal || fallback;
   }
 
+  function getCustomDimensionLabel() {
+    const inp = document.getElementById('input-custom-dimension-label');
+    if (inp && inp.value && inp.value.trim() !== '') {
+      return inp.value.trim();
+    }
+    return (primaryState.custom_dimension_label && primaryState.custom_dimension_label.trim() !== '')
+      ? primaryState.custom_dimension_label.trim()
+      : 'Masukkan Ukuran';
+  }
+
+  function isCustomDimensionValid() {
+    if (!primaryState.has_custom_dimension) return true;
+    const p = parseFloat(previewTestState.dimLength);
+    const l = parseFloat(previewTestState.dimWidth);
+    return !isNaN(p) && p > 0 && !isNaN(l) && l > 0;
+  }
+
   function ensureExtraServiceNoneAtBottom() {
     if (!finishingsState.extra_3) finishingsState.extra_3 = [];
     const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
@@ -2238,6 +2267,12 @@ const ProductForm = (() => {
       bodyHtml: `
         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
           <div class="font-bold text-slate-900 truncate">${escapeHtml(prodName)}</div>
+          ${primaryState.has_custom_dimension && isCustomDimensionValid() ? `
+            <div class="text-[11px] text-slate-600 flex justify-between">
+              <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
+              <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
+            </div>
+          ` : ''}
           <div class="text-[11px] text-slate-600 flex justify-between">
             <span>Kuantitas:</span>
             <span class="font-bold text-slate-800">${curQ} pcs</span>
@@ -2285,6 +2320,12 @@ const ProductForm = (() => {
             <span>Pilihan Varian:</span>
             <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
           </div>
+          ${primaryState.has_custom_dimension && isCustomDimensionValid() ? `
+            <div class="text-[11px] text-slate-600 flex justify-between">
+              <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
+              <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
+            </div>
+          ` : ''}
           <div class="text-[11px] text-slate-600 flex justify-between">
             <span>Kuantitas:</span>
             <span class="font-bold text-slate-800">${curQ} pcs</span>
@@ -2292,7 +2333,9 @@ const ProductForm = (() => {
         </div>
       `
     });
-  }  function buildShopeeDrawerHtml(actionType) {
+  }
+
+  function buildShopeeDrawerHtml(actionType) {
     const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
     const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
@@ -2316,6 +2359,27 @@ const ProductForm = (() => {
     }
     const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
     const isAllVariationsSelected = checkAllVariationsSelected();
+
+    const dimLabel = getCustomDimensionLabel();
+    const dimLengthVal = (previewTestState.dimLength !== undefined && previewTestState.dimLength !== null) ? String(previewTestState.dimLength) : '';
+    const dimWidthVal = (previewTestState.dimWidth !== undefined && previewTestState.dimWidth !== null) ? String(previewTestState.dimWidth) : '';
+    const dimError = Boolean(previewTestState.dimError);
+
+    const customDimensionDrawerHtml = primaryState.has_custom_dimension ? `
+      <div id="drawer-custom-dimension-section" class="space-y-1.5 pt-2 border-t border-slate-100">
+        <div class="text-xs font-normal text-slate-600 mb-1.5">${escapeHtml(dimLabel)}</div>
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
+          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimLengthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimLengthVal) > 0 ? 'bg-white border-[#33b589]' : 'border-slate-200 focus-within:border-[#33b589] focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition">
+            <input type="number" step="any" min="0.01" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none" />
+          </div>
+          <span class="text-xs font-semibold text-slate-400 px-0.5">×</span>
+          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimWidthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimWidthVal) > 0 ? 'bg-white border-[#33b589]' : 'border-slate-200 focus-within:border-[#33b589] focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition">
+            <input type="number" step="any" min="0.01" placeholder="Lebar (L)" value="${escapeHtml(dimWidthVal)}" class="input-shopee-dim-l w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none" />
+          </div>
+        </div>
+        ${dimError && !(parseFloat(dimLengthVal) > 0 && parseFloat(dimWidthVal) > 0) ? '<p class="text-[10px] font-semibold text-red-600 mt-1">Ukuran Panjang (P) dan Lebar (L) wajib diisi.</p>' : ''}
+      </div>
+    ` : '';
 
     const name = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
     const coverImg = (primaryState.images && primaryState.images.length > 0)
@@ -2637,9 +2701,10 @@ const ProductForm = (() => {
             </button>
           </div>
 
-          ${primaryState.has_extra_service ? `
-            <div class="p-3 border-b border-slate-100">
-              ${extrasAccordionHtml}
+          ${(primaryState.has_custom_dimension || primaryState.has_extra_service) ? `
+            <div class="p-3 border-b border-slate-100 space-y-3">
+              ${customDimensionDrawerHtml}
+              ${primaryState.has_extra_service ? extrasAccordionHtml : ''}
             </div>
           ` : ''}
 
@@ -2774,6 +2839,9 @@ const ProductForm = (() => {
                 </div>
               </div>
             ` : ''}
+
+            <!-- Input Ukuran (P x L) - DI ATAS LAYANAN EXTRAS! -->
+            ${customDimensionDrawerHtml}
 
             <!-- Layanan Extras -->
             ${primaryState.has_extra_service ? `
@@ -2976,6 +3044,11 @@ const ProductForm = (() => {
           ? chosenVars.join(', ') 
           : (primaryState.has_variants ? 'Belum Dipilih' : 'Standar');
 
+        if (primaryState.has_custom_dimension && isCustomDimensionValid()) {
+          const dimLabel = getCustomDimensionLabel();
+          variantText += ` [${dimLabel}: ${previewTestState.dimLength} x ${previewTestState.dimWidth}]`;
+        }
+
         const chosenExtras = [];
         if (primaryState.has_extra_service) {
           const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
@@ -3063,6 +3136,11 @@ const ProductForm = (() => {
           }
 
           const hasVariations = Boolean(primaryState.has_variants && (materialsState || []).some(m => m && m.name && m.name.trim() !== ''));
+
+          if (primaryState.has_custom_dimension && !isCustomDimensionValid()) {
+            openShopeeCheckoutDrawer('cart');
+            return;
+          }
 
           if (!hasVariations) {
             // KASUS A.1: Produk TANPA variasi -> LANGSUNG VALID TANPA MEMBUKA DRAWER
@@ -3364,6 +3442,49 @@ const ProductForm = (() => {
           };
         });
 
+        // Input Dimensi (P x L) di dalam Drawer
+        container.querySelectorAll('.input-shopee-dim-p').forEach(pInp => {
+          pInp.onclick = (e) => e.stopPropagation();
+          pInp.oninput = (e) => {
+            previewTestState.dimLength = e.target.value;
+            const pVal = parseFloat(previewTestState.dimLength);
+            const lVal = parseFloat(previewTestState.dimWidth);
+            const pBox = pInp.parentElement;
+            if (pVal > 0) {
+              pBox.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
+              pBox.classList.add('bg-white', 'border-[#33b589]');
+            } else {
+              pBox.classList.remove('bg-white', 'border-[#33b589]');
+              pBox.classList.add('border-slate-200');
+            }
+            if (pVal > 0 && lVal > 0) {
+              previewTestState.dimError = false;
+              container.querySelectorAll('#drawer-custom-dimension-section p.text-red-600').forEach(el => el.remove());
+            }
+          };
+        });
+
+        container.querySelectorAll('.input-shopee-dim-l').forEach(lInp => {
+          lInp.onclick = (e) => e.stopPropagation();
+          lInp.oninput = (e) => {
+            previewTestState.dimWidth = e.target.value;
+            const pVal = parseFloat(previewTestState.dimLength);
+            const lVal = parseFloat(previewTestState.dimWidth);
+            const lBox = lInp.parentElement;
+            if (lVal > 0) {
+              lBox.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
+              lBox.classList.add('bg-white', 'border-[#33b589]');
+            } else {
+              lBox.classList.remove('bg-white', 'border-[#33b589]');
+              lBox.classList.add('border-slate-200');
+            }
+            if (pVal > 0 && lVal > 0) {
+              previewTestState.dimError = false;
+              container.querySelectorAll('#drawer-custom-dimension-section p.text-red-600').forEach(el => el.remove());
+            }
+          };
+        });
+
         // Submit Button di dalam Drawer
         container.querySelectorAll('.btn-shopee-submit').forEach(btn => {
           btn.onclick = (e) => {
@@ -3397,6 +3518,22 @@ const ProductForm = (() => {
               }
             }
 
+            // Validasi Input Ukuran (P x L) jika aktif
+            if (primaryState.has_custom_dimension && !isCustomDimensionValid()) {
+              previewTestState.dimError = true;
+              updateProductCardLivePreview();
+              setTimeout(() => {
+                const pInp = container.querySelector('.input-shopee-dim-p');
+                const lInp = container.querySelector('.input-shopee-dim-l');
+                if (!parseFloat(previewTestState.dimLength) && pInp) {
+                  pInp.focus();
+                } else if (!parseFloat(previewTestState.dimWidth) && lInp) {
+                  lInp.focus();
+                }
+              }, 50);
+              return;
+            }
+
             closeShopeeCheckoutDrawer();
 
             const name = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
@@ -3416,6 +3553,10 @@ const ProductForm = (() => {
               if (f && f.name) chosenVariants.push(f.name.trim());
             }
             let variantText = chosenVariants.length > 0 ? chosenVariants.join(' - ') : 'Standar';
+            if (primaryState.has_custom_dimension) {
+              const dimLabel = getCustomDimensionLabel();
+              variantText += ` (${dimLabel}: ${previewTestState.dimLength} x ${previewTestState.dimWidth})`;
+            }
 
             if (actionType === 'buy') {
               if (typeof App !== 'undefined' && App.showToast) {
@@ -3432,6 +3573,12 @@ const ProductForm = (() => {
                       <span>Varian:</span>
                       <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
                     </div>
+                    ${primaryState.has_custom_dimension ? `
+                      <div class="text-[11px] text-slate-600 flex justify-between">
+                        <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
+                      </div>
+                    ` : ''}
                     <div class="text-[11px] text-slate-600 flex justify-between">
                       <span>Jumlah:</span>
                       <span class="font-bold text-slate-800">${curQty} pcs</span>
@@ -3462,6 +3609,12 @@ const ProductForm = (() => {
                       <span>Pilihan Varian:</span>
                       <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
                     </div>
+                    ${primaryState.has_custom_dimension ? `
+                      <div class="text-[11px] text-slate-600 flex justify-between">
+                        <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
+                      </div>
+                    ` : ''}
                     <div class="text-[11px] text-slate-600 flex justify-between">
                       <span>Kuantitas:</span>
                       <span class="font-bold text-slate-800">${curQty} pcs</span>
@@ -4261,11 +4414,13 @@ const ProductForm = (() => {
 
       const hasTier3 = Boolean(primaryState.has_variation_3);
       const hasTier4 = Boolean(primaryState.has_variation_4);
+      const hasCustomDim = Boolean(primaryState.has_custom_dimension);
       const hasExtras = Boolean(primaryState.has_extra_service);
 
       const summaryParts = [];
       if (hasTier3) summaryParts.push(`${validV3.length > 0 ? validV3.length + ' ' : ''}${getVariationLabel('tier3', 'Variasi 3')}`);
       if (hasTier4) summaryParts.push(`${validV4.length > 0 ? validV4.length + ' ' : ''}${getVariationLabel('tier4', 'Variasi 4')}`);
+      if (hasCustomDim) summaryParts.push(getCustomDimensionLabel());
       if (hasExtras) summaryParts.push(`${validExtras.length > 0 ? validExtras.length + ' ' : ''}${getVariationLabel('extras', 'Layanan Extras')}`);
 
       const hasExtraTiers = summaryParts.length > 0;
@@ -5388,6 +5543,9 @@ const ProductForm = (() => {
     if (tier === 'extra_3' || tier === 'extras' || tier === 'extra_service' || tier === 5) {
       return ['Extra Service', 'Layanan Prioritas', 'Konsep Tambahan'];
     }
+    if (tier === 'custom_dimension' || tier === 'dimension') {
+      return ['Masukkan Ukuran', 'Ukuran Spanduk', 'Ukuran Banner'];
+    }
     return ['Toping', 'Warna', 'Ukuran', 'Finishing', 'Jenis'];
   }
 
@@ -5416,6 +5574,10 @@ const ProductForm = (() => {
     if (isExtraActive) {
       const elExtra = document.getElementById('input-var-label-extra3') || document.getElementById('input-var-label-extra_3');
       if (elExtra) activeInputs.push(elExtra);
+    }
+    if (primaryState.has_custom_dimension) {
+      const elDim = document.getElementById('input-custom-dimension-label');
+      if (elDim) activeInputs.push(elDim);
     }
     if (activeInputs.length === 0) {
       document.querySelectorAll('.input-variation-label').forEach(inp => activeInputs.push(inp));
@@ -5779,7 +5941,72 @@ const ProductForm = (() => {
       `;
     }
 
+    // Helper render kartu & konfigurasi Input Ukuran (P x L)
+    function renderCustomDimensionCard() {
+      const isChecked = Boolean(primaryState.has_custom_dimension);
+      const labelVal = primaryState.custom_dimension_label || '';
+      const recs = getVariationLabelRecommendations('custom_dimension');
 
+      return `
+        <!-- Kartu / Tombol Pengaktif Input Ukuran (P x L) tepat di bawah Layanan Extras -->
+        <div id="card-custom-dimension-pxl" class="p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
+          <div class="flex items-center justify-between gap-3">
+            <div class="space-y-0.5">
+              <div class="text-sm font-bold text-slate-900">Input Ukuran (P x L)</div>
+              <p class="text-xs text-slate-500">Aktifkan jika pembeli perlu memasukkan ukuran Panjang x Lebar secara mandiri.</p>
+            </div>
+            <!-- Toggle Checkbox (Default OFF) -->
+            <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
+              <input type="checkbox" id="toggle-custom-dimension" class="sr-only peer" ${isChecked ? 'checked' : ''}>
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+
+          <!-- Area Konfigurasi Saat Toggle Diaktifkan -->
+          <div id="custom-dimension-config-body" class="${isChecked ? 'block' : 'hidden'} pt-3 border-t border-slate-100 space-y-3">
+            <div class="space-y-1.5">
+              <label for="input-custom-dimension-label" class="block text-xs font-bold text-slate-800">
+                Nama Label Ukuran <span class="text-red-500">*</span>
+              </label>
+              <div class="custom-combobox-wrapper relative w-full sm:w-72">
+                <input 
+                  type="text" 
+                  id="input-custom-dimension-label" 
+                  data-tier="custom_dimension" 
+                  value="${escapeHtml(labelVal)}" 
+                  placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, dll" 
+                  autocomplete="off" 
+                  class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-emerald-500 shadow-2xs" 
+                />
+                <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+                  <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
+                  <div class="max-h-48 overflow-y-auto">
+                    ${recs.map(rec => `
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
+                        <span>${escapeHtml(rec)}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+                <div class="label-dup-error-msg hidden mt-1"></div>
+                <div id="custom-dimension-label-error" class="hidden text-[11px] text-red-500 font-semibold mt-1">Nama Label Ukuran (P x L) wajib diisi.</div>
+              </div>
+            </div>
+
+            <!-- Tabel Input Simulasi / Ketentuan Kolom (P x L) -->
+            <div class="space-y-1.5 pt-1">
+              <div class="text-[11px] font-bold text-slate-600">Ketentuan Kolom Ukuran:</div>
+              <div class="inline-flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
+                <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-800 font-semibold shadow-2xs">Panjang (P)</span>
+                <span class="text-slate-400 font-bold">×</span>
+                <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-800 font-semibold shadow-2xs">Lebar (L)</span>
+                <span class="text-[11px] text-slate-400 ml-1.5">(Otomatis aktif di Drawer Checkout)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     // Helper render seluruh variasi bertumpuk & pemicu berjenjang
     function renderHierarchicalVariationsSection() {
@@ -5859,6 +6086,9 @@ const ProductForm = (() => {
             <!-- Kartu Layanan Extras (Jika Aktif) -->
             ${isExtraServiceActive ? renderExtraServiceCard() : ''}
           </div>
+
+          <!-- Kartu Pengaktif & Konfigurasi Ukuran (P x L) tepat di bawah Layanan Extras -->
+          ${renderCustomDimensionCard()}
 
           <!-- Modals Terintegrasi -->
           ${renderWholesaleModalMarkup()}
@@ -5949,6 +6179,9 @@ const ProductForm = (() => {
                 ${renderExtraServiceCard()}
               `}
             </div>
+
+            <!-- Kartu Pengaktif & Konfigurasi Ukuran (P x L) tepat di bawah Layanan Extras pada Produk Tunggal -->
+            ${renderCustomDimensionCard()}
           ` : `
             <!-- Mode Variasi Bertingkat (Variasi 1 s/d 4 + Layanan Ekstra) -->
             ${renderHierarchicalVariationsSection()}
@@ -8767,6 +9000,64 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         bindStep2InteractiveEvents();
         updateProductCardLivePreview();
         if (window.lucide) window.lucide.createIcons();
+      };
+    }
+
+    // Toggle Pengaktif Input Ukuran (P x L)
+    const toggleCustomDim = document.getElementById('toggle-custom-dimension');
+    if (toggleCustomDim) {
+      toggleCustomDim.onchange = (e) => {
+        const isChecked = e.target.checked;
+        primaryState.has_custom_dimension = isChecked;
+        const configBody = document.getElementById('custom-dimension-config-body');
+        if (configBody) {
+          if (isChecked) {
+            configBody.classList.remove('hidden');
+            configBody.classList.add('block');
+            const dimCard = document.getElementById('card-custom-dimension-pxl');
+            if (dimCard) bindCustomComboboxes(dimCard);
+            const dimLabelInp = document.getElementById('input-custom-dimension-label');
+            if (dimLabelInp) {
+              if (!dimLabelInp.value) {
+                dimLabelInp.value = primaryState.custom_dimension_label || '';
+              }
+              dimLabelInp.focus();
+            }
+          } else {
+            configBody.classList.remove('block');
+            configBody.classList.add('hidden');
+            previewTestState.dimLength = '';
+            previewTestState.dimWidth = '';
+            previewTestState.dimError = false;
+            const errEl = document.getElementById('custom-dimension-label-error');
+            if (errEl) errEl.classList.add('hidden');
+            const dimLabelInp = document.getElementById('input-custom-dimension-label');
+            if (dimLabelInp) {
+              dimLabelInp.classList.remove('border-red-500');
+              dimLabelInp.classList.add('border-slate-400');
+            }
+          }
+        }
+        updateVariationTitleComboboxRecommendations();
+        refreshVariationTitleDuplicateErrors();
+        updateProductCardLivePreview();
+      };
+    }
+
+    // Input Nama Label Ukuran (P x L)
+    const inputCustomDimLabel = document.getElementById('input-custom-dimension-label');
+    if (inputCustomDimLabel) {
+      inputCustomDimLabel.oninput = (e) => {
+        primaryState.custom_dimension_label = e.target.value.trim();
+        if (primaryState.custom_dimension_label) {
+          e.target.classList.remove('border-red-500');
+          e.target.classList.add('border-slate-400');
+          const errEl = document.getElementById('custom-dimension-label-error');
+          if (errEl) errEl.classList.add('hidden');
+        }
+        updateVariationTitleComboboxRecommendations();
+        refreshVariationTitleDuplicateErrors();
+        updateProductCardLivePreview();
       };
     }
 
@@ -12422,6 +12713,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const volumeUnitSel = document.getElementById('select-volume-unit');
     if (volumeUnitSel) primaryState.volume_unit = volumeUnitSel.value;
 
+    // Custom Dimension (P x L) DOM sync
+    const customDimToggle = document.getElementById('toggle-custom-dimension');
+    if (customDimToggle) {
+      primaryState.has_custom_dimension = customDimToggle.checked;
+    }
+    const customDimLabelInp = document.getElementById('input-custom-dimension-label');
+    if (customDimLabelInp) {
+      primaryState.custom_dimension_label = customDimLabelInp.value.trim();
+    }
+
     // Single Price & Cost for Normal Single
     const singlePriceInp = document.getElementById('input-single-price');
     const singleCostInp = document.getElementById('input-single-cost');
@@ -12945,6 +13246,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
+    if (primaryState.has_custom_dimension === true) {
+      const dimLabelInp = document.getElementById('input-custom-dimension-label');
+      const val = (dimLabelInp?.value || primaryState.custom_dimension_label || '').trim();
+      if (!val) {
+        addError('Nama Label Ukuran (P x L) wajib diisi.', dimLabelInp || document.getElementById('card-custom-dimension-pxl'));
+        if (dimLabelInp) {
+          dimLabelInp.classList.add('border-red-500');
+          dimLabelInp.classList.remove('border-slate-400');
+        }
+        const errEl = document.getElementById('custom-dimension-label-error');
+        if (errEl) errEl.classList.remove('hidden');
+      }
+    }
+
     // 3. Validasi Step 3: Promo & Deskripsi
     if (primaryState.has_monthly_discount) {
       if (primaryState.discount_type === 'percent' && (primaryState.discount_value <= 0 || primaryState.discount_value > 100)) {
@@ -12987,7 +13302,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       if (firstInvalidEl) {
         const isInsideStep1 = Boolean(firstInvalidEl.closest('#step-pane-1') || (firstInvalidEl.id && firstInvalidEl.id.startsWith('section-step1')));
-        const isInsideStep2 = Boolean(firstInvalidEl.closest('#step-pane-2') || (firstInvalidEl.id && (firstInvalidEl.id.startsWith('card-step2') || firstInvalidEl.id.startsWith('card-variasi') || firstInvalidEl.id === 'card-extra-service' || firstInvalidEl.id === 'combination-matrix-section')));
+        const isInsideStep2 = Boolean(firstInvalidEl.closest('#step-pane-2') || (firstInvalidEl.id && (firstInvalidEl.id.startsWith('card-step2') || firstInvalidEl.id.startsWith('card-variasi') || firstInvalidEl.id === 'card-extra-service' || firstInvalidEl.id === 'card-custom-dimension-pxl' || firstInvalidEl.id === 'combination-matrix-section')));
 
         const doScrollAndHighlight = (el) => {
           const targetScrollEl = el.closest('table, .variation-card-block, .step2-section-card, .form-group') || el;
