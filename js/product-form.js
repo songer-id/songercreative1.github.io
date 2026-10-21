@@ -675,11 +675,11 @@ const ProductForm = (() => {
 
                 <!-- Input 1: Jenis Produk / Layanan ([Fisik] | [Non Fisik]) -->
                 <div class="space-y-2.5 pt-1" id="section-step1-input1-type">
-                  <div class="flex items-center justify-between">
+                  <div>
                     <label class="block text-xs font-bold text-slate-800">
                       Jenis Produk / Layanan <span class="text-red-500">*</span>
                     </label>
-                    <span class="text-[11px] text-slate-400">Pilih jenis produk terlebih dahulu</span>
+                    <span class="text-xs text-slate-500 font-medium block mt-0.5">Silahkan Tentukan Jenis Produk Kamu</span>
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="product-type-selector-group">
                     <!-- Fisik -->
@@ -869,7 +869,7 @@ const ProductForm = (() => {
                       </div>
 
                       <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false) ? 'space-y-4' : 'hidden'}">
-                        <p class="text-xs text-slate-500">Saran: Gunakan 1–2 kata singkat per label (maks. 10–12 karakter) agar seluruh label muat di kartu.</p>
+                        <p id="custom-labels-suggestion-text" class="text-xs text-slate-500 hidden transition-all duration-200">Saran: Gunakan 1–2 kata singkat per label (maks. 10–12 karakter) agar seluruh label muat di kartu.</p>
 
                         <div class="space-y-2">
                           <span class="text-[11px] font-semibold text-slate-500">Preset Populer (1-Klik untuk Mengisi):</span>
@@ -883,8 +883,8 @@ const ProductForm = (() => {
                           </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
-                          <div>
+                        <div id="grid-custom-labels-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+                          <div id="wrapper-custom-label-1">
                             <div class="flex items-center justify-between mb-1">
                               <label for="input-custom-label-1" class="block text-[11px] font-semibold text-slate-700">
                                 Label 1 <span class="text-red-500">*</span>
@@ -899,8 +899,9 @@ const ProductForm = (() => {
                               placeholder="Slot 1 (misal: Free Ongkir)" 
                               class="input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium"
                             />
+                            <div id="error-custom-label-1" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                           </div>
-                          <div>
+                          <div id="wrapper-custom-label-2">
                             <div class="flex items-center justify-between mb-1">
                               <label for="input-custom-label-2" class="block text-[11px] font-semibold text-slate-700">
                                 Label 2 (Opsional)
@@ -915,23 +916,32 @@ const ProductForm = (() => {
                               placeholder="Slot 2 (misal: Best Seller)" 
                               class="input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium"
                             />
+                            <div id="error-custom-label-2" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                           </div>
-                          <div>
-                            <div class="flex items-center justify-between mb-1">
-                              <label for="input-custom-label-3" class="block text-[11px] font-semibold text-slate-700">
-                                Label 3 (Opsional)
-                              </label>
-                              <div id="warn-label-3" class="hidden"></div>
-                            </div>
-                            <input 
-                              type="text" 
-                              id="input-custom-label-3" 
-                              list="custom-labels-history-list"
-                              value="${escapeHtml(primaryState.custom_labels?.[2] || '')}" 
-                              placeholder="Slot 3 (misal: Garansi 100%)" 
-                              class="input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium"
-                            />
-                          </div>
+                          ${(() => {
+                            const l1 = (primaryState.custom_labels?.[0] || '').trim();
+                            const l2 = (primaryState.custom_labels?.[1] || '').trim();
+                            const canShowLabel3 = l1.length > 0 && l1.length <= 15 && l2.length > 0 && l2.length <= 12 && (l1.length + l2.length <= 16);
+                            return `
+                              <div id="wrapper-custom-label-3" class="${canShowLabel3 ? '' : 'hidden'}">
+                                <div class="flex items-center justify-between mb-1">
+                                  <label for="input-custom-label-3" class="block text-[11px] font-semibold text-slate-700">
+                                    Label 3 (Opsional)
+                                  </label>
+                                  <div id="warn-label-3" class="hidden"></div>
+                                </div>
+                                <input 
+                                  type="text" 
+                                  id="input-custom-label-3" 
+                                  list="custom-labels-history-list"
+                                  value="${escapeHtml(primaryState.custom_labels?.[2] || '')}" 
+                                  placeholder="Slot 3 (misal: Garansi 100%)" 
+                                  class="input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium"
+                                />
+                                <div id="error-custom-label-3" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
+                              </div>
+                            `;
+                          })()}
                         </div>
 
                         <!-- Indikator Info Kapasitas Baris Label Pintar -->
@@ -1761,7 +1771,7 @@ const ProductForm = (() => {
     const visible = getSmartVisibleBadges(productName, valid);
 
     if (visible.length === valid.length) {
-      return `<i class="bi bi-check-circle-fill text-emerald-600"></i><span class="text-emerald-700">Menampilkan ${visible.length} label (teks singkat & muat di kartu)</span>`;
+      return `<i class="bi bi-check-circle-fill text-emerald-600"></i><span class="text-emerald-700">Menampilkan ${visible.length} label</span>`;
     } else {
       const reason = !isShortName ? 'judul produk 2 baris' : 'total teks melebihi kapasitas';
       return `<i class="bi bi-info-circle-fill text-amber-500"></i><span class="text-amber-700 font-medium">Menampilkan ${visible.length} dari ${valid.length} label (dibatasi otomatis agar rapi karena ${reason})</span>`;
@@ -3775,12 +3785,15 @@ const ProductForm = (() => {
     const footer2Icon = (footer2IconSelect?.value || primaryState.footer_2_badge_icon || 'minus').trim() || 'minus';
 
     // Ambil maksimal 3 label kustom dari input DOM atau state
-    const label1Input = document.getElementById('input-custom-label-1') || document.getElementById('step2-input-label-1');
-    const label2Input = document.getElementById('input-custom-label-2') || document.getElementById('step2-input-label-2');
-    const label3Input = document.getElementById('input-custom-label-3') || document.getElementById('step2-input-label-3');
+    const label1Input = document.getElementById('input-custom-label-1');
+    const label2Input = document.getElementById('input-custom-label-2');
+    const label3Input = document.getElementById('input-custom-label-3');
+    const wrapper3 = document.getElementById('wrapper-custom-label-3');
+    const isLabel3Visible = wrapper3 ? !wrapper3.classList.contains('hidden') : false;
+
     const customLabel1 = (label1Input ? label1Input.value : (primaryState.custom_labels?.[0] || '')).trim();
     const customLabel2 = (label2Input ? label2Input.value : (primaryState.custom_labels?.[1] || '')).trim();
-    const customLabel3 = (label3Input ? label3Input.value : (primaryState.custom_labels?.[2] || '')).trim();
+    const customLabel3 = (isLabel3Visible && label3Input ? label3Input.value : (isLabel3Visible ? (primaryState.custom_labels?.[2] || '') : '')).trim();
     let rawCustomLabels = [customLabel1, customLabel2, customLabel3].filter(Boolean);
 
     if (rawCustomLabels.length === 0 && Array.isArray(primaryState.custom_labels) && primaryState.custom_labels.length > 0) {
@@ -7315,7 +7328,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (errorBanner && errorList) {
         errorList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
         errorBanner.classList.remove('hidden');
-        errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         if (window.lucide) window.lucide.createIcons();
       }
     }
@@ -7369,27 +7381,68 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         // Validasi Step 1 jika ingin maju dari Step 1 ke Step 2
         if (currentStep === 1) {
           const s1Errors = [];
+          let firstInvalidEl = null;
+
+          function addS1Error(msg, el) {
+            s1Errors.push(msg);
+            if (!firstInvalidEl && el) firstInvalidEl = el;
+          }
+
           if (!primaryState.product_type || (primaryState.product_type !== 'physical' && primaryState.product_type !== 'non_physical')) {
-            s1Errors.push('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).');
+            addS1Error('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).', document.getElementById('section-step1-input1-type') || document.getElementById('product-type-selector-group'));
           }
           if (primaryState.is_active && !primaryState.card_variant) {
-            s1Errors.push('Pilih Jenis Model Kartu Produk terlebih dahulu.');
+            addS1Error('Pilih Jenis Model Kartu Produk terlebih dahulu.', document.getElementById('section-step1-input3-cardmodel') || document.querySelector('input[name="card_variant_radio"]')?.closest('label'));
           }
           if (primaryState.is_active && (!primaryState.images || primaryState.images.length === 0) && !primaryState.image_url) {
-            s1Errors.push('Foto produk wajib diunggah minimal 1 foto sebagai cover.');
+            addS1Error('Foto produk wajib diunggah minimal 1 foto sebagai cover.', document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('input-prod-image'));
           }
           if (!primaryState.name || primaryState.name.trim() === '') {
-            s1Errors.push('Nama Produk wajib diisi.');
+            addS1Error('Nama Produk wajib diisi.', document.getElementById('input-prod-name'));
           }
           if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
-            const l1 = (document.getElementById('input-custom-label-1')?.value || primaryState.custom_labels?.[0] || '').trim();
+            const input1 = document.getElementById('input-custom-label-1');
+            const input2 = document.getElementById('input-custom-label-2');
+            const input3 = document.getElementById('input-custom-label-3');
+            const wrapper3 = document.getElementById('wrapper-custom-label-3');
+            const isLabel3Visible = wrapper3 ? !wrapper3.classList.contains('hidden') : false;
+
+            const l1 = (input1?.value || primaryState.custom_labels?.[0] || '').trim();
+            const l2 = (input2?.value || primaryState.custom_labels?.[1] || '').trim();
+            const l3 = (isLabel3Visible && input3 ? input3.value : (isLabel3Visible ? (primaryState.custom_labels?.[2] || '') : '')).trim();
+
             if (!l1) {
-              s1Errors.push('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.');
+              addS1Error('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.', input1);
+            }
+
+            let hasDuplicate = false;
+            let dupEl = null;
+            if (l1 && l2 && l1.toLowerCase() === l2.toLowerCase()) {
+              hasDuplicate = true;
+              dupEl = input2;
+            }
+            if (l3) {
+              if (l1 && l3.toLowerCase() === l1.toLowerCase()) {
+                hasDuplicate = true;
+                dupEl = input3;
+              } else if (l2 && l3.toLowerCase() === l2.toLowerCase()) {
+                hasDuplicate = true;
+                dupEl = input3;
+              }
+            }
+            if (hasDuplicate) {
+              addS1Error('Label tidak boleh sama.', dupEl || input2);
             }
           }
 
           if (s1Errors.length > 0) {
             showWizardErrorBanner(s1Errors);
+            if (firstInvalidEl) {
+              firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              if (typeof firstInvalidEl.focus === 'function' && firstInvalidEl.tagName !== 'DIV') {
+                firstInvalidEl.focus();
+              }
+            }
             return;
           }
         }
@@ -9783,6 +9836,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const input1 = document.getElementById('input-custom-label-1');
       const input2 = document.getElementById('input-custom-label-2');
       const input3 = document.getElementById('input-custom-label-3');
+      const wrapper3 = document.getElementById('wrapper-custom-label-3');
       const charCount1 = document.getElementById('char-count-label-1');
       const warn2 = document.getElementById('warn-label-2');
       const warn3 = document.getElementById('warn-label-3');
@@ -9805,25 +9859,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       const val1 = (input1.value || '').trim();
       const len1 = val1.length;
-      if (charCount1) charCount1.textContent = `${len1}/15`;
+      if (charCount1) {
+        charCount1.textContent = `${len1}/15`;
+        if (len1 > 15) {
+          charCount1.className = 'text-[10px] font-mono text-red-500 font-bold';
+        } else {
+          charCount1.className = 'text-[10px] font-mono text-slate-400';
+        }
+      }
 
       const val2 = (input2 ? input2.value || '' : '').trim();
       const len2 = val2.length;
-      const prodName = (primaryState.name || '').trim();
 
-      // Aturan Otomasi Penguncian Berdasarkan Panjang Teks:
-      // Label 1:
-      // - val1 === 0: Label 2 & 3 disabled
-      // - val1 > 15: Kunci/nonaktifkan Label 2 & 3, kosongkan nilainya, tampilkan (?) Label 1 terlalu panjang
-      // - 1 <= val1 <= 15: Aktifkan input Label 2!
+      // 1. Kondisi Label 1 & Label 2
       if (len1 === 0) {
         if (input2) {
           input2.disabled = true;
           input2.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
         }
+        if (wrapper3) wrapper3.classList.add('hidden');
         if (input3) {
+          input3.value = '';
           input3.disabled = true;
-          input3.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
         }
         if (warn2) warn2.classList.add('hidden');
         if (warn3) warn3.classList.add('hidden');
@@ -9833,75 +9890,99 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           input2.disabled = true;
           input2.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
         }
+        if (wrapper3) wrapper3.classList.add('hidden');
         if (input3) {
           input3.value = '';
           input3.disabled = true;
-          input3.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
         }
-        if (warn2) {
-          warn2.classList.remove('hidden');
-          warn2.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded cursor-help" title="Teks pada Label 1 melebihi 15 karakter sehingga ruang kartu penuh. Persingkat Label 1 menjadi maks. 15 karakter untuk mengaktifkan Label 2."><i class="bi bi-question-circle font-bold"></i> Label 1 terlalu panjang</span>`;
-        }
-        if (warn3) {
-          warn3.classList.remove('hidden');
-          warn3.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded cursor-help" title="Teks pada Label 1 melebihi 15 karakter sehingga ruang kartu penuh. Persingkat Label 1 menjadi maks. 15 karakter untuk mengaktifkan Label 2."><i class="bi bi-question-circle font-bold"></i> Label 1 terlalu panjang</span>`;
-        }
+        if (warn2) warn2.classList.add('hidden');
+        if (warn3) warn3.classList.add('hidden');
       } else {
-        // 1 <= len1 <= 15 -> Aktifkan Label 2
+        // 1 <= len1 <= 15 -> Aktifkan input Label 2
         if (input2) {
           input2.disabled = false;
           input2.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium';
         }
         if (warn2) warn2.classList.add('hidden');
 
-        // Label 2:
-        // - val2 === 0: Label 3 disabled
-        // - val2 > 12 ATAU len1 + len2 > 22 ATAU (prodName.length > 28 && len1 + len2 > 16):
-        //   Kunci/nonaktifkan Label 3, kosongkan nilainya, tampilkan (?) Label 2 terlalu panjang
-        // - len2 > 0 dan len1 + len2 <= 16: Aktifkan Label 3!
-        const isLabel2TooLong = len2 > 12 || (len1 + len2 > 22) || (prodName.length > 28 && len1 + len2 > 16);
+        // 2. Kondisi Label 3: Hanya dirender/tampil jika Label 1 dan Label 2 telah terisi & memenuhi syarat kapasitas
+        const canShowLabel3 = (len2 > 0 && len2 <= 12 && (len1 + len2 <= 16));
 
-        if (len2 === 0) {
-          if (input3) {
-            input3.disabled = true;
-            input3.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
-          }
-          if (warn3) warn3.classList.add('hidden');
-        } else if (isLabel2TooLong) {
-          if (input3) {
-            input3.value = '';
-            input3.disabled = true;
-            input3.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
-          }
-          if (warn3) {
-            warn3.classList.remove('hidden');
-            warn3.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded cursor-help" title="Kombinasi teks Label 1 dan Label 2 sudah memenuhi baris kartu. Persingkat teks label jika ingin menambahkan Label 3."><i class="bi bi-question-circle font-bold"></i> Label 2 terlalu panjang</span>`;
-          }
-        } else if (len1 + len2 <= 16) {
+        if (canShowLabel3) {
+          if (wrapper3) wrapper3.classList.remove('hidden');
           if (input3) {
             input3.disabled = false;
             input3.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium';
           }
           if (warn3) warn3.classList.add('hidden');
         } else {
-          // len1 + len2 > 16
+          if (wrapper3) wrapper3.classList.add('hidden');
           if (input3) {
             input3.value = '';
             input3.disabled = true;
-            input3.className = 'input-custom-label-slot w-full px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
           }
-          if (warn3) {
-            warn3.classList.remove('hidden');
-            warn3.innerHTML = `<span class="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded cursor-help" title="Kombinasi teks Label 1 dan Label 2 sudah memenuhi baris kartu. Persingkat teks label jika ingin menambahkan Label 3."><i class="bi bi-question-circle font-bold"></i> Label 2 terlalu panjang</span>`;
+          if (warn3) warn3.classList.add('hidden');
+        }
+      }
+
+      // 3. Validasi Keunikan Label Khusus (tidak boleh ada yang sama persis)
+      const err1 = document.getElementById('error-custom-label-1');
+      const err2 = document.getElementById('error-custom-label-2');
+      const err3 = document.getElementById('error-custom-label-3');
+      const val3 = (input3 && !input3.disabled && wrapper3 && !wrapper3.classList.contains('hidden')) ? (input3.value || '').trim() : '';
+
+      [err1, err2, err3].forEach(el => {
+        if (el) { el.textContent = ''; el.classList.add('hidden'); }
+      });
+      [input1, input2, input3].forEach(inp => {
+        if (inp && !inp.disabled) {
+          inp.classList.remove('border-red-500');
+          if (!inp.classList.contains('border-slate-300')) inp.classList.add('border-slate-300');
+        }
+      });
+
+      if (val1 && val2 && val1.toLowerCase() === val2.toLowerCase()) {
+        if (err2) {
+          err2.textContent = 'Label tidak boleh sama';
+          err2.classList.remove('hidden');
+        }
+        if (input2) {
+          input2.classList.remove('border-slate-300');
+          input2.classList.add('border-red-500');
+        }
+      }
+
+      if (val3) {
+        if (val1 && val3.toLowerCase() === val1.toLowerCase()) {
+          if (err3) {
+            err3.textContent = 'Label tidak boleh sama';
+            err3.classList.remove('hidden');
+          }
+          if (input3) {
+            input3.classList.remove('border-slate-300');
+            input3.classList.add('border-red-500');
+          }
+        } else if (val2 && val3.toLowerCase() === val2.toLowerCase()) {
+          if (err3) {
+            err3.textContent = 'Label tidak boleh sama';
+            err3.classList.remove('hidden');
+          }
+          if (input3) {
+            input3.classList.remove('border-slate-300');
+            input3.classList.add('border-red-500');
           }
         }
       }
 
       // Update primaryState.custom_labels
-      const l1 = input1 ? input1.value.trim() : '';
-      const l2 = (input2 && !input2.disabled) ? input2.value.trim() : '';
-      const l3 = (input3 && !input3.disabled) ? input3.value.trim() : '';
-      primaryState.custom_labels = [l1, l2, l3].filter(Boolean);
+      const validLabels = [val1, val2, val3].filter(Boolean);
+      primaryState.custom_labels = validLabels;
+
+      const capInfoEl = document.getElementById('custom-labels-capacity-info');
+      if (capInfoEl) {
+        capInfoEl.innerHTML = getCustomLabelsCapacityMessage(primaryState.name, primaryState.custom_labels);
+      }
+
       updateProductCardLivePreview();
     }
 
@@ -9918,13 +9999,35 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
+    // Teks Saran Dinamis: Tampilkan hanya saat fokus/ketik pada input label khusus
+    const labelSuggestionText = document.getElementById('custom-labels-suggestion-text');
+    function showLabelSuggestion() {
+      if (labelSuggestionText) labelSuggestionText.classList.remove('hidden');
+    }
+    function hideLabelSuggestion() {
+      setTimeout(() => {
+        const active = document.activeElement;
+        const slots = [
+          document.getElementById('input-custom-label-1'),
+          document.getElementById('input-custom-label-2'),
+          document.getElementById('input-custom-label-3')
+        ];
+        if (!slots.includes(active) && labelSuggestionText) {
+          labelSuggestionText.classList.add('hidden');
+        }
+      }, 150);
+    }
+
     // Step 1 Custom Label Slots Input Listeners
     ['input-custom-label-1', 'input-custom-label-2', 'input-custom-label-3'].forEach(id => {
       const inp = document.getElementById(id);
       if (inp) {
         inp.addEventListener('input', () => {
+          showLabelSuggestion();
           updateCustomLabelsLockState();
         });
+        inp.addEventListener('focus', showLabelSuggestion);
+        inp.addEventListener('blur', hideLabelSuggestion);
       }
     });
 
@@ -9935,12 +10038,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const l1 = document.getElementById('input-custom-label-1');
         const l2 = document.getElementById('input-custom-label-2');
         const l3 = document.getElementById('input-custom-label-3');
+        const wrapper3 = document.getElementById('wrapper-custom-label-3');
+        const isL3Visible = wrapper3 && !wrapper3.classList.contains('hidden');
 
         if (l1 && !l1.value.trim()) {
           l1.value = lbl;
         } else if (l2 && !l2.disabled && !l2.value.trim()) {
           l2.value = lbl;
-        } else if (l3 && !l3.disabled && !l3.value.trim()) {
+        } else if (l3 && isL3Visible && !l3.disabled && !l3.value.trim()) {
           l3.value = lbl;
         } else if (l1) {
           l1.value = lbl;
@@ -11631,39 +11736,75 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
   function validateForm(isDraft = false) {
     syncStateFromDOM();
+    const draftMode = (isDraft === true);
     const errors = [];
+    let firstInvalidEl = null;
+
+    function addError(msg, el) {
+      errors.push(msg);
+      if (!firstInvalidEl && el) firstInvalidEl = el;
+    }
 
     // Jika Simpan Draf: hanya wajibkan Nama Produk
-    if (isDraft) {
+    if (draftMode) {
       if (!primaryState.name || primaryState.name.trim() === '') {
-        errors.push('Nama Produk wajib diisi untuk menyimpan draf.');
+        addError('Nama Produk wajib diisi untuk menyimpan draf.', document.getElementById('input-prod-name') || document.getElementById('step2-input-name'));
       }
+      errors.firstInvalidElement = firstInvalidEl;
       return errors;
     }
 
     // 1. Validasi Step 1: Informasi Pokok Produk
     if (!primaryState.product_type || (primaryState.product_type !== 'physical' && primaryState.product_type !== 'non_physical')) {
-      errors.push('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).');
+      addError('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).', document.getElementById('section-step1-input1-type') || document.getElementById('product-type-selector-group'));
     }
     if (primaryState.is_active && !primaryState.card_variant) {
-      errors.push('Pilih Jenis Model Kartu Produk terlebih dahulu.');
+      addError('Pilih Jenis Model Kartu Produk terlebih dahulu.', document.getElementById('section-step1-input3-cardmodel') || document.querySelector('input[name="card_variant_radio"]')?.closest('label'));
     }
     if (!primaryState.images || primaryState.images.length === 0) {
       if (!primaryState.image_url) {
-        errors.push('Foto produk wajib diunggah minimal 1 gambar sebagai cover.');
+        addError('Foto produk wajib diunggah minimal 1 gambar sebagai cover.', document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('input-prod-image'));
       }
     }
     if (!primaryState.name || primaryState.name.trim() === '') {
-      errors.push('Nama / judul produk wajib diisi.');
+      addError('Nama / judul produk wajib diisi.', document.getElementById('input-prod-name') || document.getElementById('step2-input-name'));
     }
     if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
-      const l1Val = (primaryState.custom_labels && primaryState.custom_labels[0]) ? primaryState.custom_labels[0].trim() : '';
+      const input1 = document.getElementById('input-custom-label-1');
+      const input2 = document.getElementById('input-custom-label-2');
+      const input3 = document.getElementById('input-custom-label-3');
+      const wrapper3 = document.getElementById('wrapper-custom-label-3');
+      const isLabel3Visible = wrapper3 ? !wrapper3.classList.contains('hidden') : false;
+
+      const l1Val = (input1?.value || primaryState.custom_labels?.[0] || '').trim();
+      const l2Val = (input2?.value || primaryState.custom_labels?.[1] || '').trim();
+      const l3Val = (isLabel3Visible && input3 ? input3.value : (isLabel3Visible ? (primaryState.custom_labels?.[2] || '') : '')).trim();
+
       if (!l1Val) {
-        errors.push('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.');
+        addError('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.', input1);
+      }
+
+      let hasDup = false;
+      let dupEl = null;
+      if (l1Val && l2Val && l1Val.toLowerCase() === l2Val.toLowerCase()) {
+        hasDup = true;
+        dupEl = input2;
+      }
+      if (l3Val) {
+        if (l1Val && l3Val.toLowerCase() === l1Val.toLowerCase()) {
+          hasDup = true;
+          dupEl = input3;
+        } else if (l2Val && l3Val.toLowerCase() === l2Val.toLowerCase()) {
+          hasDup = true;
+          dupEl = input3;
+        }
+      }
+      if (hasDup) {
+        addError('Label tidak boleh sama.', dupEl || input2);
       }
     }
     if (!primaryState.category_id || String(primaryState.category_id).trim() === '') {
-      errors.push('Kategori Utama Etalase wajib dipilih.');
+      addError('Kategori Utama Etalase wajib dipilih.', document.getElementById('select-step2-cat') || document.getElementById('category_id'));
     }
 
     // 2. Validasi Step 2: Informasi Penjualan
@@ -11671,69 +11812,79 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const firstMat = materialsState[0];
       const pRaw = (firstMat?.price !== undefined && firstMat?.price !== null) ? String(firstMat.price).trim() : '';
       const pVal = parseFloat(pRaw);
+      const singlePriceEl = document.getElementById('input-single-price');
+      const singleCostEl = document.getElementById('input-single-cost');
+      const singleStockEl = document.getElementById('input-stock-qty') || document.getElementById('input-single-stock');
+
       if (pRaw === '' || isNaN(pVal) || pVal < 0) {
-        errors.push('Harga Jual produk wajib diisi.');
+        addError('Harga Jual produk wajib diisi.', singlePriceEl);
         validateSinglePrice(true);
       }
       const cRaw = (firstMat?.cost_price !== undefined && firstMat?.cost_price !== null) ? String(firstMat.cost_price).trim() : '';
       const cVal = parseFloat(cRaw);
       if (cRaw === '' || isNaN(cVal) || cVal < 0) {
-        errors.push('Modal/HPP produk wajib diisi (minimal "0").');
+        addError('Modal/HPP produk wajib diisi (minimal "0").', singleCostEl);
         validateSingleCost(true);
       } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
-        errors.push('Hpp melebihi Harga Jual produk.');
+        addError('Hpp melebihi Harga Jual produk.', singleCostEl);
         validateSingleCost(true);
       }
       if (!primaryState.is_unlimited_stock) {
         const sVal = firstMat?.stock;
         if (sVal === '' || sVal === undefined || sVal === null || isNaN(parseInt(sVal)) || parseInt(sVal) < 0) {
-          errors.push('Stok produk wajib diisi.');
+          addError('Stok produk wajib diisi.', singleStockEl);
         }
       }
     } else if (primaryState.has_variants) {
       // Periksa Duplikasi Label Judul Kelompok Variasi
       const groupLabelCheck = validateVariationGroupLabels();
       if (groupLabelCheck.hasDuplicate) {
-        errors.push('Nama judul kelompok variasi tidak boleh sama persis satu sama lain.');
+        addError('Nama judul kelompok variasi tidak boleh sama persis satu sama lain.', document.getElementById('input-var-label-tier1') || document.getElementById('input-var-label-main'));
       }
 
       // Validasi Baris Opsi Variasi 1
       if (!materialsState || materialsState.length === 0) {
-        errors.push('Minimal harus mengisi 1 pilihan varian / bahan dasar.');
+        addError('Minimal harus mengisi 1 pilihan varian / bahan dasar.', document.getElementById('table-tier1-container') || document.querySelector('[data-tier="tier1"]'));
       } else {
         const validMats = materialsState.filter(m => m.name && m.name.trim() !== '');
         if (validMats.length < 1) {
-          errors.push('Variasi 1 wajib memiliki minimal 1 opsi yang terisi namanya.');
+          addError('Variasi 1 wajib memiliki minimal 1 opsi yang terisi namanya.', document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]'));
         }
 
         materialsState.forEach((m, idx) => {
           const isUntouched = (materialsState.length > 1 && idx === materialsState.length - 1 && (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined) && (m.cost_price === '' || m.cost_price === undefined) && (m.stock === '' || m.stock === undefined));
           if (isUntouched) return;
 
+          const rowEl = document.querySelector(`.variation-option-row[data-tier="tier1"][data-idx="${idx}"]`);
+          const nameInp = rowEl?.querySelector('input[data-field="name"]');
+          const priceInp = rowEl?.querySelector('input[data-field="price"]');
+          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+
           if (!m.name || !m.name.trim()) {
-            errors.push(`Variasi 1: Opsi ke-${idx + 1} wajib diisi namanya.`);
+            addError(`Variasi 1: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
           } else if (checkOptionNameDuplicate('tier1', m.name, idx)) {
-            errors.push(`Variasi 1: Nama opsi "${m.name}" kembar / duplikat.`);
+            addError(`Variasi 1: Nama opsi "${m.name}" kembar / duplikat.`, nameInp || rowEl);
           }
 
           const pRaw = (m.price !== undefined && m.price !== null) ? String(m.price).trim() : '';
           const pNum = parseFloat(pRaw);
           if (pRaw === '' || isNaN(pNum) || pNum < 0) {
-            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Harga jual wajib diisi.`);
+            addError(`Variasi 1 (Opsi ${m.name || idx + 1}): Harga jual wajib diisi.`, priceInp || rowEl);
           }
 
           const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
           const cNum = parseFloat(cRaw);
           if (cRaw === '' || isNaN(cNum) || cNum < 0) {
-            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Modal/HPP wajib diisi (minimal "0").`);
+            addError(`Variasi 1 (Opsi ${m.name || idx + 1}): Modal/HPP wajib diisi (minimal "0").`, costInp || rowEl);
           } else if (!isNaN(pNum) && pNum > 0 && cNum > pNum) {
-            errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Hpp melebihi Harga Jual.`);
+            addError(`Variasi 1 (Opsi ${m.name || idx + 1}): Hpp melebihi Harga Jual.`, costInp || rowEl);
           }
 
           const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
           if (stockMode !== 'unlimited') {
             if (m.stock === '' || m.stock === undefined || m.stock === null || isNaN(parseInt(m.stock)) || parseInt(m.stock) < 0) {
-              errors.push(`Variasi 1 (Opsi ${m.name || idx + 1}): Stok wajib diisi.`);
+              addError(`Variasi 1 (Opsi ${m.name || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
             }
           }
         });
@@ -11751,7 +11902,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const isExtra3 = (tier === 'extra_3');
         const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
         if (validList.length < 1) {
-          errors.push(`${label} wajib memiliki minimal 1 opsi yang terisi namanya.`);
+          addError(`${label} wajib memiliki minimal 1 opsi yang terisi namanya.`, document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`));
         }
 
         list.forEach((f, idx) => {
@@ -11760,34 +11911,41 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const isUntouched = (list.length > (isExtra3 ? 2 : 1) && idx === triggerIdx && (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined) && (f.cost_price === '' || f.cost_price === undefined) && (f.stock === '' || f.stock === undefined) && !f.extra_type);
           if (isUntouched) return;
 
+          const rowEl = document.querySelector(`.variation-option-row[data-tier="${tier}"][data-idx="${idx}"]`);
+          const nameInp = rowEl?.querySelector('input[data-field="name"]');
+          const typeSel = rowEl?.querySelector('select.fin-extra-type');
+          const priceInp = rowEl?.querySelector('input[data-field="price"]');
+          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+
           if (!f.name || !f.name.trim()) {
-            errors.push(`${label}: Opsi ke-${idx + 1} wajib diisi namanya.`);
+            addError(`${label}: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
           } else if (checkOptionNameDuplicate(tier, f.name, idx)) {
-            errors.push(`${label}: Nama opsi "${f.name}" kembar / duplikat.`);
+            addError(`${label}: Nama opsi "${f.name}" kembar / duplikat.`, nameInp || rowEl);
           }
 
           if (isExtra3 && (!f.extra_type || f.extra_type.trim() === '')) {
-            errors.push(`${label} (Opsi ${f.name || idx + 1}): Jenis input wajib dipilih.`);
+            addError(`${label} (Opsi ${f.name || idx + 1}): Jenis input wajib dipilih.`, typeSel || rowEl);
           }
 
           const pRaw = (f.price !== undefined && f.price !== null) ? String(f.price).trim() : '';
           const pNum = parseFloat(pRaw);
           if (pRaw === '' || isNaN(pNum) || pNum < 0) {
-            errors.push(`${label} (Opsi ${f.name || idx + 1}): Harga satuan/jual wajib diisi.`);
+            addError(`${label} (Opsi ${f.name || idx + 1}): Harga satuan/jual wajib diisi.`, priceInp || rowEl);
           }
 
           const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
           const cNum = parseFloat(cRaw);
           if (cRaw === '' || isNaN(cNum) || cNum < 0) {
-            errors.push(`${label} (Opsi ${f.name || idx + 1}): Modal/HPP wajib diisi (minimal "0").`);
+            addError(`${label} (Opsi ${f.name || idx + 1}): Modal/HPP wajib diisi (minimal "0").`, costInp || rowEl);
           } else if (!isNaN(pNum) && pNum > 0 && cNum > pNum) {
-            errors.push(`${label} (Opsi ${f.name || idx + 1}): Hpp melebihi Harga Jual.`);
+            addError(`${label} (Opsi ${f.name || idx + 1}): Hpp melebihi Harga Jual.`, costInp || rowEl);
           }
 
           const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
           if (stockMode !== 'unlimited') {
             if (f.stock === '' || f.stock === undefined || f.stock === null || isNaN(parseInt(f.stock)) || parseInt(f.stock) < 0) {
-              errors.push(`${label} (Opsi ${f.name || idx + 1}): Stok wajib diisi.`);
+              addError(`${label} (Opsi ${f.name || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
             }
           }
         });
@@ -11804,34 +11962,35 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const totalDisplayRows = displayMats.length;
       const uploadedCount = displayMats.filter(m => m.image_url && m.image_url.trim() !== '').length;
       if (uploadedCount > 0 && uploadedCount < totalDisplayRows) {
-        errors.push('Foto pada Tabel Kombinasi Variasi belum seragam. Seluruh baris opsi wajib memiliki foto, atau kosongkan semua foto.');
+        addError('Foto pada Tabel Kombinasi Variasi belum seragam. Seluruh baris opsi wajib memiliki foto, atau kosongkan semua foto.', document.getElementById('combination-matrix-section') || document.getElementById('table-combination-variations'));
       }
     }
 
     if (!primaryState.is_unlimited_stock && (primaryState.stock === null || isNaN(primaryState.stock) || primaryState.stock < 0)) {
-      errors.push('Masukkan kuota stok fisik yang valid jika batas stok aktif.');
+      addError('Masukkan kuota stok fisik yang valid jika batas stok aktif.', document.getElementById('input-stock-qty') || document.getElementById('stock-input-wrapper'));
     }
 
     if (primaryState.min_order < 1) {
-      errors.push('Minimal pesanan minimal bernilai 1.');
+      addError('Minimal pesanan minimal bernilai 1.', document.getElementById('input-min-order'));
     }
     if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && primaryState.max_order_qty < primaryState.min_order) {
-      errors.push('Maksimal pesanan per checkout tidak boleh lebih kecil dari minimal pesanan.');
+      addError('Maksimal pesanan per checkout tidak boleh lebih kecil dari minimal pesanan.', document.getElementById('input-normal-max-order') || document.getElementById('input-max-order-qty'));
     }
 
     // 3. Validasi Step 3: Promo & Deskripsi
     if (primaryState.has_monthly_discount) {
       if (primaryState.discount_type === 'percent' && (primaryState.discount_value <= 0 || primaryState.discount_value > 100)) {
-        errors.push('Persentase diskon harus di antara 1% dan 100%.');
+        addError('Persentase diskon harus di antara 1% dan 100%.', document.getElementById('input-discount-val'));
       } else if (primaryState.discount_type === 'nominal' && primaryState.discount_value <= 0) {
-        errors.push('Nominal potongan diskon IDR harus lebih besar dari 0.');
+        addError('Nominal potongan diskon IDR harus lebih besar dari 0.', document.getElementById('input-discount-val'));
       }
     }
 
     if (!primaryState.description || primaryState.description.trim() === '') {
-      errors.push('Deskripsi produk wajib diisi.');
+      addError('Deskripsi produk wajib diisi.', document.getElementById('input-prod-desc') || document.getElementById('card-step2-description'));
     }
 
+    errors.firstInvalidElement = firstInvalidEl;
     return errors;
   }
 
@@ -11844,14 +12003,40 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const icon = document.getElementById('btn-submit-icon');
     const submitText = document.getElementById('btn-submit-text');
 
-    primaryState.status = isDraft ? 'draft' : 'published';
+    const draftMode = (isDraft === true);
+    primaryState.status = draftMode ? 'draft' : 'published';
 
-    const errors = validateForm(isDraft);
+    const errors = validateForm(draftMode);
 
     if (errors.length > 0) {
       if (errorList) errorList.innerHTML = errors.map(err => `<li>${err}</li>`).join('');
       if (errorBanner) errorBanner.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      const targetEl = errors.firstInvalidElement ||
+        document.querySelector('.field-error-msg:not(.hidden)')?.closest('.flex-col, .variation-option-row, td')?.querySelector('input, select, textarea') ||
+        document.querySelector('.border-red-500') ||
+        document.getElementById('form-error-banner');
+
+      if (targetEl) {
+        const isInsideStep1 = targetEl.closest('#step-pane-1');
+        if (isInsideStep1 && currentStep !== 1) {
+          goToStep(1);
+          setTimeout(() => {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (typeof targetEl.focus === 'function' && targetEl.tagName !== 'DIV') {
+              targetEl.focus();
+            }
+          }, 150);
+        } else {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (typeof targetEl.focus === 'function' && targetEl.tagName !== 'DIV') {
+            targetEl.focus();
+          }
+        }
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
       if (window.lucide) window.lucide.createIcons();
       return;
     }
