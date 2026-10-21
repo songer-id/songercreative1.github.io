@@ -439,6 +439,13 @@ const ProductForm = (() => {
       extra_2: [],
       extra_3: []
     };
+
+    sandboxPxlState = {
+      selectedMainOptionId: '',
+      selectedFinishingIds: [],
+      simLength: '',
+      simWidth: ''
+    };
   }
 
   function loadProductForEdit(id) {
@@ -5752,6 +5759,718 @@ const ProductForm = (() => {
     }
   }
 
+  // =========================================================================
+  // MESIN PENGATURAN & SIMULASI UKURAN (P x L) (MODULE SCOPE & GLOBAL)
+  // =========================================================================
+
+  // State untuk Sandbox Simulasi P x L di dalam kartu config
+  let sandboxPxlState = {
+    selectedMainOptionId: '',
+    selectedFinishingIds: [],
+    simLength: '',
+    simWidth: ''
+  };
+
+  function formatNumberLocal(num) {
+    const n = parseFloat(num) || 0;
+    return Math.round(n).toLocaleString('id-ID');
+  }
+
+  function getDimensionMainComponentChoices() {
+    const choices = [];
+    if (!primaryState.has_variants) {
+      choices.push({
+        id: 'single',
+        label: 'Harga Produk Utama'
+      });
+    } else {
+      const t1Label = getVariationLabel('tier1', 'Variasi 1');
+      choices.push({
+        id: 'tier1',
+        label: `Variasi 1: ${t1Label}`
+      });
+
+      const isVar2Active = Boolean(primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0));
+      if (isVar2Active) {
+        const t2Label = getVariationLabel('main', 'Variasi 2');
+        choices.push({
+          id: 'main',
+          label: `Variasi 2: ${t2Label}`
+        });
+      }
+
+      const isVar3Active = Boolean(isVar2Active && (primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0)));
+      if (isVar3Active) {
+        const t3Label = getVariationLabel('extra_1', 'Variasi 3');
+        choices.push({
+          id: 'extra_1',
+          label: `Variasi 3: ${t3Label}`
+        });
+      }
+
+      const isVar4Active = Boolean(isVar3Active && (primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0)));
+      if (isVar4Active) {
+        const t4Label = getVariationLabel('extra_2', 'Variasi 4');
+        choices.push({
+          id: 'extra_2',
+          label: `Variasi 4: ${t4Label}`
+        });
+      }
+    }
+    return choices;
+  }
+
+  function getDimensionMainComponentOptionsHtml() {
+    const choices = getDimensionMainComponentChoices();
+    let currentVal = primaryState.dimension_main_component;
+    if (!currentVal || !choices.some(c => c.id === currentVal)) {
+      currentVal = choices[0]?.id || (primaryState.has_variants ? 'tier1' : 'single');
+      primaryState.dimension_main_component = currentVal;
+    }
+
+    return choices.map(c => `
+      <option value="${c.id}" ${c.id === currentVal ? 'selected' : ''}>${escapeHtml(c.label)}</option>
+    `).join('');
+  }
+
+  function getSandboxMainComponentOptionsList() {
+    const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
+    const unit = primaryState.dimension_unit || 'meter';
+    const unitLabel = unit === 'meter' ? 'm²' : `${unit}²`;
+
+    if (mainComp === 'single' || !primaryState.has_variants) {
+      const singlePriceInp = document.getElementById('input-single-price');
+      const singleCostInp = document.getElementById('input-single-cost');
+      const price = singlePriceInp ? (parseFloat(singlePriceInp.value) || 0) : (materialsState[0]?.price || 0);
+      const cost = singleCostInp ? (parseFloat(singleCostInp.value) || 0) : (materialsState[0]?.cost_price || 0);
+      return [{
+        id: 'single',
+        name: primaryState.name || 'Produk Standar',
+        price: price,
+        cost_price: cost,
+        unitLabel: unitLabel
+      }];
+    }
+
+    if (mainComp === 'tier1') {
+      const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
+      if (validMats.length === 0 && materialsState.length > 0) {
+        return [{
+          id: materialsState[0].id,
+          name: materialsState[0].name || 'Variasi 1',
+          price: parseFloat(materialsState[0].price) || 0,
+          cost_price: parseFloat(materialsState[0].cost_price) || 0,
+          unitLabel: unitLabel
+        }];
+      }
+      return validMats.map((m) => ({
+        id: m.id,
+        name: m.name.trim(),
+        price: parseFloat(m.price) || 0,
+        cost_price: parseFloat(m.cost_price) || 0,
+        unitLabel: unitLabel
+      }));
+    }
+
+    const finList = finishingsState[mainComp] || [];
+    const validFins = finList.filter(f => f && f.name && f.name.trim() !== '' && !f.is_default_none);
+    if (validFins.length === 0 && finList.length > 0) {
+      return [{
+        id: finList[0].id,
+        name: finList[0].name || 'Opsi 1',
+        price: parseFloat(finList[0].price) || 0,
+        cost_price: parseFloat(finList[0].cost_price) || 0,
+        unitLabel: unitLabel
+      }];
+    }
+    return validFins.map((f) => ({
+      id: f.id,
+      name: f.name.trim(),
+      price: parseFloat(f.price) || 0,
+      cost_price: parseFloat(f.cost_price) || 0,
+      unitLabel: unitLabel
+    }));
+  }
+
+  function getSandboxMainComponentOptionsHtml() {
+    const opts = getSandboxMainComponentOptionsList();
+    if (opts.length === 0) {
+      return `<option value="" disabled selected>Belum ada opsi pada komponen utama terpilih</option>`;
+    }
+    let selId = sandboxPxlState.selectedMainOptionId;
+    if (!selId || !opts.some(o => o.id === selId)) {
+      selId = opts[0].id;
+      sandboxPxlState.selectedMainOptionId = selId;
+    }
+    return opts.map(o => `
+      <option value="${o.id}" ${o.id === selId ? 'selected' : ''}>
+        ${escapeHtml(o.name)} — Rp ${formatNumberLocal(o.price)} / ${o.unitLabel} (HPP: Rp ${formatNumberLocal(o.cost_price)})
+      </option>
+    `).join('');
+  }
+
+  function getSandboxFinishingOptionsList() {
+    const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
+    const list = [];
+
+    const tiersToCheck = [];
+    if (mainComp !== 'main' && (primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0))) {
+      tiersToCheck.push({ tier: 'main', label: getVariationLabel('main', 'Variasi 2') });
+    }
+    if (mainComp !== 'extra_1' && (primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0))) {
+      tiersToCheck.push({ tier: 'extra_1', label: getVariationLabel('extra_1', 'Variasi 3') });
+    }
+    if (mainComp !== 'extra_2' && (primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0))) {
+      tiersToCheck.push({ tier: 'extra_2', label: getVariationLabel('extra_2', 'Variasi 4') });
+    }
+    if (primaryState.has_extra_service || (finishingsState.extra_3 && finishingsState.extra_3.length > 0)) {
+      tiersToCheck.push({ tier: 'extra_3', label: getVariationLabel('extra_3', 'Layanan Extras') });
+    }
+
+    tiersToCheck.forEach(t => {
+      const finItems = finishingsState[t.tier] || [];
+      finItems.forEach(item => {
+        if (item && item.name && item.name.trim() !== '' && !item.is_default_none) {
+          list.push({
+            id: item.id,
+            tier: t.tier,
+            tierLabel: t.label,
+            name: item.name.trim(),
+            price: parseFloat(item.price) || 0,
+            cost_price: parseFloat(item.cost_price) || 0,
+            calc_mode: item.calc_mode || 'flat',
+            dim_add_val: item.dim_add_val !== undefined && item.dim_add_val !== null ? item.dim_add_val : 0,
+            dim_add_side: item.dim_add_side || 'p_l'
+          });
+        }
+      });
+    });
+
+    return list;
+  }
+
+  function getSandboxFinishingCheckboxesHtml() {
+    const list = getSandboxFinishingOptionsList();
+    if (list.length === 0) {
+      return `<div class="text-[11px] text-slate-400 italic py-2 px-3 text-center">Belum ada opsi finishing / variasi tambahan aktif.</div>`;
+    }
+
+    const dimUnit = primaryState.dimension_unit || 'meter';
+
+    return list.map(item => {
+      const isChecked = sandboxPxlState.selectedFinishingIds.includes(item.id);
+      let modeBadge = '';
+      if (item.calc_mode === 'area') {
+        modeBadge = `<span class="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shrink-0">Ikut Luas</span>`;
+      } else if (item.calc_mode === 'add_dim') {
+        const sideText = item.dim_add_side === 'p' ? 'P' : (item.dim_add_side === 'l' ? 'L' : (item.dim_add_side === 'area_add' ? 'Luas' : 'P&L'));
+        modeBadge = `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] font-bold shrink-0">+${item.dim_add_val} ${dimUnit} (${sideText})</span>`;
+      } else {
+        modeBadge = `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[10px] font-bold shrink-0">Flat</span>`;
+      }
+
+      return `
+        <label class="sandbox-finishing-chip flex items-center justify-between gap-2.5 py-2 px-3 rounded-lg bg-white hover:bg-emerald-50/50 cursor-pointer text-xs border border-slate-200/90 hover:border-emerald-300 transition select-none shadow-2xs">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <input 
+              type="checkbox" 
+              class="sandbox-chk-fin accent-emerald-600 w-4 h-4 rounded cursor-pointer shrink-0" 
+              value="${item.id}" 
+              ${isChecked ? 'checked' : ''} 
+            />
+            <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+              <span class="font-bold text-slate-800 text-xs truncate">${escapeHtml(item.name)}</span>
+              <span class="text-[10px] text-slate-400 font-medium shrink-0">(${escapeHtml(item.tierLabel)})</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            ${modeBadge}
+            <span class="text-xs font-bold text-slate-700 whitespace-nowrap">Rp ${formatNumberLocal(item.price)}</span>
+          </div>
+        </label>
+      `;
+    }).join('');
+  }
+
+  function renderOptionDimCalcControl(arg1, arg2, idx) {
+    let fin = {};
+    let tier = '';
+    if (arg1 && typeof arg1 === 'object') {
+      fin = arg1;
+      tier = typeof arg2 === 'string' ? arg2 : (arg1.tier || '');
+    } else if (typeof arg1 === 'string') {
+      tier = arg1;
+      fin = (arg2 && typeof arg2 === 'object') ? arg2 : {};
+    } else if (arg2 && typeof arg2 === 'object') {
+      fin = arg2;
+      tier = typeof arg1 === 'string' ? arg1 : '';
+    }
+
+    const isCheckedDim = Boolean(primaryState.has_custom_dimension);
+    const calcMode = fin.calc_mode || 'flat';
+    const dimAddVal = (fin.dim_add_val !== undefined && fin.dim_add_val !== null) ? fin.dim_add_val : '';
+    const dimAddSide = fin.dim_add_side || 'p_l';
+    const dimUnit = primaryState.dimension_unit || 'meter';
+    const finId = fin.id || '';
+
+    return `
+      <div class="option-dim-calc-wrapper w-full basis-full ${isCheckedDim ? 'flex' : 'hidden'} flex-col md:flex-row md:items-center gap-2 p-2 sm:px-2.5 sm:py-1.5 bg-amber-50/70 border border-amber-200/90 rounded-lg text-xs text-slate-700 mt-1.5 shadow-2xs">
+        <div class="flex items-center gap-1.5 font-bold text-amber-900 shrink-0 text-xs">
+          <i class="bi bi-rulers text-amber-600"></i>
+          <span>Mode Hitung Ukuran:</span>
+        </div>
+        <div class="grid grid-cols-1 md:flex md:items-center gap-2 w-full md:w-auto flex-1">
+          <select class="select-option-calc-mode w-full md:w-auto px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" data-tier="${tier}" data-id="${finId}">
+            <option value="flat" ${calcMode === 'flat' ? 'selected' : ''}>Flat (Harga Tetap per Pcs)</option>
+            <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Dikalikan Luas (P x L)</option>
+            <option value="add_dim" ${calcMode === 'add_dim' ? 'selected' : ''}>Tambah Ukuran Bahan (+ Ukuran)</option>
+          </select>
+          <div class="dim-add-controls-wrapper ${calcMode === 'add_dim' ? 'grid grid-cols-1 sm:flex' : 'hidden'} items-center gap-2 flex-wrap w-full md:w-auto bg-amber-100/60 md:bg-transparent p-2 md:p-0 rounded border border-amber-200 md:border-0">
+            <div class="flex items-center gap-1.5 w-full sm:w-auto">
+              <span class="text-slate-600 font-extrabold text-sm select-none">+</span>
+              <input 
+                type="number" 
+                step="any"
+                min="0"
+                placeholder="0" 
+                value="${dimAddVal}" 
+                class="input-option-dim-add w-full sm:w-20 px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900 outline-none focus:border-amber-500 text-center shadow-2xs" 
+                data-tier="${tier}" 
+                data-id="${finId}" 
+              />
+              <span class="text-[11px] font-bold text-slate-600 dim-unit-text shrink-0">${dimUnit}</span>
+            </div>
+            <select class="select-option-dim-side w-full sm:w-auto px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" data-tier="${tier}" data-id="${finId}">
+              <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke Panjang & Lebar (P & L)</option>
+              <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P)</option>
+              <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L)</option>
+              <option value="area_add" ${dimAddSide === 'area_add' ? 'selected' : ''}>Tambah ke Total Luas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSandboxCalculationResultsHtml() {
+    const dimUnit = primaryState.dimension_unit || 'meter';
+
+    // Live extraction from DOM if rendered, otherwise fall back to sandboxPxlState
+    const pInputEl = document.getElementById('sandbox-input-dim-p');
+    const lInputEl = document.getElementById('sandbox-input-dim-l');
+    const mainOptEl = document.getElementById('sandbox-select-main-option');
+
+    if (pInputEl && pInputEl.value !== undefined && pInputEl.value !== '') {
+      sandboxPxlState.simLength = pInputEl.value;
+    }
+    if (lInputEl && lInputEl.value !== undefined && lInputEl.value !== '') {
+      sandboxPxlState.simWidth = lInputEl.value;
+    }
+    if (mainOptEl && mainOptEl.value) {
+      sandboxPxlState.selectedMainOptionId = mainOptEl.value;
+    }
+
+    const chkElements = document.querySelectorAll('.sandbox-chk-fin:checked');
+    if (chkElements && chkElements.length > 0) {
+      sandboxPxlState.selectedFinishingIds = Array.from(chkElements).map(c => c.value);
+    }
+
+    let pRaw = parseFloat(sandboxPxlState.simLength);
+    let lRaw = parseFloat(sandboxPxlState.simWidth);
+
+    if (isNaN(pRaw)) {
+      pRaw = dimUnit === 'meter' ? 2 : (dimUnit === 'cm' ? 200 : 2000);
+    }
+    if (isNaN(lRaw)) {
+      lRaw = dimUnit === 'meter' ? 1 : (dimUnit === 'cm' ? 100 : 1000);
+    }
+
+    if (pRaw <= 0 || lRaw <= 0) {
+      return `
+        <div class="p-3 bg-white border border-dashed border-slate-300 rounded-lg text-center text-xs text-slate-500">
+          <i class="bi bi-info-circle text-slate-400 mr-1"></i>
+          Ketik nilai <strong>Panjang (P)</strong> dan <strong>Lebar (L)</strong> di atas untuk melihat bedah kalkulasi real-time.
+        </div>
+      `;
+    }
+
+    // Conversion factor to meter (m)
+    let factor = 1;
+    if (dimUnit === 'cm') factor = 0.01;
+    else if (dimUnit === 'mm') factor = 0.001;
+
+    const pMurni = pRaw;
+    const lMurni = lRaw;
+    const areaMurni = (pMurni * factor) * (lMurni * factor);
+
+    const finishingList = getSandboxFinishingOptionsList();
+    const selectedFins = finishingList.filter(f => sandboxPxlState.selectedFinishingIds.includes(f.id));
+
+    let pEff = pMurni;
+    let lEff = lMurni;
+    let directAreaAdd = 0;
+    let hasAddDimEffect = false;
+    const addDimDetails = [];
+
+    selectedFins.forEach(f => {
+      if (f.calc_mode === 'add_dim') {
+        hasAddDimEffect = true;
+        const val = parseFloat(f.dim_add_val) || 0;
+        if (f.dim_add_side === 'p') {
+          pEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke P)`);
+        } else if (f.dim_add_side === 'l') {
+          lEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke L)`);
+        } else if (f.dim_add_side === 'p_l') {
+          pEff += val;
+          lEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke P & L)`);
+        } else if (f.dim_add_side === 'area_add') {
+          directAreaAdd += (val * factor * factor);
+          addDimDetails.push(`${f.name} (+${val} ke Luas)`);
+        }
+      }
+    });
+
+    const areaEff = ((pEff * factor) * (lEff * factor)) + directAreaAdd;
+
+    // Komponen Utama
+    const mainOptions = getSandboxMainComponentOptionsList();
+    let mainOpt = mainOptions.find(o => o.id === sandboxPxlState.selectedMainOptionId) || mainOptions[0] || {
+      name: 'Komponen Utama',
+      price: 0,
+      cost_price: 0
+    };
+
+    const mainPriceTotal = areaEff * mainOpt.price;
+    const mainCostTotal = areaEff * mainOpt.cost_price;
+
+    // Finishing
+    const finBreakdown = [];
+    let finPriceTotal = 0;
+    let finCostTotal = 0;
+
+    selectedFins.forEach(f => {
+      let fPrice = 0;
+      let fCost = 0;
+      let formulaText = '';
+
+      if (f.calc_mode === 'flat') {
+        fPrice = f.price;
+        fCost = f.cost_price;
+        formulaText = `Flat per Pcs: Rp ${formatNumberLocal(f.price)}`;
+      } else if (f.calc_mode === 'area') {
+        fPrice = areaEff * f.price;
+        fCost = areaEff * f.cost_price;
+        formulaText = `Ikut Luas (${areaEff.toFixed(2)} m² × Rp ${formatNumberLocal(f.price)}): Rp ${formatNumberLocal(Math.round(fPrice))}`;
+      } else if (f.calc_mode === 'add_dim') {
+        fPrice = f.price;
+        fCost = f.cost_price;
+        formulaText = `Bahan bertambah (+${f.dim_add_val} ${dimUnit})${f.price > 0 ? ` + Jasa: Rp ${formatNumberLocal(f.price)}` : ' (Tanpa Biaya Tambahan)'}`;
+      }
+
+      finPriceTotal += fPrice;
+      finCostTotal += fCost;
+
+      finBreakdown.push({
+        name: f.name,
+        calc_mode: f.calc_mode,
+        formulaText: formulaText,
+        price: fPrice,
+        cost: fCost
+      });
+    });
+
+    const grandTotalPrice = Math.round(mainPriceTotal + finPriceTotal);
+    const grandTotalCost = Math.round(mainCostTotal + finCostTotal);
+    const netProfit = grandTotalPrice - grandTotalCost;
+    const marginPercent = grandTotalPrice > 0 ? ((netProfit / grandTotalPrice) * 100) : 0;
+
+    return `
+      <div class="bg-white border border-emerald-300/80 rounded-xl p-3 sm:p-3.5 space-y-3 shadow-2xs">
+        <!-- 1. Baris Dimensi & Luas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+            <span class="text-slate-500 font-semibold block text-[11px]">Luas Murni (P × L):</span>
+            <div class="font-bold text-slate-800 text-xs sm:text-sm mt-0.5 break-words">
+              ${pMurni} ${dimUnit} × ${lMurni} ${dimUnit} = 
+              <span class="text-emerald-700 font-extrabold">${areaMurni.toFixed(4)} m²</span>
+            </div>
+          </div>
+
+          <div class="p-2.5 ${hasAddDimEffect ? 'bg-amber-50/70 border-amber-200 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-800'} border rounded-lg">
+            <span class="${hasAddDimEffect ? 'text-amber-700' : 'text-slate-500'} font-semibold block text-[11px]">
+              ${hasAddDimEffect ? 'Efek Tambahan Ukuran (+ Bahan):' : 'Dimensi Efektif Bahan:'}
+            </span>
+            <div class="font-bold text-xs sm:text-sm mt-0.5 break-words">
+              ${hasAddDimEffect ? `
+                ${pEff.toFixed(1)} ${dimUnit} × ${lEff.toFixed(1)} ${dimUnit} = 
+                <span class="text-amber-800 font-extrabold">${areaEff.toFixed(4)} m²</span>
+              ` : `
+                Sama dengan Luas Murni (${areaEff.toFixed(4)} m²)
+              `}
+            </div>
+            ${hasAddDimEffect ? `
+              <div class="text-[10px] text-amber-700 mt-1 flex items-center gap-1 flex-wrap">
+                <i class="bi bi-arrow-right-short"></i>
+                <span>${addDimDetails.join(', ')}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- 2. Rincian Kalkulasi Harga & Biaya -->
+        <div class="space-y-1.5 pt-1 border-t border-slate-100 text-xs">
+          <div class="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Bedah Rincian Biaya:</div>
+          
+          <!-- Rincian Komponen Utama -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1.5 px-2.5 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="space-y-0.5 min-w-0">
+              <div class="font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                <span class="truncate">${escapeHtml(mainOpt.name)}</span>
+                <span class="text-[10px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-semibold">Bahan Utama</span>
+              </div>
+              <div class="text-[11px] text-slate-500">
+                ${areaEff.toFixed(2)} m² × Rp ${formatNumberLocal(mainOpt.price)} (HPP: Rp ${formatNumberLocal(mainOpt.cost_price)})
+              </div>
+            </div>
+            <div class="text-left sm:text-right shrink-0">
+              <div class="font-extrabold text-slate-900 text-xs sm:text-sm">Rp ${formatNumberLocal(Math.round(mainPriceTotal))}</div>
+              <div class="text-[10px] text-slate-400">Modal: Rp ${formatNumberLocal(Math.round(mainCostTotal))}</div>
+            </div>
+          </div>
+
+          <!-- Rincian Finishing / Variasi Tambahan -->
+          ${finBreakdown.map(fb => `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1.5 px-2.5 bg-slate-50/60 rounded-lg border border-slate-200">
+              <div class="space-y-0.5 min-w-0">
+                <div class="font-semibold text-slate-800 truncate">${escapeHtml(fb.name)}</div>
+                <div class="text-[11px] text-slate-500">${fb.formulaText}</div>
+              </div>
+              <div class="text-left sm:text-right shrink-0">
+                <div class="font-bold text-slate-800 text-xs sm:text-sm">Rp ${formatNumberLocal(Math.round(fb.price))}</div>
+                <div class="text-[10px] text-slate-400">Modal: Rp ${formatNumberLocal(Math.round(fb.cost))}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- 3. Total Harga Simulasi & Estimasi Laba/HPP -->
+        <div class="pt-2 border-t border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50/60 p-2.5 rounded-lg border">
+          <div>
+            <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Total Harga Simulasi:</div>
+            <div class="text-lg sm:text-xl font-black text-emerald-700 leading-tight">
+              Rp ${formatNumberLocal(grandTotalPrice)}
+            </div>
+          </div>
+          <div class="flex items-center gap-2 sm:gap-3 flex-wrap text-xs">
+            <div class="px-2.5 py-1 bg-white border border-slate-200 rounded-md shadow-2xs">
+              <span class="text-slate-400 text-[10px] block font-semibold uppercase">Estimasi Modal (HPP):</span>
+              <span class="font-bold text-slate-700">Rp ${formatNumberLocal(grandTotalCost)}</span>
+            </div>
+            <div class="px-2.5 py-1 bg-emerald-600 text-white rounded-md shadow-2xs">
+              <span class="text-emerald-100 text-[10px] block font-semibold uppercase">Estimasi Laba Bersih:</span>
+              <span class="font-extrabold">+Rp ${formatNumberLocal(netProfit)} (+${marginPercent.toFixed(1)}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateSandboxCalculation() {
+    const container = document.getElementById('sandbox-calc-results-breakdown');
+    if (container) {
+      container.innerHTML = renderSandboxCalculationResultsHtml();
+    }
+  }
+
+  // Helper render kartu & konfigurasi Input Ukuran (P x L) (Mobile-First Layout)
+  function renderCustomDimensionCard() {
+    const isChecked = Boolean(primaryState.has_custom_dimension);
+    const labelVal = primaryState.custom_dimension_label || '';
+    const recs = getVariationLabelRecommendations('custom_dimension');
+    const dimUnit = primaryState.dimension_unit || 'meter';
+
+    return `
+      <!-- Kartu / Tombol Pengaktif Input Ukuran (P x L) tepat di bawah Layanan Extras -->
+      <div id="card-custom-dimension-pxl" class="p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
+        <div class="flex items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <div class="text-sm font-bold text-slate-900">Input Ukuran (P x L)</div>
+            <p class="text-xs text-slate-500">Aktifkan jika pembeli perlu memasukkan ukuran Panjang x Lebar secara mandiri.</p>
+          </div>
+          <!-- Toggle Checkbox (Default OFF) -->
+          <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
+            <input type="checkbox" id="toggle-custom-dimension" class="sr-only peer" ${isChecked ? 'checked' : ''}>
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        </div>
+
+        <!-- Area Konfigurasi Saat Toggle Diaktifkan -->
+        <div id="custom-dimension-config-body" class="${isChecked ? 'block' : 'hidden'} pt-3 border-t border-slate-100 space-y-3.5">
+          <!-- Input Nama Label Ukuran -->
+          <div class="space-y-1.5">
+            <label for="input-custom-dimension-label" class="block text-xs font-bold text-slate-800">
+              Nama Label Ukuran <span class="text-red-500">*</span>
+            </label>
+            <div class="custom-combobox-wrapper relative w-full sm:w-80">
+              <input 
+                type="text" 
+                id="input-custom-dimension-label" 
+                data-tier="custom_dimension" 
+                value="${escapeHtml(labelVal)}" 
+                placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, dll" 
+                autocomplete="off" 
+                class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-lg border border-slate-400 text-xs font-medium bg-white outline-none focus:border-emerald-500 shadow-2xs" 
+              />
+              <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
+                <div class="max-h-48 overflow-y-auto">
+                  ${recs.map(rec => `
+                    <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
+                      <span>${escapeHtml(rec)}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              <div class="label-dup-error-msg hidden mt-1"></div>
+              <div id="custom-dimension-label-error" class="hidden text-[11px] text-red-500 font-semibold mt-1">Nama Label Ukuran (P x L) wajib diisi.</div>
+            </div>
+          </div>
+
+          <!-- LAPISAN 1: PENGATURAN GLOBAL MODE UKURAN (Mobile-First Stack Vertikal w-full) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+            <!-- 1. Dropdown Komponen Utama Ukuran -->
+            <div class="space-y-1 w-full">
+              <label for="select-dimension-main-component" class="block text-xs font-bold text-slate-800">
+                Komponen Utama Ukuran <span class="text-slate-400 font-normal">(Varian Pengali Luas Dasar)</span>
+              </label>
+              <select id="select-dimension-main-component" class="w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-emerald-500 shadow-2xs">
+                ${getDimensionMainComponentOptionsHtml()}
+              </select>
+              <p class="text-[11px] text-slate-500 leading-tight">Komponen harga yang dikalikan dengan luas ukuran $(P \times L)$ sebagai bahan utama.</p>
+            </div>
+
+            <!-- 2. Dropdown Satuan Ukuran -->
+            <div class="space-y-1 w-full">
+              <label for="select-dimension-unit" class="block text-xs font-bold text-slate-800">
+                Satuan Ukuran
+              </label>
+              <select id="select-dimension-unit" class="w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-emerald-500 shadow-2xs">
+                <option value="meter" ${dimUnit === 'meter' ? 'selected' : ''}>meter (m)</option>
+                <option value="cm" ${dimUnit === 'cm' ? 'selected' : ''}>centimeter (cm)</option>
+                <option value="mm" ${dimUnit === 'mm' ? 'selected' : ''}>millimeter (mm)</option>
+              </select>
+              <p class="text-[11px] text-slate-500 leading-tight">Satuan dimensi yang diisi oleh pembeli pada saat memesan produk.</p>
+            </div>
+          </div>
+
+          <!-- Ketentuan Kolom Ukuran (P x L) -->
+          <div class="space-y-1 pt-1">
+            <div class="text-[11px] font-bold text-slate-600">Ketentuan Kolom Ukuran:</div>
+            <div class="inline-flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 flex-wrap">
+              <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-800 font-semibold shadow-2xs">Panjang (P) <span class="text-emerald-600 font-bold badge-unit-text">[${dimUnit}]</span></span>
+              <span class="text-slate-400 font-bold">×</span>
+              <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-800 font-semibold shadow-2xs">Lebar (L) <span class="text-emerald-600 font-bold badge-unit-text">[${dimUnit}]</span></span>
+              <span class="text-[11px] text-slate-400 ml-1.5">(Otomatis aktif di Drawer Checkout)</span>
+            </div>
+          </div>
+
+          <!-- LAPISAN 3: PANEL SANDBOX KALKULATOR SIMULASI UKURAN (P x L) LANGSUNG DI DALAM KARTU CONFIG -->
+          <div id="sandbox-pxl-calculator-panel" class="mt-3 p-3 sm:p-4 bg-gradient-to-br from-slate-50 to-emerald-50/20 border border-emerald-200/80 rounded-xl space-y-3.5 shadow-2xs">
+            <!-- Header Panel Sandbox -->
+            <div class="flex items-center justify-between gap-2 border-b border-emerald-100 pb-2">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-2xs shrink-0">
+                  <i class="bi bi-calculator-fill text-sm"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                    <span>Sandbox Kalkulator Simulasi Ukuran (P x L)</span>
+                    <span class="px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-100 text-emerald-800 rounded">Live Test</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500">Uji coba langsung kalkulasi rumus dimensi, komponen utama, dan efek variasi finishing di formulir ini.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kontrol Simulasi: Komponen Utama + Input P x L -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+              <!-- Pilih Opsi Komponen Utama -->
+              <div class="md:col-span-6 space-y-1 w-full">
+                <label for="sandbox-select-main-option" class="block text-[11px] font-bold text-slate-700">
+                  Pilih Opsi Komponen Utama:
+                </label>
+                <select id="sandbox-select-main-option" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
+                  ${getSandboxMainComponentOptionsHtml()}
+                </select>
+              </div>
+
+              <!-- Kotak Input Simulasi P x L (Grid Berimbang 2 Kolom) -->
+              <div class="md:col-span-6 space-y-1 w-full">
+                <label class="block text-[11px] font-bold text-slate-700">
+                  Dimensi Simulasi (P × L):
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="relative">
+                    <input 
+                      type="number" 
+                      step="any"
+                      min="0"
+                      id="sandbox-input-dim-p" 
+                      value="${sandboxPxlState.simLength || (dimUnit === 'meter' ? '2' : (dimUnit === 'cm' ? '200' : '2000'))}" 
+                      placeholder="P" 
+                      class="w-full pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
+                    />
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">P (${dimUnit})</span>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="number" 
+                      step="any"
+                      min="0"
+                      id="sandbox-input-dim-l" 
+                      value="${sandboxPxlState.simWidth || (dimUnit === 'meter' ? '1' : (dimUnit === 'cm' ? '100' : '1000'))}" 
+                      placeholder="L" 
+                      class="w-full pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
+                    />
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">L (${dimUnit})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pilih Opsi Finishing / Variasi Tambahan -->
+            <div class="space-y-1.5 pt-0.5">
+              <div class="text-[11px] font-bold text-slate-700 flex items-center justify-between flex-wrap gap-1">
+                <span>Pilih Opsi Variasi Tambahan / Finishing untuk Diuji:</span>
+                <span class="text-[10px] text-slate-400 font-normal">(Centang untuk menguji penambahan biaya/dimensi)</span>
+              </div>
+              <div id="sandbox-finishing-options-list" class="max-h-52 overflow-y-auto space-y-1.5 p-2 bg-white/80 border border-slate-200/90 rounded-xl">
+                ${getSandboxFinishingCheckboxesHtml()}
+              </div>
+            </div>
+
+            <!-- Box Rincian Real-Time Teks Kalkulasi & Hasil Akhir -->
+            <div id="sandbox-calc-results-breakdown" class="pt-1">
+              ${renderSandboxCalculationResultsHtml()}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Attach to window for absolute reliability across scripts
+  if (typeof window !== 'undefined') {
+    window.renderOptionDimCalcControl = renderOptionDimCalcControl;
+    window.renderSandboxCalculationResultsHtml = renderSandboxCalculationResultsHtml;
+    window.updateSandboxCalculation = updateSandboxCalculation;
+    window.formatNumberLocal = formatNumberLocal;
+  }
+
   function renderPricingModelSection() {
     const model = primaryState.pricing_model || 'normal';
 
@@ -5942,660 +6661,6 @@ const ProductForm = (() => {
           <!-- Strip Baris Opsi Layanan Extras -->
           <div id="finishings-extra_3-rows-container" class="space-y-2">
             ${renderFinishingRows('extra_3')}
-          </div>
-        </div>
-      `;
-    }
-
-    // =========================================================================
-    // MESIN PENGATURAN & SIMULASI UKURAN (P x L) DI FORMULIR STEP 2
-    // =========================================================================
-
-    // State untuk Sandbox Simulasi P x L di dalam kartu config
-    let sandboxPxlState = {
-      selectedMainOptionId: '',
-      selectedFinishingIds: [],
-      simLength: '',
-      simWidth: ''
-    };
-
-    function formatNumberLocal(num) {
-      const n = parseFloat(num) || 0;
-      return Math.round(n).toLocaleString('id-ID');
-    }
-
-    function getDimensionMainComponentChoices() {
-      const choices = [];
-      if (!primaryState.has_variants) {
-        choices.push({
-          id: 'single',
-          label: 'Harga Produk Utama'
-        });
-      } else {
-        const t1Label = getVariationLabel('tier1', 'Variasi 1');
-        choices.push({
-          id: 'tier1',
-          label: `Variasi 1: ${t1Label}`
-        });
-
-        const isVar2Active = Boolean(primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0));
-        if (isVar2Active) {
-          const t2Label = getVariationLabel('main', 'Variasi 2');
-          choices.push({
-            id: 'main',
-            label: `Variasi 2: ${t2Label}`
-          });
-        }
-
-        const isVar3Active = Boolean(isVar2Active && (primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0)));
-        if (isVar3Active) {
-          const t3Label = getVariationLabel('extra_1', 'Variasi 3');
-          choices.push({
-            id: 'extra_1',
-            label: `Variasi 3: ${t3Label}`
-          });
-        }
-
-        const isVar4Active = Boolean(isVar3Active && (primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0)));
-        if (isVar4Active) {
-          const t4Label = getVariationLabel('extra_2', 'Variasi 4');
-          choices.push({
-            id: 'extra_2',
-            label: `Variasi 4: ${t4Label}`
-          });
-        }
-      }
-      return choices;
-    }
-
-    function getDimensionMainComponentOptionsHtml() {
-      const choices = getDimensionMainComponentChoices();
-      let currentVal = primaryState.dimension_main_component;
-      if (!currentVal || !choices.some(c => c.id === currentVal)) {
-        currentVal = choices[0]?.id || (primaryState.has_variants ? 'tier1' : 'single');
-        primaryState.dimension_main_component = currentVal;
-      }
-
-      return choices.map(c => `
-        <option value="${c.id}" ${c.id === currentVal ? 'selected' : ''}>${escapeHtml(c.label)}</option>
-      `).join('');
-    }
-
-    function getSandboxMainComponentOptionsList() {
-      const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
-      const unit = primaryState.dimension_unit || 'meter';
-      const unitLabel = unit === 'meter' ? 'm²' : `${unit}²`;
-
-      if (mainComp === 'single' || !primaryState.has_variants) {
-        const singlePriceInp = document.getElementById('input-single-price');
-        const singleCostInp = document.getElementById('input-single-cost');
-        const price = singlePriceInp ? (parseFloat(singlePriceInp.value) || 0) : (materialsState[0]?.price || 0);
-        const cost = singleCostInp ? (parseFloat(singleCostInp.value) || 0) : (materialsState[0]?.cost_price || 0);
-        return [{
-          id: 'single',
-          name: primaryState.name || 'Produk Standar',
-          price: price,
-          cost_price: cost,
-          unitLabel: unitLabel
-        }];
-      }
-
-      if (mainComp === 'tier1') {
-        const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
-        if (validMats.length === 0 && materialsState.length > 0) {
-          return [{
-            id: materialsState[0].id,
-            name: materialsState[0].name || 'Variasi 1',
-            price: parseFloat(materialsState[0].price) || 0,
-            cost_price: parseFloat(materialsState[0].cost_price) || 0,
-            unitLabel: unitLabel
-          }];
-        }
-        return validMats.map((m) => ({
-          id: m.id,
-          name: m.name.trim(),
-          price: parseFloat(m.price) || 0,
-          cost_price: parseFloat(m.cost_price) || 0,
-          unitLabel: unitLabel
-        }));
-      }
-
-      const finList = finishingsState[mainComp] || [];
-      const validFins = finList.filter(f => f && f.name && f.name.trim() !== '' && !f.is_default_none);
-      if (validFins.length === 0 && finList.length > 0) {
-        return [{
-          id: finList[0].id,
-          name: finList[0].name || 'Opsi 1',
-          price: parseFloat(finList[0].price) || 0,
-          cost_price: parseFloat(finList[0].cost_price) || 0,
-          unitLabel: unitLabel
-        }];
-      }
-      return validFins.map((f) => ({
-        id: f.id,
-        name: f.name.trim(),
-        price: parseFloat(f.price) || 0,
-        cost_price: parseFloat(f.cost_price) || 0,
-        unitLabel: unitLabel
-      }));
-    }
-
-    function getSandboxMainComponentOptionsHtml() {
-      const opts = getSandboxMainComponentOptionsList();
-      if (opts.length === 0) {
-        return `<option value="" disabled selected>Belum ada opsi pada komponen utama terpilih</option>`;
-      }
-      let selId = sandboxPxlState.selectedMainOptionId;
-      if (!selId || !opts.some(o => o.id === selId)) {
-        selId = opts[0].id;
-        sandboxPxlState.selectedMainOptionId = selId;
-      }
-      return opts.map(o => `
-        <option value="${o.id}" ${o.id === selId ? 'selected' : ''}>
-          ${escapeHtml(o.name)} — Rp ${formatNumberLocal(o.price)} / ${o.unitLabel} (HPP: Rp ${formatNumberLocal(o.cost_price)})
-        </option>
-      `).join('');
-    }
-
-    function getSandboxFinishingOptionsList() {
-      const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
-      const list = [];
-
-      const tiersToCheck = [];
-      if (mainComp !== 'main' && (primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0))) {
-        tiersToCheck.push({ tier: 'main', label: getVariationLabel('main', 'Variasi 2') });
-      }
-      if (mainComp !== 'extra_1' && (primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0))) {
-        tiersToCheck.push({ tier: 'extra_1', label: getVariationLabel('extra_1', 'Variasi 3') });
-      }
-      if (mainComp !== 'extra_2' && (primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0))) {
-        tiersToCheck.push({ tier: 'extra_2', label: getVariationLabel('extra_2', 'Variasi 4') });
-      }
-      if (primaryState.has_extra_service || (finishingsState.extra_3 && finishingsState.extra_3.length > 0)) {
-        tiersToCheck.push({ tier: 'extra_3', label: getVariationLabel('extra_3', 'Layanan Extras') });
-      }
-
-      tiersToCheck.forEach(t => {
-        const finItems = finishingsState[t.tier] || [];
-        finItems.forEach(item => {
-          if (item && item.name && item.name.trim() !== '' && !item.is_default_none) {
-            list.push({
-              id: item.id,
-              tier: t.tier,
-              tierLabel: t.label,
-              name: item.name.trim(),
-              price: parseFloat(item.price) || 0,
-              cost_price: parseFloat(item.cost_price) || 0,
-              calc_mode: item.calc_mode || 'flat',
-              dim_add_val: item.dim_add_val !== undefined && item.dim_add_val !== null ? item.dim_add_val : 0,
-              dim_add_side: item.dim_add_side || 'p_l'
-            });
-          }
-        });
-      });
-
-      return list;
-    }
-
-    function getSandboxFinishingCheckboxesHtml() {
-      const list = getSandboxFinishingOptionsList();
-      if (list.length === 0) {
-        return `<div class="text-[11px] text-slate-400 italic py-1 px-2">Belum ada opsi finishing / variasi tambahan aktif.</div>`;
-      }
-
-      const dimUnit = primaryState.dimension_unit || 'meter';
-
-      return list.map(item => {
-        const isChecked = sandboxPxlState.selectedFinishingIds.includes(item.id);
-        let modeBadge = '';
-        if (item.calc_mode === 'area') {
-          modeBadge = `<span class="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold">Ikut Luas (× P×L)</span>`;
-        } else if (item.calc_mode === 'add_dim') {
-          const sideText = item.dim_add_side === 'p' ? 'Ke P' : (item.dim_add_side === 'l' ? 'Ke L' : (item.dim_add_side === 'area_add' ? 'Ke Luas' : 'P & L'));
-          modeBadge = `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] font-bold">+${item.dim_add_val} ${dimUnit} (${sideText})</span>`;
-        } else {
-          modeBadge = `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[10px] font-bold">Flat</span>`;
-        }
-
-        return `
-          <label class="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-slate-100/80 cursor-pointer text-xs border border-transparent hover:border-slate-200 transition select-none">
-            <div class="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                class="sandbox-chk-fin accent-emerald-600 w-3.5 h-3.5 rounded cursor-pointer" 
-                value="${item.id}" 
-                ${isChecked ? 'checked' : ''} 
-              />
-              <span class="font-bold text-slate-800">${escapeHtml(item.name)}</span>
-              <span class="text-[10px] text-slate-400 font-medium">(${escapeHtml(item.tierLabel)})</span>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              ${modeBadge}
-              <span class="text-xs font-semibold text-slate-700">Rp ${formatNumberLocal(item.price)}</span>
-            </div>
-          </label>
-        `;
-      }).join('');
-    }
-
-    function renderSandboxCalculationResultsHtml() {
-      const dimUnit = primaryState.dimension_unit || 'meter';
-      let pRaw = parseFloat(sandboxPxlState.simLength);
-      let lRaw = parseFloat(sandboxPxlState.simWidth);
-
-      if (isNaN(pRaw) || isNaN(lRaw) || pRaw <= 0 || lRaw <= 0) {
-        return `
-          <div class="p-3 bg-white border border-dashed border-slate-300 rounded-lg text-center text-xs text-slate-500">
-            <i class="bi bi-info-circle text-slate-400 mr-1"></i>
-            Ketik nilai <strong>Panjang (P)</strong> dan <strong>Lebar (L)</strong> di atas untuk melihat bedah kalkulasi real-time.
-          </div>
-        `;
-      }
-
-      // Faktor konversi ke meter (m)
-      let factor = 1;
-      if (dimUnit === 'cm') factor = 0.01;
-      else if (dimUnit === 'mm') factor = 0.001;
-
-      const pMurni = pRaw;
-      const lMurni = lRaw;
-      const areaMurni = (pMurni * factor) * (lMurni * factor);
-
-      // Cek opsi finishing dengan mode tambah ukuran bahan
-      const finishingList = getSandboxFinishingOptionsList();
-      const selectedFins = finishingList.filter(f => sandboxPxlState.selectedFinishingIds.includes(f.id));
-
-      let pEff = pMurni;
-      let lEff = lMurni;
-      let directAreaAdd = 0;
-      let hasAddDimEffect = false;
-      const addDimDetails = [];
-
-      selectedFins.forEach(f => {
-        if (f.calc_mode === 'add_dim') {
-          hasAddDimEffect = true;
-          const val = parseFloat(f.dim_add_val) || 0;
-          if (f.dim_add_side === 'p') {
-            pEff += val;
-            addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke P)`);
-          } else if (f.dim_add_side === 'l') {
-            lEff += val;
-            addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke L)`);
-          } else if (f.dim_add_side === 'p_l') {
-            pEff += val;
-            lEff += val;
-            addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke P & L)`);
-          } else if (f.dim_add_side === 'area_add') {
-            directAreaAdd += (val * factor * factor);
-            addDimDetails.push(`${f.name} (+${val} ke Luas)`);
-          }
-        }
-      });
-
-      const areaEff = ((pEff * factor) * (lEff * factor)) + directAreaAdd;
-
-      // Komponen Utama
-      const mainOptions = getSandboxMainComponentOptionsList();
-      let mainOpt = mainOptions.find(o => o.id === sandboxPxlState.selectedMainOptionId) || mainOptions[0] || {
-        name: 'Komponen Utama',
-        price: 0,
-        cost_price: 0
-      };
-
-      const mainPriceTotal = areaEff * mainOpt.price;
-      const mainCostTotal = areaEff * mainOpt.cost_price;
-
-      // Finishing
-      const finBreakdown = [];
-      let finPriceTotal = 0;
-      let finCostTotal = 0;
-
-      selectedFins.forEach(f => {
-        let fPrice = 0;
-        let fCost = 0;
-        let formulaText = '';
-
-        if (f.calc_mode === 'flat') {
-          fPrice = f.price;
-          fCost = f.cost_price;
-          formulaText = `Flat per Pcs: Rp ${formatNumberLocal(f.price)}`;
-        } else if (f.calc_mode === 'area') {
-          fPrice = areaEff * f.price;
-          fCost = areaEff * f.cost_price;
-          formulaText = `Ikut Luas (${areaEff.toFixed(2)} m² × Rp ${formatNumberLocal(f.price)}): Rp ${formatNumberLocal(Math.round(fPrice))}`;
-        } else if (f.calc_mode === 'add_dim') {
-          fPrice = f.price;
-          fCost = f.cost_price;
-          formulaText = `Bahan bertambah (+${f.dim_add_val} ${dimUnit})${f.price > 0 ? ` + Jasa: Rp ${formatNumberLocal(f.price)}` : ' (Tanpa Biaya Tambahan)'}`;
-        }
-
-        finPriceTotal += fPrice;
-        finCostTotal += fCost;
-
-        finBreakdown.push({
-          name: f.name,
-          calc_mode: f.calc_mode,
-          formulaText: formulaText,
-          price: fPrice,
-          cost: fCost
-        });
-      });
-
-      const grandTotalPrice = Math.round(mainPriceTotal + finPriceTotal);
-      const grandTotalCost = Math.round(mainCostTotal + finCostTotal);
-      const netProfit = grandTotalPrice - grandTotalCost;
-      const marginPercent = grandTotalPrice > 0 ? ((netProfit / grandTotalPrice) * 100) : 0;
-
-      return `
-        <div class="bg-white border border-emerald-300/80 rounded-xl p-3 sm:p-3.5 space-y-3 shadow-2xs">
-          <!-- 1. Baris Dimensi & Luas -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg">
-              <span class="text-slate-500 font-semibold block text-[11px]">Luas Murni (P × L):</span>
-              <div class="font-bold text-slate-800 text-sm mt-0.5">
-                ${pMurni} ${dimUnit} × ${lMurni} ${dimUnit} = 
-                <span class="text-emerald-700">${areaMurni.toFixed(4)} m²</span>
-              </div>
-            </div>
-
-            <div class="p-2 ${hasAddDimEffect ? 'bg-amber-50/70 border-amber-200 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-800'} border rounded-lg">
-              <span class="${hasAddDimEffect ? 'text-amber-700' : 'text-slate-500'} font-semibold block text-[11px]">
-                ${hasAddDimEffect ? 'Efek Tambahan Ukuran (+ Bahan):' : 'Dimensi Efektif Bahan:'}
-              </span>
-              <div class="font-bold text-sm mt-0.5">
-                ${hasAddDimEffect ? `
-                  ${pEff.toFixed(1)} ${dimUnit} × ${lEff.toFixed(1)} ${dimUnit} = 
-                  <span class="text-amber-800">${areaEff.toFixed(4)} m²</span>
-                ` : `
-                  Sama dengan Luas Murni (${areaEff.toFixed(4)} m²)
-                `}
-              </div>
-              ${hasAddDimEffect ? `
-                <div class="text-[10px] text-amber-700 mt-1 flex items-center gap-1">
-                  <i class="bi bi-arrow-right-short"></i>
-                  <span>${addDimDetails.join(', ')}</span>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-
-          <!-- 2. Rincian Kalkulasi Harga & Biaya -->
-          <div class="space-y-1.5 pt-1 border-t border-slate-100 text-xs">
-            <div class="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Bedah Rincian Biaya:</div>
-            
-            <!-- Rincian Komponen Utama -->
-            <div class="flex items-center justify-between py-1 px-2 bg-slate-50 rounded border border-slate-200">
-              <div class="space-y-0.5">
-                <div class="font-bold text-slate-800 flex items-center gap-1.5">
-                  <span>${escapeHtml(mainOpt.name)}</span>
-                  <span class="text-[10px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-semibold">Bahan Utama</span>
-                </div>
-                <div class="text-[11px] text-slate-500">
-                  ${areaEff.toFixed(2)} m² × Rp ${formatNumberLocal(mainOpt.price)} (HPP: Rp ${formatNumberLocal(mainOpt.cost_price)})
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="font-extrabold text-slate-900">Rp ${formatNumberLocal(Math.round(mainPriceTotal))}</div>
-                <div class="text-[10px] text-slate-400">Modal: Rp ${formatNumberLocal(Math.round(mainCostTotal))}</div>
-              </div>
-            </div>
-
-            <!-- Rincian Finishing / Variasi Tambahan -->
-            ${finBreakdown.map(fb => `
-              <div class="flex items-center justify-between py-1 px-2 bg-slate-50/60 rounded border border-slate-200">
-                <div class="space-y-0.5">
-                  <div class="font-semibold text-slate-800">${escapeHtml(fb.name)}</div>
-                  <div class="text-[11px] text-slate-500">${fb.formulaText}</div>
-                </div>
-                <div class="text-right">
-                  <div class="font-bold text-slate-800">Rp ${formatNumberLocal(Math.round(fb.price))}</div>
-                  <div class="text-[10px] text-slate-400">Modal: Rp ${formatNumberLocal(Math.round(fb.cost))}</div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-
-          <!-- 3. Total Harga Simulasi & Estimasi Laba/HPP -->
-          <div class="pt-2 border-t border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50/60 p-2.5 rounded-lg border">
-            <div>
-              <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Total Harga Simulasi:</div>
-              <div class="text-xl font-black text-emerald-700 leading-tight">
-                Rp ${formatNumberLocal(grandTotalPrice)}
-              </div>
-            </div>
-            <div class="flex items-center gap-2 sm:gap-3 flex-wrap text-xs">
-              <div class="px-2.5 py-1 bg-white border border-slate-200 rounded-md shadow-2xs">
-                <span class="text-slate-400 text-[10px] block font-semibold uppercase">Estimasi Modal (HPP):</span>
-                <span class="font-bold text-slate-700">Rp ${formatNumberLocal(grandTotalCost)}</span>
-              </div>
-              <div class="px-2.5 py-1 bg-emerald-600 text-white rounded-md shadow-2xs">
-                <span class="text-emerald-100 text-[10px] block font-semibold uppercase">Estimasi Laba Bersih:</span>
-                <span class="font-extrabold">+Rp ${formatNumberLocal(netProfit)} (+${marginPercent.toFixed(1)}%)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderOptionDimCalcControl(tier, fin, idx) {
-      const isCheckedDim = Boolean(primaryState.has_custom_dimension);
-      const calcMode = fin.calc_mode || 'flat';
-      const dimAddVal = fin.dim_add_val !== undefined && fin.dim_add_val !== null ? fin.dim_add_val : '';
-      const dimAddSide = fin.dim_add_side || 'p_l';
-      const dimUnit = primaryState.dimension_unit || 'meter';
-
-      return `
-        <div class="option-dim-calc-wrapper w-full basis-full ${isCheckedDim ? 'flex' : 'hidden'} items-center flex-wrap gap-2 px-2.5 py-1.5 bg-amber-50/50 border border-amber-200/90 rounded text-xs text-slate-700 mt-1">
-          <div class="flex items-center gap-1.5 font-bold text-amber-900 shrink-0">
-            <i class="bi bi-rulers text-amber-600"></i>
-            <span>Mode Hitung Ukuran:</span>
-          </div>
-          <select class="select-option-calc-mode px-2 py-1 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs" data-tier="${tier}" data-id="${fin.id}">
-            <option value="flat" ${calcMode === 'flat' ? 'selected' : ''}>Flat (Harga Tetap per Pcs)</option>
-            <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Dikalikan Luas (P x L)</option>
-            <option value="add_dim" ${calcMode === 'add_dim' ? 'selected' : ''}>Tambah Ukuran Bahan (+ Ukuran)</option>
-          </select>
-          <div class="dim-add-controls-wrapper ${calcMode === 'add_dim' ? 'inline-flex' : 'hidden'} items-center gap-1.5 flex-wrap">
-            <span class="text-slate-500 font-bold">+</span>
-            <input 
-              type="number" 
-              step="any"
-              min="0"
-              placeholder="0" 
-              value="${dimAddVal}" 
-              class="input-option-dim-add w-16 px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900 outline-none focus:border-amber-500 text-center shadow-2xs" 
-              data-tier="${tier}" 
-              data-id="${fin.id}" 
-            />
-            <span class="text-[11px] font-bold text-slate-600 dim-unit-text">${dimUnit}</span>
-            <select class="select-option-dim-side px-2 py-1 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs" data-tier="${tier}" data-id="${fin.id}">
-              <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke Panjang & Lebar (P & L)</option>
-              <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P)</option>
-              <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L)</option>
-              <option value="area_add" ${dimAddSide === 'area_add' ? 'selected' : ''}>Tambah ke Total Luas</option>
-            </select>
-          </div>
-        </div>
-      `;
-    }
-
-    // Helper render kartu & konfigurasi Input Ukuran (P x L)
-    function renderCustomDimensionCard() {
-      const isChecked = Boolean(primaryState.has_custom_dimension);
-      const labelVal = primaryState.custom_dimension_label || '';
-      const recs = getVariationLabelRecommendations('custom_dimension');
-      const dimUnit = primaryState.dimension_unit || 'meter';
-
-      return `
-        <!-- Kartu / Tombol Pengaktif Input Ukuran (P x L) tepat di bawah Layanan Extras -->
-        <div id="card-custom-dimension-pxl" class="p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
-          <div class="flex items-center justify-between gap-3">
-            <div class="space-y-0.5">
-              <div class="text-sm font-bold text-slate-900">Input Ukuran (P x L)</div>
-              <p class="text-xs text-slate-500">Aktifkan jika pembeli perlu memasukkan ukuran Panjang x Lebar secara mandiri.</p>
-            </div>
-            <!-- Toggle Checkbox (Default OFF) -->
-            <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
-              <input type="checkbox" id="toggle-custom-dimension" class="sr-only peer" ${isChecked ? 'checked' : ''}>
-              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
-
-          <!-- Area Konfigurasi Saat Toggle Diaktifkan -->
-          <div id="custom-dimension-config-body" class="${isChecked ? 'block' : 'hidden'} pt-3 border-t border-slate-100 space-y-3.5">
-            <!-- Input Nama Label Ukuran -->
-            <div class="space-y-1.5">
-              <label for="input-custom-dimension-label" class="block text-xs font-bold text-slate-800">
-                Nama Label Ukuran <span class="text-red-500">*</span>
-              </label>
-              <div class="custom-combobox-wrapper relative w-full sm:w-72">
-                <input 
-                  type="text" 
-                  id="input-custom-dimension-label" 
-                  data-tier="custom_dimension" 
-                  value="${escapeHtml(labelVal)}" 
-                  placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, dll" 
-                  autocomplete="off" 
-                  class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-emerald-500 shadow-2xs" 
-                />
-                <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
-                  <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
-                  <div class="max-h-48 overflow-y-auto">
-                    ${recs.map(rec => `
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
-                        <span>${escapeHtml(rec)}</span>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-                <div class="label-dup-error-msg hidden mt-1"></div>
-                <div id="custom-dimension-label-error" class="hidden text-[11px] text-red-500 font-semibold mt-1">Nama Label Ukuran (P x L) wajib diisi.</div>
-              </div>
-            </div>
-
-            <!-- LAPISAN 1: PENGATURAN GLOBAL MODE UKURAN -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100">
-              <!-- 1. Dropdown Komponen Utama Ukuran -->
-              <div class="space-y-1">
-                <label for="select-dimension-main-component" class="block text-xs font-bold text-slate-800">
-                  Komponen Utama Ukuran <span class="text-slate-400 font-normal">(Varian Pengali Luas Dasar)</span>
-                </label>
-                <select id="select-dimension-main-component" class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-emerald-500 shadow-2xs">
-                  ${getDimensionMainComponentOptionsHtml()}
-                </select>
-                <p class="text-[11px] text-slate-500">Komponen harga yang dikalikan dengan luas ukuran $(P \times L)$ sebagai bahan utama.</p>
-              </div>
-
-              <!-- 2. Dropdown Satuan Ukuran -->
-              <div class="space-y-1">
-                <label for="select-dimension-unit" class="block text-xs font-bold text-slate-800">
-                  Satuan Ukuran
-                </label>
-                <select id="select-dimension-unit" class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-emerald-500 shadow-2xs">
-                  <option value="meter" ${dimUnit === 'meter' ? 'selected' : ''}>meter (m)</option>
-                  <option value="cm" ${dimUnit === 'cm' ? 'selected' : ''}>centimeter (cm)</option>
-                  <option value="mm" ${dimUnit === 'mm' ? 'selected' : ''}>millimeter (mm)</option>
-                </select>
-                <p class="text-[11px] text-slate-500">Satuan dimensi yang diisi oleh pembeli pada saat memesan produk.</p>
-              </div>
-            </div>
-
-            <!-- Ketentuan Kolom Ukuran (P x L) -->
-            <div class="space-y-1 pt-1">
-              <div class="text-[11px] font-bold text-slate-600">Ketentuan Kolom Ukuran:</div>
-              <div class="inline-flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 flex-wrap">
-                <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-800 font-semibold shadow-2xs">Panjang (P) <span class="text-emerald-600 font-bold badge-unit-text">[${dimUnit}]</span></span>
-                <span class="text-slate-400 font-bold">×</span>
-                <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-800 font-semibold shadow-2xs">Lebar (L) <span class="text-emerald-600 font-bold badge-unit-text">[${dimUnit}]</span></span>
-                <span class="text-[11px] text-slate-400 ml-1.5">(Otomatis aktif di Drawer Checkout)</span>
-              </div>
-            </div>
-
-            <!-- LAPISAN 3: PANEL SANDBOX KALKULATOR SIMULASI UKURAN (P x L) LANGSUNG DI DALAM KARTU CONFIG -->
-            <div id="sandbox-pxl-calculator-panel" class="mt-3 p-3 sm:p-4 bg-gradient-to-br from-slate-50 to-emerald-50/20 border border-emerald-200/80 rounded-xl space-y-3.5 shadow-2xs">
-              <!-- Header Panel Sandbox -->
-              <div class="flex items-center justify-between gap-2 border-b border-emerald-100 pb-2">
-                <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-2xs shrink-0">
-                    <i class="bi bi-calculator-fill text-sm"></i>
-                  </div>
-                  <div>
-                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
-                      <span>Sandbox Kalkulator Simulasi Ukuran (P x L)</span>
-                      <span class="px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-100 text-emerald-800 rounded">Live Test</span>
-                    </div>
-                    <p class="text-[11px] text-slate-500">Uji coba langsung kalkulasi rumus dimensi, komponen utama, dan efek variasi finishing di formulir ini.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Kontrol Simulasi: Komponen Utama + Input P x L -->
-              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <!-- Pilih Opsi Komponen Utama -->
-                <div class="sm:col-span-6 space-y-1">
-                  <label for="sandbox-select-main-option" class="block text-[11px] font-bold text-slate-700">
-                    Pilih Opsi Komponen Utama:
-                  </label>
-                  <select id="sandbox-select-main-option" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-md text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs">
-                    ${getSandboxMainComponentOptionsHtml()}
-                  </select>
-                </div>
-
-                <!-- Kotak Input Simulasi P x L -->
-                <div class="sm:col-span-6 space-y-1">
-                  <label class="block text-[11px] font-bold text-slate-700">
-                    Dimensi Simulasi (P × L):
-                  </label>
-                  <div class="flex items-center gap-1.5">
-                    <div class="relative flex-1">
-                      <input 
-                        type="number" 
-                        step="any"
-                        min="0"
-                        id="sandbox-input-dim-p" 
-                        value="${sandboxPxlState.simLength || (dimUnit === 'meter' ? '2' : (dimUnit === 'cm' ? '200' : '2000'))}" 
-                        placeholder="P" 
-                        class="w-full pl-2.5 pr-7 py-1.5 bg-white border border-slate-300 rounded-md text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
-                      />
-                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">P</span>
-                    </div>
-                    <span class="text-xs font-bold text-slate-400">×</span>
-                    <div class="relative flex-1">
-                      <input 
-                        type="number" 
-                        step="any"
-                        min="0"
-                        id="sandbox-input-dim-l" 
-                        value="${sandboxPxlState.simWidth || (dimUnit === 'meter' ? '1' : (dimUnit === 'cm' ? '100' : '1000'))}" 
-                        placeholder="L" 
-                        class="w-full pl-2.5 pr-7 py-1.5 bg-white border border-slate-300 rounded-md text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
-                      />
-                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">L</span>
-                    </div>
-                    <span class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded-md text-[11px] font-bold text-slate-600 shrink-0 badge-unit-text">
-                      ${dimUnit}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Pilih Opsi Finishing / Variasi Tambahan -->
-              <div class="space-y-1.5 pt-0.5">
-                <div class="text-[11px] font-bold text-slate-700 flex items-center justify-between">
-                  <span>Pilih Opsi Variasi Tambahan / Finishing untuk Diuji:</span>
-                  <span class="text-[10px] text-slate-400 font-normal">(Centang untuk menguji penambahan biaya/dimensi)</span>
-                </div>
-                <div id="sandbox-finishing-options-list" class="max-h-40 overflow-y-auto space-y-1.5 p-2 bg-white/70 border border-slate-200/90 rounded-lg">
-                  ${getSandboxFinishingCheckboxesHtml()}
-                </div>
-              </div>
-
-              <!-- Box Rincian Real-Time Teks Kalkulasi & Hasil Akhir -->
-              <div id="sandbox-calc-results-breakdown" class="pt-1">
-                ${renderSandboxCalculationResultsHtml()}
-              </div>
-            </div>
           </div>
         </div>
       `;
@@ -14268,10 +14333,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     updateProductCardLivePreview,
     getLastProductFooterConfig,
     validateForm,
-    getPrimaryState: () => primaryState
+    getPrimaryState: () => primaryState,
+    renderOptionDimCalcControl,
+    renderSandboxCalculationResultsHtml,
+    updateSandboxCalculation,
+    renderCustomDimensionCard
   };
 })();
 
 window.ProductForm = ProductForm;
+window.renderOptionDimCalcControl = ProductForm.renderOptionDimCalcControl;
+window.renderSandboxCalculationResultsHtml = ProductForm.renderSandboxCalculationResultsHtml;
+window.updateSandboxCalculation = ProductForm.updateSandboxCalculation;
 
 

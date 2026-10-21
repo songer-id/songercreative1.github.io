@@ -1252,11 +1252,54 @@ input.toggle-same-cost:checked ~ div::after {
 }
 
 /* --------------------------------------------------------------------------
-   CUSTOM DIMENSION (P x L) INPUTS & SANDBOX
+   CUSTOM DIMENSION (P x L) INPUTS & SANDBOX (MOBILE-FIRST OPTIMIZATION)
    -------------------------------------------------------------------------- */
 .option-dim-calc-wrapper {
   transition: all 0.15s ease-in-out;
 }
+
+@media (max-width: 767.98px) {
+  .option-dim-calc-wrapper {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 0.75rem !important;
+  }
+  .option-dim-calc-wrapper .select-option-calc-mode,
+  .option-dim-calc-wrapper .select-option-dim-side,
+  .option-dim-calc-wrapper .input-option-dim-add {
+    width: 100% !important;
+    min-height: 38px;
+    font-size: 0.8125rem;
+  }
+  .option-dim-calc-wrapper .dim-add-controls-wrapper {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+  #card-custom-dimension-pxl #select-dimension-main-component,
+  #card-custom-dimension-pxl #select-dimension-unit {
+    width: 100% !important;
+    min-height: 40px;
+  }
+  #sandbox-pxl-calculator-panel #sandbox-select-main-option {
+    width: 100% !important;
+    min-height: 40px;
+  }
+  #sandbox-input-dim-p,
+  #sandbox-input-dim-l {
+    min-height: 40px;
+  }
+}
+
+.sandbox-finishing-chip {
+  touch-action: manipulation;
+  min-height: 40px;
+}
+.sandbox-finishing-chip:active {
+  transform: scale(0.99);
+}
+
 .input-shopee-dim-p::-webkit-outer-spin-button,
 .input-shopee-dim-p::-webkit-inner-spin-button,
 .input-shopee-dim-l::-webkit-outer-spin-button,
