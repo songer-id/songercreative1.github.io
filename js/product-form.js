@@ -2600,23 +2600,11 @@ const ProductForm = (() => {
               ${coverImg ? `<img src="${coverImg}" class="w-full h-full object-cover" alt="Cover" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
             </div>
             <div class="flex-1 pr-6 min-w-0">
-              ${(curQty > 1 || extrasActivePrice > 0) ? `
-                ${effHasDiscount ? `
-                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
-                ` : `
-                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                `}
-                <div class="text-[10px] text-slate-500 font-normal mt-0.5">
-                  (${curQty} pcs @ Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}${extrasActivePrice > 0 ? ` + Ekstra Rp${Math.round(extrasActivePrice).toLocaleString('id-ID')}` : ''})
-                </div>
+              ${effHasDiscount ? `
+                <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
               ` : `
-                ${effHasDiscount ? `
-                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
-                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(displayBasePrice).toLocaleString('id-ID')}</div>
-                ` : `
-                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
-                `}
+                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
               ${wholesaleInfo.bannerText ? `
@@ -2667,23 +2655,11 @@ const ProductForm = (() => {
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${isAllVariationsSelected ? `
-                ${(curQty > 1 || extrasActivePrice > 0) ? `
-                  ${effHasDiscount ? `
-                    <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                    <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
-                  ` : `
-                    <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                  `}
-                  <div class="text-[10px] text-slate-500 font-normal mt-0.5">
-                    (${curQty} pcs @ Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}${extrasActivePrice > 0 ? ` + Ekstra Rp${Math.round(extrasActivePrice).toLocaleString('id-ID')}` : ''})
-                  </div>
+                ${effHasDiscount ? `
+                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
                 ` : `
-                  ${effHasDiscount ? `
-                    <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
-                    <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID')}</div>
-                  ` : `
-                    <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
-                  `}
+                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
                 `}
               ` : `
                 <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
@@ -4323,16 +4299,13 @@ const ProductForm = (() => {
                   ${escapeHtml(name)}
                 </h3>
 
-                <!-- Stok & Grosir -->
-                <div class="space-y-1">
-                  <div class="text-[11px] text-slate-500 font-medium">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
-                  ${wholesaleInfo.bannerText ? `
-                    <div class="mt-1 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
-                      <i class="bi bi-tag-fill text-amber-600"></i>
-                      <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
-                    </div>
-                  ` : ''}
-                </div>
+                <!-- Grosir (Jika Aktif) -->
+                ${wholesaleInfo.bannerText ? `
+                  <div class="mt-1 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
+                    <i class="bi bi-tag-fill text-amber-600"></i>
+                    <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
+                  </div>
+                ` : ''}
 
                 <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
                 ${primaryState.has_variants ? `
@@ -4414,13 +4387,8 @@ const ProductForm = (() => {
                   </div>
                 ` : '')}
 
-                <!-- URUTAN 5: Estimasi Pengiriman & Deskripsi Produk -->
-                <div class="p-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[10px] text-slate-600">
-                  <i class="bi bi-truck text-xs" style="color: ${accentColor};"></i>
-                  <span class="font-medium">${primaryState.product_type === 'non_physical' ? 'Layanan Digital / Tanpa Pengiriman Fisik' : 'Estimasi Pengiriman: 1-2 Hari Kerja'}</span>
-                </div>
-
-                <div class="space-y-1 pt-1">
+                <!-- Deskripsi Produk -->
+                <div class="space-y-1 pt-2 border-t border-slate-100">
                   <span class="text-xs font-medium text-slate-600 block">Deskripsi Produk</span>
                   <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
                     ${escapeHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
