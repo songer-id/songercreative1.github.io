@@ -85,7 +85,7 @@ const ProductForm = (() => {
     weight_unit: 'Kg',       // 'Kg' | 'gram' | 'ons' | 'ton'
     volume_unit: 'Liter',    // 'Liter' | 'ml' | 'galon' | 'drum' | 'cc'
     stock: null,
-    is_unlimited_stock: true,
+    is_unlimited_stock: false,
     min_order: 1,
     max_order: null,
     max_order_type: 'unlimited', // 'unlimited' | 'per_order' | 'per_period'
@@ -326,7 +326,7 @@ const ProductForm = (() => {
       weight_unit: 'Kg',
       volume_unit: 'Liter',
       stock: null,
-      is_unlimited_stock: true,
+      is_unlimited_stock: false,
       min_order: 1,
       max_order: null,
       max_order_type: 'unlimited',
@@ -1867,7 +1867,7 @@ const ProductForm = (() => {
 
   function getPreviewStockDisplay(selectedMat, validMaterials) {
     if (!primaryState.has_variants) {
-      const unlCheck = document.getElementById('toggle-unlimited-stock');
+      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
       const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
       if (isUnl) return 'Unlimited';
       const stockInp = document.getElementById('input-stock-qty');
@@ -1918,7 +1918,7 @@ const ProductForm = (() => {
 
     // Cek stok jika tidak unlimited
     if (!primaryState.has_variants) {
-      const unlCheck = document.getElementById('toggle-unlimited-stock');
+      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
       const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
       if (!isUnl) {
         const stockInp = document.getElementById('input-stock-qty');
@@ -4703,7 +4703,7 @@ const ProductForm = (() => {
       <div class="space-y-6 pt-6">
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
-        <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6" id="card-step2-info">
+        <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6 step2-section-card" id="card-step2-info">
           <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
             <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
           </div>
@@ -4815,7 +4815,7 @@ const ProductForm = (() => {
 
         <!-- CARD 2: INFORMASI PENJUALAN (GATED) -->
         ${missingCard1.length > 0 ? renderFlashbackCard('Informasi Penjualan', 'bi-shop', missingCard1, 'card-step2-sales') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6" id="card-step2-sales">
+          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6 step2-section-card" id="card-step2-sales">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Penjualan</h2>
             </div>
@@ -4828,7 +4828,6 @@ const ProductForm = (() => {
                 <label for="select-pricing-model" class="block text-xs font-bold text-slate-800">
                   Jenis Harga Produk <span class="text-red-500">*</span>
                 </label>
-                <span class="text-[11px] text-slate-400">Pilih formula penetapan harga dasar produk</span>
               </div>
 
               <div>
@@ -4857,7 +4856,8 @@ const ProductForm = (() => {
                   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
                     <input 
                       type="checkbox" 
-                      id="toggle-unlimited-stock" 
+                      id="chk-unlimited-stock" 
+                      data-alias="toggle-unlimited-stock"
                       ${primaryState.is_unlimited_stock ? 'checked' : ''} 
                       class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                     />
@@ -4871,10 +4871,11 @@ const ProductForm = (() => {
                     type="number" 
                     id="input-stock-qty" 
                     min="0"
-                    value="${primaryState.stock !== null ? primaryState.stock : 0}" 
+                    value="${primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : ''}" 
                     class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white"
                     placeholder="0"
                   />
+                  <div id="single-stock-error-msg" class="field-error-msg hidden mt-1 text-xs text-red-500"></div>
                 </div>
               </div>
 
@@ -4999,7 +5000,7 @@ const ProductForm = (() => {
 
         <!-- CARD 3: PENGIRIMAN (GATED) -->
         ${missingCard2.length > 0 ? renderFlashbackCard('Pengiriman', 'bi-truck', missingCard2, 'card-step2-shipping') : `
-          <div id="card-step2-shipping" class="${isPhysical ? 'block' : 'hidden'} bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-5">
+          <div id="card-step2-shipping" class="${isPhysical ? 'block' : 'hidden'} bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-5 step2-section-card">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Pengiriman & Dimensi Paket</h2>
             </div>
@@ -5089,7 +5090,7 @@ const ProductForm = (() => {
 
         <!-- CARD 4: PROGRAM PROMO (GATED) -->
         ${missingCard3.length > 0 ? renderFlashbackCard('Program Promo', 'bi-tag', missingCard3, 'card-step2-promo') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4" id="card-step2-promo">
+          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4 step2-section-card" id="card-step2-promo">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
               <label class="relative inline-flex items-center cursor-pointer">
@@ -5180,7 +5181,7 @@ const ProductForm = (() => {
 
         <!-- CARD 5: DESKRIPSI PRODUK (GATED) -->
         ${missingCard4.length > 0 ? renderFlashbackCard('Deskripsi Produk', 'bi-file-text', missingCard4, 'card-step2-description') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4" id="card-step2-description">
+          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4 step2-section-card" id="card-step2-description">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">
                 Deskripsi Produk <span class="text-red-500">*</span>
@@ -5231,7 +5232,7 @@ const ProductForm = (() => {
 
         <!-- CARD 6: LAINNYA (GATED) -->
         ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-5" id="card-step2-others">
+          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-5 step2-section-card" id="card-step2-others">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Lainnya & Konfigurasi Tambahan</h2>
             </div>
@@ -5335,6 +5336,122 @@ const ProductForm = (() => {
     return ['Finishing', 'Ukuran', 'Warna', 'Toping'];
   }
 
+  // Helper pengambil input judul variasi aktif (Variasi 1 -> Variasi 2 -> Variasi 3 -> Variasi 4 -> Layanan Extras)
+  function getActiveVariationLabelInputs() {
+    const isVarMode = Boolean(primaryState.has_variants || primaryState.has_variations);
+    const isExtraActive = Boolean(primaryState.has_extra_service || (finishingsState.extra_3 && finishingsState.extra_3.length > 0));
+
+    const activeInputs = [];
+    if (isVarMode) {
+      const el1 = document.getElementById('input-var-label-tier1');
+      if (el1) activeInputs.push(el1);
+      if (primaryState.has_variation_2) {
+        const el2 = document.getElementById('input-var-label-main') || document.getElementById('input-var-label-tier2');
+        if (el2) activeInputs.push(el2);
+      }
+      if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+        const el3 = document.getElementById('input-var-label-extra_1') || document.getElementById('input-var-label-tier3');
+        if (el3) activeInputs.push(el3);
+      }
+      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+        const el4 = document.getElementById('input-var-label-extra_2') || document.getElementById('input-var-label-tier4');
+        if (el4) activeInputs.push(el4);
+      }
+    }
+    if (isExtraActive) {
+      const elExtra = document.getElementById('input-var-label-extra3') || document.getElementById('input-var-label-extra_3');
+      if (elExtra) activeInputs.push(elExtra);
+    }
+    if (activeInputs.length === 0) {
+      document.querySelectorAll('.input-variation-label').forEach(inp => activeInputs.push(inp));
+    }
+    return activeInputs;
+  }
+
+  // KUNCI REKOMENDASI JUDUL VARIASI YANG SUDAH DIGUNAKAN DI VARIASI LAIN PADA COMBOBOX
+  function updateVariationTitleComboboxRecommendations() {
+    const activeInputs = getActiveVariationLabelInputs();
+
+    activeInputs.forEach(input => {
+      const wrapper = input.closest('.custom-combobox-wrapper');
+      if (!wrapper) return;
+      const popover = wrapper.querySelector('.custom-combobox-popover');
+      if (!popover) return;
+
+      // Ambil judul yang terpakai di kartu variasi LAIN yang aktif
+      const otherUsedTitles = new Set();
+      activeInputs.forEach(other => {
+        if (other !== input) {
+          const val = (other.value || '').trim().toLowerCase();
+          if (val) otherUsedTitles.add(val);
+        }
+      });
+
+      popover.querySelectorAll('.combobox-item').forEach(item => {
+        const itemVal = (item.getAttribute('data-value') || item.textContent || '').trim().toLowerCase();
+        if (itemVal && otherUsedTitles.has(itemVal)) {
+          item.classList.add('opacity-40', 'pointer-events-none', 'cursor-not-allowed');
+          item.setAttribute('title', 'Judul variasi sudah digunakan');
+        } else {
+          item.classList.remove('opacity-40', 'pointer-events-none', 'cursor-not-allowed');
+          item.removeAttribute('title');
+        }
+      });
+    });
+  }
+
+  // VALIDASI REAL-TIME ANTI-DUPLIKAT ANTAR JUDUL VARIASI (BERURUTAN DARI ATAS KE BAWAH)
+  function refreshVariationTitleDuplicateErrors() {
+    const targetInputs = getActiveVariationLabelInputs();
+
+    const seenTitles = new Set();
+    let hasDuplicate = false;
+    let firstDuplicateEl = null;
+
+    targetInputs.forEach(input => {
+      const wrapper = input.closest('.custom-combobox-wrapper');
+      const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
+      const val = (input.value || '').trim();
+      const normTitle = val.toLowerCase();
+
+      if (!normTitle) {
+        input.classList.remove('border-red-500');
+        input.classList.add('border-slate-400');
+        if (errEl) {
+          errEl.textContent = '';
+          errEl.classList.add('hidden');
+        }
+        return;
+      }
+
+      if (!seenTitles.has(normTitle)) {
+        // Kemunculan Pertama: 100% VALID
+        seenTitles.add(normTitle);
+        input.classList.remove('border-red-500');
+        input.classList.add('border-slate-400');
+        if (errEl) {
+          errEl.textContent = '';
+          errEl.classList.add('hidden');
+        }
+      } else {
+        // Kemunculan Kedua/Duplikat: Beri border merah & tampilkan pesan peringatan
+        hasDuplicate = true;
+        if (!firstDuplicateEl) {
+          firstDuplicateEl = input;
+        }
+        input.classList.remove('border-slate-400');
+        input.classList.add('border-red-500');
+        if (errEl) {
+          errEl.textContent = 'Judul variasi sudah digunakan';
+          errEl.classList.remove('hidden');
+        }
+      }
+    });
+
+    updateVariationTitleComboboxRecommendations();
+    return { hasDuplicate, firstDuplicateEl, targetInputs };
+  }
+
   // Helper Binding Custom Combobox Popover (Rekomendasi + Input Manual)
   function bindCustomComboboxes(root = document) {
     if (!root) return;
@@ -5347,6 +5464,9 @@ const ProductForm = (() => {
         document.querySelectorAll('.custom-combobox-popover').forEach(p => {
           if (p !== popover) p.classList.add('hidden');
         });
+        if (input.classList.contains('input-variation-label')) {
+          updateVariationTitleComboboxRecommendations();
+        }
         // Smart flip: jika berada di baris-baris bawah atau dekat dasar viewport
         const rect = wrapper.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
@@ -5385,6 +5505,9 @@ const ProductForm = (() => {
       popover.querySelectorAll('.combobox-item').forEach(item => {
         item.onclick = (e) => {
           e.stopPropagation();
+          if (item.classList.contains('pointer-events-none') || item.classList.contains('cursor-not-allowed')) {
+            return;
+          }
           const chosenVal = item.getAttribute('data-value');
           input.value = chosenVal;
           popover.classList.add('hidden');
@@ -5393,6 +5516,8 @@ const ProductForm = (() => {
         };
       });
     });
+
+    updateVariationTitleComboboxRecommendations();
 
     if (!window._comboboxGlobalClickListener) {
       window._comboboxGlobalClickListener = true;
@@ -5421,7 +5546,7 @@ const ProductForm = (() => {
       const containerId = isTier1 ? 'materials-rows-container' : `finishings-${tier}-rows-container`;
 
       return `
-        <div class="bg-slate-50/70 rounded-lg border border-slate-300 p-4 sm:p-5 space-y-4 relative shadow-2xs" id="card-variasi-${tierNum}">
+        <div class="bg-slate-50/70 rounded-lg border border-slate-300 p-4 sm:p-5 space-y-4 relative shadow-2xs variation-card-block" id="card-variasi-${tierNum}">
           <!-- Bagian Atas Kartu (2 Kolom Kiri & Kanan) -->
           <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2 border-b border-slate-200/80">
             <!-- Sisi Kiri: Judul, Input Nama Kelompok Variasi + (?) & Sub-label Opsi -->
@@ -5514,7 +5639,7 @@ const ProductForm = (() => {
       const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.extra_3) || '';
 
       return `
-        <div class="bg-slate-50/70 rounded-lg border border-slate-300 p-4 sm:p-5 space-y-4 relative shadow-2xs" id="card-extra-service">
+        <div class="bg-slate-50/70 rounded-lg border border-slate-300 p-4 sm:p-5 space-y-4 relative shadow-2xs variation-card-block" id="card-extra-service">
           <!-- Bagian Atas Kartu (2 Kolom Kiri & Kanan) -->
           <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2 border-b border-slate-200/80">
             <!-- Sisi Kiri: Judul, Input Nama Kelompok + (?) & Sub-label Opsi -->
@@ -5707,9 +5832,6 @@ const ProductForm = (() => {
                   <span>Variasi Produk</span>
                 </button>
               </div>
-              <span class="text-[11px] text-slate-500">
-                Produk tunggal (tanpa varian). Klik tombol untuk mengaktifkan varian.
-              </span>
             </div>
 
             <!-- Produk Tunggal: Tabel Input Sederhana Harga Jual & HPP -->
@@ -6162,7 +6284,7 @@ const ProductForm = (() => {
 
     return `
       <!-- Tabel Matriks Kombinasi Utama -->
-      <div class="mt-6 space-y-3" id="combination-matrix-section">
+      <div class="mt-6 space-y-3 step2-section-card variation-card-block" id="combination-matrix-section">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <span>Tabel Kombinasi Variasi & Pengaturan Pembelian</span>
@@ -6855,60 +6977,8 @@ const ProductForm = (() => {
   }
 
   function validateVariationGroupLabels() {
-    const isVarMode = Boolean(primaryState.has_variants || primaryState.has_variations);
-    const groups = [];
-    if (isVarMode) {
-      const v1Val = (primaryState.variation_labels?.label_tier_1 || document.getElementById('input-var-label-tier1')?.value || 'Variasi 1').trim();
-      const el1 = document.getElementById('input-var-label-tier1')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
-      groups.push({ key: 'tier1', label: v1Val, errorEl: el1 });
-    }
-    if (isVarMode && primaryState.has_variation_2) {
-      const v2Val = (primaryState.variation_labels?.label_tier_2 || document.getElementById('input-var-label-tier2')?.value || 'Variasi 2').trim();
-      const el2 = document.getElementById('input-var-label-tier2')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
-      groups.push({ key: 'tier2', label: v2Val, errorEl: el2 });
-    }
-    if (isVarMode && primaryState.has_variation_2 && primaryState.has_variation_3) {
-      const v3Val = (primaryState.variation_labels?.label_extra_1 || document.getElementById('input-var-label-tier3')?.value || 'Variasi 3').trim();
-      const el3 = document.getElementById('input-var-label-tier3')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
-      groups.push({ key: 'extra_1', label: v3Val, errorEl: el3 });
-    }
-    if (isVarMode && primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
-      const v4Val = (primaryState.variation_labels?.label_extra_2 || document.getElementById('input-var-label-tier4')?.value || 'Variasi 4').trim();
-      const el4 = document.getElementById('input-var-label-tier4')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
-      groups.push({ key: 'extra_2', label: v4Val, errorEl: el4 });
-    }
-    if (isVarMode && primaryState.has_extra_service) {
-      const vExtraVal = (primaryState.variation_labels?.label_extra_3 || document.getElementById('input-var-label-extra3')?.value || 'Layanan Extras').trim();
-      const elExtra = document.getElementById('input-var-label-extra3')?.closest('.custom-combobox-wrapper')?.querySelector('.label-dup-error-msg');
-      groups.push({ key: 'extra_3', label: vExtraVal, errorEl: elExtra });
-    }
-
-    let hasDuplicate = false;
-    groups.forEach((g) => {
-      if (g.errorEl) {
-        g.errorEl.textContent = '';
-        g.errorEl.classList.add('hidden');
-      }
-    });
-
-    for (let i = 0; i < groups.length; i++) {
-      for (let j = i + 1; j < groups.length; j++) {
-        if (groups[i].label.toLowerCase() === groups[j].label.toLowerCase()) {
-          hasDuplicate = true;
-          const msg = 'Nama judul kelompok variasi tidak boleh sama';
-          if (groups[i].errorEl) {
-            groups[i].errorEl.textContent = msg;
-            groups[i].errorEl.classList.remove('hidden');
-          }
-          if (groups[j].errorEl) {
-            groups[j].errorEl.textContent = msg;
-            groups[j].errorEl.classList.remove('hidden');
-          }
-        }
-      }
-    }
-
-    return { hasDuplicate, groups };
+    const res = refreshVariationTitleDuplicateErrors();
+    return { hasDuplicate: res.hasDuplicate, firstDuplicateEl: res.firstDuplicateEl, groups: [] };
   }
 
 
@@ -7997,6 +8067,38 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       updateProductCardLivePreview();
     }
 
+    // Single Stock Input (Produk Tunggal)
+    const singleStock = document.getElementById('input-stock-qty');
+    const singleStockErr = document.getElementById('single-stock-error-msg');
+
+    function validateSingleStock(isBlur = false) {
+      if (!singleStock) return true;
+      const unl = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
+      if (unl && unl.checked) {
+        if (singleStockErr) { singleStockErr.textContent = ''; singleStockErr.classList.add('hidden'); }
+        singleStock.classList.remove('border-red-500');
+        singleStock.classList.add('border-slate-300');
+        return true;
+      }
+      const raw = (singleStock.value || '').trim();
+      if (raw === '' || isNaN(parseInt(raw)) || parseInt(raw) < 0) {
+        if (isBlur) {
+          singleStock.classList.remove('border-slate-300');
+          singleStock.classList.add('border-red-500');
+          if (singleStockErr) {
+            singleStockErr.textContent = 'Stok produk wajib diisi (minimal "0")';
+            singleStockErr.classList.remove('hidden');
+          }
+          return false;
+        }
+        return false;
+      }
+      singleStock.classList.remove('border-red-500');
+      singleStock.classList.add('border-slate-300');
+      if (singleStockErr) { singleStockErr.textContent = ''; singleStockErr.classList.add('hidden'); }
+      return true;
+    }
+
     if (singlePrice) {
       singlePrice.oninput = updateSingleMargin;
       singlePrice.onblur = () => validateSinglePrice(true);
@@ -8004,6 +8106,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (singleCost) {
       singleCost.oninput = updateSingleMargin;
       singleCost.onblur = () => validateSingleCost(true);
+    }
+    if (singleStock) {
+      singleStock.disabled = false;
+      singleStock.oninput = () => {
+        primaryState.stock = singleStock.value.trim() === '' ? null : parseInt(singleStock.value);
+        if (materialsState.length > 0) materialsState[0].stock = primaryState.stock;
+        validateSingleStock(false);
+        updateProductCardLivePreview();
+      };
+      singleStock.onblur = () => validateSingleStock(true);
     }
 
     // Kustomisasi Label Input pada Setiap Variasi Real-Time Sync
@@ -8032,7 +8144,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
       }
 
-      validateVariationGroupLabels();
+      refreshVariationTitleDuplicateErrors();
       updateProductCardLivePreview();
     }
 
@@ -8041,7 +8153,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         handleVariationLabelInput(inp, e.target.value.trim());
       };
       inp.onblur = () => {
-        validateVariationGroupLabels();
+        refreshVariationTitleDuplicateErrors();
       };
     });
 
@@ -8055,7 +8167,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       document.addEventListener('blur', (e) => {
         const inp = e.target.closest('.input-variation-label');
         if (!inp) return;
-        validateVariationGroupLabels();
+        refreshVariationTitleDuplicateErrors();
       }, true);
     }
 
@@ -9263,12 +9375,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // STEP 2 CONTROLS LAINNYA (STOK, PENGIRIMAN, PROMO, AI)
     // =====================================================================
     // Stok Unlimited Toggle
-    const unlStock = document.getElementById('toggle-unlimited-stock');
+    const unlStock = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
     const stockWrap = document.getElementById('stock-input-wrapper');
+    const stockQtyInput = document.getElementById('input-stock-qty');
+    const stockErr = document.getElementById('single-stock-error-msg');
     if (unlStock) {
       unlStock.onchange = e => {
         primaryState.is_unlimited_stock = e.target.checked;
         if (stockWrap) stockWrap.className = primaryState.is_unlimited_stock ? 'hidden' : 'block';
+        if (primaryState.is_unlimited_stock) {
+          if (stockQtyInput) {
+            stockQtyInput.classList.remove('border-red-500');
+            stockQtyInput.classList.add('border-slate-300');
+          }
+          if (stockErr) {
+            stockErr.textContent = '';
+            stockErr.classList.add('hidden');
+          }
+        } else {
+          if (stockQtyInput) {
+            stockQtyInput.disabled = false;
+          }
+        }
         updateProductCardLivePreview();
       };
     }
@@ -11235,7 +11363,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
 
     // Unlimited Stock Switch
-    const toggleUnlStock = document.getElementById('toggle-unlimited-stock');
+    const toggleUnlStock = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
     const stockWrapper = document.getElementById('stock-input-wrapper');
     if (toggleUnlStock && stockWrapper) {
       toggleUnlStock.addEventListener('change', e => {
@@ -11811,11 +11939,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // Stok
-    const unlStockCheck = document.getElementById('toggle-unlimited-stock');
+    const unlStockCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
     if (unlStockCheck) primaryState.is_unlimited_stock = unlStockCheck.checked;
     const stockQtyInp = document.getElementById('input-stock-qty');
     if (stockQtyInp) {
-      primaryState.stock = primaryState.is_unlimited_stock ? null : (parseInt(stockQtyInp.value) || 0);
+      const rawStock = stockQtyInp.value.trim();
+      primaryState.stock = primaryState.is_unlimited_stock ? null : (rawStock === '' ? null : parseInt(rawStock));
+      if (materialsState.length > 0) {
+        materialsState[0].stock = primaryState.stock;
+      }
     }
 
     // Min Order
@@ -12152,24 +12284,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
       if (!primaryState.is_unlimited_stock) {
         const sVal = firstMat?.stock;
-        if (sVal === '' || sVal === undefined || sVal === null || isNaN(parseInt(sVal)) || parseInt(sVal) < 0) {
+        const stockRaw = singleStockEl?.value !== undefined ? singleStockEl.value.trim() : (sVal !== null && sVal !== undefined ? String(sVal) : '');
+        if (stockRaw === '' || isNaN(parseInt(stockRaw)) || parseInt(stockRaw) < 0) {
           addError('Stok produk wajib diisi.', singleStockEl);
+          if (typeof validateSingleStock === 'function') validateSingleStock(true);
         }
       }
     } else if (primaryState.has_variants) {
       // Periksa Duplikasi Label Judul Kelompok Variasi
-      const groupLabelCheck = validateVariationGroupLabels();
+      const groupLabelCheck = refreshVariationTitleDuplicateErrors();
       if (groupLabelCheck.hasDuplicate) {
-        addError('Nama judul kelompok variasi tidak boleh sama persis satu sama lain.', document.getElementById('input-var-label-tier1') || document.getElementById('input-var-label-main'));
+        addError('Judul variasi sudah digunakan.', groupLabelCheck.firstDuplicateEl || document.getElementById('input-var-label-tier1') || document.getElementById('input-var-label-main'));
       }
 
       // Validasi Baris Opsi Variasi 1
       if (!materialsState || materialsState.length === 0) {
-        addError('Minimal harus mengisi 1 pilihan varian / bahan dasar.', document.getElementById('table-tier1-container') || document.querySelector('[data-tier="tier1"]'));
+        addError('Minimal harus mengisi 1 pilihan varian / bahan dasar.', document.getElementById('table-tier1-container') || document.querySelector('[data-tier="tier1"]') || document.getElementById('card-variasi-1'));
       } else {
         const validMats = materialsState.filter(m => m.name && m.name.trim() !== '');
-        if (validMats.length < 1) {
-          addError('Variasi 1 wajib memiliki minimal 1 opsi yang terisi namanya.', document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]'));
+        if (validMats.length < 2) {
+          addError('Variasi 1 wajib memiliki minimal 2 opsi yang terisi namanya.', document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]') || document.getElementById('card-variasi-1'));
         }
 
         materialsState.forEach((m, idx) => {
@@ -12213,17 +12347,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       // Validasi Baris Variasi 2, 3, 4 & Layanan Extras
       const activeTiers = [];
-      if (primaryState.has_variation_2) activeTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2' });
-      if (primaryState.has_variation_3) activeTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3' });
-      if (primaryState.has_variation_4) activeTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4' });
-      if (primaryState.has_extra_service) activeTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras' });
+      if (primaryState.has_variation_2) activeTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2', cardId: 'card-variasi-2' });
+      if (primaryState.has_variation_3) activeTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3', cardId: 'card-variasi-3' });
+      if (primaryState.has_variation_4) activeTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4', cardId: 'card-variasi-4' });
+      if (primaryState.has_extra_service) activeTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras', cardId: 'card-extra-service' });
 
-      activeTiers.forEach(({ tier, label }) => {
+      activeTiers.forEach(({ tier, label, cardId }) => {
         const list = finishingsState[tier] || [];
         const isExtra3 = (tier === 'extra_3');
         const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
-        if (validList.length < 1) {
-          addError(`${label} wajib memiliki minimal 1 opsi yang terisi namanya.`, document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`));
+        const minReq = isExtra3 ? 1 : 2;
+        if (validList.length < minReq) {
+          addError(`${label} wajib memiliki minimal ${minReq} opsi yang terisi namanya.`, document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`) || document.getElementById(cardId));
         }
 
         list.forEach((f, idx) => {
@@ -12287,8 +12422,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
-    if (!primaryState.is_unlimited_stock && (primaryState.stock === null || isNaN(primaryState.stock) || primaryState.stock < 0)) {
+    if (!primaryState.is_unlimited_stock && !primaryState.has_variants && (primaryState.stock === null || isNaN(primaryState.stock) || primaryState.stock < 0)) {
       addError('Masukkan kuota stok fisik yang valid jika batas stok aktif.', document.getElementById('input-stock-qty') || document.getElementById('stock-input-wrapper'));
+    }
+
+    if (primaryState.has_wholesale && (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0)) {
+      addError('Harga Grosir aktif namun belum memiliki pengaturan tingkatan harga.', document.getElementById('wholesale-table-wrapper') || document.getElementById('btn-toggle-wholesale'));
     }
 
     if (primaryState.min_order < 1) {
@@ -12296,6 +12435,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
     if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && primaryState.max_order_qty < primaryState.min_order) {
       addError('Maksimal pesanan per checkout tidak boleh lebih kecil dari minimal pesanan.', document.getElementById('input-normal-max-order') || document.getElementById('input-max-order-qty'));
+    }
+
+    if (primaryState.product_type === 'physical') {
+      const pkgWeight = primaryState.shipping_config?.weight;
+      const weightInp = document.getElementById('input-package-weight') || document.getElementById('input-pkg-weight');
+      if (pkgWeight === undefined || pkgWeight === null || isNaN(pkgWeight) || pkgWeight <= 0) {
+        addError('Berat paket pengiriman wajib diisi (minimal 1 gram).', weightInp || document.getElementById('card-step2-shipping'));
+      }
     }
 
     // 3. Validasi Step 3: Promo & Deskripsi
@@ -12333,26 +12480,50 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (errorList) errorList.innerHTML = errors.map(err => `<li>${err}</li>`).join('');
       if (errorBanner) errorBanner.classList.remove('hidden');
 
-      const targetEl = errors.firstInvalidElement ||
+      const firstInvalidEl = errors.firstInvalidElement ||
         document.querySelector('.field-error-msg:not(.hidden)')?.closest('.flex-col, .variation-option-row, td')?.querySelector('input, select, textarea') ||
         document.querySelector('.border-red-500') ||
         document.getElementById('form-error-banner');
 
-      if (targetEl) {
-        const isInsideStep1 = targetEl.closest('#step-pane-1');
+      if (firstInvalidEl) {
+        const isInsideStep1 = Boolean(firstInvalidEl.closest('#step-pane-1') || (firstInvalidEl.id && firstInvalidEl.id.startsWith('section-step1')));
+        const isInsideStep2 = Boolean(firstInvalidEl.closest('#step-pane-2') || (firstInvalidEl.id && (firstInvalidEl.id.startsWith('card-step2') || firstInvalidEl.id.startsWith('card-variasi') || firstInvalidEl.id === 'card-extra-service' || firstInvalidEl.id === 'combination-matrix-section')));
+
+        const doScrollAndHighlight = (el) => {
+          const targetScrollEl = el.closest('table, .variation-card-block, .step2-section-card, .form-group') || el;
+          targetScrollEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TABLE' && el.tagName !== 'TR') {
+            setTimeout(() => {
+              try { el.focus({ preventScroll: true }); } catch (err) {}
+            }, 250);
+          }
+          // Visual highlight ring sementara (3 detik)
+          targetScrollEl.classList.add('ring-2', 'ring-red-400', 'transition-all');
+          if (el !== targetScrollEl && typeof el.classList?.add === 'function') {
+            el.classList.add('ring-2', 'ring-red-400', 'transition-all');
+          }
+          setTimeout(() => {
+            targetScrollEl.classList.remove('ring-2', 'ring-red-400');
+            if (el !== targetScrollEl && typeof el.classList?.remove === 'function') {
+              el.classList.remove('ring-2', 'ring-red-400');
+            }
+          }, 3000);
+        };
+
         if (isInsideStep1 && currentStep !== 1) {
           goToStep(1);
           setTimeout(() => {
-            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (typeof targetEl.focus === 'function' && targetEl.tagName !== 'DIV') {
-              targetEl.focus();
-            }
-          }, 150);
+            const reEl = (firstInvalidEl.id ? document.getElementById(firstInvalidEl.id) : null) || firstInvalidEl;
+            doScrollAndHighlight(reEl);
+          }, 250);
+        } else if (isInsideStep2 && currentStep !== 2) {
+          goToStep(2);
+          setTimeout(() => {
+            const reEl = (firstInvalidEl.id ? document.getElementById(firstInvalidEl.id) : null) || firstInvalidEl;
+            doScrollAndHighlight(reEl);
+          }, 250);
         } else {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          if (typeof targetEl.focus === 'function' && targetEl.tagName !== 'DIV') {
-            targetEl.focus();
-          }
+          doScrollAndHighlight(firstInvalidEl);
         }
       } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });

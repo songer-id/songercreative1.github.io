@@ -1175,3 +1175,34 @@ input.toggle-same-cost:checked ~ div::after {
   display: block;
   width: 100%;
 }
+
+/* --------------------------------------------------------------------------
+   FORM VALIDATION AUTO-SCROLL HIGHLIGHT & ERROR RING STYLES
+   -------------------------------------------------------------------------- */
+.ring-2.ring-red-400 {
+  box-shadow: 0 0 0 2px #f87171 !important;
+  border-color: #f87171 !important;
+  animation: pulse-border-red 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-border-red {
+  0%, 100% {
+    box-shadow: 0 0 0 2px #f87171;
+  }
+  50% {
+    box-shadow: 0 0 0 4px #ef4444;
+  }
+}
+
+.label-dup-error-msg {
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 3px;
+  font-weight: 600;
+}
+
+.variation-card-block,
+.step2-section-card {
+  scroll-margin-top: 80px;
+}
+
