@@ -2365,9 +2365,10 @@ const ProductForm = (() => {
     }
 
     const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
-    const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extrasActivePrice) : (parseFloat(primaryState.price || 0) + extrasActivePrice);
+    // PISAHKAN: displayBasePrice murni harga produk utama (TIDAK ditambah extrasActivePrice)
+    const displayBasePrice = comboUnitBase > 0 ? comboUnitBase : parseFloat(primaryState.price || 0);
 
-    // Hitung seluruh kemungkinan harga unit kombinasi dari Variasi 1 s/d Variasi 4 yang aktif:
+    // Hitung seluruh kemungkinan harga unit kombinasi dari Variasi 1 s/d Variasi 4 yang aktif (murni produk):
     const p1List = validMaterials.map(m => parseFloat(m.price) || 0);
     const minV1 = p1List.length > 0 ? Math.min(...p1List) : (parseFloat(primaryState.price) || 0);
     const maxV1 = p1List.length > 0 ? Math.max(...p1List) : (parseFloat(primaryState.price) || 0);
@@ -2396,8 +2397,9 @@ const ProductForm = (() => {
     const rawMinUnit = minV1 + minV2 + minV3 + minV4;
     const rawMaxUnit = maxV1 + maxV2 + maxV3 + maxV4;
 
-    const baseMin = rawMinUnit + extrasActivePrice;
-    const baseMax = rawMaxUnit + extrasActivePrice;
+    // PISAHKAN: baseMin & baseMax murni dari variasi utama produk (TIDAK ditambah extrasActivePrice)
+    const baseMin = rawMinUnit;
+    const baseMax = rawMaxUnit;
 
     // Diskon Bulanan
     const hasDiscount = Boolean(primaryState.has_discount);
@@ -2462,12 +2464,22 @@ const ProductForm = (() => {
     }
     const curQty = previewTestState.qty;
 
-    // Wholesale discount & banner
+    // Wholesale discount & banner (Hanya memotong per pcs produk utama)
     const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
     let finalUnitPrice = unitPriceAfterDiscount;
     if (wholesaleInfo.hasDiscount) {
       finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
     }
+
+    // RUMUS BENAR: Extras adalah biaya tambahan di luar Qty Global pesanan utama
+    // Subtotal Produk Utama = finalUnitPrice * curQty
+    // Total Biaya Extras = extrasActivePrice (terhitung dari opsi extra yang aktif)
+    // Total Harga Akhir = Subtotal Produk Utama + Total Biaya Extras
+    const productSubtotal = finalUnitPrice * curQty;
+    const grandTotalPrice = productSubtotal + extrasActivePrice;
+
+    const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
+    const grandStrikePrice = strikeSubtotal + extrasActivePrice;
 
     // Stok Display
     const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
@@ -2588,11 +2600,23 @@ const ProductForm = (() => {
               ${coverImg ? `<img src="${coverImg}" class="w-full h-full object-cover" alt="Cover" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
             </div>
             <div class="flex-1 pr-6 min-w-0">
-              ${effHasDiscount ? `
-                <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
-                <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(displayBasePrice).toLocaleString('id-ID')}</div>
+              ${(curQty > 1 || extrasActivePrice > 0) ? `
+                ${effHasDiscount ? `
+                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
+                ` : `
+                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                `}
+                <div class="text-[10px] text-slate-500 font-normal mt-0.5">
+                  (${curQty} pcs @ Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}${extrasActivePrice > 0 ? ` + Ekstra Rp${Math.round(extrasActivePrice).toLocaleString('id-ID')}` : ''})
+                </div>
               ` : `
-                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                ${effHasDiscount ? `
+                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(displayBasePrice).toLocaleString('id-ID')}</div>
+                ` : `
+                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                `}
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
               ${wholesaleInfo.bannerText ? `
@@ -2623,7 +2647,7 @@ const ProductForm = (() => {
 
           <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
-            <span class="text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice * curQty).toLocaleString('id-ID')}</span>
+            <span class="text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</span>
           </div>
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
@@ -2643,11 +2667,23 @@ const ProductForm = (() => {
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${isAllVariationsSelected ? `
-                ${effHasDiscount ? `
-                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
-                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID')}</div>
+                ${(curQty > 1 || extrasActivePrice > 0) ? `
+                  ${effHasDiscount ? `
+                    <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                    <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
+                  ` : `
+                    <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                  `}
+                  <div class="text-[10px] text-slate-500 font-normal mt-0.5">
+                    (${curQty} pcs @ Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}${extrasActivePrice > 0 ? ` + Ekstra Rp${Math.round(extrasActivePrice).toLocaleString('id-ID')}` : ''})
+                  </div>
                 ` : `
-                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                  ${effHasDiscount ? `
+                    <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                    <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID')}</div>
+                  ` : `
+                    <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice).toLocaleString('id-ID')}</div>
+                  `}
                 `}
               ` : `
                 <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
@@ -2761,7 +2797,7 @@ const ProductForm = (() => {
 
           <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
-            <span class="text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(finalUnitPrice * curQty).toLocaleString('id-ID')}</span>
+            <span class="text-sm font-extrabold" style="color: ${accentColor};">${isAllVariationsSelected ? `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}` : '-'}</span>
           </div>
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
@@ -3336,6 +3372,23 @@ const ProductForm = (() => {
         // Submit Button di dalam Drawer
         container.querySelectorAll('.btn-shopee-submit').forEach(btn => {
           btn.onclick = (e) => {
+            const curQ = previewTestState.qty || minOrderQty;
+            let exTotal = 0;
+            if (primaryState.has_extra_service && (finishingsState.extra_3 || []).length > 0) {
+              (finishingsState.extra_3 || []).forEach((ex, idx) => {
+                if (ex.is_default_none) return;
+                const exId = ex.id || `ex_${idx}`;
+                const xt = String(ex.extra_type || '').toLowerCase();
+                const pr = parseFloat(ex.price) || 0;
+                if (xt === 'qty') {
+                  const q = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
+                  exTotal += pr * q;
+                } else if (previewTestState.selectedExtras?.[exId] || xt === 'direct' || xt === 'langsung proses') {
+                  exTotal += pr;
+                }
+              });
+            }
+            const grandTotalPrice = (finalUnitPrice * curQ) + exTotal;
             e.preventDefault();
             if (hasVariations && !checkAllVariationsSelected()) {
               const valRes = validatePreviewVariantSelection();
@@ -3387,6 +3440,10 @@ const ProductForm = (() => {
                     <div class="text-[11px] text-slate-600 flex justify-between">
                       <span>Jumlah:</span>
                       <span class="font-bold text-slate-800">${curQty} pcs</span>
+                    </div>
+                    <div class="text-[11px] text-slate-600 flex justify-between border-t border-emerald-200/60 pt-1">
+                      <span>Total Pembayaran:</span>
+                      <span class="font-black text-emerald-800">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</span>
                     </div>
                     <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
                       <i class="bi bi-shield-check text-emerald-700"></i>
@@ -4091,8 +4148,9 @@ const ProductForm = (() => {
       const rawMinUnit = minV1 + minV2 + minV3 + minV4;
       const rawMaxUnit = maxV1 + maxV2 + maxV3 + maxV4;
 
-      const baseMin = rawMinUnit + extrasActivePrice;
-      const baseMax = rawMaxUnit + extrasActivePrice;
+      // PISAHKAN: baseMin & baseMax murni dari variasi utama produk (TIDAK ditambah extrasActivePrice)
+      const baseMin = rawMinUnit;
+      const baseMax = rawMaxUnit;
 
       let effMinPrice = baseMin;
       let effMaxPrice = baseMax;
@@ -4115,7 +4173,8 @@ const ProductForm = (() => {
 
       // Hitung harga dasar kombinasi aktif (jika variasi dipilih atau produk tunggal)
       const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
-      const displayBasePrice = comboUnitBase > 0 ? (comboUnitBase + extrasActivePrice) : (parseFloat(primaryState.price || 0) + extrasActivePrice || effFinalPrice);
+      // PISAHKAN: displayBasePrice murni harga produk utama (TIDAK ditambah extrasActivePrice)
+      const displayBasePrice = comboUnitBase > 0 ? comboUnitBase : (parseFloat(primaryState.price || 0) || effFinalPrice);
 
       let unitPriceAfterDiscount = displayBasePrice;
       let step2StrikePrice = displayBasePrice;
@@ -4160,6 +4219,13 @@ const ProductForm = (() => {
         finalUnitPrice = effMinPrice || effFinalPrice;
       }
 
+      // RUMUS BENAR: Extras adalah biaya tambahan di luar Qty Global pesanan utama
+      const productSubtotal = finalUnitPrice * curQty;
+      const grandTotalPrice = productSubtotal + extrasActivePrice;
+
+      const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
+      const grandStrikePrice = strikeSubtotal + extrasActivePrice;
+
       const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
 
       let displayPriceString = '';
@@ -4177,8 +4243,13 @@ const ProductForm = (() => {
           displayStrikePriceString = 'Rp' + Math.round(effMinStrike).toLocaleString('id-ID');
         }
       } else {
-        displayPriceString = 'Rp' + Math.round(finalUnitPrice).toLocaleString('id-ID');
-        displayStrikePriceString = 'Rp' + Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID');
+        if (curQty === 1 && extrasActivePrice === 0) {
+          displayPriceString = 'Rp' + Math.round(finalUnitPrice).toLocaleString('id-ID');
+          displayStrikePriceString = 'Rp' + Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID');
+        } else {
+          displayPriceString = 'Rp' + Math.round(grandTotalPrice).toLocaleString('id-ID');
+          displayStrikePriceString = 'Rp' + Math.round(grandStrikePrice).toLocaleString('id-ID');
+        }
       }
 
       const hasAnyTier1Image = validMaterials.some(m => m && (m.image_url || m.image));
