@@ -1869,13 +1869,13 @@ const ProductForm = (() => {
     if (!primaryState.has_variants) {
       const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
       const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
-      if (isUnl) return 'Unlimited';
+      if (isUnl) return 'Tanpa Batas';
       const stockInp = document.getElementById('input-stock-qty');
       const s = stockInp ? parseInt(stockInp.value) : (primaryState.stock !== null ? parseInt(primaryState.stock) : NaN);
       return (isNaN(s) || s < 0) ? '0' : String(s);
     } else {
       const stockMode = primaryState.stock_mode_tiers?.tier1 || '';
-      if (stockMode === 'unlimited') return 'Unlimited';
+      if (stockMode === 'unlimited') return 'Tanpa Batas';
       if (selectedMat && selectedMat.stock !== null && selectedMat.stock !== undefined && selectedMat.stock !== '') {
         const s = parseInt(selectedMat.stock);
         return isNaN(s) ? '0' : String(s);
@@ -1892,7 +1892,7 @@ const ProductForm = (() => {
         });
         if (hasAnyNumber) return String(total);
       }
-      return primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null ? String(primaryState.stock) : '0');
+      return primaryState.is_unlimited_stock ? 'Tanpa Batas' : (primaryState.stock !== null ? String(primaryState.stock) : '0');
     }
   }
 
@@ -4822,27 +4822,12 @@ const ProductForm = (() => {
 
 
 
-            <!-- Jenis Harga Produk -->
-            <div class="space-y-3.5">
-              <div class="border-b border-slate-100 pb-2 flex items-center justify-between flex-wrap gap-2">
-                <label for="select-pricing-model" class="block text-xs font-bold text-slate-800">
-                  Jenis Harga Produk <span class="text-red-500">*</span>
-                </label>
-              </div>
+            <!-- Hidden fallback input agar referensi internal select-pricing-model tetap aman -->
+            <input type="hidden" id="select-pricing-model" value="${primaryState.pricing_model || 'normal'}" />
 
-              <div>
-                <select id="select-pricing-model" class="w-full sm:w-72 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white">
-                  <option value="normal" ${primaryState.pricing_model === 'normal' ? 'selected' : ''}>Normal</option>
-                  <option value="size" ${primaryState.pricing_model === 'size' ? 'selected' : ''}>Berdasar Ukuran</option>
-                  <option value="weight" ${primaryState.pricing_model === 'weight' ? 'selected' : ''}>Berdasar Berat</option>
-                  <option value="volume" ${primaryState.pricing_model === 'volume' ? 'selected' : ''}>Berdasar Volume</option>
-                </select>
-              </div>
-
-              <!-- Sub-Panel Interaktif Berdasarkan Pilihan Jenis Harga -->
-              <div id="pricing-model-interactive-container">
-                ${renderPricingModelSection()}
-              </div>
+            <!-- Sub-Panel Interaktif Berdasarkan Pilihan Jenis Harga -->
+            <div id="pricing-model-interactive-container">
+              ${renderPricingModelSection()}
             </div>
 
             <!-- Pengaturan Pembelian Khusus Produk Tunggal (Disembunyikan jika Menggunakan Variasi) -->
@@ -4850,9 +4835,12 @@ const ProductForm = (() => {
               <hr class="border-slate-100" />
 
               <!-- Stok Produk -->
-              <div class="space-y-3">
-                <div class="flex items-center justify-between pb-1 border-b border-slate-100">
-                  <label class="block text-xs font-bold text-slate-800">Stok Produk</label>
+              <div class="space-y-3" id="single-product-stock-section">
+                <!-- Baris Label Stok Produk & Checkbox Tanpa Batas (Di Atas Kotak Input) -->
+                <div class="flex items-center justify-between pb-1 border-b border-slate-100 flex-wrap gap-2">
+                  <label class="block text-xs font-bold text-slate-800">
+                    Stok Produk <span class="text-red-500">*</span>
+                  </label>
                   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
                     <input 
                       type="checkbox" 
@@ -4861,19 +4849,21 @@ const ProductForm = (() => {
                       ${primaryState.is_unlimited_stock ? 'checked' : ''} 
                       class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                     />
-                    <span>Unlimited</span>
+                    <span>Tanpa Batas</span>
                   </label>
                 </div>
 
-                <div id="stock-input-wrapper" class="${primaryState.is_unlimited_stock ? 'hidden' : 'block'}">
+                <!-- Kotak Input Angka Stok (Berada di Bawah Baris Checkbox) -->
+                <div id="stock-input-wrapper" class="block">
                   <label for="input-stock-qty" class="block text-[11px] font-semibold text-slate-600 mb-1">Jumlah Kuota Stok Fisik Tersedia:</label>
                   <input 
-                    type="number" 
+                    type="${primaryState.is_unlimited_stock ? 'text' : 'number'}" 
                     id="input-stock-qty" 
                     min="0"
-                    value="${primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : ''}" 
-                    class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white"
-                    placeholder="0"
+                    value="${primaryState.is_unlimited_stock ? 'Tanpa Batas' : (primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : '')}" 
+                    placeholder="${primaryState.is_unlimited_stock ? 'Tanpa Batas' : '0'}"
+                    ${primaryState.is_unlimited_stock ? 'readonly' : ''}
+                    class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none ${primaryState.is_unlimited_stock ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-800 focus:border-emerald-500'}"
                   />
                   <div id="single-stock-error-msg" class="field-error-msg hidden mt-1 text-xs text-red-500"></div>
                 </div>
@@ -4920,19 +4910,19 @@ const ProductForm = (() => {
                     id="input-normal-max-order" 
                     class="custom-combobox-input w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white text-slate-800" 
                     placeholder="Ketik atau pilih" 
-                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited') ? 'Unlimited' : primaryState.max_order}" 
+                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Tanpa Batas' : primaryState.max_order}" 
                     autocomplete="off" 
                   />
                   <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
                     <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
                     <div class="max-h-48 overflow-y-auto">
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Unlimited">
-                        <span>Unlimited</span>
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Tanpa Batas">
+                        <span>Tanpa Batas</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <span class="text-[10px] text-slate-400 block">Ketik angka maks. batas pesanan atau pilih "Unlimited"</span>
+                <span class="text-[10px] text-slate-400 block">Ketik angka maks. batas pesanan atau pilih "Tanpa Batas"</span>
               </div>
 
               <hr class="border-slate-100" />
@@ -5325,15 +5315,24 @@ const ProductForm = (() => {
     `;
   }
 
-  // Rekomendasi Nama Kelompok Variasi (Persis Gambar 1)
+  // Rekomendasi Nama Kelompok Variasi (Persis Tingkat Variasi 1-4 & Extras)
   function getVariationLabelRecommendations(tier) {
-    if (tier === 'tier1') {
-      return ['Bahan Utama', 'Ukuran', 'Warna', 'Jenis'];
+    if (tier === 'tier1' || tier === 'tier_1' || tier === 'materials' || tier === 1) {
+      return ['Bahan Utama', 'Bahan Pokok', 'Jenis Bahan', 'Warna', 'Jenis', 'Ukuran'];
     }
-    if (tier === 'extra_3') {
-      return ['Layanan Prioritas', 'Langsung Proses', 'Packaging Tambahan'];
+    if (tier === 'main' || tier === 'tier_2' || tier === 'tier2' || tier === 2) {
+      return ['Toping', 'Warna', 'Ukuran', 'Finishing', 'Jenis'];
     }
-    return ['Finishing', 'Ukuran', 'Warna', 'Toping'];
+    if (tier === 'extra_1' || tier === 'tier_3' || tier === 'tier3' || tier === 3) {
+      return ['Toping Tambahan', 'Finishing Tambahan', 'Minuman', 'Packing', 'Warna', 'Jenis', 'Ukuran'];
+    }
+    if (tier === 'extra_2' || tier === 'tier_4' || tier === 'tier4' || tier === 4) {
+      return ['Toping Tambahan', 'Finishing Tambahan', 'Minuman', 'Packing', 'Warna', 'Jenis', 'Ukuran'];
+    }
+    if (tier === 'extra_3' || tier === 'extras' || tier === 'extra_service' || tier === 5) {
+      return ['Extra Service', 'Layanan Prioritas', 'Konsep Tambahan'];
+    }
+    return ['Toping', 'Warna', 'Ukuran', 'Finishing', 'Jenis'];
   }
 
   // Helper pengambil input judul variasi aktif (Variasi 1 -> Variasi 2 -> Variasi 3 -> Variasi 4 -> Layanan Extras)
@@ -5612,7 +5611,7 @@ const ProductForm = (() => {
                 <div class="flex items-center justify-start sm:justify-end flex-wrap gap-x-4 gap-y-1.5 pt-1">
                   <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600">
                     <input type="radio" name="stock_mode_${tier}" value="unlimited" class="radio-stock-mode accent-emerald-600" data-tier="${tier}" ${stockMode === 'unlimited' ? 'checked' : ''}>
-                    <span>Semua Stok Unlimited</span>
+                    <span>Semua Stok Tanpa Batas</span>
                   </label>
                   <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600">
                     <input type="radio" name="stock_mode_${tier}" value="same" class="radio-stock-mode accent-emerald-600" data-tier="${tier}" ${stockMode === 'same' ? 'checked' : ''}>
@@ -5704,7 +5703,7 @@ const ProductForm = (() => {
                 <div class="flex items-center justify-start sm:justify-end flex-wrap gap-x-4 gap-y-1.5 pt-1">
                   <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600">
                     <input type="radio" name="stock_mode_extra_3" value="unlimited" class="radio-stock-mode accent-emerald-600" data-tier="extra_3" ${stockMode === 'unlimited' ? 'checked' : ''}>
-                    <span>Semua Stok Unlimited</span>
+                    <span>Semua Stok Tanpa Batas</span>
                   </label>
                   <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600">
                     <input type="radio" name="stock_mode_extra_3" value="same" class="radio-stock-mode accent-emerald-600" data-tier="extra_3" ${stockMode === 'same' ? 'checked' : ''}>
@@ -6178,7 +6177,7 @@ const ProductForm = (() => {
     const rows = displayMaterials.map((mat, idx) => {
       const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
       const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
-      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Tanpa Batas' ? 'Unlimited' : mat.max_order) : '';
+      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : mat.max_order) : '';
 
       function renderScopeCell(tier) {
         const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
@@ -6248,8 +6247,8 @@ const ProductForm = (() => {
                 autocomplete="off" 
               />
               <div class="custom-combobox-popover max-order-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-32 p-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 text-left">
-                <button type="button" class="combobox-item btn-select-max-unlimited w-full text-left px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-md transition cursor-pointer" data-value="Unlimited">
-                  Unlimited
+                <button type="button" class="combobox-item btn-select-max-unlimited w-full text-left px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-md transition cursor-pointer" data-value="Tanpa Batas">
+                  Tanpa Batas
                 </button>
               </div>
             </div>
@@ -6743,11 +6742,16 @@ const ProductForm = (() => {
       }
 
       if (isUntouchedTriggerRow || !val) {
-        if (errorEl && errorEl.textContent === 'Nama opsi sudah digunakan') {
+        if (errorEl && (errorEl.textContent === 'Nama opsi sudah digunakan' || errorEl.textContent === 'Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter')) {
           errorEl.textContent = '';
           errorEl.classList.add('hidden');
           inp.classList.remove('border-red-500');
         }
+        return;
+      }
+
+      if (val.length > 15) {
+        // Validasi panjang karakter yang menangani pesan error
         return;
       }
 
@@ -6827,12 +6831,17 @@ const ProductForm = (() => {
     const val = (inp.value || '').trim();
 
     if (field === 'name') {
+      const isExtraNone = (tier === 'extra_3' && (finishingsState.extra_3?.[idx]?.is_default_none || val.startsWith('Tanpa ')));
       if (!val) {
         if (isBlur) {
           setError('Wajib di isi');
           return false;
         }
         setError('');
+        return false;
+      }
+      if (!isExtraNone && val.length > 15) {
+        setError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter');
         return false;
       }
       if (checkOptionNameDuplicate(tier, val, idx)) {
@@ -6996,7 +7005,7 @@ const ProductForm = (() => {
       const placeholderName = `Opsi ${idx + 1}`;
       const priceVal = (isSamePrice && idx > 0) ? firstPrice : (mat.price !== undefined && mat.price !== null && mat.price !== '' ? mat.price : '');
       const costVal = (isSameCost && idx > 0) ? firstCost : (mat.cost_price !== undefined && mat.cost_price !== null && mat.cost_price !== '' ? mat.cost_price : '');
-      const stockVal = stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (mat.stock !== undefined && mat.stock !== null && mat.stock !== '' ? mat.stock : ''));
+      const stockVal = stockMode === 'unlimited' ? 'Tanpa Batas' : ((stockMode === 'same' && idx > 0) ? firstStock : (mat.stock !== undefined && mat.stock !== null && mat.stock !== '' ? mat.stock : ''));
 
       return `
         <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${mat.id}" data-tier="tier1" data-idx="${idx}">
@@ -7059,7 +7068,7 @@ const ProductForm = (() => {
                 min="0" 
                 data-field="stock" 
                 value="${stockVal}" 
-                placeholder="Stok" 
+                placeholder="${stockMode === 'unlimited' ? 'Tanpa Batas' : 'Stok'}" 
                 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
                 class="mat-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
@@ -7126,7 +7135,7 @@ const ProductForm = (() => {
         const placeholderName = isLastRow ? defaultNoneName : `Opsi ${idx + 1}`;
         const priceVal = isLastRow ? 0 : ((isSamePrice && idx > 0) ? firstPrice : (fin.price !== undefined && fin.price !== null && fin.price !== '' ? fin.price : ''));
         const costVal = isLastRow ? 0 : ((isSameCost && idx > 0) ? firstCost : (fin.cost_price !== undefined && fin.cost_price !== null && fin.cost_price !== '' ? fin.cost_price : ''));
-        const stockVal = isLastRow ? '' : (stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : '')));
+        const stockVal = isLastRow ? '' : (stockMode === 'unlimited' ? 'Tanpa Batas' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : '')));
         const extraType = isLastRow ? 'pilihan_ganda' : (fin.extra_type || '');
 
         return `
@@ -7207,7 +7216,7 @@ const ProductForm = (() => {
                   min="0" 
                   data-field="stock" 
                   value="${stockVal}" 
-                  placeholder="Stok" 
+                  placeholder="${stockMode === 'unlimited' ? 'Tanpa Batas' : 'Stok'}" 
                   ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
                   style="border-radius: 0px !important;" 
                   class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-emerald-50/30'}" 
@@ -7248,7 +7257,7 @@ const ProductForm = (() => {
       const placeholderName = `Opsi ${idx + 1}`;
       const priceVal = (isSamePrice && idx > 0) ? firstPrice : (fin.price !== undefined && fin.price !== null && fin.price !== '' ? fin.price : '');
       const costVal = (isSameCost && idx > 0) ? firstCost : (fin.cost_price !== undefined && fin.cost_price !== null && fin.cost_price !== '' ? fin.cost_price : '');
-      const stockVal = stockMode === 'unlimited' ? 'Unlimited' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : ''));
+      const stockVal = stockMode === 'unlimited' ? 'Tanpa Batas' : ((stockMode === 'same' && idx > 0) ? firstStock : (fin.stock !== undefined && fin.stock !== null && fin.stock !== '' ? fin.stock : ''));
 
       return `
         <div class="variation-option-row flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-id="${fin.id}" data-tier="${tier}" data-idx="${idx}">
@@ -7311,7 +7320,7 @@ const ProductForm = (() => {
                 min="0" 
                 data-field="stock" 
                 value="${stockVal}" 
-                placeholder="Stok" 
+                placeholder="${stockMode === 'unlimited' ? 'Tanpa Batas' : 'Stok'}" 
                 ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
                 class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${stockMode === 'unlimited' || (stockMode === 'same' && idx > 0) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
@@ -8564,6 +8573,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (comboLabel) {
               comboLabel.textContent = e.target.value || `Opsi ${idx + 1}`;
             }
+            validateOptionField(e.target, false);
             refreshOptionDuplicateErrors('tier1');
             // Update status tombol Tambah Variasi 2 jika nama mulai terisi
             const btnVar2 = document.getElementById('btn-trigger-variasi-2');
@@ -8801,6 +8811,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
 
           if (field === 'name') {
+            validateOptionField(e.target, false);
             refreshOptionDuplicateErrors(tier);
           } else {
             validateOptionField(e.target, false);
@@ -8922,7 +8933,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // 1c. Tombol Popover Max Order Unlimited
+      // 1c. Tombol Popover Max Order Tanpa Batas
       document.querySelectorAll('.btn-select-max-unlimited').forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
@@ -8930,10 +8941,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const inp = wrapper?.querySelector('.combo-max-order-input');
           const popover = wrapper?.querySelector('.custom-combobox-popover');
           if (inp) {
-            inp.value = 'Unlimited';
+            inp.value = 'Tanpa Batas';
             const matId = inp.getAttribute('data-mat-id');
             const item = materialsState.find(m => m.id === matId);
-            if (item) item.max_order = 'Unlimited';
+            if (item) item.max_order = 'Tanpa Batas';
             inp.dispatchEvent(new Event('input', { bubbles: true }));
             inp.dispatchEvent(new Event('change', { bubbles: true }));
           }
@@ -8960,7 +8971,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (!raw) {
               item.max_order = null;
             } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
-              item.max_order = 'Unlimited';
+              item.max_order = 'Tanpa Batas';
             } else {
               item.max_order = parseInt(raw) || null;
             }
@@ -8972,8 +8983,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (item) {
             const raw = (inp.value || '').trim();
             if (raw === '0' || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw.toLowerCase() === 'unlimited') {
-              inp.value = 'Unlimited';
-              item.max_order = 'Unlimited';
+              inp.value = 'Tanpa Batas';
+              item.max_order = 'Tanpa Batas';
             }
           }
         };
@@ -9382,11 +9393,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (unlStock) {
       unlStock.onchange = e => {
         primaryState.is_unlimited_stock = e.target.checked;
-        if (stockWrap) stockWrap.className = primaryState.is_unlimited_stock ? 'hidden' : 'block';
+        if (stockWrap) stockWrap.className = 'block';
         if (primaryState.is_unlimited_stock) {
           if (stockQtyInput) {
-            stockQtyInput.classList.remove('border-red-500');
-            stockQtyInput.classList.add('border-slate-300');
+            stockQtyInput.type = 'text';
+            stockQtyInput.value = 'Tanpa Batas';
+            stockQtyInput.placeholder = 'Tanpa Batas';
+            stockQtyInput.readOnly = true;
+            stockQtyInput.classList.remove('border-red-500', 'bg-white', 'text-slate-800');
+            stockQtyInput.classList.add('border-slate-300', 'bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
           }
           if (stockErr) {
             stockErr.textContent = '';
@@ -9394,7 +9409,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
         } else {
           if (stockQtyInput) {
+            stockQtyInput.type = 'number';
+            stockQtyInput.readOnly = false;
             stockQtyInput.disabled = false;
+            stockQtyInput.value = (primaryState.stock !== null && primaryState.stock !== undefined) ? primaryState.stock : '';
+            stockQtyInput.placeholder = '0';
+            stockQtyInput.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+            stockQtyInput.classList.add('bg-white', 'text-slate-800');
           }
         }
         updateProductCardLivePreview();
@@ -9406,7 +9427,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (normalMaxInp) {
       normalMaxInp.oninput = (e) => {
         const raw = e.target.value.trim();
-        if (!raw || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
+        if (!raw || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
           primaryState.max_order = null;
           primaryState.max_order_qty = null;
           primaryState.max_order_type = 'unlimited';
@@ -9418,8 +9439,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
       };
       normalMaxInp.onblur = (e) => {
-        if (!primaryState.max_order || primaryState.max_order === 0 || String(primaryState.max_order).toLowerCase() === 'unlimited' || String(primaryState.max_order).toLowerCase() === 'tanpa max order') {
-          normalMaxInp.value = 'Unlimited';
+        if (!primaryState.max_order || primaryState.max_order === 0 || String(primaryState.max_order).toLowerCase() === 'unlimited' || String(primaryState.max_order).toLowerCase() === 'tanpa batas' || String(primaryState.max_order).toLowerCase() === 'tanpa max order') {
+          normalMaxInp.value = 'Tanpa Batas';
         }
       };
     }
@@ -11365,10 +11386,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Unlimited Stock Switch
     const toggleUnlStock = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
     const stockWrapper = document.getElementById('stock-input-wrapper');
-    if (toggleUnlStock && stockWrapper) {
+    const stockQtyInpEl = document.getElementById('input-stock-qty');
+    if (toggleUnlStock) {
       toggleUnlStock.addEventListener('change', e => {
         primaryState.is_unlimited_stock = e.target.checked;
-        stockWrapper.classList.toggle('hidden', e.target.checked);
+        if (stockWrapper) stockWrapper.classList.remove('hidden');
+        if (stockQtyInpEl) {
+          if (e.target.checked) {
+            stockQtyInpEl.type = 'text';
+            stockQtyInpEl.value = 'Tanpa Batas';
+            stockQtyInpEl.placeholder = 'Tanpa Batas';
+            stockQtyInpEl.readOnly = true;
+            stockQtyInpEl.classList.remove('border-red-500', 'bg-white', 'text-slate-800');
+            stockQtyInpEl.classList.add('border-slate-300', 'bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+          } else {
+            stockQtyInpEl.type = 'number';
+            stockQtyInpEl.readOnly = false;
+            stockQtyInpEl.disabled = false;
+            stockQtyInpEl.value = (primaryState.stock !== null && primaryState.stock !== undefined) ? primaryState.stock : '';
+            stockQtyInpEl.placeholder = '0';
+            stockQtyInpEl.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+            stockQtyInpEl.classList.add('bg-white', 'text-slate-800');
+          }
+        }
       });
     }
 
@@ -12318,6 +12358,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
           if (!m.name || !m.name.trim()) {
             addError(`Variasi 1: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
+          } else if (m.name.trim().length > 15) {
+            addError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter', nameInp || rowEl);
           } else if (checkOptionNameDuplicate('tier1', m.name, idx)) {
             addError(`Variasi 1: Nama opsi "${m.name}" kembar / duplikat.`, nameInp || rowEl);
           }
@@ -12374,8 +12416,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
           const stockInp = rowEl?.querySelector('input[data-field="stock"]');
 
+          const isExtraNone = (isExtra3 && (idx === list.length - 1 || f.is_default_none || (f.name && f.name.startsWith('Tanpa '))));
           if (!f.name || !f.name.trim()) {
             addError(`${label}: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
+          } else if (!isExtraNone && f.name.trim().length > 15) {
+            addError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter', nameInp || rowEl);
           } else if (checkOptionNameDuplicate(tier, f.name, idx)) {
             addError(`${label}: Nama opsi "${f.name}" kembar / duplikat.`, nameInp || rowEl);
           }
