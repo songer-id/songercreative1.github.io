@@ -1166,3 +1166,12 @@ input.toggle-same-cost:checked ~ div::after {
 .btn-clear-custom-label:hover {
   color: #0f172a;
 }
+
+/* Max Order Popover & Unlimited Button */
+.max-order-popover {
+  min-width: 120px !important;
+}
+.btn-select-max-unlimited {
+  display: block;
+  width: 100%;
+}

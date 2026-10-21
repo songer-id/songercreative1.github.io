@@ -4775,9 +4775,9 @@ const ProductForm = (() => {
                 <label class="block text-xs font-bold text-slate-800">
                   Foto Produk <span class="text-red-500">*</span>
                 </label>
-                <span class="text-[11px] text-slate-500">Total: ${primaryState.images?.length || 0} Foto Diunggah</span>
+                <span id="step2-photo-count" class="text-[11px] text-slate-500">Total: ${primaryState.images?.length || 0} Foto Diunggah</span>
               </div>
-              <div class="flex items-center gap-2 overflow-x-auto pb-1">
+              <div id="step2-gallery-strip" class="flex items-center gap-2 overflow-x-auto pb-1">
                 ${(primaryState.images || []).map((img, i) => `
                   <div class="w-14 h-14 rounded-md border border-slate-200 overflow-hidden shrink-0 relative bg-slate-50">
                     <img src="${img}" alt="Cover ${i+1}" class="w-full h-full object-cover" />
@@ -6125,13 +6125,10 @@ const ProductForm = (() => {
                 placeholder="Ketik atau pilih" 
                 autocomplete="off" 
               />
-              <div class="custom-combobox-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-36 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
-                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
-                <div class="max-h-48 overflow-y-auto">
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer font-medium flex items-center justify-between transition" data-value="Unlimited">
-                    <span>Unlimited</span>
-                  </div>
-                </div>
+              <div class="custom-combobox-popover max-order-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-32 p-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 text-left">
+                <button type="button" class="combobox-item btn-select-max-unlimited w-full text-left px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-md transition cursor-pointer" data-value="Unlimited">
+                  Unlimited
+                </button>
               </div>
             </div>
           </td>
@@ -6572,28 +6569,81 @@ const ProductForm = (() => {
     if (!clean) return false;
 
     if (tier === 'tier1') {
-      return materialsState.some((m, idx) => {
-        if (idx === currentIdx) return false;
-        if (idx === materialsState.length - 1 && (!m.name || m.name.trim() === '')) return false;
-        return (m.name || '').trim().toLowerCase() === clean;
-      });
+      for (let i = 0; i < currentIdx; i++) {
+        const m = materialsState[i];
+        if (m && (m.name || '').trim().toLowerCase() === clean) {
+          return true;
+        }
+      }
+      return false;
     }
 
     const list = finishingsState[tier] || [];
-    return list.some((f, idx) => {
-      if (idx === currentIdx) return false;
-      if (f.is_default_none) return false;
-      const isTriggerRow = (tier === 'extra_3') ? (idx === list.length - 2) : (idx === list.length - 1);
-      if (isTriggerRow && (!f.name || f.name.trim() === '')) return false;
-      return (f.name || '').trim().toLowerCase() === clean;
-    });
+    for (let i = 0; i < currentIdx; i++) {
+      const f = list[i];
+      if (f && !f.is_default_none && (f.name || '').trim().toLowerCase() === clean) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function refreshOptionDuplicateErrors(tier) {
     const selector = tier === 'tier1' ? '.mat-input[data-field="name"]' : `#finishings-${tier}-rows-container .fin-input[data-field="name"]`;
+    const seenNames = new Set();
+
     document.querySelectorAll(selector).forEach(inp => {
-      if (!inp.readOnly && !inp.disabled) {
-        validateOptionField(inp, false);
+      if (inp.readOnly || inp.disabled) return;
+      const row = inp.closest('.variation-option-row');
+      if (!row) return;
+      const idx = parseInt(row.getAttribute('data-idx'));
+      const cellWrapper = inp.closest('.flex-col') || inp.parentElement;
+      const errorEl = cellWrapper ? cellWrapper.querySelector('.field-error-msg') : null;
+      const val = (inp.value || '').trim();
+      const normName = val.toLowerCase();
+
+      // Cek apakah ini baris pemicu (trigger row) yang belum disentuh
+      let isUntouchedTriggerRow = false;
+      if (tier === 'tier1') {
+        if (materialsState.length > 1 && idx === materialsState.length - 1) {
+          const item = materialsState[idx];
+          const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined));
+          if (!hasAnyVal) isUntouchedTriggerRow = true;
+        }
+      } else {
+        const list = finishingsState[tier] || [];
+        const triggerIdx = (tier === 'extra_3') ? list.length - 2 : list.length - 1;
+        if (list.length > (tier === 'extra_3' ? 2 : 1) && idx === triggerIdx) {
+          const item = list[idx];
+          const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined) || item?.extra_type);
+          if (!hasAnyVal) isUntouchedTriggerRow = true;
+        }
+      }
+
+      if (isUntouchedTriggerRow || !val) {
+        if (errorEl && errorEl.textContent === 'Nama opsi sudah digunakan') {
+          errorEl.textContent = '';
+          errorEl.classList.add('hidden');
+          inp.classList.remove('border-red-500');
+        }
+        return;
+      }
+
+      if (!seenNames.has(normName)) {
+        // Kemunculan Pertama / Asli -> VALID
+        seenNames.add(normName);
+        if (errorEl && errorEl.textContent === 'Nama opsi sudah digunakan') {
+          errorEl.textContent = '';
+          errorEl.classList.add('hidden');
+          inp.classList.remove('border-red-500');
+        }
+      } else {
+        // Kemunculan Kedua, Ketiga, dst. -> DUPLIKAT
+        if (errorEl) {
+          errorEl.textContent = 'Nama opsi sudah digunakan';
+          errorEl.classList.remove('hidden');
+        }
+        inp.classList.add('border-red-500');
       }
     });
   }
@@ -6614,9 +6664,11 @@ const ProductForm = (() => {
       if (msg) {
         errorEl.textContent = msg;
         errorEl.classList.remove('hidden');
+        inp.classList.add('border-red-500');
       } else {
         errorEl.textContent = '';
         errorEl.classList.add('hidden');
+        inp.classList.remove('border-red-500');
       }
     }
 
@@ -6658,6 +6710,7 @@ const ProductForm = (() => {
           setError('Wajib di isi');
           return false;
         }
+        setError('');
         return false;
       }
       if (checkOptionNameDuplicate(tier, val, idx)) {
@@ -8571,7 +8624,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             try {
               const base64 = await compressProductImage(file, 800, 800, 0.8);
               const item = (finishingsState.extra_3 || []).find(f => f.id === id);
-              if (item) item.image_url = base64;
+              if (item) {
+                item.image_url = base64;
+                item.image = base64;
+              }
+              const lbl = fileInp.closest('div')?.querySelector(`label[for="${fileInp.id}"]`) || fileInp.nextElementSibling;
+              if (lbl) {
+                lbl.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-md" />`;
+              }
               container.innerHTML = renderFinishingRows('extra_3');
               bindFinishingTierRows('extra_3');
               updateProductCardLivePreview();
@@ -8707,6 +8767,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         bindCombinationMatrixEvents();
       }
     }
+    const refreshCombinationMatrixDOM = refreshCombinationMatrixTable;
 
     function bindCombinationMatrixEvents() {
       // 1. Upload Foto Variasi 1 dari Tabel Kombinasi
@@ -8718,11 +8779,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           try {
             const base64 = await compressProductImage(file, 800, 800, 0.8);
             const item = materialsState.find(m => m.id === id);
-            if (item) item.image_url = base64;
+            if (item) {
+              item.image_url = base64;
+              item.image = base64;
+            }
+            const lbl = fileInp.closest('div')?.querySelector(`label[for="${fileInp.id}"]`) || fileInp.nextElementSibling;
+            if (lbl) {
+              lbl.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-md" />`;
+            }
             refreshCombinationMatrixTable();
             updateProductCardLivePreview();
           } catch (err) {
-            console.warn('Gagal memproses gambar:', err);
+            console.warn('Gagal memproses gambar variasi:', err);
           }
         };
       });
@@ -8735,9 +8803,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const item = materialsState.find(m => m.id === id);
           if (item) {
             item.image_url = '';
+            item.image = '';
             refreshCombinationMatrixTable();
             updateProductCardLivePreview();
           }
+        };
+      });
+
+      // 1c. Tombol Popover Max Order Unlimited
+      document.querySelectorAll('.btn-select-max-unlimited').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const wrapper = btn.closest('.custom-combobox-wrapper');
+          const inp = wrapper?.querySelector('.combo-max-order-input');
+          const popover = wrapper?.querySelector('.custom-combobox-popover');
+          if (inp) {
+            inp.value = 'Unlimited';
+            const matId = inp.getAttribute('data-mat-id');
+            const item = materialsState.find(m => m.id === matId);
+            if (item) item.max_order = 'Unlimited';
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          if (popover) popover.classList.add('hidden');
         };
       });
 
@@ -11464,6 +11552,43 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     });
   }
 
+  function refreshStep2GalleryDOM() {
+    const strip = document.getElementById('step2-gallery-strip');
+    const countEl = document.getElementById('step2-photo-count');
+    if (countEl) {
+      countEl.textContent = `Total: ${primaryState.images?.length || 0} Foto Diunggah`;
+    }
+    if (strip) {
+      strip.innerHTML = `
+        ${(primaryState.images || []).map((img, i) => `
+          <div class="w-14 h-14 rounded-md border border-slate-200 overflow-hidden shrink-0 relative bg-slate-50">
+            <img src="${img}" alt="Cover ${i+1}" class="w-full h-full object-cover" />
+            ${i === 0 ? '<span class="absolute bottom-0 inset-x-0 bg-emerald-600 text-[8px] text-white font-bold text-center py-0.5">Cover</span>' : ''}
+          </div>
+        `).join('')}
+        <button type="button" id="btn-step2-upload-more" class="w-14 h-14 rounded-md border-2 border-dashed border-slate-300 hover:border-emerald-500 text-slate-400 hover:text-emerald-600 flex flex-col items-center justify-center gap-0.5 shrink-0 transition cursor-pointer">
+          <i class="bi bi-plus text-base"></i>
+          <span class="text-[9px] font-bold">Foto</span>
+        </button>
+      `;
+      const btnStep2Upload = document.getElementById('btn-step2-upload-more');
+      if (btnStep2Upload) {
+        btnStep2Upload.onclick = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.isTrusted === false) return;
+          }
+          const fileInput = document.getElementById('input-prod-images-hidden') || document.getElementById('input-prod-image');
+          if (fileInput) fileInput.click();
+        };
+      }
+    }
+    if (typeof updateStep2CardGatingDOM === 'function') {
+      updateStep2CardGatingDOM();
+    }
+  }
+
   function refreshGalleryDOM() {
     const galleryContainer = document.getElementById('gallery-slots-container') || document.getElementById('image-gallery-container');
     if (galleryContainer) {
@@ -11471,6 +11596,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       bindGalleryButtons();
       if (window.lucide) window.lucide.createIcons();
     }
+    refreshStep2GalleryDOM();
   }
 
   // ========================================================================
@@ -11482,7 +11608,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Delegasi Klik File Picker & Aksi Galeri (Berlaku global di level document)
     document.addEventListener('click', (e) => {
       // 1. Pemicu dialog pilih berkas (Add Photo Slot)
-      const addBtn = e.target.closest('#btn-slot-add-photo') || e.target.closest('[data-action="add-photo"]');
+      const addBtn = e.target.closest('#btn-slot-add-photo') || e.target.closest('#btn-step2-upload-more') || e.target.closest('[data-action="add-photo"]');
       if (addBtn) {
         e.preventDefault();
         e.stopPropagation();
@@ -11565,6 +11691,52 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           await handleImageFilesSelected(Array.from(e.target.files));
           e.target.value = '';
         }
+      } else if (e.target && e.target.classList && e.target.classList.contains('combo-var1-file-input')) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const id = e.target.getAttribute('data-id');
+        try {
+          const base64 = await compressProductImage(file, 800, 800, 0.8);
+          const item = materialsState.find(m => m.id === id);
+          if (item) {
+            item.image_url = base64;
+            item.image = base64;
+          }
+          const lbl = e.target.closest('div')?.querySelector(`label[for="${e.target.id}"]`) || e.target.nextElementSibling;
+          if (lbl) {
+            lbl.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-md" />`;
+          }
+          refreshCombinationMatrixTable();
+          updateProductCardLivePreview();
+        } catch (err) {
+          console.warn('Gagal memproses gambar variasi:', err);
+        }
+        e.target.value = '';
+      } else if (e.target && e.target.classList && e.target.classList.contains('extra-file-input')) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const id = e.target.getAttribute('data-id');
+        try {
+          const base64 = await compressProductImage(file, 800, 800, 0.8);
+          const item = (finishingsState.extra_3 || []).find(f => f.id === id);
+          if (item) {
+            item.image_url = base64;
+            item.image = base64;
+          }
+          const lbl = e.target.closest('div')?.querySelector(`label[for="${e.target.id}"]`) || e.target.nextElementSibling;
+          if (lbl) {
+            lbl.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-md" />`;
+          }
+          const container = document.getElementById('finishings-extra_3-rows-container');
+          if (container) {
+            container.innerHTML = renderFinishingRows('extra_3');
+            bindFinishingTierRows('extra_3');
+          }
+          updateProductCardLivePreview();
+        } catch (err) {
+          console.warn('Gagal memproses foto layanan ekstra:', err);
+        }
+        e.target.value = '';
       }
     });
   }
