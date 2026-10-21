@@ -1206,3 +1206,42 @@ input.toggle-same-cost:checked ~ div::after {
   scroll-margin-top: 80px;
 }
 
+/* --------------------------------------------------------------------------
+   VARIATION ROW PROFIT ESTIMATION & MOBILE STYLING
+   -------------------------------------------------------------------------- */
+.opt-profit-info-wrapper {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.opt-profit-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   DYNAMIC GALLERY RATIO SCALING (MOBILE & DESKTOP)
+   -------------------------------------------------------------------------- */
+#gallery-slots-container > div,
+#gallery-slots-container > #btn-slot-add-photo {
+  width: 100% !important;
+  height: auto !important;
+}
+
+.aspect-square {
+  aspect-ratio: 1 / 1 !important;
+}
+
+.aspect-\[3\/4\] {
+  aspect-ratio: 3 / 4 !important;
+}
+
+.aspect-\[4\/3\] {
+  aspect-ratio: 4 / 3 !important;
+}
+
+

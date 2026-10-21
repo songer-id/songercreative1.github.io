@@ -792,10 +792,13 @@ const ProductForm = (() => {
                     <div id="section-step1-input4-photo" class="${!primaryState.is_active ? 'hidden' : 'space-y-3'}">
                       <hr class="border-slate-100" />
                       <div class="border-b border-slate-100 pb-2">
-                        <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                          <span>Foto Produk</span> <span class="text-red-500">*</span>
-                          <span class="text-[11px] font-normal text-slate-500 ml-1">(Galeri Maksimal 10 Slot)</span>
-                        </label>
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                          <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                            <span>Foto Produk</span> <span class="text-red-500">*</span>
+                            <span class="text-[11px] font-normal text-slate-500 ml-1">(Galeri Maksimal 10 Slot)</span>
+                          </label>
+                          <span id="gallery-ratio-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Rasio ${getActiveCardRatioInfo().ratioText}</span>
+                        </div>
                         <p class="text-xs text-slate-500 mt-0.5">Foto pertama otomatis menjadi Cover Utama. Urutkan posisi foto atau ganti cover dengan mudah.</p>
                       </div>
 
@@ -4469,11 +4472,60 @@ const ProductForm = (() => {
     requestAnimationFrame(restoreAllScrolls);
   }
 
+  // Helper rasio skala foto produk berdasarkan model kartu aktif
+  function getActiveCardRatioInfo() {
+    const variant = primaryState.card_variant || 'A';
+    if (variant === 'B') {
+      return { ratioText: '3:4', aspectClass: 'aspect-[3/4]', aspectRatioStyle: '3 / 4' };
+    }
+    if (variant === 'C') {
+      return { ratioText: '4:3', aspectClass: 'aspect-[4/3]', aspectRatioStyle: '4 / 3' };
+    }
+    return { ratioText: '1:1', aspectClass: 'aspect-square', aspectRatioStyle: '1 / 1' };
+  }
+
+  // Helper render teks estimasi laba / margin HPP per opsi variasi
+  function renderOptionProfitInfo(price, cost) {
+    const p = (price !== '' && price !== null && price !== undefined) ? parseFloat(price) : NaN;
+    const c = (cost !== '' && cost !== null && cost !== undefined) ? parseFloat(cost) : null;
+    const hasP = !isNaN(p) && p > 0;
+    const hasC = c !== null && !isNaN(c) && c >= 0;
+
+    if (hasP && hasC) {
+      const laba = p - c;
+      const marginPct = p > 0 ? Math.round((laba / p) * 100) : 0;
+      if (laba > 0) {
+        return `<span class="opt-profit-info text-[11px] font-medium text-emerald-700">Laba: <b>Rp${laba.toLocaleString('id-ID')}</b> (${marginPct}%)</span>`;
+      }
+      if (laba < 0) {
+        return `<span class="opt-profit-info text-[11px] font-semibold text-red-600">Rugi: Rp${Math.abs(laba).toLocaleString('id-ID')}</span>`;
+      }
+      return `<span class="opt-profit-info text-[11px] font-medium text-slate-600">Laba: Rp0 (0%)</span>`;
+    }
+
+    if (hasP && !hasC) {
+      return `<span class="opt-profit-info text-[11px] text-slate-400">HPP: Rp0 · Laba: Rp${p.toLocaleString('id-ID')}</span>`;
+    }
+
+    return `<span class="opt-profit-info text-[11px] text-slate-400">Estimasi Laba: —</span>`;
+  }
+
+  // Helper pembaruan real-time estimasi laba/HPP per baris opsi variasi
+  function updateRowProfitInfo(row) {
+    if (!row) return;
+    const priceInp = row.querySelector('input[data-field="price"]');
+    const costInp = row.querySelector('input[data-field="cost_price"]');
+    const profitEl = row.querySelector('.opt-profit-info-wrapper');
+    if (profitEl && priceInp) {
+      const pVal = priceInp.value;
+      const cVal = costInp ? costInp.value : '';
+      profitEl.innerHTML = renderOptionProfitInfo(pVal, cVal);
+    }
+  }
+
   function renderGalleryThumbnails() {
     const images = Array.isArray(primaryState.images) ? primaryState.images : [];
-    const isLandscape = primaryState.image_aspect_ratio === '4:3';
-    const isPortrait = primaryState.image_aspect_ratio === '3:4' || primaryState.card_variant === 'B';
-    const aspectClass = isLandscape ? 'aspect-[4/3]' : (isPortrait ? 'aspect-[3/4]' : 'aspect-square');
+    const { ratioText, aspectClass, aspectRatioStyle } = getActiveCardRatioInfo();
 
     let html = '';
 
@@ -4484,7 +4536,7 @@ const ProductForm = (() => {
       const canMoveRight = idx < images.length - 1;
 
       html += `
-        <div class="relative ${aspectClass} rounded-2xl ${isMain ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-slate-200 hover:border-slate-300'} bg-slate-100 overflow-hidden group shadow-2xs select-none transition-all duration-200" data-index="${idx}">
+        <div style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="relative ${aspectClass} rounded-2xl ${isMain ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-slate-200 hover:border-slate-300'} bg-slate-100 overflow-hidden group shadow-2xs select-none transition-all duration-200" data-index="${idx}">
           <!-- Gambar Slot -->
           <img src="${imgSrc}" class="w-full h-full object-cover select-none" alt="Foto ${slotNum}" loading="lazy" />
 
@@ -4545,8 +4597,8 @@ const ProductForm = (() => {
       const isFirstSlot = images.length === 0;
 
       html += `
-        <div id="btn-slot-add-photo" data-action="add-photo" class="relative ${aspectClass} rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-2.5 select-none shadow-2xs" title="Unggah foto produk baru (${images.length}/10)">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-700 shadow-xs mb-1 transition-transform group-hover:scale-110">
+        <div id="btn-slot-add-photo" data-action="add-photo" style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="relative ${aspectClass} rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-2.5 select-none shadow-2xs" title="Unggah foto produk baru (${images.length}/10)">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-700 shadow-xs mb-1 transition-transform group-hover:scale-110">
             <i data-lucide="camera" class="w-4 h-4 sm:w-5 sm:h-5"></i>
           </div>
           <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800 transition leading-tight">
@@ -4555,6 +4607,7 @@ const ProductForm = (() => {
           <span class="text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition font-mono mt-0.5">
             (${images.length}/10)
           </span>
+          <span class="text-[10px] font-semibold text-emerald-600 mt-0.5">Skala ${ratioText}</span>
         </div>
       `;
     }
@@ -4771,10 +4824,13 @@ const ProductForm = (() => {
           ${primaryState.is_active ? `
             <!-- Foto Produk Ringkas di Step 2 -->
             <div class="space-y-2 pt-1 border-t border-slate-100">
-              <div class="flex items-center justify-between">
-                <label class="block text-xs font-bold text-slate-800">
-                  Foto Produk <span class="text-red-500">*</span>
-                </label>
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <label class="block text-xs font-bold text-slate-800">
+                    Foto Produk <span class="text-red-500">*</span>
+                  </label>
+                  <span id="step2-gallery-ratio-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Rasio ${getActiveCardRatioInfo().ratioText}</span>
+                </div>
                 <span id="step2-photo-count" class="text-[11px] text-slate-500">Total: ${primaryState.images?.length || 0} Foto Diunggah</span>
               </div>
               <div id="step2-gallery-strip" class="flex items-center gap-2 overflow-x-auto pb-1">
@@ -7034,7 +7090,7 @@ const ProductForm = (() => {
               />
             </div>
             <!-- Kolom 3: Harga Jual -->
-            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center border-r border-slate-300">
               <input 
                 type="number" 
                 min="0" 
@@ -7077,27 +7133,32 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
-          <div class="flex items-center justify-end sm:justify-start gap-2 sm:gap-2.5 shrink-0 self-end sm:self-center">
-            <button 
-              type="button" 
-              class="btn-delete-mat p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
-              data-tier="tier1" 
-              data-id="${mat.id}" 
-              ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
-            >
-              <i class="bi bi-trash3-fill"></i>
-            </button>
-            <button 
-              type="button" 
-              class="btn-move-row btn-move-mat p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
-              data-tier="tier1" 
-              data-id="${mat.id}" 
-              data-idx="${idx}" 
-              title="Geser / Pindah Urutan Opsi"
-            >
-              <i class="bi bi-arrows-move"></i>
-            </button>
+          <!-- Tombol Aksi di Luar Kotak: Estimasi Laba di Sisi Kiri, Hapus & Geser di Sisi Kanan -->
+          <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-2.5 shrink-0 w-full sm:w-auto px-1 sm:px-0 py-0.5 sm:py-0">
+            <div class="opt-profit-info-wrapper flex items-center pr-2">
+              ${renderOptionProfitInfo(priceVal, costVal)}
+            </div>
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-0">
+              <button 
+                type="button" 
+                class="btn-delete-mat p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
+                data-tier="tier1" 
+                data-id="${mat.id}" 
+                ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
+              >
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn-move-row btn-move-mat p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
+                data-tier="tier1" 
+                data-id="${mat.id}" 
+                data-idx="${idx}" 
+                title="Geser / Pindah Urutan Opsi"
+              >
+                <i class="bi bi-arrows-move"></i>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -7180,7 +7241,7 @@ const ProductForm = (() => {
               </div>
 
               <!-- Bagian 4: Harga Satuan -->
-              <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+              <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center border-r border-slate-300">
                 <input 
                   type="number" 
                   min="0" 
@@ -7225,27 +7286,32 @@ const ProductForm = (() => {
               </div>
             </div>
 
-            <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
-            <div class="flex items-center justify-end sm:justify-start gap-2 sm:gap-2.5 shrink-0 self-end sm:self-center">
-              <button 
-                type="button" 
-                class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
-                data-tier="${tier}" 
-                data-id="${fin.id}" 
-                ${isLastRow ? 'disabled title="Opsi default tidak dapat dihapus"' : (isExtraProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"')}
-              >
-                <i class="bi bi-trash3-fill"></i>
-              </button>
-              <button 
-                type="button" 
-                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition text-xs leading-none ${isLastRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
-                data-tier="${tier}" 
-                data-id="${fin.id}" 
-                data-idx="${idx}" 
-                ${isLastRow ? 'disabled title="Opsi default tetap di baris terakhir"' : 'title="Geser / Pindah Urutan Opsi"'}
-              >
-                <i class="bi bi-arrows-move"></i>
-              </button>
+            <!-- Tombol Aksi di Luar Kotak: Estimasi Laba di Sisi Kiri, Hapus & Geser di Sisi Kanan -->
+            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-2.5 shrink-0 w-full sm:w-auto px-1 sm:px-0 py-0.5 sm:py-0">
+              <div class="opt-profit-info-wrapper flex items-center pr-2">
+                ${!isLastRow ? renderOptionProfitInfo(priceVal, costVal) : ''}
+              </div>
+              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-0">
+                <button 
+                  type="button" 
+                  class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
+                  data-tier="${tier}" 
+                  data-id="${fin.id}" 
+                  ${isLastRow ? 'disabled title="Opsi default tidak dapat dihapus"' : (isExtraProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"')}
+                >
+                  <i class="bi bi-trash3-fill"></i>
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition text-xs leading-none ${isLastRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
+                  data-tier="${tier}" 
+                  data-id="${fin.id}" 
+                  data-idx="${idx}" 
+                  ${isLastRow ? 'disabled title="Opsi default tetap di baris terakhir"' : 'title="Geser / Pindah Urutan Opsi"'}
+                >
+                  <i class="bi bi-arrows-move"></i>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -7286,7 +7352,7 @@ const ProductForm = (() => {
               />
             </div>
             <!-- Kolom 3: Harga Jual -->
-            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
+            <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center border-r border-slate-300">
               <input 
                 type="number" 
                 min="0" 
@@ -7329,27 +7395,32 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <!-- Tombol Aksi di Luar Kotak: Hapus di Sisi Kiri, Handle Geser di Sisi Kanan -->
-          <div class="flex items-center justify-end sm:justify-start gap-2 sm:gap-2.5 shrink-0 self-end sm:self-center">
-            <button 
-              type="button" 
-              class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
-              data-tier="${tier}" 
-              data-id="${fin.id}" 
-              ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
-            >
-              <i class="bi bi-trash3-fill"></i>
-            </button>
-            <button 
-              type="button" 
-              class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
-              data-tier="${tier}" 
-              data-id="${fin.id}" 
-              data-idx="${idx}" 
-              title="Geser / Pindah Urutan Opsi"
-            >
-              <i class="bi bi-arrows-move"></i>
-            </button>
+          <!-- Tombol Aksi di Luar Kotak: Estimasi Laba di Sisi Kiri, Hapus & Geser di Sisi Kanan -->
+          <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-2.5 shrink-0 w-full sm:w-auto px-1 sm:px-0 py-0.5 sm:py-0">
+            <div class="opt-profit-info-wrapper flex items-center pr-2">
+              ${renderOptionProfitInfo(priceVal, costVal)}
+            </div>
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-0">
+              <button 
+                type="button" 
+                class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs" 
+                data-tier="${tier}" 
+                data-id="${fin.id}" 
+                ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
+              >
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
+                data-tier="${tier}" 
+                data-id="${fin.id}" 
+                data-idx="${idx}" 
+                title="Geser / Pindah Urutan Opsi"
+              >
+                <i class="bi bi-arrows-move"></i>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -8588,16 +8659,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             validateOptionField(e.target, false);
           }
 
+          if (field === 'price' || field === 'cost_price') {
+            updateRowProfitInfo(row);
+          }
+
           // Ketentuan Tambahan Real-Time Propagation dari Baris 0
           if (idx === 0) {
             if (field === 'price' && primaryState.same_price_tiers?.tier1) {
               const val = item.price;
               materialsState.forEach((m, mIdx) => { if (mIdx > 0) m.price = val; });
               container.querySelectorAll('.variation-option-row:not([data-idx="0"]) input[data-field="price"]').forEach(pi => { pi.value = val; });
+              container.querySelectorAll('.variation-option-row').forEach(r => updateRowProfitInfo(r));
             } else if (field === 'cost_price' && primaryState.same_cost_tiers?.tier1) {
               const val = item.cost_price;
               materialsState.forEach((m, mIdx) => { if (mIdx > 0) m.cost_price = val; });
               container.querySelectorAll('.variation-option-row:not([data-idx="0"]) input[data-field="cost_price"]').forEach(ci => { ci.value = val; });
+              container.querySelectorAll('.variation-option-row').forEach(r => updateRowProfitInfo(r));
             } else if (field === 'stock' && primaryState.stock_mode_tiers?.tier1 === 'same') {
               const val = item.stock;
               materialsState.forEach((m, mIdx) => { if (mIdx > 0) m.stock = val; });
@@ -8817,16 +8894,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             validateOptionField(e.target, false);
           }
 
+          if (field === 'price' || field === 'cost_price') {
+            updateRowProfitInfo(row);
+          }
+
           // Ketentuan Tambahan Propagation dari Baris 0
           if (idx === 0) {
             if (field === 'price' && primaryState.same_price_tiers?.[tier]) {
               const val = item.price;
               currentList.forEach((f, fIdx) => { if (fIdx > 0) f.price = val; });
               container.querySelectorAll('.variation-option-row:not([data-idx="0"]) input[data-field="price"]').forEach(pi => { pi.value = val; });
+              container.querySelectorAll('.variation-option-row').forEach(r => updateRowProfitInfo(r));
             } else if (field === 'cost_price' && primaryState.same_cost_tiers?.[tier]) {
               const val = item.cost_price;
               currentList.forEach((f, fIdx) => { if (fIdx > 0) f.cost_price = val; });
               container.querySelectorAll('.variation-option-row:not([data-idx="0"]) input[data-field="cost_price"]').forEach(ci => { ci.value = val; });
+              container.querySelectorAll('.variation-option-row').forEach(r => updateRowProfitInfo(r));
             } else if (field === 'stock' && primaryState.stock_mode_tiers?.[tier] === 'same') {
               const val = item.stock;
               currentList.forEach((f, fIdx) => { if (fIdx > 0) f.stock = val; });
@@ -11763,6 +11846,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       galleryContainer.innerHTML = renderGalleryThumbnails();
       bindGalleryButtons();
       if (window.lucide) window.lucide.createIcons();
+    }
+    const { ratioText } = getActiveCardRatioInfo();
+    const ratioBadge = document.getElementById('gallery-ratio-badge');
+    if (ratioBadge) {
+      ratioBadge.textContent = `Rasio ${ratioText}`;
+    }
+    const s2RatioBadge = document.getElementById('step2-gallery-ratio-badge');
+    if (s2RatioBadge) {
+      s2RatioBadge.textContent = `Rasio ${ratioText}`;
     }
     refreshStep2GalleryDOM();
   }
