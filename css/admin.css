@@ -1357,3 +1357,20 @@ input.toggle-same-cost:checked ~ div::after {
   -moz-appearance: textfield;
 }
 
+/* Drawer Detail Produk: Input Dimensi (P x L) & Live Summary */
+.input-shopee-dim-p::-webkit-outer-spin-button,
+.input-shopee-dim-p::-webkit-inner-spin-button,
+.input-shopee-dim-l::-webkit-outer-spin-button,
+.input-shopee-dim-l::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-shopee-dim-p,
+.input-shopee-dim-l {
+  -moz-appearance: textfield;
+}
+
+#drawer-dim-live-summary {
+  animation: fadeIn 0.15s ease-out;
+}

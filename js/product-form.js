@@ -2372,6 +2372,239 @@ const ProductForm = (() => {
     });
   }
 
+  function calculateCustomDimensionPricingForDrawer(pVal, lVal) {
+    if (!primaryState.has_custom_dimension) {
+      return {
+        isValid: false,
+        unitPrice: 0,
+        summaryText: '',
+        areaPrice: 0,
+        unitAreaEff: 0,
+        chargedUnitAreaPrice: 0,
+        isPriceRounded: false,
+        pEff: 0,
+        lEff: 0
+      };
+    }
+
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || 'meter';
+    let factor = 1;
+    if (dimUnit === 'cm') factor = 0.01;
+    else if (dimUnit === 'mm') factor = 0.001;
+
+    const areaUnitLabel = getDimensionAreaUnitLabel(dimUnit) || (dimUnit === 'cm' ? 'cm²' : (dimUnit === 'mm' ? 'mm²' : 'm²'));
+    const defThreshold = getDefaultMinAreaThreshold(dimUnit);
+
+    const chkMinPrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
+    const isMinOnePriceActive = chkMinPrice ? chkMinPrice.checked : (primaryState.dim_min_one_price !== false);
+
+    const inMinPriceTh = document.getElementById('input-min-price-threshold');
+    const minPriceTh = (inMinPriceTh && inMinPriceTh.value !== '')
+      ? parseFloat(inMinPriceTh.value)
+      : ((primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && !isNaN(primaryState.min_area_threshold))
+        ? parseFloat(primaryState.min_area_threshold)
+        : defThreshold);
+
+    const inMinPriceCh = document.getElementById('input-min-price-charge');
+    const minPriceCh = (inMinPriceCh && inMinPriceCh.value !== '')
+      ? parseFloat(inMinPriceCh.value)
+      : ((primaryState.min_area_charge_value !== undefined && primaryState.min_area_charge_value !== null && !isNaN(primaryState.min_area_charge_value))
+        ? parseFloat(primaryState.min_area_charge_value)
+        : minPriceTh);
+
+    const pRaw = parseFloat(pVal !== undefined && pVal !== null ? pVal : previewTestState.dimLength);
+    const lRaw = parseFloat(lVal !== undefined && lVal !== null ? lVal : previewTestState.dimWidth);
+
+    if (isNaN(pRaw) || isNaN(lRaw) || pRaw <= 0 || lRaw <= 0) {
+      return {
+        isValid: false,
+        unitPrice: 0,
+        summaryText: '',
+        areaPrice: 0,
+        unitAreaEff: 0,
+        chargedUnitAreaPrice: 0,
+        isPriceRounded: false,
+        pEff: 0,
+        lEff: 0,
+        dimUnit: dimUnit,
+        areaUnitLabel: areaUnitLabel
+      };
+    }
+
+    const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+    const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+
+    const selectedMat = (primaryState.has_variants && previewTestState.selectedTier1Id)
+      ? validMaterials.find(m => m.id === previewTestState.selectedTier1Id)
+      : (validMaterials[0] || null);
+
+    const selectedV2 = (primaryState.has_variation_2 && validV2.length > 0)
+      ? validV2.find((f, idx) => (f.id || `v2_${idx}`) === previewTestState.selectedTier2Id)
+      : null;
+
+    const selectedV3 = (primaryState.has_variation_3 && validV3.length > 0)
+      ? validV3.find((f, idx) => (f.id || `v3_${idx}`) === previewTestState.selectedTier3Id)
+      : null;
+
+    const selectedV4 = (primaryState.has_variation_4 && validV4.length > 0)
+      ? validV4.find((f, idx) => (f.id || `v4_${idx}`) === previewTestState.selectedTier4Id)
+      : null;
+
+    const activeExtras = [];
+    if (primaryState.has_extra_service && validExtras.length > 0) {
+      validExtras.forEach((ex, idx) => {
+        if (ex.is_default_none) return;
+        const exId = ex.id || `ex_${idx}`;
+        const xt = String(ex.extra_type || '').toLowerCase();
+        if (xt === 'qty') {
+          const qty = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
+          if (qty > 0) {
+            activeExtras.push({ opt: ex, tierKey: 'extra_3', qty: qty });
+          }
+        } else {
+          const isSelected = Boolean(previewTestState.selectedExtras && previewTestState.selectedExtras[exId]);
+          const isDirect = (xt === 'direct' || xt === 'langsung proses');
+          if (isSelected || isDirect) {
+            activeExtras.push({ opt: ex, tierKey: 'extra_3', qty: 1 });
+          }
+        }
+      });
+    }
+
+    const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
+    let mainOptPrice = 0;
+    if (mainComp === 'single') {
+      const singlePriceInp = document.getElementById('input-single-price');
+      mainOptPrice = singlePriceInp ? (parseFloat(singlePriceInp.value) || 0) : (parseFloat(materialsState[0]?.price) || parseFloat(primaryState.price) || 0);
+    } else if (mainComp === 'tier1') {
+      if (selectedMat) mainOptPrice = parseFloat(selectedMat.price) || 0;
+      else if (validMaterials.length > 0) mainOptPrice = parseFloat(validMaterials[0].price) || 0;
+    } else if (mainComp === 'main') {
+      if (selectedV2) mainOptPrice = parseFloat(selectedV2.price) || 0;
+    } else if (mainComp === 'extra_1') {
+      if (selectedV3) mainOptPrice = parseFloat(selectedV3.price) || 0;
+    } else if (mainComp === 'extra_2') {
+      if (selectedV4) mainOptPrice = parseFloat(selectedV4.price) || 0;
+    }
+
+    const otherSelectedOptions = [];
+    if (mainComp !== 'single' && mainComp !== 'tier1' && selectedMat) {
+      otherSelectedOptions.push({ opt: selectedMat, tierKey: 'tier1', qty: 1 });
+    }
+    if (mainComp !== 'main' && selectedV2) {
+      otherSelectedOptions.push({ opt: selectedV2, tierKey: 'main', qty: 1 });
+    }
+    if (mainComp !== 'extra_1' && selectedV3) {
+      otherSelectedOptions.push({ opt: selectedV3, tierKey: 'extra_1', qty: 1 });
+    }
+    if (mainComp !== 'extra_2' && selectedV4) {
+      otherSelectedOptions.push({ opt: selectedV4, tierKey: 'extra_2', qty: 1 });
+    }
+    activeExtras.forEach(ae => otherSelectedOptions.push(ae));
+
+    let pEff = pRaw;
+    let lEff = lRaw;
+    let directAreaAdd = 0;
+    const addDimNotes = [];
+
+    otherSelectedOptions.forEach(item => {
+      const effRule = getEffectiveRuleForOption(item.tierKey, item.opt);
+      if (effRule && effRule.calc_mode === 'add_dim') {
+        const val = parseFloat(effRule.dim_add_val) || 0;
+        const side = effRule.dim_add_side || 'p_l';
+        if (side === 'top' || side === 'bottom' || side === 'top_bottom' || side === 'p') {
+          pEff += val;
+          addDimNotes.push(`+${val}${dimUnit} P (${item.opt.name.trim()})`);
+        } else if (side === 'side_one' || side === 'left_right' || side === 'l') {
+          lEff += val;
+          addDimNotes.push(`+${val}${dimUnit} L (${item.opt.name.trim()})`);
+        } else if (side === 'area_add') {
+          directAreaAdd += (val * factor * factor);
+          addDimNotes.push(`+${val} Luas (${item.opt.name.trim()})`);
+        } else {
+          pEff += val;
+          lEff += val;
+          addDimNotes.push(`+${val}${dimUnit} P&L (${item.opt.name.trim()})`);
+        }
+      }
+    });
+
+    const areaEff = ((pEff * factor) * (lEff * factor)) + directAreaAdd;
+    const unitAreaEff = (pEff * lEff) + (factor > 0 ? (directAreaAdd / (factor * factor)) : 0);
+
+    const isPriceRounded = isMinOnePriceActive && unitAreaEff > 0 && unitAreaEff < minPriceTh;
+    const chargedUnitAreaPrice = isPriceRounded ? minPriceCh : unitAreaEff;
+    const areaPrice = chargedUnitAreaPrice * (factor * factor);
+
+    const mainPriceTotal = mainOptPrice * areaPrice;
+
+    let otherVariantsTotal = 0;
+    otherSelectedOptions.forEach(item => {
+      const effRule = getEffectiveRuleForOption(item.tierKey, item.opt);
+      const optPrice = parseFloat(item.opt.price) || 0;
+      const qtyMultiplier = item.qty || 1;
+      const mode = effRule ? effRule.calc_mode : 'flat';
+
+      if (mode === 'area') {
+        otherVariantsTotal += (optPrice * areaPrice * qtyMultiplier);
+      } else if (mode === 'side_length') {
+        const side = effRule.dim_add_side || 'top';
+        const pLen = pRaw * factor;
+        const lLen = lRaw * factor;
+        let sideMultiplier = 0;
+        if (side === 'top' || side === 'bottom') sideMultiplier = 1 * pLen;
+        else if (side === 'top_bottom') sideMultiplier = 2 * pLen;
+        else if (side === 'side_one') sideMultiplier = 1 * lLen;
+        else if (side === 'left_right') sideMultiplier = 2 * lLen;
+        else if (side === 'perimeter') sideMultiplier = 2 * (pLen + lLen);
+        else sideMultiplier = 1 * pLen;
+
+        otherVariantsTotal += (sideMultiplier * optPrice * qtyMultiplier);
+      } else if (mode === 'add_dim') {
+        otherVariantsTotal += (optPrice * qtyMultiplier);
+      } else {
+        otherVariantsTotal += (optPrice * qtyMultiplier);
+      }
+    });
+
+    const finalCalculatedUnitPrice = Math.round(mainPriceTotal + otherVariantsTotal);
+
+    function formatAreaNum(num) {
+      if (!num || isNaN(num)) return '0';
+      const fixed = Number(num).toFixed(2);
+      return fixed.endsWith('.00') ? String(parseInt(num, 10)) : fixed.replace(/\.?0+$/, '');
+    }
+
+    let summaryText = `Luas hitung: ${formatAreaNum(unitAreaEff)} ${areaUnitLabel}`;
+    if (isPriceRounded) {
+      summaryText += ` (Dibulatkan min. ${formatAreaNum(minPriceCh)} ${areaUnitLabel})`;
+    }
+    if (addDimNotes.length > 0) {
+      summaryText += ` • Tambahan bahan: ${addDimNotes.join(', ')}`;
+    }
+
+    return {
+      isValid: true,
+      unitPrice: finalCalculatedUnitPrice,
+      mainOptPrice: mainOptPrice,
+      mainPriceTotal: mainPriceTotal,
+      otherVariantsTotal: otherVariantsTotal,
+      summaryText: summaryText,
+      areaEff: areaEff,
+      unitAreaEff: unitAreaEff,
+      chargedUnitAreaPrice: chargedUnitAreaPrice,
+      areaPrice: areaPrice,
+      isPriceRounded: isPriceRounded,
+      pEff: pEff,
+      lEff: lEff,
+      dimUnit: dimUnit,
+      areaUnitLabel: areaUnitLabel
+    };
+  }
+
   function buildShopeeDrawerHtml(actionType) {
     const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
@@ -2398,21 +2631,30 @@ const ProductForm = (() => {
     const isAllVariationsSelected = checkAllVariationsSelected();
 
     const dimLabel = getCustomDimensionLabel();
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || 'meter';
+    const displayUnit = (dimUnit === 'cm') ? 'cm' : ((dimUnit === 'mm') ? 'mm' : 'm');
     const dimLengthVal = (previewTestState.dimLength !== undefined && previewTestState.dimLength !== null) ? String(previewTestState.dimLength) : '';
     const dimWidthVal = (previewTestState.dimWidth !== undefined && previewTestState.dimWidth !== null) ? String(previewTestState.dimWidth) : '';
     const dimError = Boolean(previewTestState.dimError);
+
+    const dimPricing = calculateCustomDimensionPricingForDrawer(dimLengthVal, dimWidthVal);
 
     const customDimensionDrawerHtml = primaryState.has_custom_dimension ? `
       <div id="drawer-custom-dimension-section" class="space-y-1.5 pt-2 border-t border-slate-100">
         <div class="text-xs font-normal text-slate-600 mb-1.5">${escapeHtml(dimLabel)}</div>
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
           <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimLengthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimLengthVal) > 0 ? 'bg-white border-[#33b589]' : 'border-slate-200 focus-within:border-[#33b589] focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition">
-            <input type="number" step="any" min="0.01" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none" />
+            <input type="number" step="any" min="0.01" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none pr-1" />
+            <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
           <span class="text-xs font-semibold text-slate-400 px-0.5">×</span>
           <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimWidthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimWidthVal) > 0 ? 'bg-white border-[#33b589]' : 'border-slate-200 focus-within:border-[#33b589] focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition">
-            <input type="number" step="any" min="0.01" placeholder="Lebar (L)" value="${escapeHtml(dimWidthVal)}" class="input-shopee-dim-l w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none" />
+            <input type="number" step="any" min="0.01" placeholder="Lebar (L)" value="${escapeHtml(dimWidthVal)}" class="input-shopee-dim-l w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none pr-1" />
+            <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
+        </div>
+        <div id="drawer-dim-live-summary" class="text-[10px] text-emerald-700 bg-emerald-50/80 border border-emerald-200/80 rounded px-2 py-1 mt-1 font-medium transition ${dimPricing.isValid && dimPricing.summaryText ? 'block' : 'hidden'}">
+          <i class="bi bi-calculator mr-1"></i><span>${escapeHtml(dimPricing.summaryText || '')}</span>
         </div>
         ${dimError && !(parseFloat(dimLengthVal) > 0 && parseFloat(dimWidthVal) > 0) ? '<p class="text-[10px] font-semibold text-red-600 mt-1">Ukuran Panjang (P) dan Lebar (L) wajib diisi.</p>' : ''}
       </div>
@@ -2485,7 +2727,6 @@ const ProductForm = (() => {
     }
 
     const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
-    // PISAHKAN: displayBasePrice murni harga produk utama (TIDAK ditambah extrasActivePrice)
     const displayBasePrice = comboUnitBase > 0 ? comboUnitBase : parseFloat(primaryState.price || 0);
 
     // Hitung seluruh kemungkinan harga unit kombinasi dari Variasi 1 s/d Variasi 4 yang aktif (murni produk):
@@ -2517,7 +2758,6 @@ const ProductForm = (() => {
     const rawMinUnit = minV1 + minV2 + minV3 + minV4;
     const rawMaxUnit = maxV1 + maxV2 + maxV3 + maxV4;
 
-    // PISAHKAN: baseMin & baseMax murni dari variasi utama produk (TIDAK ditambah extrasActivePrice)
     const baseMin = rawMinUnit;
     const baseMax = rawMaxUnit;
 
@@ -2549,17 +2789,6 @@ const ProductForm = (() => {
       drawerPriceRangeString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID');
     }
 
-    let unitPriceAfterDiscount = displayBasePrice;
-    let step2StrikePrice = displayBasePrice;
-    if (effHasDiscount) {
-      if (hasDiscount && discPercent > 0) {
-        unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
-      } else {
-        unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
-        step2StrikePrice = displayBasePrice * 2;
-      }
-    }
-
     // Aturan Min / Max / Kelipatan
     let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
     if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
@@ -2584,22 +2813,51 @@ const ProductForm = (() => {
     }
     const curQty = previewTestState.qty;
 
-    // Wholesale discount & banner (Hanya memotong per pcs produk utama)
-    const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
-    let finalUnitPrice = unitPriceAfterDiscount;
-    if (wholesaleInfo.hasDiscount) {
-      finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+    // Evaluasi Harga Final
+    let grandTotalPrice = 0;
+    let grandStrikePrice = 0;
+    let wholesaleInfo = { hasDiscount: false, discountPerPcs: 0, bannerText: '' };
+
+    if (primaryState.has_custom_dimension && dimPricing.isValid) {
+      const effUnitPrice = dimPricing.unitPrice;
+      let unitPriceAfterDiscount = effUnitPrice;
+      let step2StrikePrice = effUnitPrice;
+      if (effHasDiscount) {
+        if (hasDiscount && discPercent > 0) {
+          unitPriceAfterDiscount = Math.round(effUnitPrice * (1 - (discPercent / 100)));
+        } else {
+          unitPriceAfterDiscount = Math.round(effUnitPrice * 0.5);
+          step2StrikePrice = effUnitPrice * 2;
+        }
+      }
+      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      let finalUnitPrice = unitPriceAfterDiscount;
+      if (wholesaleInfo.hasDiscount) {
+        finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+      }
+      grandTotalPrice = finalUnitPrice * curQty;
+      grandStrikePrice = (step2StrikePrice || effUnitPrice) * curQty;
+    } else {
+      let unitPriceAfterDiscount = displayBasePrice;
+      let step2StrikePrice = displayBasePrice;
+      if (effHasDiscount) {
+        if (hasDiscount && discPercent > 0) {
+          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
+        } else {
+          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
+          step2StrikePrice = displayBasePrice * 2;
+        }
+      }
+      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      let finalUnitPrice = unitPriceAfterDiscount;
+      if (wholesaleInfo.hasDiscount) {
+        finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+      }
+      const productSubtotal = finalUnitPrice * curQty;
+      grandTotalPrice = productSubtotal + extrasActivePrice;
+      const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
+      grandStrikePrice = strikeSubtotal + extrasActivePrice;
     }
-
-    // RUMUS BENAR: Extras adalah biaya tambahan di luar Qty Global pesanan utama
-    // Subtotal Produk Utama = finalUnitPrice * curQty
-    // Total Biaya Extras = extrasActivePrice (terhitung dari opsi extra yang aktif)
-    // Total Harga Akhir = Subtotal Produk Utama + Total Biaya Extras
-    const productSubtotal = finalUnitPrice * curQty;
-    const grandTotalPrice = productSubtotal + extrasActivePrice;
-
-    const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
-    const grandStrikePrice = strikeSubtotal + extrasActivePrice;
 
     // Stok Display
     const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
@@ -2717,16 +2975,17 @@ const ProductForm = (() => {
         <div class="flex flex-col w-full shrink-0 overflow-hidden bg-white">
           <div class="flex items-start gap-2.5 p-3 border-b border-slate-100 relative shrink-0">
             <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-              ${coverImg ? `<img src="${coverImg}" class="w-full h-full object-cover" alt="Cover" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
+              ${coverImg ? `<img src="${coverImg}" class="drawer-header-img w-full h-full object-cover" alt="Cover" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${effHasDiscount ? `
-                <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
               ` : `
-                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
               `}
-              <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
+              <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
               ${wholesaleInfo.bannerText ? `
                 <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
                   <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
@@ -2756,7 +3015,7 @@ const ProductForm = (() => {
 
           <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
-            <span class="text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</span>
+            <span class="drawer-total-price text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</span>
           </div>
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
@@ -2772,21 +3031,24 @@ const ProductForm = (() => {
         <div class="flex flex-col w-full overflow-hidden max-h-full bg-white">
           <div class="flex items-start gap-2.5 p-3 border-b border-slate-100 relative shrink-0">
             <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-              ${variantImg ? `<img src="${variantImg}" class="w-full h-full object-cover" alt="Varian" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
+              ${variantImg ? `<img src="${variantImg}" class="drawer-header-img w-full h-full object-cover" alt="Varian" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${isAllVariationsSelected ? `
                 ${effHasDiscount ? `
-                  <div class="text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                  <div class="text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
                 ` : `
-                  <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
                 `}
+                <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5 hidden">Pilih varian dahulu</div>
               ` : `
-                <div class="text-sm font-extrabold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
-                <div class="text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
+                <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
+                <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
+                <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
               `}
-              <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="font-semibold text-slate-700">${stockDisplayText}</span></div>
+              <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
               ${wholesaleInfo.bannerText ? `
                 <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
                   <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
@@ -2832,7 +3094,7 @@ const ProductForm = (() => {
                     const fId = f.id || `v2_${idx}`;
                     const isSelected = previewTestState.selectedTier2Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier2 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier2 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier2" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2850,7 +3112,7 @@ const ProductForm = (() => {
                     const fId = f.id || `v3_${idx}`;
                     const isSelected = previewTestState.selectedTier3Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier3 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier3 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier3" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2868,7 +3130,7 @@ const ProductForm = (() => {
                     const fId = f.id || `v4_${idx}`;
                     const isSelected = previewTestState.selectedTier4Id === fId;
                     return `
-                      <button type="button" class="btn-shopee-tier4 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-id="${fId}">
+                      <button type="button" class="btn-shopee-tier4 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier4" data-id="${fId}">
                         <span>${escapeHtml(f.name.trim())}</span>
                       </button>
                     `;
@@ -2897,7 +3159,7 @@ const ProductForm = (() => {
 
           <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
-            <span class="text-sm font-extrabold" style="color: ${accentColor};">${isAllVariationsSelected ? `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}` : '-'}</span>
+            <span class="drawer-total-price text-sm font-extrabold" style="color: ${accentColor};">${isAllVariationsSelected ? `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}` : '-'}</span>
           </div>
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
@@ -2955,6 +3217,268 @@ const ProductForm = (() => {
         }
       });
     }
+  }
+
+  function updateShopeeDrawerLivePricing() {
+    const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+    const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+
+    const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
+    const isAllVariationsSelected = checkAllVariationsSelected();
+
+    const pInp = document.querySelector('.input-shopee-dim-p');
+    const lInp = document.querySelector('.input-shopee-dim-l');
+    const pVal = pInp ? pInp.value : (previewTestState.dimLength || '');
+    const lVal = lInp ? lInp.value : (previewTestState.dimWidth || '');
+
+    previewTestState.dimLength = pVal;
+    previewTestState.dimWidth = lVal;
+
+    const pNum = parseFloat(pVal);
+    const lNum = parseFloat(lVal);
+
+    const dimPricing = calculateCustomDimensionPricingForDrawer(pVal, lVal);
+
+    // Update #drawer-dim-live-summary
+    document.querySelectorAll('#drawer-dim-live-summary').forEach(summaryEl => {
+      if (dimPricing.isValid && dimPricing.summaryText) {
+        summaryEl.classList.remove('hidden');
+        summaryEl.innerHTML = `<i class="bi bi-calculator mr-1"></i><span>${escapeHtml(dimPricing.summaryText)}</span>`;
+      } else {
+        summaryEl.classList.add('hidden');
+        summaryEl.innerHTML = '';
+      }
+    });
+
+    // Update border input P dan L
+    document.querySelectorAll('.input-shopee-dim-p').forEach(inp => {
+      if (inp.value !== pVal) inp.value = pVal;
+      const box = inp.parentElement;
+      if (box) {
+        if (pNum > 0) {
+          box.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
+          box.classList.add('bg-white', 'border-[#33b589]');
+        } else {
+          box.classList.remove('bg-white', 'border-[#33b589]');
+          box.classList.add('border-slate-200');
+        }
+      }
+    });
+
+    document.querySelectorAll('.input-shopee-dim-l').forEach(inp => {
+      if (inp.value !== lVal) inp.value = lVal;
+      const box = inp.parentElement;
+      if (box) {
+        if (lNum > 0) {
+          box.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
+          box.classList.add('bg-white', 'border-[#33b589]');
+        } else {
+          box.classList.remove('bg-white', 'border-[#33b589]');
+          box.classList.add('border-slate-200');
+        }
+      }
+    });
+
+    if (pNum > 0 && lNum > 0) {
+      previewTestState.dimError = false;
+      document.querySelectorAll('#drawer-custom-dimension-section p.text-red-600').forEach(el => el.remove());
+    }
+
+    const selectedMat = (hasVariations && previewTestState.selectedTier1Id)
+      ? (validMaterials.find(m => m.id === previewTestState.selectedTier1Id) || null)
+      : null;
+
+    let v1Price = 0;
+    if (hasVariations) {
+      if (selectedMat) {
+        v1Price = parseFloat(selectedMat.price) || 0;
+      } else if (validMaterials.length > 0) {
+        v1Price = parseFloat(validMaterials[0].price) || 0;
+      }
+    } else {
+      const singlePriceInp = document.getElementById('input-single-price');
+      v1Price = singlePriceInp ? (parseFloat(singlePriceInp.value) || 0) : (parseFloat(materialsState[0]?.price) || 0);
+    }
+
+    let v2Price = 0;
+    if (primaryState.has_variation_2 && validV2.length > 0) {
+      const selV2 = validV2.find((f, idx) => (f.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
+      if (selV2) v2Price = parseFloat(selV2.price) || 0;
+    }
+
+    let v3Price = 0;
+    if (primaryState.has_variation_3 && validV3.length > 0) {
+      const selV3 = validV3.find((f, idx) => (f.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
+      if (selV3) v3Price = parseFloat(selV3.price) || 0;
+    }
+
+    let v4Price = 0;
+    if (primaryState.has_variation_4 && validV4.length > 0) {
+      const selV4 = validV4.find((f, idx) => (f.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
+      if (selV4) v4Price = parseFloat(selV4.price) || 0;
+    }
+
+    let extrasActivePrice = 0;
+    if (primaryState.has_extra_service && validExtras.length > 0) {
+      validExtras.forEach((ex, idx) => {
+        if (ex.is_default_none) return;
+        const exId = ex.id || `ex_${idx}`;
+        const xt = String(ex.extra_type || '').toLowerCase();
+        const price = parseFloat(ex.price) || 0;
+        if (xt === 'qty') {
+          const qty = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
+          if (qty > 0) extrasActivePrice += price * qty;
+        } else {
+          const isSelected = Boolean(previewTestState.selectedExtras && previewTestState.selectedExtras[exId]);
+          const isDirect = (xt === 'direct' || xt === 'langsung proses');
+          if (isSelected || isDirect) extrasActivePrice += price;
+        }
+      });
+    }
+
+    const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
+    const displayBasePrice = comboUnitBase > 0 ? comboUnitBase : parseFloat(primaryState.price || 0);
+
+    const hasDiscount = Boolean(primaryState.has_discount);
+    const discPercent = parseFloat(primaryState.discount_percent) || 0;
+    const simDiscCb = document.getElementById('cfg-simulate-countdown-preview');
+    const simDiscCbMob = document.getElementById('cfg-simulate-countdown-preview-mob');
+    const isSimulateDisc = Boolean((simDiscCb && simDiscCb.checked) || (simDiscCbMob && simDiscCbMob.checked));
+    const effHasDiscount = hasDiscount || isSimulateDisc;
+
+    const p1List = validMaterials.map(m => parseFloat(m.price) || 0);
+    const minV1 = p1List.length > 0 ? Math.min(...p1List) : (parseFloat(primaryState.price) || 0);
+    const maxV1 = p1List.length > 0 ? Math.max(...p1List) : (parseFloat(primaryState.price) || 0);
+    let minV2 = 0, maxV2 = 0;
+    if (primaryState.has_variation_2 && validV2.length > 0) {
+      const p2List = validV2.map(f => parseFloat(f.price) || 0);
+      minV2 = Math.min(...p2List); maxV2 = Math.max(...p2List);
+    }
+    let minV3 = 0, maxV3 = 0;
+    if (primaryState.has_variation_3 && validV3.length > 0) {
+      const p3List = validV3.map(f => parseFloat(f.price) || 0);
+      minV3 = Math.min(...p3List); maxV3 = Math.max(...p3List);
+    }
+    let minV4 = 0, maxV4 = 0;
+    if (primaryState.has_variation_4 && validV4.length > 0) {
+      const p4List = validV4.map(f => parseFloat(f.price) || 0);
+      minV4 = Math.min(...p4List); maxV4 = Math.max(...p4List);
+    }
+    let effMinPrice = minV1 + minV2 + minV3 + minV4;
+    let effMaxPrice = maxV1 + maxV2 + maxV3 + maxV4;
+    if (effHasDiscount) {
+      if (hasDiscount && discPercent > 0) {
+        effMinPrice = Math.round(effMinPrice * (1 - (discPercent / 100)));
+        effMaxPrice = Math.round(effMaxPrice * (1 - (discPercent / 100)));
+      } else {
+        effMinPrice = Math.round(effMinPrice * 0.5);
+        effMaxPrice = Math.round(effMaxPrice * 0.5);
+      }
+    }
+    const drawerPriceRangeString = (effMinPrice !== effMaxPrice)
+      ? `Rp${Math.round(effMinPrice).toLocaleString('id-ID')} - Rp${Math.round(effMaxPrice).toLocaleString('id-ID')}`
+      : `Rp${Math.round(effMinPrice).toLocaleString('id-ID')}`;
+
+    let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
+    if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+      minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
+    }
+    let maxOrderQty = Infinity;
+    if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+      maxOrderQty = parseInt(primaryState.max_order_qty);
+    } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+      maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
+    }
+    if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+      maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
+    }
+    if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
+      previewTestState.qty = minOrderQty;
+    }
+    if (previewTestState.qty > maxOrderQty && maxOrderQty !== Infinity) {
+      previewTestState.qty = maxOrderQty;
+    }
+    const curQty = previewTestState.qty;
+
+    let grandTotalPrice = 0;
+    let grandStrikePrice = 0;
+
+    if (primaryState.has_custom_dimension && dimPricing.isValid) {
+      const effUnitPrice = dimPricing.unitPrice;
+      let unitPriceAfterDiscount = effUnitPrice;
+      let step2StrikePrice = effUnitPrice;
+      if (effHasDiscount) {
+        if (hasDiscount && discPercent > 0) {
+          unitPriceAfterDiscount = Math.round(effUnitPrice * (1 - (discPercent / 100)));
+        } else {
+          unitPriceAfterDiscount = Math.round(effUnitPrice * 0.5);
+          step2StrikePrice = effUnitPrice * 2;
+        }
+      }
+      const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      let finalUnitPrice = unitPriceAfterDiscount;
+      if (wholesaleInfo.hasDiscount) {
+        finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+      }
+      grandTotalPrice = finalUnitPrice * curQty;
+      grandStrikePrice = (step2StrikePrice || effUnitPrice) * curQty;
+    } else {
+      let unitPriceAfterDiscount = displayBasePrice;
+      let step2StrikePrice = displayBasePrice;
+      if (effHasDiscount) {
+        if (hasDiscount && discPercent > 0) {
+          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
+        } else {
+          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
+          step2StrikePrice = displayBasePrice * 2;
+        }
+      }
+      const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      let finalUnitPrice = unitPriceAfterDiscount;
+      if (wholesaleInfo.hasDiscount) {
+        finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
+      }
+      const productSubtotal = finalUnitPrice * curQty;
+      grandTotalPrice = productSubtotal + extrasActivePrice;
+      const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
+      grandStrikePrice = strikeSubtotal + extrasActivePrice;
+    }
+
+    document.querySelectorAll('.drawer-header-price').forEach(el => {
+      if (hasVariations && !isAllVariationsSelected) {
+        el.textContent = drawerPriceRangeString;
+      } else {
+        el.textContent = `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}`;
+      }
+    });
+
+    document.querySelectorAll('.drawer-header-strike-price').forEach(el => {
+      if (effHasDiscount && (!hasVariations || isAllVariationsSelected)) {
+        el.textContent = `Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}`;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    });
+
+    document.querySelectorAll('.drawer-header-variant-warning').forEach(el => {
+      if (hasVariations && !isAllVariationsSelected) {
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    });
+
+    document.querySelectorAll('.drawer-total-price').forEach(el => {
+      if (hasVariations && !isAllVariationsSelected) {
+        el.textContent = '-';
+      } else {
+        el.textContent = `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}`;
+      }
+    });
   }
 
   function bindMiniPdpInteractiveEvents() {
@@ -3272,7 +3796,10 @@ const ProductForm = (() => {
             let nextQ = curQ - stepMultiplier;
             if (nextQ < minOrderQty) nextQ = minOrderQty;
             previewTestState.qty = nextQ;
-            updateProductCardLivePreview();
+            container.querySelectorAll('.input-preview-test-qty, #input-preview-test-qty').forEach(inp => {
+              inp.value = nextQ;
+            });
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -3284,7 +3811,10 @@ const ProductForm = (() => {
             let nextQ = curQ + stepMultiplier;
             if (nextQ > maxOrderQty && maxOrderQty !== Infinity) nextQ = maxOrderQty;
             previewTestState.qty = nextQ;
-            updateProductCardLivePreview();
+            container.querySelectorAll('.input-preview-test-qty, #input-preview-test-qty').forEach(inp => {
+              inp.value = nextQ;
+            });
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -3295,6 +3825,7 @@ const ProductForm = (() => {
             if (!isNaN(val) && val > 0) {
               if (maxOrderQty !== Infinity && val > maxOrderQty) val = maxOrderQty;
               previewTestState.qty = val;
+              updateShopeeDrawerLivePricing();
             }
           };
           inp.onchange = inp.onblur = (e) => {
@@ -3302,7 +3833,8 @@ const ProductForm = (() => {
             if (isNaN(val) || val < minOrderQty) val = minOrderQty;
             if (maxOrderQty !== Infinity && val > maxOrderQty) val = maxOrderQty;
             previewTestState.qty = val;
-            updateProductCardLivePreview();
+            inp.value = val;
+            updateShopeeDrawerLivePricing();
           };
           inp.onkeydown = (e) => {
             if (e.key === 'Enter') {
@@ -3318,7 +3850,23 @@ const ProductForm = (() => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
             previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
-            updateProductCardLivePreview();
+            container.querySelectorAll('.btn-shopee-tier1').forEach(b => {
+              if (b.getAttribute('data-id') === previewTestState.selectedTier1Id) {
+                b.classList.add('is-active');
+              } else {
+                b.classList.remove('is-active');
+              }
+            });
+            const selMat = (materialsState || []).find(m => m.id === previewTestState.selectedTier1Id);
+            const vImg = (selMat && (selMat.image_url || selMat.image)) ? (selMat.image_url || selMat.image) : (primaryState.images?.[0] || primaryState.image_url || null);
+            container.querySelectorAll('.drawer-header-img').forEach(img => {
+              if (vImg) img.src = vImg;
+            });
+            const stockText = getPreviewStockDisplay(selMat, materialsState);
+            container.querySelectorAll('.drawer-stock-display').forEach(st => {
+              st.textContent = stockText;
+            });
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -3327,7 +3875,14 @@ const ProductForm = (() => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
             previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
-            updateProductCardLivePreview();
+            container.querySelectorAll('.btn-shopee-tier2').forEach(b => {
+              if (b.getAttribute('data-id') === previewTestState.selectedTier2Id) {
+                b.classList.add('is-active');
+              } else {
+                b.classList.remove('is-active');
+              }
+            });
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -3336,7 +3891,14 @@ const ProductForm = (() => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
             previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
-            updateProductCardLivePreview();
+            container.querySelectorAll('.btn-shopee-tier3').forEach(b => {
+              if (b.getAttribute('data-id') === previewTestState.selectedTier3Id) {
+                b.classList.add('is-active');
+              } else {
+                b.classList.remove('is-active');
+              }
+            });
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -3345,7 +3907,14 @@ const ProductForm = (() => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
             previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
-            updateProductCardLivePreview();
+            container.querySelectorAll('.btn-shopee-tier4').forEach(b => {
+              if (b.getAttribute('data-id') === previewTestState.selectedTier4Id) {
+                b.classList.add('is-active');
+              } else {
+                b.classList.remove('is-active');
+              }
+            });
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -3484,20 +4053,7 @@ const ProductForm = (() => {
           pInp.onclick = (e) => e.stopPropagation();
           pInp.oninput = (e) => {
             previewTestState.dimLength = e.target.value;
-            const pVal = parseFloat(previewTestState.dimLength);
-            const lVal = parseFloat(previewTestState.dimWidth);
-            const pBox = pInp.parentElement;
-            if (pVal > 0) {
-              pBox.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
-              pBox.classList.add('bg-white', 'border-[#33b589]');
-            } else {
-              pBox.classList.remove('bg-white', 'border-[#33b589]');
-              pBox.classList.add('border-slate-200');
-            }
-            if (pVal > 0 && lVal > 0) {
-              previewTestState.dimError = false;
-              container.querySelectorAll('#drawer-custom-dimension-section p.text-red-600').forEach(el => el.remove());
-            }
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -3505,44 +4061,16 @@ const ProductForm = (() => {
           lInp.onclick = (e) => e.stopPropagation();
           lInp.oninput = (e) => {
             previewTestState.dimWidth = e.target.value;
-            const pVal = parseFloat(previewTestState.dimLength);
-            const lVal = parseFloat(previewTestState.dimWidth);
-            const lBox = lInp.parentElement;
-            if (lVal > 0) {
-              lBox.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
-              lBox.classList.add('bg-white', 'border-[#33b589]');
-            } else {
-              lBox.classList.remove('bg-white', 'border-[#33b589]');
-              lBox.classList.add('border-slate-200');
-            }
-            if (pVal > 0 && lVal > 0) {
-              previewTestState.dimError = false;
-              container.querySelectorAll('#drawer-custom-dimension-section p.text-red-600').forEach(el => el.remove());
-            }
+            updateShopeeDrawerLivePricing();
           };
         });
 
         // Submit Button di dalam Drawer
         container.querySelectorAll('.btn-shopee-submit').forEach(btn => {
           btn.onclick = (e) => {
-            const curQ = previewTestState.qty || minOrderQty;
-            let exTotal = 0;
-            if (primaryState.has_extra_service && (finishingsState.extra_3 || []).length > 0) {
-              (finishingsState.extra_3 || []).forEach((ex, idx) => {
-                if (ex.is_default_none) return;
-                const exId = ex.id || `ex_${idx}`;
-                const xt = String(ex.extra_type || '').toLowerCase();
-                const pr = parseFloat(ex.price) || 0;
-                if (xt === 'qty') {
-                  const q = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
-                  exTotal += pr * q;
-                } else if (previewTestState.selectedExtras?.[exId] || xt === 'direct' || xt === 'langsung proses') {
-                  exTotal += pr;
-                }
-              });
-            }
-            const grandTotalPrice = (finalUnitPrice * curQ) + exTotal;
             e.preventDefault();
+            const curQ = previewTestState.qty || minOrderQty;
+
             if (hasVariations && !checkAllVariationsSelected()) {
               const valRes = validatePreviewVariantSelection();
               if (!valRes.valid) {
@@ -3558,23 +4086,68 @@ const ProductForm = (() => {
             // Validasi Input Ukuran (P x L) jika aktif
             if (primaryState.has_custom_dimension && !isCustomDimensionValid()) {
               previewTestState.dimError = true;
-              updateProductCardLivePreview();
-              setTimeout(() => {
-                const pInp = container.querySelector('.input-shopee-dim-p');
-                const lInp = container.querySelector('.input-shopee-dim-l');
-                if (!parseFloat(previewTestState.dimLength) && pInp) {
-                  pInp.focus();
-                } else if (!parseFloat(previewTestState.dimWidth) && lInp) {
-                  lInp.focus();
-                }
-              }, 50);
+              updateShopeeDrawerLivePricing();
+              const pVal = parseFloat(previewTestState.dimLength);
+              const lVal = parseFloat(previewTestState.dimWidth);
+              const sec = container.querySelector('#drawer-custom-dimension-section');
+              if (sec && !sec.querySelector('p.text-red-600')) {
+                const errP = document.createElement('p');
+                errP.className = 'text-[10px] font-semibold text-red-600 mt-1';
+                errP.textContent = 'Ukuran Panjang (P) dan Lebar (L) wajib diisi.';
+                sec.appendChild(errP);
+              }
+              const pInp = container.querySelector('.input-shopee-dim-p');
+              const lInp = container.querySelector('.input-shopee-dim-l');
+              if (!(pVal > 0) && pInp) {
+                pInp.focus();
+              } else if (!(lVal > 0) && lInp) {
+                lInp.focus();
+              }
               return;
+            }
+
+            // Hitung harga final
+            const dimPricing = calculateCustomDimensionPricingForDrawer(previewTestState.dimLength, previewTestState.dimWidth);
+            let finalGrandTotal = 0;
+
+            if (primaryState.has_custom_dimension && dimPricing.isValid) {
+              const effUnitPrice = dimPricing.unitPrice;
+              let unitPriceAfterDiscount = effUnitPrice;
+              if (effHasDiscount) {
+                if (hasDiscount && discPercent > 0) {
+                  unitPriceAfterDiscount = Math.round(effUnitPrice * (1 - (discPercent / 100)));
+                } else {
+                  unitPriceAfterDiscount = Math.round(effUnitPrice * 0.5);
+                }
+              }
+              const wsInfo = getPreviewWholesaleDiscount(curQ, unitPriceAfterDiscount);
+              let finalUnitPrice = unitPriceAfterDiscount;
+              if (wsInfo.hasDiscount) {
+                finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wsInfo.discountPerPcs);
+              }
+              finalGrandTotal = finalUnitPrice * curQ;
+            } else {
+              let exTotal = 0;
+              if (primaryState.has_extra_service && (finishingsState.extra_3 || []).length > 0) {
+                (finishingsState.extra_3 || []).forEach((ex, idx) => {
+                  if (ex.is_default_none) return;
+                  const exId = ex.id || `ex_${idx}`;
+                  const xt = String(ex.extra_type || '').toLowerCase();
+                  const pr = parseFloat(ex.price) || 0;
+                  if (xt === 'qty') {
+                    const q = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
+                    exTotal += pr * q;
+                  } else if (previewTestState.selectedExtras?.[exId] || xt === 'direct' || xt === 'langsung proses') {
+                    exTotal += pr;
+                  }
+                });
+              }
+              finalGrandTotal = (finalUnitPrice * curQ) + exTotal;
             }
 
             closeShopeeCheckoutDrawer();
 
             const name = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
-            const curQty = previewTestState.qty || minOrderQty;
             const chosenVariants = [];
             if (selectedMat && selectedMat.name) chosenVariants.push(selectedMat.name.trim());
             if (primaryState.has_variation_2 && validV2.length > 0) {
@@ -3590,9 +4163,15 @@ const ProductForm = (() => {
               if (f && f.name) chosenVariants.push(f.name.trim());
             }
             let variantText = chosenVariants.length > 0 ? chosenVariants.join(' - ') : 'Standar';
-            if (primaryState.has_custom_dimension) {
+            if (primaryState.has_custom_dimension && dimPricing.isValid) {
               const dimLabel = getCustomDimensionLabel();
-              variantText += ` (${dimLabel}: ${previewTestState.dimLength} x ${previewTestState.dimWidth})`;
+              variantText += ` (${dimLabel}: ${previewTestState.dimLength} x ${previewTestState.dimWidth} ${dimPricing.displayUnit || ''})`;
+            }
+
+            function formatAreaLocal(num) {
+              if (!num || isNaN(num)) return '0';
+              const fixed = Number(num).toFixed(2);
+              return fixed.endsWith('.00') ? String(parseInt(num, 10)) : fixed.replace(/\.?0+$/, '');
             }
 
             if (actionType === 'buy') {
@@ -3610,23 +4189,23 @@ const ProductForm = (() => {
                       <span>Varian:</span>
                       <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
                     </div>
-                    ${primaryState.has_custom_dimension ? `
+                    ${primaryState.has_custom_dimension && dimPricing.isValid ? `
                       <div class="text-[11px] text-slate-600 flex justify-between">
                         <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
-                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)} ${dimPricing.displayUnit || ''} (${formatAreaLocal(dimPricing.unitAreaEff)} ${dimPricing.areaUnitLabel}${dimPricing.isPriceRounded ? ` • min. ${formatAreaLocal(dimPricing.chargedUnitAreaPrice)} ${dimPricing.areaUnitLabel}` : ''})</span>
                       </div>
                     ` : ''}
                     <div class="text-[11px] text-slate-600 flex justify-between">
                       <span>Jumlah:</span>
-                      <span class="font-bold text-slate-800">${curQty} pcs</span>
+                      <span class="font-bold text-slate-800">${curQ} pcs</span>
                     </div>
                     <div class="text-[11px] text-slate-600 flex justify-between border-t border-emerald-200/60 pt-1">
                       <span>Total Pembayaran:</span>
-                      <span class="font-black text-emerald-800">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</span>
+                      <span class="font-black text-emerald-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
                     </div>
                     <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
                       <i class="bi bi-shield-check text-emerald-700"></i>
-                      <span>Validasi seluruh aturan batas order & harga lulus 100%</span>
+                      <span>Kalkulasi ukuran (P × L) dan batas minimal presisi 100%</span>
                     </div>
                   </div>
                 `
@@ -3646,15 +4225,19 @@ const ProductForm = (() => {
                       <span>Pilihan Varian:</span>
                       <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
                     </div>
-                    ${primaryState.has_custom_dimension ? `
+                    ${primaryState.has_custom_dimension && dimPricing.isValid ? `
                       <div class="text-[11px] text-slate-600 flex justify-between">
                         <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
-                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)} ${dimPricing.displayUnit || ''} (${formatAreaLocal(dimPricing.unitAreaEff)} ${dimPricing.areaUnitLabel}${dimPricing.isPriceRounded ? ` • min. ${formatAreaLocal(dimPricing.chargedUnitAreaPrice)} ${dimPricing.areaUnitLabel}` : ''})</span>
                       </div>
                     ` : ''}
                     <div class="text-[11px] text-slate-600 flex justify-between">
                       <span>Kuantitas:</span>
-                      <span class="font-bold text-slate-800">${curQty} pcs</span>
+                      <span class="font-bold text-slate-800">${curQ} pcs</span>
+                    </div>
+                    <div class="text-[11px] text-slate-600 flex justify-between border-t border-slate-200 pt-1">
+                      <span>Total Pembayaran:</span>
+                      <span class="font-black text-slate-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
                     </div>
                   </div>
                 `
@@ -3698,9 +4281,18 @@ const ProductForm = (() => {
 
     const activeEl = document.activeElement;
     let focusedExtraId = null;
+    let focusedDimField = null;
     let selStart = null, selEnd = null;
     if (activeEl && activeEl.classList.contains('input-extra-qty')) {
       focusedExtraId = activeEl.getAttribute('data-id');
+      selStart = activeEl.selectionStart;
+      selEnd = activeEl.selectionEnd;
+    } else if (activeEl && activeEl.classList.contains('input-shopee-dim-p')) {
+      focusedDimField = 'p';
+      selStart = activeEl.selectionStart;
+      selEnd = activeEl.selectionEnd;
+    } else if (activeEl && activeEl.classList.contains('input-shopee-dim-l')) {
+      focusedDimField = 'l';
       selStart = activeEl.selectionStart;
       selEnd = activeEl.selectionEnd;
     }
@@ -3725,6 +4317,26 @@ const ProductForm = (() => {
             }
           } catch (_) {}
         });
+      } else if (focusedDimField === 'p') {
+        const pInp = document.querySelector('.input-shopee-dim-p');
+        if (pInp) {
+          pInp.focus();
+          try {
+            if (selStart !== null && selEnd !== null) {
+              pInp.setSelectionRange(selStart, selEnd);
+            }
+          } catch (_) {}
+        }
+      } else if (focusedDimField === 'l') {
+        const lInp = document.querySelector('.input-shopee-dim-l');
+        if (lInp) {
+          lInp.focus();
+          try {
+            if (selStart !== null && selEnd !== null) {
+              lInp.setSelectionRange(selStart, selEnd);
+            }
+          } catch (_) {}
+        }
       }
     };
 
@@ -6282,7 +6894,7 @@ const ProductForm = (() => {
     if (unit === 'cm') return 'cm²';
     if (unit === 'meter') return 'm²';
     if (unit === 'mm') return 'mm²';
-    return '(Pilih Satuan Ukuran dulu)';
+    return '';
   }
 
   function getDefaultMinAreaThreshold(unit) {
@@ -6295,19 +6907,6 @@ const ProductForm = (() => {
     const unitSelect = document.getElementById('select-dimension-unit');
     const unitVal = (unitSelect ? unitSelect.value : '') || primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
     if (!unitVal) {
-      const errorMsg = 'Tentukan Satuan Ukuran terlebih dahulu sebelum mengatur aturan atau simulasi harga.';
-      if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
-        App.showToast(errorMsg, 'warning');
-      } else if (typeof showToast === 'function') {
-        showToast(errorMsg, 'warning');
-      }
-
-      const unitErr = document.getElementById('custom-dimension-unit-error');
-      if (unitErr) {
-        unitErr.textContent = errorMsg;
-        unitErr.classList.remove('hidden');
-      }
-
       if (unitSelect) {
         unitSelect.classList.remove('border-slate-300');
         unitSelect.classList.add('border-red-500', 'ring-2', 'ring-red-400');
