@@ -5930,11 +5930,117 @@ const ProductForm = (() => {
     `).join('');
   }
 
+  function getAvailableRuleTierChoices() {
+    const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
+    const choices = [];
+
+    // Variasi 1 (hanya jika bervariasi dan bukan komponen utama)
+    if (primaryState.has_variants && mainComp !== 'tier1') {
+      const validMats = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+      if (validMats.length > 0) {
+        const lbl = getVariationLabel('tier1', 'Variasi 1');
+        choices.push({ tier: 'tier1', label: `Variasi 1: ${lbl}` });
+      }
+    }
+
+    // Variasi 2
+    if (primaryState.has_variation_2 && mainComp !== 'main') {
+      const validFins = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '' && !f.is_default_none);
+      if (validFins.length > 0) {
+        const lbl = getVariationLabel('main', 'Variasi 2');
+        choices.push({ tier: 'main', label: `Variasi 2: ${lbl}` });
+      }
+    }
+
+    // Variasi 3
+    if (primaryState.has_variation_2 && primaryState.has_variation_3 && mainComp !== 'extra_1') {
+      const validFins = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '' && !f.is_default_none);
+      if (validFins.length > 0) {
+        const lbl = getVariationLabel('extra_1', 'Variasi 3');
+        choices.push({ tier: 'extra_1', label: `Variasi 3: ${lbl}` });
+      }
+    }
+
+    // Variasi 4
+    if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4 && mainComp !== 'extra_2') {
+      const validFins = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '' && !f.is_default_none);
+      if (validFins.length > 0) {
+        const lbl = getVariationLabel('extra_2', 'Variasi 4');
+        choices.push({ tier: 'extra_2', label: `Variasi 4: ${lbl}` });
+      }
+    }
+
+    // Layanan Extras
+    if (primaryState.has_extra_service && mainComp !== 'extra_3') {
+      const validFins = (finishingsState.extra_3 || []).filter(f => f && f.name && f.name.trim() !== '' && !f.is_default_none);
+      if (validFins.length > 0) {
+        const lbl = getVariationLabel('extra_3', 'Layanan Extras');
+        choices.push({ tier: 'extra_3', label: `Layanan Extras: ${lbl}` });
+      }
+    }
+
+    return choices;
+  }
+
+  function getValidOptionsForTier(tierKey) {
+    if (tierKey === 'tier1') {
+      return (materialsState || [])
+        .filter(m => m && m.name && m.name.trim() !== '')
+        .map(m => ({ id: String(m.id || m.name.trim()), name: m.name.trim(), price: parseFloat(m.price) || 0 }));
+    }
+    const finList = finishingsState[tierKey] || [];
+    return finList
+      .filter(f => f && f.name && f.name.trim() !== '' && !f.is_default_none)
+      .map(f => ({ id: String(f.id || f.name.trim()), name: f.name.trim(), price: parseFloat(f.price) || 0 }));
+  }
+
+  function getEffectiveRuleForOption(tierKey, optionObj) {
+    if (!Array.isArray(primaryState.dimension_rules) || primaryState.dimension_rules.length === 0 || !optionObj) {
+      return { calc_mode: 'flat', dim_add_val: 0, dim_add_side: 'p_l' };
+    }
+    const optId = String(optionObj.id || '');
+    const optName = String(optionObj.name || '').trim();
+
+    // Cari aturan yang cocok untuk tier ini
+    const matchingRules = primaryState.dimension_rules.filter(r => r && r.tier_key === tierKey);
+    if (matchingRules.length === 0) {
+      return { calc_mode: 'flat', dim_add_val: 0, dim_add_side: 'p_l' };
+    }
+
+    // 1. Prioritaskan aturan opsi spesifik
+    const specificRule = matchingRules.find(r => 
+      r.target_scope === 'specific' && Array.isArray(r.option_ids) && 
+      (r.option_ids.includes(optId) || (optName && r.option_ids.includes(optName)))
+    );
+    if (specificRule) {
+      return {
+        calc_mode: specificRule.calc_mode || 'area',
+        dim_add_val: parseFloat(specificRule.dim_add_val) || 0,
+        dim_add_side: specificRule.dim_add_side || 'p_l'
+      };
+    }
+
+    // 2. Jika tidak ada opsi spesifik, periksa aturan 'all' (semua opsi)
+    const allRule = matchingRules.find(r => r.target_scope === 'all');
+    if (allRule) {
+      return {
+        calc_mode: allRule.calc_mode || 'area',
+        dim_add_val: parseFloat(allRule.dim_add_val) || 0,
+        dim_add_side: allRule.dim_add_side || 'p_l'
+      };
+    }
+
+    return { calc_mode: 'flat', dim_add_val: 0, dim_add_side: 'p_l' };
+  }
+
   function getSandboxFinishingOptionsList() {
     const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
     const list = [];
 
     const tiersToCheck = [];
+    if (primaryState.has_variants && mainComp !== 'tier1' && (materialsState && materialsState.length > 0)) {
+      tiersToCheck.push({ tier: 'tier1', label: getVariationLabel('tier1', 'Variasi 1') });
+    }
     if (mainComp !== 'main' && (primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0))) {
       tiersToCheck.push({ tier: 'main', label: getVariationLabel('main', 'Variasi 2') });
     }
@@ -5944,24 +6050,25 @@ const ProductForm = (() => {
     if (mainComp !== 'extra_2' && (primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0))) {
       tiersToCheck.push({ tier: 'extra_2', label: getVariationLabel('extra_2', 'Variasi 4') });
     }
-    if (primaryState.has_extra_service || (finishingsState.extra_3 && finishingsState.extra_3.length > 0)) {
+    if (mainComp !== 'extra_3' && (primaryState.has_extra_service || (finishingsState.extra_3 && finishingsState.extra_3.length > 0))) {
       tiersToCheck.push({ tier: 'extra_3', label: getVariationLabel('extra_3', 'Layanan Extras') });
     }
 
     tiersToCheck.forEach(t => {
-      const finItems = finishingsState[t.tier] || [];
-      finItems.forEach(item => {
+      const items = (t.tier === 'tier1') ? materialsState : (finishingsState[t.tier] || []);
+      items.forEach(item => {
         if (item && item.name && item.name.trim() !== '' && !item.is_default_none) {
+          const effRule = getEffectiveRuleForOption(t.tier, item);
           list.push({
-            id: item.id,
+            id: String(item.id || item.name.trim()),
             tier: t.tier,
             tierLabel: t.label,
             name: item.name.trim(),
             price: parseFloat(item.price) || 0,
             cost_price: parseFloat(item.cost_price) || 0,
-            calc_mode: item.calc_mode || 'flat',
-            dim_add_val: item.dim_add_val !== undefined && item.dim_add_val !== null ? item.dim_add_val : 0,
-            dim_add_side: item.dim_add_side || 'p_l'
+            calc_mode: effRule.calc_mode || 'flat',
+            dim_add_val: effRule.dim_add_val !== undefined && effRule.dim_add_val !== null ? effRule.dim_add_val : 0,
+            dim_add_side: effRule.dim_add_side || 'p_l'
           });
         }
       });
@@ -6325,6 +6432,401 @@ const ProductForm = (() => {
     }
   }
 
+  function renderSingleDimensionRuleCardHtml(rule, idx, availableTiers, dimUnit) {
+    const ruleId = rule.id;
+    const currentTier = rule.tier_key || '';
+    const currentScope = rule.target_scope || 'specific';
+    const calcMode = rule.calc_mode || 'area';
+    const dimAddVal = rule.dim_add_val !== undefined && rule.dim_add_val !== null ? rule.dim_add_val : 0;
+    const dimAddSide = rule.dim_add_side || 'p_l';
+    const selectedOptionIds = Array.isArray(rule.option_ids) ? rule.option_ids : [];
+
+    const validOptions = currentTier ? getValidOptionsForTier(currentTier) : [];
+
+    return `
+      <div class="dimension-rule-card bg-slate-50/90 border border-slate-200 hover:border-emerald-300/80 rounded-xl p-3 sm:p-3.5 space-y-3 transition shadow-2xs relative" data-rule-id="${ruleId}">
+        <!-- Header Bar Kartu Aturan: Nomor Aturan & Tombol Hapus -->
+        <div class="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+              ${idx + 1}
+            </span>
+            <span class="text-xs font-bold text-slate-800">Aturan Khusus #${idx + 1}</span>
+          </div>
+          <button 
+            type="button" 
+            class="btn-delete-dim-rule inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer" 
+            data-rule-id="${ruleId}" 
+            title="Hapus Aturan Ini"
+          >
+            <i class="bi bi-trash3-fill text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Konten Formulir Aturan (Mobile-First Stack Vertikal) -->
+        <div class="space-y-3">
+          <!-- 1. Dropdown Pilih Variasi Target -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700">
+              Pilih Variasi Target <span class="text-red-500">*</span>:
+            </label>
+            <select 
+              class="select-rule-tier w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer" 
+              data-rule-id="${ruleId}" 
+            >
+              <option value="" ${!currentTier ? 'selected' : ''}>-- Pilih Variasi --</option>
+              ${availableTiers.map(t => `
+                <option value="${t.tier}" ${currentTier === t.tier ? 'selected' : ''}>${escapeHtml(t.label)}</option>
+              `).join('')}
+            </select>
+          </div>
+
+          ${currentTier ? `
+            <!-- 2. Pilihan Target Cakupan Opsi (Pilih Opsi Tertentu vs Semua Opsi) -->
+            <div class="space-y-2 pt-0.5">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <label class="block text-[11px] font-bold text-slate-700">
+                  Terapkan Aturan Pada:
+                </label>
+                <div class="inline-flex items-center gap-3 text-xs">
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input 
+                      type="radio" 
+                      name="scope_${ruleId}" 
+                      value="specific" 
+                      class="radio-rule-scope accent-emerald-600 cursor-pointer" 
+                      data-rule-id="${ruleId}" 
+                      ${currentScope === 'specific' ? 'checked' : ''}
+                    />
+                    <span class="text-xs font-medium text-slate-700">Pilih Opsi Tertentu</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                    <input 
+                      type="radio" 
+                      name="scope_${ruleId}" 
+                      value="all" 
+                      class="radio-rule-scope accent-emerald-600 cursor-pointer" 
+                      data-rule-id="${ruleId}" 
+                      ${currentScope === 'all' ? 'checked' : ''}
+                    />
+                    <span class="text-xs font-medium text-slate-700">Semua Opsi di Variasi Ini</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Daftar Opsi Chip Interaktif Ramah Mobile (Jika specific) -->
+              ${currentScope === 'specific' ? `
+                <div class="rule-options-container bg-white border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+                  <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Centang opsi yang dikenai aturan (${selectedOptionIds.length} dipilih):
+                  </div>
+                  ${validOptions.length === 0 ? `
+                    <div class="text-xs text-slate-400 italic py-1">Belum ada opsi yang diisi pada variasi ini.</div>
+                  ` : `
+                    <div class="flex flex-wrap gap-2">
+                      ${validOptions.map(opt => {
+                        const isOptChecked = selectedOptionIds.includes(opt.id) || selectedOptionIds.includes(opt.name);
+                        return `
+                          <label class="rule-option-chip inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer select-none transition ${isOptChecked ? 'bg-emerald-50 text-emerald-800 border-emerald-400 shadow-2xs' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'}">
+                            <input 
+                              type="checkbox" 
+                              class="chk-rule-option accent-emerald-600 w-3.5 h-3.5 rounded cursor-pointer" 
+                              data-rule-id="${ruleId}" 
+                              value="${escapeHtml(opt.id)}" 
+                              data-name="${escapeHtml(opt.name)}"
+                              ${isOptChecked ? 'checked' : ''}
+                            />
+                            <span>${escapeHtml(opt.name)}</span>
+                            <span class="text-[10px] font-normal text-slate-400">Rp ${formatNumberLocal(opt.price)}</span>
+                          </label>
+                        `;
+                      }).join('')}
+                    </div>
+                  `}
+                </div>
+              ` : `
+                <div class="p-2.5 bg-emerald-50/70 border border-emerald-200/90 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
+                  <i class="bi bi-check2-circle text-emerald-600 shrink-0 text-sm"></i>
+                  <span>Aturan ini otomatis berlaku untuk <strong>seluruh opsi</strong> di variasi terpilih.</span>
+                </div>
+              `}
+            </div>
+
+            <!-- 3. Dropdown Jenis Perlakuan / Mode Hitung -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-1">
+              <div class="${calcMode === 'add_dim' ? 'sm:col-span-6' : 'sm:col-span-12'} space-y-1">
+                <label class="block text-[11px] font-bold text-slate-700">
+                  Mode Hitung / Perlakuan Ukuran:
+                </label>
+                <select 
+                  class="select-rule-calc-mode w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer" 
+                  data-rule-id="${ruleId}" 
+                >
+                  <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Dikalikan Luas (P × L)</option>
+                  <option value="add_dim" ${calcMode === 'add_dim' ? 'selected' : ''}>Tambah Ukuran Bahan (+ Ukuran)</option>
+                </select>
+              </div>
+
+              <!-- Jika calc_mode === 'add_dim', tampilkan input angka tambahan & sisi penambahan -->
+              ${calcMode === 'add_dim' ? `
+                <div class="sm:col-span-6 space-y-1 bg-amber-50/70 border border-amber-200 rounded-xl p-2.5">
+                  <label class="block text-[11px] font-bold text-amber-900">
+                    Besar Tambahan & Sisi Penambahan:
+                  </label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg px-2 py-1 shadow-2xs">
+                      <span class="text-slate-600 font-extrabold text-xs select-none">+</span>
+                      <input 
+                        type="number" 
+                        step="any" 
+                        min="0" 
+                        placeholder="0" 
+                        value="${dimAddVal}" 
+                        class="input-rule-dim-add w-full bg-transparent text-xs font-bold text-slate-900 outline-none text-center" 
+                        data-rule-id="${ruleId}" 
+                      />
+                      <span class="text-[10px] font-bold text-slate-500 shrink-0">${dimUnit}</span>
+                    </div>
+                    <select 
+                      class="select-rule-dim-side w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" 
+                      data-rule-id="${ruleId}" 
+                    >
+                      <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke P & L (Panjang & Lebar)</option>
+                      <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P)</option>
+                      <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L)</option>
+                      <option value="area_add" ${dimAddSide === 'area_add' || dimAddSide === 'area' ? 'selected' : ''}>Tambah ke Total Luas</option>
+                    </select>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDimensionRulesSectionHtml() {
+    const availableTiers = getAvailableRuleTierChoices();
+    const rules = Array.isArray(primaryState.dimension_rules) ? primaryState.dimension_rules : [];
+    const dimUnit = primaryState.dimension_unit || 'meter';
+    const hasAvailableTiers = availableTiers.length > 0;
+
+    return `
+      <div id="dimension-rules-section" class="pt-3 border-t border-slate-100 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i class="bi bi-gear-wide-connected text-emerald-600"></i>
+              <span>Lapisan 2: Aturan Khusus Variasi Lain</span>
+              <span class="px-1.5 py-0.2 text-[9px] font-bold bg-slate-100 text-slate-600 rounded">Opsional</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-tight mt-0.5">
+              Default variasi selain komponen utama dihitung <strong>Flat (per pcs)</strong>. Buat aturan jika ada opsi yang ikut luas atau menambah ukuran bahan.
+            </p>
+          </div>
+          ${hasAvailableTiers ? `
+            <button 
+              type="button" 
+              id="btn-add-dimension-rule" 
+              class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-700 hover:text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition shadow-2xs shrink-0 self-start sm:self-auto cursor-pointer"
+            >
+              <i class="bi bi-plus-circle-fill text-emerald-600 text-xs"></i>
+              <span>+ Buat Aturan Khusus</span>
+            </button>
+          ` : ''}
+        </div>
+
+        ${!hasAvailableTiers ? `
+          <div class="p-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-center text-xs text-slate-400 italic">
+            <i class="bi bi-info-circle mr-1 text-slate-400"></i>
+            Aktifkan dan lengkapi Variasi 2/3/4/Extras di atas jika ingin menambahkan aturan khusus.
+          </div>
+        ` : ''}
+
+        <div id="dimension-rules-list" class="space-y-3">
+          ${rules.length === 0 && hasAvailableTiers ? `
+            <div class="p-3 bg-slate-50/70 border border-dashed border-slate-200 rounded-xl text-center text-xs text-slate-500">
+              <span class="block font-semibold text-slate-600">Belum ada aturan khusus</span>
+              <span class="text-[11px] text-slate-400">Semua variasi lain saat ini dihitung <strong>Flat (Harga Tetap per Pcs)</strong>. Klik tombol <strong>+ Buat Aturan Khusus</strong> di atas jika membutuhkan variasi seperti laminasi (ikut luas) atau slongsong (+ ukuran bahan).</span>
+            </div>
+          ` : ''}
+
+          ${rules.map((rule, idx) => renderSingleDimensionRuleCardHtml(rule, idx, availableTiers, dimUnit)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function refreshDimensionRulesDOM() {
+    const container = document.getElementById('dimension-rules-container');
+    if (container) {
+      container.innerHTML = renderDimensionRulesSectionHtml();
+      bindDimensionRulesEvents();
+    }
+  }
+
+  function refreshSandboxFinishingList() {
+    const listEl = document.getElementById('sandbox-finishing-options-list');
+    if (listEl) {
+      listEl.innerHTML = getSandboxFinishingCheckboxesHtml();
+      listEl.querySelectorAll('.sandbox-chk-fin').forEach(chk => {
+        chk.onchange = () => {
+          sandboxPxlState.selectedFinishingIds = Array.from(document.querySelectorAll('.sandbox-chk-fin:checked')).map(c => c.value);
+          updateSandboxCalculation();
+        };
+      });
+    }
+  }
+
+  function bindDimensionRulesEvents() {
+    const container = document.getElementById('dimension-rules-container');
+    if (!container) return;
+
+    // 1. Tombol + Buat Aturan Khusus
+    const btnAdd = document.getElementById('btn-add-dimension-rule');
+    if (btnAdd) {
+      btnAdd.onclick = (e) => {
+        e.preventDefault();
+        const availableTiers = getAvailableRuleTierChoices();
+        if (availableTiers.length === 0) {
+          alert('Aktifkan dan lengkapi Variasi 2/3/4/Extras terlebih dahulu jika ingin menambahkan aturan khusus.');
+          return;
+        }
+        const newRule = {
+          id: 'rule_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          tier_key: availableTiers[0].tier,
+          target_scope: 'specific',
+          option_ids: [],
+          calc_mode: 'area',
+          dim_add_val: 0,
+          dim_add_side: 'p_l'
+        };
+        if (!Array.isArray(primaryState.dimension_rules)) {
+          primaryState.dimension_rules = [];
+        }
+        primaryState.dimension_rules.push(newRule);
+        refreshDimensionRulesDOM();
+        refreshSandboxFinishingList();
+        updateSandboxCalculation();
+      };
+    }
+
+    // 2. Tombol Hapus Aturan
+    container.querySelectorAll('.btn-delete-dim-rule').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const ruleId = btn.getAttribute('data-rule-id');
+        if (!ruleId) return;
+        primaryState.dimension_rules = (primaryState.dimension_rules || []).filter(r => r.id !== ruleId);
+        refreshDimensionRulesDOM();
+        refreshSandboxFinishingList();
+        updateSandboxCalculation();
+      };
+    });
+
+    // 3. Dropdown Pilih Variasi Target
+    container.querySelectorAll('.select-rule-tier').forEach(sel => {
+      sel.onchange = (e) => {
+        const ruleId = sel.getAttribute('data-rule-id');
+        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
+        if (rule) {
+          rule.tier_key = e.target.value;
+          rule.option_ids = []; // reset pilihan opsi jika variasi berganti
+          refreshDimensionRulesDOM();
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+        }
+      };
+    });
+
+    // 4. Radio Cakupan Scope (specific vs all)
+    container.querySelectorAll('.radio-rule-scope').forEach(radio => {
+      radio.onchange = (e) => {
+        const ruleId = radio.getAttribute('data-rule-id');
+        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
+        if (rule) {
+          rule.target_scope = e.target.value;
+          refreshDimensionRulesDOM();
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+        }
+      };
+    });
+
+    // 5. Checkbox Opsi Tertentu
+    container.querySelectorAll('.chk-rule-option').forEach(chk => {
+      chk.onchange = (e) => {
+        const ruleId = chk.getAttribute('data-rule-id');
+        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
+        if (rule) {
+          if (!Array.isArray(rule.option_ids)) rule.option_ids = [];
+          const optVal = chk.value;
+          const optName = chk.getAttribute('data-name');
+          if (chk.checked) {
+            if (!rule.option_ids.includes(optVal)) rule.option_ids.push(optVal);
+            if (optName && !rule.option_ids.includes(optName)) rule.option_ids.push(optName);
+          } else {
+            rule.option_ids = rule.option_ids.filter(id => id !== optVal && id !== optName);
+          }
+          // Update visual chip
+          const chipLabel = chk.closest('.rule-option-chip');
+          if (chipLabel) {
+            if (chk.checked) {
+              chipLabel.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-400', 'shadow-2xs');
+              chipLabel.classList.remove('bg-slate-50', 'text-slate-600', 'border-slate-200');
+            } else {
+              chipLabel.classList.remove('bg-emerald-50', 'text-emerald-800', 'border-emerald-400', 'shadow-2xs');
+              chipLabel.classList.add('bg-slate-50', 'text-slate-600', 'border-slate-200');
+            }
+          }
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+        }
+      };
+    });
+
+    // 6. Dropdown Mode Hitung
+    container.querySelectorAll('.select-rule-calc-mode').forEach(sel => {
+      sel.onchange = (e) => {
+        const ruleId = sel.getAttribute('data-rule-id');
+        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
+        if (rule) {
+          rule.calc_mode = e.target.value;
+          refreshDimensionRulesDOM();
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+        }
+      };
+    });
+
+    // 7. Input Tambahan Ukuran (+ Dimensi)
+    container.querySelectorAll('.input-rule-dim-add').forEach(inp => {
+      inp.oninput = (e) => {
+        const ruleId = inp.getAttribute('data-rule-id');
+        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
+        if (rule) {
+          rule.dim_add_val = parseFloat(e.target.value) || 0;
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+        }
+      };
+    });
+
+    // 8. Dropdown Sisi Penambahan
+    container.querySelectorAll('.select-rule-dim-side').forEach(sel => {
+      sel.onchange = (e) => {
+        const ruleId = sel.getAttribute('data-rule-id');
+        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
+        if (rule) {
+          rule.dim_add_side = e.target.value;
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+        }
+      };
+    });
+  }
+
   // Helper render kartu & konfigurasi Input Ukuran (P x L) (Mobile-First Layout)
   function renderCustomDimensionCard() {
     const isChecked = Boolean(primaryState.has_custom_dimension);
@@ -6451,6 +6953,11 @@ const ProductForm = (() => {
               <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-slate-800 font-semibold shadow-2xs">Lebar (L) <span class="text-emerald-600 font-bold badge-unit-text">[${dimUnit}]</span></span>
               <span class="text-[11px] text-slate-400 ml-1.5">(Otomatis aktif di Drawer Checkout)</span>
             </div>
+          </div>
+
+          <!-- LAPISAN 2: ATURAN KHUSUS VARIASI LAIN (+ BUAT ATURAN KHUSUS) -->
+          <div id="dimension-rules-container">
+            ${renderDimensionRulesSectionHtml()}
           </div>
 
           <!-- LAPISAN 3: PANEL SANDBOX KALKULATOR SIMULASI UKURAN (P x L) LANGSUNG DI DALAM KARTU CONFIG -->
@@ -8519,9 +9026,292 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (errorBanner) errorBanner.classList.add('hidden');
   }
 
+  function validatePrerequisitesBeforeCustomDimension() {
+    const errors = [];
+    let firstInvalidEl = null;
+
+    function addError(msg, el) {
+      errors.push(msg);
+      if (!firstInvalidEl && el) {
+        firstInvalidEl = el;
+      }
+    }
+
+    if (!primaryState.has_variants) {
+      // 1. MODE PRODUK TUNGGAL
+      const singlePriceEl = document.getElementById('input-single-price');
+      const singleCostEl = document.getElementById('input-single-cost');
+      const singleStockEl = document.getElementById('input-stock-qty') || document.getElementById('input-single-stock');
+      const singlePriceErr = document.getElementById('single-price-error-msg');
+      const singleCostErr = document.getElementById('single-cost-error-msg');
+      const singleStockErr = document.getElementById('single-stock-error-msg');
+
+      const pRaw = singlePriceEl ? (singlePriceEl.value || '').trim() : '';
+      const pVal = parseFloat(pRaw);
+      if (pRaw === '' || isNaN(pVal) || pVal <= 0) {
+        addError('Harga Jual produk wajib diisi (> 0).', singlePriceEl);
+        if (singlePriceEl) {
+          singlePriceEl.classList.remove('border-slate-300');
+          singlePriceEl.classList.add('border-red-500');
+        }
+        if (singlePriceErr) {
+          singlePriceErr.textContent = 'Wajib di isi';
+          singlePriceErr.classList.remove('hidden');
+        }
+      } else {
+        if (singlePriceEl) {
+          singlePriceEl.classList.remove('border-red-500');
+          singlePriceEl.classList.add('border-slate-300');
+        }
+        if (singlePriceErr) {
+          singlePriceErr.textContent = '';
+          singlePriceErr.classList.add('hidden');
+        }
+      }
+
+      const cRaw = singleCostEl ? (singleCostEl.value || '').trim() : '';
+      if (cRaw !== '') {
+        const cVal = parseFloat(cRaw);
+        if (isNaN(cVal) || cVal < 0) {
+          addError('Biaya Modal (HPP) produk minimal bernilai 0.', singleCostEl);
+          if (singleCostEl) {
+            singleCostEl.classList.remove('border-slate-300');
+            singleCostEl.classList.add('border-red-500');
+          }
+          if (singleCostErr) {
+            singleCostErr.textContent = 'Wajib Di Isi Min. "0"';
+            singleCostErr.classList.remove('hidden');
+          }
+        } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
+          addError('Biaya Modal (HPP) melebihi Harga Jual produk.', singleCostEl);
+          if (singleCostEl) {
+            singleCostEl.classList.add('text-red-600', 'font-bold', 'border-red-500');
+            singleCostEl.classList.remove('text-slate-900', 'border-slate-300');
+          }
+          if (singleCostErr) {
+            singleCostErr.textContent = 'Hpp melebihi Harga Jual';
+            singleCostErr.classList.remove('hidden');
+          }
+        } else {
+          if (singleCostEl) {
+            singleCostEl.classList.remove('text-red-600', 'font-bold', 'border-red-500');
+            singleCostEl.classList.add('text-slate-900', 'border-slate-300');
+          }
+          if (singleCostErr) {
+            singleCostErr.textContent = '';
+            singleCostErr.classList.add('hidden');
+          }
+        }
+      }
+
+      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
+      const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
+      if (!isUnl) {
+        const stockRaw = singleStockEl ? (singleStockEl.value || '').trim() : '';
+        const stockVal = parseInt(stockRaw, 10);
+        if (stockRaw === '' || isNaN(stockVal) || stockVal < 0) {
+          addError('Stok produk wajib diisi (minimal 0).', singleStockEl);
+          if (singleStockEl) {
+            singleStockEl.classList.remove('border-slate-300');
+            singleStockEl.classList.add('border-red-500');
+          }
+          if (singleStockErr) {
+            singleStockErr.textContent = 'Stok produk wajib diisi (minimal "0")';
+            singleStockErr.classList.remove('hidden');
+          }
+        } else {
+          if (singleStockEl) {
+            singleStockEl.classList.remove('border-red-500');
+            singleStockEl.classList.add('border-slate-300');
+          }
+          if (singleStockErr) {
+            singleStockErr.textContent = '';
+            singleStockErr.classList.add('hidden');
+          }
+        }
+      }
+    } else {
+      // 2. MODE BERVARIASI
+      // A. Periksa Judul Seluruh Kartu Variasi yang Sedang Aktif
+      const activeVariationCards = [];
+      const t1TitleEl = document.getElementById('input-var-label-tier1');
+      activeVariationCards.push({ tier: 'tier1', labelDefault: 'Variasi 1', inputEl: t1TitleEl, cardId: 'card-variasi-1' });
+
+      if (primaryState.has_variation_2) {
+        const t2TitleEl = document.getElementById('input-var-label-main') || document.getElementById('input-var-label-tier2');
+        activeVariationCards.push({ tier: 'main', labelDefault: 'Variasi 2', inputEl: t2TitleEl, cardId: 'card-variasi-2' });
+      }
+      if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+        const t3TitleEl = document.getElementById('input-var-label-extra_1') || document.getElementById('input-var-label-tier3');
+        activeVariationCards.push({ tier: 'extra_1', labelDefault: 'Variasi 3', inputEl: t3TitleEl, cardId: 'card-variasi-3' });
+      }
+      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+        const t4TitleEl = document.getElementById('input-var-label-extra_2') || document.getElementById('input-var-label-tier4');
+        activeVariationCards.push({ tier: 'extra_2', labelDefault: 'Variasi 4', inputEl: t4TitleEl, cardId: 'card-variasi-4' });
+      }
+      if (primaryState.has_extra_service) {
+        const extraTitleEl = document.getElementById('input-var-label-extra3') || document.getElementById('input-var-label-extra_3');
+        activeVariationCards.push({ tier: 'extra_3', labelDefault: 'Layanan Extras', inputEl: extraTitleEl, cardId: 'card-extra-service' });
+      }
+
+      // Validasi Judul Wajib Diisi
+      activeVariationCards.forEach(({ labelDefault, inputEl }) => {
+        if (inputEl) {
+          const val = (inputEl.value || '').trim();
+          const wrapper = inputEl.closest('.custom-combobox-wrapper');
+          const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
+          if (!val) {
+            addError(`Judul ${labelDefault} wajib diisi.`, inputEl);
+            inputEl.classList.remove('border-slate-400');
+            inputEl.classList.add('border-red-500');
+            if (errEl) {
+              errEl.textContent = `Judul ${labelDefault} wajib diisi`;
+              errEl.classList.remove('hidden');
+            }
+          }
+        }
+      });
+
+      // Validasi Judul Anti-Duplikat
+      const groupLabelCheck = refreshVariationTitleDuplicateErrors();
+      if (groupLabelCheck && groupLabelCheck.hasDuplicate) {
+        addError('Judul variasi sudah digunakan / duplikat.', groupLabelCheck.firstDuplicateEl || t1TitleEl);
+      }
+
+      // B. Validasi Baris Opsi Variasi 1 (materialsState)
+      if (!materialsState || materialsState.length === 0) {
+        addError('Variasi 1 wajib memiliki minimal 1 opsi terisi.', document.getElementById('card-variasi-1'));
+      } else {
+        const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
+        if (validMats.length < 2) {
+          const firstMatNameInp = document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]');
+          addError('Variasi 1 wajib memiliki minimal 2 opsi yang terisi namanya.', firstMatNameInp || document.getElementById('card-variasi-1'));
+        }
+
+        materialsState.forEach((m, idx) => {
+          const isUntouched = (materialsState.length > 1 && idx === materialsState.length - 1 && (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined) && (m.cost_price === '' || m.cost_price === undefined) && (m.stock === '' || m.stock === undefined));
+          if (isUntouched) return;
+
+          const rowEl = document.querySelector(`.variation-option-row[data-tier="tier1"][data-idx="${idx}"]`);
+          const nameInp = rowEl?.querySelector('input[data-field="name"]');
+          const priceInp = rowEl?.querySelector('input[data-field="price"]');
+          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+
+          const nameVal = (m.name || '').trim();
+          if (!nameVal) {
+            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
+          } else if (nameVal.length > 15) {
+            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+          } else if (checkOptionNameDuplicate('tier1', nameVal, idx)) {
+            addError(`Variasi 1: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
+          }
+
+          const pRaw = (m.price !== undefined && m.price !== null) ? String(m.price).trim() : '';
+          const pNum = parseFloat(pRaw);
+          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Harga jual wajib diisi.`, priceInp || rowEl);
+          }
+
+          const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
+          const cNum = parseFloat(cRaw);
+          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
+          }
+
+          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
+          if (stockMode !== 'unlimited') {
+            if (m.stock === '' || m.stock === undefined || m.stock === null || isNaN(parseInt(m.stock, 10)) || parseInt(m.stock, 10) < 0) {
+              addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
+            }
+          }
+        });
+      }
+
+      // C. Validasi Baris Opsi Variasi 2, 3, 4 & Layanan Extras
+      const activeFinTiers = [];
+      if (primaryState.has_variation_2) activeFinTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2', cardId: 'card-variasi-2' });
+      if (primaryState.has_variation_2 && primaryState.has_variation_3) activeFinTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3', cardId: 'card-variasi-3' });
+      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) activeFinTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4', cardId: 'card-variasi-4' });
+      if (primaryState.has_extra_service) activeFinTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras', cardId: 'card-extra-service' });
+
+      activeFinTiers.forEach(({ tier, label, cardId }) => {
+        const list = finishingsState[tier] || [];
+        const isExtra3 = (tier === 'extra_3');
+        const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
+        const minReq = isExtra3 ? 1 : 2;
+        if (validList.length < minReq) {
+          const firstFinNameInp = document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`);
+          addError(`${label} wajib memiliki minimal ${minReq} opsi yang terisi namanya.`, firstFinNameInp || document.getElementById(cardId));
+        }
+
+        list.forEach((f, idx) => {
+          if (isExtra3 && (idx === list.length - 1 || f.is_default_none)) return;
+          const triggerIdx = isExtra3 ? list.length - 2 : list.length - 1;
+          const isUntouched = (list.length > (isExtra3 ? 2 : 1) && idx === triggerIdx && (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined) && (f.cost_price === '' || f.cost_price === undefined) && (f.stock === '' || f.stock === undefined) && !f.extra_type);
+          if (isUntouched) return;
+
+          const rowEl = document.querySelector(`.variation-option-row[data-tier="${tier}"][data-idx="${idx}"]`);
+          const nameInp = rowEl?.querySelector('input[data-field="name"]');
+          const typeSel = rowEl?.querySelector('select.fin-extra-type');
+          const priceInp = rowEl?.querySelector('input[data-field="price"]');
+          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+
+          const nameVal = (f.name || '').trim();
+          const isExtraNone = (isExtra3 && (f.is_default_none || (nameVal && nameVal.startsWith('Tanpa '))));
+          if (!nameVal) {
+            addError(`${label} (Baris ${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
+          } else if (!isExtraNone && nameVal.length > 15) {
+            addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+          } else if (checkOptionNameDuplicate(tier, nameVal, idx)) {
+            addError(`${label}: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
+          }
+
+          if (isExtra3 && (!f.extra_type || f.extra_type.trim() === '')) {
+            addError(`${label} (Opsi ${nameVal || idx + 1}): Jenis input wajib dipilih.`, typeSel || rowEl);
+          }
+
+          const pRaw = (f.price !== undefined && f.price !== null) ? String(f.price).trim() : '';
+          const pNum = parseFloat(pRaw);
+          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+            addError(`${label} (Opsi ${nameVal || idx + 1}): Harga satuan/jual wajib diisi.`, priceInp || rowEl);
+          }
+
+          const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
+          const cNum = parseFloat(cRaw);
+          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+            addError(`${label} (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
+          }
+
+          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
+          if (stockMode !== 'unlimited') {
+            if (f.stock === '' || f.stock === undefined || f.stock === null || isNaN(parseInt(f.stock, 10)) || parseInt(f.stock, 10) < 0) {
+              addError(`${label} (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
+            }
+          }
+        });
+      });
+
+      // Pemicu tampilan error inline merah di DOM tabel opsi
+      document.querySelectorAll('.mat-input, .fin-input').forEach(inp => {
+        if (typeof validateOptionField === 'function') {
+          validateOptionField(inp, true);
+        }
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors,
+      firstInvalidEl: firstInvalidEl
+    };
+  }
+
   if (typeof window !== 'undefined') {
     window.showWizardErrorBanner = showWizardErrorBanner;
     window.hideWizardErrorBanner = hideWizardErrorBanner;
+    window.validatePrerequisitesBeforeCustomDimension = validatePrerequisitesBeforeCustomDimension;
   }
 
   function bindFormEvents() {
@@ -9283,295 +10073,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
   }
 
-  // ==========================================================================
-  // VALIDASI PRASYARAT SEBELUM MENGAKTIFKAN INPUT UKURAN (P x L)
-  // ==========================================================================
-  function validatePrerequisitesBeforeCustomDimension() {
-    const errors = [];
-    let firstInvalidEl = null;
-
-    function addError(msg, el) {
-      errors.push(msg);
-      if (!firstInvalidEl && el) {
-        firstInvalidEl = el;
-      }
-    }
-
-    if (!primaryState.has_variants) {
-      // 1. MODE PRODUK TUNGGAL
-      const singlePriceEl = document.getElementById('input-single-price');
-      const singleCostEl = document.getElementById('input-single-cost');
-      const singleStockEl = document.getElementById('input-stock-qty') || document.getElementById('input-single-stock');
-      const singlePriceErr = document.getElementById('single-price-error-msg');
-      const singleCostErr = document.getElementById('single-cost-error-msg');
-      const singleStockErr = document.getElementById('single-stock-error-msg');
-
-      const pRaw = singlePriceEl ? (singlePriceEl.value || '').trim() : '';
-      const pVal = parseFloat(pRaw);
-      if (pRaw === '' || isNaN(pVal) || pVal <= 0) {
-        addError('Harga Jual produk wajib diisi (> 0).', singlePriceEl);
-        if (singlePriceEl) {
-          singlePriceEl.classList.remove('border-slate-300');
-          singlePriceEl.classList.add('border-red-500');
-        }
-        if (singlePriceErr) {
-          singlePriceErr.textContent = 'Wajib di isi';
-          singlePriceErr.classList.remove('hidden');
-        }
-      } else {
-        if (singlePriceEl) {
-          singlePriceEl.classList.remove('border-red-500');
-          singlePriceEl.classList.add('border-slate-300');
-        }
-        if (singlePriceErr) {
-          singlePriceErr.textContent = '';
-          singlePriceErr.classList.add('hidden');
-        }
-      }
-
-      const cRaw = singleCostEl ? (singleCostEl.value || '').trim() : '';
-      if (cRaw !== '') {
-        const cVal = parseFloat(cRaw);
-        if (isNaN(cVal) || cVal < 0) {
-          addError('Biaya Modal (HPP) produk minimal bernilai 0.', singleCostEl);
-          if (singleCostEl) {
-            singleCostEl.classList.remove('border-slate-300');
-            singleCostEl.classList.add('border-red-500');
-          }
-          if (singleCostErr) {
-            singleCostErr.textContent = 'Wajib Di Isi Min. "0"';
-            singleCostErr.classList.remove('hidden');
-          }
-        } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
-          addError('Biaya Modal (HPP) melebihi Harga Jual produk.', singleCostEl);
-          if (singleCostEl) {
-            singleCostEl.classList.add('text-red-600', 'font-bold', 'border-red-500');
-            singleCostEl.classList.remove('text-slate-900', 'border-slate-300');
-          }
-          if (singleCostErr) {
-            singleCostErr.textContent = 'Hpp melebihi Harga Jual';
-            singleCostErr.classList.remove('hidden');
-          }
-        } else {
-          if (singleCostEl) {
-            singleCostEl.classList.remove('text-red-600', 'font-bold', 'border-red-500');
-            singleCostEl.classList.add('text-slate-900', 'border-slate-300');
-          }
-          if (singleCostErr) {
-            singleCostErr.textContent = '';
-            singleCostErr.classList.add('hidden');
-          }
-        }
-      }
-
-      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
-      const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
-      if (!isUnl) {
-        const stockRaw = singleStockEl ? (singleStockEl.value || '').trim() : '';
-        const stockVal = parseInt(stockRaw, 10);
-        if (stockRaw === '' || isNaN(stockVal) || stockVal < 0) {
-          addError('Stok produk wajib diisi (minimal 0).', singleStockEl);
-          if (singleStockEl) {
-            singleStockEl.classList.remove('border-slate-300');
-            singleStockEl.classList.add('border-red-500');
-          }
-          if (singleStockErr) {
-            singleStockErr.textContent = 'Stok produk wajib diisi (minimal "0")';
-            singleStockErr.classList.remove('hidden');
-          }
-        } else {
-          if (singleStockEl) {
-            singleStockEl.classList.remove('border-red-500');
-            singleStockEl.classList.add('border-slate-300');
-          }
-          if (singleStockErr) {
-            singleStockErr.textContent = '';
-            singleStockErr.classList.add('hidden');
-          }
-        }
-      }
-    } else {
-      // 2. MODE BERVARIASI
-      // A. Periksa Judul Seluruh Kartu Variasi yang Sedang Aktif
-      const activeVariationCards = [];
-      const t1TitleEl = document.getElementById('input-var-label-tier1');
-      activeVariationCards.push({ tier: 'tier1', labelDefault: 'Variasi 1', inputEl: t1TitleEl, cardId: 'card-variasi-1' });
-
-      if (primaryState.has_variation_2) {
-        const t2TitleEl = document.getElementById('input-var-label-main') || document.getElementById('input-var-label-tier2');
-        activeVariationCards.push({ tier: 'main', labelDefault: 'Variasi 2', inputEl: t2TitleEl, cardId: 'card-variasi-2' });
-      }
-      if (primaryState.has_variation_2 && primaryState.has_variation_3) {
-        const t3TitleEl = document.getElementById('input-var-label-extra_1') || document.getElementById('input-var-label-tier3');
-        activeVariationCards.push({ tier: 'extra_1', labelDefault: 'Variasi 3', inputEl: t3TitleEl, cardId: 'card-variasi-3' });
-      }
-      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
-        const t4TitleEl = document.getElementById('input-var-label-extra_2') || document.getElementById('input-var-label-tier4');
-        activeVariationCards.push({ tier: 'extra_2', labelDefault: 'Variasi 4', inputEl: t4TitleEl, cardId: 'card-variasi-4' });
-      }
-      if (primaryState.has_extra_service) {
-        const extraTitleEl = document.getElementById('input-var-label-extra3') || document.getElementById('input-var-label-extra_3');
-        activeVariationCards.push({ tier: 'extra_3', labelDefault: 'Layanan Extras', inputEl: extraTitleEl, cardId: 'card-extra-service' });
-      }
-
-      // Validasi Judul Wajib Diisi
-      activeVariationCards.forEach(({ labelDefault, inputEl }) => {
-        if (inputEl) {
-          const val = (inputEl.value || '').trim();
-          const wrapper = inputEl.closest('.custom-combobox-wrapper');
-          const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
-          if (!val) {
-            addError(`Judul ${labelDefault} wajib diisi.`, inputEl);
-            inputEl.classList.remove('border-slate-400');
-            inputEl.classList.add('border-red-500');
-            if (errEl) {
-              errEl.textContent = `Judul ${labelDefault} wajib diisi`;
-              errEl.classList.remove('hidden');
-            }
-          }
-        }
-      });
-
-      // Validasi Judul Anti-Duplikat
-      const groupLabelCheck = refreshVariationTitleDuplicateErrors();
-      if (groupLabelCheck && groupLabelCheck.hasDuplicate) {
-        addError('Judul variasi sudah digunakan / duplikat.', groupLabelCheck.firstDuplicateEl || t1TitleEl);
-      }
-
-      // B. Validasi Baris Opsi Variasi 1 (materialsState)
-      if (!materialsState || materialsState.length === 0) {
-        addError('Variasi 1 wajib memiliki minimal 1 opsi terisi.', document.getElementById('card-variasi-1'));
-      } else {
-        const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
-        if (validMats.length < 2) {
-          const firstMatNameInp = document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]');
-          addError('Variasi 1 wajib memiliki minimal 2 opsi yang terisi namanya.', firstMatNameInp || document.getElementById('card-variasi-1'));
-        }
-
-        materialsState.forEach((m, idx) => {
-          const isUntouched = (materialsState.length > 1 && idx === materialsState.length - 1 && (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined) && (m.cost_price === '' || m.cost_price === undefined) && (m.stock === '' || m.stock === undefined));
-          if (isUntouched) return;
-
-          const rowEl = document.querySelector(`.variation-option-row[data-tier="tier1"][data-idx="${idx}"]`);
-          const nameInp = rowEl?.querySelector('input[data-field="name"]');
-          const priceInp = rowEl?.querySelector('input[data-field="price"]');
-          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
-          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
-
-          const nameVal = (m.name || '').trim();
-          if (!nameVal) {
-            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
-          } else if (nameVal.length > 15) {
-            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
-          } else if (checkOptionNameDuplicate('tier1', nameVal, idx)) {
-            addError(`Variasi 1: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
-          }
-
-          const pRaw = (m.price !== undefined && m.price !== null) ? String(m.price).trim() : '';
-          const pNum = parseFloat(pRaw);
-          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
-            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Harga jual wajib diisi.`, priceInp || rowEl);
-          }
-
-          const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
-          const cNum = parseFloat(cRaw);
-          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
-            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
-          }
-
-          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
-          if (stockMode !== 'unlimited') {
-            if (m.stock === '' || m.stock === undefined || m.stock === null || isNaN(parseInt(m.stock, 10)) || parseInt(m.stock, 10) < 0) {
-              addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
-            }
-          }
-        });
-      }
-
-      // C. Validasi Baris Opsi Variasi 2, 3, 4 & Layanan Extras
-      const activeFinTiers = [];
-      if (primaryState.has_variation_2) activeFinTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2', cardId: 'card-variasi-2' });
-      if (primaryState.has_variation_2 && primaryState.has_variation_3) activeFinTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3', cardId: 'card-variasi-3' });
-      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) activeFinTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4', cardId: 'card-variasi-4' });
-      if (primaryState.has_extra_service) activeFinTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras', cardId: 'card-extra-service' });
-
-      activeFinTiers.forEach(({ tier, label, cardId }) => {
-        const list = finishingsState[tier] || [];
-        const isExtra3 = (tier === 'extra_3');
-        const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
-        const minReq = isExtra3 ? 1 : 2;
-        if (validList.length < minReq) {
-          const firstFinNameInp = document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`);
-          addError(`${label} wajib memiliki minimal ${minReq} opsi yang terisi namanya.`, firstFinNameInp || document.getElementById(cardId));
-        }
-
-        list.forEach((f, idx) => {
-          if (isExtra3 && (idx === list.length - 1 || f.is_default_none)) return;
-          const triggerIdx = isExtra3 ? list.length - 2 : list.length - 1;
-          const isUntouched = (list.length > (isExtra3 ? 2 : 1) && idx === triggerIdx && (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined) && (f.cost_price === '' || f.cost_price === undefined) && (f.stock === '' || f.stock === undefined) && !f.extra_type);
-          if (isUntouched) return;
-
-          const rowEl = document.querySelector(`.variation-option-row[data-tier="${tier}"][data-idx="${idx}"]`);
-          const nameInp = rowEl?.querySelector('input[data-field="name"]');
-          const typeSel = rowEl?.querySelector('select.fin-extra-type');
-          const priceInp = rowEl?.querySelector('input[data-field="price"]');
-          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
-          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
-
-          const nameVal = (f.name || '').trim();
-          const isExtraNone = (isExtra3 && (f.is_default_none || (nameVal && nameVal.startsWith('Tanpa '))));
-          if (!nameVal) {
-            addError(`${label} (Baris ${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
-          } else if (!isExtraNone && nameVal.length > 15) {
-            addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
-          } else if (checkOptionNameDuplicate(tier, nameVal, idx)) {
-            addError(`${label}: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
-          }
-
-          if (isExtra3 && (!f.extra_type || f.extra_type.trim() === '')) {
-            addError(`${label} (Opsi ${nameVal || idx + 1}): Jenis input wajib dipilih.`, typeSel || rowEl);
-          }
-
-          const pRaw = (f.price !== undefined && f.price !== null) ? String(f.price).trim() : '';
-          const pNum = parseFloat(pRaw);
-          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
-            addError(`${label} (Opsi ${nameVal || idx + 1}): Harga satuan/jual wajib diisi.`, priceInp || rowEl);
-          }
-
-          const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
-          const cNum = parseFloat(cRaw);
-          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
-            addError(`${label} (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
-          }
-
-          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
-          if (stockMode !== 'unlimited') {
-            if (f.stock === '' || f.stock === undefined || f.stock === null || isNaN(parseInt(f.stock, 10)) || parseInt(f.stock, 10) < 0) {
-              addError(`${label} (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
-            }
-          }
-        });
-      });
-
-      // Pemicu tampilan error inline merah di DOM tabel opsi
-      document.querySelectorAll('.mat-input, .fin-input').forEach(inp => {
-        if (typeof validateOptionField === 'function') {
-          validateOptionField(inp, true);
-        }
-      });
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors: errors,
-      firstInvalidEl: firstInvalidEl
-    };
-  }
-
-  if (typeof window !== 'undefined') {
-    window.validatePrerequisitesBeforeCustomDimension = validatePrerequisitesBeforeCustomDimension;
-  }
-
   // BIND EVENT INTERAKTIF STEP 2
   function bindStep2InteractiveEvents() {
     // Tombol Aksi Bawah Step 2
@@ -10113,6 +10614,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               mainCompSel.innerHTML = getDimensionMainComponentOptionsHtml();
             }
 
+            refreshDimensionRulesDOM();
+            refreshSandboxFinishingList();
+
             const dimCard = document.getElementById('card-custom-dimension-pxl');
             if (dimCard) bindCustomComboboxes(dimCard);
             const dimLabelInp = document.getElementById('input-custom-dimension-label');
@@ -10176,13 +10680,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (selectDimensionMainComp) {
       selectDimensionMainComp.onchange = (e) => {
         primaryState.dimension_main_component = e.target.value;
+        // Bersihkan aturan yang menargetkan variasi yang baru saja dipilih sebagai Komponen Utama
+        if (Array.isArray(primaryState.dimension_rules)) {
+          primaryState.dimension_rules = primaryState.dimension_rules.filter(r => r.tier_key !== e.target.value);
+        }
+        refreshDimensionRulesDOM();
         const sMainSel = document.getElementById('sandbox-select-main-option');
         if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
-        const sFinList = document.getElementById('sandbox-finishing-options-list');
-        if (sFinList) {
-          sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
-          bindSandboxCheckboxes();
-        }
+        refreshSandboxFinishingList();
         updateSandboxCalculation();
       };
     }
@@ -10194,13 +10699,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         primaryState.dimension_unit = e.target.value || 'meter';
         document.querySelectorAll('.badge-unit-text').forEach(el => el.textContent = `[${primaryState.dimension_unit}]`);
         document.querySelectorAll('.dim-unit-text').forEach(el => el.textContent = primaryState.dimension_unit);
+        refreshDimensionRulesDOM();
         const sMainSel = document.getElementById('sandbox-select-main-option');
         if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
-        const sFinList = document.getElementById('sandbox-finishing-options-list');
-        if (sFinList) {
-          sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
-          bindSandboxCheckboxes();
-        }
+        refreshSandboxFinishingList();
         updateSandboxCalculation();
       };
     }
@@ -10249,6 +10751,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     bindSandboxCheckboxes();
+    bindDimensionRulesEvents();
 
     // =====================================================================
     // KETENTUAN TAMBAHAN (GLOBAL TOGGLES PER KARTU)
@@ -14780,7 +15283,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     renderSandboxCalculationResultsHtml,
     updateSandboxCalculation,
     renderCustomDimensionCard,
-    validatePrerequisitesBeforeCustomDimension
+    validatePrerequisitesBeforeCustomDimension,
+    getEffectiveRuleForOption,
+    renderDimensionRulesSectionHtml
   };
 })();
 
@@ -14789,5 +15294,7 @@ window.renderOptionDimCalcControl = ProductForm.renderOptionDimCalcControl;
 window.renderSandboxCalculationResultsHtml = ProductForm.renderSandboxCalculationResultsHtml;
 window.updateSandboxCalculation = ProductForm.updateSandboxCalculation;
 window.validatePrerequisitesBeforeCustomDimension = ProductForm.validatePrerequisitesBeforeCustomDimension;
+window.getEffectiveRuleForOption = ProductForm.getEffectiveRuleForOption;
+window.renderDimensionRulesSectionHtml = ProductForm.renderDimensionRulesSectionHtml;
 
 

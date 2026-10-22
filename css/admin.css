@@ -1331,3 +1331,29 @@ input.toggle-same-cost:checked ~ div::after {
 #sandbox-input-dim-l {
   -moz-appearance: textfield;
 }
+
+/* Lapisan 2: Aturan Khusus Variasi Ukuran (P x L) (Mobile-First) */
+.dimension-rule-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dimension-rule-card:hover {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+.rule-option-chip {
+  transition: all 0.15s ease-in-out;
+  touch-action: manipulation;
+  user-select: none;
+}
+.rule-option-chip:active {
+  transform: scale(0.97);
+}
+
+.input-rule-dim-add::-webkit-outer-spin-button,
+.input-rule-dim-add::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-rule-dim-add {
+  -moz-appearance: textfield;
+}
+
