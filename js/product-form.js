@@ -52,7 +52,8 @@ const ProductForm = (() => {
     has_custom_dimension: false,
     custom_dimension_label: '',
     dimension_main_component: '',
-    dimension_unit: 'meter',
+    dimension_unit: '',
+    custom_dimension_unit: '',
     dim_min_one_price: true,
     dim_min_one_cost: false,
     dimension_rules: [],
@@ -406,7 +407,8 @@ const ProductForm = (() => {
       has_custom_dimension: false,
       custom_dimension_label: '',
       dimension_main_component: '',
-      dimension_unit: 'meter',
+      dimension_unit: '',
+      custom_dimension_unit: '',
       dim_min_one_price: true,
       dim_min_one_cost: false,
       dimension_rules: [],
@@ -621,7 +623,8 @@ const ProductForm = (() => {
     primaryState.has_custom_dimension = prod.has_custom_dimension !== undefined ? Boolean(prod.has_custom_dimension) : false;
     primaryState.custom_dimension_label = prod.custom_dimension_label || '';
     primaryState.dimension_main_component = prod.dimension_main_component || '';
-    primaryState.dimension_unit = prod.dimension_unit || 'meter';
+    primaryState.dimension_unit = prod.dimension_unit || prod.custom_dimension_unit || '';
+    primaryState.custom_dimension_unit = primaryState.dimension_unit;
     primaryState.dim_min_one_price = prod.dim_min_one_price !== undefined ? Boolean(prod.dim_min_one_price) : true;
     primaryState.dim_min_one_cost = prod.dim_min_one_cost !== undefined ? Boolean(prod.dim_min_one_cost) : false;
     primaryState.dimension_rules = Array.isArray(prod.dimension_rules) ? JSON.parse(JSON.stringify(prod.dimension_rules)) : [];
@@ -5857,8 +5860,8 @@ const ProductForm = (() => {
 
   function getSandboxMainComponentOptionsList() {
     const mainComp = primaryState.dimension_main_component || (primaryState.has_variants ? 'tier1' : 'single');
-    const unit = primaryState.dimension_unit || 'meter';
-    const unitLabel = unit === 'meter' ? 'm²' : `${unit}²`;
+    const unit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
+    const unitLabel = unit ? (unit === 'meter' ? 'm²' : `${unit}²`) : 'satuan luas';
 
     if (mainComp === 'single' || !primaryState.has_variants) {
       const singlePriceInp = document.getElementById('input-single-price');
@@ -6039,20 +6042,22 @@ const ProductForm = (() => {
       (r.option_ids.includes(optId) || (optName && r.option_ids.includes(optName)))
     );
     if (specificRule) {
+      const mode = specificRule.calc_mode || 'area';
       return {
-        calc_mode: specificRule.calc_mode || 'area',
+        calc_mode: mode,
         dim_add_val: parseFloat(specificRule.dim_add_val) || 0,
-        dim_add_side: specificRule.dim_add_side || 'p_l'
+        dim_add_side: specificRule.dim_add_side || (mode === 'side_length' ? 'top' : 'p_l')
       };
     }
 
     // 2. Jika tidak ada opsi spesifik, periksa aturan 'all' (semua opsi)
     const allRule = matchingRules.find(r => r.target_scope === 'all');
     if (allRule) {
+      const mode = allRule.calc_mode || 'area';
       return {
-        calc_mode: allRule.calc_mode || 'area',
+        calc_mode: mode,
         dim_add_val: parseFloat(allRule.dim_add_val) || 0,
-        dim_add_side: allRule.dim_add_side || 'p_l'
+        dim_add_side: allRule.dim_add_side || (mode === 'side_length' ? 'top' : 'p_l')
       };
     }
 
@@ -6109,7 +6114,7 @@ const ProductForm = (() => {
       return `<div class="text-[11px] text-slate-400 italic py-2 px-3 text-center">Belum ada opsi variasi tambahan aktif.</div>`;
     }
 
-    const dimUnit = primaryState.dimension_unit || 'meter';
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
     const currentSelectedId = (sandboxPxlState.selectedFinishingIds && sandboxPxlState.selectedFinishingIds.length > 0)
       ? sandboxPxlState.selectedFinishingIds[0]
       : '';
@@ -6139,9 +6144,18 @@ const ProductForm = (() => {
       let modeBadge = '';
       if (item.calc_mode === 'area') {
         modeBadge = `<span class="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shrink-0">Ikut Luas</span>`;
+      } else if (item.calc_mode === 'side_length') {
+        let sideLabel = 'Sisi';
+        if (item.dim_add_side === 'top') sideLabel = 'Atas (1×P)';
+        else if (item.dim_add_side === 'bottom') sideLabel = 'Bawah (1×P)';
+        else if (item.dim_add_side === 'top_bottom') sideLabel = 'Atas & Bawah (2×P)';
+        else if (item.dim_add_side === 'side_one') sideLabel = 'Samping (1×L)';
+        else if (item.dim_add_side === 'left_right') sideLabel = 'Samping Kiri & Kanan (2×L)';
+        else if (item.dim_add_side === 'perimeter') sideLabel = 'Keliling (2P+2L)';
+        modeBadge = `<span class="px-1.5 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 rounded text-[10px] font-bold shrink-0">${sideLabel}</span>`;
       } else if (item.calc_mode === 'add_dim') {
-        const sideText = item.dim_add_side === 'p' ? 'P' : (item.dim_add_side === 'l' ? 'L' : ((item.dim_add_side === 'area_add' || item.dim_add_side === 'area') ? 'Luas' : 'P&L'));
-        modeBadge = `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] font-bold shrink-0">+${item.dim_add_val} ${dimUnit} (${sideText})</span>`;
+        const sideText = item.dim_add_side === 'p' ? 'P' : (item.dim_add_side === 'l' ? 'L' : 'P & L');
+        modeBadge = `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] font-bold shrink-0">+${item.dim_add_val} ${dimUnit || ''} ke ${sideText}</span>`;
       } else {
         modeBadge = `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[10px] font-bold shrink-0">Flat</span>`;
       }
@@ -6189,8 +6203,8 @@ const ProductForm = (() => {
     const isCheckedDim = Boolean(primaryState.has_custom_dimension);
     const calcMode = fin.calc_mode || 'flat';
     const dimAddVal = (fin.dim_add_val !== undefined && fin.dim_add_val !== null) ? fin.dim_add_val : '';
-    const dimAddSide = fin.dim_add_side || 'p_l';
-    const dimUnit = primaryState.dimension_unit || 'meter';
+    const dimAddSide = fin.dim_add_side || (calcMode === 'side_length' ? 'top' : 'p_l');
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
     const finId = fin.id || '';
 
     return `
@@ -6201,7 +6215,8 @@ const ProductForm = (() => {
         <div class="grid grid-cols-1 md:flex md:items-center gap-2 w-full md:w-auto flex-1">
           <select class="select-option-calc-mode w-full md:w-auto px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" data-tier="${tier}" data-id="${finId}">
             <option value="flat" ${calcMode === 'flat' ? 'selected' : ''}>Flat (Harga Tetap per Pcs)</option>
-            <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Dikalikan Luas (P x L)</option>
+            <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Luas Penuh (P × L)</option>
+            <option value="side_length" ${calcMode === 'side_length' ? 'selected' : ''}>Ikut Ukuran Sisi (Atas / Bawah / Samping)</option>
             <option value="add_dim" ${calcMode === 'add_dim' ? 'selected' : ''}>Tambah Ukuran Bahan (+ Ukuran)</option>
           </select>
           <div class="dim-add-controls-wrapper ${calcMode === 'add_dim' ? 'grid grid-cols-1 sm:flex' : 'hidden'} items-center gap-2 flex-wrap w-full md:w-auto bg-amber-100/60 md:bg-transparent p-2 md:p-0 rounded border border-amber-200 md:border-0">
@@ -6217,13 +6232,22 @@ const ProductForm = (() => {
                 data-tier="${tier}" 
                 data-id="${finId}" 
               />
-              <span class="text-[11px] font-bold text-slate-600 dim-unit-text shrink-0">${dimUnit}</span>
+              <span class="text-[11px] font-bold text-slate-600 dim-unit-text shrink-0">${dimUnit || '-'}</span>
             </div>
             <select class="select-option-dim-side w-full sm:w-auto px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" data-tier="${tier}" data-id="${finId}">
               <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke Panjang & Lebar (P & L)</option>
-              <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P)</option>
-              <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L)</option>
-              <option value="area_add" ${dimAddSide === 'area_add' ? 'selected' : ''}>Tambah ke Total Luas</option>
+              <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P) Saja</option>
+              <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L) Saja</option>
+            </select>
+          </div>
+          <div class="dim-side-controls-wrapper ${calcMode === 'side_length' ? 'block' : 'hidden'} w-full md:w-auto">
+            <select class="select-option-dim-side-len w-full sm:w-auto px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 shadow-2xs cursor-pointer" data-tier="${tier}" data-id="${finId}">
+              <option value="top" ${dimAddSide === 'top' ? 'selected' : ''}>Atas Saja (P)</option>
+              <option value="bottom" ${dimAddSide === 'bottom' ? 'selected' : ''}>Bawah Saja (P)</option>
+              <option value="top_bottom" ${dimAddSide === 'top_bottom' ? 'selected' : ''}>Atas & Bawah (2 × P)</option>
+              <option value="side_one" ${dimAddSide === 'side_one' ? 'selected' : ''}>Samping Saja - Kanan/Kiri (L)</option>
+              <option value="left_right" ${dimAddSide === 'left_right' ? 'selected' : ''}>Samping Kanan & Kiri (2 × L)</option>
+              <option value="perimeter" ${dimAddSide === 'perimeter' ? 'selected' : ''}>Keliling Penuh (2P + 2L)</option>
             </select>
           </div>
         </div>
@@ -6360,10 +6384,42 @@ const ProductForm = (() => {
         fPrice = areaPrice * f.price;
         fCost = areaCost * f.cost_price;
         formulaText = `Ikut Luas (${areaPrice.toFixed(2)} m² × Rp ${formatNumberLocal(f.price)}): Rp ${formatNumberLocal(Math.round(fPrice))}`;
+      } else if (f.calc_mode === 'side_length') {
+        let sideMultiplier = 0;
+        let sideDesc = '';
+        const pLen = pMurni * factor;
+        const lLen = lMurni * factor;
+
+        if (f.dim_add_side === 'top') {
+          sideMultiplier = 1 * pLen;
+          sideDesc = `Atas Saja (1 × P: ${pLen.toFixed(2)} m)`;
+        } else if (f.dim_add_side === 'bottom') {
+          sideMultiplier = 1 * pLen;
+          sideDesc = `Bawah Saja (1 × P: ${pLen.toFixed(2)} m)`;
+        } else if (f.dim_add_side === 'top_bottom') {
+          sideMultiplier = 2 * pLen;
+          sideDesc = `Atas & Bawah (2 × P: ${(2 * pLen).toFixed(2)} m)`;
+        } else if (f.dim_add_side === 'side_one') {
+          sideMultiplier = 1 * lLen;
+          sideDesc = `Samping Saja (1 × L: ${lLen.toFixed(2)} m)`;
+        } else if (f.dim_add_side === 'left_right') {
+          sideMultiplier = 2 * lLen;
+          sideDesc = `Samping Kanan & Kiri (2 × L: ${(2 * lLen).toFixed(2)} m)`;
+        } else if (f.dim_add_side === 'perimeter') {
+          sideMultiplier = 2 * (pLen + lLen);
+          sideDesc = `Keliling Penuh (2P + 2L: ${(2 * (pLen + lLen)).toFixed(2)} m)`;
+        } else {
+          sideMultiplier = 1 * pLen;
+          sideDesc = `Sisi (1 × P: ${pLen.toFixed(2)} m)`;
+        }
+
+        fPrice = sideMultiplier * f.price;
+        fCost = sideMultiplier * f.cost_price;
+        formulaText = `${sideDesc} × Rp ${formatNumberLocal(f.price)}: Rp ${formatNumberLocal(Math.round(fPrice))}`;
       } else if (f.calc_mode === 'add_dim') {
         fPrice = f.price;
         fCost = f.cost_price;
-        formulaText = `Bahan bertambah (+${f.dim_add_val} ${dimUnit})${f.price > 0 ? ` + Jasa: Rp ${formatNumberLocal(f.price)}` : ' (Tanpa Biaya Tambahan)'}`;
+        formulaText = `Bahan bertambah (+${f.dim_add_val} ${dimUnit || ''})${f.price > 0 ? ` + Jasa: Rp ${formatNumberLocal(f.price)}` : ' (Tanpa Biaya Tambahan)'}`;
       }
 
       finPriceTotal += fPrice;
@@ -6639,7 +6695,7 @@ const ProductForm = (() => {
 
             <!-- 3. Dropdown Jenis Perlakuan / Mode Hitung -->
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-1">
-              <div class="${calcMode === 'add_dim' ? 'sm:col-span-6' : 'sm:col-span-12'} space-y-1">
+              <div class="${calcMode === 'add_dim' || calcMode === 'side_length' ? 'sm:col-span-6' : 'sm:col-span-12'} space-y-1">
                 <label class="block text-[11px] font-bold text-slate-700">
                   Mode Hitung / Perlakuan Ukuran:
                 </label>
@@ -6647,7 +6703,8 @@ const ProductForm = (() => {
                   class="select-rule-calc-mode w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer" 
                   data-rule-id="${ruleId}" 
                 >
-                  <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Dikalikan Luas (P × L)</option>
+                  <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Luas Penuh (P × L)</option>
+                  <option value="side_length" ${calcMode === 'side_length' ? 'selected' : ''}>Ikut Ukuran Sisi (Atas / Bawah / Samping)</option>
                   <option value="add_dim" ${calcMode === 'add_dim' ? 'selected' : ''}>Tambah Ukuran Bahan (+ Ukuran)</option>
                 </select>
               </div>
@@ -6670,20 +6727,36 @@ const ProductForm = (() => {
                         class="input-rule-dim-add w-full bg-transparent text-xs font-bold text-slate-900 outline-none text-center" 
                         data-rule-id="${ruleId}" 
                       />
-                      <span class="text-[10px] font-bold text-slate-500 shrink-0">${dimUnit}</span>
+                      <span class="text-[10px] font-bold text-slate-500 shrink-0">${dimUnit || '-'}</span>
                     </div>
                     <select 
                       class="select-rule-dim-side w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" 
                       data-rule-id="${ruleId}" 
                     >
-                      <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke P & L (Panjang & Lebar)</option>
-                      <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P)</option>
-                      <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L)</option>
-                      <option value="area_add" ${dimAddSide === 'area_add' || dimAddSide === 'area' ? 'selected' : ''}>Tambah ke Total Luas</option>
+                      <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke Panjang & Lebar (P & L)</option>
+                      <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P) Saja</option>
+                      <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L) Saja</option>
                     </select>
                   </div>
                 </div>
-              ` : ''}
+              ` : (calcMode === 'side_length' ? `
+                <div class="sm:col-span-6 space-y-1 bg-blue-50/70 border border-blue-200 rounded-xl p-2.5">
+                  <label class="block text-[11px] font-bold text-blue-900">
+                    Pilih Sisi Ukuran yang Diikuti:
+                  </label>
+                  <select 
+                    class="select-rule-dim-side w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 shadow-2xs cursor-pointer" 
+                    data-rule-id="${ruleId}" 
+                  >
+                    <option value="top" ${dimAddSide === 'top' ? 'selected' : ''}>Atas Saja (P)</option>
+                    <option value="bottom" ${dimAddSide === 'bottom' ? 'selected' : ''}>Bawah Saja (P)</option>
+                    <option value="top_bottom" ${dimAddSide === 'top_bottom' ? 'selected' : ''}>Atas & Bawah (2 × P)</option>
+                    <option value="side_one" ${dimAddSide === 'side_one' ? 'selected' : ''}>Samping Saja - Kanan/Kiri (L)</option>
+                    <option value="left_right" ${dimAddSide === 'left_right' ? 'selected' : ''}>Samping Kanan & Kiri (2 × L)</option>
+                    <option value="perimeter" ${dimAddSide === 'perimeter' ? 'selected' : ''}>Keliling Penuh (2P + 2L)</option>
+                  </select>
+                </div>
+              ` : '')}
             </div>
           ` : ''}
         </div>
@@ -6693,7 +6766,7 @@ const ProductForm = (() => {
 
   function renderDimensionRulesSectionHtml() {
     const rules = Array.isArray(primaryState.dimension_rules) ? primaryState.dimension_rules : [];
-    const dimUnit = primaryState.dimension_unit || 'meter';
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
     const globalAvailableTiers = getAvailableRuleTierChoices();
     const canAddNewRule = globalAvailableTiers.length > 0;
 
@@ -6906,6 +6979,15 @@ const ProductForm = (() => {
         const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
         if (rule) {
           rule.calc_mode = e.target.value;
+          if (rule.calc_mode === 'side_length') {
+            if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'perimeter'].includes(rule.dim_add_side)) {
+              rule.dim_add_side = 'top';
+            }
+          } else if (rule.calc_mode === 'add_dim') {
+            if (!['p_l', 'p', 'l'].includes(rule.dim_add_side)) {
+              rule.dim_add_side = 'p_l';
+            }
+          }
           refreshDimensionRulesDOM();
           refreshSandboxFinishingList();
           updateSandboxCalculation();
@@ -6946,7 +7028,7 @@ const ProductForm = (() => {
     const isChecked = Boolean(primaryState.has_custom_dimension);
     const labelVal = primaryState.custom_dimension_label || '';
     const recs = getVariationLabelRecommendations('custom_dimension');
-    const dimUnit = primaryState.dimension_unit || 'meter';
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
 
     return `
       <!-- Kartu / Tombol Pengaktif Input Ukuran (P x L) tepat di bawah Layanan Extras -->
@@ -7011,13 +7093,15 @@ const ProductForm = (() => {
             <!-- 2. Dropdown Satuan Ukuran -->
             <div class="space-y-1 w-full">
               <label for="select-dimension-unit" class="block text-xs font-bold text-slate-800">
-                Satuan Ukuran
+                Satuan Ukuran <span class="text-red-500">*</span>
               </label>
               <select id="select-dimension-unit" class="w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-emerald-500 shadow-2xs">
+                <option value="" disabled ${!dimUnit ? 'selected' : ''}>Pilih Satuan Ukuran</option>
                 <option value="meter" ${dimUnit === 'meter' ? 'selected' : ''}>meter (m)</option>
                 <option value="cm" ${dimUnit === 'cm' ? 'selected' : ''}>centimeter (cm)</option>
                 <option value="mm" ${dimUnit === 'mm' ? 'selected' : ''}>millimeter (mm)</option>
               </select>
+              <div id="custom-dimension-unit-error" class="hidden text-[11px] text-red-500 font-semibold mt-1">Satuan Ukuran wajib dipilih.</div>
               <p class="text-[11px] text-slate-500 leading-tight">Satuan dimensi yang diisi oleh pembeli pada saat memesan produk.</p>
             </div>
           </div>
@@ -7098,7 +7182,7 @@ const ProductForm = (() => {
               <!-- Kotak Input Simulasi P x L (Grid Berimbang 2 Kolom) -->
               <div class="md:col-span-6 space-y-1 w-full">
                 <label class="block text-[11px] font-bold text-slate-700">
-                  Dimensi Simulasi (P × L):
+                  Masukkan Ukuran (P x L):
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                   <div class="relative">
@@ -7107,11 +7191,11 @@ const ProductForm = (() => {
                       step="any" 
                       min="0" 
                       id="sandbox-input-dim-p" 
-                      value="${sandboxPxlState.simLength || (dimUnit === 'meter' ? '2' : (dimUnit === 'cm' ? '200' : '2000'))}" 
+                      value="${sandboxPxlState.simLength || (dimUnit === 'meter' ? '2' : (dimUnit === 'cm' ? '200' : (dimUnit === 'mm' ? '2000' : '2')))}" 
                       placeholder="P" 
-                      class="w-full pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
+                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
                     />
-                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">P (${dimUnit})</span>
+                    <span class="sandbox-dim-unit-p absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
                   </div>
                   <div class="relative">
                     <input 
@@ -7119,11 +7203,11 @@ const ProductForm = (() => {
                       step="any" 
                       min="0" 
                       id="sandbox-input-dim-l" 
-                      value="${sandboxPxlState.simWidth || (dimUnit === 'meter' ? '1' : (dimUnit === 'cm' ? '100' : '1000'))}" 
+                      value="${sandboxPxlState.simWidth || (dimUnit === 'meter' ? '1' : (dimUnit === 'cm' ? '100' : (dimUnit === 'mm' ? '1000' : '1')))}" 
                       placeholder="L" 
-                      class="w-full pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
+                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
                     />
-                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">L (${dimUnit})</span>
+                    <span class="sandbox-dim-unit-l absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -9495,6 +9579,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     function goToStep(step) {
       if (step < 1 || step > 2) return;
 
+      if (currentStep === 2) {
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        if (primaryState.has_custom_dimension) {
+          const dimUnitSel = document.getElementById('select-dimension-unit');
+          const unitVal = (dimUnitSel?.value || primaryState.custom_dimension_unit || primaryState.dimension_unit || '').trim();
+          if (!unitVal) {
+            showWizardErrorBanner(['Satuan Ukuran wajib dipilih terlebih dahulu.']);
+            if (dimUnitSel) {
+              dimUnitSel.classList.add('border-red-500');
+              dimUnitSel.classList.remove('border-slate-300');
+              dimUnitSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              try { dimUnitSel.focus(); } catch (_) {}
+            }
+            const unitErrEl = document.getElementById('custom-dimension-unit-error');
+            if (unitErrEl) unitErrEl.classList.remove('hidden');
+            return;
+          }
+        }
+      }
+
       if (step > currentStep) {
         syncStateFromDOM();
 
@@ -10763,6 +10867,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             previewTestState.dimError = false;
             const errEl = document.getElementById('custom-dimension-label-error');
             if (errEl) errEl.classList.add('hidden');
+            const unitErrEl = document.getElementById('custom-dimension-unit-error');
+            if (unitErrEl) unitErrEl.classList.add('hidden');
+            const selectDimUnit = document.getElementById('select-dimension-unit');
+            if (selectDimUnit) {
+              selectDimUnit.classList.remove('border-red-500');
+              selectDimUnit.classList.add('border-slate-300');
+            }
             const dimLabelInp = document.getElementById('input-custom-dimension-label');
             if (dimLabelInp) {
               dimLabelInp.classList.remove('border-red-500');
@@ -10817,9 +10928,24 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (selectDimensionUnit) {
       selectDimensionUnit.onchange = (e) => {
         if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        primaryState.dimension_unit = e.target.value || 'meter';
-        document.querySelectorAll('.badge-unit-text').forEach(el => el.textContent = `[${primaryState.dimension_unit}]`);
-        document.querySelectorAll('.dim-unit-text').forEach(el => el.textContent = primaryState.dimension_unit);
+        const chosenUnit = e.target.value || '';
+        primaryState.dimension_unit = chosenUnit;
+        primaryState.custom_dimension_unit = chosenUnit;
+
+        if (chosenUnit) {
+          selectDimensionUnit.classList.remove('border-red-500');
+          selectDimensionUnit.classList.add('border-slate-300');
+          const unitErr = document.getElementById('custom-dimension-unit-error');
+          if (unitErr) unitErr.classList.add('hidden');
+        }
+
+        // Sinkronisasi indikator satuan di input Simulasi (P dan L) seketika
+        document.querySelectorAll('.sandbox-dim-unit-p, .sandbox-dim-unit-l').forEach(el => {
+          el.textContent = chosenUnit || '-';
+        });
+
+        document.querySelectorAll('.badge-unit-text').forEach(el => el.textContent = chosenUnit ? `[${chosenUnit}]` : '');
+        document.querySelectorAll('.dim-unit-text').forEach(el => el.textContent = chosenUnit || '-');
         refreshDimensionRulesDOM();
         const sMainSel = document.getElementById('sandbox-select-main-option');
         if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
@@ -11793,14 +11919,33 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const item = (finishingsState[tier] || []).find(f => f.id === id);
           if (item) {
             item.calc_mode = e.target.value;
+            if (item.calc_mode === 'side_length') {
+              if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'perimeter'].includes(item.dim_add_side)) {
+                item.dim_add_side = 'top';
+              }
+            } else if (item.calc_mode === 'add_dim') {
+              if (!['p_l', 'p', 'l'].includes(item.dim_add_side)) {
+                item.dim_add_side = 'p_l';
+              }
+            }
             const addWrap = row.querySelector('.dim-add-controls-wrapper');
             if (addWrap) {
               if (item.calc_mode === 'add_dim') {
                 addWrap.classList.remove('hidden');
-                addWrap.classList.add('inline-flex');
+                addWrap.classList.add('grid', 'grid-cols-1', 'sm:flex');
               } else {
-                addWrap.classList.remove('inline-flex');
+                addWrap.classList.remove('grid', 'grid-cols-1', 'sm:flex');
                 addWrap.classList.add('hidden');
+              }
+            }
+            const sideWrap = row.querySelector('.dim-side-controls-wrapper');
+            if (sideWrap) {
+              if (item.calc_mode === 'side_length') {
+                sideWrap.classList.remove('hidden');
+                sideWrap.classList.add('block');
+              } else {
+                sideWrap.classList.remove('block');
+                sideWrap.classList.add('hidden');
               }
             }
             const sFinList = document.getElementById('sandbox-finishing-options-list');
@@ -11831,6 +11976,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
 
       container.querySelectorAll('.select-option-dim-side').forEach(sel => {
+        sel.onchange = (e) => {
+          const row = e.target.closest('.variation-option-row');
+          const id = row?.getAttribute('data-id');
+          const item = (finishingsState[tier] || []).find(f => f.id === id);
+          if (item) {
+            item.dim_add_side = e.target.value;
+            const sFinList = document.getElementById('sandbox-finishing-options-list');
+            if (sFinList) {
+              sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
+              bindSandboxCheckboxes();
+            }
+            updateSandboxCalculation();
+          }
+        };
+      });
+
+      container.querySelectorAll('.select-option-dim-side-len').forEach(sel => {
         sel.onchange = (e) => {
           const row = e.target.closest('.variation-option-row');
           const id = row?.getAttribute('data-id');
@@ -14961,7 +15123,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const mainCompSel = document.getElementById('select-dimension-main-component');
     if (mainCompSel) primaryState.dimension_main_component = mainCompSel.value;
     const dimUnitSel = document.getElementById('select-dimension-unit');
-    if (dimUnitSel) primaryState.dimension_unit = dimUnitSel.value || 'meter';
+    if (dimUnitSel) {
+      primaryState.dimension_unit = dimUnitSel.value || '';
+      primaryState.custom_dimension_unit = primaryState.dimension_unit;
+    }
     const chkMinOnePrice = document.getElementById('toggle-dim-min-one-price');
     if (chkMinOnePrice) primaryState.dim_min_one_price = chkMinOnePrice.checked;
     const chkMinOneCost = document.getElementById('toggle-dim-min-one-cost');
@@ -15525,6 +15690,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
         const errEl = document.getElementById('custom-dimension-label-error');
         if (errEl) errEl.classList.remove('hidden');
+      }
+
+      const dimUnitSel = document.getElementById('select-dimension-unit');
+      const unitVal = (dimUnitSel?.value || primaryState.custom_dimension_unit || primaryState.dimension_unit || '').trim();
+      if (!unitVal) {
+        addError('Satuan Ukuran wajib dipilih terlebih dahulu.', dimUnitSel || document.getElementById('card-custom-dimension-pxl'));
+        if (dimUnitSel) {
+          dimUnitSel.classList.add('border-red-500');
+          dimUnitSel.classList.remove('border-slate-300');
+        }
+        const unitErrEl = document.getElementById('custom-dimension-unit-error');
+        if (unitErrEl) unitErrEl.classList.remove('hidden');
       }
     }
 
