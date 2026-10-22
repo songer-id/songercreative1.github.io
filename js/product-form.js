@@ -5948,29 +5948,15 @@ const ProductForm = (() => {
     const choices = [];
     const rules = Array.isArray(primaryState.dimension_rules) ? primaryState.dimension_rules : [];
 
-    // Helper cek apakah suatu tier masih bisa dipakai (masih ada opsi tersisa yang belum diklaim aturan lain)
+    // Helper cek apakah suatu tier masih bisa dipakai:
+    // 1 Kartu = 1 Variasi: tier aktif, punya opsi valid, bukan main component, dan belum punya kartu aturan di dimension_rules
     const isTierAvailable = (tierKey) => {
       const validOptions = getValidOptionsForTier(tierKey);
       if (validOptions.length === 0) return false;
 
       // Cari aturan lain (selain currentRuleId) pada tier ini
-      const otherRules = rules.filter(r => r && r.id !== currentRuleId && r.tier_key === tierKey);
-      // Jika ada aturan lain yang sudah mengunci 'all', maka tier ini tidak bisa dibuat aturan lagi
-      if (otherRules.some(r => r.target_scope === 'all')) {
-        return false;
-      }
-
-      // Kumpulkan opsi yang sudah diklaim aturan lain
-      const usedOptionIds = new Set();
-      otherRules.forEach(r => {
-        if (Array.isArray(r.option_ids)) {
-          r.option_ids.forEach(id => usedOptionIds.add(String(id)));
-        }
-      });
-
-      // Hitung opsi tersisa yang belum diklaim
-      const unclaimed = validOptions.filter(opt => !usedOptionIds.has(String(opt.id)) && !usedOptionIds.has(String(opt.name)));
-      return unclaimed.length > 0;
+      const isAlreadyUsed = rules.some(r => r && r.id !== currentRuleId && r.tier_key === tierKey);
+      return !isAlreadyUsed;
     };
 
     // Variasi 1 (hanya jika bervariasi dan bukan komponen utama)
@@ -6044,7 +6030,10 @@ const ProductForm = (() => {
     if (specificRule) {
       const optOverride = specificRule.option_rules?.[optId] || (optName ? specificRule.option_rules?.[optName] : null);
       if (optOverride) {
-        const mode = optOverride.calc_mode || 'area';
+        const mode = optOverride.calc_mode || 'flat';
+        if (mode === 'flat') {
+          return { calc_mode: 'flat', dim_add_val: 0, dim_add_side: 'p_l' };
+        }
         return {
           calc_mode: mode,
           dim_add_val: parseFloat(optOverride.dim_add_val) || 0,
@@ -6637,6 +6626,14 @@ const ProductForm = (() => {
               <i class="bi bi-x-lg text-xs"></i>
             </button>
           </div>
+
+          <!-- Teks Judul & Deskripsi yang dipindahkan ke dalam modal bantuan -->
+          <div class="p-3 bg-emerald-50/70 border border-emerald-200/90 rounded-xl space-y-1">
+            <div class="text-xs font-bold text-emerald-900">Aturan Hitung Variasi Tambahan</div>
+            <p class="text-[11px] text-emerald-800 leading-relaxed">
+              Secara bawaan, variasi lain dihitung harga tetap per item. Tambahkan aturan jika ada variasi yang mengikuti luas ukuran.
+            </p>
+          </div>
           
           <div class="space-y-2.5 text-xs text-slate-600">
             <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
@@ -6846,7 +6843,7 @@ const ProductForm = (() => {
         : `Atur Perlakuan Ukuran: ${optName || optId}`;
     }
 
-    let currentCalcMode = 'area';
+    let currentCalcMode = 'flat';
     let currentDimSide = 'p_l';
     let currentDimVal = 0;
 
@@ -6857,13 +6854,17 @@ const ProductForm = (() => {
     } else {
       const optOverride = rule.option_rules?.[optId] || (optName ? rule.option_rules?.[optName] : null);
       if (optOverride) {
-        currentCalcMode = optOverride.calc_mode || 'area';
+        currentCalcMode = optOverride.calc_mode || 'flat';
         currentDimSide = optOverride.dim_add_side || (currentCalcMode === 'side_length' ? 'top' : 'p_l');
         currentDimVal = optOverride.dim_add_val || 0;
-      } else {
+      } else if (Array.isArray(rule.option_ids) && (rule.option_ids.includes(optId) || (optName && rule.option_ids.includes(optName)))) {
         currentCalcMode = rule.calc_mode || 'area';
         currentDimSide = rule.dim_add_side || (currentCalcMode === 'side_length' ? 'top' : 'p_l');
         currentDimVal = rule.dim_add_val || 0;
+      } else {
+        currentCalcMode = 'flat';
+        currentDimSide = 'p_l';
+        currentDimVal = 0;
       }
     }
 
@@ -6888,52 +6889,18 @@ const ProductForm = (() => {
     const ruleId = rule.id;
     const currentTier = rule.tier_key || '';
     const currentScope = rule.target_scope || 'specific';
-    const selectedOptionIds = Array.isArray(rule.option_ids) ? rule.option_ids : [];
-
     const validOptions = currentTier ? getValidOptionsForTier(currentTier) : [];
-
-    // Opsi yang sudah digunakan di aturan LAIN pada variasi/tier yang sama
-    const allRules = Array.isArray(primaryState.dimension_rules) ? primaryState.dimension_rules : [];
-    const otherRulesForTier = allRules.filter(r => r && r.id !== ruleId && r.tier_key === currentTier);
-    const hasOtherRulesOnTier = otherRulesForTier.length > 0;
-
-    const usedInOtherRules = new Set();
-    otherRulesForTier.forEach(r => {
-      if (Array.isArray(r.option_ids)) {
-        r.option_ids.forEach(id => usedInOtherRules.add(String(id)));
-      }
-    });
-
-    const validSelectedCount = validOptions.filter(opt => 
-      !usedInOtherRules.has(String(opt.id)) && 
-      !usedInOtherRules.has(String(opt.name)) && 
-      (selectedOptionIds.includes(opt.id) || selectedOptionIds.includes(opt.name))
-    ).length;
 
     return `
       <div class="dimension-rule-card bg-slate-50/90 border border-slate-200 hover:border-emerald-300/80 rounded-xl p-3 sm:p-3.5 space-y-3 transition shadow-2xs relative" data-rule-id="${ruleId}">
-        <!-- Header Bar Kartu Aturan: Nomor Aturan & Tombol Hapus -->
+        <!-- Bar Kartu Aturan: Pilih Variasi Target di Kiri & Tombol Hapus di Kanan Atas (Tanpa Label Aturan #) -->
         <div class="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
-          <span class="text-xs font-bold text-slate-800">Aturan #${idx + 1}</span>
-          <button 
-            type="button" 
-            class="btn-delete-dim-rule inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer" 
-            data-rule-id="${ruleId}" 
-            title="Hapus Aturan Ini"
-          >
-            <i class="bi bi-trash3-fill text-xs"></i>
-          </button>
-        </div>
-
-        <!-- Konten Formulir Aturan (Mobile-First Stack Vertikal) -->
-        <div class="space-y-3">
-          <!-- 1. Dropdown Pilih Variasi Target -->
-          <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700">
+          <div class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <label class="text-[11px] font-bold text-slate-700 shrink-0">
               Pilih Variasi Target <span class="text-red-500">*</span>:
             </label>
             <select 
-              class="select-rule-tier w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer" 
+              class="select-rule-tier w-full sm:max-w-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer" 
               data-rule-id="${ruleId}" 
             >
               <option value="" ${!currentTier ? 'selected' : ''}>-- Pilih Variasi --</option>
@@ -6942,143 +6909,143 @@ const ProductForm = (() => {
               `).join('')}
             </select>
           </div>
-
-          ${currentTier ? `
-            <!-- 2. Pilihan Target Cakupan Opsi (Pilih Opsi Tertentu vs Semua Opsi) -->
-            <div class="space-y-2 pt-0.5">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <label class="block text-[11px] font-bold text-slate-700">
-                  Terapkan Aturan Pada:
-                </label>
-                <div class="inline-flex items-center gap-3 text-xs">
-                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                    <input 
-                      type="radio" 
-                      name="scope_${ruleId}" 
-                      value="specific" 
-                      class="radio-rule-scope accent-emerald-600 cursor-pointer" 
-                      data-rule-id="${ruleId}" 
-                      ${currentScope === 'specific' ? 'checked' : ''} 
-                    />
-                    <span class="text-xs font-medium text-slate-700">Pilih Opsi Tertentu</span>
-                  </label>
-                  <label class="inline-flex items-center gap-1.5 ${hasOtherRulesOnTier ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'} select-none" ${hasOtherRulesOnTier ? 'title="Variasi ini sudah memiliki aturan lain. Gunakan \'Pilih Opsi Tertentu\' agar tidak bentrok."' : ''}>
-                    <input 
-                      type="radio" 
-                      name="scope_${ruleId}" 
-                      value="all" 
-                      class="radio-rule-scope accent-emerald-600 ${hasOtherRulesOnTier ? 'cursor-not-allowed pointer-events-none' : 'cursor-pointer'}" 
-                      data-rule-id="${ruleId}" 
-                      ${currentScope === 'all' && !hasOtherRulesOnTier ? 'checked' : ''} 
-                      ${hasOtherRulesOnTier ? 'disabled' : ''} 
-                    />
-                    <span class="text-xs font-medium text-slate-700">Semua Opsi di Variasi Ini</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Daftar Opsi Chip Interaktif Ramah Mobile (Jika specific) -->
-              ${currentScope === 'specific' ? `
-                <div class="rule-options-container bg-white border border-slate-200 rounded-xl p-2.5 space-y-1.5">
-                  <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Centang opsi yang dikenai aturan (${validSelectedCount} dipilih):
-                  </div>
-                  ${validOptions.length === 0 ? `
-                    <div class="text-xs text-slate-400 italic py-1">Belum ada opsi yang diisi pada variasi ini.</div>
-                  ` : `
-                    <div class="flex flex-wrap gap-2">
-                      ${validOptions.map(opt => {
-                        const isUsedInOther = usedInOtherRules.has(String(opt.id)) || usedInOtherRules.has(String(opt.name));
-                        const isOptChecked = !isUsedInOther && (selectedOptionIds.includes(opt.id) || selectedOptionIds.includes(opt.name));
-
-                        if (isUsedInOther) {
-                          return `
-                            <div class="rule-option-item inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition opacity-40 bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none" title="Opsi ini sudah digunakan di aturan lain">
-                              <input 
-                                type="checkbox" 
-                                class="chk-rule-option accent-emerald-600 w-3.5 h-3.5 rounded cursor-not-allowed" 
-                                data-rule-id="${ruleId}" 
-                                value="${escapeHtml(opt.id)}" 
-                                data-name="${escapeHtml(opt.name)}" 
-                                disabled
-                              />
-                              <span>${escapeHtml(opt.name)}</span>
-                              <span class="text-[9px] font-normal italic text-slate-400 bg-slate-200/80 px-1 py-0.5 rounded leading-none">(Di aturan lain)</span>
-                            </div>
-                          `;
-                        }
-
-                        const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
-                        const optMode = optOverride ? optOverride.calc_mode : (rule.calc_mode || 'area');
-                        const optSide = optOverride ? optOverride.dim_add_side : (rule.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l'));
-                        const optVal = optOverride ? optOverride.dim_add_val : (rule.dim_add_val || 0);
-                        const optBadge = getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit);
-
-                        return `
-                          <div class="rule-option-item inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition ${isOptChecked ? 'bg-emerald-50/80 text-emerald-900 border-emerald-300 shadow-2xs' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'}">
-                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                class="chk-rule-option accent-emerald-600 w-3.5 h-3.5 rounded cursor-pointer shrink-0" 
-                                data-rule-id="${ruleId}" 
-                                value="${escapeHtml(opt.id)}" 
-                                data-name="${escapeHtml(opt.name)}" 
-                                ${isOptChecked ? 'checked' : ''} 
-                              />
-                              <span class="truncate max-w-[140px] sm:max-w-none">${escapeHtml(opt.name)}</span>
-                            </label>
-                            ${isOptChecked ? `
-                              <div class="inline-flex items-center gap-1 shrink-0 ml-1">
-                                ${optBadge}
-                                <button 
-                                  type="button" 
-                                  class="btn-open-option-gear inline-flex items-center justify-center w-6 h-6 rounded-md bg-white hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 transition cursor-pointer shadow-2xs" 
-                                  data-rule-id="${ruleId}" 
-                                  data-opt-id="${escapeHtml(opt.id)}" 
-                                  data-opt-name="${escapeHtml(opt.name)}" 
-                                  data-tier="${currentTier}" 
-                                  title="Atur Perlakuan Ukuran: ${escapeHtml(opt.name)}"
-                                >
-                                  <i class="bi bi-gear-fill text-[11px]"></i>
-                                </button>
-                              </div>
-                            ` : ''}
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  `}
-                </div>
-              ` : `
-                <!-- Tampilan Cakupan Semua Opsi di Variasi Ini (Dengan Ikon Gear & Badge) -->
-                ${(() => {
-                  const groupBadge = getRuleSummaryBadgeHtml(rule.calc_mode || 'area', rule.dim_add_side || ((rule.calc_mode || 'area') === 'side_length' ? 'top' : 'p_l'), rule.dim_add_val || 0, dimUnit);
-                  return `
-                    <div class="p-2.5 bg-emerald-50/70 border border-emerald-200/90 rounded-lg text-xs text-emerald-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div class="flex items-center gap-2">
-                        <i class="bi bi-check2-circle text-emerald-600 shrink-0 text-sm"></i>
-                        <span>Berlaku untuk <strong>seluruh opsi</strong> di variasi terpilih.</span>
-                      </div>
-                      <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-                        ${groupBadge}
-                        <button 
-                          type="button" 
-                          class="btn-open-group-gear inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 border border-emerald-300 text-xs font-bold transition shadow-2xs cursor-pointer" 
-                          data-rule-id="${ruleId}" 
-                          data-tier="${currentTier}" 
-                          title="Atur Perlakuan Ukuran Semua Opsi"
-                        >
-                          <i class="bi bi-gear-fill text-xs text-emerald-700"></i>
-                          <span>Atur Perlakuan</span>
-                        </button>
-                      </div>
-                    </div>
-                  `;
-                })()}
-              `}
-            </div>
-          ` : ''}
+          <button 
+            type="button" 
+            class="btn-delete-dim-rule inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer shrink-0" 
+            data-rule-id="${ruleId}" 
+            title="Hapus Aturan Ini"
+          >
+            <i class="bi bi-trash3-fill text-xs"></i>
+          </button>
         </div>
+
+        <!-- Konten Formulir Aturan (Mobile-First) -->
+        ${currentTier ? `
+          <div class="space-y-2.5 pt-0.5">
+            <!-- Pilihan Target Cakupan Opsi (Pilih Opsi Tertentu vs Semua Opsi) -->
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <label class="block text-[11px] font-bold text-slate-700">
+                Terapkan Aturan Pada:
+              </label>
+              <div class="inline-flex items-center gap-3 text-xs">
+                <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                  <input 
+                    type="radio" 
+                    name="scope_${ruleId}" 
+                    value="specific" 
+                    class="radio-rule-scope accent-emerald-600 cursor-pointer" 
+                    data-rule-id="${ruleId}" 
+                    ${currentScope === 'specific' ? 'checked' : ''} 
+                  />
+                  <span class="text-xs font-medium text-slate-700">Pilih Opsi Tertentu</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                  <input 
+                    type="radio" 
+                    name="scope_${ruleId}" 
+                    value="all" 
+                    class="radio-rule-scope accent-emerald-600 cursor-pointer" 
+                    data-rule-id="${ruleId}" 
+                    ${currentScope === 'all' ? 'checked' : ''} 
+                  />
+                  <span class="text-xs font-medium text-slate-700">Semua Opsi di Variasi Ini</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Daftar Opsi Chip Interaktif (Jika specific) — Tanpa Checkbox, Langsung Ikon Gear -->
+            ${currentScope === 'specific' ? `
+              <div class="rule-options-container bg-white border border-slate-200 rounded-xl p-2.5">
+                ${validOptions.length === 0 ? `
+                  <div class="text-xs text-slate-400 italic py-1">Belum ada opsi yang diisi pada variasi ini.</div>
+                ` : `
+                  <div class="flex flex-wrap gap-2">
+                    ${validOptions.map(opt => {
+                      const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
+                      const isLegacyChecked = Array.isArray(rule.option_ids) && (rule.option_ids.includes(opt.id) || (opt.name && rule.option_ids.includes(opt.name)));
+                      
+                      let optMode = 'flat';
+                      let optSide = 'p_l';
+                      let optVal = 0;
+
+                      if (optOverride) {
+                        optMode = optOverride.calc_mode || 'flat';
+                        optSide = optOverride.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
+                        optVal = optOverride.dim_add_val || 0;
+                      } else if (isLegacyChecked) {
+                        optMode = rule.calc_mode || 'area';
+                        optSide = rule.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
+                        optVal = rule.dim_add_val || 0;
+                      }
+
+                      const isCustomRule = optMode !== 'flat';
+                      const optBadge = isCustomRule ? getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit) : '';
+
+                      if (isCustomRule) {
+                        return `
+                          <button 
+                            type="button" 
+                            class="btn-option-rule-chip inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition bg-emerald-50/90 text-emerald-950 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 shadow-2xs cursor-pointer"
+                            data-rule-id="${ruleId}" 
+                            data-opt-id="${escapeHtml(opt.id)}" 
+                            data-opt-name="${escapeHtml(opt.name)}" 
+                            data-tier="${currentTier}" 
+                            title="Klik untuk mengubah aturan ukuran: ${escapeHtml(opt.name)}"
+                          >
+                            <span class="truncate max-w-[140px] sm:max-w-none font-bold">${escapeHtml(opt.name)}</span>
+                            ${optBadge}
+                            <i class="bi bi-gear-fill text-emerald-700 text-xs shrink-0 ml-0.5"></i>
+                          </button>
+                        `;
+                      } else {
+                        return `
+                          <button 
+                            type="button" 
+                            class="btn-option-rule-chip inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-2xs cursor-pointer"
+                            data-rule-id="${ruleId}" 
+                            data-opt-id="${escapeHtml(opt.id)}" 
+                            data-opt-name="${escapeHtml(opt.name)}" 
+                            data-tier="${currentTier}" 
+                            title="Klik untuk mengatur perlakuan ukuran: ${escapeHtml(opt.name)}"
+                          >
+                            <span class="truncate max-w-[140px] sm:max-w-none">${escapeHtml(opt.name)}</span>
+                            <i class="bi bi-gear text-slate-400 hover:text-slate-600 text-xs shrink-0 ml-0.5"></i>
+                          </button>
+                        `;
+                      }
+                    }).join('')}
+                  </div>
+                `}
+              </div>
+            ` : `
+              <!-- Tampilan Cakupan Semua Opsi di Variasi Ini (Dengan Ikon Gear & Badge) -->
+              ${(() => {
+                const groupBadge = getRuleSummaryBadgeHtml(rule.calc_mode || 'area', rule.dim_add_side || ((rule.calc_mode || 'area') === 'side_length' ? 'top' : 'p_l'), rule.dim_add_val || 0, dimUnit);
+                return `
+                  <div class="p-2.5 bg-emerald-50/70 border border-emerald-200/90 rounded-lg text-xs text-emerald-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <i class="bi bi-check2-circle text-emerald-600 shrink-0 text-sm"></i>
+                      <span>Berlaku untuk <strong>seluruh opsi</strong> di variasi terpilih.</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                      ${groupBadge}
+                      <button 
+                        type="button" 
+                        class="btn-open-group-gear inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 border border-emerald-300 text-xs font-bold transition shadow-2xs cursor-pointer" 
+                        data-rule-id="${ruleId}" 
+                        data-tier="${currentTier}" 
+                        title="Atur Perlakuan Ukuran Semua Opsi"
+                      >
+                        <i class="bi bi-gear-fill text-xs text-emerald-700"></i>
+                        <span>Atur Perlakuan</span>
+                      </button>
+                    </div>
+                  </div>
+                `;
+              })()}
+            `}
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -7086,16 +7053,18 @@ const ProductForm = (() => {
   function renderDimensionRulesSectionHtml() {
     const rules = Array.isArray(primaryState.dimension_rules) ? primaryState.dimension_rules : [];
     const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
-    const globalAvailableTiers = getAvailableRuleTierChoices();
+    const globalAvailableTiers = getAvailableRuleTierChoices(null);
     const canAddNewRule = globalAvailableTiers.length > 0;
     const hasRules = rules.length > 0;
 
-    const actionButtonsHtml = canAddNewRule ? `
-      <div class="inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+    const actionButtonsHtml = `
+      <div class="inline-flex items-center gap-1.5 shrink-0">
         <button 
           type="button" 
           id="btn-add-dimension-rule" 
-          class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+          ${!canAddNewRule ? 'disabled' : ''} 
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-bold transition shadow-2xs ${canAddNewRule ? 'hover:bg-emerald-100 hover:text-emerald-800 cursor-pointer' : 'opacity-50 cursor-not-allowed'}"
+          ${!canAddNewRule ? 'title="Semua variasi tambahan yang aktif sudah memiliki aturan ukuran."' : ''}
         >
           <span>+ Buat Aturan Khusus</span>
         </button>
@@ -7108,39 +7077,19 @@ const ProductForm = (() => {
           <i class="bi bi-question-circle text-xs"></i>
         </button>
       </div>
-    ` : '';
+    `;
 
     return `
-      <div id="dimension-rules-section" class="pt-3 border-t border-slate-100 space-y-3">
-        <!-- Header Bar -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div class="text-xs font-bold text-slate-800">
-              Aturan Hitung Variasi Tambahan
-            </div>
-            <p class="text-[11px] text-slate-500 leading-tight mt-0.5">
-              Secara bawaan, variasi lain dihitung harga tetap per item. Tambahkan aturan jika ada variasi yang mengikuti luas ukuran.
-            </p>
-          </div>
-          <!-- Jika BELUM ada aturan aktif, tombol tampil di header samping deskripsi -->
-          ${!hasRules ? actionButtonsHtml : ''}
-        </div>
-
-        ${!canAddNewRule && rules.length === 0 ? `
-          <div class="p-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-center text-xs text-slate-400 italic">
-            <i class="bi bi-info-circle mr-1 text-slate-400"></i>
-            Aktifkan dan lengkapi Variasi 2/3/4/Extras di atas jika ingin menambahkan aturan khusus.
+      <div id="dimension-rules-section" class="pt-2 border-t border-slate-100 space-y-3">
+        <!-- Tombol Aksi di Atas jika BELUM ada aturan aktif -->
+        ${!hasRules ? `
+          <div class="flex items-center gap-2">
+            ${actionButtonsHtml}
           </div>
         ` : ''}
 
+        <!-- Daftar Kartu Aturan (1 Kartu = 1 Variasi) -->
         <div id="dimension-rules-list" class="space-y-3">
-          ${rules.length === 0 && canAddNewRule ? `
-            <div class="p-3 bg-slate-50/70 border border-dashed border-slate-200 rounded-xl text-center text-xs text-slate-500">
-              <span class="block font-semibold text-slate-600">Belum ada aturan khusus</span>
-              <span class="text-[11px] text-slate-400">Semua variasi lain saat ini dihitung <strong>harga tetap per item</strong>. Klik tombol <strong>+ Buat Aturan Khusus</strong> di atas jika ada variasi yang mengikuti luas ukuran atau menambah bahan.</span>
-            </div>
-          ` : ''}
-
           ${rules.map((rule, idx) => {
             const tiersForRule = getAvailableRuleTierChoices(rule.id);
             if (rule.tier_key && !tiersForRule.some(t => t.tier === rule.tier_key)) {
@@ -7150,9 +7099,9 @@ const ProductForm = (() => {
           }).join('')}
         </div>
 
-        <!-- Jika SUDAH ada aturan aktif (rules.length > 0), tombol tampil di bawah daftar aturan -->
+        <!-- Tombol Aksi di Bawah setelah kartu terakhir jika SUDAH ada aturan aktif -->
         ${hasRules ? `
-          <div class="pt-1">
+          <div class="pt-1 flex items-center gap-2">
             ${actionButtonsHtml}
           </div>
         ` : ''}
@@ -7214,11 +7163,9 @@ const ProductForm = (() => {
     if (btnAdd) {
       btnAdd.onclick = (e) => {
         e.preventDefault();
-        const availableTiers = getAvailableRuleTierChoices();
-        if (availableTiers.length === 0) {
-          alert('Tidak ada variasi atau opsi variasi tersisa yang dapat dibuat aturan baru.');
-          return;
-        }
+        if (btnAdd.disabled) return;
+        const availableTiers = getAvailableRuleTierChoices(null);
+        if (availableTiers.length === 0) return;
         const newRule = {
           id: 'rule_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           tier_key: availableTiers[0].tier,
@@ -7283,42 +7230,8 @@ const ProductForm = (() => {
       };
     });
 
-    // 5. Cegah Klik Chip yang Terkunci / Disabled
-    container.querySelectorAll('.rule-option-chip, .rule-option-item').forEach(chip => {
-      chip.onclick = (e) => {
-        const chk = chip.querySelector('.chk-rule-option');
-        if (chk && chk.disabled) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      };
-    });
-
-    // 6. Checkbox Opsi Tertentu
-    container.querySelectorAll('.chk-rule-option').forEach(chk => {
-      chk.onchange = (e) => {
-        if (chk.disabled) return;
-        const ruleId = chk.getAttribute('data-rule-id');
-        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
-        if (rule) {
-          if (!Array.isArray(rule.option_ids)) rule.option_ids = [];
-          const optVal = chk.value;
-          const optName = chk.getAttribute('data-name');
-          if (chk.checked) {
-            if (!rule.option_ids.includes(optVal)) rule.option_ids.push(optVal);
-            if (optName && !rule.option_ids.includes(optName)) rule.option_ids.push(optName);
-          } else {
-            rule.option_ids = rule.option_ids.filter(id => id !== optVal && id !== optName);
-          }
-          refreshDimensionRulesDOM();
-          refreshSandboxFinishingList();
-          updateSandboxCalculation();
-        }
-      };
-    });
-
-    // 7. Tombol Ikon Gear per Opsi
-    container.querySelectorAll('.btn-open-option-gear').forEach(btn => {
+    // 5. Tombol Chip Opsi (Langsung Buka Modal Pengaturan Ukuran)
+    container.querySelectorAll('.btn-option-rule-chip').forEach(btn => {
       btn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -7329,7 +7242,7 @@ const ProductForm = (() => {
       };
     });
 
-    // 8. Tombol Ikon Gear Grup (Semua Opsi)
+    // 6. Tombol Ikon Gear Grup (Semua Opsi)
     container.querySelectorAll('.btn-open-group-gear').forEach(btn => {
       btn.onclick = (e) => {
         e.preventDefault();
@@ -7341,7 +7254,7 @@ const ProductForm = (() => {
       };
     });
 
-    // 9. Tombol Bantuan (?) & Tutup Bantuan
+    // 7. Tombol Bantuan (?) & Tutup Bantuan
     const btnHelp = document.getElementById('btn-help-dimension-rule');
     if (btnHelp) {
       btnHelp.onclick = (e) => {
@@ -7359,7 +7272,7 @@ const ProductForm = (() => {
       };
     });
 
-    // 10. Kontrol Modal Pengaturan Perlakuan Ukuran
+    // 8. Kontrol Modal Pengaturan Perlakuan Ukuran
     document.querySelectorAll('.btn-close-option-rule-modal').forEach(btn => {
       btn.onclick = (e) => {
         e.preventDefault();
@@ -7387,7 +7300,7 @@ const ProductForm = (() => {
         const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
         if (!rule) return;
 
-        const calcMode = document.getElementById('modal-select-calc-mode')?.value || 'area';
+        const calcMode = document.getElementById('modal-select-calc-mode')?.value || 'flat';
         let dimAddSide = 'p_l';
         let dimAddVal = 0;
 
@@ -7406,18 +7319,26 @@ const ProductForm = (() => {
           if (!rule.option_rules || typeof rule.option_rules !== 'object') {
             rule.option_rules = {};
           }
-          const ruleConfig = {
-            calc_mode: calcMode,
-            dim_add_side: dimAddSide,
-            dim_add_val: dimAddVal
-          };
-          if (optId) rule.option_rules[optId] = ruleConfig;
-          if (optName) rule.option_rules[optName] = ruleConfig;
-
-          // Pastikan opsi ini masuk ke option_ids jika belum ada
           if (!Array.isArray(rule.option_ids)) rule.option_ids = [];
-          if (optId && !rule.option_ids.includes(optId)) rule.option_ids.push(optId);
-          if (optName && !rule.option_ids.includes(optName)) rule.option_ids.push(optName);
+
+          if (calcMode === 'flat') {
+            // Hapus aturan khusus untuk opsi ini (kembali ke Flat / Harga Tetap)
+            delete rule.option_rules[optId];
+            if (optName) delete rule.option_rules[optName];
+            rule.option_ids = rule.option_ids.filter(id => id !== optId && id !== optName);
+          } else {
+            const ruleConfig = {
+              calc_mode: calcMode,
+              dim_add_side: dimAddSide,
+              dim_add_val: dimAddVal
+            };
+            if (optId) rule.option_rules[optId] = ruleConfig;
+            if (optName) rule.option_rules[optName] = ruleConfig;
+
+            // Pastikan opsi ini masuk ke option_ids jika belum ada
+            if (optId && !rule.option_ids.includes(optId)) rule.option_ids.push(optId);
+            if (optName && !rule.option_ids.includes(optName)) rule.option_ids.push(optName);
+          }
         }
 
         const ruleModal = document.getElementById('modal-option-dimension-rule');
