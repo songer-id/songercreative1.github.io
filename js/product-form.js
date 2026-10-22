@@ -53,6 +53,9 @@ const ProductForm = (() => {
     custom_dimension_label: '',
     dimension_main_component: '',
     dimension_unit: 'meter',
+    dim_min_one_price: true,
+    dim_min_one_cost: false,
+    dimension_rules: [],
     variation_scopes: {
       main: 'umum',
       extra_1: 'umum',
@@ -404,6 +407,9 @@ const ProductForm = (() => {
       custom_dimension_label: '',
       dimension_main_component: '',
       dimension_unit: 'meter',
+      dim_min_one_price: true,
+      dim_min_one_cost: false,
+      dimension_rules: [],
       variation_scopes: {
         main: 'umum',
         extra_1: 'umum',
@@ -616,6 +622,9 @@ const ProductForm = (() => {
     primaryState.custom_dimension_label = prod.custom_dimension_label || '';
     primaryState.dimension_main_component = prod.dimension_main_component || '';
     primaryState.dimension_unit = prod.dimension_unit || 'meter';
+    primaryState.dim_min_one_price = prod.dim_min_one_price !== undefined ? Boolean(prod.dim_min_one_price) : true;
+    primaryState.dim_min_one_cost = prod.dim_min_one_cost !== undefined ? Boolean(prod.dim_min_one_cost) : false;
+    primaryState.dimension_rules = Array.isArray(prod.dimension_rules) ? JSON.parse(JSON.stringify(prod.dimension_rules)) : [];
 
     primaryState.variation_scopes = prod.variation_scopes || {
       main: prod.scope_main || 'umum',
@@ -5784,14 +5793,18 @@ const ProductForm = (() => {
         label: 'Harga Produk Utama'
       });
     } else {
-      const t1Label = getVariationLabel('tier1', 'Variasi 1');
-      choices.push({
-        id: 'tier1',
-        label: `Variasi 1: ${t1Label}`
-      });
+      const hasValidT1 = Array.isArray(materialsState) && materialsState.some(m => m && m.name && m.name.trim() !== '');
+      if (hasValidT1 || !primaryState.has_variation_2) {
+        const t1Label = getVariationLabel('tier1', 'Variasi 1');
+        choices.push({
+          id: 'tier1',
+          label: `Variasi 1: ${t1Label}`
+        });
+      }
 
-      const isVar2Active = Boolean(primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0));
-      if (isVar2Active) {
+      const isVar2Active = Boolean(primaryState.has_variation_2);
+      const hasValidVar2 = Array.isArray(finishingsState.main) && finishingsState.main.some(f => f && f.name && f.name.trim() !== '');
+      if (isVar2Active && hasValidVar2) {
         const t2Label = getVariationLabel('main', 'Variasi 2');
         choices.push({
           id: 'main',
@@ -5799,8 +5812,9 @@ const ProductForm = (() => {
         });
       }
 
-      const isVar3Active = Boolean(isVar2Active && (primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0)));
-      if (isVar3Active) {
+      const isVar3Active = Boolean(isVar2Active && primaryState.has_variation_3);
+      const hasValidVar3 = Array.isArray(finishingsState.extra_1) && finishingsState.extra_1.some(f => f && f.name && f.name.trim() !== '');
+      if (isVar3Active && hasValidVar3) {
         const t3Label = getVariationLabel('extra_1', 'Variasi 3');
         choices.push({
           id: 'extra_1',
@@ -5808,14 +5822,21 @@ const ProductForm = (() => {
         });
       }
 
-      const isVar4Active = Boolean(isVar3Active && (primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0)));
-      if (isVar4Active) {
+      const isVar4Active = Boolean(isVar3Active && primaryState.has_variation_4);
+      const hasValidVar4 = Array.isArray(finishingsState.extra_2) && finishingsState.extra_2.some(f => f && f.name && f.name.trim() !== '');
+      if (isVar4Active && hasValidVar4) {
         const t4Label = getVariationLabel('extra_2', 'Variasi 4');
         choices.push({
           id: 'extra_2',
           label: `Variasi 4: ${t4Label}`
         });
       }
+    }
+    if (choices.length === 0) {
+      choices.push({
+        id: primaryState.has_variants ? 'tier1' : 'single',
+        label: primaryState.has_variants ? 'Variasi 1' : 'Harga Produk Utama'
+      });
     }
     return choices;
   }
@@ -6135,6 +6156,22 @@ const ProductForm = (() => {
 
     const areaEff = ((pEff * factor) * (lEff * factor)) + directAreaAdd;
 
+    // Sinkronisasi status toggle minimal 1 dari DOM jika ada
+    const chkMinOnePrice = document.getElementById('toggle-dim-min-one-price');
+    if (chkMinOnePrice) primaryState.dim_min_one_price = chkMinOnePrice.checked;
+    const chkMinOneCost = document.getElementById('toggle-dim-min-one-cost');
+    if (chkMinOneCost) primaryState.dim_min_one_cost = chkMinOneCost.checked;
+
+    // Pemisahan aturan minimal 1 m² antara Harga Jual vs Biaya Modal (HPP)
+    const isMinOnePriceActive = primaryState.dim_min_one_price !== false;
+    const isMinOneCostActive = Boolean(primaryState.dim_min_one_cost);
+
+    const isPriceRounded = isMinOnePriceActive && areaEff > 0 && areaEff < 1;
+    const areaPrice = isPriceRounded ? 1 : areaEff;
+
+    const isCostRounded = isMinOneCostActive && areaEff > 0 && areaEff < 1;
+    const areaCost = isCostRounded ? 1 : areaEff;
+
     // Komponen Utama
     const mainOptions = getSandboxMainComponentOptionsList();
     let mainOpt = mainOptions.find(o => o.id === sandboxPxlState.selectedMainOptionId) || mainOptions[0] || {
@@ -6143,8 +6180,8 @@ const ProductForm = (() => {
       cost_price: 0
     };
 
-    const mainPriceTotal = areaEff * mainOpt.price;
-    const mainCostTotal = areaEff * mainOpt.cost_price;
+    const mainPriceTotal = areaPrice * mainOpt.price;
+    const mainCostTotal = areaCost * mainOpt.cost_price;
 
     // Finishing
     const finBreakdown = [];
@@ -6161,9 +6198,9 @@ const ProductForm = (() => {
         fCost = f.cost_price;
         formulaText = `Flat per Pcs: Rp ${formatNumberLocal(f.price)}`;
       } else if (f.calc_mode === 'area') {
-        fPrice = areaEff * f.price;
-        fCost = areaEff * f.cost_price;
-        formulaText = `Ikut Luas (${areaEff.toFixed(2)} m² × Rp ${formatNumberLocal(f.price)}): Rp ${formatNumberLocal(Math.round(fPrice))}`;
+        fPrice = areaPrice * f.price;
+        fCost = areaCost * f.cost_price;
+        formulaText = `Ikut Luas (${areaPrice.toFixed(2)} m² × Rp ${formatNumberLocal(f.price)}): Rp ${formatNumberLocal(Math.round(fPrice))}`;
       } else if (f.calc_mode === 'add_dim') {
         fPrice = f.price;
         fCost = f.cost_price;
@@ -6230,9 +6267,11 @@ const ProductForm = (() => {
               <div class="font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
                 <span class="truncate">${escapeHtml(mainOpt.name)}</span>
                 <span class="text-[10px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-semibold">Bahan Utama</span>
+                ${isPriceRounded ? '<span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded text-[9px] font-bold">Dibulatkan min. 1 m²</span>' : ''}
+                ${isCostRounded ? '<span class="px-1.5 py-0.2 bg-blue-100 text-blue-800 rounded text-[9px] font-bold">HPP min. 1 m²</span>' : ''}
               </div>
               <div class="text-[11px] text-slate-500">
-                ${areaEff.toFixed(2)} m² × Rp ${formatNumberLocal(mainOpt.price)} (HPP: Rp ${formatNumberLocal(mainOpt.cost_price)})
+                ${areaPrice.toFixed(2)} m² × Rp ${formatNumberLocal(mainOpt.price)} (HPP: ${areaCost.toFixed(2)} m² × Rp ${formatNumberLocal(mainOpt.cost_price)})
               </div>
             </div>
             <div class="text-left sm:text-right shrink-0">
@@ -6364,6 +6403,42 @@ const ProductForm = (() => {
                 <option value="mm" ${dimUnit === 'mm' ? 'selected' : ''}>millimeter (mm)</option>
               </select>
               <p class="text-[11px] text-slate-500 leading-tight">Satuan dimensi yang diisi oleh pembeli pada saat memesan produk.</p>
+            </div>
+          </div>
+
+          <!-- UI KETENTUAN LUAS MINIMAL (< 1 m² Dianggap 1 m²) TERPISAH: HARGA JUAL VS BIAYA MODAL (HPP) -->
+          <div class="space-y-1.5 pt-1">
+            <div class="text-[11px] font-bold text-slate-700">Ketentuan Luas Minimal (&lt; 1 m² Dianggap 1 m²):</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <!-- Kotak Toggle 1 (Khusus Harga Jual) -->
+              <label class="flex items-start gap-2.5 p-2.5 sm:p-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl cursor-pointer transition select-none">
+                <input 
+                  type="checkbox" 
+                  id="toggle-dim-min-one-price" 
+                  class="sr-only peer" 
+                  ${primaryState.dim_min_one_price !== false ? 'checked' : ''}
+                />
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
+                <div class="space-y-0.5 min-w-0">
+                  <div class="text-xs font-bold text-slate-900 leading-tight">Harga Jual: Minimal 1 m²</div>
+                  <p class="text-[11px] text-slate-500 leading-snug">Jika luas P × L di bawah 1, harga jual tetap dihitung 1.</p>
+                </div>
+              </label>
+
+              <!-- Kotak Toggle 2 (Khusus Biaya Modal / HPP — Independen) -->
+              <label class="flex items-start gap-2.5 p-2.5 sm:p-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl cursor-pointer transition select-none">
+                <input 
+                  type="checkbox" 
+                  id="toggle-dim-min-one-cost" 
+                  class="sr-only peer" 
+                  ${Boolean(primaryState.dim_min_one_cost) ? 'checked' : ''}
+                />
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
+                <div class="space-y-0.5 min-w-0">
+                  <div class="text-xs font-bold text-slate-900 leading-tight">Biaya Modal (HPP): Minimal 1 m²</div>
+                  <p class="text-[11px] text-slate-500 leading-snug">Jika aktif, perhitungan modal/HPP untuk luas di bawah 1 juga dikunci menjadi 1.</p>
+                </div>
+              </label>
             </div>
           </div>
 
@@ -8205,7 +8280,6 @@ const ProductForm = (() => {
                 </button>
               </div>
             </div>
-            ${!isLastRow ? renderOptionDimCalcControl(tier, fin, idx) : ''}
           </div>
         `;
       }).join('');
@@ -8315,7 +8389,6 @@ const ProductForm = (() => {
               </button>
             </div>
           </div>
-          ${renderOptionDimCalcControl(tier, fin, idx)}
         </div>
       `;
     }).join('');
@@ -8427,25 +8500,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 3. Memerlukan konsultasi khusus atau pesanan dalam kuantitas besar? Hubungi layanan pelanggan kami melalui fitur chat yang tersedia.`;
   }
 
+  // -------------------------------------------------------------
+  // Helper: Validasi & Banner Peringatan Form Wizard (Step 1-3)
+  // -------------------------------------------------------------
+  function showWizardErrorBanner(errors) {
+    const errorBanner = document.getElementById('form-error-banner');
+    const errorList = document.getElementById('form-error-list');
+    if (errorBanner && errorList) {
+      const errArr = Array.isArray(errors) ? errors : [errors];
+      errorList.innerHTML = errArr.map(e => `<li>${e}</li>`).join('');
+      errorBanner.classList.remove('hidden');
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+
+  function hideWizardErrorBanner() {
+    const errorBanner = document.getElementById('form-error-banner');
+    if (errorBanner) errorBanner.classList.add('hidden');
+  }
+
+  if (typeof window !== 'undefined') {
+    window.showWizardErrorBanner = showWizardErrorBanner;
+    window.hideWizardErrorBanner = hideWizardErrorBanner;
+  }
+
   function bindFormEvents() {
-    // -------------------------------------------------------------
-    // Helper: Validasi & Navigasi Antar-Langkah Wizard (Step 1-3)
-    // -------------------------------------------------------------
-    function showWizardErrorBanner(errors) {
-      const errorBanner = document.getElementById('form-error-banner');
-      const errorList = document.getElementById('form-error-list');
-      if (errorBanner && errorList) {
-        errorList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
-        errorBanner.classList.remove('hidden');
-        if (window.lucide) window.lucide.createIcons();
-      }
-    }
-
-    function hideWizardErrorBanner() {
-      const errorBanner = document.getElementById('form-error-banner');
-      if (errorBanner) errorBanner.classList.add('hidden');
-    }
-
     function updateStepVisibility() {
       const p1 = document.getElementById('step-pane-1');
       const p2 = document.getElementById('step-pane-2');
@@ -9204,7 +9283,296 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
   }
 
-    // BIND EVENT INTERAKTIF STEP 2
+  // ==========================================================================
+  // VALIDASI PRASYARAT SEBELUM MENGAKTIFKAN INPUT UKURAN (P x L)
+  // ==========================================================================
+  function validatePrerequisitesBeforeCustomDimension() {
+    const errors = [];
+    let firstInvalidEl = null;
+
+    function addError(msg, el) {
+      errors.push(msg);
+      if (!firstInvalidEl && el) {
+        firstInvalidEl = el;
+      }
+    }
+
+    if (!primaryState.has_variants) {
+      // 1. MODE PRODUK TUNGGAL
+      const singlePriceEl = document.getElementById('input-single-price');
+      const singleCostEl = document.getElementById('input-single-cost');
+      const singleStockEl = document.getElementById('input-stock-qty') || document.getElementById('input-single-stock');
+      const singlePriceErr = document.getElementById('single-price-error-msg');
+      const singleCostErr = document.getElementById('single-cost-error-msg');
+      const singleStockErr = document.getElementById('single-stock-error-msg');
+
+      const pRaw = singlePriceEl ? (singlePriceEl.value || '').trim() : '';
+      const pVal = parseFloat(pRaw);
+      if (pRaw === '' || isNaN(pVal) || pVal <= 0) {
+        addError('Harga Jual produk wajib diisi (> 0).', singlePriceEl);
+        if (singlePriceEl) {
+          singlePriceEl.classList.remove('border-slate-300');
+          singlePriceEl.classList.add('border-red-500');
+        }
+        if (singlePriceErr) {
+          singlePriceErr.textContent = 'Wajib di isi';
+          singlePriceErr.classList.remove('hidden');
+        }
+      } else {
+        if (singlePriceEl) {
+          singlePriceEl.classList.remove('border-red-500');
+          singlePriceEl.classList.add('border-slate-300');
+        }
+        if (singlePriceErr) {
+          singlePriceErr.textContent = '';
+          singlePriceErr.classList.add('hidden');
+        }
+      }
+
+      const cRaw = singleCostEl ? (singleCostEl.value || '').trim() : '';
+      if (cRaw !== '') {
+        const cVal = parseFloat(cRaw);
+        if (isNaN(cVal) || cVal < 0) {
+          addError('Biaya Modal (HPP) produk minimal bernilai 0.', singleCostEl);
+          if (singleCostEl) {
+            singleCostEl.classList.remove('border-slate-300');
+            singleCostEl.classList.add('border-red-500');
+          }
+          if (singleCostErr) {
+            singleCostErr.textContent = 'Wajib Di Isi Min. "0"';
+            singleCostErr.classList.remove('hidden');
+          }
+        } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
+          addError('Biaya Modal (HPP) melebihi Harga Jual produk.', singleCostEl);
+          if (singleCostEl) {
+            singleCostEl.classList.add('text-red-600', 'font-bold', 'border-red-500');
+            singleCostEl.classList.remove('text-slate-900', 'border-slate-300');
+          }
+          if (singleCostErr) {
+            singleCostErr.textContent = 'Hpp melebihi Harga Jual';
+            singleCostErr.classList.remove('hidden');
+          }
+        } else {
+          if (singleCostEl) {
+            singleCostEl.classList.remove('text-red-600', 'font-bold', 'border-red-500');
+            singleCostEl.classList.add('text-slate-900', 'border-slate-300');
+          }
+          if (singleCostErr) {
+            singleCostErr.textContent = '';
+            singleCostErr.classList.add('hidden');
+          }
+        }
+      }
+
+      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
+      const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
+      if (!isUnl) {
+        const stockRaw = singleStockEl ? (singleStockEl.value || '').trim() : '';
+        const stockVal = parseInt(stockRaw, 10);
+        if (stockRaw === '' || isNaN(stockVal) || stockVal < 0) {
+          addError('Stok produk wajib diisi (minimal 0).', singleStockEl);
+          if (singleStockEl) {
+            singleStockEl.classList.remove('border-slate-300');
+            singleStockEl.classList.add('border-red-500');
+          }
+          if (singleStockErr) {
+            singleStockErr.textContent = 'Stok produk wajib diisi (minimal "0")';
+            singleStockErr.classList.remove('hidden');
+          }
+        } else {
+          if (singleStockEl) {
+            singleStockEl.classList.remove('border-red-500');
+            singleStockEl.classList.add('border-slate-300');
+          }
+          if (singleStockErr) {
+            singleStockErr.textContent = '';
+            singleStockErr.classList.add('hidden');
+          }
+        }
+      }
+    } else {
+      // 2. MODE BERVARIASI
+      // A. Periksa Judul Seluruh Kartu Variasi yang Sedang Aktif
+      const activeVariationCards = [];
+      const t1TitleEl = document.getElementById('input-var-label-tier1');
+      activeVariationCards.push({ tier: 'tier1', labelDefault: 'Variasi 1', inputEl: t1TitleEl, cardId: 'card-variasi-1' });
+
+      if (primaryState.has_variation_2) {
+        const t2TitleEl = document.getElementById('input-var-label-main') || document.getElementById('input-var-label-tier2');
+        activeVariationCards.push({ tier: 'main', labelDefault: 'Variasi 2', inputEl: t2TitleEl, cardId: 'card-variasi-2' });
+      }
+      if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+        const t3TitleEl = document.getElementById('input-var-label-extra_1') || document.getElementById('input-var-label-tier3');
+        activeVariationCards.push({ tier: 'extra_1', labelDefault: 'Variasi 3', inputEl: t3TitleEl, cardId: 'card-variasi-3' });
+      }
+      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+        const t4TitleEl = document.getElementById('input-var-label-extra_2') || document.getElementById('input-var-label-tier4');
+        activeVariationCards.push({ tier: 'extra_2', labelDefault: 'Variasi 4', inputEl: t4TitleEl, cardId: 'card-variasi-4' });
+      }
+      if (primaryState.has_extra_service) {
+        const extraTitleEl = document.getElementById('input-var-label-extra3') || document.getElementById('input-var-label-extra_3');
+        activeVariationCards.push({ tier: 'extra_3', labelDefault: 'Layanan Extras', inputEl: extraTitleEl, cardId: 'card-extra-service' });
+      }
+
+      // Validasi Judul Wajib Diisi
+      activeVariationCards.forEach(({ labelDefault, inputEl }) => {
+        if (inputEl) {
+          const val = (inputEl.value || '').trim();
+          const wrapper = inputEl.closest('.custom-combobox-wrapper');
+          const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
+          if (!val) {
+            addError(`Judul ${labelDefault} wajib diisi.`, inputEl);
+            inputEl.classList.remove('border-slate-400');
+            inputEl.classList.add('border-red-500');
+            if (errEl) {
+              errEl.textContent = `Judul ${labelDefault} wajib diisi`;
+              errEl.classList.remove('hidden');
+            }
+          }
+        }
+      });
+
+      // Validasi Judul Anti-Duplikat
+      const groupLabelCheck = refreshVariationTitleDuplicateErrors();
+      if (groupLabelCheck && groupLabelCheck.hasDuplicate) {
+        addError('Judul variasi sudah digunakan / duplikat.', groupLabelCheck.firstDuplicateEl || t1TitleEl);
+      }
+
+      // B. Validasi Baris Opsi Variasi 1 (materialsState)
+      if (!materialsState || materialsState.length === 0) {
+        addError('Variasi 1 wajib memiliki minimal 1 opsi terisi.', document.getElementById('card-variasi-1'));
+      } else {
+        const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
+        if (validMats.length < 2) {
+          const firstMatNameInp = document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]');
+          addError('Variasi 1 wajib memiliki minimal 2 opsi yang terisi namanya.', firstMatNameInp || document.getElementById('card-variasi-1'));
+        }
+
+        materialsState.forEach((m, idx) => {
+          const isUntouched = (materialsState.length > 1 && idx === materialsState.length - 1 && (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined) && (m.cost_price === '' || m.cost_price === undefined) && (m.stock === '' || m.stock === undefined));
+          if (isUntouched) return;
+
+          const rowEl = document.querySelector(`.variation-option-row[data-tier="tier1"][data-idx="${idx}"]`);
+          const nameInp = rowEl?.querySelector('input[data-field="name"]');
+          const priceInp = rowEl?.querySelector('input[data-field="price"]');
+          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+
+          const nameVal = (m.name || '').trim();
+          if (!nameVal) {
+            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
+          } else if (nameVal.length > 15) {
+            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+          } else if (checkOptionNameDuplicate('tier1', nameVal, idx)) {
+            addError(`Variasi 1: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
+          }
+
+          const pRaw = (m.price !== undefined && m.price !== null) ? String(m.price).trim() : '';
+          const pNum = parseFloat(pRaw);
+          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Harga jual wajib diisi.`, priceInp || rowEl);
+          }
+
+          const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
+          const cNum = parseFloat(cRaw);
+          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
+          }
+
+          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
+          if (stockMode !== 'unlimited') {
+            if (m.stock === '' || m.stock === undefined || m.stock === null || isNaN(parseInt(m.stock, 10)) || parseInt(m.stock, 10) < 0) {
+              addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
+            }
+          }
+        });
+      }
+
+      // C. Validasi Baris Opsi Variasi 2, 3, 4 & Layanan Extras
+      const activeFinTiers = [];
+      if (primaryState.has_variation_2) activeFinTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2', cardId: 'card-variasi-2' });
+      if (primaryState.has_variation_2 && primaryState.has_variation_3) activeFinTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3', cardId: 'card-variasi-3' });
+      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) activeFinTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4', cardId: 'card-variasi-4' });
+      if (primaryState.has_extra_service) activeFinTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras', cardId: 'card-extra-service' });
+
+      activeFinTiers.forEach(({ tier, label, cardId }) => {
+        const list = finishingsState[tier] || [];
+        const isExtra3 = (tier === 'extra_3');
+        const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
+        const minReq = isExtra3 ? 1 : 2;
+        if (validList.length < minReq) {
+          const firstFinNameInp = document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`);
+          addError(`${label} wajib memiliki minimal ${minReq} opsi yang terisi namanya.`, firstFinNameInp || document.getElementById(cardId));
+        }
+
+        list.forEach((f, idx) => {
+          if (isExtra3 && (idx === list.length - 1 || f.is_default_none)) return;
+          const triggerIdx = isExtra3 ? list.length - 2 : list.length - 1;
+          const isUntouched = (list.length > (isExtra3 ? 2 : 1) && idx === triggerIdx && (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined) && (f.cost_price === '' || f.cost_price === undefined) && (f.stock === '' || f.stock === undefined) && !f.extra_type);
+          if (isUntouched) return;
+
+          const rowEl = document.querySelector(`.variation-option-row[data-tier="${tier}"][data-idx="${idx}"]`);
+          const nameInp = rowEl?.querySelector('input[data-field="name"]');
+          const typeSel = rowEl?.querySelector('select.fin-extra-type');
+          const priceInp = rowEl?.querySelector('input[data-field="price"]');
+          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+
+          const nameVal = (f.name || '').trim();
+          const isExtraNone = (isExtra3 && (f.is_default_none || (nameVal && nameVal.startsWith('Tanpa '))));
+          if (!nameVal) {
+            addError(`${label} (Baris ${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
+          } else if (!isExtraNone && nameVal.length > 15) {
+            addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+          } else if (checkOptionNameDuplicate(tier, nameVal, idx)) {
+            addError(`${label}: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
+          }
+
+          if (isExtra3 && (!f.extra_type || f.extra_type.trim() === '')) {
+            addError(`${label} (Opsi ${nameVal || idx + 1}): Jenis input wajib dipilih.`, typeSel || rowEl);
+          }
+
+          const pRaw = (f.price !== undefined && f.price !== null) ? String(f.price).trim() : '';
+          const pNum = parseFloat(pRaw);
+          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+            addError(`${label} (Opsi ${nameVal || idx + 1}): Harga satuan/jual wajib diisi.`, priceInp || rowEl);
+          }
+
+          const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
+          const cNum = parseFloat(cRaw);
+          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+            addError(`${label} (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
+          }
+
+          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
+          if (stockMode !== 'unlimited') {
+            if (f.stock === '' || f.stock === undefined || f.stock === null || isNaN(parseInt(f.stock, 10)) || parseInt(f.stock, 10) < 0) {
+              addError(`${label} (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
+            }
+          }
+        });
+      });
+
+      // Pemicu tampilan error inline merah di DOM tabel opsi
+      document.querySelectorAll('.mat-input, .fin-input').forEach(inp => {
+        if (typeof validateOptionField === 'function') {
+          validateOptionField(inp, true);
+        }
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors,
+      firstInvalidEl: firstInvalidEl
+    };
+  }
+
+  if (typeof window !== 'undefined') {
+    window.validatePrerequisitesBeforeCustomDimension = validatePrerequisitesBeforeCustomDimension;
+  }
+
+  // BIND EVENT INTERAKTIF STEP 2
   function bindStep2InteractiveEvents() {
     // Tombol Aksi Bawah Step 2
     const btn2Prev = document.getElementById('btn-step-2-prev');
@@ -9684,12 +10052,67 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (toggleCustomDim) {
       toggleCustomDim.onchange = (e) => {
         const isChecked = e.target.checked;
-        primaryState.has_custom_dimension = isChecked;
-        const configBody = document.getElementById('custom-dimension-config-body');
-        if (configBody) {
-          if (isChecked) {
+        if (isChecked) {
+          // 1. Panggil syncStateFromDOM() terlebih dahulu agar data terkini tersimpan
+          if (typeof syncStateFromDOM === 'function') {
+            syncStateFromDOM();
+          }
+
+          // 2. Jalankan validasi prasyarat sebelum mengizinkan ukuran P x L diaktifkan
+          const prereqResult = validatePrerequisitesBeforeCustomDimension();
+          if (!prereqResult.isValid) {
+            // Batalkan pengaktifan toggle
+            toggleCustomDim.checked = false;
+            primaryState.has_custom_dimension = false;
+            const configBody = document.getElementById('custom-dimension-config-body');
+            if (configBody) {
+              configBody.classList.remove('block');
+              configBody.classList.add('hidden');
+            }
+
+            // Tampilkan banner peringatan singkat via showWizardErrorBanner
+            showWizardErrorBanner(prereqResult.errors);
+
+            // Auto-scroll halus ke bagian yang belum valid dengan ring highlight merah
+            if (prereqResult.firstInvalidEl) {
+              const el = prereqResult.firstInvalidEl;
+              const targetScrollEl = el.closest('table, .variation-card-block, .step2-section-card, .form-group, .custom-combobox-wrapper') || el;
+              targetScrollEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+              targetScrollEl.classList.add('ring-2', 'ring-red-400', 'transition-all');
+              if (el !== targetScrollEl && typeof el.classList?.add === 'function') {
+                el.classList.add('ring-2', 'ring-red-400', 'transition-all');
+              }
+              setTimeout(() => {
+                targetScrollEl.classList.remove('ring-2', 'ring-red-400', 'transition-all');
+                if (el !== targetScrollEl && typeof el.classList?.remove === 'function') {
+                  el.classList.remove('ring-2', 'ring-red-400', 'transition-all');
+                }
+              }, 3000);
+
+              if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TABLE' && el.tagName !== 'TR') {
+                setTimeout(() => {
+                  try { el.focus({ preventScroll: true }); } catch (err) {}
+                }, 250);
+              }
+            }
+            return;
+          }
+
+          // Seluruh data prasyarat valid: sembunyikan banner error & aktifkan P x L
+          hideWizardErrorBanner();
+          primaryState.has_custom_dimension = true;
+          const configBody = document.getElementById('custom-dimension-config-body');
+          if (configBody) {
             configBody.classList.remove('hidden');
             configBody.classList.add('block');
+
+            // Muat ulang daftar pilihan komponen utama yang valid
+            const mainCompSel = document.getElementById('select-dimension-main-component');
+            if (mainCompSel) {
+              mainCompSel.innerHTML = getDimensionMainComponentOptionsHtml();
+            }
+
             const dimCard = document.getElementById('card-custom-dimension-pxl');
             if (dimCard) bindCustomComboboxes(dimCard);
             const dimLabelInp = document.getElementById('input-custom-dimension-label');
@@ -9699,7 +10122,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               }
               dimLabelInp.focus();
             }
-          } else {
+          }
+
+          // Update sandbox kalkulator
+          updateSandboxCalculation();
+          updateVariationTitleComboboxRecommendations();
+          refreshVariationTitleDuplicateErrors();
+          updateProductCardLivePreview();
+        } else {
+          primaryState.has_custom_dimension = false;
+          const configBody = document.getElementById('custom-dimension-config-body');
+          if (configBody) {
             configBody.classList.remove('block');
             configBody.classList.add('hidden');
             previewTestState.dimLength = '';
@@ -9713,27 +10146,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               dimLabelInp.classList.add('border-slate-400');
             }
           }
+
+          updateVariationTitleComboboxRecommendations();
+          refreshVariationTitleDuplicateErrors();
+          updateProductCardLivePreview();
         }
-
-        // Lapisan 2: Toggle visibilitas .option-dim-calc-wrapper di setiap baris opsi
-        document.querySelectorAll('.option-dim-calc-wrapper').forEach(w => {
-          if (isChecked) {
-            w.classList.remove('hidden');
-            w.classList.add('flex');
-          } else {
-            w.classList.remove('flex');
-            w.classList.add('hidden');
-          }
-        });
-
-        // Update sandbox kalkulator
-        if (isChecked) {
-          updateSandboxCalculation();
-        }
-
-        updateVariationTitleComboboxRecommendations();
-        refreshVariationTitleDuplicateErrors();
-        updateProductCardLivePreview();
       };
     }
 
@@ -9784,6 +10201,24 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
           bindSandboxCheckboxes();
         }
+        updateSandboxCalculation();
+      };
+    }
+
+    // LAPISAN 1: Ketentuan Luas Minimal (Harga Jual: < 1 m² Dianggap 1 m²)
+    const toggleDimMinOnePrice = document.getElementById('toggle-dim-min-one-price');
+    if (toggleDimMinOnePrice) {
+      toggleDimMinOnePrice.onchange = (e) => {
+        primaryState.dim_min_one_price = e.target.checked;
+        updateSandboxCalculation();
+      };
+    }
+
+    // LAPISAN 1: Ketentuan Luas Minimal (Biaya Modal / HPP: < 1 m² Dianggap 1 m² - Independen)
+    const toggleDimMinOneCost = document.getElementById('toggle-dim-min-one-cost');
+    if (toggleDimMinOneCost) {
+      toggleDimMinOneCost.onchange = (e) => {
+        primaryState.dim_min_one_cost = e.target.checked;
         updateSandboxCalculation();
       };
     }
@@ -13555,6 +13990,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (mainCompSel) primaryState.dimension_main_component = mainCompSel.value;
     const dimUnitSel = document.getElementById('select-dimension-unit');
     if (dimUnitSel) primaryState.dimension_unit = dimUnitSel.value || 'meter';
+    const chkMinOnePrice = document.getElementById('toggle-dim-min-one-price');
+    if (chkMinOnePrice) primaryState.dim_min_one_price = chkMinOnePrice.checked;
+    const chkMinOneCost = document.getElementById('toggle-dim-min-one-cost');
+    if (chkMinOneCost) primaryState.dim_min_one_cost = chkMinOneCost.checked;
+    if (!Array.isArray(primaryState.dimension_rules)) {
+      primaryState.dimension_rules = [];
+    }
 
     // Single Price & Cost for Normal Single
     const singlePriceInp = document.getElementById('input-single-price');
@@ -14337,7 +14779,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     renderOptionDimCalcControl,
     renderSandboxCalculationResultsHtml,
     updateSandboxCalculation,
-    renderCustomDimensionCard
+    renderCustomDimensionCard,
+    validatePrerequisitesBeforeCustomDimension
   };
 })();
 
@@ -14345,5 +14788,6 @@ window.ProductForm = ProductForm;
 window.renderOptionDimCalcControl = ProductForm.renderOptionDimCalcControl;
 window.renderSandboxCalculationResultsHtml = ProductForm.renderSandboxCalculationResultsHtml;
 window.updateSandboxCalculation = ProductForm.updateSandboxCalculation;
+window.validatePrerequisitesBeforeCustomDimension = ProductForm.validatePrerequisitesBeforeCustomDimension;
 
 

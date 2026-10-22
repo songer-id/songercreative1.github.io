@@ -1300,6 +1300,17 @@ input.toggle-same-cost:checked ~ div::after {
   transform: scale(0.99);
 }
 
+#card-custom-dimension-pxl label:has(#toggle-dim-min-one-price),
+#card-custom-dimension-pxl label:has(#toggle-dim-min-one-cost) {
+  touch-action: manipulation;
+  user-select: none;
+  transition: all 0.15s ease-in-out;
+}
+#card-custom-dimension-pxl label:has(#toggle-dim-min-one-price):active,
+#card-custom-dimension-pxl label:has(#toggle-dim-min-one-cost):active {
+  transform: scale(0.985);
+}
+
 .input-shopee-dim-p::-webkit-outer-spin-button,
 .input-shopee-dim-p::-webkit-inner-spin-button,
 .input-shopee-dim-l::-webkit-outer-spin-button,
