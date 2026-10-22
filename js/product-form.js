@@ -6042,11 +6042,20 @@ const ProductForm = (() => {
       (r.option_ids.includes(optId) || (optName && r.option_ids.includes(optName)))
     );
     if (specificRule) {
+      const optOverride = specificRule.option_rules?.[optId] || (optName ? specificRule.option_rules?.[optName] : null);
+      if (optOverride) {
+        const mode = optOverride.calc_mode || 'area';
+        return {
+          calc_mode: mode,
+          dim_add_val: parseFloat(optOverride.dim_add_val) || 0,
+          dim_add_side: optOverride.dim_add_side || (mode === 'side_length' ? 'top' : (mode === 'add_dim' ? 'p_l' : 'top'))
+        };
+      }
       const mode = specificRule.calc_mode || 'area';
       return {
         calc_mode: mode,
         dim_add_val: parseFloat(specificRule.dim_add_val) || 0,
-        dim_add_side: specificRule.dim_add_side || (mode === 'side_length' ? 'top' : 'p_l')
+        dim_add_side: specificRule.dim_add_side || (mode === 'side_length' ? 'top' : (mode === 'add_dim' ? 'p_l' : 'top'))
       };
     }
 
@@ -6154,8 +6163,16 @@ const ProductForm = (() => {
         else if (item.dim_add_side === 'perimeter') sideLabel = 'Keliling (2P+2L)';
         modeBadge = `<span class="px-1.5 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 rounded text-[10px] font-bold shrink-0">${sideLabel}</span>`;
       } else if (item.calc_mode === 'add_dim') {
-        const sideText = item.dim_add_side === 'p' ? 'P' : (item.dim_add_side === 'l' ? 'L' : 'P & L');
-        modeBadge = `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] font-bold shrink-0">+${item.dim_add_val} ${dimUnit || ''} ke ${sideText}</span>`;
+        let sideText = 'P & L';
+        if (item.dim_add_side === 'top') sideText = 'Atas (+P)';
+        else if (item.dim_add_side === 'bottom') sideText = 'Bawah (+P)';
+        else if (item.dim_add_side === 'top_bottom') sideText = 'Atas & Bawah (+P)';
+        else if (item.dim_add_side === 'p') sideText = 'P';
+        else if (item.dim_add_side === 'side_one') sideText = 'Kiri/Kanan (+L)';
+        else if (item.dim_add_side === 'left_right') sideText = 'Kanan & Kiri (+L)';
+        else if (item.dim_add_side === 'l') sideText = 'L';
+        else if (item.dim_add_side === 'p_l' || item.dim_add_side === 'perimeter') sideText = 'Semua Sisi (+P&L)';
+        modeBadge = `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] font-bold shrink-0">+${item.dim_add_val} ${dimUnit || ''} (${sideText})</span>`;
       } else {
         modeBadge = `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[10px] font-bold shrink-0">Flat</span>`;
       }
@@ -6224,8 +6241,8 @@ const ProductForm = (() => {
               <span class="text-slate-600 font-extrabold text-sm select-none">+</span>
               <input 
                 type="number" 
-                step="any"
-                min="0"
+                step="any" 
+                min="0" 
                 placeholder="0" 
                 value="${dimAddVal}" 
                 class="input-option-dim-add w-full sm:w-20 px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900 outline-none focus:border-amber-500 text-center shadow-2xs" 
@@ -6235,9 +6252,14 @@ const ProductForm = (() => {
               <span class="text-[11px] font-bold text-slate-600 dim-unit-text shrink-0">${dimUnit || '-'}</span>
             </div>
             <select class="select-option-dim-side w-full sm:w-auto px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" data-tier="${tier}" data-id="${finId}">
-              <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke Panjang & Lebar (P & L)</option>
-              <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P) Saja</option>
-              <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L) Saja</option>
+              <option value="top" ${dimAddSide === 'top' ? 'selected' : ''}>Atas Saja (+ ke P)</option>
+              <option value="bottom" ${dimAddSide === 'bottom' ? 'selected' : ''}>Bawah Saja (+ ke P)</option>
+              <option value="top_bottom" ${dimAddSide === 'top_bottom' ? 'selected' : ''}>Atas & Bawah (+ ke P)</option>
+              <option value="side_one" ${dimAddSide === 'side_one' ? 'selected' : ''}>Kiri / Kanan Saja (+ ke L)</option>
+              <option value="left_right" ${dimAddSide === 'left_right' ? 'selected' : ''}>Kanan & Kiri (+ ke L)</option>
+              <option value="p_l" ${dimAddSide === 'p_l' || dimAddSide === 'perimeter' ? 'selected' : ''}>Keliling / Semua Sisi (+ ke P & L)</option>
+              ${dimAddSide === 'p' ? '<option value="p" selected>Ke Panjang (P) Saja</option>' : ''}
+              ${dimAddSide === 'l' ? '<option value="l" selected>Ke Lebar (L) Saja</option>' : ''}
             </select>
           </div>
           <div class="dim-side-controls-wrapper ${calcMode === 'side_length' ? 'block' : 'hidden'} w-full md:w-auto">
@@ -6320,19 +6342,40 @@ const ProductForm = (() => {
       if (f.calc_mode === 'add_dim') {
         hasAddDimEffect = true;
         const val = parseFloat(f.dim_add_val) || 0;
-        if (f.dim_add_side === 'p') {
+        const side = f.dim_add_side || 'p_l';
+
+        if (side === 'top') {
+          pEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke Atas)`);
+        } else if (side === 'bottom') {
+          pEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke Bawah)`);
+        } else if (side === 'top_bottom') {
+          pEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke Atas & Bawah)`);
+        } else if (side === 'p') {
           pEff += val;
           addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke P)`);
-        } else if (f.dim_add_side === 'l') {
+        } else if (side === 'side_one') {
+          lEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke Kiri/Kanan)`);
+        } else if (side === 'left_right') {
+          lEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke Kanan & Kiri)`);
+        } else if (side === 'l') {
           lEff += val;
           addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke L)`);
-        } else if (f.dim_add_side === 'p_l') {
+        } else if (side === 'p_l' || side === 'perimeter') {
           pEff += val;
           lEff += val;
           addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke P & L)`);
-        } else if (f.dim_add_side === 'area_add') {
+        } else if (side === 'area_add') {
           directAreaAdd += (val * factor * factor);
           addDimDetails.push(`${f.name} (+${val} ke Luas)`);
+        } else {
+          pEff += val;
+          lEff += val;
+          addDimDetails.push(`${f.name} (+${val} ${dimUnit} ke P & L)`);
         }
       }
     });
@@ -6419,7 +6462,16 @@ const ProductForm = (() => {
       } else if (f.calc_mode === 'add_dim') {
         fPrice = f.price;
         fCost = f.cost_price;
-        formulaText = `Bahan bertambah (+${f.dim_add_val} ${dimUnit || ''})${f.price > 0 ? ` + Jasa: Rp ${formatNumberLocal(f.price)}` : ' (Tanpa Biaya Tambahan)'}`;
+        let sideText = 'P & L';
+        if (f.dim_add_side === 'top') sideText = 'Atas (+P)';
+        else if (f.dim_add_side === 'bottom') sideText = 'Bawah (+P)';
+        else if (f.dim_add_side === 'top_bottom') sideText = 'Atas & Bawah (+P)';
+        else if (f.dim_add_side === 'p') sideText = 'P';
+        else if (f.dim_add_side === 'side_one') sideText = 'Kiri/Kanan (+L)';
+        else if (f.dim_add_side === 'left_right') sideText = 'Kanan & Kiri (+L)';
+        else if (f.dim_add_side === 'l') sideText = 'L';
+        else if (f.dim_add_side === 'p_l' || f.dim_add_side === 'perimeter') sideText = 'Semua Sisi (+P&L)';
+        formulaText = `Bahan bertambah (+${f.dim_add_val} ${dimUnit || ''} ke ${sideText})${f.price > 0 ? ` + Jasa: Rp ${formatNumberLocal(f.price)}` : ' (Tanpa Biaya Tambahan)'}`;
       }
 
       finPriceTotal += fPrice;
@@ -6540,13 +6592,302 @@ const ProductForm = (() => {
     }
   }
 
+  function getRuleSummaryBadgeHtml(calcMode, dimAddSide, dimAddVal, dimUnit) {
+    if (calcMode === 'area') {
+      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200 shrink-0">Ikut Luas</span>`;
+    }
+    if (calcMode === 'side_length') {
+      let sideLabel = 'Sisi';
+      if (dimAddSide === 'top') sideLabel = 'Atas (1×P)';
+      else if (dimAddSide === 'bottom') sideLabel = 'Bawah (1×P)';
+      else if (dimAddSide === 'top_bottom') sideLabel = 'Atas & Bawah (2×P)';
+      else if (dimAddSide === 'side_one') sideLabel = 'Samping (1×L)';
+      else if (dimAddSide === 'left_right') sideLabel = 'Kanan & Kiri (2×L)';
+      else if (dimAddSide === 'perimeter') sideLabel = 'Keliling (2P+2L)';
+      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 shrink-0">${sideLabel}</span>`;
+    }
+    if (calcMode === 'add_dim') {
+      let sideLabel = 'P & L';
+      if (dimAddSide === 'top') sideLabel = 'Atas (+P)';
+      else if (dimAddSide === 'bottom') sideLabel = 'Bawah (+P)';
+      else if (dimAddSide === 'top_bottom') sideLabel = 'Atas & Bawah (+P)';
+      else if (dimAddSide === 'side_one') sideLabel = 'Kiri/Kanan (+L)';
+      else if (dimAddSide === 'left_right') sideLabel = 'Kanan & Kiri (+L)';
+      else if (dimAddSide === 'p') sideLabel = 'P';
+      else if (dimAddSide === 'l') sideLabel = 'L';
+      const valStr = (dimAddVal !== undefined && dimAddVal !== null && dimAddVal !== '') ? dimAddVal : 0;
+      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">+${valStr} ${dimUnit || ''} (${sideLabel})</span>`;
+    }
+    return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">Flat</span>`;
+  }
+
+  function renderDimensionRuleModalsHtml(dimUnit) {
+    return `
+      <!-- 1. Modal Bantuan Aturan Ukuran (?) -->
+      <div id="modal-help-dimension-rule" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-4 sm:p-5 space-y-4 border border-slate-100 animate-modal-pop relative max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
+                <i class="bi bi-question-lg text-sm"></i>
+              </div>
+              <h3 class="text-sm font-bold text-slate-800">Panduan Aturan Ukuran Variasi</h3>
+            </div>
+            <button type="button" class="btn-close-help-rule text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+              <i class="bi bi-x-lg text-xs"></i>
+            </button>
+          </div>
+          
+          <div class="space-y-2.5 text-xs text-slate-600">
+            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-200 text-slate-700 font-bold">1. Flat</span>
+                <span>Harga Tetap / Normal (Per Item)</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">
+                Harga variasi dihitung tetap per pcs tanpa terpengaruh ukuran P × L (contoh: Biaya Desain, Jasa Setting).
+              </p>
+            </div>
+
+            <div class="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
+              <div class="font-bold text-blue-900 flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-blue-800 font-bold">2. Ikut Luas</span>
+                <span>Ikut Luas Penuh (P × L)</span>
+              </div>
+              <p class="text-[11px] text-blue-700 leading-relaxed">
+                Harga variasi dikalikan total luas m² produk (P × L). Sangat cocok untuk laminasi doff/glossy, vernis, atau bahan pelapis.
+              </p>
+            </div>
+
+            <div class="p-2.5 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1">
+              <div class="font-bold text-indigo-900 flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 rounded text-[10px] bg-indigo-100 text-indigo-800 font-bold">3. Ikut Sisi</span>
+                <span>Ikut Ukuran Sisi (Atas / Bawah / Samping)</span>
+              </div>
+              <p class="text-[11px] text-indigo-700 leading-relaxed">
+                Harga variasi dikalikan panjang sisi yang dipilih (1×P, 2×P, 1×L, 2×L, atau Keliling 2P+2L). Cocok untuk mata ayam per meter atau jahit keliling.
+              </p>
+            </div>
+
+            <div class="p-2.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
+              <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-900 font-bold">4. +Ukuran</span>
+                <span>Tambah Ukuran Bahan (+ Ukuran)</span>
+              </div>
+              <p class="text-[11px] text-amber-800 leading-relaxed">
+                Menambah ukuran fisik bahan sebelum dicetak pada sisi yang dipilih (Atas, Bawah, Kanan/Kiri, atau Keliling). Cocok untuk slongsong atau lipatan lem banner.
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex justify-end">
+            <button type="button" class="btn-close-help-rule px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer">
+              Mengerti
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Modal Atur Perlakuan Ukuran Opsi / Grup (Ikon Gear) -->
+      <div id="modal-option-dimension-rule" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs hidden">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-w-md w-full p-4 sm:p-5 space-y-4 border border-slate-100 animate-modal-pop relative max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
+                <i class="bi bi-gear-fill"></i>
+              </div>
+              <h3 id="modal-option-rule-title" class="text-xs sm:text-sm font-bold text-slate-800 truncate">
+                Atur Perlakuan Ukuran: Opsi
+              </h3>
+            </div>
+            <button type="button" class="btn-close-option-rule-modal text-slate-400 hover:text-slate-600 p-1 cursor-pointer shrink-0">
+              <i class="bi bi-x-lg text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Hidden identifiers -->
+          <input type="hidden" id="modal-rule-active-rule-id" value="" />
+          <input type="hidden" id="modal-rule-active-opt-id" value="" />
+          <input type="hidden" id="modal-rule-active-opt-name" value="" />
+          <input type="hidden" id="modal-rule-active-is-all" value="false" />
+
+          <!-- Body -->
+          <div class="space-y-3.5">
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-800">
+                Mode Hitung / Perlakuan Ukuran:
+              </label>
+              <select id="modal-select-calc-mode" class="w-full px-3 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer">
+                <option value="flat">Harga Tetap / Normal (Per Item)</option>
+                <option value="area">Ikut Luas Penuh (P × L)</option>
+                <option value="side_length">Ikut Ukuran Sisi (Atas / Bawah / Samping)</option>
+                <option value="add_dim">Tambah Ukuran Bahan (+ Ukuran)</option>
+              </select>
+            </div>
+
+            <!-- Detail container: Flat -->
+            <div id="modal-container-flat" class="hidden p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1">
+              <div class="font-bold text-slate-700">Harga Tetap (Flat per Pcs)</div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">
+                Harga opsi tidak dipengaruhi oleh ukuran produk (P × L). Tetap dihitung sesuai harga satuan opsi.
+              </p>
+            </div>
+
+            <!-- Detail container: Area -->
+            <div id="modal-container-area" class="hidden p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-800 space-y-1">
+              <div class="font-bold text-blue-900">Mengikuti Luas Penuh (P × L)</div>
+              <p class="text-[11px] text-blue-700 leading-relaxed">
+                Biaya opsi dihitung proporsional mengikuti luas murni (atau minimal 1 m² jika aturan pembulatan aktif).
+              </p>
+            </div>
+
+            <!-- Detail container: Side Length -->
+            <div id="modal-container-side-length" class="hidden p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2">
+              <label class="block text-xs font-bold text-indigo-900">
+                Pilih Sisi Ukuran yang Diikuti:
+              </label>
+              <select id="modal-select-side-len" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500 shadow-2xs cursor-pointer">
+                <option value="top">Atas Saja (1 × P)</option>
+                <option value="bottom">Bawah Saja (1 × P)</option>
+                <option value="top_bottom">Atas & Bawah (2 × P)</option>
+                <option value="side_one">Samping Saja - Kanan/Kiri (1 × L)</option>
+                <option value="left_right">Samping Kanan & Kiri (2 × L)</option>
+                <option value="perimeter">Keliling Penuh (2P + 2L)</option>
+              </select>
+              <p class="text-[11px] text-indigo-600 leading-tight">
+                Harga opsi dikalikan panjang meter sisi yang dipilih.
+              </p>
+            </div>
+
+            <!-- Detail container: Add Dimension -->
+            <div id="modal-container-add-dim" class="hidden p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2.5">
+              <div class="space-y-1">
+                <label class="block text-xs font-bold text-amber-900">
+                  Besar Tambahan Ukuran Bahan:
+                </label>
+                <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-lg px-3 py-2 shadow-2xs">
+                  <span class="text-slate-600 font-extrabold text-xs select-none">+</span>
+                  <input 
+                    type="number" 
+                    step="any" 
+                    min="0" 
+                    id="modal-input-dim-add-val" 
+                    placeholder="0" 
+                    class="w-full bg-transparent text-xs font-bold text-slate-900 outline-none text-center" 
+                  />
+                  <span class="text-xs font-bold text-slate-500 shrink-0 modal-dim-unit-text">${dimUnit || '-'}</span>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <label class="block text-xs font-bold text-amber-900">
+                  Sisi Penambahan Bahan:
+                </label>
+                <select id="modal-select-add-side" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer">
+                  <option value="top">Atas Saja (+ ke P)</option>
+                  <option value="bottom">Bawah Saja (+ ke P)</option>
+                  <option value="top_bottom">Atas & Bawah (+ ke P)</option>
+                  <option value="side_one">Kiri / Kanan Saja (+ ke L)</option>
+                  <option value="left_right">Kanan & Kiri (+ ke L)</option>
+                  <option value="p_l">Keliling / Semua Sisi (+ ke P & L)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Buttons -->
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button type="button" class="btn-close-option-rule-modal px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+              Batal
+            </button>
+            <button type="button" id="btn-save-option-rule-modal" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer">
+              Simpan Aturan
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateModalDetailVisibility(calcMode) {
+    const cFlat = document.getElementById('modal-container-flat');
+    const cArea = document.getElementById('modal-container-area');
+    const cSide = document.getElementById('modal-container-side-length');
+    const cAdd = document.getElementById('modal-container-add-dim');
+
+    if (cFlat) cFlat.classList.toggle('hidden', calcMode !== 'flat');
+    if (cArea) cArea.classList.toggle('hidden', calcMode !== 'area');
+    if (cSide) cSide.classList.toggle('hidden', calcMode !== 'side_length');
+    if (cAdd) cAdd.classList.toggle('hidden', calcMode !== 'add_dim');
+  }
+
+  function openOptionDimensionRuleModal(ruleId, optId, optName, isAll = false) {
+    const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
+    if (!rule) return;
+
+    const modal = document.getElementById('modal-option-dimension-rule');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('modal-option-rule-title');
+    const inpRuleId = document.getElementById('modal-rule-active-rule-id');
+    const inpOptId = document.getElementById('modal-rule-active-opt-id');
+    const inpOptName = document.getElementById('modal-rule-active-opt-name');
+    const inpIsAll = document.getElementById('modal-rule-active-is-all');
+
+    if (inpRuleId) inpRuleId.value = ruleId;
+    if (inpOptId) inpOptId.value = optId || '';
+    if (inpOptName) inpOptName.value = optName || '';
+    if (inpIsAll) inpIsAll.value = isAll ? 'true' : 'false';
+
+    if (titleEl) {
+      titleEl.textContent = isAll 
+        ? `Atur Perlakuan Ukuran: ${optName || 'Semua Opsi'}`
+        : `Atur Perlakuan Ukuran: ${optName || optId}`;
+    }
+
+    let currentCalcMode = 'area';
+    let currentDimSide = 'p_l';
+    let currentDimVal = 0;
+
+    if (isAll) {
+      currentCalcMode = rule.calc_mode || 'area';
+      currentDimSide = rule.dim_add_side || (currentCalcMode === 'side_length' ? 'top' : 'p_l');
+      currentDimVal = rule.dim_add_val || 0;
+    } else {
+      const optOverride = rule.option_rules?.[optId] || (optName ? rule.option_rules?.[optName] : null);
+      if (optOverride) {
+        currentCalcMode = optOverride.calc_mode || 'area';
+        currentDimSide = optOverride.dim_add_side || (currentCalcMode === 'side_length' ? 'top' : 'p_l');
+        currentDimVal = optOverride.dim_add_val || 0;
+      } else {
+        currentCalcMode = rule.calc_mode || 'area';
+        currentDimSide = rule.dim_add_side || (currentCalcMode === 'side_length' ? 'top' : 'p_l');
+        currentDimVal = rule.dim_add_val || 0;
+      }
+    }
+
+    const selCalcMode = document.getElementById('modal-select-calc-mode');
+    const selSideLen = document.getElementById('modal-select-side-len');
+    const inpDimAddVal = document.getElementById('modal-input-dim-add-val');
+    const selAddSide = document.getElementById('modal-select-add-side');
+
+    if (selCalcMode) selCalcMode.value = currentCalcMode;
+    if (selSideLen) selSideLen.value = ['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'perimeter'].includes(currentDimSide) ? currentDimSide : 'top';
+    if (inpDimAddVal) inpDimAddVal.value = currentDimVal || '';
+    if (selAddSide) selAddSide.value = currentDimSide || 'p_l';
+
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '-';
+    modal.querySelectorAll('.modal-dim-unit-text').forEach(el => el.textContent = dimUnit);
+
+    updateModalDetailVisibility(currentCalcMode);
+    modal.classList.remove('hidden');
+  }
+
   function renderSingleDimensionRuleCardHtml(rule, idx, availableTiers, dimUnit) {
     const ruleId = rule.id;
     const currentTier = rule.tier_key || '';
     const currentScope = rule.target_scope || 'specific';
-    const calcMode = rule.calc_mode || 'area';
-    const dimAddVal = rule.dim_add_val !== undefined && rule.dim_add_val !== null ? rule.dim_add_val : 0;
-    const dimAddSide = rule.dim_add_side || 'p_l';
     const selectedOptionIds = Array.isArray(rule.option_ids) ? rule.option_ids : [];
 
     const validOptions = currentTier ? getValidOptionsForTier(currentTier) : [];
@@ -6563,7 +6904,6 @@ const ProductForm = (() => {
       }
     });
 
-    // Hitung counter valid (hanya opsi valid di aturan ini yang belum diklaim aturan lain)
     const validSelectedCount = validOptions.filter(opt => 
       !usedInOtherRules.has(String(opt.id)) && 
       !usedInOtherRules.has(String(opt.name)) && 
@@ -6630,7 +6970,7 @@ const ProductForm = (() => {
                       class="radio-rule-scope accent-emerald-600 ${hasOtherRulesOnTier ? 'cursor-not-allowed pointer-events-none' : 'cursor-pointer'}" 
                       data-rule-id="${ruleId}" 
                       ${currentScope === 'all' && !hasOtherRulesOnTier ? 'checked' : ''} 
-                      ${hasOtherRulesOnTier ? 'disabled' : ''}
+                      ${hasOtherRulesOnTier ? 'disabled' : ''} 
                     />
                     <span class="text-xs font-medium text-slate-700">Semua Opsi di Variasi Ini</span>
                   </label>
@@ -6653,110 +6993,89 @@ const ProductForm = (() => {
 
                         if (isUsedInOther) {
                           return `
-                            <label class="rule-option-chip inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition opacity-40 bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none" title="Opsi ini sudah digunakan di aturan lain">
+                            <div class="rule-option-item inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition opacity-40 bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none" title="Opsi ini sudah digunakan di aturan lain">
                               <input 
                                 type="checkbox" 
                                 class="chk-rule-option accent-emerald-600 w-3.5 h-3.5 rounded cursor-not-allowed" 
                                 data-rule-id="${ruleId}" 
                                 value="${escapeHtml(opt.id)}" 
-                                data-name="${escapeHtml(opt.name)}"
+                                data-name="${escapeHtml(opt.name)}" 
                                 disabled
                               />
                               <span>${escapeHtml(opt.name)}</span>
                               <span class="text-[9px] font-normal italic text-slate-400 bg-slate-200/80 px-1 py-0.5 rounded leading-none">(Di aturan lain)</span>
-                            </label>
+                            </div>
                           `;
                         }
 
+                        const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
+                        const optMode = optOverride ? optOverride.calc_mode : (rule.calc_mode || 'area');
+                        const optSide = optOverride ? optOverride.dim_add_side : (rule.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l'));
+                        const optVal = optOverride ? optOverride.dim_add_val : (rule.dim_add_val || 0);
+                        const optBadge = getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit);
+
                         return `
-                          <label class="rule-option-chip inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer select-none transition ${isOptChecked ? 'bg-emerald-50 text-emerald-800 border-emerald-400 shadow-2xs' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'}">
-                            <input 
-                              type="checkbox" 
-                              class="chk-rule-option accent-emerald-600 w-3.5 h-3.5 rounded cursor-pointer" 
-                              data-rule-id="${ruleId}" 
-                              value="${escapeHtml(opt.id)}" 
-                              data-name="${escapeHtml(opt.name)}"
-                              ${isOptChecked ? 'checked' : ''}
-                            />
-                            <span>${escapeHtml(opt.name)}</span>
-                          </label>
+                          <div class="rule-option-item inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition ${isOptChecked ? 'bg-emerald-50/80 text-emerald-900 border-emerald-300 shadow-2xs' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'}">
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                class="chk-rule-option accent-emerald-600 w-3.5 h-3.5 rounded cursor-pointer shrink-0" 
+                                data-rule-id="${ruleId}" 
+                                value="${escapeHtml(opt.id)}" 
+                                data-name="${escapeHtml(opt.name)}" 
+                                ${isOptChecked ? 'checked' : ''} 
+                              />
+                              <span class="truncate max-w-[140px] sm:max-w-none">${escapeHtml(opt.name)}</span>
+                            </label>
+                            ${isOptChecked ? `
+                              <div class="inline-flex items-center gap-1 shrink-0 ml-1">
+                                ${optBadge}
+                                <button 
+                                  type="button" 
+                                  class="btn-open-option-gear inline-flex items-center justify-center w-6 h-6 rounded-md bg-white hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 transition cursor-pointer shadow-2xs" 
+                                  data-rule-id="${ruleId}" 
+                                  data-opt-id="${escapeHtml(opt.id)}" 
+                                  data-opt-name="${escapeHtml(opt.name)}" 
+                                  data-tier="${currentTier}" 
+                                  title="Atur Perlakuan Ukuran: ${escapeHtml(opt.name)}"
+                                >
+                                  <i class="bi bi-gear-fill text-[11px]"></i>
+                                </button>
+                              </div>
+                            ` : ''}
+                          </div>
                         `;
                       }).join('')}
                     </div>
                   `}
                 </div>
               ` : `
-                <div class="p-2.5 bg-emerald-50/70 border border-emerald-200/90 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
-                  <i class="bi bi-check2-circle text-emerald-600 shrink-0 text-sm"></i>
-                  <span>Aturan ini otomatis berlaku untuk <strong>seluruh opsi</strong> di variasi terpilih.</span>
-                </div>
-              `}
-            </div>
-
-            <!-- 3. Dropdown Jenis Perlakuan / Mode Hitung -->
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-1">
-              <div class="${calcMode === 'add_dim' || calcMode === 'side_length' ? 'sm:col-span-6' : 'sm:col-span-12'} space-y-1">
-                <label class="block text-[11px] font-bold text-slate-700">
-                  Mode Hitung / Perlakuan Ukuran:
-                </label>
-                <select 
-                  class="select-rule-calc-mode w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer" 
-                  data-rule-id="${ruleId}" 
-                >
-                  <option value="area" ${calcMode === 'area' ? 'selected' : ''}>Ikut Luas Penuh (P × L)</option>
-                  <option value="side_length" ${calcMode === 'side_length' ? 'selected' : ''}>Ikut Ukuran Sisi (Atas / Bawah / Samping)</option>
-                  <option value="add_dim" ${calcMode === 'add_dim' ? 'selected' : ''}>Tambah Ukuran Bahan (+ Ukuran)</option>
-                </select>
-              </div>
-
-              <!-- Jika calc_mode === 'add_dim', tampilkan input angka tambahan & sisi penambahan -->
-              ${calcMode === 'add_dim' ? `
-                <div class="sm:col-span-6 space-y-1 bg-amber-50/70 border border-amber-200 rounded-xl p-2.5">
-                  <label class="block text-[11px] font-bold text-amber-900">
-                    Besar Tambahan & Sisi Penambahan:
-                  </label>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg px-2 py-1 shadow-2xs">
-                      <span class="text-slate-600 font-extrabold text-xs select-none">+</span>
-                      <input 
-                        type="number" 
-                        step="any" 
-                        min="0" 
-                        placeholder="0" 
-                        value="${dimAddVal}" 
-                        class="input-rule-dim-add w-full bg-transparent text-xs font-bold text-slate-900 outline-none text-center" 
-                        data-rule-id="${ruleId}" 
-                      />
-                      <span class="text-[10px] font-bold text-slate-500 shrink-0">${dimUnit || '-'}</span>
+                <!-- Tampilan Cakupan Semua Opsi di Variasi Ini (Dengan Ikon Gear & Badge) -->
+                ${(() => {
+                  const groupBadge = getRuleSummaryBadgeHtml(rule.calc_mode || 'area', rule.dim_add_side || ((rule.calc_mode || 'area') === 'side_length' ? 'top' : 'p_l'), rule.dim_add_val || 0, dimUnit);
+                  return `
+                    <div class="p-2.5 bg-emerald-50/70 border border-emerald-200/90 rounded-lg text-xs text-emerald-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div class="flex items-center gap-2">
+                        <i class="bi bi-check2-circle text-emerald-600 shrink-0 text-sm"></i>
+                        <span>Berlaku untuk <strong>seluruh opsi</strong> di variasi terpilih.</span>
+                      </div>
+                      <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                        ${groupBadge}
+                        <button 
+                          type="button" 
+                          class="btn-open-group-gear inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 border border-emerald-300 text-xs font-bold transition shadow-2xs cursor-pointer" 
+                          data-rule-id="${ruleId}" 
+                          data-tier="${currentTier}" 
+                          title="Atur Perlakuan Ukuran Semua Opsi"
+                        >
+                          <i class="bi bi-gear-fill text-xs text-emerald-700"></i>
+                          <span>Atur Perlakuan</span>
+                        </button>
+                      </div>
                     </div>
-                    <select 
-                      class="select-rule-dim-side w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-amber-500 shadow-2xs cursor-pointer" 
-                      data-rule-id="${ruleId}" 
-                    >
-                      <option value="p_l" ${dimAddSide === 'p_l' ? 'selected' : ''}>Ke Panjang & Lebar (P & L)</option>
-                      <option value="p" ${dimAddSide === 'p' ? 'selected' : ''}>Ke Panjang (P) Saja</option>
-                      <option value="l" ${dimAddSide === 'l' ? 'selected' : ''}>Ke Lebar (L) Saja</option>
-                    </select>
-                  </div>
-                </div>
-              ` : (calcMode === 'side_length' ? `
-                <div class="sm:col-span-6 space-y-1 bg-blue-50/70 border border-blue-200 rounded-xl p-2.5">
-                  <label class="block text-[11px] font-bold text-blue-900">
-                    Pilih Sisi Ukuran yang Diikuti:
-                  </label>
-                  <select 
-                    class="select-rule-dim-side w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 shadow-2xs cursor-pointer" 
-                    data-rule-id="${ruleId}" 
-                  >
-                    <option value="top" ${dimAddSide === 'top' ? 'selected' : ''}>Atas Saja (P)</option>
-                    <option value="bottom" ${dimAddSide === 'bottom' ? 'selected' : ''}>Bawah Saja (P)</option>
-                    <option value="top_bottom" ${dimAddSide === 'top_bottom' ? 'selected' : ''}>Atas & Bawah (2 × P)</option>
-                    <option value="side_one" ${dimAddSide === 'side_one' ? 'selected' : ''}>Samping Saja - Kanan/Kiri (L)</option>
-                    <option value="left_right" ${dimAddSide === 'left_right' ? 'selected' : ''}>Samping Kanan & Kiri (2 × L)</option>
-                    <option value="perimeter" ${dimAddSide === 'perimeter' ? 'selected' : ''}>Keliling Penuh (2P + 2L)</option>
-                  </select>
-                </div>
-              ` : '')}
+                  `;
+                })()}
+              `}
             </div>
           ` : ''}
         </div>
@@ -6769,9 +7088,31 @@ const ProductForm = (() => {
     const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || '';
     const globalAvailableTiers = getAvailableRuleTierChoices();
     const canAddNewRule = globalAvailableTiers.length > 0;
+    const hasRules = rules.length > 0;
+
+    const actionButtonsHtml = canAddNewRule ? `
+      <div class="inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+        <button 
+          type="button" 
+          id="btn-add-dimension-rule" 
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+        >
+          <span>+ Buat Aturan Khusus</span>
+        </button>
+        <button 
+          type="button" 
+          id="btn-help-dimension-rule" 
+          class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0" 
+          title="Bantuan Aturan Hitung Ukuran"
+        >
+          <i class="bi bi-question-circle text-xs"></i>
+        </button>
+      </div>
+    ` : '';
 
     return `
       <div id="dimension-rules-section" class="pt-3 border-t border-slate-100 space-y-3">
+        <!-- Header Bar -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div class="text-xs font-bold text-slate-800">
@@ -6781,15 +7122,8 @@ const ProductForm = (() => {
               Secara bawaan, variasi lain dihitung harga tetap per item. Tambahkan aturan jika ada variasi yang mengikuti luas ukuran.
             </p>
           </div>
-          ${canAddNewRule ? `
-            <button 
-              type="button" 
-              id="btn-add-dimension-rule" 
-              class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-700 hover:text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition shadow-2xs shrink-0 self-start sm:self-auto cursor-pointer"
-            >
-              <span>+ Buat Aturan Khusus</span>
-            </button>
-          ` : ''}
+          <!-- Jika BELUM ada aturan aktif, tombol tampil di header samping deskripsi -->
+          ${!hasRules ? actionButtonsHtml : ''}
         </div>
 
         ${!canAddNewRule && rules.length === 0 ? `
@@ -6815,6 +7149,16 @@ const ProductForm = (() => {
             return renderSingleDimensionRuleCardHtml(rule, idx, tiersForRule, dimUnit);
           }).join('')}
         </div>
+
+        <!-- Jika SUDAH ada aturan aktif (rules.length > 0), tombol tampil di bawah daftar aturan -->
+        ${hasRules ? `
+          <div class="pt-1">
+            ${actionButtonsHtml}
+          </div>
+        ` : ''}
+
+        <!-- Modals Terintegrasi Aturan Ukuran: Panduan (?) & Atur Perlakuan (Gear) -->
+        ${renderDimensionRuleModalsHtml(dimUnit)}
       </div>
     `;
   }
@@ -6865,7 +7209,7 @@ const ProductForm = (() => {
     const container = document.getElementById('dimension-rules-container');
     if (!container) return;
 
-    // 1. Tombol + Buat Aturan Khusus
+    // 1. Tombol + Buat Aturan Khusus (Bisa di header atau di bawah list)
     const btnAdd = document.getElementById('btn-add-dimension-rule');
     if (btnAdd) {
       btnAdd.onclick = (e) => {
@@ -6882,7 +7226,8 @@ const ProductForm = (() => {
           option_ids: [],
           calc_mode: 'area',
           dim_add_val: 0,
-          dim_add_side: 'p_l'
+          dim_add_side: 'p_l',
+          option_rules: {}
         };
         if (!Array.isArray(primaryState.dimension_rules)) {
           primaryState.dimension_rules = [];
@@ -6915,6 +7260,7 @@ const ProductForm = (() => {
         if (rule) {
           rule.tier_key = e.target.value;
           rule.option_ids = []; // reset pilihan opsi jika variasi berganti
+          rule.option_rules = {};
           refreshDimensionRulesDOM();
           refreshSandboxFinishingList();
           updateSandboxCalculation();
@@ -6938,7 +7284,7 @@ const ProductForm = (() => {
     });
 
     // 5. Cegah Klik Chip yang Terkunci / Disabled
-    container.querySelectorAll('.rule-option-chip').forEach(chip => {
+    container.querySelectorAll('.rule-option-chip, .rule-option-item').forEach(chip => {
       chip.onclick = (e) => {
         const chk = chip.querySelector('.chk-rule-option');
         if (chk && chk.disabled) {
@@ -6964,7 +7310,6 @@ const ProductForm = (() => {
           } else {
             rule.option_ids = rule.option_ids.filter(id => id !== optVal && id !== optName);
           }
-          // Refresh DOM agar aturan lain langsung mengunci atau membuka kunci opsi ini seketika
           refreshDimensionRulesDOM();
           refreshSandboxFinishingList();
           updateSandboxCalculation();
@@ -6972,53 +7317,128 @@ const ProductForm = (() => {
       };
     });
 
-    // 7. Dropdown Mode Hitung
-    container.querySelectorAll('.select-rule-calc-mode').forEach(sel => {
-      sel.onchange = (e) => {
-        const ruleId = sel.getAttribute('data-rule-id');
+    // 7. Tombol Ikon Gear per Opsi
+    container.querySelectorAll('.btn-open-option-gear').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const ruleId = btn.getAttribute('data-rule-id');
+        const optId = btn.getAttribute('data-opt-id');
+        const optName = btn.getAttribute('data-opt-name');
+        openOptionDimensionRuleModal(ruleId, optId, optName, false);
+      };
+    });
+
+    // 8. Tombol Ikon Gear Grup (Semua Opsi)
+    container.querySelectorAll('.btn-open-group-gear').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const ruleId = btn.getAttribute('data-rule-id');
+        const tierKey = btn.getAttribute('data-tier');
+        const tierName = getTierDisplayName(tierKey);
+        openOptionDimensionRuleModal(ruleId, '', tierName, true);
+      };
+    });
+
+    // 9. Tombol Bantuan (?) & Tutup Bantuan
+    const btnHelp = document.getElementById('btn-help-dimension-rule');
+    if (btnHelp) {
+      btnHelp.onclick = (e) => {
+        e.preventDefault();
+        const helpModal = document.getElementById('modal-help-dimension-rule');
+        if (helpModal) helpModal.classList.remove('hidden');
+      };
+    }
+
+    document.querySelectorAll('.btn-close-help-rule').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const helpModal = document.getElementById('modal-help-dimension-rule');
+        if (helpModal) helpModal.classList.add('hidden');
+      };
+    });
+
+    // 10. Kontrol Modal Pengaturan Perlakuan Ukuran
+    document.querySelectorAll('.btn-close-option-rule-modal').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const ruleModal = document.getElementById('modal-option-dimension-rule');
+        if (ruleModal) ruleModal.classList.add('hidden');
+      };
+    });
+
+    const modalCalcSel = document.getElementById('modal-select-calc-mode');
+    if (modalCalcSel) {
+      modalCalcSel.onchange = (e) => {
+        updateModalDetailVisibility(e.target.value);
+      };
+    }
+
+    const btnSaveModal = document.getElementById('btn-save-option-rule-modal');
+    if (btnSaveModal) {
+      btnSaveModal.onclick = (e) => {
+        e.preventDefault();
+        const ruleId = document.getElementById('modal-rule-active-rule-id')?.value;
+        const optId = document.getElementById('modal-rule-active-opt-id')?.value;
+        const optName = document.getElementById('modal-rule-active-opt-name')?.value;
+        const isAll = document.getElementById('modal-rule-active-is-all')?.value === 'true';
+
         const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
-        if (rule) {
-          rule.calc_mode = e.target.value;
-          if (rule.calc_mode === 'side_length') {
-            if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'perimeter'].includes(rule.dim_add_side)) {
-              rule.dim_add_side = 'top';
-            }
-          } else if (rule.calc_mode === 'add_dim') {
-            if (!['p_l', 'p', 'l'].includes(rule.dim_add_side)) {
-              rule.dim_add_side = 'p_l';
-            }
+        if (!rule) return;
+
+        const calcMode = document.getElementById('modal-select-calc-mode')?.value || 'area';
+        let dimAddSide = 'p_l';
+        let dimAddVal = 0;
+
+        if (calcMode === 'side_length') {
+          dimAddSide = document.getElementById('modal-select-side-len')?.value || 'top';
+        } else if (calcMode === 'add_dim') {
+          dimAddSide = document.getElementById('modal-select-add-side')?.value || 'p_l';
+          dimAddVal = parseFloat(document.getElementById('modal-input-dim-add-val')?.value) || 0;
+        }
+
+        if (isAll) {
+          rule.calc_mode = calcMode;
+          rule.dim_add_side = dimAddSide;
+          rule.dim_add_val = dimAddVal;
+        } else {
+          if (!rule.option_rules || typeof rule.option_rules !== 'object') {
+            rule.option_rules = {};
           }
-          refreshDimensionRulesDOM();
-          refreshSandboxFinishingList();
-          updateSandboxCalculation();
-        }
-      };
-    });
+          const ruleConfig = {
+            calc_mode: calcMode,
+            dim_add_side: dimAddSide,
+            dim_add_val: dimAddVal
+          };
+          if (optId) rule.option_rules[optId] = ruleConfig;
+          if (optName) rule.option_rules[optName] = ruleConfig;
 
-    // 8. Input Tambahan Ukuran (+ Dimensi)
-    container.querySelectorAll('.input-rule-dim-add').forEach(inp => {
-      inp.oninput = (e) => {
-        const ruleId = inp.getAttribute('data-rule-id');
-        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
-        if (rule) {
-          rule.dim_add_val = parseFloat(e.target.value) || 0;
-          refreshSandboxFinishingList();
-          updateSandboxCalculation();
+          // Pastikan opsi ini masuk ke option_ids jika belum ada
+          if (!Array.isArray(rule.option_ids)) rule.option_ids = [];
+          if (optId && !rule.option_ids.includes(optId)) rule.option_ids.push(optId);
+          if (optName && !rule.option_ids.includes(optName)) rule.option_ids.push(optName);
         }
-      };
-    });
 
-    // 9. Dropdown Sisi Penambahan
-    container.querySelectorAll('.select-rule-dim-side').forEach(sel => {
-      sel.onchange = (e) => {
-        const ruleId = sel.getAttribute('data-rule-id');
-        const rule = (primaryState.dimension_rules || []).find(r => r.id === ruleId);
-        if (rule) {
-          rule.dim_add_side = e.target.value;
-          refreshSandboxFinishingList();
-          updateSandboxCalculation();
-        }
+        const ruleModal = document.getElementById('modal-option-dimension-rule');
+        if (ruleModal) ruleModal.classList.add('hidden');
+
+        refreshDimensionRulesDOM();
+        refreshSandboxFinishingList();
+        updateSandboxCalculation();
       };
+    }
+
+    // Klik Backdrop untuk menutup modal
+    ['modal-help-dimension-rule', 'modal-option-dimension-rule'].forEach(mId => {
+      const modalEl = document.getElementById(mId);
+      if (modalEl) {
+        modalEl.onclick = (e) => {
+          if (e.target === modalEl) {
+            modalEl.classList.add('hidden');
+          }
+        };
+      }
     });
   }
 
@@ -11924,7 +12344,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                 item.dim_add_side = 'top';
               }
             } else if (item.calc_mode === 'add_dim') {
-              if (!['p_l', 'p', 'l'].includes(item.dim_add_side)) {
+              if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'p_l', 'p', 'l', 'perimeter'].includes(item.dim_add_side)) {
                 item.dim_add_side = 'p_l';
               }
             }
