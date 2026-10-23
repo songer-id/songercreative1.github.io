@@ -132,7 +132,7 @@ const ProductForm = (() => {
     // Step 3: Promo, Pengiriman & Deskripsi
     has_monthly_discount: false,
     include_in_monthly_promo: true, // default true — konfirmasi ikut Promo Otomatis Bulanan / Event Besar
-    promo_display_mode: 'always', // 'always' | 'scheduled' (default 'always')
+    promo_display_mode: 'daily', // Mode standar: 'daily' (Promo Harian)
     discount_type: 'percent', // 'percent' | 'nominal'
     discount_value: '', // kosong, tanpa default 0 agar penjual wajib mengisi secara sadar
     monthly_promo_label: 'Promo Bulanan',
@@ -389,7 +389,7 @@ const ProductForm = (() => {
       // Step 3: Promo, Pengiriman & Deskripsi
       has_monthly_discount: false,
       include_in_monthly_promo: true,
-      promo_display_mode: 'always',
+      promo_display_mode: 'daily',
       discount_type: 'percent',
       discount_value: '',
       monthly_promo_label: 'Promo Bulanan',
@@ -605,7 +605,7 @@ const ProductForm = (() => {
       // Step 3: Promo, Pengiriman & Deskripsi
       has_monthly_discount: Boolean(prod.has_monthly_discount),
       include_in_monthly_promo: prod.include_in_monthly_promo !== undefined ? Boolean(prod.include_in_monthly_promo) : true,
-      promo_display_mode: prod.promo_display_mode || (prod.promo_start_date || prod.promo_end_date ? 'scheduled' : 'always'),
+      promo_display_mode: prod.promo_display_mode || 'daily',
       discount_type: prod.discount_type || 'percent',
       discount_value: (prod.discount_value !== undefined && prod.discount_value !== null && prod.discount_value !== '') ? prod.discount_value : '',
       monthly_promo_label: prod.monthly_promo_label || 'Promo Bulanan',
@@ -6293,59 +6293,20 @@ const ProductForm = (() => {
                 </label>
               </div>
 
-              <!-- Bagian B: Mode Tampilan Promo Produk -->
-              <div class="space-y-2.5">
-                <label class="block text-xs font-bold text-slate-800">
-                  Mode Tampilan Promo Produk <span class="text-red-500">*</span>:
-                </label>
-                <div class="grid grid-cols-2 gap-2" id="promo-display-mode-selector-group">
-                  <!-- Selalu Tampil -->
-                  <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.promo_display_mode !== 'scheduled' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-2 select-none text-center">
-                    <input type="radio" name="promo_display_mode_radio" value="always" ${primaryState.promo_display_mode !== 'scheduled' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                    <span class="font-bold text-xs ${primaryState.promo_display_mode !== 'scheduled' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Selalu Tampil</span>
-                  </label>
-
-                  <!-- Jadwal Tertentu -->
-                  <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.promo_display_mode === 'scheduled' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-2 select-none text-center">
-                    <input type="radio" name="promo_display_mode_radio" value="scheduled" ${primaryState.promo_display_mode === 'scheduled' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                    <span class="font-bold text-xs ${primaryState.promo_display_mode === 'scheduled' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Jadwal Tertentu</span>
-                  </label>
+              <!-- Bagian B: Mode Tampilan Promo Harian & Status Migrasi Otomatis -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-800">Mode Tampilan Promo:</span>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Promo Harian
+                  </span>
                 </div>
-
-                <!-- Deskripsi Dinamis Mode Tampilan & Status Migrasi Otomatis -->
-                <div id="promo-mode-dynamic-info" class="p-2.5 rounded-xl text-[11px] leading-relaxed transition ${primaryState.promo_display_mode !== 'scheduled' ? (primaryState.include_in_monthly_promo !== false ? 'bg-emerald-50 border border-emerald-200 text-emerald-900 font-medium' : 'bg-slate-50 border border-slate-200 text-slate-700') : 'hidden'}">
-                  ${primaryState.promo_display_mode !== 'scheduled'
-                    ? (primaryState.include_in_monthly_promo !== false 
-                        ? '<i class="bi bi-patch-check-fill text-emerald-600 mr-1"></i> Promo buatan tampil setiap hari, dan otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat jadwal kampanye berlangsung.'
-                        : '<i class="bi bi-info-circle text-slate-500 mr-1"></i> Promo buatan tampil terus-menerus setiap hari tanpa batas waktu (tidak ikut berubah saat Promo Bulanan).')
-                    : ''}
-                </div>
-
-                <!-- Kotak Input Tanggal (Hanya Tampil jika Mode: Jadwal Tertentu) -->
-                <div id="promo-scheduled-dates-box" class="${primaryState.promo_display_mode === 'scheduled' ? 'grid' : 'hidden'} grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label for="input-promo-start-date" class="block text-[11px] font-bold text-slate-700 mb-1">
-                      Tanggal Mulai Promo:
-                    </label>
-                    <input 
-                      type="date" 
-                      id="input-promo-start-date" 
-                      value="${primaryState.promo_start_date || ''}" 
-                      class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-emerald-500 outline-none bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label for="input-promo-end-date" class="block text-[11px] font-bold text-slate-700 mb-1">
-                      Tanggal Selesai Promo:
-                    </label>
-                    <input 
-                      type="date" 
-                      id="input-promo-end-date" 
-                      value="${primaryState.promo_end_date || ''}" 
-                      class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-emerald-500 outline-none bg-white"
-                    />
-                  </div>
-                </div>
+                <!-- Deskripsi Dinamis Status Migrasi Otomatis (Ringkas 1 Baris Tanpa Ikon Berlebih) -->
+                <p id="promo-mode-dynamic-info" class="text-[11px] leading-relaxed p-2.5 rounded-xl border ${primaryState.include_in_monthly_promo !== false ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900 font-medium' : 'bg-slate-50 border-slate-200 text-slate-600'}">
+                  ${primaryState.include_in_monthly_promo !== false 
+                    ? 'Promo harian otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat kampanye aktif.' 
+                    : 'Promo harian berjalan tetap tanpa terpengaruh Promo Bulanan.'}
+                </p>
               </div>
 
               <!-- Bagian C: Input Label & Nilai Potongan Diskon -->
@@ -6366,7 +6327,6 @@ const ProductForm = (() => {
                     placeholder="Promo Spesial"
                     class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:border-emerald-500 outline-none font-semibold"
                   />
-                  <p class="text-[10px] text-slate-500 mt-1">Ditampilkan pada lencana atau banner promosi produk.</p>
                 </div>
 
                 <div>
@@ -14702,46 +14662,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    const promoModeRadios = document.querySelectorAll('input[name="promo_display_mode_radio"]');
-    promoModeRadios.forEach(radio => {
-      radio.onchange = e => {
-        primaryState.promo_display_mode = e.target.value;
-        const selectorGroup = document.getElementById('promo-display-mode-selector-group');
-        if (selectorGroup) {
-          const labels = selectorGroup.querySelectorAll('label');
-          labels.forEach(lbl => {
-            const r = lbl.querySelector('input[type="radio"]');
-            const span = lbl.querySelector('span');
-            if (r && r.checked) {
-              lbl.className = 'p-2.5 sm:p-3 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
-              if (span) span.className = 'font-bold text-xs text-emerald-950 font-extrabold';
-            } else if (lbl) {
-              lbl.className = 'p-2.5 sm:p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
-              if (span) span.className = 'font-bold text-xs text-slate-800';
-            }
-          });
-        }
-        updatePromoModeDynamicUI();
-        updateProductCardLivePreview();
-      };
-    });
-
-    const promoStartInp = document.getElementById('input-promo-start-date');
-    if (promoStartInp) {
-      promoStartInp.onchange = e => {
-        primaryState.promo_start_date = e.target.value || null;
-        updateProductCardLivePreview();
-      };
-    }
-
-    const promoEndInp = document.getElementById('input-promo-end-date');
-    if (promoEndInp) {
-      promoEndInp.onchange = e => {
-        primaryState.promo_end_date = e.target.value || null;
-        updateProductCardLivePreview();
-      };
-    }
-
     const promoLabelInp = document.getElementById('input-monthly-promo-label');
     if (promoLabelInp) {
       promoLabelInp.oninput = e => {
@@ -14752,10 +14672,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     function updatePromoModeDynamicUI() {
       const isIncluded = chkIncludeMonthly ? chkIncludeMonthly.checked : (primaryState.include_in_monthly_promo !== false);
-      const curMode = document.querySelector('input[name="promo_display_mode_radio"]:checked')?.value || primaryState.promo_display_mode || 'always';
-
       const infoEl = document.getElementById('promo-mode-dynamic-info');
-      const datesBox = document.getElementById('promo-scheduled-dates-box');
       const labelHint = document.getElementById('promo-label-migration-hint');
 
       if (labelHint) {
@@ -14763,29 +14680,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         labelHint.classList.toggle('block', isIncluded);
       }
 
-      if (curMode === 'scheduled') {
-        if (datesBox) {
-          datesBox.classList.remove('hidden');
-          datesBox.classList.add('grid');
-        }
-        if (infoEl) {
-          infoEl.classList.add('hidden');
-        }
-      } else {
-        // Mode 'always'
-        if (datesBox) {
-          datesBox.classList.add('hidden');
-          datesBox.classList.remove('grid');
-        }
-        if (infoEl) {
-          infoEl.classList.remove('hidden');
-          if (isIncluded) {
-            infoEl.className = 'p-2.5 rounded-xl text-[11px] leading-relaxed transition bg-emerald-50 border border-emerald-200 text-emerald-900 font-medium';
-            infoEl.innerHTML = '<i class="bi bi-patch-check-fill text-emerald-600 mr-1"></i> Promo buatan tampil setiap hari, dan otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat jadwal kampanye berlangsung.';
-          } else {
-            infoEl.className = 'p-2.5 rounded-xl text-[11px] leading-relaxed transition bg-slate-50 border border-slate-200 text-slate-700';
-            infoEl.innerHTML = '<i class="bi bi-info-circle text-slate-500 mr-1"></i> Promo buatan tampil terus-menerus setiap hari tanpa batas waktu (tidak ikut berubah saat Promo Bulanan).';
-          }
+      if (infoEl) {
+        if (isIncluded) {
+          infoEl.className = 'text-[11px] leading-relaxed p-2.5 rounded-xl border bg-emerald-50/70 border-emerald-200 text-emerald-900 font-medium';
+          infoEl.textContent = 'Promo harian otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat kampanye aktif.';
+        } else {
+          infoEl.className = 'text-[11px] leading-relaxed p-2.5 rounded-xl border bg-slate-50 border-slate-200 text-slate-600';
+          infoEl.textContent = 'Promo harian berjalan tetap tanpa terpengaruh Promo Bulanan.';
         }
       }
     }
@@ -17392,17 +17293,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const chkIncludeMonthly = document.getElementById('chk-include-monthly-promo');
     if (chkIncludeMonthly) primaryState.include_in_monthly_promo = chkIncludeMonthly.checked;
 
-    const promoModeRadio = document.querySelector('input[name="promo_display_mode_radio"]:checked');
-    if (promoModeRadio) primaryState.promo_display_mode = promoModeRadio.value;
-
+    primaryState.promo_display_mode = 'daily';
     primaryState.monthly_promo_label = document.getElementById('input-monthly-promo-label')?.value || 'Promo Spesial';
     primaryState.discount_type = document.getElementById('select-monthly-discount-type')?.value || 'percent';
     const rawDiscVal = document.getElementById('input-discount-val')?.value;
     primaryState.discount_value = (rawDiscVal !== undefined && rawDiscVal !== null && rawDiscVal !== '') ? (parseFloat(rawDiscVal) || 0) : '';
-    const pStart = document.getElementById('input-promo-start-date')?.value;
-    primaryState.promo_start_date = (primaryState.promo_display_mode === 'scheduled' && pStart) ? pStart : null;
-    const pEnd = document.getElementById('input-promo-end-date')?.value;
-    primaryState.promo_end_date = (primaryState.promo_display_mode === 'scheduled' && pEnd) ? pEnd : null;
+    primaryState.promo_start_date = null;
+    primaryState.promo_end_date = null;
 
     // Step 2 Card 3: Pengiriman & Dimensi Paket
     const toggleShippingEl = document.getElementById('toggle-shipping-enabled');
@@ -17897,12 +17794,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         addError('Nilai potongan diskon wajib diisi dan harus lebih besar dari 0.', document.getElementById('input-discount-val'));
       } else if (primaryState.discount_type === 'percent' && dNum > 100) {
         addError('Persentase diskon maksimal 100%.', document.getElementById('input-discount-val'));
-      }
-
-      if (primaryState.promo_display_mode === 'scheduled') {
-        if (primaryState.promo_start_date && primaryState.promo_end_date && primaryState.promo_start_date > primaryState.promo_end_date) {
-          addError('Tanggal selesai promo tidak boleh lebih awal dari tanggal mulai promo.', document.getElementById('input-promo-end-date'));
-        }
       }
     }
 
