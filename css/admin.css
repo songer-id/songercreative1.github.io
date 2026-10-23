@@ -962,6 +962,31 @@ input.toggle-same-cost:checked~div::after {
   transform: translateX(1rem) !important;
 }
 
+/* Help Popover Tooltip Mobile Responsiveness (Mencegah overflow keluar layar HP) */
+.btn-help-popover .admin-help-tooltip,
+.admin-help-tooltip,
+.group:has(> .bi-question-circle) > div[class*="bg-slate-900"],
+.group:has(> .bi-question-circle-fill) > div[class*="bg-slate-900"],
+.group > div[class*="bg-slate-900"] {
+  max-width: min(240px, calc(100vw - 32px)) !important;
+  width: max-content !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+@media (max-width: 640px) {
+  .btn-help-popover .admin-help-tooltip,
+  .admin-help-tooltip,
+  .group:has(> .bi-question-circle) > div[class*="bg-slate-900"],
+  .group:has(> .bi-question-circle-fill) > div[class*="bg-slate-900"],
+  .group > div[class*="bg-slate-900"] {
+    left: auto !important;
+    right: -8px !important;
+    top: calc(100% + 4px) !important;
+    transform: none !important;
+  }
+}
+
 /* Sub-navbar horizontal mobile dimatikan permanen demi clean UI & mencegah bentrok dengan Step 2 subnav */
 #admin-mobile-nav {
   display: none !important;

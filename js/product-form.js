@@ -772,29 +772,30 @@ const ProductForm = (() => {
                 <div class="space-y-2.5 pt-1" id="section-step1-input1-type">
                   <div>
                     <label class="block text-xs font-bold text-slate-800">
-                      Jenis Produk / Layanan <span class="text-red-500">*</span>
+                      Jenis Produk <span class="text-red-500">*</span>
                     </label>
-                    <span class="text-xs text-slate-500 font-medium block mt-0.5">Silahkan Tentukan Jenis Produk Kamu</span>
                   </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="product-type-selector-group">
+                  <div class="grid grid-cols-2 gap-2.5" id="product-type-selector-group">
                     <!-- Fisik -->
-                    <label class="p-3.5 rounded-xl border ${primaryState.product_type === 'physical' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
+                    <label class="p-3 rounded-xl border ${primaryState.product_type === 'physical' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-2 select-none text-center">
                       <input type="radio" name="product_type_radio" value="physical" ${primaryState.product_type === 'physical' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                      <div>
-                        <span class="font-bold text-xs ${primaryState.product_type === 'physical' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Fisik</span>
-                        <span class="text-[11px] text-slate-500 block">Produk berwujud fisik dengan inventaris stok dan pengiriman kurir.</span>
-                      </div>
+                      <span class="font-bold text-xs ${primaryState.product_type === 'physical' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Fisik</span>
                     </label>
 
                     <!-- Non Fisik -->
-                    <label class="p-3.5 rounded-xl border ${primaryState.product_type === 'non_physical' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
+                    <label class="p-3 rounded-xl border ${primaryState.product_type === 'non_physical' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-2 select-none text-center">
                       <input type="radio" name="product_type_radio" value="non_physical" ${primaryState.product_type === 'non_physical' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                      <div>
-                        <span class="font-bold text-xs ${primaryState.product_type === 'non_physical' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Non Fisik</span>
-                        <span class="text-[11px] text-slate-500 block">Layanan jasa profesional, produk digital, voucher, atau reservasi tanpa pengiriman fisik.</span>
-                      </div>
+                      <span class="font-bold text-xs ${primaryState.product_type === 'non_physical' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Non Fisik</span>
                     </label>
                   </div>
+                  <!-- Deskripsi Dinamis Jenis Produk -->
+                  <p id="product-type-dynamic-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    ${primaryState.product_type === 'physical' 
+                      ? 'Produk berwujud fisik dengan pengelolaan stok dan pengiriman kurir.' 
+                      : (primaryState.product_type === 'non_physical' 
+                        ? 'Layanan jasa, produk digital, atau voucher tanpa pengiriman fisik.' 
+                        : 'Pilih jenis produk untuk menentukan alur pengelolaan stok dan pengiriman.')}
+                  </p>
                 </div>
 
                 <!-- State Terkunci Step 1: Belum Memilih Jenis Produk (Clean Shopee-Style Card Tanpa Gembok) -->
@@ -814,7 +815,7 @@ const ProductForm = (() => {
                         <label class="block text-xs font-bold text-slate-800">
                           Tampilkan di Etalase Toko
                         </label>
-                        <p class="text-xs text-slate-500 mt-0.5">Jika dinonaktifkan, produk disembunyikan dari pembeli namun tetap tersedia di kasir POS.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Tampilkan produk di halaman toko pembeli.</p>
                       </div>
                       <label class="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -833,45 +834,40 @@ const ProductForm = (() => {
                     <hr class="border-slate-100" />
                     <div class="border-b border-slate-100 pb-2">
                       <label class="block text-xs font-bold text-slate-800">
-                        Pilih Jenis Model Kartu Produk <span class="text-red-500">*</span>
+                        Model Kartu Produk <span class="text-red-500">*</span>
                       </label>
-                      <p class="text-xs text-slate-500 mt-0.5">Format tampilan kartu produk di etalase web toko pembeli.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-3 gap-2" id="card-model-selector-group">
                       <!-- Kartu Klasik -->
-                      <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
-                        <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'A' ? 'text-emerald-900' : 'text-slate-800'}">Kartu Klasik</span>
-                          <input type="radio" name="card_variant_radio" value="A" ${primaryState.card_variant === 'A' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                        </div>
-                        <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Format seimbang dengan penonjolan ulasan kepuasan pembeli. Cocok untuk berbagai produk ritel umum.
-                        </p>
+                      <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center">
+                        <input type="radio" name="card_variant_radio" value="A" ${primaryState.card_variant === 'A' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+                        <span class="font-bold text-xs ${primaryState.card_variant === 'A' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Kartu Klasik</span>
                       </label>
 
                       <!-- Kartu Minimalis -->
-                      <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
-                        <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'B' ? 'text-emerald-900' : 'text-slate-800'}">Kartu Minimalis</span>
-                          <input type="radio" name="card_variant_radio" value="B" ${primaryState.card_variant === 'B' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                        </div>
-                        <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Tata letak ringkas dengan rasio foto produk 3:4. Cocok untuk produk pakaian dan fashion.
-                        </p>
+                      <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center">
+                        <input type="radio" name="card_variant_radio" value="B" ${primaryState.card_variant === 'B' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+                        <span class="font-bold text-xs ${primaryState.card_variant === 'B' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Kartu Minimalis</span>
                       </label>
 
                       <!-- Kartu Detail -->
-                      <label class="p-3.5 rounded-xl border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1.5 block select-none">
-                        <div class="flex items-center justify-between">
-                          <span class="font-bold text-xs ${primaryState.card_variant === 'C' ? 'text-emerald-900' : 'text-slate-800'}">Kartu Detail</span>
-                          <input type="radio" name="card_variant_radio" value="C" ${primaryState.card_variant === 'C' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                        </div>
-                        <p class="text-[11px] text-slate-500 leading-relaxed">
-                          Tampilan etalase modern dengan footer spesifikasi dinamis. Cocok untuk jasa atau produk dengan detail varian.
-                        </p>
+                      <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center">
+                        <input type="radio" name="card_variant_radio" value="C" ${primaryState.card_variant === 'C' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+                        <span class="font-bold text-xs ${primaryState.card_variant === 'C' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Kartu Detail</span>
                       </label>
                     </div>
+
+                    <!-- Deskripsi Dinamis Model Kartu -->
+                    <p id="card-model-dynamic-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                      ${primaryState.card_variant === 'A' 
+                        ? 'Rasio foto 1:1 dengan ringkasan ulasan dan lokasi toko.' 
+                        : (primaryState.card_variant === 'B' 
+                          ? 'Rasio foto potret 3:4 bergaya bersih untuk produk fesyen atau katalog visual.' 
+                          : (primaryState.card_variant === 'C' 
+                            ? 'Rasio foto 4:3 dengan ringkasan spesifikasi varian di bagian bawah kartu.' 
+                            : 'Pilih model kartu untuk menentukan format rasio foto dan tata letak di etalase toko.'))}
+                    </p>
                   </div>
 
                   <!-- State Terkunci Poin 4, 5, 6 jika Model Kartu Belum Dipilih (Etalase Aktif) -->
@@ -5701,7 +5697,6 @@ const ProductForm = (() => {
                 <label class="block text-xs font-bold text-slate-800">
                   Kategori Produk <span class="text-red-500">*</span>
                 </label>
-                <p class="text-xs text-slate-500 mt-0.5">Pilih kategori utama atau buat kategori baru.</p>
               </div>
               <button type="button" id="btn-quick-add-category-step2" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1 transition cursor-pointer" title="Tambah Kategori">
                 <i class="bi bi-plus-circle"></i>
@@ -5995,10 +5990,9 @@ const ProductForm = (() => {
                     <div class="flex items-center gap-1.5 mb-1">
                       <label for="input-package-weight" class="text-xs font-bold text-slate-800">
                         Berat Paket <span class="text-red-500">*</span>:
-                      </label>
-                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600" tabindex="0">
+                                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                         <i class="bi bi-question-circle text-xs"></i>
-                        <div class="hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                           Berat paket dalam gram. Digunakan oleh ekspedisi logistik untuk menghitung tarif ongkos kirim kiloan.
                         </div>
                       </div>
@@ -6027,9 +6021,9 @@ const ProductForm = (() => {
                       <label class="text-xs font-bold text-slate-800">
                         Ukuran Paket (Opsional):
                       </label>
-                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600" tabindex="0">
+                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                         <i class="bi bi-question-circle text-xs"></i>
-                        <div class="hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                           Panjang, lebar, dan tinggi paket dalam cm untuk menghitung berat volumetrik paket jika ukuran melebihi standar ekspedisi: (P × L × T) ÷ 6.000.
                         </div>
                       </div>
@@ -6051,7 +6045,7 @@ const ProductForm = (() => {
                   </div>
                 </div>
 
-                <!-- Info Berat Volumetrik Real-Time -->
+                <!-- Info Volumetrik Real-time -->
                 <div id="volumetric-weight-info" class="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-xs text-slate-700 hidden transition"></div>
               </div>
 
@@ -6062,9 +6056,9 @@ const ProductForm = (() => {
                   <div class="flex items-center justify-between gap-3 select-none">
                     <div class="flex items-center gap-1.5">
                       <span class="text-xs font-bold text-slate-800">Sistem COD (Bayar di Tempat)</span>
-                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600" tabindex="0">
+                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                         <i class="bi bi-question-circle text-xs"></i>
-                        <div class="hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                           Izinkan pembeli membayar pesanan secara tunai saat barang diterima, baik melalui kurir antar toko maupun ekspedisi rekanan.
                         </div>
                       </div>
@@ -6079,43 +6073,21 @@ const ProductForm = (() => {
                       <div class="toggle-switch-track w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                     </label>
                   </div>
-
-                  <!-- Sub-opsi Cakupan COD (Muncul Saat ON sebagai chips ringkas) -->
-                  <div id="cod-scope-options-container" class="${shippingCfg.is_cod ? 'flex' : 'hidden'} flex-wrap gap-2 pt-1">
-                    <label class="px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer flex items-center gap-2 select-none transition ${shippingCfg.cod_local !== false ? 'border-emerald-400 bg-emerald-50/60 text-emerald-900 font-bold' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}">
-                      <input 
-                        type="checkbox" 
-                        id="chk-cod-local" 
-                        ${shippingCfg.cod_local !== false ? 'checked' : ''} 
-                        class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" 
-                      />
-                      <span>COD Kurir Toko (Area Sekitar)</span>
-                    </label>
-                    <label class="px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer flex items-center gap-2 select-none transition ${shippingCfg.cod_expedition !== false ? 'border-emerald-400 bg-emerald-50/60 text-emerald-900 font-bold' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}">
-                      <input 
-                        type="checkbox" 
-                        id="chk-cod-expedition" 
-                        ${shippingCfg.cod_expedition !== false ? 'checked' : ''} 
-                        class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" 
-                      />
-                      <span>COD Ekspedisi (Luar Kota)</span>
-                    </label>
-                  </div>
                 </div>
 
                 <!-- Pilihan Kurir Tersedia -->
                 <div class="space-y-2">
                   <div class="flex items-center gap-1.5">
                     <label class="text-xs font-bold text-slate-800">Dukungan Kurir / Ekspedisi:</label>
-                    <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600" tabindex="0">
+                    <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                       <i class="bi bi-question-circle text-xs"></i>
-                      <div class="hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                      <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                         Pilih metode pengiriman yang didukung toko untuk produk ini (ambil sendiri, antar mandiri, reguler, kargo, atau ekspor).
                       </div>
                     </div>
                   </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 select-none transition">
+                  <div class="grid grid-cols-2 gap-2">
+                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
                       <input 
                         type="checkbox" 
                         name="courier_checkbox" 
@@ -6123,13 +6095,10 @@ const ProductForm = (() => {
                         ${couriersList.includes('pickup') ? 'checked' : ''} 
                         class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
                       />
-                      <div class="min-w-0">
-                        <span class="text-xs font-bold text-slate-800 block leading-tight">Ambil di Toko (Pickup)</span>
-                        <span class="text-[10px] text-slate-500 block">Ambil sendiri ke toko (Rp 0)</span>
-                      </div>
+                      <span class="text-xs font-bold text-slate-800 truncate">Ambil di Toko</span>
                     </label>
 
-                    <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 select-none transition">
+                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
                       <input 
                         type="checkbox" 
                         name="courier_checkbox" 
@@ -6137,13 +6106,10 @@ const ProductForm = (() => {
                         ${couriersList.includes('local_store') || couriersList.includes('instant') ? 'checked' : ''} 
                         class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
                       />
-                      <div class="min-w-0">
-                        <span class="text-xs font-bold text-slate-800 block leading-tight">Kurir Toko / Lokal</span>
-                        <span class="text-[10px] text-slate-500 block">Antar mandiri desa/kecamatan</span>
-                      </div>
+                      <span class="text-xs font-bold text-slate-800 truncate">Kurir Toko / Lokal</span>
                     </label>
 
-                    <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 select-none transition">
+                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
                       <input 
                         type="checkbox" 
                         name="courier_checkbox" 
@@ -6151,13 +6117,10 @@ const ProductForm = (() => {
                         ${couriersList.includes('reguler') ? 'checked' : ''} 
                         class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
                       />
-                      <div class="min-w-0">
-                        <span class="text-xs font-bold text-slate-800 block leading-tight">Reguler Domestik</span>
-                        <span class="text-[10px] text-slate-500 block">J&T, JNE, SiCepat, dll</span>
-                      </div>
+                      <span class="text-xs font-bold text-slate-800 truncate">Reguler Domestik</span>
                     </label>
 
-                    <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 select-none transition">
+                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
                       <input 
                         type="checkbox" 
                         name="courier_checkbox" 
@@ -6165,13 +6128,10 @@ const ProductForm = (() => {
                         ${couriersList.includes('cargo') ? 'checked' : ''} 
                         class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
                       />
-                      <div class="min-w-0">
-                        <span class="text-xs font-bold text-slate-800 block leading-tight">Kargo / Partai Besar</span>
-                        <span class="text-[10px] text-slate-500 block">Ekspedisi muatan banyak</span>
-                      </div>
+                      <span class="text-xs font-bold text-slate-800 truncate">Kargo / Partai Besar</span>
                     </label>
 
-                    <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 select-none transition sm:col-span-2">
+                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition col-span-2 sm:col-span-1">
                       <input 
                         type="checkbox" 
                         name="courier_checkbox" 
@@ -6179,10 +6139,7 @@ const ProductForm = (() => {
                         ${couriersList.includes('international') ? 'checked' : ''} 
                         class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
                       />
-                      <div class="min-w-0">
-                        <span class="text-xs font-bold text-slate-800 block leading-tight">Luar Negeri (Ekspor)</span>
-                        <span class="text-[10px] text-slate-500 block">Pengiriman internasional</span>
-                      </div>
+                      <span class="text-xs font-bold text-slate-800 truncate">Luar Negeri</span>
                     </label>
                   </div>
                 </div>
@@ -6193,9 +6150,9 @@ const ProductForm = (() => {
                     <div class="flex items-center gap-1.5">
                       <i class="bi bi-geo-alt-fill text-emerald-600 text-xs"></i>
                       <span class="text-xs font-bold text-slate-800">Tarif Kurir Toko / Lokal</span>
-                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600" tabindex="0">
+                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                         <i class="bi bi-question-circle text-xs"></i>
-                        <div class="hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                           Atur tarif antar mandiri oleh toko Anda. Tersedia opsi Gratis Ongkir atau biaya flat untuk satu desa dan satu kecamatan terdekat.
                         </div>
                       </div>
@@ -11163,6 +11120,33 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
+    // Update Deskripsi Dinamis Step 1 (Jenis Produk & Model Kartu)
+    function updateStep1DynamicDescriptions() {
+      const typeDescEl = document.getElementById('product-type-dynamic-desc');
+      if (typeDescEl) {
+        if (primaryState.product_type === 'physical') {
+          typeDescEl.textContent = 'Produk berwujud fisik dengan pengelolaan stok dan pengiriman kurir.';
+        } else if (primaryState.product_type === 'non_physical') {
+          typeDescEl.textContent = 'Layanan jasa, produk digital, atau voucher tanpa pengiriman fisik.';
+        } else {
+          typeDescEl.textContent = 'Pilih jenis produk untuk menentukan alur pengelolaan stok dan pengiriman.';
+        }
+      }
+
+      const modelDescEl = document.getElementById('card-model-dynamic-desc');
+      if (modelDescEl) {
+        if (primaryState.card_variant === 'A') {
+          modelDescEl.textContent = 'Rasio foto 1:1 dengan ringkasan ulasan dan lokasi toko.';
+        } else if (primaryState.card_variant === 'B') {
+          modelDescEl.textContent = 'Rasio foto potret 3:4 bergaya bersih untuk produk fesyen atau katalog visual.';
+        } else if (primaryState.card_variant === 'C') {
+          modelDescEl.textContent = 'Rasio foto 4:3 dengan ringkasan spesifikasi varian di bagian bawah kartu.';
+        } else {
+          modelDescEl.textContent = 'Pilih model kartu untuk menentukan format rasio foto dan tata letak di etalase toko.';
+        }
+      }
+    }
+
     // GATING BERTAHAP DI STEP 1 (CLEAN SHOPEE-STYLE TANPA GEMBOK)
     function updateStep1SequentialGatingDOM() {
       const p1Placeholder = document.getElementById('step1-gated-placeholder');
@@ -11171,6 +11155,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const cardModelPlaceholder = document.getElementById('step1-cardmodel-gated-placeholder');
       const cardModelUnlocked = document.getElementById('step1-cardmodel-unlocked-fields');
       const fabMob = document.getElementById('btn-fab-live-preview');
+
+      updateStep1DynamicDescriptions();
 
       const hasType = Boolean(primaryState.product_type);
       const isStoreOn = Boolean(primaryState.is_active);
@@ -14321,40 +14307,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     const toggleCod = document.getElementById('toggle-is-cod');
-    const codScopeCont = document.getElementById('cod-scope-options-container');
     if (toggleCod) {
       toggleCod.onchange = (e) => {
         if (!primaryState.shipping_config) primaryState.shipping_config = {};
         primaryState.shipping_config.is_cod = e.target.checked;
-        if (codScopeCont) {
-          if (e.target.checked) codScopeCont.classList.remove('hidden');
-          else codScopeCont.classList.add('hidden');
-        }
-        updateProductCardLivePreview();
-      };
-    }
-
-    const chkCodLocal = document.getElementById('chk-cod-local');
-    if (chkCodLocal) {
-      chkCodLocal.onchange = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.cod_local = e.target.checked;
-        const lbl = chkCodLocal.closest('label');
-        if (lbl) {
-          lbl.className = `px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer flex items-center gap-2 select-none transition ${e.target.checked ? 'border-emerald-400 bg-emerald-50/60 text-emerald-900 font-bold' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
-        }
-        updateProductCardLivePreview();
-      };
-    }
-
-    const chkCodExp = document.getElementById('chk-cod-expedition');
-    if (chkCodExp) {
-      chkCodExp.onchange = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.cod_expedition = e.target.checked;
-        const lbl = chkCodExp.closest('label');
-        if (lbl) {
-          lbl.className = `px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer flex items-center gap-2 select-none transition ${e.target.checked ? 'border-emerald-400 bg-emerald-50/60 text-emerald-900 font-bold' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+        if (e.target.checked) {
+          primaryState.shipping_config.cod_local = true;
+          primaryState.shipping_config.cod_expedition = true;
         }
         updateProductCardLivePreview();
       };
@@ -14991,6 +14950,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             shipDisabled.classList.toggle('block', !primaryState.has_shipping);
           }
         }
+        document.querySelectorAll('input[name="product_type_radio"]').forEach(r => {
+          const lbl = r.closest('label');
+          if (lbl) {
+            if (r.checked) {
+              lbl.className = 'p-3 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
+              const txt = lbl.querySelector('span');
+              if (txt) txt.className = 'font-bold text-xs text-emerald-950 font-extrabold';
+            } else {
+              lbl.className = 'p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
+              const txt = lbl.querySelector('span');
+              if (txt) txt.className = 'font-bold text-xs text-slate-800';
+            }
+          }
+        });
         updateStep1SequentialGatingDOM();
         updateProductCardLivePreview();
       });
@@ -15010,6 +14983,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       rad.addEventListener('change', (e) => {
         primaryState.card_variant = e.target.value;
         applyCardVariant(e.target.value, true);
+        document.querySelectorAll('input[name="card_variant_radio"]').forEach(r => {
+          const lbl = r.closest('label');
+          if (lbl) {
+            if (r.checked) {
+              lbl.className = 'p-2.5 sm:p-3 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center';
+              const txt = lbl.querySelector('span');
+              if (txt) txt.className = 'font-bold text-xs text-emerald-950 font-extrabold';
+            } else {
+              lbl.className = 'p-2.5 sm:p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center';
+              const txt = lbl.querySelector('span');
+              if (txt) txt.className = 'font-bold text-xs text-slate-800';
+            }
+          }
+        });
         updateStep1SequentialGatingDOM();
       });
     });
@@ -16420,16 +16407,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = radio.closest('label');
           if (lbl) {
             if (radio.checked) {
-              lbl.className = 'p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center gap-3 block select-none';
+              lbl.className = 'p-3 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
               const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-emerald-950 font-extrabold block';
+              if (txt) txt.className = 'font-bold text-xs text-emerald-950 font-extrabold';
             } else {
-              lbl.className = 'p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center gap-3 block select-none';
+              lbl.className = 'p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
               const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-slate-800 block';
+              if (txt) txt.className = 'font-bold text-xs text-slate-800';
             }
           }
         });
+        updateStep1DynamicDescriptions();
         updateProductCardLivePreview();
       });
     });
@@ -17146,11 +17134,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     if (!primaryState.shipping_config) primaryState.shipping_config = {};
     const codCheck = document.getElementById('toggle-is-cod') || document.getElementById('check-shipping-cod');
-    if (codCheck) primaryState.shipping_config.is_cod = codCheck.checked;
-    const codLocalChk = document.getElementById('chk-cod-local');
-    if (codLocalChk) primaryState.shipping_config.cod_local = codLocalChk.checked;
-    const codExpChk = document.getElementById('chk-cod-expedition');
-    if (codExpChk) primaryState.shipping_config.cod_expedition = codExpChk.checked;
+    if (codCheck) {
+      primaryState.shipping_config.is_cod = codCheck.checked;
+      if (codCheck.checked) {
+        primaryState.shipping_config.cod_local = true;
+        primaryState.shipping_config.cod_expedition = true;
+      }
+    }
 
     const courierBoxes = document.querySelectorAll('input[name="courier_checkbox"]:checked, .check-courier-service:checked');
     primaryState.shipping_config.couriers = Array.from(courierBoxes).map(cb => cb.value);
