@@ -1371,6 +1371,26 @@ input.toggle-same-cost:checked ~ div::after {
   -moz-appearance: textfield;
 }
 
+/* Ketentuan Ukuran Minimal Inputs */
+#input-min-price-threshold::-webkit-outer-spin-button,
+#input-min-price-threshold::-webkit-inner-spin-button,
+#input-min-price-charge::-webkit-outer-spin-button,
+#input-min-price-charge::-webkit-inner-spin-button,
+#input-min-hpp-threshold::-webkit-outer-spin-button,
+#input-min-hpp-threshold::-webkit-inner-spin-button,
+#input-min-hpp-charge::-webkit-outer-spin-button,
+#input-min-hpp-charge::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#input-min-price-threshold,
+#input-min-price-charge,
+#input-min-hpp-threshold,
+#input-min-hpp-charge {
+  -moz-appearance: textfield;
+}
+
 #drawer-dim-live-summary {
   animation: fadeIn 0.15s ease-out;
 }
