@@ -1508,3 +1508,12 @@ input.toggle-same-cost:checked~div::after {
 #custom-dim-no-variant-warning.hidden {
   display: none !important;
 }
+
+/* Pengaturan Tarif Pengiriman Kurir Toko / Lokal */
+#local-delivery-rates-box {
+  transition: all 0.25s ease-in-out;
+}
+
+#local-delivery-rates-box.hidden {
+  display: none !important;
+}

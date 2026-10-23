@@ -34,6 +34,16 @@ const ProductForm = (() => {
     dimError: false
   };
 
+  function getStoreDefaultLocalShipping() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem('store_default_local_shipping');
+        if (raw) return JSON.parse(raw);
+      }
+    } catch (e) {}
+    return null;
+  }
+
   // Primary metadata state
   let primaryState = {
     name: '',
@@ -126,17 +136,24 @@ const ProductForm = (() => {
     promo_start_date: null,
     promo_end_date: null,
     custom_labels: [],
-    shipping_config: {
-      is_cod: false,
-      cod_local: true,      // COD Kurir Toko (Desa / Kecamatan)
-      cod_expedition: true, // COD Ekspedisi Reguler
-      couriers: ['pickup', 'local_store', 'reguler'],
-      weight: '',           // Kosong (wajib diisi manual oleh penjual!)
-      weight_unit: 'gram',
-      length: '',           // Kosong (opsional)
-      width: '',            // Kosong (opsional)
-      height: ''            // Kosong (opsional)
-    },
+    shipping_config: (function() {
+      const defLocal = getStoreDefaultLocalShipping();
+      return {
+        is_cod: false,
+        cod_local: true,      // COD Kurir Toko (Desa / Kecamatan)
+        cod_expedition: true, // COD Ekspedisi Reguler
+        couriers: ['pickup', 'local_store', 'reguler'],
+        local_village_free: defLocal ? Boolean(defLocal.local_village_free) : true,
+        local_village_fee: defLocal ? (defLocal.local_village_fee ?? '') : '',
+        local_district_free: defLocal ? Boolean(defLocal.local_district_free) : false,
+        local_district_fee: defLocal ? (defLocal.local_district_fee ?? '') : '',
+        weight: '',           // Kosong (wajib diisi manual oleh penjual!)
+        weight_unit: 'gram',
+        length: '',           // Kosong (opsional)
+        width: '',            // Kosong (opsional)
+        height: ''            // Kosong (opsional)
+      };
+    })(),
     image_url: null,
     images: [],
     image_aspect_ratio: '1:1',
@@ -373,17 +390,24 @@ const ProductForm = (() => {
       promo_start_date: null,
       promo_end_date: null,
       custom_labels: [],
-      shipping_config: {
-        is_cod: false,
-        cod_local: true,      // COD Kurir Toko (Desa / Kecamatan)
-        cod_expedition: true, // COD Ekspedisi Reguler
-        couriers: ['pickup', 'local_store', 'reguler'],
-        weight: '',           // Kosong (wajib diisi manual oleh penjual!)
-        weight_unit: 'gram',
-        length: '',           // Kosong (opsional)
-        width: '',            // Kosong (opsional)
-        height: ''            // Kosong (opsional)
-      },
+      shipping_config: (function() {
+        const defLocal = getStoreDefaultLocalShipping();
+        return {
+          is_cod: false,
+          cod_local: true,      // COD Kurir Toko (Desa / Kecamatan)
+          cod_expedition: true, // COD Ekspedisi Reguler
+          couriers: ['pickup', 'local_store', 'reguler'],
+          local_village_free: defLocal ? Boolean(defLocal.local_village_free) : true,
+          local_village_fee: defLocal ? (defLocal.local_village_fee ?? '') : '',
+          local_district_free: defLocal ? Boolean(defLocal.local_district_free) : false,
+          local_district_fee: defLocal ? (defLocal.local_district_fee ?? '') : '',
+          weight: '',           // Kosong (wajib diisi manual oleh penjual!)
+          weight_unit: 'gram',
+          length: '',           // Kosong (opsional)
+          width: '',            // Kosong (opsional)
+          height: ''            // Kosong (opsional)
+        };
+      })(),
       custom_footer_1: { ...f1Default },
       custom_footer_2: { ...f2Default },
       card_footer_text: f1Default.text,
@@ -592,6 +616,10 @@ const ProductForm = (() => {
           cod_local: sc.cod_local !== undefined ? Boolean(sc.cod_local) : true,
           cod_expedition: sc.cod_expedition !== undefined ? Boolean(sc.cod_expedition) : true,
           couriers: couriers.length > 0 ? couriers : ['pickup', 'local_store', 'reguler'],
+          local_village_free: sc.local_village_free !== undefined ? Boolean(sc.local_village_free) : true,
+          local_village_fee: (sc.local_village_fee !== undefined && sc.local_village_fee !== null) ? sc.local_village_fee : '',
+          local_district_free: sc.local_district_free !== undefined ? Boolean(sc.local_district_free) : false,
+          local_district_fee: (sc.local_district_fee !== undefined && sc.local_district_fee !== null) ? sc.local_district_fee : '',
           weight: (sc.weight !== undefined && sc.weight !== null && sc.weight !== '') ? sc.weight : '',
           weight_unit: sc.weight_unit || 'gram',
           length: (sc.length !== undefined && sc.length !== null && sc.length !== '') ? sc.length : (sc.length_cm || ''),
@@ -2306,6 +2334,54 @@ const ProductForm = (() => {
     });
   }
 
+  function getShippingSimulationSummaryHtml() {
+    if (primaryState.product_type !== 'physical') return '';
+    const sc = primaryState.shipping_config || {};
+    const couriers = Array.isArray(sc.couriers) ? sc.couriers : [];
+    const cList = couriers.map(c => {
+      if (c === 'pickup') return 'Ambil di Toko';
+      if (c === 'local_store' || c === 'instant') {
+        const vFree = sc.local_village_free !== false;
+        const vFee = parseFloat(sc.local_village_fee) || 0;
+        const dFree = Boolean(sc.local_district_free);
+        const dFee = parseFloat(sc.local_district_fee) || 0;
+        if (vFree && dFree) return 'Kurir Toko (1 Kec Gratis)';
+        if (vFree) return dFee > 0 ? `Kurir Toko (1 Desa Gratis / Kec Rp${dFee.toLocaleString('id-ID')})` : 'Kurir Toko (1 Desa Gratis)';
+        if (vFee > 0) return `Kurir Toko (Desa Rp${vFee.toLocaleString('id-ID')})`;
+        return 'Kurir Toko';
+      }
+      if (c === 'reguler') return 'Reguler';
+      if (c === 'cargo') return 'Kargo';
+      if (c === 'international') return 'Luar Negeri';
+      return c;
+    });
+
+    const codStatus = sc.is_cod
+      ? (sc.cod_local !== false && sc.cod_expedition !== false ? 'Bisa COD (Lokal & Ekspedisi)' : (sc.cod_local !== false ? 'Bisa COD Lokal' : 'Bisa COD Ekspedisi'))
+      : 'Tidak Tersedia (Non-COD)';
+
+    const weightStr = (sc.weight !== undefined && sc.weight !== null && sc.weight !== '' && parseFloat(sc.weight) > 0)
+      ? `${parseFloat(sc.weight).toLocaleString('id-ID')} ${sc.weight_unit || 'gram'}`
+      : '';
+
+    return `
+      <div class="text-[11px] text-slate-600 flex justify-between border-t border-slate-200/60 pt-1">
+        <span>Dukungan Kurir:</span>
+        <span class="font-semibold text-slate-800 text-right">${cList.length > 0 ? escapeHtml(cList.join(', ')) : 'Belum diatur'}</span>
+      </div>
+      <div class="text-[11px] text-slate-600 flex justify-between">
+        <span>Status COD:</span>
+        <span class="font-semibold text-slate-800 text-right">${escapeHtml(codStatus)}</span>
+      </div>
+      ${weightStr ? `
+        <div class="text-[11px] text-slate-600 flex justify-between">
+          <span>Berat Paket:</span>
+          <span class="font-semibold text-slate-800 text-right">${escapeHtml(weightStr)}</span>
+        </div>
+      ` : ''}
+    `;
+  }
+
   function addSingleProductToCartDirect() {
     const prodName = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
     const curQ = 1;
@@ -2329,6 +2405,7 @@ const ProductForm = (() => {
             <span>Kuantitas:</span>
             <span class="font-bold text-slate-800">${curQ} pcs</span>
           </div>
+          ${getShippingSimulationSummaryHtml()}
         </div>
       `
     });
@@ -2382,6 +2459,7 @@ const ProductForm = (() => {
             <span>Kuantitas:</span>
             <span class="font-bold text-slate-800">${curQ} pcs</span>
           </div>
+          ${getShippingSimulationSummaryHtml()}
         </div>
       `
     });
@@ -2724,6 +2802,32 @@ const ProductForm = (() => {
         ${dimError && !(parseFloat(dimLengthVal) > 0 && parseFloat(dimWidthVal) > 0) ? '<p class="text-[10px] font-semibold text-red-600 mt-1">Ukuran Panjang (P) dan Lebar (L) wajib diisi.</p>' : ''}
       </div>
     ` : '';
+
+    let drawerShippingBarHtml = '';
+    if (primaryState.product_type === 'physical') {
+      const sc = primaryState.shipping_config || {};
+      const couriers = Array.isArray(sc.couriers) ? sc.couriers : [];
+      const cList = couriers.map(c => {
+        if (c === 'pickup') return 'Pickup';
+        if (c === 'local_store' || c === 'instant') {
+          return sc.local_village_free !== false ? 'Kurir Toko (1 Desa Gratis)' : 'Kurir Toko';
+        }
+        if (c === 'reguler') return 'Reguler';
+        if (c === 'cargo') return 'Kargo';
+        if (c === 'international') return 'Luar Negeri';
+        return c;
+      });
+      const isCod = Boolean(sc.is_cod);
+      drawerShippingBarHtml = `
+        <div class="px-3 py-1.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-600 shrink-0">
+          <div class="flex items-center gap-1.5 truncate">
+            <i class="bi bi-truck text-emerald-600"></i>
+            <span class="font-medium truncate">${cList.length > 0 ? cList.join(' • ') : 'Kurir belum dipilih'}</span>
+          </div>
+          ${isCod ? `<span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-100 text-emerald-800 shrink-0 leading-none">Bisa COD</span>` : ''}
+        </div>
+      `;
+    }
 
     const name = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
     const coverImg = (primaryState.images && primaryState.images.length > 0)
@@ -3069,6 +3173,9 @@ const ProductForm = (() => {
             </div>
           ` : ''}
 
+          <!-- Dukungan Pengiriman & COD -->
+          ${drawerShippingBarHtml}
+
           <div class="p-3 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
             <div class="inline-flex items-center border border-slate-300 rounded-md overflow-hidden bg-white shadow-2xs">
@@ -3212,6 +3319,9 @@ const ProductForm = (() => {
               ${extrasAccordionHtml}
             ` : ''}
           </div>
+
+          <!-- Dukungan Pengiriman & COD -->
+          ${drawerShippingBarHtml}
 
           <div class="p-3 pt-2 border-t border-slate-100 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
@@ -3707,7 +3817,25 @@ const ProductForm = (() => {
         btn.onclick = (e) => {
           e.preventDefault();
           const { prodName, variantText, qty } = getContextSummary();
-          const chatMsg = `Halo Kak, saya ingin memesan produk ${prodName} (Varian: ${variantText}) sejumlah ${qty} pcs.`;
+          let shipWaInfo = '';
+          if (primaryState.product_type === 'physical') {
+            const sc = primaryState.shipping_config || {};
+            const couriers = Array.isArray(sc.couriers) ? sc.couriers : [];
+            const cList = couriers.map(c => {
+              if (c === 'pickup') return 'Ambil di Toko';
+              if (c === 'local_store' || c === 'instant') {
+                return sc.local_village_free !== false ? 'Kurir Toko (1 Desa Gratis)' : 'Kurir Toko';
+              }
+              if (c === 'reguler') return 'Reguler';
+              if (c === 'cargo') return 'Kargo';
+              if (c === 'international') return 'Luar Negeri';
+              return c;
+            });
+            const codText = sc.is_cod ? (sc.cod_local !== false && sc.cod_expedition !== false ? 'Bisa COD' : (sc.cod_local !== false ? 'COD Lokal' : 'COD Ekspedisi')) : 'Non-COD';
+            const wText = (sc.weight !== undefined && sc.weight !== null && sc.weight !== '' && parseFloat(sc.weight) > 0) ? `${parseFloat(sc.weight).toLocaleString('id-ID')} ${sc.weight_unit || 'gram'}` : '';
+            shipWaInfo = `\nPengiriman: ${cList.length > 0 ? cList.join(', ') : 'Standar'} (${codText}${wText ? ', Berat: ' + wText : ''})`;
+          }
+          const chatMsg = `Halo Kak, saya ingin memesan produk ${prodName} (Varian: ${variantText}) sejumlah ${qty} pcs.${shipWaInfo}`;
 
           if (typeof App !== 'undefined' && App.showToast) {
             App.showToast(`Simulasi WhatsApp: "${chatMsg}"`, 'info');
@@ -4265,6 +4393,7 @@ const ProductForm = (() => {
                       <span>Jumlah:</span>
                       <span class="font-bold text-slate-800">${curQ} pcs</span>
                     </div>
+                    ${getShippingSimulationSummaryHtml()}
                     <div class="text-[11px] text-slate-600 flex justify-between border-t border-emerald-200/60 pt-1">
                       <span>Total Pembayaran:</span>
                       <span class="font-black text-emerald-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
@@ -4301,6 +4430,7 @@ const ProductForm = (() => {
                       <span>Kuantitas:</span>
                       <span class="font-bold text-slate-800">${curQ} pcs</span>
                     </div>
+                    ${getShippingSimulationSummaryHtml()}
                     <div class="text-[11px] text-slate-600 flex justify-between border-t border-slate-200 pt-1">
                       <span>Total Pembayaran:</span>
                       <span class="font-black text-slate-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
@@ -5147,6 +5277,79 @@ const ProductForm = (() => {
       const isDrawerOpen = Boolean(isTestMode && previewTestState.isDrawerOpen);
       const drawerHtml = isDrawerOpen ? buildShopeeDrawerHtml(previewTestState.drawerActionType || 'buy') : '';
 
+      // Info Pengiriman & Layanan untuk Mini PDP (Hanya untuk Produk Fisik)
+      let shippingMiniPdpHtml = '';
+      if (primaryState.product_type === 'physical') {
+        const sc = primaryState.shipping_config || {};
+        const isCodActive = Boolean(sc.is_cod);
+        const couriers = Array.isArray(sc.couriers) ? sc.couriers : [];
+
+        const codBadges = [];
+        if (isCodActive) {
+          if (sc.cod_local !== false) {
+            codBadges.push(`<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/60 leading-none">Bisa COD Lokal</span>`);
+          }
+          if (sc.cod_expedition !== false) {
+            codBadges.push(`<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-200/60 leading-none">Bisa COD Ekspedisi</span>`);
+          }
+        }
+
+        const courierItems = [];
+        if (couriers.includes('pickup')) {
+          courierItems.push('Ambil di Toko');
+        }
+        if (couriers.includes('local_store') || couriers.includes('instant')) {
+          let localTxt = 'Kurir Toko';
+          const vFree = sc.local_village_free !== false;
+          const vFee = parseFloat(sc.local_village_fee) || 0;
+          const dFree = Boolean(sc.local_district_free);
+          const dFee = parseFloat(sc.local_district_fee) || 0;
+
+          if (vFree && dFree) {
+            localTxt += ' (1 Kec Gratis Ongkir)';
+          } else if (vFree) {
+            localTxt += (dFee > 0 ? ` (1 Desa Gratis / Kec Rp${dFee.toLocaleString('id-ID')})` : ' (1 Desa Gratis Ongkir)');
+          } else if (vFee > 0) {
+            localTxt += (dFee > 0 ? ` (Desa Rp${vFee.toLocaleString('id-ID')} / Kec Rp${dFee.toLocaleString('id-ID')})` : ` (Desa Rp${vFee.toLocaleString('id-ID')})`);
+          }
+          courierItems.push(localTxt);
+        }
+        if (couriers.includes('reguler')) {
+          courierItems.push('Reguler');
+        }
+        if (couriers.includes('cargo')) {
+          courierItems.push('Kargo');
+        }
+        if (couriers.includes('international')) {
+          courierItems.push('Luar Negeri');
+        }
+
+        let weightTxt = '';
+        if (sc.weight !== undefined && sc.weight !== null && sc.weight !== '' && parseFloat(sc.weight) > 0) {
+          weightTxt = `Berat: ${parseFloat(sc.weight).toLocaleString('id-ID')} ${sc.weight_unit || 'gram'}`;
+        }
+
+        if (courierItems.length > 0 || isCodActive || weightTxt) {
+          shippingMiniPdpHtml = `
+            <div class="pt-2 border-t border-slate-100">
+              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-700 space-y-1.5">
+                <div class="flex items-center justify-between gap-1 flex-wrap">
+                  <div class="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+                    <i class="bi bi-truck text-emerald-600"></i>
+                    <span>Pengiriman & Layanan</span>
+                  </div>
+                  ${codBadges.length > 0 ? `<div class="flex items-center gap-1 flex-wrap">${codBadges.join('')}</div>` : ''}
+                </div>
+                <div class="text-[10px] text-slate-600 leading-snug flex items-center justify-between gap-1 flex-wrap">
+                  <span class="font-medium text-slate-700">${courierItems.length > 0 ? courierItems.join(' • ') : 'Pilihan kurir belum diatur'}</span>
+                  ${weightTxt ? `<span class="font-bold text-slate-600 shrink-0 bg-white px-1.5 py-0.5 rounded border border-slate-200/70">${weightTxt}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+
       const miniPdpHtml = `
         <div class="mini-pdp-card w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
           <!-- AREA KONTEN UTAMA MINI PDP (SCROLLABLE) -->
@@ -5280,6 +5483,9 @@ const ProductForm = (() => {
                     </div>
                   </div>
                 ` : '')}
+
+                <!-- Info Pengiriman & Layanan (Hanya untuk Produk Fisik) -->
+                ${shippingMiniPdpHtml}
 
                 <!-- Deskripsi Produk -->
                 <div class="space-y-1 pt-2 border-t border-slate-100">
@@ -5576,6 +5782,10 @@ const ProductForm = (() => {
       cod_local: true,
       cod_expedition: true,
       couriers: ['pickup', 'local_store', 'reguler'],
+      local_village_free: true,
+      local_village_fee: '',
+      local_district_free: false,
+      local_district_fee: '',
       weight: '',
       weight_unit: 'gram',
       length: '',
@@ -6049,6 +6259,99 @@ const ProductForm = (() => {
                       <span class="text-xs font-bold text-slate-800 block leading-tight">Luar Negeri (Internasional / Export)</span>
                       <span class="text-[10px] text-slate-500 block leading-tight">Pengiriman lintas negara (mendukung ekspedisi internasional).</span>
                     </div>
+                  </label>
+                </div>
+
+                <!-- Panel Pengaturan Tarif Ongkir Kurir Toko / Lokal -->
+                <div id="local-delivery-rates-box" class="${(couriersList.includes('local_store') || couriersList.includes('instant')) ? 'block' : 'hidden'} p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-3 transition mt-2">
+                  <div class="flex items-center gap-2">
+                    <i class="bi bi-geo-alt-fill text-emerald-600 text-sm"></i>
+                    <div>
+                      <span class="text-xs font-bold text-slate-800 block leading-tight">Pengaturan Tarif Kurir Toko / Lokal</span>
+                      <span class="text-[10px] text-slate-500 block">Atur tarif antar mandiri untuk pembeli di sekitar lokasi toko Anda.</span>
+                    </div>
+                  </div>
+
+                  <!-- Baris 1: Area Satu Desa / Kelurahan -->
+                  <div class="p-2.5 rounded-lg bg-white border border-slate-200/90 space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+                      <span class="text-xs font-bold text-slate-800">1. Area Satu Desa / Kelurahan:</span>
+                      <!-- Pilihan Cepat: Gratis vs Tambah Ongkir -->
+                      <div class="inline-flex rounded-lg bg-slate-100 p-0.5 text-[11px] font-semibold text-slate-600 select-none">
+                        <label class="btn-rate-village-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${shippingCfg.local_village_free !== false ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                          <input type="radio" name="radio_village_rate" value="free" ${shippingCfg.local_village_free !== false ? 'checked' : ''} class="sr-only cursor-pointer" />
+                          <i class="bi bi-gift-fill text-[10px] text-emerald-600"></i>
+                          <span>Gratis Ongkir (Rp 0)</span>
+                        </label>
+                        <label class="btn-rate-village-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${shippingCfg.local_village_free === false ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                          <input type="radio" name="radio_village_rate" value="custom" ${shippingCfg.local_village_free === false ? 'checked' : ''} class="sr-only cursor-pointer" />
+                          <span>Tambah Biaya Ongkir</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Input Biaya Satu Desa jika tidak gratis -->
+                    <div id="village-rate-input-container" class="${shippingCfg.local_village_free === false ? 'flex' : 'hidden'} items-center gap-2 pt-1 border-t border-slate-100">
+                      <span class="text-[11px] text-slate-600 font-medium whitespace-nowrap">Tarif Flat per Kirim:</span>
+                      <div class="relative flex-1 sm:max-w-xs">
+                        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">Rp</span>
+                        <input 
+                          type="number" 
+                          id="input-local-village-fee" 
+                          min="0" 
+                          step="500" 
+                          value="${shippingCfg.local_village_fee !== undefined && shippingCfg.local_village_fee !== null ? shippingCfg.local_village_fee : ''}" 
+                          placeholder="Contoh: 3000" 
+                          class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none bg-slate-50 focus:bg-white transition"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Baris 2: Area Satu Kecamatan (Beda Desa) -->
+                  <div class="p-2.5 rounded-lg bg-white border border-slate-200/90 space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+                      <span class="text-xs font-bold text-slate-800">2. Area Satu Kecamatan (Beda Desa):</span>
+                      <!-- Pilihan Cepat: Gratis vs Tambah Ongkir -->
+                      <div class="inline-flex rounded-lg bg-slate-100 p-0.5 text-[11px] font-semibold text-slate-600 select-none">
+                        <label class="btn-rate-district-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${shippingCfg.local_district_free ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                          <input type="radio" name="radio_district_rate" value="free" ${shippingCfg.local_district_free ? 'checked' : ''} class="sr-only cursor-pointer" />
+                          <i class="bi bi-gift-fill text-[10px] text-emerald-600"></i>
+                          <span>Gratis Ongkir (Rp 0)</span>
+                        </label>
+                        <label class="btn-rate-district-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${!shippingCfg.local_district_free ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                          <input type="radio" name="radio_district_rate" value="custom" ${!shippingCfg.local_district_free ? 'checked' : ''} class="sr-only cursor-pointer" />
+                          <span>Tambah Biaya Ongkir</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Input Biaya Satu Kecamatan jika tidak gratis -->
+                    <div id="district-rate-input-container" class="${!shippingCfg.local_district_free ? 'flex' : 'hidden'} items-center gap-2 pt-1 border-t border-slate-100">
+                      <span class="text-[11px] text-slate-600 font-medium whitespace-nowrap">Tarif Flat per Kirim:</span>
+                      <div class="relative flex-1 sm:max-w-xs">
+                        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">Rp</span>
+                        <input 
+                          type="number" 
+                          id="input-local-district-fee" 
+                          min="0" 
+                          step="500" 
+                          value="${shippingCfg.local_district_fee !== undefined && shippingCfg.local_district_fee !== null ? shippingCfg.local_district_fee : ''}" 
+                          placeholder="Contoh: 5000" 
+                          class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none bg-slate-50 focus:bg-white transition"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Checkbox Simpan Default Toko -->
+                  <label class="flex items-center gap-2 cursor-pointer pt-1 select-none text-[11px] text-slate-700 font-medium">
+                    <input 
+                      type="checkbox" 
+                      id="chk-save-local-shipping-default" 
+                      class="w-4 h-4 text-emerald-600 rounded cursor-pointer"
+                    />
+                    <span>Gunakan pengaturan ongkir lokal ini sebagai bawaan toko untuk produk berikutnya</span>
                   </label>
                 </div>
               </div>
@@ -14125,6 +14428,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (e.target.checked) codScopeCont.classList.remove('hidden');
           else codScopeCont.classList.add('hidden');
         }
+        updateProductCardLivePreview();
       };
     }
 
@@ -14133,6 +14437,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       chkCodLocal.onchange = (e) => {
         if (!primaryState.shipping_config) primaryState.shipping_config = {};
         primaryState.shipping_config.cod_local = e.target.checked;
+        updateProductCardLivePreview();
       };
     }
 
@@ -14141,6 +14446,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       chkCodExp.onchange = (e) => {
         if (!primaryState.shipping_config) primaryState.shipping_config = {};
         primaryState.shipping_config.cod_expedition = e.target.checked;
+        updateProductCardLivePreview();
       };
     }
 
@@ -14149,9 +14455,105 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       cb.onchange = () => {
         const checkedBoxes = document.querySelectorAll('input[name="courier_checkbox"]:checked');
         if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.couriers = Array.from(checkedBoxes).map(b => b.value);
+        const couriers = Array.from(checkedBoxes).map(b => b.value);
+        primaryState.shipping_config.couriers = couriers;
+
+        // Tampilkan / Sembunyikan Panel Pengaturan Tarif Kurir Toko
+        const localBox = document.getElementById('local-delivery-rates-box');
+        if (localBox) {
+          if (couriers.includes('local_store') || couriers.includes('instant')) {
+            localBox.classList.remove('hidden');
+            localBox.classList.add('block');
+          } else {
+            localBox.classList.add('hidden');
+            localBox.classList.remove('block');
+          }
+        }
+        updateProductCardLivePreview();
       };
     });
+
+    // Event Pengaturan Tarif Kurir Toko (Satu Desa & Satu Kecamatan)
+    const villageRadios = document.querySelectorAll('input[name="radio_village_rate"]');
+    const villageInputCont = document.getElementById('village-rate-input-container');
+    const villageFeeInput = document.getElementById('input-local-village-fee');
+    const btnVillageFree = document.querySelector('.btn-rate-village-free');
+    const btnVillageCustom = document.querySelector('.btn-rate-village-custom');
+
+    villageRadios.forEach(r => {
+      r.onchange = (e) => {
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        const isFree = (e.target.value === 'free');
+        primaryState.shipping_config.local_village_free = isFree;
+        if (villageInputCont) {
+          villageInputCont.classList.toggle('hidden', isFree);
+          villageInputCont.classList.toggle('flex', !isFree);
+        }
+        if (btnVillageFree && btnVillageCustom) {
+          btnVillageFree.className = `btn-rate-village-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+          btnVillageCustom.className = `btn-rate-village-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${!isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+        }
+        updateProductCardLivePreview();
+      };
+    });
+
+    if (villageFeeInput) {
+      villageFeeInput.oninput = (e) => {
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.local_village_fee = e.target.value.trim();
+        updateProductCardLivePreview();
+      };
+    }
+
+    const districtRadios = document.querySelectorAll('input[name="radio_district_rate"]');
+    const districtInputCont = document.getElementById('district-rate-input-container');
+    const districtFeeInput = document.getElementById('input-local-district-fee');
+    const btnDistrictFree = document.querySelector('.btn-rate-district-free');
+    const btnDistrictCustom = document.querySelector('.btn-rate-district-custom');
+
+    districtRadios.forEach(r => {
+      r.onchange = (e) => {
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        const isFree = (e.target.value === 'free');
+        primaryState.shipping_config.local_district_free = isFree;
+        if (districtInputCont) {
+          districtInputCont.classList.toggle('hidden', isFree);
+          districtInputCont.classList.toggle('flex', !isFree);
+        }
+        if (btnDistrictFree && btnDistrictCustom) {
+          btnDistrictFree.className = `btn-rate-district-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+          btnDistrictCustom.className = `btn-rate-district-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${!isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+        }
+        updateProductCardLivePreview();
+      };
+    });
+
+    if (districtFeeInput) {
+      districtFeeInput.oninput = (e) => {
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.local_district_fee = e.target.value.trim();
+        updateProductCardLivePreview();
+      };
+    }
+
+    const chkSaveDefault = document.getElementById('chk-save-local-shipping-default');
+    if (chkSaveDefault) {
+      chkSaveDefault.onchange = (e) => {
+        if (e.target.checked && primaryState.shipping_config) {
+          try {
+            localStorage.setItem('store_default_local_shipping', JSON.stringify({
+              local_village_free: primaryState.shipping_config.local_village_free !== false,
+              local_village_fee: primaryState.shipping_config.local_village_fee ?? '',
+              local_district_free: Boolean(primaryState.shipping_config.local_district_free),
+              local_district_fee: primaryState.shipping_config.local_district_fee ?? ''
+            }));
+            if (typeof App !== 'undefined' && App.showToast) {
+              App.showToast('Pengaturan tarif lokal disimpan sebagai bawaan toko!', 'success');
+            }
+          } catch (err) {}
+        }
+      };
+    }
 
     function updateVolumetricWeightCalculation() {
       const lInp = document.getElementById('input-dim-length');
@@ -14225,6 +14627,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (weightErrEl) weightErrEl.classList.add('hidden');
         }
         updateVolumetricWeightCalculation();
+        updateProductCardLivePreview();
       };
     }
 
@@ -14233,6 +14636,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!primaryState.shipping_config) primaryState.shipping_config = {};
         primaryState.shipping_config.weight_unit = e.target.value || 'gram';
         updateVolumetricWeightCalculation();
+        updateProductCardLivePreview();
       };
     }
 
@@ -16826,6 +17230,37 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     primaryState.shipping_config.length = pkgL;
     primaryState.shipping_config.width = pkgW;
     primaryState.shipping_config.height = pkgH;
+
+    // Tarif Kurir Toko / Lokal (Satu Desa & Satu Kecamatan)
+    const villageRadioChecked = document.querySelector('input[name="radio_village_rate"]:checked');
+    if (villageRadioChecked) {
+      primaryState.shipping_config.local_village_free = (villageRadioChecked.value === 'free');
+    }
+    const villageFeeInp = document.getElementById('input-local-village-fee');
+    if (villageFeeInp) {
+      primaryState.shipping_config.local_village_fee = villageFeeInp.value.trim();
+    }
+
+    const districtRadioChecked = document.querySelector('input[name="radio_district_rate"]:checked');
+    if (districtRadioChecked) {
+      primaryState.shipping_config.local_district_free = (districtRadioChecked.value === 'free');
+    }
+    const districtFeeInp = document.getElementById('input-local-district-fee');
+    if (districtFeeInp) {
+      primaryState.shipping_config.local_district_fee = districtFeeInp.value.trim();
+    }
+
+    const chkSaveDef = document.getElementById('chk-save-local-shipping-default');
+    if (chkSaveDef && chkSaveDef.checked) {
+      try {
+        localStorage.setItem('store_default_local_shipping', JSON.stringify({
+          local_village_free: primaryState.shipping_config.local_village_free !== false,
+          local_village_fee: primaryState.shipping_config.local_village_fee ?? '',
+          local_district_free: Boolean(primaryState.shipping_config.local_district_free),
+          local_district_fee: primaryState.shipping_config.local_district_fee ?? ''
+        }));
+      } catch (err) {}
+    }
 
     // Step 2 Card 6: Lainnya (Footer model 3, condition, sku, barcode)
     const footer1Inp = document.getElementById('input-card-footer-text');
