@@ -128,12 +128,14 @@ const ProductForm = (() => {
     custom_labels: [],
     shipping_config: {
       is_cod: false,
-      couriers: ['pickup', 'instant', 'reguler'],
-      weight: 100,
+      cod_local: true,      // COD Kurir Toko (Desa / Kecamatan)
+      cod_expedition: true, // COD Ekspedisi Reguler
+      couriers: ['pickup', 'local_store', 'reguler'],
+      weight: '',           // Kosong (wajib diisi manual oleh penjual!)
       weight_unit: 'gram',
-      length: 10,
-      width: 10,
-      height: 5
+      length: '',           // Kosong (opsional)
+      width: '',            // Kosong (opsional)
+      height: ''            // Kosong (opsional)
     },
     image_url: null,
     images: [],
@@ -373,12 +375,14 @@ const ProductForm = (() => {
       custom_labels: [],
       shipping_config: {
         is_cod: false,
-        couriers: ['pickup', 'instant', 'reguler'],
-        weight: 100,
+        cod_local: true,      // COD Kurir Toko (Desa / Kecamatan)
+        cod_expedition: true, // COD Ekspedisi Reguler
+        couriers: ['pickup', 'local_store', 'reguler'],
+        weight: '',           // Kosong (wajib diisi manual oleh penjual!)
         weight_unit: 'gram',
-        length: 10,
-        width: 10,
-        height: 5
+        length: '',           // Kosong (opsional)
+        width: '',            // Kosong (opsional)
+        height: ''            // Kosong (opsional)
       },
       custom_footer_1: { ...f1Default },
       custom_footer_2: { ...f2Default },
@@ -575,15 +579,26 @@ const ProductForm = (() => {
       promo_start_date: prod.promo_start_date || null,
       promo_end_date: prod.promo_end_date || null,
       custom_labels: prod.card_variant === 'B' ? [] : (Array.isArray(prod.custom_labels) ? [...prod.custom_labels] : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])),
-      shipping_config: prod.shipping_config || {
-        is_cod: false,
-        couriers: ['pickup', 'instant', 'reguler'],
-        weight: 100,
-        weight_unit: 'gram',
-        length: 10,
-        width: 10,
-        height: 5
-      },
+      shipping_config: (function() {
+        const sc = prod.shipping_config || {};
+        let rawCouriers = Array.isArray(sc.couriers) ? [...sc.couriers] : ['pickup', 'local_store', 'reguler'];
+        if (rawCouriers.includes('instant')) {
+          rawCouriers = rawCouriers.map(c => c === 'instant' ? 'local_store' : c);
+        }
+        const couriers = Array.from(new Set(rawCouriers));
+
+        return {
+          is_cod: Boolean(sc.is_cod),
+          cod_local: sc.cod_local !== undefined ? Boolean(sc.cod_local) : true,
+          cod_expedition: sc.cod_expedition !== undefined ? Boolean(sc.cod_expedition) : true,
+          couriers: couriers.length > 0 ? couriers : ['pickup', 'local_store', 'reguler'],
+          weight: (sc.weight !== undefined && sc.weight !== null && sc.weight !== '') ? sc.weight : '',
+          weight_unit: sc.weight_unit || 'gram',
+          length: (sc.length !== undefined && sc.length !== null && sc.length !== '') ? sc.length : (sc.length_cm || ''),
+          width: (sc.width !== undefined && sc.width !== null && sc.width !== '') ? sc.width : (sc.width_cm || ''),
+          height: (sc.height !== undefined && sc.height !== null && sc.height !== '') ? sc.height : (sc.height_cm || '')
+        };
+      })(),
       custom_footer_1: f1Prod,
       custom_footer_2: f2Prod,
       card_footer_text: f1Prod.text,
@@ -5558,13 +5573,16 @@ const ProductForm = (() => {
     const isPhysical = primaryState.product_type !== 'non_physical';
     const shippingCfg = primaryState.shipping_config || {
       is_cod: false,
-      couriers: ['pickup', 'instant', 'reguler'],
-      weight: 100,
+      cod_local: true,
+      cod_expedition: true,
+      couriers: ['pickup', 'local_store', 'reguler'],
+      weight: '',
       weight_unit: 'gram',
-      length: 10,
-      width: 10,
-      height: 5
+      length: '',
+      width: '',
+      height: ''
     };
+    const couriersList = Array.isArray(shippingCfg.couriers) ? shippingCfg.couriers : ['pickup', 'local_store', 'reguler'];
 
     const allCategories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
     const currentSubs = primaryState.category_id ? DB.getSubCategories(primaryState.category_id) : [];
@@ -5908,40 +5926,129 @@ const ProductForm = (() => {
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Pengiriman & Dimensi Paket</h2>
             </div>
 
-            <div class="space-y-3">
-              <!-- Checkbox COD -->
-              <label class="p-3 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition select-none">
-                <input 
-                  type="checkbox" 
-                  id="toggle-is-cod" 
-                  ${shippingCfg.is_cod ? 'checked' : ''} 
-                  class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
-                />
-                <div>
-                  <span class="text-xs font-bold text-slate-800 block">Sistem COD (Bayar di Tempat)</span>
-                  <span class="text-[11px] text-slate-500 block">Izinkan pembeli membayar pesanan secara tunai saat barang diterima.</span>
+            <div class="space-y-4">
+              <!-- Kontrol Sistem COD dengan Toggle Switch di Kanan -->
+              <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
+                <div class="flex items-center justify-between gap-3 select-none">
+                  <div class="space-y-0.5">
+                    <span class="text-xs font-bold text-slate-800 block">Sistem COD (Bayar di Tempat)</span>
+                    <span class="text-[11px] text-slate-500 block leading-snug">Izinkan pembeli membayar pesanan secara tunai saat barang diterima.</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input 
+                      type="checkbox" 
+                      id="toggle-is-cod" 
+                      ${shippingCfg.is_cod ? 'checked' : ''} 
+                      class="sr-only peer"
+                    />
+                    <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
                 </div>
-              </label>
 
-              <!-- Pilihan Kurir -->
-              <div class="space-y-1.5 pt-1">
-                <label class="block text-xs font-bold text-slate-700">Pilihan Kurir Tersedia:</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
-                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none text-xs">
-                    <input type="checkbox" name="courier_checkbox" value="pickup" ${(shippingCfg.couriers || []).includes('pickup') ? 'checked' : ''} class="w-4 h-4 text-emerald-600 rounded cursor-pointer" />
-                    <span class="font-medium text-slate-800">Ambil di Toko (Pickup)</span>
+                <!-- Sub-opsi Cakupan COD (Muncul Saat ON) -->
+                <div id="cod-scope-options-container" class="${shippingCfg.is_cod ? 'block' : 'hidden'} pt-2.5 border-t border-slate-200/80 space-y-2">
+                  <div class="text-[11px] font-bold text-slate-700">Pilih Cakupan Area COD:</div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <label class="p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer flex items-start gap-2.5 select-none transition">
+                      <input 
+                        type="checkbox" 
+                        id="chk-cod-local" 
+                        ${shippingCfg.cod_local !== false ? 'checked' : ''} 
+                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer mt-0.5 shrink-0" 
+                      />
+                      <div class="space-y-0.5 min-w-0">
+                        <span class="text-xs font-semibold text-slate-800 block leading-tight">COD Kurir Toko (Area Desa / Kecamatan Terdekat)</span>
+                        <span class="text-[10px] text-slate-500 block leading-tight">Pembeli bayar tunai langsung ke kurir toko saat diantar.</span>
+                      </div>
+                    </label>
+                    <label class="p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer flex items-start gap-2.5 select-none transition">
+                      <input 
+                        type="checkbox" 
+                        id="chk-cod-expedition" 
+                        ${shippingCfg.cod_expedition !== false ? 'checked' : ''} 
+                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer mt-0.5 shrink-0" 
+                      />
+                      <div class="space-y-0.5 min-w-0">
+                        <span class="text-xs font-semibold text-slate-800 block leading-tight">COD Ekspedisi (Luar Kota via Kurir Reguler)</span>
+                        <span class="text-[10px] text-slate-500 block leading-tight">Pembayaran COD melalui mitra ekspedisi pengiriman.</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pilihan Kurir Tersedia -->
+              <div class="space-y-2 pt-1">
+                <label class="block text-xs font-bold text-slate-800">Pilihan Kurir Tersedia:</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer flex items-start gap-2.5 select-none transition">
+                    <input 
+                      type="checkbox" 
+                      name="courier_checkbox" 
+                      value="pickup" 
+                      ${couriersList.includes('pickup') ? 'checked' : ''} 
+                      class="w-4 h-4 text-emerald-600 rounded cursor-pointer mt-0.5 shrink-0" 
+                    />
+                    <div class="space-y-0.5 min-w-0">
+                      <span class="text-xs font-bold text-slate-800 block leading-tight">Ambil di Toko (Pickup)</span>
+                      <span class="text-[10px] text-slate-500 block leading-tight">Pembeli mengambil sendiri di lokasi toko (Tanpa Ongkir).</span>
+                    </div>
                   </label>
-                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none text-xs">
-                    <input type="checkbox" name="courier_checkbox" value="instant" ${(shippingCfg.couriers || []).includes('instant') ? 'checked' : ''} class="w-4 h-4 text-emerald-600 rounded cursor-pointer" />
-                    <span class="font-medium text-slate-800">Kurir Instan Lokal</span>
+
+                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer flex items-start gap-2.5 select-none transition">
+                    <input 
+                      type="checkbox" 
+                      name="courier_checkbox" 
+                      value="local_store" 
+                      ${couriersList.includes('local_store') || couriersList.includes('instant') ? 'checked' : ''} 
+                      class="w-4 h-4 text-emerald-600 rounded cursor-pointer mt-0.5 shrink-0" 
+                    />
+                    <div class="space-y-0.5 min-w-0">
+                      <span class="text-xs font-bold text-slate-800 block leading-tight">Kurir Toko / Lokal (Desa & Kecamatan)</span>
+                      <span class="text-[10px] text-slate-500 block leading-tight">Diantar sendiri untuk area satu desa/kecamatan (Gratis / Tarif Lokal).</span>
+                    </div>
                   </label>
-                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none text-xs">
-                    <input type="checkbox" name="courier_checkbox" value="reguler" ${(shippingCfg.couriers || []).includes('reguler') ? 'checked' : ''} class="w-4 h-4 text-emerald-600 rounded cursor-pointer" />
-                    <span class="font-medium text-slate-800">Reguler (J&T/JNE/SiCepat)</span>
+
+                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer flex items-start gap-2.5 select-none transition">
+                    <input 
+                      type="checkbox" 
+                      name="courier_checkbox" 
+                      value="reguler" 
+                      ${couriersList.includes('reguler') ? 'checked' : ''} 
+                      class="w-4 h-4 text-emerald-600 rounded cursor-pointer mt-0.5 shrink-0" 
+                    />
+                    <div class="space-y-0.5 min-w-0">
+                      <span class="text-xs font-bold text-slate-800 block leading-tight">Reguler Domestik (J&T / JNE / SiCepat, dll)</span>
+                      <span class="text-[10px] text-slate-500 block leading-tight">Pengiriman standar antar kota seluruh Indonesia.</span>
+                    </div>
                   </label>
-                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none text-xs">
-                    <input type="checkbox" name="courier_checkbox" value="cargo" ${(shippingCfg.couriers || []).includes('cargo') ? 'checked' : ''} class="w-4 h-4 text-emerald-600 rounded cursor-pointer" />
-                    <span class="font-medium text-slate-800">Kargo (Trucking)</span>
+
+                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer flex items-start gap-2.5 select-none transition">
+                    <input 
+                      type="checkbox" 
+                      name="courier_checkbox" 
+                      value="cargo" 
+                      ${couriersList.includes('cargo') ? 'checked' : ''} 
+                      class="w-4 h-4 text-emerald-600 rounded cursor-pointer mt-0.5 shrink-0" 
+                    />
+                    <div class="space-y-0.5 min-w-0">
+                      <span class="text-xs font-bold text-slate-800 block leading-tight">Kargo / Partai Besar (Trucking)</span>
+                      <span class="text-[10px] text-slate-500 block leading-tight">Ekspedisi muatan berat atau jumlah banyak.</span>
+                    </div>
+                  </label>
+
+                  <label class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer flex items-start gap-2.5 select-none transition">
+                    <input 
+                      type="checkbox" 
+                      name="courier_checkbox" 
+                      value="international" 
+                      ${couriersList.includes('international') ? 'checked' : ''} 
+                      class="w-4 h-4 text-emerald-600 rounded cursor-pointer mt-0.5 shrink-0" 
+                    />
+                    <div class="space-y-0.5 min-w-0">
+                      <span class="text-xs font-bold text-slate-800 block leading-tight">Luar Negeri (Internasional / Export)</span>
+                      <span class="text-[10px] text-slate-500 block leading-tight">Pengiriman lintas negara (mendukung ekspedisi internasional).</span>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -5957,15 +6064,17 @@ const ProductForm = (() => {
                       type="number" 
                       id="input-package-weight" 
                       min="1"
-                      value="${shippingCfg.weight || 100}" 
-                      class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white"
-                      placeholder="100"
+                      step="any"
+                      value="${shippingCfg.weight !== undefined && shippingCfg.weight !== null && shippingCfg.weight !== '' ? shippingCfg.weight : ''}" 
+                      class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white transition"
+                      placeholder="Masukkan berat"
                     />
-                    <select id="select-package-weight-unit" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500">
+                    <select id="select-package-weight-unit" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500 transition shrink-0">
                       <option value="gram" ${shippingCfg.weight_unit === 'gram' ? 'selected' : ''}>gram</option>
                       <option value="kg" ${shippingCfg.weight_unit === 'kg' ? 'selected' : ''}>kg</option>
                     </select>
                   </div>
+                  <span id="package-weight-error-msg" class="text-[11px] text-red-600 font-semibold hidden mt-1">Berat Paket wajib diisi untuk produk fisik.</span>
                   <span class="text-[10px] text-slate-400 mt-1 block">Digunakan untuk kalkulasi tarif ekspedisi kiloan.</span>
                 </div>
 
@@ -5973,18 +6082,21 @@ const ProductForm = (() => {
                   <label class="block text-xs font-bold text-slate-800 mb-1">Ukuran Dimensi Paket (Opsional):</label>
                   <div class="grid grid-cols-3 gap-1.5">
                     <div>
-                      <input type="number" id="input-dim-length" min="1" value="${shippingCfg.length || ''}" placeholder="P" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold focus:border-emerald-500 outline-none bg-white" />
+                      <input type="number" id="input-dim-length" min="1" step="any" value="${shippingCfg.length || ''}" placeholder="P" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold focus:border-emerald-500 outline-none bg-white transition" />
                       <span class="text-[9px] text-slate-400 block text-center mt-0.5">P (cm)</span>
                     </div>
                     <div>
-                      <input type="number" id="input-dim-width" min="1" value="${shippingCfg.width || ''}" placeholder="L" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold focus:border-emerald-500 outline-none bg-white" />
+                      <input type="number" id="input-dim-width" min="1" step="any" value="${shippingCfg.width || ''}" placeholder="L" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold focus:border-emerald-500 outline-none bg-white transition" />
                       <span class="text-[9px] text-slate-400 block text-center mt-0.5">L (cm)</span>
                     </div>
                     <div>
-                      <input type="number" id="input-dim-height" min="1" value="${shippingCfg.height || ''}" placeholder="T" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold focus:border-emerald-500 outline-none bg-white" />
+                      <input type="number" id="input-dim-height" min="1" step="any" value="${shippingCfg.height || ''}" placeholder="T" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold focus:border-emerald-500 outline-none bg-white transition" />
                       <span class="text-[9px] text-slate-400 block text-center mt-0.5">T (cm)</span>
                     </div>
                   </div>
+                  
+                  <!-- Info Berat Volumetrik Real-Time -->
+                  <div id="volumetric-weight-info" class="mt-2.5 p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-xs text-slate-700 hidden transition"></div>
                 </div>
               </div>
             </div>
@@ -14004,12 +14116,140 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Card 3: Pengiriman
     const toggleCod = document.getElementById('toggle-is-cod');
+    const codScopeCont = document.getElementById('cod-scope-options-container');
     if (toggleCod) {
       toggleCod.onchange = (e) => {
         if (!primaryState.shipping_config) primaryState.shipping_config = {};
         primaryState.shipping_config.is_cod = e.target.checked;
+        if (codScopeCont) {
+          if (e.target.checked) codScopeCont.classList.remove('hidden');
+          else codScopeCont.classList.add('hidden');
+        }
       };
     }
+
+    const chkCodLocal = document.getElementById('chk-cod-local');
+    if (chkCodLocal) {
+      chkCodLocal.onchange = (e) => {
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.cod_local = e.target.checked;
+      };
+    }
+
+    const chkCodExp = document.getElementById('chk-cod-expedition');
+    if (chkCodExp) {
+      chkCodExp.onchange = (e) => {
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.cod_expedition = e.target.checked;
+      };
+    }
+
+    const courierCheckboxes = document.querySelectorAll('input[name="courier_checkbox"]');
+    courierCheckboxes.forEach(cb => {
+      cb.onchange = () => {
+        const checkedBoxes = document.querySelectorAll('input[name="courier_checkbox"]:checked');
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.couriers = Array.from(checkedBoxes).map(b => b.value);
+      };
+    });
+
+    function updateVolumetricWeightCalculation() {
+      const lInp = document.getElementById('input-dim-length');
+      const wInp = document.getElementById('input-dim-width');
+      const hInp = document.getElementById('input-dim-height');
+      const weightInp = document.getElementById('input-package-weight');
+      const unitSel = document.getElementById('select-package-weight-unit');
+      const infoEl = document.getElementById('volumetric-weight-info');
+
+      if (!infoEl) return;
+
+      const l = parseFloat(lInp?.value) || 0;
+      const w = parseFloat(wInp?.value) || 0;
+      const h = parseFloat(hInp?.value) || 0;
+
+      if (l > 0 && w > 0 && h > 0) {
+        // Formula: Berat Volumetrik (kg) = (P * L * T) / 6000, gram = kg * 1000
+        const volKg = (l * w * h) / 6000;
+        const volGram = Math.round(volKg * 1000);
+        const volKgFormatted = (Math.round(volKg * 100) / 100).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+        const volGramFormatted = volGram.toLocaleString('id-ID');
+
+        // Bandingkan dengan berat paket aktual jika diisi
+        let pkgGram = 0;
+        if (weightInp && weightInp.value.trim() !== '') {
+          const rawW = parseFloat(weightInp.value) || 0;
+          const unit = unitSel?.value || 'gram';
+          pkgGram = unit === 'kg' ? rawW * 1000 : rawW;
+        }
+
+        const isVolumetricHeavier = pkgGram > 0 && volGram > pkgGram;
+
+        infoEl.innerHTML = `
+          <div class="flex items-start gap-2">
+            <i class="bi bi-box-seam text-emerald-600 text-sm mt-0.5 shrink-0"></i>
+            <div class="space-y-0.5 min-w-0">
+              <span class="font-bold text-slate-800 block text-xs">Estimasi Berat Volumetrik: ${volGramFormatted} gram (${volKgFormatted} kg)</span>
+              ${isVolumetricHeavier ? `
+                <span class="text-[11px] text-amber-700 font-semibold block">
+                  <i class="bi bi-exclamation-triangle-fill mr-1 text-amber-600"></i>
+                  Ekspedisi akan menggunakan berat volumetrik karena ukuran paket besar.
+                </span>
+              ` : `
+                <span class="text-[10px] text-slate-500 block">Dihitung dengan rumus standar logistik ekspedisi: (P × L × T) ÷ 6.000</span>
+              `}
+            </div>
+          </div>
+        `;
+        infoEl.classList.remove('hidden');
+      } else {
+        infoEl.classList.add('hidden');
+        infoEl.innerHTML = '';
+      }
+    }
+
+    const pkgWeightInp = document.getElementById('input-package-weight');
+    const pkgWeightUnitSel = document.getElementById('select-package-weight-unit');
+    const dimLInp = document.getElementById('input-dim-length');
+    const dimWInp = document.getElementById('input-dim-width');
+    const dimHInp = document.getElementById('input-dim-height');
+
+    if (pkgWeightInp) {
+      pkgWeightInp.oninput = (e) => {
+        const val = e.target.value.trim();
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.weight = val !== '' ? (parseFloat(val) || '') : '';
+        const weightErrEl = document.getElementById('package-weight-error-msg');
+        if (val !== '' && parseFloat(val) > 0) {
+          pkgWeightInp.classList.remove('border-red-500');
+          pkgWeightInp.classList.add('border-slate-300');
+          if (weightErrEl) weightErrEl.classList.add('hidden');
+        }
+        updateVolumetricWeightCalculation();
+      };
+    }
+
+    if (pkgWeightUnitSel) {
+      pkgWeightUnitSel.onchange = (e) => {
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.weight_unit = e.target.value || 'gram';
+        updateVolumetricWeightCalculation();
+      };
+    }
+
+    [dimLInp, dimWInp, dimHInp].forEach(inp => {
+      if (inp) {
+        inp.oninput = () => {
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          if (inp === dimLInp) primaryState.shipping_config.length = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
+          if (inp === dimWInp) primaryState.shipping_config.width = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
+          if (inp === dimHInp) primaryState.shipping_config.height = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
+          updateVolumetricWeightCalculation();
+        };
+      }
+    });
+
+    // Inisialisasi hitungan volumetrik jika sudah ada nilai
+    updateVolumetricWeightCalculation();
 
     // Card 4: Promo Diskon
     const togglePromo = document.getElementById('toggle-monthly-discount');
@@ -16555,21 +16795,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (!primaryState.shipping_config) primaryState.shipping_config = {};
     const codCheck = document.getElementById('toggle-is-cod') || document.getElementById('check-shipping-cod');
     if (codCheck) primaryState.shipping_config.is_cod = codCheck.checked;
+    const codLocalChk = document.getElementById('chk-cod-local');
+    if (codLocalChk) primaryState.shipping_config.cod_local = codLocalChk.checked;
+    const codExpChk = document.getElementById('chk-cod-expedition');
+    if (codExpChk) primaryState.shipping_config.cod_expedition = codExpChk.checked;
 
     const courierBoxes = document.querySelectorAll('input[name="courier_checkbox"]:checked, .check-courier-service:checked');
-    if (courierBoxes.length > 0) {
-      primaryState.shipping_config.couriers = Array.from(courierBoxes).map(cb => cb.value);
-    }
+    primaryState.shipping_config.couriers = Array.from(courierBoxes).map(cb => cb.value);
 
     const pkgWeightInp = document.getElementById('input-package-weight') || document.getElementById('input-pkg-weight');
-    if (pkgWeightInp) primaryState.shipping_config.weight = parseFloat(pkgWeightInp.value) || 0;
+    if (pkgWeightInp) {
+      const wRaw = pkgWeightInp.value.trim();
+      primaryState.shipping_config.weight = wRaw !== '' ? (parseFloat(wRaw) || '') : '';
+    }
 
     const pkgWeightUnitSel = document.getElementById('select-package-weight-unit') || document.getElementById('select-pkg-weight-unit');
     if (pkgWeightUnitSel) primaryState.shipping_config.weight_unit = pkgWeightUnitSel.value || 'gram';
 
-    const pkgL = parseFloat(document.getElementById('input-dim-length')?.value || document.getElementById('input-pkg-length')?.value) || 0;
-    const pkgW = parseFloat(document.getElementById('input-dim-width')?.value || document.getElementById('input-pkg-width')?.value) || 0;
-    const pkgH = parseFloat(document.getElementById('input-dim-height')?.value || document.getElementById('input-pkg-height')?.value) || 0;
+    const rawL = (document.getElementById('input-dim-length')?.value || document.getElementById('input-pkg-length')?.value || '').trim();
+    const rawW = (document.getElementById('input-dim-width')?.value || document.getElementById('input-pkg-width')?.value || '').trim();
+    const rawH = (document.getElementById('input-dim-height')?.value || document.getElementById('input-pkg-height')?.value || '').trim();
+
+    const pkgL = rawL !== '' ? (parseFloat(rawL) || '') : '';
+    const pkgW = rawW !== '' ? (parseFloat(rawW) || '') : '';
+    const pkgH = rawH !== '' ? (parseFloat(rawH) || '') : '';
+
     primaryState.shipping_config.length_cm = pkgL;
     primaryState.shipping_config.width_cm = pkgW;
     primaryState.shipping_config.height_cm = pkgH;
@@ -16924,8 +17174,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (primaryState.product_type === 'physical') {
       const pkgWeight = primaryState.shipping_config?.weight;
       const weightInp = document.getElementById('input-package-weight') || document.getElementById('input-pkg-weight');
-      if (pkgWeight === undefined || pkgWeight === null || isNaN(pkgWeight) || pkgWeight <= 0) {
-        addError('Berat paket pengiriman wajib diisi (minimal 1 gram).', weightInp || document.getElementById('card-step2-shipping'));
+      const weightErrEl = document.getElementById('package-weight-error-msg');
+      const isWeightInvalid = pkgWeight === undefined || pkgWeight === null || pkgWeight === '' || isNaN(parseFloat(pkgWeight)) || parseFloat(pkgWeight) <= 0;
+      
+      if (isWeightInvalid) {
+        addError('Berat Paket wajib diisi untuk produk fisik.', weightInp || document.getElementById('card-step2-shipping'));
+        if (weightInp) {
+          weightInp.classList.add('border-red-500');
+          weightInp.classList.remove('border-slate-300');
+        }
+        if (weightErrEl) weightErrEl.classList.remove('hidden');
+      } else {
+        if (weightInp) {
+          weightInp.classList.remove('border-red-500');
+          weightInp.classList.add('border-slate-300');
+        }
+        if (weightErrEl) weightErrEl.classList.add('hidden');
+      }
+
+      const couriers = primaryState.shipping_config?.couriers;
+      if (!Array.isArray(couriers) || couriers.length === 0) {
+        const firstCourierCheckbox = document.querySelector('input[name="courier_checkbox"]');
+        addError('Pilih minimal 1 kurir pengiriman untuk produk fisik.', firstCourierCheckbox || document.getElementById('card-step2-shipping'));
       }
     }
 

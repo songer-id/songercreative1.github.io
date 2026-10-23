@@ -707,7 +707,8 @@ body {
    PRODUCT FORM LIVE PREVIEW SIDEBAR (DOCK UNDER TOPBAR)
    ========================================================================== */
 #desktop-preview-sidebar {
-  top: 4rem !important; /* 64px - persis di bawah garis batas navbar h-16 */
+  top: 4rem !important;
+  /* 64px - persis di bawah garis batas navbar h-16 */
   height: calc(100vh - 4rem) !important;
   box-shadow: none !important;
   z-index: 30 !important;
@@ -718,7 +719,8 @@ body {
    ========================================================================== */
 #step2-subnav-fixed,
 #step2-subnav-sticky {
-  top: 4rem !important; /* right below h-16 navbar */
+  top: 4rem !important;
+  /* right below h-16 navbar */
   z-index: 30 !important;
 }
 
@@ -736,7 +738,8 @@ body {
 #view-product-form [id^="card-step2-"],
 #view-product-form .bg-white.border.border-slate-200.shadow-xs,
 #view-product-form .bg-white.border.border-slate-200.shadow-sm {
-  border-radius: 0.5rem !important; /* 8px (rounded-lg) */
+  border-radius: 0.5rem !important;
+  /* 8px (rounded-lg) */
 }
 
 #view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.rounded-full):not(.mat-input):not(.fin-input),
@@ -746,13 +749,15 @@ body {
 #view-product-form button.rounded-2xl,
 #view-product-form .input-custom-label-slot,
 #view-product-form .btn-primary-brand {
-  border-radius: 0.375rem !important; /* 6px (rounded-md) */
+  border-radius: 0.375rem !important;
+  /* 6px (rounded-md) */
 }
 
 /* Mobile FAB Live Preview position (centered at bottom) */
 #btn-fab-live-preview {
   position: fixed !important;
-  bottom: 1rem !important; /* 16px bottom-4 */
+  bottom: 1rem !important;
+  /* 16px bottom-4 */
   left: 50% !important;
   transform: translateX(-50%) !important;
   right: auto !important;
@@ -769,14 +774,16 @@ body {
 
 .variation-table {
   border-collapse: collapse !important;
-  border: 1px solid #334155 !important; /* border-slate-700 */
+  border: 1px solid #334155 !important;
+  /* border-slate-700 */
   background-color: #ffffff;
   width: 100%;
 }
 
 .variation-table th,
 .variation-table td {
-  border: 1px solid #334155 !important; /* border-slate-700 */
+  border: 1px solid #334155 !important;
+  /* border-slate-700 */
 }
 
 .variation-table thead tr:first-child th {
@@ -813,8 +820,10 @@ body {
 }
 
 .variation-img-btn {
-  width: 2.5rem; /* 40px w-10 */
-  height: 2rem;  /* 32px h-8 */
+  width: 2.5rem;
+  /* 40px w-10 */
+  height: 2rem;
+  /* 32px h-8 */
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -851,6 +860,7 @@ body {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+
   .variation-option-row input,
   .variation-option-row select {
     font-size: 11px !important;
@@ -887,13 +897,13 @@ body {
 }
 
 /* Toggle Switch Reliability */
-input.toggle-same-price:checked ~ div,
-input.toggle-same-cost:checked ~ div {
+input.toggle-same-price:checked~div,
+input.toggle-same-cost:checked~div {
   background-color: #059669 !important;
 }
 
-input.toggle-same-price:checked ~ div::after,
-input.toggle-same-cost:checked ~ div::after {
+input.toggle-same-price:checked~div::after,
+input.toggle-same-cost:checked~div::after {
   transform: translateX(1rem) !important;
 }
 
@@ -901,15 +911,18 @@ input.toggle-same-cost:checked ~ div::after {
 #admin-mobile-nav {
   display: none !important;
 }
+
 /* Input Angka Tabel Variasi: Minimum Width 95px agar teks & placeholder "Stok" terbaca penuh */
 .variation-option-row input[data-field="price"],
 .variation-option-row input[data-field="cost_price"] {
   min-width: 100px !important;
 }
+
 .variation-option-row input[data-field="stock"] {
   min-width: 95px !important;
 }
-#view-product-form .variation-option-row > div.grid,
+
+#view-product-form .variation-option-row>div.grid,
 #view-product-form .variation-option-row input.mat-input,
 #view-product-form .variation-option-row input.fin-input,
 #view-product-form .variation-option-row select.fin-input,
@@ -921,12 +934,21 @@ input.toggle-same-cost:checked ~ div::after {
 .custom-combobox-wrapper {
   position: relative;
 }
+
 .custom-combobox-popover {
   animation: comboboxFadeIn 0.15s ease-out;
 }
+
 @keyframes comboboxFadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ==========================================================================
@@ -936,10 +958,19 @@ input.toggle-same-cost:checked ~ div::after {
 .animate-modal-pop {
   animation: fadeInModal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 @keyframes fadeInModal {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
+
 .btn-preview-tier1,
 .btn-preview-tier2,
 .btn-preview-tier3,
@@ -966,12 +997,15 @@ input.toggle-same-cost:checked ~ div::after {
     z-index: 35 !important;
     box-shadow: none !important;
   }
+
   #desktop-preview-sidebar.translate-x-full {
     transform: translateX(100%) !important;
   }
+
   #desktop-preview-sidebar.translate-x-0 {
     transform: translateX(0) !important;
   }
+
   /* Sembunyikan mutlak Mobile Preview Drawer & FAB di layar Desktop */
   #mobile-preview-sheet,
   #mobile-preview-backdrop,
@@ -987,6 +1021,7 @@ input.toggle-same-cost:checked ~ div::after {
 }
 
 @media (max-width: 1023.98px) {
+
   #desktop-preview-sidebar,
   #btn-expand-preview-sidebar {
     display: none !important;
@@ -1038,6 +1073,7 @@ input.toggle-same-cost:checked ~ div::after {
   -webkit-appearance: none;
   margin: 0;
 }
+
 .input-preview-test-qty {
   -moz-appearance: textfield;
 }
@@ -1046,6 +1082,7 @@ input.toggle-same-cost:checked ~ div::after {
 .scrollbar-none::-webkit-scrollbar {
   display: none !important;
 }
+
 .scrollbar-none {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
@@ -1099,10 +1136,12 @@ input.toggle-same-cost:checked ~ div::after {
   border-radius: 6px;
   transition: all 0.15s ease-in-out;
 }
+
 .extra-item-row.is-active {
   background-color: #ffffff !important;
   border-color: #33b589 !important;
 }
+
 .extra-item-row:not(.is-active) {
   background-color: #f8fafc;
   border-color: #e2e8f0;
@@ -1120,6 +1159,7 @@ input.toggle-same-cost:checked ~ div::after {
   font-weight: 600;
   text-align: left;
 }
+
 .field-error-msg.hidden {
   display: none !important;
 }
@@ -1136,6 +1176,7 @@ input.toggle-same-cost:checked ~ div::after {
   font-weight: 600;
   text-align: left;
 }
+
 .label-dup-error-msg.hidden {
   display: none !important;
 }
@@ -1160,9 +1201,11 @@ input.toggle-same-cost:checked ~ div::after {
 .btn-clear-custom-label {
   display: none;
 }
+
 .btn-clear-custom-label.flex {
   display: flex !important;
 }
+
 .btn-clear-custom-label:hover {
   color: #0f172a;
 }
@@ -1171,6 +1214,7 @@ input.toggle-same-cost:checked ~ div::after {
 .max-order-popover {
   min-width: 120px !important;
 }
+
 .btn-select-max-unlimited {
   display: block;
   width: 100%;
@@ -1186,9 +1230,12 @@ input.toggle-same-cost:checked ~ div::after {
 }
 
 @keyframes pulse-border-red {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 2px #f87171;
   }
+
   50% {
     box-shadow: 0 0 0 4px #ef4444;
   }
@@ -1209,6 +1256,7 @@ input.toggle-same-cost:checked ~ div::after {
 .btn-remove-variation-tier {
   transition: color 0.15s ease-in-out, transform 0.1s ease-in-out;
 }
+
 .btn-remove-variation-tier:active {
   transform: scale(0.92);
 }
@@ -1233,8 +1281,8 @@ input.toggle-same-cost:checked ~ div::after {
 /* --------------------------------------------------------------------------
    DYNAMIC GALLERY RATIO SCALING (MOBILE & DESKTOP)
    -------------------------------------------------------------------------- */
-#gallery-slots-container > div,
-#gallery-slots-container > #btn-slot-add-photo {
+#gallery-slots-container>div,
+#gallery-slots-container>#btn-slot-add-photo {
   width: 100% !important;
   height: auto !important;
 }
@@ -1264,6 +1312,7 @@ input.toggle-same-cost:checked ~ div::after {
     align-items: stretch !important;
     padding: 0.75rem !important;
   }
+
   .option-dim-calc-wrapper .select-option-calc-mode,
   .option-dim-calc-wrapper .select-option-dim-side,
   .option-dim-calc-wrapper .input-option-dim-add {
@@ -1271,21 +1320,25 @@ input.toggle-same-cost:checked ~ div::after {
     min-height: 38px;
     font-size: 0.8125rem;
   }
+
   .option-dim-calc-wrapper .dim-add-controls-wrapper {
     width: 100% !important;
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 0.5rem !important;
   }
+
   #card-custom-dimension-pxl #select-dimension-main-component,
   #card-custom-dimension-pxl #select-dimension-unit {
     width: 100% !important;
     min-height: 40px;
   }
+
   #sandbox-pxl-calculator-panel #sandbox-select-main-option {
     width: 100% !important;
     min-height: 40px;
   }
+
   #sandbox-input-dim-p,
   #sandbox-input-dim-l {
     min-height: 40px;
@@ -1296,6 +1349,7 @@ input.toggle-same-cost:checked ~ div::after {
   touch-action: manipulation;
   min-height: 40px;
 }
+
 .sandbox-finishing-chip:active {
   transform: scale(0.99);
 }
@@ -1308,6 +1362,7 @@ input.toggle-same-cost:checked ~ div::after {
   user-select: none;
   transition: all 0.15s ease-in-out;
 }
+
 #card-custom-dimension-pxl label:has(#toggle-dim-min-one-price):active,
 #card-custom-dimension-pxl label:has(#toggle-dim-min-one-cost):active,
 #card-custom-dimension-pxl label:has(#chk-min-one-unit-price):active,
@@ -1328,6 +1383,7 @@ input.toggle-same-cost:checked ~ div::after {
   -webkit-appearance: none;
   margin: 0;
 }
+
 .input-shopee-dim-p,
 .input-shopee-dim-l,
 .input-option-dim-add,
@@ -1340,14 +1396,17 @@ input.toggle-same-cost:checked ~ div::after {
 .dimension-rule-card {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .dimension-rule-card:hover {
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
 }
+
 .rule-option-chip {
   transition: all 0.15s ease-in-out;
   touch-action: manipulation;
   user-select: none;
 }
+
 .rule-option-chip:active {
   transform: scale(0.97);
 }
@@ -1357,6 +1416,7 @@ input.toggle-same-cost:checked ~ div::after {
   -webkit-appearance: none;
   margin: 0;
 }
+
 .input-rule-dim-add {
   -moz-appearance: textfield;
 }
@@ -1403,6 +1463,7 @@ input.toggle-same-cost:checked ~ div::after {
    MOBILE SAAS HYGIENE & NESTED BORDERS ELIMINATION (< 640px)
    -------------------------------------------------------------------------- */
 @media (max-width: 640px) {
+
   /* Kurangi padding horizontal berlebih pada wrapper luar form produk */
   #admin-main-viewport {
     padding-left: 0.5rem !important;
@@ -1443,7 +1504,7 @@ input.toggle-same-cost:checked ~ div::after {
 #custom-dim-no-variant-warning {
   transition: all 0.25s ease-in-out;
 }
+
 #custom-dim-no-variant-warning.hidden {
   display: none !important;
 }
-
