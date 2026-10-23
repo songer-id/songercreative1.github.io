@@ -54,12 +54,10 @@ const ProductForm = (() => {
     dimension_main_component: '',
     dimension_unit: '',
     custom_dimension_unit: '',
-    dim_min_one_price: true,
-    is_custom_min_price_active: false,
+    dim_min_one_price: false,
     min_area_threshold: null,
     min_area_charge_value: null,
     dim_min_one_cost: false,
-    is_custom_min_hpp_active: false,
     min_hpp_threshold: null,
     min_hpp_charge_value: null,
     dimension_rules: [],
@@ -415,12 +413,10 @@ const ProductForm = (() => {
       dimension_main_component: '',
       dimension_unit: '',
       custom_dimension_unit: '',
-      dim_min_one_price: true,
-      is_custom_min_price_active: false,
+      dim_min_one_price: false,
       min_area_threshold: null,
       min_area_charge_value: null,
       dim_min_one_cost: false,
-      is_custom_min_hpp_active: false,
       min_hpp_threshold: null,
       min_hpp_charge_value: null,
       dimension_rules: [],
@@ -637,12 +633,10 @@ const ProductForm = (() => {
     primaryState.dimension_main_component = prod.dimension_main_component || '';
     primaryState.dimension_unit = prod.dimension_unit || prod.custom_dimension_unit || '';
     primaryState.custom_dimension_unit = primaryState.dimension_unit;
-    primaryState.dim_min_one_price = prod.dim_min_one_price !== undefined ? Boolean(prod.dim_min_one_price) : true;
-    primaryState.is_custom_min_price_active = prod.is_custom_min_price_active !== undefined ? Boolean(prod.is_custom_min_price_active) : (prod.min_area_threshold !== undefined && prod.min_area_threshold !== null && prod.min_area_threshold !== '');
+    primaryState.dim_min_one_price = prod.dim_min_one_price !== undefined ? Boolean(prod.dim_min_one_price) : false;
     primaryState.min_area_threshold = (prod.min_area_threshold !== undefined && prod.min_area_threshold !== null && prod.min_area_threshold !== '') ? parseFloat(prod.min_area_threshold) : null;
     primaryState.min_area_charge_value = (prod.min_area_charge_value !== undefined && prod.min_area_charge_value !== null && prod.min_area_charge_value !== '') ? parseFloat(prod.min_area_charge_value) : null;
     primaryState.dim_min_one_cost = prod.dim_min_one_cost !== undefined ? Boolean(prod.dim_min_one_cost) : false;
-    primaryState.is_custom_min_hpp_active = prod.is_custom_min_hpp_active !== undefined ? Boolean(prod.is_custom_min_hpp_active) : (prod.min_hpp_threshold !== undefined && prod.min_hpp_threshold !== null && prod.min_hpp_threshold !== '');
     primaryState.min_hpp_threshold = (prod.min_hpp_threshold !== undefined && prod.min_hpp_threshold !== null && prod.min_hpp_threshold !== '') ? parseFloat(prod.min_hpp_threshold) : null;
     primaryState.min_hpp_charge_value = (prod.min_hpp_charge_value !== undefined && prod.min_hpp_charge_value !== null && prod.min_hpp_charge_value !== '') ? parseFloat(prod.min_hpp_charge_value) : null;
     primaryState.dimension_rules = Array.isArray(prod.dimension_rules) ? JSON.parse(JSON.stringify(prod.dimension_rules)) : [];
@@ -2402,10 +2396,7 @@ const ProductForm = (() => {
     const defThreshold = getDefaultMinAreaThreshold(dimUnit);
 
     const chkMinPrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
-    const isMinOnePriceActive = chkMinPrice ? chkMinPrice.checked : (primaryState.dim_min_one_price !== false);
-
-    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
-    const isCustomPriceActive = chkSubPrice ? chkSubPrice.checked : Boolean(primaryState.is_custom_min_price_active);
+    const isMinOnePriceActive = chkMinPrice ? chkMinPrice.checked : Boolean(primaryState.dim_min_one_price);
 
     const inMinPriceTh = document.getElementById('input-min-price-threshold');
     const minPriceTh = (inMinPriceTh && inMinPriceTh.value !== '')
@@ -2545,7 +2536,7 @@ const ProductForm = (() => {
     const unitAreaEff = (pEff * lEff) + (factor > 0 ? (directAreaAdd / (factor * factor)) : 0);
 
     const hasValidPriceTh = minPriceTh !== null && !isNaN(minPriceTh) && minPriceTh > 0;
-    const isPriceRounded = isMinOnePriceActive && isCustomPriceActive && hasValidPriceTh && unitAreaEff > 0 && unitAreaEff < minPriceTh;
+    const isPriceRounded = isMinOnePriceActive && hasValidPriceTh && unitAreaEff > 0 && unitAreaEff < minPriceTh;
     const chargedUnitAreaPrice = isPriceRounded ? (minPriceCh !== null && !isNaN(minPriceCh) && minPriceCh > 0 ? minPriceCh : minPriceTh) : unitAreaEff;
     const areaPrice = chargedUnitAreaPrice * (factor * factor);
 
@@ -2618,12 +2609,8 @@ const ProductForm = (() => {
   function getDrawerMinimalDimensionNoteText() {
     if (!primaryState.has_custom_dimension) return '';
     const chkMinPrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
-    const isMinOnePriceActive = chkMinPrice ? chkMinPrice.checked : (primaryState.dim_min_one_price !== false);
+    const isMinOnePriceActive = chkMinPrice ? chkMinPrice.checked : Boolean(primaryState.dim_min_one_price);
     if (!isMinOnePriceActive) return '';
-
-    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
-    const isCustomPriceActive = chkSubPrice ? chkSubPrice.checked : Boolean(primaryState.is_custom_min_price_active);
-    if (!isCustomPriceActive) return '';
 
     const unitSelect = document.getElementById('select-dimension-unit');
     const dimUnit = (unitSelect && unitSelect.value) ? unitSelect.value : (primaryState.dimension_unit || primaryState.custom_dimension_unit || 'cm');
@@ -7009,10 +6996,10 @@ const ProductForm = (() => {
     const lInputEl = document.getElementById('sandbox-input-dim-l');
     const mainOptEl = document.getElementById('sandbox-select-main-option');
 
-    if (pInputEl && pInputEl.value !== undefined && pInputEl.value !== '') {
+    if (pInputEl) {
       sandboxPxlState.simLength = pInputEl.value;
     }
-    if (lInputEl && lInputEl.value !== undefined && lInputEl.value !== '') {
+    if (lInputEl) {
       sandboxPxlState.simWidth = lInputEl.value;
     }
     if (mainOptEl && mainOptEl.value) {
@@ -7025,21 +7012,14 @@ const ProductForm = (() => {
       sandboxPxlState.selectedFinishingIds = val ? [val] : [];
     }
 
-    let pRaw = parseFloat(sandboxPxlState.simLength);
-    let lRaw = parseFloat(sandboxPxlState.simWidth);
+    const pRaw = parseFloat(sandboxPxlState.simLength);
+    const lRaw = parseFloat(sandboxPxlState.simWidth);
 
-    if (isNaN(pRaw)) {
-      pRaw = dimUnit === 'meter' ? 2 : (dimUnit === 'cm' ? 200 : 2000);
-    }
-    if (isNaN(lRaw)) {
-      lRaw = dimUnit === 'meter' ? 1 : (dimUnit === 'cm' ? 100 : 1000);
-    }
-
-    if (pRaw <= 0 || lRaw <= 0) {
+    if (isNaN(pRaw) || isNaN(lRaw) || pRaw <= 0 || lRaw <= 0) {
       return `
         <div class="p-3 bg-white border border-dashed border-slate-300 rounded-lg text-center text-xs text-slate-500">
-          <i class="bi bi-info-circle text-slate-400 mr-1"></i>
-          Ketik nilai <strong>Panjang (P)</strong> dan <strong>Lebar (L)</strong> di atas untuk melihat bedah kalkulasi real-time.
+          <i class="bi bi-info-circle text-slate-400 mr-1.5"></i>
+          Masukkan angka Panjang (P) dan Lebar (L) di atas untuk melihat simulasi perhitungan harga.
         </div>
       `;
     }
@@ -7112,57 +7092,49 @@ const ProductForm = (() => {
     const chkMinPrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
     if (chkMinPrice) primaryState.dim_min_one_price = chkMinPrice.checked;
 
-    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
-    if (chkSubPrice) primaryState.is_custom_min_price_active = chkSubPrice.checked;
-
     const inMinPriceTh = document.getElementById('input-min-price-threshold');
     if (inMinPriceTh) {
-      primaryState.min_area_threshold = inMinPriceTh.value !== '' ? parseFloat(inMinPriceTh.value) : null;
+      primaryState.min_area_threshold = inMinPriceTh.value.trim() !== '' ? parseFloat(inMinPriceTh.value) : null;
     }
 
     const inMinPriceCh = document.getElementById('input-min-price-charge');
     if (inMinPriceCh) {
-      primaryState.min_area_charge_value = inMinPriceCh.value !== '' ? parseFloat(inMinPriceCh.value) : null;
+      primaryState.min_area_charge_value = inMinPriceCh.value.trim() !== '' ? parseFloat(inMinPriceCh.value) : null;
     }
 
     const chkMinCost = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
     if (chkMinCost) primaryState.dim_min_one_cost = chkMinCost.checked;
 
-    const chkSubCost = document.getElementById('toggle-custom-min-hpp-box');
-    if (chkSubCost) primaryState.is_custom_min_hpp_active = chkSubCost.checked;
-
     const inMinHppTh = document.getElementById('input-min-hpp-threshold');
     if (inMinHppTh) {
-      primaryState.min_hpp_threshold = inMinHppTh.value !== '' ? parseFloat(inMinHppTh.value) : null;
+      primaryState.min_hpp_threshold = inMinHppTh.value.trim() !== '' ? parseFloat(inMinHppTh.value) : null;
     }
 
     const inMinHppCh = document.getElementById('input-min-hpp-charge');
     if (inMinHppCh) {
-      primaryState.min_hpp_charge_value = inMinHppCh.value !== '' ? parseFloat(inMinHppCh.value) : null;
+      primaryState.min_hpp_charge_value = inMinHppCh.value.trim() !== '' ? parseFloat(inMinHppCh.value) : null;
     }
 
     // Pemisahan aturan minimal antara Harga Jual vs Biaya Modal (HPP)
-    const isMinOnePriceActive = primaryState.dim_min_one_price !== false;
-    const isCustomPriceActive = Boolean(primaryState.is_custom_min_price_active);
+    const isMinOnePriceActive = Boolean(primaryState.dim_min_one_price);
     const minPriceTh = (primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && !isNaN(primaryState.min_area_threshold))
       ? parseFloat(primaryState.min_area_threshold) : null;
     const minPriceCh = (primaryState.min_area_charge_value !== undefined && primaryState.min_area_charge_value !== null && !isNaN(primaryState.min_area_charge_value))
       ? parseFloat(primaryState.min_area_charge_value) : minPriceTh;
 
     const isMinOneCostActive = Boolean(primaryState.dim_min_one_cost);
-    const isCustomCostActive = Boolean(primaryState.is_custom_min_hpp_active);
     const minHppTh = (primaryState.min_hpp_threshold !== undefined && primaryState.min_hpp_threshold !== null && !isNaN(primaryState.min_hpp_threshold))
       ? parseFloat(primaryState.min_hpp_threshold) : null;
     const minHppCh = (primaryState.min_hpp_charge_value !== undefined && primaryState.min_hpp_charge_value !== null && !isNaN(primaryState.min_hpp_charge_value))
       ? parseFloat(primaryState.min_hpp_charge_value) : minHppTh;
 
     const hasValidPriceTh = minPriceTh !== null && !isNaN(minPriceTh) && minPriceTh > 0;
-    const isPriceRounded = isMinOnePriceActive && isCustomPriceActive && hasValidPriceTh && unitAreaEff > 0 && unitAreaEff < minPriceTh;
+    const isPriceRounded = isMinOnePriceActive && hasValidPriceTh && unitAreaEff > 0 && unitAreaEff < minPriceTh;
     const chargedUnitAreaPrice = isPriceRounded ? (minPriceCh !== null && !isNaN(minPriceCh) && minPriceCh > 0 ? minPriceCh : minPriceTh) : unitAreaEff;
     const areaPrice = chargedUnitAreaPrice * (factor * factor);
 
     const hasValidCostTh = minHppTh !== null && !isNaN(minHppTh) && minHppTh > 0;
-    const isCostRounded = isMinOneCostActive && isCustomCostActive && hasValidCostTh && unitAreaEff > 0 && unitAreaEff < minHppTh;
+    const isCostRounded = isMinOneCostActive && hasValidCostTh && unitAreaEff > 0 && unitAreaEff < minHppTh;
     const chargedUnitAreaCost = isCostRounded ? (minHppCh !== null && !isNaN(minHppCh) && minHppCh > 0 ? minHppCh : minHppTh) : unitAreaEff;
     const areaCost = chargedUnitAreaCost * (factor * factor);
 
@@ -8239,34 +8211,18 @@ const ProductForm = (() => {
                     type="checkbox" 
                     id="chk-min-one-unit-price" 
                     class="sr-only peer" 
-                    ${primaryState.dim_min_one_price !== false ? 'checked' : ''}
+                    ${Boolean(primaryState.dim_min_one_price) ? 'checked' : ''}
                   />
-                  <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
                   <div class="space-y-0.5 min-w-0">
-                    <div class="text-xs font-bold text-slate-900 leading-tight">Harga Jual — Minimal Ukuran</div>
+                    <div class="text-xs font-bold text-slate-900 leading-tight">Atur Batas Minimal Pesanan (Harga Jual)</div>
                     <p class="text-[11px] text-slate-500 leading-snug">Tetapkan batas luas minimum untuk penagihan harga jual ke pembeli.</p>
                   </div>
                 </label>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
-                <div id="container-min-price-inputs" class="${primaryState.dim_min_one_price !== false ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700 space-y-2">
-                  <div class="flex items-center justify-between py-1 px-0.5">
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold text-slate-700">Atur Batas Angka Kustom</span>
-                      <span class="text-[10px] text-slate-400 font-normal">(Opsional)</span>
-                    </div>
-                    <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
-                      <input 
-                        type="checkbox" 
-                        id="toggle-custom-min-price-box" 
-                        class="sr-only peer" 
-                        ${primaryState.is_custom_min_price_active ? 'checked' : ''}
-                      />
-                      <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600 relative"></div>
-                    </label>
-                  </div>
-
-                  <div id="min-price-custom-box" class="${primaryState.is_custom_min_price_active ? 'flex' : 'hidden'} flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
+                <div id="container-min-price-inputs" class="${Boolean(primaryState.dim_min_one_price) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
+                  <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8310,32 +8266,16 @@ const ProductForm = (() => {
                     class="sr-only peer" 
                     ${Boolean(primaryState.dim_min_one_cost) ? 'checked' : ''}
                   />
-                  <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
                   <div class="space-y-0.5 min-w-0">
-                    <div class="text-xs font-bold text-slate-900 leading-tight">Biaya Modal (HPP) — Minimal Ukuran</div>
+                    <div class="text-xs font-bold text-slate-900 leading-tight">Atur Batas Minimal Pesanan (Biaya Modal / HPP)</div>
                     <p class="text-[11px] text-slate-500 leading-snug">Tetapkan batas luas minimum untuk perhitungan modal/HPP bahan.</p>
                   </div>
                 </label>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
-                <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700 space-y-2">
-                  <div class="flex items-center justify-between py-1 px-0.5">
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold text-slate-700">Atur Batas Angka Kustom</span>
-                      <span class="text-[10px] text-slate-400 font-normal">(Opsional)</span>
-                    </div>
-                    <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
-                      <input 
-                        type="checkbox" 
-                        id="toggle-custom-min-hpp-box" 
-                        class="sr-only peer" 
-                        ${primaryState.is_custom_min_hpp_active ? 'checked' : ''}
-                      />
-                      <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600 relative"></div>
-                    </label>
-                  </div>
-
-                  <div id="min-hpp-custom-box" class="${primaryState.is_custom_min_hpp_active ? 'flex' : 'hidden'} flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
+                <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
+                  <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8421,8 +8361,8 @@ const ProductForm = (() => {
                       step="any" 
                       min="0" 
                       id="sandbox-input-dim-p" 
-                      value="${sandboxPxlState.simLength || (dimUnit === 'meter' ? '2' : (dimUnit === 'cm' ? '200' : (dimUnit === 'mm' ? '2000' : '2')))}" 
-                      placeholder="P" 
+                      value="${sandboxPxlState.simLength || ''}" 
+                      placeholder="Panjang (P)" 
                       class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
                     />
                     <span class="sandbox-dim-unit-p absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
@@ -8433,8 +8373,8 @@ const ProductForm = (() => {
                       step="any" 
                       min="0" 
                       id="sandbox-input-dim-l" 
-                      value="${sandboxPxlState.simWidth || (dimUnit === 'meter' ? '1' : (dimUnit === 'cm' ? '100' : (dimUnit === 'mm' ? '1000' : '1')))}" 
-                      placeholder="L" 
+                      value="${sandboxPxlState.simWidth || ''}" 
+                      placeholder="Lebar (L)" 
                       class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
                     />
                     <span class="sandbox-dim-unit-l absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
@@ -12190,26 +12130,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    const toggleCustomMinPriceBox = document.getElementById('toggle-custom-min-price-box');
-    if (toggleCustomMinPriceBox) {
-      toggleCustomMinPriceBox.onchange = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        primaryState.is_custom_min_price_active = e.target.checked;
-        const box = document.getElementById('min-price-custom-box');
-        if (box) {
-          if (e.target.checked) {
-            box.classList.remove('hidden');
-            box.classList.add('flex');
-          } else {
-            box.classList.remove('flex');
-            box.classList.add('hidden');
-          }
-        }
-        updateSandboxCalculation();
-        if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
-      };
-    }
-
     const inMinPriceTh = document.getElementById('input-min-price-threshold');
     if (inMinPriceTh) {
       inMinPriceTh.oninput = (e) => {
@@ -12238,25 +12158,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (cont) {
           if (e.target.checked) cont.classList.remove('hidden');
           else cont.classList.add('hidden');
-        }
-        updateSandboxCalculation();
-      };
-    }
-
-    const toggleCustomMinHppBox = document.getElementById('toggle-custom-min-hpp-box');
-    if (toggleCustomMinHppBox) {
-      toggleCustomMinHppBox.onchange = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        primaryState.is_custom_min_hpp_active = e.target.checked;
-        const box = document.getElementById('min-hpp-custom-box');
-        if (box) {
-          if (e.target.checked) {
-            box.classList.remove('hidden');
-            box.classList.add('flex');
-          } else {
-            box.classList.remove('flex');
-            box.classList.add('hidden');
-          }
         }
         updateSandboxCalculation();
       };
@@ -16434,8 +16335,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
     const chkMinOnePrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
     if (chkMinOnePrice) primaryState.dim_min_one_price = chkMinOnePrice.checked;
-    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
-    if (chkSubPrice) primaryState.is_custom_min_price_active = chkSubPrice.checked;
     const inpMinPriceThreshold = document.getElementById('input-min-price-threshold');
     if (inpMinPriceThreshold) {
       primaryState.min_area_threshold = inpMinPriceThreshold.value.trim() !== '' ? parseFloat(inpMinPriceThreshold.value) : null;
@@ -16447,8 +16346,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     const chkMinOneCost = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
     if (chkMinOneCost) primaryState.dim_min_one_cost = chkMinOneCost.checked;
-    const chkSubCost = document.getElementById('toggle-custom-min-hpp-box');
-    if (chkSubCost) primaryState.is_custom_min_hpp_active = chkSubCost.checked;
     const inpMinHppThreshold = document.getElementById('input-min-hpp-threshold');
     if (inpMinHppThreshold) {
       primaryState.min_hpp_threshold = inpMinHppThreshold.value.trim() !== '' ? parseFloat(inpMinHppThreshold.value) : null;
