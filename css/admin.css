@@ -1301,13 +1301,17 @@ input.toggle-same-cost:checked ~ div::after {
 }
 
 #card-custom-dimension-pxl label:has(#toggle-dim-min-one-price),
-#card-custom-dimension-pxl label:has(#toggle-dim-min-one-cost) {
+#card-custom-dimension-pxl label:has(#toggle-dim-min-one-cost),
+#card-custom-dimension-pxl label:has(#toggle-custom-min-price-box),
+#card-custom-dimension-pxl label:has(#toggle-custom-min-hpp-box) {
   touch-action: manipulation;
   user-select: none;
   transition: all 0.15s ease-in-out;
 }
 #card-custom-dimension-pxl label:has(#toggle-dim-min-one-price):active,
-#card-custom-dimension-pxl label:has(#toggle-dim-min-one-cost):active {
+#card-custom-dimension-pxl label:has(#toggle-dim-min-one-cost):active,
+#card-custom-dimension-pxl label:has(#toggle-custom-min-price-box):active,
+#card-custom-dimension-pxl label:has(#toggle-custom-min-hpp-box):active {
   transform: scale(0.985);
 }
 

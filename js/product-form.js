@@ -55,11 +55,13 @@ const ProductForm = (() => {
     dimension_unit: '',
     custom_dimension_unit: '',
     dim_min_one_price: true,
-    min_area_threshold: 1,
-    min_area_charge_value: 1,
+    is_custom_min_price_active: false,
+    min_area_threshold: null,
+    min_area_charge_value: null,
     dim_min_one_cost: false,
-    min_hpp_threshold: 1,
-    min_hpp_charge_value: 1,
+    is_custom_min_hpp_active: false,
+    min_hpp_threshold: null,
+    min_hpp_charge_value: null,
     dimension_rules: [],
     variation_scopes: {
       main: 'umum',
@@ -414,11 +416,13 @@ const ProductForm = (() => {
       dimension_unit: '',
       custom_dimension_unit: '',
       dim_min_one_price: true,
-      min_area_threshold: 1,
-      min_area_charge_value: 1,
+      is_custom_min_price_active: false,
+      min_area_threshold: null,
+      min_area_charge_value: null,
       dim_min_one_cost: false,
-      min_hpp_threshold: 1,
-      min_hpp_charge_value: 1,
+      is_custom_min_hpp_active: false,
+      min_hpp_threshold: null,
+      min_hpp_charge_value: null,
       dimension_rules: [],
       variation_scopes: {
         main: 'umum',
@@ -634,11 +638,13 @@ const ProductForm = (() => {
     primaryState.dimension_unit = prod.dimension_unit || prod.custom_dimension_unit || '';
     primaryState.custom_dimension_unit = primaryState.dimension_unit;
     primaryState.dim_min_one_price = prod.dim_min_one_price !== undefined ? Boolean(prod.dim_min_one_price) : true;
-    primaryState.min_area_threshold = prod.min_area_threshold !== undefined ? parseFloat(prod.min_area_threshold) || 1 : 1;
-    primaryState.min_area_charge_value = prod.min_area_charge_value !== undefined ? parseFloat(prod.min_area_charge_value) || 1 : primaryState.min_area_threshold;
+    primaryState.is_custom_min_price_active = prod.is_custom_min_price_active !== undefined ? Boolean(prod.is_custom_min_price_active) : (prod.min_area_threshold !== undefined && prod.min_area_threshold !== null && prod.min_area_threshold !== '');
+    primaryState.min_area_threshold = (prod.min_area_threshold !== undefined && prod.min_area_threshold !== null && prod.min_area_threshold !== '') ? parseFloat(prod.min_area_threshold) : null;
+    primaryState.min_area_charge_value = (prod.min_area_charge_value !== undefined && prod.min_area_charge_value !== null && prod.min_area_charge_value !== '') ? parseFloat(prod.min_area_charge_value) : null;
     primaryState.dim_min_one_cost = prod.dim_min_one_cost !== undefined ? Boolean(prod.dim_min_one_cost) : false;
-    primaryState.min_hpp_threshold = prod.min_hpp_threshold !== undefined ? parseFloat(prod.min_hpp_threshold) || 1 : 1;
-    primaryState.min_hpp_charge_value = prod.min_hpp_charge_value !== undefined ? parseFloat(prod.min_hpp_charge_value) || 1 : primaryState.min_hpp_threshold;
+    primaryState.is_custom_min_hpp_active = prod.is_custom_min_hpp_active !== undefined ? Boolean(prod.is_custom_min_hpp_active) : (prod.min_hpp_threshold !== undefined && prod.min_hpp_threshold !== null && prod.min_hpp_threshold !== '');
+    primaryState.min_hpp_threshold = (prod.min_hpp_threshold !== undefined && prod.min_hpp_threshold !== null && prod.min_hpp_threshold !== '') ? parseFloat(prod.min_hpp_threshold) : null;
+    primaryState.min_hpp_charge_value = (prod.min_hpp_charge_value !== undefined && prod.min_hpp_charge_value !== null && prod.min_hpp_charge_value !== '') ? parseFloat(prod.min_hpp_charge_value) : null;
     primaryState.dimension_rules = Array.isArray(prod.dimension_rules) ? JSON.parse(JSON.stringify(prod.dimension_rules)) : [];
 
     primaryState.variation_scopes = prod.variation_scopes || {
@@ -2398,12 +2404,15 @@ const ProductForm = (() => {
     const chkMinPrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
     const isMinOnePriceActive = chkMinPrice ? chkMinPrice.checked : (primaryState.dim_min_one_price !== false);
 
+    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
+    const isCustomPriceActive = chkSubPrice ? chkSubPrice.checked : Boolean(primaryState.is_custom_min_price_active);
+
     const inMinPriceTh = document.getElementById('input-min-price-threshold');
     const minPriceTh = (inMinPriceTh && inMinPriceTh.value !== '')
       ? parseFloat(inMinPriceTh.value)
       : ((primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && !isNaN(primaryState.min_area_threshold))
         ? parseFloat(primaryState.min_area_threshold)
-        : defThreshold);
+        : null);
 
     const inMinPriceCh = document.getElementById('input-min-price-charge');
     const minPriceCh = (inMinPriceCh && inMinPriceCh.value !== '')
@@ -2535,8 +2544,9 @@ const ProductForm = (() => {
     const areaEff = ((pEff * factor) * (lEff * factor)) + directAreaAdd;
     const unitAreaEff = (pEff * lEff) + (factor > 0 ? (directAreaAdd / (factor * factor)) : 0);
 
-    const isPriceRounded = isMinOnePriceActive && unitAreaEff > 0 && unitAreaEff < minPriceTh;
-    const chargedUnitAreaPrice = isPriceRounded ? minPriceCh : unitAreaEff;
+    const hasValidPriceTh = minPriceTh !== null && !isNaN(minPriceTh) && minPriceTh > 0;
+    const isPriceRounded = isMinOnePriceActive && isCustomPriceActive && hasValidPriceTh && unitAreaEff > 0 && unitAreaEff < minPriceTh;
+    const chargedUnitAreaPrice = isPriceRounded ? (minPriceCh !== null && !isNaN(minPriceCh) && minPriceCh > 0 ? minPriceCh : minPriceTh) : unitAreaEff;
     const areaPrice = chargedUnitAreaPrice * (factor * factor);
 
     const mainPriceTotal = mainOptPrice * areaPrice;
@@ -2611,6 +2621,10 @@ const ProductForm = (() => {
     const isMinOnePriceActive = chkMinPrice ? chkMinPrice.checked : (primaryState.dim_min_one_price !== false);
     if (!isMinOnePriceActive) return '';
 
+    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
+    const isCustomPriceActive = chkSubPrice ? chkSubPrice.checked : Boolean(primaryState.is_custom_min_price_active);
+    if (!isCustomPriceActive) return '';
+
     const unitSelect = document.getElementById('select-dimension-unit');
     const dimUnit = (unitSelect && unitSelect.value) ? unitSelect.value : (primaryState.dimension_unit || primaryState.custom_dimension_unit || 'cm');
     let unitShort = 'cm';
@@ -2624,15 +2638,14 @@ const ProductForm = (() => {
       unitShort = 'cm';
     }
 
-    const defThreshold = typeof getDefaultMinAreaThreshold === 'function' ? getDefaultMinAreaThreshold(dimUnit) : (dimUnit === 'cm' ? 100 : (dimUnit === 'mm' ? 10000 : 1));
     const inMinPriceTh = document.getElementById('input-min-price-threshold');
     let threshold = (inMinPriceTh && inMinPriceTh.value !== '')
       ? parseFloat(inMinPriceTh.value)
       : ((primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && !isNaN(primaryState.min_area_threshold))
         ? parseFloat(primaryState.min_area_threshold)
-        : defThreshold);
+        : null);
 
-    if (isNaN(threshold) || threshold <= 0) threshold = 1;
+    if (threshold === null || isNaN(threshold) || threshold <= 0) return '';
 
     const inMinPriceCh = document.getElementById('input-min-price-charge');
     let charge = (inMinPriceCh && inMinPriceCh.value !== '')
@@ -2641,7 +2654,7 @@ const ProductForm = (() => {
         ? parseFloat(primaryState.min_area_charge_value)
         : threshold);
 
-    if (isNaN(charge) || charge <= 0) charge = threshold || 1;
+    if (isNaN(charge) || charge <= 0) charge = threshold;
 
     function formatCleanNum(val) {
       if (val === undefined || val === null || isNaN(val)) return '1';
@@ -2777,7 +2790,7 @@ const ProductForm = (() => {
     }
 
     const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
-    const displayBasePrice = comboUnitBase > 0 ? comboUnitBase : parseFloat(primaryState.price || 0);
+    const displayBasePrice = primaryState.has_variants ? comboUnitBase : ((primaryState.price !== undefined && primaryState.price !== null && primaryState.price !== '' && !isNaN(parseFloat(primaryState.price))) ? parseFloat(primaryState.price) : comboUnitBase);
 
     // Hitung seluruh kemungkinan harga unit kombinasi dari Variasi 1 s/d Variasi 4 yang aktif (murni produk):
     const p1List = validMaterials.map(m => parseFloat(m.price) || 0);
@@ -3391,7 +3404,7 @@ const ProductForm = (() => {
     }
 
     const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
-    const displayBasePrice = comboUnitBase > 0 ? comboUnitBase : parseFloat(primaryState.price || 0);
+    const displayBasePrice = primaryState.has_variants ? comboUnitBase : ((primaryState.price !== undefined && primaryState.price !== null && primaryState.price !== '' && !isNaN(parseFloat(primaryState.price))) ? parseFloat(primaryState.price) : comboUnitBase);
 
     const hasDiscount = Boolean(primaryState.has_discount);
     const discPercent = parseFloat(primaryState.discount_percent) || 0;
@@ -5341,14 +5354,14 @@ const ProductForm = (() => {
 
   // Helper render teks estimasi laba / margin HPP per opsi variasi
   function renderOptionProfitInfo(price, cost) {
-    const p = (price !== '' && price !== null && price !== undefined) ? parseFloat(price) : NaN;
-    const c = (cost !== '' && cost !== null && cost !== undefined) ? parseFloat(cost) : null;
-    const hasP = !isNaN(p) && p > 0;
+    const p = (price !== '' && price !== null && price !== undefined && !isNaN(parseFloat(price))) ? parseFloat(price) : NaN;
+    const c = (cost !== '' && cost !== null && cost !== undefined && !isNaN(parseFloat(cost))) ? parseFloat(cost) : null;
+    const hasP = !isNaN(p) && p >= 0;
     const hasC = c !== null && !isNaN(c) && c >= 0;
 
     if (hasP && hasC) {
       const laba = p - c;
-      const marginPct = p > 0 ? Math.round((laba / p) * 100) : 0;
+      const marginPct = p > 0 ? Math.round((laba / p) * 100) : (c > 0 ? -100 : 0);
       if (laba > 0) {
         return `<span class="opt-profit-info text-[11px] font-medium text-emerald-700">Laba: <b>Rp${laba.toLocaleString('id-ID')}</b> (${marginPct}%)</span>`;
       }
@@ -5505,13 +5518,15 @@ const ProductForm = (() => {
   }
 
   function calculateMarginBadge(price, cost) {
-    const p = parseFloat(price) || 0;
-    const c = parseFloat(cost) || 0;
-    if (p <= 0 && c <= 0) {
+    const hasP = price !== '' && price !== null && price !== undefined && !isNaN(parseFloat(price));
+    const hasC = cost !== '' && cost !== null && cost !== undefined && !isNaN(parseFloat(cost));
+    if (!hasP && !hasC) {
       return `<span class="live-margin-badge px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[10px] font-medium">-</span>`;
     }
+    const p = hasP ? parseFloat(price) : 0;
+    const c = hasC ? parseFloat(cost) : 0;
     const profit = p - c;
-    const percent = p > 0 ? Math.round((profit / p) * 100) : 0;
+    const percent = p > 0 ? Math.round((profit / p) * 100) : (c > 0 ? -100 : 0);
     if (profit >= 0) {
       return `<span class="live-margin-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]" title="Margin Keuntungan Bersih: Rp ${profit.toLocaleString('id-ID')} (${percent}%)">Rp ${profit.toLocaleString('id-ID')} (${percent}%)</span>`;
     } else {
@@ -7097,42 +7112,58 @@ const ProductForm = (() => {
     const chkMinPrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
     if (chkMinPrice) primaryState.dim_min_one_price = chkMinPrice.checked;
 
+    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
+    if (chkSubPrice) primaryState.is_custom_min_price_active = chkSubPrice.checked;
+
     const inMinPriceTh = document.getElementById('input-min-price-threshold');
-    if (inMinPriceTh && inMinPriceTh.value !== '') primaryState.min_area_threshold = parseFloat(inMinPriceTh.value);
+    if (inMinPriceTh) {
+      primaryState.min_area_threshold = inMinPriceTh.value !== '' ? parseFloat(inMinPriceTh.value) : null;
+    }
 
     const inMinPriceCh = document.getElementById('input-min-price-charge');
-    if (inMinPriceCh && inMinPriceCh.value !== '') primaryState.min_area_charge_value = parseFloat(inMinPriceCh.value);
+    if (inMinPriceCh) {
+      primaryState.min_area_charge_value = inMinPriceCh.value !== '' ? parseFloat(inMinPriceCh.value) : null;
+    }
 
     const chkMinCost = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
     if (chkMinCost) primaryState.dim_min_one_cost = chkMinCost.checked;
 
+    const chkSubCost = document.getElementById('toggle-custom-min-hpp-box');
+    if (chkSubCost) primaryState.is_custom_min_hpp_active = chkSubCost.checked;
+
     const inMinHppTh = document.getElementById('input-min-hpp-threshold');
-    if (inMinHppTh && inMinHppTh.value !== '') primaryState.min_hpp_threshold = parseFloat(inMinHppTh.value);
+    if (inMinHppTh) {
+      primaryState.min_hpp_threshold = inMinHppTh.value !== '' ? parseFloat(inMinHppTh.value) : null;
+    }
 
     const inMinHppCh = document.getElementById('input-min-hpp-charge');
-    if (inMinHppCh && inMinHppCh.value !== '') primaryState.min_hpp_charge_value = parseFloat(inMinHppCh.value);
-
-    const defThreshold = getDefaultMinAreaThreshold(dimUnit);
-    const minPriceTh = (primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && !isNaN(primaryState.min_area_threshold))
-      ? parseFloat(primaryState.min_area_threshold) : defThreshold;
-    const minPriceCh = (primaryState.min_area_charge_value !== undefined && primaryState.min_area_charge_value !== null && !isNaN(primaryState.min_area_charge_value))
-      ? parseFloat(primaryState.min_area_charge_value) : minPriceTh;
-
-    const minHppTh = (primaryState.min_hpp_threshold !== undefined && primaryState.min_hpp_threshold !== null && !isNaN(primaryState.min_hpp_threshold))
-      ? parseFloat(primaryState.min_hpp_threshold) : defThreshold;
-    const minHppCh = (primaryState.min_hpp_charge_value !== undefined && primaryState.min_hpp_charge_value !== null && !isNaN(primaryState.min_hpp_charge_value))
-      ? parseFloat(primaryState.min_hpp_charge_value) : minHppTh;
+    if (inMinHppCh) {
+      primaryState.min_hpp_charge_value = inMinHppCh.value !== '' ? parseFloat(inMinHppCh.value) : null;
+    }
 
     // Pemisahan aturan minimal antara Harga Jual vs Biaya Modal (HPP)
     const isMinOnePriceActive = primaryState.dim_min_one_price !== false;
-    const isMinOneCostActive = Boolean(primaryState.dim_min_one_cost);
+    const isCustomPriceActive = Boolean(primaryState.is_custom_min_price_active);
+    const minPriceTh = (primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && !isNaN(primaryState.min_area_threshold))
+      ? parseFloat(primaryState.min_area_threshold) : null;
+    const minPriceCh = (primaryState.min_area_charge_value !== undefined && primaryState.min_area_charge_value !== null && !isNaN(primaryState.min_area_charge_value))
+      ? parseFloat(primaryState.min_area_charge_value) : minPriceTh;
 
-    const isPriceRounded = isMinOnePriceActive && unitAreaEff > 0 && unitAreaEff < minPriceTh;
-    const chargedUnitAreaPrice = isPriceRounded ? minPriceCh : unitAreaEff;
+    const isMinOneCostActive = Boolean(primaryState.dim_min_one_cost);
+    const isCustomCostActive = Boolean(primaryState.is_custom_min_hpp_active);
+    const minHppTh = (primaryState.min_hpp_threshold !== undefined && primaryState.min_hpp_threshold !== null && !isNaN(primaryState.min_hpp_threshold))
+      ? parseFloat(primaryState.min_hpp_threshold) : null;
+    const minHppCh = (primaryState.min_hpp_charge_value !== undefined && primaryState.min_hpp_charge_value !== null && !isNaN(primaryState.min_hpp_charge_value))
+      ? parseFloat(primaryState.min_hpp_charge_value) : minHppTh;
+
+    const hasValidPriceTh = minPriceTh !== null && !isNaN(minPriceTh) && minPriceTh > 0;
+    const isPriceRounded = isMinOnePriceActive && isCustomPriceActive && hasValidPriceTh && unitAreaEff > 0 && unitAreaEff < minPriceTh;
+    const chargedUnitAreaPrice = isPriceRounded ? (minPriceCh !== null && !isNaN(minPriceCh) && minPriceCh > 0 ? minPriceCh : minPriceTh) : unitAreaEff;
     const areaPrice = chargedUnitAreaPrice * (factor * factor);
 
-    const isCostRounded = isMinOneCostActive && unitAreaEff > 0 && unitAreaEff < minHppTh;
-    const chargedUnitAreaCost = isCostRounded ? minHppCh : unitAreaEff;
+    const hasValidCostTh = minHppTh !== null && !isNaN(minHppTh) && minHppTh > 0;
+    const isCostRounded = isMinOneCostActive && isCustomCostActive && hasValidCostTh && unitAreaEff > 0 && unitAreaEff < minHppTh;
+    const chargedUnitAreaCost = isCostRounded ? (minHppCh !== null && !isNaN(minHppCh) && minHppCh > 0 ? minHppCh : minHppTh) : unitAreaEff;
     const areaCost = chargedUnitAreaCost * (factor * factor);
 
     // Komponen Utama
@@ -8111,15 +8142,15 @@ const ProductForm = (() => {
     const areaUnitLabel = getDimensionAreaUnitLabel(dimUnit);
     const defThreshold = getDefaultMinAreaThreshold(dimUnit);
 
-    const priceThresholdVal = (primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && !isNaN(primaryState.min_area_threshold))
-      ? primaryState.min_area_threshold : defThreshold;
-    const priceChargeVal = (primaryState.min_area_charge_value !== undefined && primaryState.min_area_charge_value !== null && !isNaN(primaryState.min_area_charge_value))
-      ? primaryState.min_area_charge_value : priceThresholdVal;
+    const priceThresholdVal = (primaryState.min_area_threshold !== undefined && primaryState.min_area_threshold !== null && primaryState.min_area_threshold !== '' && !isNaN(primaryState.min_area_threshold))
+      ? primaryState.min_area_threshold : '';
+    const priceChargeVal = (primaryState.min_area_charge_value !== undefined && primaryState.min_area_charge_value !== null && primaryState.min_area_charge_value !== '' && !isNaN(primaryState.min_area_charge_value))
+      ? primaryState.min_area_charge_value : '';
 
-    const hppThresholdVal = (primaryState.min_hpp_threshold !== undefined && primaryState.min_hpp_threshold !== null && !isNaN(primaryState.min_hpp_threshold))
-      ? primaryState.min_hpp_threshold : defThreshold;
-    const hppChargeVal = (primaryState.min_hpp_charge_value !== undefined && primaryState.min_hpp_charge_value !== null && !isNaN(primaryState.min_hpp_charge_value))
-      ? primaryState.min_hpp_charge_value : hppThresholdVal;
+    const hppThresholdVal = (primaryState.min_hpp_threshold !== undefined && primaryState.min_hpp_threshold !== null && primaryState.min_hpp_threshold !== '' && !isNaN(primaryState.min_hpp_threshold))
+      ? primaryState.min_hpp_threshold : '';
+    const hppChargeVal = (primaryState.min_hpp_charge_value !== undefined && primaryState.min_hpp_charge_value !== null && primaryState.min_hpp_charge_value !== '' && !isNaN(primaryState.min_hpp_charge_value))
+      ? primaryState.min_hpp_charge_value : '';
 
     return `
       <!-- Kartu / Tombol Pengaktif Input Ukuran (P x L) tepat di bawah Layanan Extras -->
@@ -8218,8 +8249,24 @@ const ProductForm = (() => {
                 </label>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
-                <div id="container-min-price-inputs" class="${primaryState.dim_min_one_price !== false ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
-                  <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
+                <div id="container-min-price-inputs" class="${primaryState.dim_min_one_price !== false ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700 space-y-2">
+                  <div class="flex items-center justify-between py-1 px-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-semibold text-slate-700">Atur Batas Angka Kustom</span>
+                      <span class="text-[10px] text-slate-400 font-normal">(Opsional)</span>
+                    </div>
+                    <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
+                      <input 
+                        type="checkbox" 
+                        id="toggle-custom-min-price-box" 
+                        class="sr-only peer" 
+                        ${primaryState.is_custom_min_price_active ? 'checked' : ''}
+                      />
+                      <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600 relative"></div>
+                    </label>
+                  </div>
+
+                  <div id="min-price-custom-box" class="${primaryState.is_custom_min_price_active ? 'flex' : 'hidden'} flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8229,7 +8276,7 @@ const ProductForm = (() => {
                           min="0" 
                           id="input-min-price-threshold" 
                           value="${priceThresholdVal}" 
-                          placeholder="${defThreshold}" 
+                          placeholder="Cth. 100" 
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
@@ -8244,7 +8291,7 @@ const ProductForm = (() => {
                           min="0" 
                           id="input-min-price-charge" 
                           value="${priceChargeVal}" 
-                          placeholder="${defThreshold}" 
+                          placeholder="Cth. 100" 
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
@@ -8271,8 +8318,24 @@ const ProductForm = (() => {
                 </label>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
-                <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
-                  <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
+                <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700 space-y-2">
+                  <div class="flex items-center justify-between py-1 px-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-semibold text-slate-700">Atur Batas Angka Kustom</span>
+                      <span class="text-[10px] text-slate-400 font-normal">(Opsional)</span>
+                    </div>
+                    <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
+                      <input 
+                        type="checkbox" 
+                        id="toggle-custom-min-hpp-box" 
+                        class="sr-only peer" 
+                        ${primaryState.is_custom_min_hpp_active ? 'checked' : ''}
+                      />
+                      <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600 relative"></div>
+                    </label>
+                  </div>
+
+                  <div id="min-hpp-custom-box" class="${primaryState.is_custom_min_hpp_active ? 'flex' : 'hidden'} flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8282,7 +8345,7 @@ const ProductForm = (() => {
                           min="0" 
                           id="input-min-hpp-threshold" 
                           value="${hppThresholdVal}" 
-                          placeholder="${defThreshold}" 
+                          placeholder="Cth. 50" 
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
@@ -8297,7 +8360,7 @@ const ProductForm = (() => {
                           min="0" 
                           id="input-min-hpp-charge" 
                           value="${hppChargeVal}" 
-                          placeholder="${defThreshold}" 
+                          placeholder="Cth. 50" 
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
@@ -11553,7 +11616,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     function validateSinglePrice(isBlur = false) {
       if (!singlePrice) return true;
       const raw = (singlePrice.value || '').trim();
-      if (!raw) {
+      if (raw === '' || raw === null) {
         if (isBlur) {
           if (singlePriceErr) { singlePriceErr.textContent = 'Wajib di isi'; singlePriceErr.classList.remove('hidden'); }
           singlePrice.classList.remove('border-slate-300');
@@ -11563,9 +11626,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         return false;
       }
       const num = parseFloat(raw);
-      if (isNaN(num) || num <= 0) {
+      if (isNaN(num) || num < 0) {
         if (isBlur) {
-          if (singlePriceErr) { singlePriceErr.textContent = 'Wajib di isi (> 0)'; singlePriceErr.classList.remove('hidden'); }
+          if (singlePriceErr) { singlePriceErr.textContent = 'Harga Jual minimal bernilai 0'; singlePriceErr.classList.remove('hidden'); }
           singlePrice.classList.remove('border-slate-300');
           singlePrice.classList.add('border-red-500');
           return false;
@@ -11582,7 +11645,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     function validateSingleCost(isBlur = false) {
       if (!singleCost) return true;
       const raw = (singleCost.value || '').trim();
-      if (raw === '') {
+      if (raw === '' || raw === null) {
         singleCost.classList.remove('text-red-600', 'font-bold');
         singleCost.classList.add('text-slate-900');
         if (isBlur) {
@@ -11607,7 +11670,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
 
       // Validasi Real-Time HPP > Harga Jual
-      const pVal = parseFloat(singlePrice?.value || '0');
+      const pRaw = (singlePrice?.value || '').trim();
+      const pVal = pRaw !== '' && !isNaN(parseFloat(pRaw)) ? parseFloat(pRaw) : NaN;
       if (!isNaN(pVal) && pVal > 0 && num > pVal) {
         singleCost.classList.add('text-red-600', 'font-bold', 'border-red-500');
         singleCost.classList.remove('text-slate-900', 'border-slate-300');
@@ -11630,14 +11694,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     function updateSingleMargin() {
       const rawP = (singlePrice?.value || '').trim();
       const rawC = (singleCost?.value || '').trim();
-      const p = rawP === '' ? '' : (parseFloat(rawP) || 0);
-      const c = rawC === '' ? '' : (parseFloat(rawC) || 0);
+      const p = (rawP === '' || isNaN(parseFloat(rawP))) ? '' : parseFloat(rawP);
+      const c = (rawC === '' || isNaN(parseFloat(rawC))) ? '' : parseFloat(rawC);
       if (materialsState.length > 0) {
         materialsState[0].price = p;
         materialsState[0].cost_price = c;
         materialsState[0].name = primaryState.name || 'Produk Standar';
       }
-      if (singleBadge) singleBadge.innerHTML = calculateMarginBadge(parseFloat(p) || 0, parseFloat(c) || 0);
+      if (singleBadge) singleBadge.innerHTML = calculateMarginBadge(p, c);
       validateSinglePrice(false);
       validateSingleCost(false);
       updateProductCardLivePreview();
@@ -12126,10 +12190,30 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
+    const toggleCustomMinPriceBox = document.getElementById('toggle-custom-min-price-box');
+    if (toggleCustomMinPriceBox) {
+      toggleCustomMinPriceBox.onchange = (e) => {
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        primaryState.is_custom_min_price_active = e.target.checked;
+        const box = document.getElementById('min-price-custom-box');
+        if (box) {
+          if (e.target.checked) {
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+          } else {
+            box.classList.remove('flex');
+            box.classList.add('hidden');
+          }
+        }
+        updateSandboxCalculation();
+        if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
+      };
+    }
+
     const inMinPriceTh = document.getElementById('input-min-price-threshold');
     if (inMinPriceTh) {
       inMinPriceTh.oninput = (e) => {
-        primaryState.min_area_threshold = parseFloat(e.target.value) || 0;
+        primaryState.min_area_threshold = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
         updateSandboxCalculation();
         if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
       };
@@ -12138,7 +12222,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const inMinPriceCh = document.getElementById('input-min-price-charge');
     if (inMinPriceCh) {
       inMinPriceCh.oninput = (e) => {
-        primaryState.min_area_charge_value = parseFloat(e.target.value) || 0;
+        primaryState.min_area_charge_value = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
         updateSandboxCalculation();
         if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
       };
@@ -12159,10 +12243,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
+    const toggleCustomMinHppBox = document.getElementById('toggle-custom-min-hpp-box');
+    if (toggleCustomMinHppBox) {
+      toggleCustomMinHppBox.onchange = (e) => {
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        primaryState.is_custom_min_hpp_active = e.target.checked;
+        const box = document.getElementById('min-hpp-custom-box');
+        if (box) {
+          if (e.target.checked) {
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+          } else {
+            box.classList.remove('flex');
+            box.classList.add('hidden');
+          }
+        }
+        updateSandboxCalculation();
+      };
+    }
+
     const inMinHppTh = document.getElementById('input-min-hpp-threshold');
     if (inMinHppTh) {
       inMinHppTh.oninput = (e) => {
-        primaryState.min_hpp_threshold = parseFloat(e.target.value) || 0;
+        primaryState.min_hpp_threshold = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
         updateSandboxCalculation();
       };
     }
@@ -12170,7 +12273,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const inMinHppCh = document.getElementById('input-min-hpp-charge');
     if (inMinHppCh) {
       inMinHppCh.oninput = (e) => {
-        primaryState.min_hpp_charge_value = parseFloat(e.target.value) || 0;
+        primaryState.min_hpp_charge_value = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
         updateSandboxCalculation();
       };
     }
@@ -16331,17 +16434,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
     const chkMinOnePrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
     if (chkMinOnePrice) primaryState.dim_min_one_price = chkMinOnePrice.checked;
+    const chkSubPrice = document.getElementById('toggle-custom-min-price-box');
+    if (chkSubPrice) primaryState.is_custom_min_price_active = chkSubPrice.checked;
     const inpMinPriceThreshold = document.getElementById('input-min-price-threshold');
-    if (inpMinPriceThreshold && inpMinPriceThreshold.value !== '') primaryState.min_area_threshold = parseFloat(inpMinPriceThreshold.value) || 0;
+    if (inpMinPriceThreshold) {
+      primaryState.min_area_threshold = inpMinPriceThreshold.value.trim() !== '' ? parseFloat(inpMinPriceThreshold.value) : null;
+    }
     const inpMinPriceCharge = document.getElementById('input-min-price-charge');
-    if (inpMinPriceCharge && inpMinPriceCharge.value !== '') primaryState.min_area_charge_value = parseFloat(inpMinPriceCharge.value) || 0;
+    if (inpMinPriceCharge) {
+      primaryState.min_area_charge_value = inpMinPriceCharge.value.trim() !== '' ? parseFloat(inpMinPriceCharge.value) : null;
+    }
 
     const chkMinOneCost = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
     if (chkMinOneCost) primaryState.dim_min_one_cost = chkMinOneCost.checked;
+    const chkSubCost = document.getElementById('toggle-custom-min-hpp-box');
+    if (chkSubCost) primaryState.is_custom_min_hpp_active = chkSubCost.checked;
     const inpMinHppThreshold = document.getElementById('input-min-hpp-threshold');
-    if (inpMinHppThreshold && inpMinHppThreshold.value !== '') primaryState.min_hpp_threshold = parseFloat(inpMinHppThreshold.value) || 0;
+    if (inpMinHppThreshold) {
+      primaryState.min_hpp_threshold = inpMinHppThreshold.value.trim() !== '' ? parseFloat(inpMinHppThreshold.value) : null;
+    }
     const inpMinHppCharge = document.getElementById('input-min-hpp-charge');
-    if (inpMinHppCharge && inpMinHppCharge.value !== '') primaryState.min_hpp_charge_value = parseFloat(inpMinHppCharge.value) || 0;
+    if (inpMinHppCharge) {
+      primaryState.min_hpp_charge_value = inpMinHppCharge.value.trim() !== '' ? parseFloat(inpMinHppCharge.value) : null;
+    }
     if (!Array.isArray(primaryState.dimension_rules)) {
       primaryState.dimension_rules = [];
     }
