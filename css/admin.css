@@ -1435,3 +1435,11 @@ input.toggle-same-cost:checked ~ div::after {
   max-height: 100%;
 }
 
+/* Peringatan Wajib Variasi saat Toggle Ukuran (P x L) Diaktifkan */
+#custom-dim-no-variant-warning {
+  transition: all 0.25s ease-in-out;
+}
+#custom-dim-no-variant-warning.hidden {
+  display: none !important;
+}
+

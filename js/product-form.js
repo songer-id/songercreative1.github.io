@@ -6467,10 +6467,8 @@ const ProductForm = (() => {
   function getDimensionMainComponentChoices() {
     const choices = [];
     if (!primaryState.has_variants) {
-      choices.push({
-        id: 'single',
-        label: 'Harga Produk Utama'
-      });
+      // Input Ukuran (P x L) hanya dikhususkan untuk produk yang memiliki variasi
+      return choices;
     } else {
       const hasValidT1 = Array.isArray(materialsState) && materialsState.some(m => m && m.name && m.name.trim() !== '');
       if (hasValidT1 || !primaryState.has_variation_2) {
@@ -6513,8 +6511,8 @@ const ProductForm = (() => {
     }
     if (choices.length === 0) {
       choices.push({
-        id: primaryState.has_variants ? 'tier1' : 'single',
-        label: primaryState.has_variants ? 'Variasi 1' : 'Harga Produk Utama'
+        id: 'tier1',
+        label: 'Variasi 1'
       });
     }
     return choices;
@@ -6524,7 +6522,7 @@ const ProductForm = (() => {
     const choices = getDimensionMainComponentChoices();
     let currentVal = primaryState.dimension_main_component;
     if (!currentVal || !choices.some(c => c.id === currentVal)) {
-      currentVal = choices[0]?.id || (primaryState.has_variants ? 'tier1' : 'single');
+      currentVal = choices[0]?.id || 'tier1';
       primaryState.dimension_main_component = currentVal;
     }
 
@@ -8398,6 +8396,12 @@ const ProductForm = (() => {
             </div>
           </div>
         </div>
+
+        <!-- Pesan Peringatan Wajib Variasi Jika Produk Tanpa Variasi -->
+        <div id="custom-dim-no-variant-warning" class="hidden mt-2 p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-600 flex items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill shrink-0 text-red-500 text-sm"></i>
+          <span>Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.</span>
+        </div>
     `;
   }
 
@@ -8707,7 +8711,7 @@ const ProductForm = (() => {
               <div class="flex items-center gap-2">
                 <button 
                   type="button" 
-                  id="btn-toggle-has-variants" 
+                  id="btn-enable-variants" 
                   class="px-3.5 py-1.5 rounded-md border transition cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
                 >
                   <i class="bi bi-plus-lg"></i>
@@ -9609,25 +9613,19 @@ const ProductForm = (() => {
       const val = (inp.value || '').trim();
       const normName = val.toLowerCase();
 
-      // Cek apakah ini baris pemicu (trigger row) yang belum disentuh
-      let isUntouchedTriggerRow = false;
-      if (tier === 'tier1') {
-        if (materialsState.length > 1 && idx === materialsState.length - 1) {
-          const item = materialsState[idx];
-          const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined));
-          if (!hasAnyVal) isUntouchedTriggerRow = true;
-        }
-      } else {
-        const list = finishingsState[tier] || [];
-        const triggerIdx = (tier === 'extra_3') ? list.length - 2 : list.length - 1;
-        if (list.length > (tier === 'extra_3' ? 2 : 1) && idx === triggerIdx) {
-          const item = list[idx];
-          const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined) || item?.extra_type);
-          if (!hasAnyVal) isUntouchedTriggerRow = true;
-        }
-      }
+      // Cek apakah baris ini baris kosong tambahan yang diabaikan (jika sudah ada minimal 1 baris opsi terisi)
+      const curRow = inp.closest('.variation-option-row');
+      const curName = (curRow?.querySelector('input[data-field="name"]')?.value || '').trim();
+      const curPrice = (curRow?.querySelector('input[data-field="price"]')?.value || '').trim();
+      const isCurEmpty = (curName === '' && curPrice === '');
+      
+      const allTierRows = Array.from(document.querySelectorAll(`.variation-option-row[data-tier="${tier}"]`));
+      const hasAnyFilled = allTierRows.some(r => {
+        const n = r.querySelector('input[data-field="name"]');
+        return n && (n.value || '').trim() !== '';
+      });
 
-      if (isUntouchedTriggerRow || !val) {
+      if ((hasAnyFilled && isCurEmpty) || !val) {
         if (errorEl && (errorEl.textContent === 'Nama opsi sudah digunakan' || errorEl.textContent === 'Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter')) {
           errorEl.textContent = '';
           errorEl.classList.add('hidden');
@@ -9692,24 +9690,33 @@ const ProductForm = (() => {
       }
     }
 
-    let isUntouchedTriggerRow = false;
+    // Cek apakah di kartu variasi ini sudah ada minimal 1 baris opsi yang terisi namanya (filledRows)
+    const tierRows = Array.from(document.querySelectorAll(`.variation-option-row[data-tier="${tier}"]`));
+    const filledTierRows = tierRows.filter(r => {
+      const nInp = r.querySelector('input[data-field="name"]');
+      return nInp && (nInp.value || '').trim() !== '';
+    });
+
+    const curNameVal = (row.querySelector('input[data-field="name"]')?.value || '').trim();
+    const curPriceVal = (row.querySelector('input[data-field="price"]')?.value || '').trim();
+    const isCurRowEmpty = (curNameVal === '' && curPriceVal === '');
+
+    let isStateRowEmpty = false;
+    let validStateCount = 0;
     if (tier === 'tier1') {
-      if (materialsState.length > 1 && idx === materialsState.length - 1) {
-        const item = materialsState[idx];
-        const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined));
-        if (!hasAnyVal) isUntouchedTriggerRow = true;
-      }
+      const list = materialsState || [];
+      validStateCount = list.filter(m => m && m.name && m.name.trim() !== '').length;
+      const m = list[idx];
+      isStateRowEmpty = (!m?.name || !m.name.trim()) && (m?.price === '' || m?.price === undefined || m?.price === null);
     } else {
       const list = finishingsState[tier] || [];
-      const triggerIdx = (tier === 'extra_3') ? list.length - 2 : list.length - 1;
-      if (list.length > (tier === 'extra_3' ? 2 : 1) && idx === triggerIdx) {
-        const item = list[idx];
-        const hasAnyVal = Boolean((item?.name && item.name.trim()) || (item?.price !== '' && item?.price !== undefined) || (item?.cost_price !== '' && item?.cost_price !== undefined) || (item?.stock !== '' && item?.stock !== undefined) || item?.extra_type);
-        if (!hasAnyVal) isUntouchedTriggerRow = true;
-      }
+      validStateCount = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '').length;
+      const f = list[idx];
+      isStateRowEmpty = (!f?.name || !f.name.trim()) && (f?.price === '' || f?.price === undefined || f?.price === null);
     }
 
-    if (isUntouchedTriggerRow) {
+    // Jika sudah ada minimal 1 baris terisi di variasi ini, abaikan baris yang kosong nama & harganya
+    if ((filledTierRows.length >= 1 || validStateCount >= 1) && (isCurRowEmpty || isStateRowEmpty)) {
       setError('');
       return true;
     }
@@ -10397,278 +10404,210 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     if (!primaryState.has_variants) {
-      // 1. MODE PRODUK TUNGGAL
-      const singlePriceEl = document.getElementById('input-single-price');
-      const singleCostEl = document.getElementById('input-single-cost');
-      const singleStockEl = document.getElementById('input-stock-qty') || document.getElementById('input-single-stock');
-      const singlePriceErr = document.getElementById('single-price-error-msg');
-      const singleCostErr = document.getElementById('single-cost-error-msg');
-      const singleStockErr = document.getElementById('single-stock-error-msg');
+      const btnVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
+      addError('Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.', btnVariants);
+      return {
+        isValid: false,
+        errors: errors,
+        firstInvalidEl: firstInvalidEl
+      };
+    }
 
-      const pRaw = singlePriceEl ? (singlePriceEl.value || '').trim() : '';
-      const pVal = parseFloat(pRaw);
-      if (pRaw === '' || isNaN(pVal) || pVal <= 0) {
-        addError('Harga Jual produk wajib diisi (> 0).', singlePriceEl);
-        if (singlePriceEl) {
-          singlePriceEl.classList.remove('border-slate-300');
-          singlePriceEl.classList.add('border-red-500');
-        }
-        if (singlePriceErr) {
-          singlePriceErr.textContent = 'Wajib di isi';
-          singlePriceErr.classList.remove('hidden');
-        }
-      } else {
-        if (singlePriceEl) {
-          singlePriceEl.classList.remove('border-red-500');
-          singlePriceEl.classList.add('border-slate-300');
-        }
-        if (singlePriceErr) {
-          singlePriceErr.textContent = '';
-          singlePriceErr.classList.add('hidden');
-        }
-      }
+    // MODE BERVARIASI
+    // A. Periksa Judul Seluruh Kartu Variasi yang Sedang Aktif
+    const activeVariationCards = [];
+    const t1TitleEl = document.getElementById('input-var-label-tier1');
+    activeVariationCards.push({ tier: 'tier1', labelDefault: 'Variasi 1', inputEl: t1TitleEl, cardId: 'card-variasi-1' });
 
-      const cRaw = singleCostEl ? (singleCostEl.value || '').trim() : '';
-      if (cRaw === '') {
-        addError('Modal/HPP produk wajib diisi (minimal "0").', singleCostEl);
-        if (singleCostEl) {
-          singleCostEl.classList.remove('border-slate-300');
-          singleCostEl.classList.add('border-red-500');
-        }
-        if (singleCostErr) {
-          singleCostErr.textContent = 'Wajib Di Isi Min. "0"';
-          singleCostErr.classList.remove('hidden');
-        }
-      } else {
-        const cVal = parseFloat(cRaw);
-        if (isNaN(cVal) || cVal < 0) {
-          addError('Biaya Modal (HPP) produk minimal bernilai 0.', singleCostEl);
-          if (singleCostEl) {
-            singleCostEl.classList.remove('border-slate-300');
-            singleCostEl.classList.add('border-red-500');
-          }
-          if (singleCostErr) {
-            singleCostErr.textContent = 'Wajib Di Isi Min. "0"';
-            singleCostErr.classList.remove('hidden');
-          }
-        } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
-          addError('Biaya Modal (HPP) melebihi Harga Jual produk.', singleCostEl);
-          if (singleCostEl) {
-            singleCostEl.classList.add('text-red-600', 'font-bold', 'border-red-500');
-            singleCostEl.classList.remove('text-slate-900', 'border-slate-300');
-          }
-          if (singleCostErr) {
-            singleCostErr.textContent = 'Hpp melebihi Harga Jual';
-            singleCostErr.classList.remove('hidden');
-          }
-        } else {
-          if (singleCostEl) {
-            singleCostEl.classList.remove('text-red-600', 'font-bold', 'border-red-500');
-            singleCostEl.classList.add('text-slate-900', 'border-slate-300');
-          }
-          if (singleCostErr) {
-            singleCostErr.textContent = '';
-            singleCostErr.classList.add('hidden');
+    if (primaryState.has_variation_2) {
+      const t2TitleEl = document.getElementById('input-var-label-main') || document.getElementById('input-var-label-tier2');
+      activeVariationCards.push({ tier: 'main', labelDefault: 'Variasi 2', inputEl: t2TitleEl, cardId: 'card-variasi-2' });
+    }
+    if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+      const t3TitleEl = document.getElementById('input-var-label-extra_1') || document.getElementById('input-var-label-tier3');
+      activeVariationCards.push({ tier: 'extra_1', labelDefault: 'Variasi 3', inputEl: t3TitleEl, cardId: 'card-variasi-3' });
+    }
+    if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+      const t4TitleEl = document.getElementById('input-var-label-extra_2') || document.getElementById('input-var-label-tier4');
+      activeVariationCards.push({ tier: 'extra_2', labelDefault: 'Variasi 4', inputEl: t4TitleEl, cardId: 'card-variasi-4' });
+    }
+    if (primaryState.has_extra_service) {
+      const extraTitleEl = document.getElementById('input-var-label-extra3') || document.getElementById('input-var-label-extra_3');
+      activeVariationCards.push({ tier: 'extra_3', labelDefault: 'Layanan Extras', inputEl: extraTitleEl, cardId: 'card-extra-service' });
+    }
+
+    // Validasi Judul Wajib Diisi
+    activeVariationCards.forEach(({ labelDefault, inputEl }) => {
+      if (inputEl) {
+        const val = (inputEl.value || '').trim();
+        const wrapper = inputEl.closest('.custom-combobox-wrapper');
+        const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
+        if (!val) {
+          addError(`Judul ${labelDefault} wajib diisi.`, inputEl);
+          inputEl.classList.remove('border-slate-400');
+          inputEl.classList.add('border-red-500');
+          if (errEl) {
+            errEl.textContent = `Judul ${labelDefault} wajib diisi`;
+            errEl.classList.remove('hidden');
           }
         }
       }
+    });
 
-      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
-      const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
-      if (!isUnl) {
-        const stockRaw = singleStockEl ? (singleStockEl.value || '').trim() : '';
-        const stockVal = parseInt(stockRaw, 10);
-        if (stockRaw === '' || isNaN(stockVal) || stockVal < 0) {
-          addError('Stok produk wajib diisi (minimal 0).', singleStockEl);
-          if (singleStockEl) {
-            singleStockEl.classList.remove('border-slate-300');
-            singleStockEl.classList.add('border-red-500');
-          }
-          if (singleStockErr) {
-            singleStockErr.textContent = 'Stok produk wajib diisi (minimal "0")';
-            singleStockErr.classList.remove('hidden');
-          }
-        } else {
-          if (singleStockEl) {
-            singleStockEl.classList.remove('border-red-500');
-            singleStockEl.classList.add('border-slate-300');
-          }
-          if (singleStockErr) {
-            singleStockErr.textContent = '';
-            singleStockErr.classList.add('hidden');
-          }
-        }
-      }
+    // Validasi Judul Anti-Duplikat
+    const groupLabelCheck = refreshVariationTitleDuplicateErrors();
+    if (groupLabelCheck && groupLabelCheck.hasDuplicate) {
+      addError('Judul variasi sudah digunakan / duplikat.', groupLabelCheck.firstDuplicateEl || t1TitleEl);
+    }
+
+    // B. Validasi Baris Opsi Variasi 1 (materialsState)
+    if (!materialsState || materialsState.length === 0) {
+      addError('Variasi 1 wajib memiliki minimal 1 opsi terisi.', document.getElementById('card-variasi-1'));
     } else {
-      // 2. MODE BERVARIASI
-      // A. Periksa Judul Seluruh Kartu Variasi yang Sedang Aktif
-      const activeVariationCards = [];
-      const t1TitleEl = document.getElementById('input-var-label-tier1');
-      activeVariationCards.push({ tier: 'tier1', labelDefault: 'Variasi 1', inputEl: t1TitleEl, cardId: 'card-variasi-1' });
-
-      if (primaryState.has_variation_2) {
-        const t2TitleEl = document.getElementById('input-var-label-main') || document.getElementById('input-var-label-tier2');
-        activeVariationCards.push({ tier: 'main', labelDefault: 'Variasi 2', inputEl: t2TitleEl, cardId: 'card-variasi-2' });
-      }
-      if (primaryState.has_variation_2 && primaryState.has_variation_3) {
-        const t3TitleEl = document.getElementById('input-var-label-extra_1') || document.getElementById('input-var-label-tier3');
-        activeVariationCards.push({ tier: 'extra_1', labelDefault: 'Variasi 3', inputEl: t3TitleEl, cardId: 'card-variasi-3' });
-      }
-      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
-        const t4TitleEl = document.getElementById('input-var-label-extra_2') || document.getElementById('input-var-label-tier4');
-        activeVariationCards.push({ tier: 'extra_2', labelDefault: 'Variasi 4', inputEl: t4TitleEl, cardId: 'card-variasi-4' });
-      }
-      if (primaryState.has_extra_service) {
-        const extraTitleEl = document.getElementById('input-var-label-extra3') || document.getElementById('input-var-label-extra_3');
-        activeVariationCards.push({ tier: 'extra_3', labelDefault: 'Layanan Extras', inputEl: extraTitleEl, cardId: 'card-extra-service' });
+      const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
+      if (validMats.length < 1) {
+        const firstMatNameInp = document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]');
+        addError('Variasi 1 wajib memiliki minimal 1 opsi yang terisi namanya.', firstMatNameInp || document.getElementById('card-variasi-1'));
       }
 
-      // Validasi Judul Wajib Diisi
-      activeVariationCards.forEach(({ labelDefault, inputEl }) => {
-        if (inputEl) {
-          const val = (inputEl.value || '').trim();
-          const wrapper = inputEl.closest('.custom-combobox-wrapper');
-          const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
-          if (!val) {
-            addError(`Judul ${labelDefault} wajib diisi.`, inputEl);
-            inputEl.classList.remove('border-slate-400');
-            inputEl.classList.add('border-red-500');
-            if (errEl) {
-              errEl.textContent = `Judul ${labelDefault} wajib diisi`;
-              errEl.classList.remove('hidden');
-            }
+      materialsState.forEach((m, idx) => {
+        const isRowEmpty = (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined || m.price === null);
+        const rowEl = document.querySelector(`.variation-option-row[data-tier="tier1"][data-idx="${idx}"]`);
+
+        // Abaikan baris kosong tambahan jika sudah ada minimal 1 opsi valid
+        if (validMats.length >= 1 && isRowEmpty) {
+          if (rowEl) {
+            rowEl.querySelectorAll('input').forEach(inp => {
+              inp.classList.remove('border-red-500', 'text-red-600', 'font-bold');
+              inp.classList.add('border-slate-300', 'text-slate-700');
+            });
+            rowEl.querySelectorAll('.field-error-msg').forEach(err => {
+              err.textContent = '';
+              err.classList.add('hidden');
+            });
           }
-        }
-      });
-
-      // Validasi Judul Anti-Duplikat
-      const groupLabelCheck = refreshVariationTitleDuplicateErrors();
-      if (groupLabelCheck && groupLabelCheck.hasDuplicate) {
-        addError('Judul variasi sudah digunakan / duplikat.', groupLabelCheck.firstDuplicateEl || t1TitleEl);
-      }
-
-      // B. Validasi Baris Opsi Variasi 1 (materialsState)
-      if (!materialsState || materialsState.length === 0) {
-        addError('Variasi 1 wajib memiliki minimal 1 opsi terisi.', document.getElementById('card-variasi-1'));
-      } else {
-        const validMats = materialsState.filter(m => m && m.name && m.name.trim() !== '');
-        if (validMats.length < 2) {
-          const firstMatNameInp = document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]');
-          addError('Variasi 1 wajib memiliki minimal 2 opsi yang terisi namanya.', firstMatNameInp || document.getElementById('card-variasi-1'));
+          return;
         }
 
-        materialsState.forEach((m, idx) => {
-          const isUntouched = (materialsState.length > 1 && idx === materialsState.length - 1 && (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined) && (m.cost_price === '' || m.cost_price === undefined) && (m.stock === '' || m.stock === undefined));
-          if (isUntouched) return;
+        const nameInp = rowEl?.querySelector('input[data-field="name"]');
+        const priceInp = rowEl?.querySelector('input[data-field="price"]');
+        const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+        const stockInp = rowEl?.querySelector('input[data-field="stock"]');
 
-          const rowEl = document.querySelector(`.variation-option-row[data-tier="tier1"][data-idx="${idx}"]`);
-          const nameInp = rowEl?.querySelector('input[data-field="name"]');
-          const priceInp = rowEl?.querySelector('input[data-field="price"]');
-          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
-          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
-
-          const nameVal = (m.name || '').trim();
-          if (!nameVal) {
-            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
-          } else if (nameVal.length > 15) {
-            addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
-          } else if (checkOptionNameDuplicate('tier1', nameVal, idx)) {
-            addError(`Variasi 1: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
-          }
-
-          const pRaw = (m.price !== undefined && m.price !== null) ? String(m.price).trim() : '';
-          const pNum = parseFloat(pRaw);
-          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
-            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Harga jual wajib diisi.`, priceInp || rowEl);
-          }
-
-          const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
-          const cNum = parseFloat(cRaw);
-          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
-            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
-          }
-
-          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
-          if (stockMode !== 'unlimited') {
-            if (m.stock === '' || m.stock === undefined || m.stock === null || isNaN(parseInt(m.stock, 10)) || parseInt(m.stock, 10) < 0) {
-              addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
-            }
-          }
-        });
-      }
-
-      // C. Validasi Baris Opsi Variasi 2, 3, 4 & Layanan Extras
-      const activeFinTiers = [];
-      if (primaryState.has_variation_2) activeFinTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2', cardId: 'card-variasi-2' });
-      if (primaryState.has_variation_2 && primaryState.has_variation_3) activeFinTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3', cardId: 'card-variasi-3' });
-      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) activeFinTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4', cardId: 'card-variasi-4' });
-      if (primaryState.has_extra_service) activeFinTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras', cardId: 'card-extra-service' });
-
-      activeFinTiers.forEach(({ tier, label, cardId }) => {
-        const list = finishingsState[tier] || [];
-        const isExtra3 = (tier === 'extra_3');
-        const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
-        const minReq = isExtra3 ? 1 : 2;
-        if (validList.length < minReq) {
-          const firstFinNameInp = document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`);
-          addError(`${label} wajib memiliki minimal ${minReq} opsi yang terisi namanya.`, firstFinNameInp || document.getElementById(cardId));
+        const nameVal = (m.name || '').trim();
+        if (!nameVal) {
+          addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
+        } else if (nameVal.length > 15) {
+          addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+        } else if (checkOptionNameDuplicate('tier1', nameVal, idx)) {
+          addError(`Variasi 1: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
         }
 
-        list.forEach((f, idx) => {
-          if (isExtra3 && (idx === list.length - 1 || f.is_default_none)) return;
-          const triggerIdx = isExtra3 ? list.length - 2 : list.length - 1;
-          const isUntouched = (list.length > (isExtra3 ? 2 : 1) && idx === triggerIdx && (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined) && (f.cost_price === '' || f.cost_price === undefined) && (f.stock === '' || f.stock === undefined) && !f.extra_type);
-          if (isUntouched) return;
+        const pRaw = (m.price !== undefined && m.price !== null) ? String(m.price).trim() : '';
+        const pNum = parseFloat(pRaw);
+        if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+          addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Harga jual wajib diisi.`, priceInp || rowEl);
+        }
 
-          const rowEl = document.querySelector(`.variation-option-row[data-tier="${tier}"][data-idx="${idx}"]`);
-          const nameInp = rowEl?.querySelector('input[data-field="name"]');
-          const typeSel = rowEl?.querySelector('select.fin-extra-type');
-          const priceInp = rowEl?.querySelector('input[data-field="price"]');
-          const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
-          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+        const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
+        const cNum = parseFloat(cRaw);
+        if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+          addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
+        }
 
-          const nameVal = (f.name || '').trim();
-          const isExtraNone = (isExtra3 && (f.is_default_none || (nameVal && nameVal.startsWith('Tanpa '))));
-          if (!nameVal) {
-            addError(`${label} (Baris ${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
-          } else if (!isExtraNone && nameVal.length > 15) {
-            addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
-          } else if (checkOptionNameDuplicate(tier, nameVal, idx)) {
-            addError(`${label}: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
+        const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
+        if (stockMode !== 'unlimited') {
+          if (m.stock === '' || m.stock === undefined || m.stock === null || isNaN(parseInt(m.stock, 10)) || parseInt(m.stock, 10) < 0) {
+            addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
           }
-
-          if (isExtra3 && (!f.extra_type || f.extra_type.trim() === '')) {
-            addError(`${label} (Opsi ${nameVal || idx + 1}): Jenis input wajib dipilih.`, typeSel || rowEl);
-          }
-
-          const pRaw = (f.price !== undefined && f.price !== null) ? String(f.price).trim() : '';
-          const pNum = parseFloat(pRaw);
-          if (pRaw === '' || isNaN(pNum) || pNum < 0) {
-            addError(`${label} (Opsi ${nameVal || idx + 1}): Harga satuan/jual wajib diisi.`, priceInp || rowEl);
-          }
-
-          const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
-          const cNum = parseFloat(cRaw);
-          if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
-            addError(`${label} (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
-          }
-
-          const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
-          if (stockMode !== 'unlimited') {
-            if (f.stock === '' || f.stock === undefined || f.stock === null || isNaN(parseInt(f.stock, 10)) || parseInt(f.stock, 10) < 0) {
-              addError(`${label} (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
-            }
-          }
-        });
-      });
-
-      // Pemicu tampilan error inline merah di DOM tabel opsi
-      document.querySelectorAll('.mat-input, .fin-input').forEach(inp => {
-        if (typeof validateOptionField === 'function') {
-          validateOptionField(inp, true);
         }
       });
     }
+
+    // C. Validasi Baris Opsi Variasi 2, 3, 4 & Layanan Extras
+    const activeFinTiers = [];
+    if (primaryState.has_variation_2) activeFinTiers.push({ tier: 'main', label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2', cardId: 'card-variasi-2' });
+    if (primaryState.has_variation_2 && primaryState.has_variation_3) activeFinTiers.push({ tier: 'extra_1', label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3', cardId: 'card-variasi-3' });
+    if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) activeFinTiers.push({ tier: 'extra_2', label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4', cardId: 'card-variasi-4' });
+    if (primaryState.has_extra_service) activeFinTiers.push({ tier: 'extra_3', label: primaryState.variation_labels?.label_extra_3 || 'Layanan Extras', cardId: 'card-extra-service' });
+
+    activeFinTiers.forEach(({ tier, label, cardId }) => {
+      const list = finishingsState[tier] || [];
+      const isExtra3 = (tier === 'extra_3');
+      const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
+      const minReq = 1;
+      if (validList.length < minReq) {
+        const firstFinNameInp = document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`);
+        addError(`${label} wajib memiliki minimal ${minReq} opsi yang terisi namanya.`, firstFinNameInp || document.getElementById(cardId));
+      }
+
+      list.forEach((f, idx) => {
+        if (isExtra3 && (idx === list.length - 1 || f.is_default_none)) return;
+        const isRowEmpty = (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined || f.price === null);
+        const rowEl = document.querySelector(`.variation-option-row[data-tier="${tier}"][data-idx="${idx}"]`);
+
+        // Abaikan baris kosong tambahan jika sudah ada minimal 1 opsi valid
+        if (validList.length >= 1 && isRowEmpty) {
+          if (rowEl) {
+            rowEl.querySelectorAll('input, select').forEach(inp => {
+              inp.classList.remove('border-red-500', 'text-red-600', 'font-bold');
+              inp.classList.add('border-slate-300', 'text-slate-700');
+            });
+            rowEl.querySelectorAll('.field-error-msg').forEach(err => {
+              err.textContent = '';
+              err.classList.add('hidden');
+            });
+          }
+          return;
+        }
+
+        const nameInp = rowEl?.querySelector('input[data-field="name"]');
+        const typeSel = rowEl?.querySelector('select.fin-extra-type');
+        const priceInp = rowEl?.querySelector('input[data-field="price"]');
+        const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
+        const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+
+        const nameVal = (f.name || '').trim();
+        const isExtraNone = (isExtra3 && (f.is_default_none || (nameVal && nameVal.startsWith('Tanpa '))));
+        if (!nameVal) {
+          addError(`${label} (Baris ${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
+        } else if (!isExtraNone && nameVal.length > 15) {
+          addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+        } else if (checkOptionNameDuplicate(tier, nameVal, idx)) {
+          addError(`${label}: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
+        }
+
+        if (isExtra3 && (!f.extra_type || f.extra_type.trim() === '')) {
+          addError(`${label} (Opsi ${nameVal || idx + 1}): Jenis input wajib dipilih.`, typeSel || rowEl);
+        }
+
+        const pRaw = (f.price !== undefined && f.price !== null) ? String(f.price).trim() : '';
+        const pNum = parseFloat(pRaw);
+        if (pRaw === '' || isNaN(pNum) || pNum < 0) {
+          addError(`${label} (Opsi ${nameVal || idx + 1}): Harga satuan/jual wajib diisi.`, priceInp || rowEl);
+        }
+
+        const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
+        const cNum = parseFloat(cRaw);
+        if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+          addError(`${label} (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
+        }
+
+        const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
+        if (stockMode !== 'unlimited') {
+          if (f.stock === '' || f.stock === undefined || f.stock === null || isNaN(parseInt(f.stock, 10)) || parseInt(f.stock, 10) < 0) {
+            addError(`${label} (Opsi ${nameVal || idx + 1}): Stok wajib diisi.`, stockInp || rowEl);
+          }
+        }
+      });
+    });
+
+    // Pemicu tampilan error inline merah di DOM tabel opsi
+    document.querySelectorAll('.mat-input, .fin-input').forEach(inp => {
+      if (typeof validateOptionField === 'function') {
+        validateOptionField(inp, true);
+      }
+    });
 
     return {
       isValid: errors.length === 0,
@@ -11570,9 +11509,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // Tombol Variasi Produk: Buka Variasi 1 (Minimal 2 Baris Awal)
-    const btnToggleVariants = document.getElementById('btn-toggle-has-variants');
+    const btnToggleVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
     if (btnToggleVariants) {
       btnToggleVariants.onclick = () => {
+        // Otomatis sembunyikan pesan peringatan jika sebelumnya muncul
+        const warnEl = document.getElementById('custom-dim-no-variant-warning');
+        if (warnEl) warnEl.classList.add('hidden');
+        hideWizardErrorBanner();
+
         primaryState.has_variants = true;
         if (materialsState.length < 2) {
           const p = materialsState[0]?.price || '';
@@ -11951,6 +11895,40 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             syncStateFromDOM();
           }
 
+          // Cek apakah produk tidak memiliki variasi
+          if (!primaryState.has_variants) {
+            toggleCustomDim.checked = false;
+            primaryState.has_custom_dimension = false;
+            const configBody = document.getElementById('custom-dimension-config-body');
+            if (configBody) {
+              configBody.classList.remove('block');
+              configBody.classList.add('hidden');
+            }
+
+            // Tampilkan pesan peringatan tepat di bawah kartu #card-custom-dimension-pxl
+            const warnEl = document.getElementById('custom-dim-no-variant-warning');
+            if (warnEl) warnEl.classList.remove('hidden');
+
+            // Tampilkan pada banner peringatan
+            const warnMsg = 'Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.';
+            showWizardErrorBanner([warnMsg]);
+
+            // Auto-Scroll & Highlight tombol + Variasi Produk
+            const btnVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
+            if (btnVariants) {
+              btnVariants.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              btnVariants.classList.add('ring-2', 'ring-red-400', 'transition-all');
+              setTimeout(() => {
+                btnVariants.classList.remove('ring-2', 'ring-red-400', 'transition-all');
+              }, 3000);
+            }
+            return;
+          }
+
+          // Sembunyikan pesan peringatan jika sebelumnya muncul
+          const warnEl = document.getElementById('custom-dim-no-variant-warning');
+          if (warnEl) warnEl.classList.add('hidden');
+
           // 2. Jalankan validasi prasyarat sebelum mengizinkan ukuran P x L diaktifkan
           const prereqResult = validatePrerequisitesBeforeCustomDimension();
           if (!prereqResult.isValid) {
@@ -12027,6 +12005,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           updateProductCardLivePreview();
         } else {
           primaryState.has_custom_dimension = false;
+          const warnEl = document.getElementById('custom-dim-no-variant-warning');
+          if (warnEl) warnEl.classList.add('hidden');
+          hideWizardErrorBanner();
           const configBody = document.getElementById('custom-dimension-config-body');
           if (configBody) {
             configBody.classList.remove('block');
@@ -16761,15 +16742,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         addError('Minimal harus mengisi 1 pilihan varian / bahan dasar.', document.getElementById('table-tier1-container') || document.querySelector('[data-tier="tier1"]') || document.getElementById('card-variasi-1'));
       } else {
         const validMats = materialsState.filter(m => m.name && m.name.trim() !== '');
-        if (validMats.length < 2) {
-          addError('Variasi 1 wajib memiliki minimal 2 opsi yang terisi namanya.', document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]') || document.getElementById('card-variasi-1'));
+        if (validMats.length < 1) {
+          addError('Variasi 1 wajib memiliki minimal 1 opsi yang terisi namanya.', document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="name"]') || document.getElementById('card-variasi-1'));
         }
 
         materialsState.forEach((m, idx) => {
-          const isUntouched = (materialsState.length > 1 && idx === materialsState.length - 1 && (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined) && (m.cost_price === '' || m.cost_price === undefined) && (m.stock === '' || m.stock === undefined));
-          if (isUntouched) return;
-
+          const isRowEmpty = (!m.name || !m.name.trim()) && (m.price === '' || m.price === undefined || m.price === null);
           const rowEl = document.querySelector(`.variation-option-row[data-tier="tier1"][data-idx="${idx}"]`);
+
+          // Abaikan baris kosong tambahan jika sudah ada minimal 1 opsi valid
+          if (validMats.length >= 1 && isRowEmpty) {
+            if (rowEl) {
+              rowEl.querySelectorAll('input').forEach(inp => {
+                inp.classList.remove('border-red-500', 'text-red-600', 'font-bold');
+                inp.classList.add('border-slate-300', 'text-slate-700');
+              });
+              rowEl.querySelectorAll('.field-error-msg').forEach(err => {
+                err.textContent = '';
+                err.classList.add('hidden');
+              });
+            }
+            return;
+          }
+
           const nameInp = rowEl?.querySelector('input[data-field="name"]');
           const priceInp = rowEl?.querySelector('input[data-field="price"]');
           const costInp = rowEl?.querySelector('input[data-field="cost_price"]');
@@ -16817,18 +16812,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const list = finishingsState[tier] || [];
         const isExtra3 = (tier === 'extra_3');
         const validList = list.filter(f => !f.is_default_none && f.name && f.name.trim() !== '');
-        const minReq = isExtra3 ? 1 : 2;
+        const minReq = 1;
         if (validList.length < minReq) {
           addError(`${label} wajib memiliki minimal ${minReq} opsi yang terisi namanya.`, document.querySelector(`.variation-option-row[data-tier="${tier}"] input[data-field="name"]`) || document.getElementById(cardId));
         }
 
         list.forEach((f, idx) => {
           if (isExtra3 && (idx === list.length - 1 || f.is_default_none)) return;
-          const triggerIdx = isExtra3 ? list.length - 2 : list.length - 1;
-          const isUntouched = (list.length > (isExtra3 ? 2 : 1) && idx === triggerIdx && (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined) && (f.cost_price === '' || f.cost_price === undefined) && (f.stock === '' || f.stock === undefined) && !f.extra_type);
-          if (isUntouched) return;
-
+          const isRowEmpty = (!f.name || !f.name.trim()) && (f.price === '' || f.price === undefined || f.price === null);
           const rowEl = document.querySelector(`.variation-option-row[data-tier="${tier}"][data-idx="${idx}"]`);
+
+          // Abaikan baris kosong tambahan jika sudah ada minimal 1 opsi valid
+          if (validList.length >= 1 && isRowEmpty) {
+            if (rowEl) {
+              rowEl.querySelectorAll('input, select').forEach(inp => {
+                inp.classList.remove('border-red-500', 'text-red-600', 'font-bold');
+                inp.classList.add('border-slate-300', 'text-slate-700');
+              });
+              rowEl.querySelectorAll('.field-error-msg').forEach(err => {
+                err.textContent = '';
+                err.classList.add('hidden');
+              });
+            }
+            return;
+          }
+
           const nameInp = rowEl?.querySelector('input[data-field="name"]');
           const typeSel = rowEl?.querySelector('select.fin-extra-type');
           const priceInp = rowEl?.querySelector('input[data-field="price"]');
@@ -16910,6 +16918,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     if (primaryState.has_custom_dimension === true) {
+      if (!primaryState.has_variants) {
+        const btnVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
+        addError('Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.', btnVariants || document.getElementById('card-custom-dimension-pxl'));
+      }
       const dimLabelInp = document.getElementById('input-custom-dimension-label');
       const val = (dimLabelInp?.value || primaryState.custom_dimension_label || '').trim();
       if (!val) {
