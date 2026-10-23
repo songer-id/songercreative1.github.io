@@ -1394,3 +1394,44 @@ input.toggle-same-cost:checked ~ div::after {
 #drawer-dim-live-summary {
   animation: fadeIn 0.15s ease-out;
 }
+
+/* --------------------------------------------------------------------------
+   MOBILE SAAS HYGIENE & NESTED BORDERS ELIMINATION (< 640px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* Kurangi padding horizontal berlebih pada wrapper luar form produk */
+  #admin-main-viewport {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-bottom: 6.5rem !important;
+  }
+
+  #view-product-form {
+    padding-bottom: 6rem !important;
+  }
+
+  /* Hilangkan border bertumpuk pada sub-card di dalam section cards */
+  .step2-section-card {
+    padding: 1rem 0.75rem !important;
+    border-radius: 0.875rem !important;
+  }
+
+  .step2-section-card #card-custom-dimension-pxl {
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Galeri Foto: Rasio 1:1 Terkunci & Overflow Hidden agar Tidak Lonjong */
+.gallery-thumb-slot,
+#btn-slot-add-photo {
+  aspect-ratio: 1 / 1;
+  overflow: hidden !important;
+  max-height: 100%;
+}
+

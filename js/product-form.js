@@ -683,7 +683,7 @@ const ProductForm = (() => {
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
 
     container.innerHTML = `
-      <div class="max-w-7xl mx-auto space-y-6 pb-20">
+      <div class="max-w-7xl mx-auto space-y-6 pb-24 sm:pb-28">
         
         <!-- Header Top Bar (Hanya tampil di Step 1) -->
         <div id="product-form-top-bar" class="${currentStep === 2 ? 'hidden' : 'flex'} items-center justify-between border-b border-slate-200 pb-3 gap-3">
@@ -862,7 +862,7 @@ const ProductForm = (() => {
                         <input type="file" id="input-prod-image" multiple accept="image/jpeg,image/png,image/webp" class="hidden" />
 
                         <!-- 10-Slot Grid Container Responsif -->
-                        <div id="gallery-slots-container" data-container="image-gallery-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-2.5 sm:gap-3">
+                        <div id="gallery-slots-container" data-container="image-gallery-container" class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
                           ${renderGalleryThumbnails()}
                         </div>
                       </div>
@@ -5391,14 +5391,14 @@ const ProductForm = (() => {
       const canMoveRight = idx < images.length - 1;
 
       html += `
-        <div style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="relative ${aspectClass} rounded-2xl ${isMain ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-slate-200 hover:border-slate-300'} bg-slate-100 overflow-hidden group shadow-2xs select-none transition-all duration-200" data-index="${idx}">
+        <div style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-2xl ${isMain ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-slate-200 hover:border-slate-300'} bg-slate-100 overflow-hidden group shadow-2xs select-none transition-all duration-200 shrink-0" data-index="${idx}">
           <!-- Gambar Slot -->
           <img src="${imgSrc}" class="w-full h-full object-cover select-none" alt="Foto ${slotNum}" loading="lazy" />
 
           <!-- Top Bar: Badge Cover / Counter & Tombol Hapus -->
           <div class="absolute top-1.5 inset-x-1.5 flex items-center justify-between pointer-events-none z-10">
             ${isMain ? `
-              <span class="pointer-events-auto bg-emerald-600 text-white text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow flex items-center gap-1 tracking-tight">
+              <span class="pointer-events-auto bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1 tracking-tight">
                 <i data-lucide="star" class="w-2.5 h-2.5 fill-white"></i> Foto Utama
               </span>
             ` : `
@@ -5452,17 +5452,17 @@ const ProductForm = (() => {
       const isFirstSlot = images.length === 0;
 
       html += `
-        <div id="btn-slot-add-photo" data-action="add-photo" style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="relative ${aspectClass} rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-2.5 select-none shadow-2xs" title="Unggah foto produk baru (${images.length}/10)">
-          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-700 shadow-xs mb-1 transition-transform group-hover:scale-110">
-            <i data-lucide="camera" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+        <div id="btn-slot-add-photo" data-action="add-photo" style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-1.5 sm:p-2.5 select-none shadow-2xs overflow-hidden shrink-0" title="Unggah foto produk baru (${images.length}/10)">
+          <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-700 shadow-xs mb-1 transition-transform group-hover:scale-105 shrink-0">
+            <i data-lucide="camera" class="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5"></i>
           </div>
-          <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800 transition leading-tight">
+          <span class="text-[11px] sm:text-xs font-bold text-slate-700 group-hover:text-emerald-800 transition leading-tight truncate max-w-full px-1">
             ${isFirstSlot ? '+ Foto Utama' : '+ Tambah Foto'}
           </span>
-          <span class="text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition font-mono mt-0.5">
+          <span class="text-[9px] sm:text-[10px] font-semibold text-slate-400 group-hover:text-emerald-600 transition font-mono leading-none mt-0.5">
             (${images.length}/10)
           </span>
-          <span class="text-[10px] font-semibold text-emerald-600 mt-0.5">Skala ${ratioText}</span>
+          <span class="text-[9px] sm:text-[10px] font-semibold text-emerald-600 leading-none mt-0.5 hidden xs:inline sm:inline">Skala ${ratioText}</span>
         </div>
       `;
     }
@@ -6797,18 +6797,28 @@ const ProductForm = (() => {
     const isNoneChecked = !currentSelectedId;
 
     const noneOptionHtml = `
-      <label class="sandbox-finishing-chip flex items-center justify-between gap-2.5 py-2 px-3 rounded-lg bg-white hover:bg-emerald-50/50 cursor-pointer text-xs border ${isNoneChecked ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30' : 'border-slate-200/90'} transition select-none shadow-2xs">
-        <div class="flex items-center gap-2.5 min-w-0">
+      <label class="sandbox-finishing-chip flex items-start justify-between gap-2.5 p-3 rounded-xl border ${isNoneChecked ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30' : 'border-slate-200/90 bg-white'} transition select-none shadow-2xs cursor-pointer w-full">
+        <div class="flex items-start gap-2.5 min-w-0 flex-1">
           <input 
             type="radio" 
             name="sandbox_finishing_radio" 
-            class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer shrink-0" 
+            class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer mt-0.5 shrink-0" 
             value="" 
             ${isNoneChecked ? 'checked' : ''} 
           />
-          <span class="font-bold text-slate-700 text-xs">Tanpa ${escapeHtml(cleanVarLabel)}</span>
+          <div class="flex flex-col gap-1 min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+              <span class="text-xs font-semibold text-slate-800">Tanpa ${escapeHtml(cleanVarLabel)}</span>
+              <span class="text-[11px] font-normal text-slate-400 shrink-0">(Hanya Komponen Utama)</span>
+            </div>
+            <div>
+              <span class="inline-flex w-fit text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">Default</span>
+            </div>
+          </div>
         </div>
-        <span class="text-[10px] text-slate-400 font-medium italic">Hanya Komponen Utama</span>
+        <div class="shrink-0 text-right">
+          <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">Rp 0</span>
+        </div>
       </label>
     `;
 
@@ -6816,7 +6826,7 @@ const ProductForm = (() => {
       const isChecked = currentSelectedId === item.id;
       let modeBadge = '';
       if (item.calc_mode === 'area') {
-        modeBadge = `<span class="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shrink-0">Ikut Luas</span>`;
+        modeBadge = `<span class="inline-flex w-fit text-[10px] font-medium px-2 py-0.5 rounded bg-blue-50 text-blue-700">Ikut Luas</span>`;
       } else if (item.calc_mode === 'side_length') {
         let sideLabel = 'Sisi';
         if (item.dim_add_side === 'top') sideLabel = 'Atas (1×P)';
@@ -6825,7 +6835,7 @@ const ProductForm = (() => {
         else if (item.dim_add_side === 'side_one') sideLabel = 'Samping (1×L)';
         else if (item.dim_add_side === 'left_right') sideLabel = 'Samping Kiri & Kanan (2×L)';
         else if (item.dim_add_side === 'perimeter') sideLabel = 'Keliling (2P+2L)';
-        modeBadge = `<span class="px-1.5 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 rounded text-[10px] font-bold shrink-0">${sideLabel}</span>`;
+        modeBadge = `<span class="inline-flex w-fit text-[10px] font-medium px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">${sideLabel}</span>`;
       } else if (item.calc_mode === 'add_dim') {
         let sideText = 'P & L';
         if (item.dim_add_side === 'top') sideText = 'Atas (+P)';
@@ -6836,29 +6846,33 @@ const ProductForm = (() => {
         else if (item.dim_add_side === 'left_right') sideText = 'Kanan & Kiri (+L)';
         else if (item.dim_add_side === 'l') sideText = 'L';
         else if (item.dim_add_side === 'p_l' || item.dim_add_side === 'perimeter') sideText = 'Semua Sisi (+P&L)';
-        modeBadge = `<span class="px-1.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[10px] font-bold shrink-0">+${item.dim_add_val} ${dimUnit || ''} (${sideText})</span>`;
+        modeBadge = `<span class="inline-flex w-fit text-[10px] font-medium px-2 py-0.5 rounded bg-amber-50 text-amber-800">+${item.dim_add_val} ${dimUnit || ''} (${sideText})</span>`;
       } else {
-        modeBadge = `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[10px] font-bold shrink-0">Flat</span>`;
+        modeBadge = `<span class="inline-flex w-fit text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">Flat</span>`;
       }
 
       return `
-        <label class="sandbox-finishing-chip flex items-center justify-between gap-2.5 py-2 px-3 rounded-lg bg-white hover:bg-emerald-50/50 cursor-pointer text-xs border ${isChecked ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30' : 'border-slate-200/90'} transition select-none shadow-2xs">
-          <div class="flex items-center gap-2.5 min-w-0">
+        <label class="sandbox-finishing-chip flex items-start justify-between gap-2.5 p-3 rounded-xl border ${isChecked ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30' : 'border-slate-200/90 bg-white'} transition select-none shadow-2xs cursor-pointer w-full">
+          <div class="flex items-start gap-2.5 min-w-0 flex-1">
             <input 
               type="radio" 
               name="sandbox_finishing_radio" 
-              class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer shrink-0" 
+              class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer mt-0.5 shrink-0" 
               value="${item.id}" 
               ${isChecked ? 'checked' : ''} 
             />
-            <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-              <span class="font-bold text-slate-800 text-xs truncate">${escapeHtml(item.name)}</span>
-              <span class="text-[10px] text-slate-400 font-medium shrink-0">(${escapeHtml(item.tierLabel)})</span>
+            <div class="flex flex-col gap-1 min-w-0">
+              <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                <span class="text-xs font-semibold text-slate-800 truncate">${escapeHtml(item.name)}</span>
+                <span class="text-[11px] font-normal text-slate-400 shrink-0">(${escapeHtml(item.tierLabel)})</span>
+              </div>
+              <div>
+                ${modeBadge}
+              </div>
             </div>
           </div>
-          <div class="flex items-center gap-1.5 shrink-0 ml-2">
-            ${modeBadge}
-            <span class="text-xs font-bold text-slate-700 whitespace-nowrap">Rp ${formatNumberLocal(item.price)}</span>
+          <div class="shrink-0 text-right">
+            <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">Rp ${formatNumberLocal(item.price)}</span>
           </div>
         </label>
       `;
@@ -7217,23 +7231,23 @@ const ProductForm = (() => {
     const marginPercent = grandTotalPrice > 0 ? ((netProfit / grandTotalPrice) * 100) : 0;
 
     return `
-      <div class="bg-white border border-emerald-300/80 rounded-xl p-3 sm:p-3.5 space-y-3 shadow-2xs">
+      <div class="bg-slate-50 rounded-xl p-3.5 space-y-2.5 border border-slate-200/70 shadow-2xs">
         <!-- 1. Baris Dimensi & Luas -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs border-b border-slate-200/60 pb-2.5">
+          <div class="space-y-0.5">
             <span class="text-slate-500 font-semibold block text-[11px]">Luas Murni (P × L):</span>
-            <div class="font-bold text-slate-800 text-xs sm:text-sm mt-0.5 break-words">
+            <div class="font-bold text-slate-800 text-xs sm:text-sm break-words">
               ${pMurni} ${dimUnit} × ${lMurni} ${dimUnit} = 
               <span class="text-emerald-700 font-extrabold">${formatNumberLocal(unitAreaMurni, 2)} ${areaUnitLabel}</span>
-              <span class="text-[11px] text-slate-500 font-semibold">(${areaMurni.toFixed(4)} m²)</span>
+              <span class="text-[11px] text-slate-500 font-medium">(${areaMurni.toFixed(4)} m²)</span>
             </div>
           </div>
 
-          <div class="p-2.5 ${hasAddDimEffect ? 'bg-amber-50/70 border-amber-200 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-800'} border rounded-lg">
-            <span class="${hasAddDimEffect ? 'text-amber-700' : 'text-slate-500'} font-semibold block text-[11px]">
+          <div class="space-y-0.5">
+            <span class="${hasAddDimEffect ? 'text-amber-700 font-bold' : 'text-slate-500 font-semibold'} block text-[11px]">
               ${hasAddDimEffect ? 'Efek Tambahan Ukuran (+ Bahan):' : 'Dimensi Efektif Bahan:'}
             </span>
-            <div class="font-bold text-xs sm:text-sm mt-0.5 break-words">
+            <div class="font-bold text-xs sm:text-sm break-words">
               ${hasAddDimEffect ? `
                 ${pEff.toFixed(1)} ${dimUnit} × ${lEff.toFixed(1)} ${dimUnit} = 
                 <span class="text-amber-800 font-extrabold">${formatNumberLocal(unitAreaEff, 2)} ${areaUnitLabel}</span>
@@ -7243,7 +7257,7 @@ const ProductForm = (() => {
               `}
             </div>
             ${hasAddDimEffect ? `
-              <div class="text-[10px] text-amber-700 mt-1 flex items-center gap-1 flex-wrap">
+              <div class="text-[10px] text-amber-700 mt-0.5 flex items-center gap-1 flex-wrap">
                 <i class="bi bi-arrow-right-short"></i>
                 <span>${addDimDetails.join(', ')}</span>
               </div>
@@ -7252,11 +7266,11 @@ const ProductForm = (() => {
         </div>
 
         <!-- 2. Rincian Kalkulasi Harga & Biaya -->
-        <div class="space-y-1.5 pt-1 border-t border-slate-100 text-xs">
+        <div class="space-y-2 border-b border-slate-200/60 pb-2.5 text-xs">
           <div class="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Rincian Perhitungan:</div>
           
           <!-- Rincian Komponen Utama -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1.5 px-2.5 bg-slate-50 rounded-lg border border-slate-200">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1">
             <div class="space-y-0.5 min-w-0">
               <div class="font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
                 <span class="truncate">${escapeHtml(mainOpt.name)}</span>
@@ -7276,7 +7290,7 @@ const ProductForm = (() => {
 
           <!-- Rincian Variasi Tambahan -->
           ${finBreakdown.map(fb => `
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1.5 px-2.5 bg-slate-50/60 rounded-lg border border-slate-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1 pt-1.5 border-t border-slate-200/40">
               <div class="space-y-0.5 min-w-0">
                 <div class="font-semibold text-slate-800 truncate">${escapeHtml(fb.name)}</div>
                 <div class="text-[11px] text-slate-500">${fb.formulaText}</div>
@@ -7290,19 +7304,19 @@ const ProductForm = (() => {
         </div>
 
         <!-- 3. Total Harga Simulasi & Estimasi Laba/HPP -->
-        <div class="pt-2 border-t border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50/60 p-2.5 rounded-lg border">
+        <div class="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
-            <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Total Harga Simulasi:</div>
+            <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Total Harga Simulasi:</div>
             <div class="text-lg sm:text-xl font-black text-emerald-700 leading-tight">
               Rp ${formatNumberLocal(grandTotalPrice)}
             </div>
           </div>
-          <div class="flex items-center gap-2 sm:gap-3 flex-wrap text-xs">
-            <div class="px-2.5 py-1 bg-white border border-slate-200 rounded-md shadow-2xs">
+          <div class="flex items-center gap-2 flex-wrap text-xs">
+            <div class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg shadow-2xs">
               <span class="text-slate-400 text-[10px] block font-semibold uppercase">Estimasi Modal (HPP):</span>
               <span class="font-bold text-slate-700">Rp ${formatNumberLocal(grandTotalCost)}</span>
             </div>
-            <div class="px-2.5 py-1 bg-emerald-600 text-white rounded-md shadow-2xs">
+            <div class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg shadow-2xs">
               <span class="text-emerald-100 text-[10px] block font-semibold uppercase">Estimasi Laba Bersih:</span>
               <span class="font-extrabold">+Rp ${formatNumberLocal(netProfit)} (+${marginPercent.toFixed(1)}%)</span>
             </div>
@@ -7321,7 +7335,7 @@ const ProductForm = (() => {
 
   function getRuleSummaryBadgeHtml(calcMode, dimAddSide, dimAddVal, dimUnit) {
     if (calcMode === 'area') {
-      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200 shrink-0">Ikut Luas</span>`;
+      return `<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 shrink-0">Ikut Luas</span>`;
     }
     if (calcMode === 'side_length') {
       let sideLabel = 'Sisi';
@@ -7331,7 +7345,7 @@ const ProductForm = (() => {
       else if (dimAddSide === 'side_one') sideLabel = 'Samping (1×L)';
       else if (dimAddSide === 'left_right') sideLabel = 'Kanan & Kiri (2×L)';
       else if (dimAddSide === 'perimeter') sideLabel = 'Keliling (2P+2L)';
-      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 shrink-0">${sideLabel}</span>`;
+      return `<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-indigo-50 text-indigo-700 shrink-0">${sideLabel}</span>`;
     }
     if (calcMode === 'add_dim') {
       let sideLabel = 'P & L';
@@ -7343,9 +7357,9 @@ const ProductForm = (() => {
       else if (dimAddSide === 'p') sideLabel = 'P';
       else if (dimAddSide === 'l') sideLabel = 'L';
       const valStr = (dimAddVal !== undefined && dimAddVal !== null && dimAddVal !== '') ? dimAddVal : 0;
-      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">+${valStr} ${dimUnit || ''} (${sideLabel})</span>`;
+      return `<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 shrink-0">+${valStr} ${dimUnit || ''} (${sideLabel})</span>`;
     }
-    return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">Flat</span>`;
+    return `<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0">Flat</span>`;
   }
 
   function renderDimensionRuleModalsHtml(dimUnit) {
@@ -7630,7 +7644,7 @@ const ProductForm = (() => {
     const validOptions = currentTier ? getValidOptionsForTier(currentTier) : [];
 
     return `
-      <div class="dimension-rule-card bg-slate-50/90 border border-slate-200 hover:border-emerald-300/80 rounded-xl p-3 sm:p-3.5 space-y-3 transition shadow-2xs relative" data-rule-id="${ruleId}">
+      <div class="dimension-rule-card bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 sm:p-3.5 space-y-3 transition shadow-2xs relative" data-rule-id="${ruleId}">
         <!-- Bar Kartu Aturan: Pilih Variasi Target di Kiri & Tombol Hapus di Kanan Atas (Tanpa Label Aturan #) -->
         <div class="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
           <div class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
@@ -7693,66 +7707,51 @@ const ProductForm = (() => {
 
             <!-- Daftar Opsi Chip Interaktif (Jika specific) — Tanpa Checkbox, Langsung Ikon Gear -->
             ${currentScope === 'specific' ? `
-              <div class="rule-options-container bg-white border border-slate-200 rounded-xl p-2.5">
+              <div class="rule-options-container pt-2 flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full">
                 ${validOptions.length === 0 ? `
                   <div class="text-xs text-slate-400 italic py-1">Belum ada opsi yang diisi pada variasi ini.</div>
                 ` : `
-                  <div class="flex flex-wrap gap-2">
-                    ${validOptions.map(opt => {
-                      const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
-                      const isLegacyChecked = Array.isArray(rule.option_ids) && (rule.option_ids.includes(opt.id) || (opt.name && rule.option_ids.includes(opt.name)));
-                      
-                      let optMode = 'flat';
-                      let optSide = 'p_l';
-                      let optVal = 0;
+                  ${validOptions.map(opt => {
+                    const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
+                    const isLegacyChecked = Array.isArray(rule.option_ids) && (rule.option_ids.includes(opt.id) || (opt.name && rule.option_ids.includes(opt.name)));
+                    
+                    let optMode = 'flat';
+                    let optSide = 'p_l';
+                    let optVal = 0;
 
-                      if (optOverride) {
-                        optMode = optOverride.calc_mode || 'flat';
-                        optSide = optOverride.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
-                        optVal = optOverride.dim_add_val || 0;
-                      } else if (isLegacyChecked) {
-                        optMode = rule.calc_mode || 'area';
-                        optSide = rule.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
-                        optVal = rule.dim_add_val || 0;
-                      }
+                    if (optOverride) {
+                      optMode = optOverride.calc_mode || 'flat';
+                      optSide = optOverride.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
+                      optVal = optOverride.dim_add_val || 0;
+                    } else if (isLegacyChecked) {
+                      optMode = rule.calc_mode || 'area';
+                      optSide = rule.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
+                      optVal = rule.dim_add_val || 0;
+                    }
 
-                      const isCustomRule = optMode !== 'flat';
-                      const optBadge = isCustomRule ? getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit) : '';
+                    const isCustomRule = optMode !== 'flat';
+                    const optBadge = isCustomRule ? getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit) : '';
 
-                      if (isCustomRule) {
-                        return `
-                          <button 
-                            type="button" 
-                            class="btn-option-rule-chip inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition bg-emerald-50/90 text-emerald-950 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 shadow-2xs cursor-pointer"
-                            data-rule-id="${ruleId}" 
-                            data-opt-id="${escapeHtml(opt.id)}" 
-                            data-opt-name="${escapeHtml(opt.name)}" 
-                            data-tier="${currentTier}" 
-                            title="Klik untuk mengubah aturan ukuran: ${escapeHtml(opt.name)}"
-                          >
-                            <span class="truncate max-w-[140px] sm:max-w-none font-bold">${escapeHtml(opt.name)}</span>
-                            ${optBadge}
-                            <i class="bi bi-gear-fill text-emerald-700 text-xs shrink-0 ml-0.5"></i>
-                          </button>
-                        `;
-                      } else {
-                        return `
-                          <button 
-                            type="button" 
-                            class="btn-option-rule-chip inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold select-none transition bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-2xs cursor-pointer"
-                            data-rule-id="${ruleId}" 
-                            data-opt-id="${escapeHtml(opt.id)}" 
-                            data-opt-name="${escapeHtml(opt.name)}" 
-                            data-tier="${currentTier}" 
-                            title="Klik untuk mengatur perlakuan ukuran: ${escapeHtml(opt.name)}"
-                          >
-                            <span class="truncate max-w-[140px] sm:max-w-none">${escapeHtml(opt.name)}</span>
-                            <i class="bi bi-gear text-slate-400 hover:text-slate-600 text-xs shrink-0 ml-0.5"></i>
-                          </button>
-                        `;
-                      }
-                    }).join('')}
-                  </div>
+                    return `
+                      <button 
+                        type="button" 
+                        class="btn-option-rule-chip rule-option-chip w-full sm:w-auto flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-xs font-semibold select-none transition ${isCustomRule ? 'bg-emerald-50/90 text-emerald-950 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'} shadow-2xs cursor-pointer text-left"
+                        data-rule-id="${ruleId}" 
+                        data-opt-id="${escapeHtml(opt.id)}" 
+                        data-opt-name="${escapeHtml(opt.name)}" 
+                        data-tier="${currentTier}" 
+                        title="Klik untuk mengatur perlakuan ukuran: ${escapeHtml(opt.name)}"
+                      >
+                        <div class="min-w-0 flex flex-wrap items-center gap-1.5 flex-1">
+                          <span class="font-semibold text-slate-800 whitespace-nowrap">${escapeHtml(opt.name)}</span>
+                          ${optBadge}
+                        </div>
+                        <span class="shrink-0 text-slate-400 hover:text-slate-700 ml-1">
+                          <i class="bi ${isCustomRule ? 'bi-gear-fill text-emerald-700' : 'bi-gear text-slate-400'} text-xs"></i>
+                        </span>
+                      </button>
+                    `;
+                  }).join('')}
                 `}
               </div>
             ` : `
@@ -8205,7 +8204,7 @@ const ProductForm = (() => {
             <div class="text-[11px] font-bold text-slate-700">Ketentuan Ukuran Minimal (Opsional)</div>
             <div class="flex flex-col gap-3 w-full">
               <!-- Kartu 1: Harga Jual — Minimal Ukuran -->
-              <div class="p-3 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl transition select-none flex flex-col justify-between gap-2.5 w-full">
+              <div class="p-3 bg-slate-50/70 rounded-xl border-0 transition select-none flex flex-col justify-between gap-2.5 w-full">
                 <label for="chk-min-one-unit-price" class="flex items-start gap-2.5 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -8222,7 +8221,7 @@ const ProductForm = (() => {
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-price-inputs" class="${primaryState.dim_min_one_price !== false ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
-                  <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200 shadow-2xs">
+                  <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8258,7 +8257,7 @@ const ProductForm = (() => {
               </div>
 
               <!-- Kartu 2: Biaya Modal / HPP — Minimal Ukuran -->
-              <div class="p-3 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-xl transition select-none flex flex-col justify-between gap-2.5 w-full">
+              <div class="p-3 bg-slate-50/70 rounded-xl border-0 transition select-none flex flex-col justify-between gap-2.5 w-full">
                 <label for="chk-min-one-unit-hpp" class="flex items-start gap-2.5 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -8275,7 +8274,7 @@ const ProductForm = (() => {
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
-                  <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200 shadow-2xs">
+                  <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8388,7 +8387,7 @@ const ProductForm = (() => {
               <div class="text-[11px] font-bold text-slate-700">
                 Pilih Variasi Tambahan:
               </div>
-              <div id="sandbox-finishing-options-list" class="max-h-52 overflow-y-auto space-y-1.5 p-2 bg-white/80 border border-slate-200/90 rounded-xl">
+              <div id="sandbox-finishing-options-list" class="flex flex-col gap-2 w-full">
                 ${getSandboxFinishingCheckboxesHtml()}
               </div>
             </div>
