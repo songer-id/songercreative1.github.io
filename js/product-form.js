@@ -1317,8 +1317,8 @@ const ProductForm = (() => {
         </button>
 
         <!-- MOBILE BOTTOM SHEET / DRAWER -->
-        <div id="mobile-preview-backdrop" class="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden transition-opacity"></div>
-        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[88vh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out">
+        <div id="mobile-preview-backdrop" class="lg:hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[90] hidden transition-opacity"></div>
+        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[88vh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out">
           <div class="p-2.5 px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/95 gap-2">
             <div id="mobile-preview-header-content" class="w-full max-w-[210px]">
               ${currentStep === 1 ? `
@@ -1538,7 +1538,7 @@ const ProductForm = (() => {
 
 
           <!-- Scoped Preview Simulation Modal (Mobile Scoped) -->
-          <div id="preview-scoped-modal-root-mob" class="absolute inset-0 z-50 hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs">
+          <div id="preview-scoped-modal-root-mob" class="absolute inset-0 z-[100] hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs">
             <!-- Rendered dynamically -->
           </div>
 
@@ -11233,7 +11233,93 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
-    // SUB-NAVBAR ANCHOR SCROLL SPY & OBSERVER
+    // SUB-NAVBAR ANCHOR SCROLL SPY & AUTO-SCROLL HORIZONTAL TAB DI MOBILE
+    let isProgrammaticTabScroll = false;
+    let scrollSpyLockTimer = null;
+    let currentStep2ActiveCardId = 'card-step2-info';
+
+    function centerActiveSubnavTab(tabEl) {
+      if (!tabEl) return;
+      const navContainer = document.getElementById('step2-subnav-links');
+      if (!navContainer) return;
+
+      const tabLeft = tabEl.offsetLeft;
+      const tabWidth = tabEl.offsetWidth;
+      const containerWidth = navContainer.clientWidth;
+      const targetScrollLeft = tabLeft - (containerWidth / 2) + (tabWidth / 2);
+
+      navContainer.scrollTo({
+        left: Math.max(0, targetScrollLeft),
+        behavior: 'smooth'
+      });
+    }
+
+    function setActiveStep2NavTab(targetId, shouldCenter = true) {
+      const tabs = document.querySelectorAll('.step2-nav-tab');
+      let activeTabEl = null;
+      tabs.forEach(tab => {
+        if (tab.getAttribute('data-target') === targetId) {
+          activeTabEl = tab;
+          tab.className = 'step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent';
+        } else {
+          tab.className = 'step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent';
+        }
+      });
+
+      if (activeTabEl && shouldCenter) {
+        centerActiveSubnavTab(activeTabEl);
+      }
+    }
+
+    function handleStep2ScrollSpy() {
+      if (currentStep !== 2 || isProgrammaticTabScroll) return;
+
+      const vp = document.getElementById('admin-main-viewport');
+      if (!vp) return;
+
+      const cardIds = [
+        'card-step2-info',
+        'card-step2-sales',
+        'card-step2-shipping',
+        'card-step2-promo',
+        'card-step2-description',
+        'card-step2-others'
+      ];
+
+      const vpRect = vp.getBoundingClientRect();
+      const triggerLine = vpRect.top + 130; // 130px di bawah batas atas viewport (tepat di bawah sub-navbar sticky)
+
+      let activeId = null;
+
+      for (let i = 0; i < cardIds.length; i++) {
+        const card = document.getElementById(cardIds[i]);
+        if (!card) continue;
+        const rect = card.getBoundingClientRect();
+        if (rect.top <= triggerLine) {
+          activeId = cardIds[i];
+        }
+      }
+
+      // Jika scroll sudah mendekati dasar kontainer, aktifkan kartu terakhir yang terlihat
+      if (vp.scrollHeight - vp.scrollTop - vp.clientHeight < 30) {
+        for (let i = cardIds.length - 1; i >= 0; i--) {
+          if (document.getElementById(cardIds[i])) {
+            activeId = cardIds[i];
+            break;
+          }
+        }
+      }
+
+      if (!activeId) {
+        activeId = cardIds[0];
+      }
+
+      if (activeId !== currentStep2ActiveCardId) {
+        currentStep2ActiveCardId = activeId;
+        setActiveStep2NavTab(activeId, true);
+      }
+    }
+
     function initStep2SubnavObserver() {
       const tabs = document.querySelectorAll('.step2-nav-tab');
       tabs.forEach(tab => {
@@ -11241,36 +11327,44 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           e.preventDefault();
           const targetId = tab.getAttribute('data-target');
           const el = document.getElementById(targetId);
-          if (el) {
+          if (!el) return;
+
+          isProgrammaticTabScroll = true;
+          currentStep2ActiveCardId = targetId;
+          setActiveStep2NavTab(targetId, true);
+
+          const vp = document.getElementById('admin-main-viewport');
+          if (vp) {
+            const vpRect = vp.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            const offset = 120; // 7.5rem (Topbar 64px + Subnav ~48px + margin aman)
+            vp.scrollBy({
+              top: elRect.top - vpRect.top - offset,
+              behavior: 'smooth'
+            });
+          } else {
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
+
+          clearTimeout(scrollSpyLockTimer);
+          scrollSpyLockTimer = setTimeout(() => {
+            isProgrammaticTabScroll = false;
+          }, 450);
         };
       });
 
-      const cards = ['card-step2-info', 'card-step2-sales', 'card-step2-shipping', 'card-step2-promo', 'card-step2-description', 'card-step2-others'];
-      const cardEls = cards.map(id => document.getElementById(id)).filter(Boolean);
-
-      if ('IntersectionObserver' in window && cardEls.length > 0) {
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const activeId = entry.target.id;
-              tabs.forEach(tab => {
-                if (tab.getAttribute('data-target') === activeId) {
-                  tab.className = 'step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent';
-                } else {
-                  tab.className = 'step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent';
-                }
-              });
-            }
-          });
-        }, {
-          threshold: 0.2,
-          rootMargin: '-80px 0px -50% 0px'
-        });
-
-        cardEls.forEach(el => observer.observe(el));
+      const vp = document.getElementById('admin-main-viewport');
+      if (vp && !vp.dataset.step2Scrollbound) {
+        vp.dataset.step2Scrollbound = 'true';
+        vp.addEventListener('scroll', () => {
+          if (currentStep === 2 && !isProgrammaticTabScroll) {
+            requestAnimationFrame(handleStep2ScrollSpy);
+          }
+        }, { passive: true });
       }
+
+      // Jalankan sekali saat inisialisasi agar tab awal aktif dan berada di posisi yang tepat
+      handleStep2ScrollSpy();
     }
 
   // =====================================================================
@@ -14733,7 +14827,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const mobileBackdrop = document.getElementById('mobile-preview-backdrop');
     const mobileSheet = document.getElementById('mobile-preview-sheet');
 
-    function openMobilePreview() { if (!primaryState.is_active) return;
+    function openMobilePreview() {
+      if (!primaryState.is_active) return;
       // Aturan Saling Tutup: Jika Sidebar Menu Toko sedang terbuka di layar kecil/mobile, otomatis tutup
       const sidebarEl = document.getElementById('admin-main-sidebar');
       const backdropSidebar = document.getElementById('sidebar-mobile-backdrop');
@@ -14745,6 +14840,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
 
       updateProductCardLivePreview();
+      if (btnFabLivePreview) btnFabLivePreview.classList.add('hidden');
+      document.body.classList.add('overflow-hidden');
+      const vp = document.getElementById('admin-main-viewport');
+      if (vp) vp.classList.add('overflow-hidden');
+
       if (mobileBackdrop) mobileBackdrop.classList.remove('hidden');
       if (mobileSheet) mobileSheet.classList.remove('translate-y-full');
     }
@@ -14752,6 +14852,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     function closeMobilePreview() {
       if (mobileSheet) mobileSheet.classList.add('translate-y-full');
       if (mobileBackdrop) mobileBackdrop.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      const vp = document.getElementById('admin-main-viewport');
+      if (vp) vp.classList.remove('overflow-hidden');
+      if (btnFabLivePreview && primaryState.is_active) {
+        btnFabLivePreview.classList.remove('hidden');
+      }
     }
 
     if (btnFabLivePreview) btnFabLivePreview.addEventListener('click', openMobilePreview);

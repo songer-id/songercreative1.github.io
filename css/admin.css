@@ -724,10 +724,25 @@ body {
   z-index: 30 !important;
 }
 
+@media (max-width: 1023.98px) {
+  #step2-subnav-fixed,
+  #step2-subnav-sticky {
+    left: 0 !important;
+    right: 0 !important;
+  }
+}
+
 #step-pane-2 section[id^="card-step2-"],
 #step-pane-2 div[id^="card-step2-"],
-.step2-anchor-card {
-  scroll-margin-top: 8.5rem !important;
+#card-step2-info,
+#card-step2-sales,
+#card-step2-shipping,
+#card-step2-promo,
+#card-step2-description,
+#card-step2-others,
+.step2-anchor-card,
+.step2-section-card {
+  scroll-margin-top: 7.5rem !important;
 }
 
 /* ==========================================================================
@@ -1105,6 +1120,25 @@ input.toggle-same-cost:checked~div::after {
   #desktop-preview-sidebar,
   #btn-expand-preview-sidebar {
     display: none !important;
+  }
+
+  /* Mobile Live Preview Overlay & Sheet (Z-index Stack: Backdrop 90, Sheet 95, Scoped Modal 100) */
+  #mobile-preview-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    background-color: rgba(15, 23, 42, 0.72) !important;
+    backdrop-filter: blur(2px) !important;
+    z-index: 90 !important;
+  }
+
+  #mobile-preview-sheet {
+    z-index: 95 !important;
+  }
+
+  #preview-scoped-modal-root-mob {
+    z-index: 100 !important;
   }
 }
 
