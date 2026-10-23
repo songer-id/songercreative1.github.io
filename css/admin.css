@@ -896,7 +896,62 @@ body {
   touch-action: manipulation;
 }
 
-/* Toggle Switch Reliability */
+/* Toggle Switch Reliability (Pengiriman, COD, Ukuran PxL & Umum) */
+.toggle-switch-track,
+label:has(#toggle-shipping-enabled) > div,
+label:has(#toggle-is-cod) > div,
+label:has(#toggle-cod-enabled) > div,
+label:has(#input-cod-enabled) > div,
+label:has(#toggle-custom-dimension) > div {
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  border-radius: 9999px !important;
+  background-color: #cbd5e1 !important;
+  position: relative !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+.toggle-switch-track::after,
+label:has(#toggle-shipping-enabled) > div::after,
+label:has(#toggle-is-cod) > div::after,
+label:has(#toggle-cod-enabled) > div::after,
+label:has(#input-cod-enabled) > div::after,
+label:has(#toggle-custom-dimension) > div::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 3px !important;
+  left: 3px !important;
+  width: 18px !important;
+  height: 18px !important;
+  background-color: #ffffff !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Checked State (Hijau #10b981 / bg-emerald-500) */
+input#toggle-shipping-enabled:checked ~ div,
+input#toggle-is-cod:checked ~ div,
+input#toggle-cod-enabled:checked ~ div,
+input#input-cod-enabled:checked ~ div,
+input#toggle-custom-dimension:checked ~ div,
+.toggle-switch-input:checked ~ .toggle-switch-track {
+  background-color: #10b981 !important;
+}
+
+input#toggle-shipping-enabled:checked ~ div::after,
+input#toggle-is-cod:checked ~ div::after,
+input#toggle-cod-enabled:checked ~ div::after,
+input#input-cod-enabled:checked ~ div::after,
+input#toggle-custom-dimension:checked ~ div::after,
+.toggle-switch-input:checked ~ .toggle-switch-track::after {
+  transform: translateX(20px) !important;
+}
+
 input.toggle-same-price:checked~div,
 input.toggle-same-cost:checked~div {
   background-color: #059669 !important;

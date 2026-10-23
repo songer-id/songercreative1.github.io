@@ -2338,51 +2338,7 @@ const ProductForm = (() => {
   }
 
   function getShippingSimulationSummaryHtml() {
-    if (primaryState.product_type !== 'physical') return '';
-    const sc = primaryState.shipping_config || {};
-    const couriers = Array.isArray(sc.couriers) ? sc.couriers : [];
-    const cList = couriers.map(c => {
-      if (c === 'pickup') return 'Ambil di Toko';
-      if (c === 'local_store' || c === 'instant') {
-        const vFree = sc.local_village_free !== false;
-        const vFee = parseFloat(sc.local_village_fee) || 0;
-        const dFree = Boolean(sc.local_district_free);
-        const dFee = parseFloat(sc.local_district_fee) || 0;
-        if (vFree && dFree) return 'Kurir Toko (1 Kec Gratis)';
-        if (vFree) return dFee > 0 ? `Kurir Toko (1 Desa Gratis / Kec Rp${dFee.toLocaleString('id-ID')})` : 'Kurir Toko (1 Desa Gratis)';
-        if (vFee > 0) return `Kurir Toko (Desa Rp${vFee.toLocaleString('id-ID')})`;
-        return 'Kurir Toko';
-      }
-      if (c === 'reguler') return 'Reguler';
-      if (c === 'cargo') return 'Kargo';
-      if (c === 'international') return 'Luar Negeri';
-      return c;
-    });
-
-    const codStatus = sc.is_cod
-      ? (sc.cod_local !== false && sc.cod_expedition !== false ? 'Bisa COD (Lokal & Ekspedisi)' : (sc.cod_local !== false ? 'Bisa COD Lokal' : 'Bisa COD Ekspedisi'))
-      : 'Tidak Tersedia (Non-COD)';
-
-    const weightStr = (sc.weight !== undefined && sc.weight !== null && sc.weight !== '' && parseFloat(sc.weight) > 0)
-      ? `${parseFloat(sc.weight).toLocaleString('id-ID')} ${sc.weight_unit || 'gram'}`
-      : '';
-
-    return `
-      <div class="text-[11px] text-slate-600 flex justify-between border-t border-slate-200/60 pt-1">
-        <span>Dukungan Kurir:</span>
-        <span class="font-semibold text-slate-800 text-right">${cList.length > 0 ? escapeHtml(cList.join(', ')) : 'Belum diatur'}</span>
-      </div>
-      <div class="text-[11px] text-slate-600 flex justify-between">
-        <span>Status COD:</span>
-        <span class="font-semibold text-slate-800 text-right">${escapeHtml(codStatus)}</span>
-      </div>
-      ${weightStr ? `
-        <div class="text-[11px] text-slate-600 flex justify-between">
-          <span>Berat Paket:</span>
-          <span class="font-semibold text-slate-800 text-right">${escapeHtml(weightStr)}</span>
-        </div>
-      ` : ''}
-    `;
+    return '';
   }
 
   function addSingleProductToCartDirect() {
@@ -2408,7 +2364,6 @@ const ProductForm = (() => {
             <span>Kuantitas:</span>
             <span class="font-bold text-slate-800">${curQ} pcs</span>
           </div>
-          ${getShippingSimulationSummaryHtml()}
         </div>
       `
     });
@@ -2462,7 +2417,6 @@ const ProductForm = (() => {
             <span>Kuantitas:</span>
             <span class="font-bold text-slate-800">${curQ} pcs</span>
           </div>
-          ${getShippingSimulationSummaryHtml()}
         </div>
       `
     });
@@ -3788,25 +3742,7 @@ const ProductForm = (() => {
         btn.onclick = (e) => {
           e.preventDefault();
           const { prodName, variantText, qty } = getContextSummary();
-          let shipWaInfo = '';
-          if (primaryState.product_type === 'physical') {
-            const sc = primaryState.shipping_config || {};
-            const couriers = Array.isArray(sc.couriers) ? sc.couriers : [];
-            const cList = couriers.map(c => {
-              if (c === 'pickup') return 'Ambil di Toko';
-              if (c === 'local_store' || c === 'instant') {
-                return sc.local_village_free !== false ? 'Kurir Toko (1 Desa Gratis)' : 'Kurir Toko';
-              }
-              if (c === 'reguler') return 'Reguler';
-              if (c === 'cargo') return 'Kargo';
-              if (c === 'international') return 'Luar Negeri';
-              return c;
-            });
-            const codText = sc.is_cod ? (sc.cod_local !== false && sc.cod_expedition !== false ? 'Bisa COD' : (sc.cod_local !== false ? 'COD Lokal' : 'COD Ekspedisi')) : 'Non-COD';
-            const wText = (sc.weight !== undefined && sc.weight !== null && sc.weight !== '' && parseFloat(sc.weight) > 0) ? `${parseFloat(sc.weight).toLocaleString('id-ID')} ${sc.weight_unit || 'gram'}` : '';
-            shipWaInfo = `\nPengiriman: ${cList.length > 0 ? cList.join(', ') : 'Standar'} (${codText}${wText ? ', Berat: ' + wText : ''})`;
-          }
-          const chatMsg = `Halo Kak, saya ingin memesan produk ${prodName} (Varian: ${variantText}) sejumlah ${qty} pcs.${shipWaInfo}`;
+          const chatMsg = `Halo Kak, saya ingin memesan produk ${prodName} (Varian: ${variantText}) sejumlah ${qty} pcs.`;
 
           if (typeof App !== 'undefined' && App.showToast) {
             App.showToast(`Simulasi WhatsApp: "${chatMsg}"`, 'info');
@@ -4364,7 +4300,6 @@ const ProductForm = (() => {
                       <span>Jumlah:</span>
                       <span class="font-bold text-slate-800">${curQ} pcs</span>
                     </div>
-                    ${getShippingSimulationSummaryHtml()}
                     <div class="text-[11px] text-slate-600 flex justify-between border-t border-emerald-200/60 pt-1">
                       <span>Total Pembayaran:</span>
                       <span class="font-black text-emerald-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
@@ -4401,7 +4336,6 @@ const ProductForm = (() => {
                       <span>Kuantitas:</span>
                       <span class="font-bold text-slate-800">${curQ} pcs</span>
                     </div>
-                    ${getShippingSimulationSummaryHtml()}
                     <div class="text-[11px] text-slate-600 flex justify-between border-t border-slate-200 pt-1">
                       <span>Total Pembayaran:</span>
                       <span class="font-black text-slate-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
@@ -5248,79 +5182,6 @@ const ProductForm = (() => {
       const isDrawerOpen = Boolean(isTestMode && previewTestState.isDrawerOpen);
       const drawerHtml = isDrawerOpen ? buildShopeeDrawerHtml(previewTestState.drawerActionType || 'buy') : '';
 
-      // Info Pengiriman & Layanan untuk Mini PDP (Hanya untuk Produk Fisik)
-      let shippingMiniPdpHtml = '';
-      if (primaryState.product_type === 'physical') {
-        const sc = primaryState.shipping_config || {};
-        const isCodActive = Boolean(sc.is_cod);
-        const couriers = Array.isArray(sc.couriers) ? sc.couriers : [];
-
-        const codBadges = [];
-        if (isCodActive) {
-          if (sc.cod_local !== false) {
-            codBadges.push(`<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/60 leading-none">Bisa COD Lokal</span>`);
-          }
-          if (sc.cod_expedition !== false) {
-            codBadges.push(`<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-200/60 leading-none">Bisa COD Ekspedisi</span>`);
-          }
-        }
-
-        const courierItems = [];
-        if (couriers.includes('pickup')) {
-          courierItems.push('Ambil di Toko');
-        }
-        if (couriers.includes('local_store') || couriers.includes('instant')) {
-          let localTxt = 'Kurir Toko';
-          const vFree = sc.local_village_free !== false;
-          const vFee = parseFloat(sc.local_village_fee) || 0;
-          const dFree = Boolean(sc.local_district_free);
-          const dFee = parseFloat(sc.local_district_fee) || 0;
-
-          if (vFree && dFree) {
-            localTxt += ' (1 Kec Gratis Ongkir)';
-          } else if (vFree) {
-            localTxt += (dFee > 0 ? ` (1 Desa Gratis / Kec Rp${dFee.toLocaleString('id-ID')})` : ' (1 Desa Gratis Ongkir)');
-          } else if (vFee > 0) {
-            localTxt += (dFee > 0 ? ` (Desa Rp${vFee.toLocaleString('id-ID')} / Kec Rp${dFee.toLocaleString('id-ID')})` : ` (Desa Rp${vFee.toLocaleString('id-ID')})`);
-          }
-          courierItems.push(localTxt);
-        }
-        if (couriers.includes('reguler')) {
-          courierItems.push('Reguler');
-        }
-        if (couriers.includes('cargo')) {
-          courierItems.push('Kargo');
-        }
-        if (couriers.includes('international')) {
-          courierItems.push('Luar Negeri');
-        }
-
-        let weightTxt = '';
-        if (sc.weight !== undefined && sc.weight !== null && sc.weight !== '' && parseFloat(sc.weight) > 0) {
-          weightTxt = `Berat: ${parseFloat(sc.weight).toLocaleString('id-ID')} ${sc.weight_unit || 'gram'}`;
-        }
-
-        if (courierItems.length > 0 || isCodActive || weightTxt) {
-          shippingMiniPdpHtml = `
-            <div class="pt-2 border-t border-slate-100">
-              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-700 space-y-1.5">
-                <div class="flex items-center justify-between gap-1 flex-wrap">
-                  <div class="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
-                    <i class="bi bi-truck text-emerald-600"></i>
-                    <span>Pengiriman & Layanan</span>
-                  </div>
-                  ${codBadges.length > 0 ? `<div class="flex items-center gap-1 flex-wrap">${codBadges.join('')}</div>` : ''}
-                </div>
-                <div class="text-[10px] text-slate-600 leading-snug flex items-center justify-between gap-1 flex-wrap">
-                  <span class="font-medium text-slate-700">${courierItems.length > 0 ? courierItems.join(' • ') : 'Pilihan kurir belum diatur'}</span>
-                  ${weightTxt ? `<span class="font-bold text-slate-600 shrink-0 bg-white px-1.5 py-0.5 rounded border border-slate-200/70">${weightTxt}</span>` : ''}
-                </div>
-              </div>
-            </div>
-          `;
-        }
-      }
-
       const miniPdpHtml = `
         <div class="mini-pdp-card w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
           <!-- AREA KONTEN UTAMA MINI PDP (SCROLLABLE) -->
@@ -5454,9 +5315,6 @@ const ProductForm = (() => {
                     </div>
                   </div>
                 ` : '')}
-
-                <!-- Info Pengiriman & Layanan (Hanya untuk Produk Fisik) -->
-                ${shippingMiniPdpHtml}
 
                 <!-- Deskripsi Produk -->
                 <div class="space-y-1 pt-2 border-t border-slate-100">
@@ -6109,14 +5967,14 @@ const ProductForm = (() => {
                 <h2 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Pengiriman & Dimensi Paket</h2>
                 <span class="text-[11px] text-slate-500 block mt-0.5">Atur kurir, ongkir, berat, dimensi, dan sistem COD</span>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
                 <input 
                   type="checkbox" 
                   id="toggle-shipping-enabled" 
                   ${primaryState.has_shipping ? 'checked' : ''} 
-                  class="sr-only peer"
+                  class="sr-only peer toggle-switch-input"
                 />
-                <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                <div class="toggle-switch-track w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
               </label>
             </div>
 
@@ -6211,14 +6069,14 @@ const ProductForm = (() => {
                         </div>
                       </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
                       <input 
                         type="checkbox" 
                         id="toggle-is-cod" 
                         ${shippingCfg.is_cod ? 'checked' : ''} 
-                        class="sr-only peer"
+                        class="sr-only peer toggle-switch-input"
                       />
-                      <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                      <div class="toggle-switch-track w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                     </label>
                   </div>
 
