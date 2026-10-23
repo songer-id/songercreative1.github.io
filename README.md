@@ -57,6 +57,8 @@ D:\pos-songer-creative\
 │   ├── models/                       # Data Validation
 │   └── database/                     # Migrations & Database Pool
 └── docs/                             # Spesifikasi sistem & API contract
+    ├── PRODUCT_FORM_ARCHITECTURE.md  # Arsitektur teknis formulir produk Shopee-style
+    └── ROADMAP.md                    # Roadmap pengembangan Laravel 12 & React 18 / Inertia v2
 ```
 
 ---
@@ -192,4 +194,21 @@ Mendukung 6 tipe rumus aktif, diskon bulanan, diskon bertingkat kuantitas, dan k
 - **Tombol Aksi:** Tambah ke Keranjang, Beli Sekarang (WhatsApp Checkout langsung), dan Bagikan Link Produk (auto-copy link).
 - **Tab Informasi & Ulasan:** Deskripsi produk, spesifikasi CMYK 300 DPI, ulasan pelanggan yang telah disetujui seller (*approved reviews*), rekomendasi produk serupa (minimal 4 item), dan 1 produk terlaris lintas kategori.
 - **Mobile-First & Sticky Bar:** Baris aksi melayang di bagian bawah layar smartphone (Tombol WA Seller, Ikon Keranjang + badge, dan Tombol "Beli Sekarang").
+
+---
+
+## 🗺️ 6. Roadmap Pengembangan Proyek (`docs/ROADMAP.md`)
+
+Seluruh perencanaan arsitektur, status modul terkini, dan peta jalan migrasi ke ekosistem **Laravel 12** dan **React 18 / Inertia.js v2** dirangkum secara lengkap pada dokumen:
+👉 **[ROADMAP.md](docs/ROADMAP.md)**
+
+Cakupan utama Roadmap:
+1. **Fondasi Backend:** Multi-Tenant Prisma ORM & migrasi service layer Laravel 12.
+2. **Pricing Engine & Kustom Dimensi:** 6 rumus harga, sub-toggle ambang batas minimal, toleransi 0 sah, dan volumetrik.
+3. **Manajemen Pengiriman:** Pemisahan fisik vs non-fisik (jasa/digital), kurir lokal & nasional, serta pembayaran COD.
+4. **Program Promo:** Promo Harian, migrasi otomatis saat Promo Bulanan/Event Besar, serta konversi [%] vs [IDR].
+5. **UI/UX Mobile-First:** Galeri 9 slot Shopee style dengan Canvas auto-compress, Sub-Navbar Sticky + ScrollSpy, dan live preview overlay.
+6. **AI Content Generation:** Generator deskripsi instan dan rancangan manajemen token kuota per-tenant.
+7. **Frontend Modernization:** Rencana konversi imperatif JS ke komponen modular React 18 + Inertia.js v2.
+
 
