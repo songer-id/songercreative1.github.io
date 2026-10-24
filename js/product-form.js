@@ -844,7 +844,7 @@ const ProductForm = (() => {
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
 
     container.innerHTML = `
-      <div class="max-w-7xl mx-auto space-y-6 pb-24 sm:pb-28" id="product-form-wrapper">
+      <div class="max-w-5xl mx-auto px-3 sm:px-6 space-y-6 pb-8 sm:pb-12" id="product-form-wrapper">
         
         <!-- Header Top Bar (Hanya tampil di Step 1) -->
         <div id="product-form-top-bar" class="${currentStep === 2 ? 'hidden' : 'flex'} items-center justify-between border-b border-slate-200 pb-3 gap-3">
