@@ -870,7 +870,7 @@ const ProductForm = (() => {
               ${currentStep === 1 ? renderFormErrorBannerHtml() : ''}
               
               <!-- 1 KARTU UTAMA: INFORMASI PRODUK -->
-              <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-5 sm:space-y-6 step1-section-card">
+              <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card w-full">
                 <!-- Header Card -->
                 <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
@@ -5721,8 +5721,8 @@ const ProductForm = (() => {
 
     return `
       <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
-      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300">
-        <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
+      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full">
+        <nav class="flex items-center overflow-x-auto scrollbar-none px-2 sm:px-6" id="step2-subnav-links">
           <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-info" data-step2-target="card-step2-info">
             Informasi Produk
           </button>
@@ -5745,11 +5745,11 @@ const ProductForm = (() => {
       </div>
 
       <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
-      <div class="space-y-4 sm:space-y-5 pt-2 sm:pt-2.5">
+      <div class="space-y-4 sm:space-y-5 pt-2 sm:pt-2.5 w-full">
         ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
-        <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-info">
+        <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card w-full" id="card-step2-info">
           <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
             <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
           </div>

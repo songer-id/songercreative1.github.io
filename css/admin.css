@@ -737,6 +737,7 @@ body {
 }
 
 /* Hilangkan padding pembatas viewport saat form produk aktif agar subnav menempel rapat di top 0 */
+/* Hilangkan padding pembatas viewport saat form produk aktif agar subnav menempel rapat di top 0 */
 #admin-main-viewport:has(#view-product-form:not(.hidden)) {
   padding-top: 0 !important;
   padding-left: 0 !important;
@@ -744,16 +745,30 @@ body {
 }
 
 #view-product-form {
-  margin-top: -1rem !important;
-  margin-left: -1rem !important;
-  margin-right: -1rem !important;
+  overflow: visible !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
-@media (min-width: 640px) {
+/* Penataan Kompensasi Margin Viewport & Padding Konten di Tablet & Desktop (>= 641px) */
+@media (min-width: 641px) {
   #view-product-form {
     margin-top: -1.5rem !important;
     margin-left: -1.5rem !important;
     margin-right: -1.5rem !important;
+  }
+
+  #product-form-top-bar {
+    padding: 1.25rem 1.5rem 0.75rem 1.5rem !important;
+  }
+
+  #step-pane-1 {
+    padding: 0 1.5rem !important;
+  }
+
+  #step-pane-2 > div.space-y-4,
+  #step-pane-2 > div.space-y-5 {
+    padding: 0.75rem 1.5rem 2.5rem 1.5rem !important;
   }
 }
 
@@ -763,53 +778,15 @@ body {
     margin-left: -2rem !important;
     margin-right: -2rem !important;
   }
-}
 
-#product-form-top-bar {
-  padding: 1rem 1rem 0.75rem 1rem !important;
-}
-
-@media (min-width: 640px) {
-  #product-form-top-bar {
-    padding: 1.25rem 1.5rem 0.75rem 1.5rem !important;
-  }
-}
-
-@media (min-width: 1024px) {
   #product-form-top-bar {
     padding: 1.5rem 2rem 0.75rem 2rem !important;
   }
-}
 
-#step-pane-1 {
-  padding: 0 1rem !important;
-}
-
-@media (min-width: 640px) {
-  #step-pane-1 {
-    padding: 0 1.5rem !important;
-  }
-}
-
-@media (min-width: 1024px) {
   #step-pane-1 {
     padding: 0 2rem !important;
   }
-}
 
-#step-pane-2 > div.space-y-4,
-#step-pane-2 > div.space-y-5 {
-  padding: 0.5rem 1rem 2rem 1rem !important;
-}
-
-@media (min-width: 640px) {
-  #step-pane-2 > div.space-y-4,
-  #step-pane-2 > div.space-y-5 {
-    padding: 0.75rem 1.5rem 2.5rem 1.5rem !important;
-  }
-}
-
-@media (min-width: 1024px) {
   #step-pane-2 > div.space-y-4,
   #step-pane-2 > div.space-y-5 {
     padding: 0.75rem 2rem 3rem 2rem !important;
@@ -1730,64 +1707,123 @@ input.toggle-same-cost:checked~div::after {
    -------------------------------------------------------------------------- */
 @media (max-width: 640px) {
 
-  /* 1. Hilangkan Border Kontainer Pembungkus Luar di Mobile & Padding Rapi */
+  /* 1. Hilangkan Border Kontainer Luar & Padding Rapi Minimal (px-1.5 / px-2) */
   #admin-main-viewport {
     padding: 0 !important;
     background-color: #f8fafc !important;
     border: none !important;
     box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   #view-product-form,
+  #form-container,
   #product-form-wrapper,
   #wizard-form-col {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     padding-top: 0 !important;
     padding-bottom: 2rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
-  /* Subnavbar sticky di mobile: edge-to-edge menempel rapat di top: 0px tanpa celah bocor 1px pun */
+  /* Padding horizontal tipis (px-1.5 / px-2) khusus untuk konten step pane agar kartu lapang maksimal */
+  #product-form-top-bar {
+    padding: 0.75rem 0.375rem 0.5rem 0.375rem !important; /* px-1.5 */
+    width: 100% !important;
+  }
+
+  #step-pane-1 {
+    padding-left: 0.375rem !important; /* px-1.5 tipis */
+    padding-right: 0.375rem !important; /* px-1.5 tipis */
+    padding-top: 0 !important;
+    padding-bottom: 2rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #step-pane-2 {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #step-pane-2 > div.space-y-4,
+  #step-pane-2 > div.space-y-5,
+  #step-pane-2 > div:not(#step2-subnav-fixed):not(#step2-subnav) {
+    padding-left: 0.375rem !important; /* px-1.5 tipis */
+    padding-right: 0.375rem !important; /* px-1.5 tipis */
+    padding-top: 0.5rem !important;
+    padding-bottom: 2.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Subnavbar sticky di mobile: full-width edge-to-edge menempel rapat di sisi kiri dan kanan tanpa jeda */
   #step2-subnav,
   #step2-subnav-fixed,
   #step2-subnav-sticky,
   .product-form-subnav {
+    position: -webkit-sticky !important;
     position: sticky !important;
     top: 0px !important;
     left: 0 !important;
     right: 0 !important;
-    margin-left: -0.75rem !important;
-    margin-right: -0.75rem !important;
-    width: calc(100% + 1.5rem) !important;
-    background-color: #ffffff !important;
-    z-index: 40 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     border-radius: 0 !important;
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+    background-color: #ffffff !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    z-index: 50 !important;
   }
 
-  /* 2. Kartu Seksi Utama: Flat Clean Layout (Zero Border & Zero Shadow) */
+  #step2-subnav-links {
+    padding-left: 0.375rem !important;
+    padding-right: 0.375rem !important;
+    width: 100% !important;
+  }
+
+  /* 2. Kartu Seksi Utama: Flat Clean Fluid Wide (Lebar Penuh w-full Tanpa Batas max-width) */
   .step2-section-card,
   .step1-section-card,
   #step-pane-1 > div.bg-white,
+  #step-pane-1 > div,
   #card-step2-info,
   #card-step2-sales,
   #card-step2-shipping,
   #card-step2-promo,
   #card-step2-description,
   #card-step2-others {
+    width: 100% !important;
+    max-width: 100% !important;
     background-color: #ffffff !important;
     border: none !important;
     border-radius: 0.5rem !important; /* rounded-lg (8px) tegas */
-    padding: 0.875rem !important; /* p-3.5 (14px) */
+    padding: 0.75rem 0.625rem !important; /* Ruang dalam lapang dan proporsional */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     margin-bottom: 0.5rem !important;
     box-shadow: none !important;
+    box-sizing: border-box !important;
   }
 
   /* Hapus kotak ber-border di dalam kartu seksi (Zero Nested Borders) */
