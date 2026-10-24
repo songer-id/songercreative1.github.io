@@ -5722,32 +5722,26 @@ const ProductForm = (() => {
     return `
       <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
       <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-40 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300">
-        <div class="flex items-center overflow-x-auto scrollbar-none px-3 sm:px-6 py-1 sm:py-1.5" id="step2-subnav-wrapper">
-          <button type="button" id="btn-step2-subnav-prev" class="btn-step2-back-action mr-2 sm:mr-3 px-2.5 sm:px-3 py-1.5 rounded-md border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition cursor-pointer select-none" title="Kembali ke Informasi Produk">
-            <i class="bi bi-arrow-left text-xs"></i>
-            <span>Kembali</span>
+        <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
+            Informasi Produk
           </button>
-          <nav class="flex items-center flex-1 min-w-0" id="step2-subnav-links">
-            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
-              Informasi Produk
-            </button>
-            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-sales">
-              Informasi Penjualan
-            </button>
-            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-shipping">
-              Pengiriman
-            </button>
-            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-promo">
-              Program Promo
-            </button>
-            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-description">
-              Deskripsi Produk
-            </button>
-            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-others">
-              Lainnya
-            </button>
-          </nav>
-        </div>
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-sales">
+            Informasi Penjualan
+          </button>
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-shipping">
+            Pengiriman
+          </button>
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-promo">
+            Program Promo
+          </button>
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-description">
+            Deskripsi Produk
+          </button>
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-others">
+            Lainnya
+          </button>
+        </nav>
       </div>
 
       <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
@@ -11898,11 +11892,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       btn2Prev.onclick = handleStep2BackAction;
     }
 
-    const btnSubnavPrev = document.getElementById('btn-step2-subnav-prev');
-    if (btnSubnavPrev) {
-      btnSubnavPrev.onclick = handleStep2BackAction;
-    }
-
     const btnDraft = document.getElementById('btn-save-draft');
     if (btnDraft) btnDraft.onclick = () => handleFormSubmit(true);
 
@@ -16838,7 +16827,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Delegasi Klik File Picker & Aksi Galeri (Berlaku global di level document)
     document.addEventListener('click', (e) => {
       // 0. Tombol Navigasi Kembali Step 2 & Kembali ke Daftar
-      const backStep2Btn = e.target.closest('#btn-step-2-prev') || e.target.closest('#btn-step2-subnav-prev') || e.target.closest('.btn-step2-back-action');
+      const backStep2Btn = e.target.closest('#btn-step-2-prev');
       if (backStep2Btn) {
         e.preventDefault();
         e.stopPropagation();
