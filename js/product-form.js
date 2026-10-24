@@ -844,7 +844,7 @@ const ProductForm = (() => {
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
 
     container.innerHTML = `
-      <div class="max-w-5xl mx-auto px-3 sm:px-6 space-y-6 pb-8 sm:pb-12" id="product-form-wrapper">
+      <div class="w-full max-w-none space-y-5 sm:space-y-6 pb-8 sm:pb-12" id="product-form-wrapper">
         
         <!-- Header Top Bar (Hanya tampil di Step 1) -->
         <div id="product-form-top-bar" class="${currentStep === 2 ? 'hidden' : 'flex'} items-center justify-between border-b border-slate-200 pb-3 gap-3">
@@ -855,16 +855,6 @@ const ProductForm = (() => {
             <span>/</span>
             <span class="text-slate-800 font-semibold">${formMode === 'edit' ? 'Edit Produk' : 'Tambah Produk Baru'}</span>
           </div>
-          ${(formMode === 'create' && hasStoredDraft()) ? `
-            <div class="flex items-center gap-2">
-              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                <i class="bi bi-clock-history"></i> Draft Tersimpan
-              </span>
-              <button type="button" id="btn-reset-form-draft" class="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-red-700 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-md transition cursor-pointer flex items-center gap-1" title="Hapus draft dan mulai isi dari awal">
-                <i class="bi bi-arrow-counterclockwise"></i> Reset Formulir
-              </button>
-            </div>
-          ` : ''}
         </div>
 
         <!-- FORM MAIN CONTAINER WITH RIGHT PADDING WHEN PREVIEW SIDEBAR IS OPEN -->
@@ -880,7 +870,7 @@ const ProductForm = (() => {
               ${currentStep === 1 ? renderFormErrorBannerHtml() : ''}
               
               <!-- 1 KARTU UTAMA: INFORMASI PRODUK -->
-              <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card">
+              <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-5 sm:space-y-6 step1-section-card">
                 <!-- Header Card -->
                 <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
@@ -1142,7 +1132,7 @@ const ProductForm = (() => {
               </div>
 
               <!-- TOMBOL AKSI BAWAH STEP 1 -->
-              <div class="bg-white/95 backdrop-blur-md rounded-lg border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+              <div class="bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between">
                 <button type="button" id="btn-step-1-cancel" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5">
                   <i class="bi bi-x-lg"></i>
                   <span>Batal</span>
@@ -4778,24 +4768,20 @@ const ProductForm = (() => {
     const footer2IconSelect = document.getElementById('select-card-footer-2-icon');
     const footer2Icon = (footer2IconSelect?.value || primaryState.footer_2_badge_icon || 'minus').trim() || 'minus';
 
-    // Ambil maksimal 3 label kustom dari input DOM atau state
+    // Ambil maksimal 2 label kustom dari input DOM atau state
     const label1Input = document.getElementById('input-custom-label-1');
     const label2Input = document.getElementById('input-custom-label-2');
-    const label3Input = document.getElementById('input-custom-label-3');
     const wrapper2 = document.getElementById('wrapper-custom-label-2');
-    const wrapper3 = document.getElementById('wrapper-custom-label-3');
     const isLabel2Visible = wrapper2 ? !wrapper2.classList.contains('hidden') : true;
-    const isLabel3Visible = wrapper3 ? !wrapper3.classList.contains('hidden') : false;
 
     const customLabel1 = (label1Input ? label1Input.value : (primaryState.custom_labels?.[0] || '')).trim();
     const customLabel2 = (isLabel2Visible && label2Input ? label2Input.value : (isLabel2Visible ? (primaryState.custom_labels?.[1] || '') : '')).trim();
-    const customLabel3 = (isLabel3Visible && label3Input ? label3Input.value : (isLabel3Visible ? (primaryState.custom_labels?.[2] || '') : '')).trim();
-    let rawCustomLabels = [customLabel1, customLabel2, customLabel3].filter(Boolean);
+    let rawCustomLabels = [customLabel1, customLabel2].filter(Boolean);
 
     if (rawCustomLabels.length === 0 && Array.isArray(primaryState.custom_labels) && primaryState.custom_labels.length > 0) {
       rawCustomLabels = primaryState.custom_labels.filter(Boolean);
     }
-    primaryState.custom_labels = rawCustomLabels.slice(0, 3);
+    primaryState.custom_labels = rawCustomLabels.slice(0, 2);
 
     const customBadges = getSmartVisibleBadges(name, rawCustomLabels);
 
@@ -5676,7 +5662,7 @@ const ProductForm = (() => {
   function renderFlashbackCard(cardTitle, cardIcon, missingLabels, cardId) {
     const missingFieldsText = Array.isArray(missingLabels) ? missingLabels.join(', ') : missingLabels;
     return `
-      <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs p-5 sm:p-6 select-none" id="${cardId}">
+      <div class="bg-white rounded-lg border-0 shadow-none p-5 sm:p-6 select-none" id="${cardId}">
         <h3 class="text-base font-bold text-slate-400">${escapeHtml(cardTitle)}</h3>
         <p class="text-xs text-slate-400 mt-2">Tersedia setelah memilih ${missingFieldsText}</p>
       </div>
@@ -5725,7 +5711,7 @@ const ProductForm = (() => {
 
     return `
       <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE) -->
-      <div id="step2-subnav-fixed" class="sticky top-0 z-40 bg-white border-b border-slate-200/80 shadow-xs transition-all duration-300">
+      <div id="step2-subnav-fixed" class="sticky top-0 z-40 bg-white rounded-lg border-0 shadow-xs transition-all duration-300">
         <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
           <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
             Informasi Produk
@@ -5749,11 +5735,11 @@ const ProductForm = (() => {
       </div>
 
       <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
-      <div class="space-y-4 sm:space-y-6 pt-3 sm:pt-4">
+      <div class="space-y-4 sm:space-y-5 pt-2 sm:pt-2.5">
         ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
-        <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-info">
+        <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-info">
           <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
             <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
           </div>
@@ -5867,7 +5853,7 @@ const ProductForm = (() => {
 
         <!-- CARD 2: INFORMASI PENJUALAN (GATED) -->
         ${missingCard1.length > 0 ? renderFlashbackCard('Informasi Penjualan', 'bi-shop', missingCard1, 'card-step2-sales') : `
-          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-sales">
+          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-sales">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Penjualan</h2>
             </div>
@@ -6042,7 +6028,7 @@ const ProductForm = (() => {
 
         <!-- CARD 3: PENGIRIMAN (GATED) -->
         ${missingCard2.length > 0 ? renderFlashbackCard('Pengiriman', 'bi-truck', missingCard2, 'card-step2-shipping') : `
-          <div id="card-step2-shipping" class="block bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 step2-section-card">
+          <div id="card-step2-shipping" class="block bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 step2-section-card">
             <!-- Header Kartu dengan Toggle Switch Utama -->
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-3">
               <div>
@@ -6336,7 +6322,7 @@ const ProductForm = (() => {
 
         <!-- CARD 4: PROGRAM PROMO (GATED) -->
         ${missingCard3.length > 0 ? renderFlashbackCard('Program Promo', 'bi-tag', missingCard3, 'card-step2-promo') : `
-          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-5 step2-section-card" id="card-step2-promo">
+          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-5 step2-section-card" id="card-step2-promo">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
             </div>
@@ -6459,7 +6445,7 @@ const ProductForm = (() => {
 
         <!-- CARD 5: DESKRIPSI PRODUK (GATED) -->
         ${missingCard4.length > 0 ? renderFlashbackCard('Deskripsi Produk', 'bi-file-text', missingCard4, 'card-step2-description') : `
-          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-description">
+          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-description">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">
                 Deskripsi Produk <span class="text-red-500">*</span>
@@ -6510,7 +6496,7 @@ const ProductForm = (() => {
 
         <!-- CARD 6: LAINNYA (GATED) -->
         ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
-          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
+          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Lainnya & Konfigurasi Tambahan</h2>
             </div>
@@ -6579,7 +6565,7 @@ const ProductForm = (() => {
       </div>
 
       <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
-      <div class="bg-white/95 backdrop-blur-md rounded-lg border border-slate-200 shadow-sm p-4 flex items-center justify-between flex-wrap gap-3 mt-6">
+      <div class="bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between flex-wrap gap-3 mt-4">
         <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
           <i class="bi bi-arrow-left"></i>
           <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>
@@ -11119,37 +11105,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
             const input1 = document.getElementById('input-custom-label-1');
             const input2 = document.getElementById('input-custom-label-2');
-            const input3 = document.getElementById('input-custom-label-3');
             const wrapper2 = document.getElementById('wrapper-custom-label-2');
-            const wrapper3 = document.getElementById('wrapper-custom-label-3');
             const isLabel2Visible = wrapper2 ? !wrapper2.classList.contains('hidden') : false;
-            const isLabel3Visible = wrapper3 ? !wrapper3.classList.contains('hidden') : false;
 
             const l1 = (input1?.value || primaryState.custom_labels?.[0] || '').trim();
             const l2 = (isLabel2Visible && input2 ? input2.value : (isLabel2Visible ? (primaryState.custom_labels?.[1] || '') : '')).trim();
-            const l3 = (isLabel3Visible && input3 ? input3.value : (isLabel3Visible ? (primaryState.custom_labels?.[2] || '') : '')).trim();
 
             if (!l1) {
               addS1Error('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.', input1);
             }
 
-            let hasDuplicate = false;
-            let dupEl = null;
             if (l1 && l2 && l1.toLowerCase() === l2.toLowerCase()) {
-              hasDuplicate = true;
-              dupEl = input2;
-            }
-            if (l3) {
-              if (l1 && l3.toLowerCase() === l1.toLowerCase()) {
-                hasDuplicate = true;
-                dupEl = input3;
-              } else if (l2 && l3.toLowerCase() === l2.toLowerCase()) {
-                hasDuplicate = true;
-                dupEl = input3;
-              }
-            }
-            if (hasDuplicate) {
-              addS1Error('Label tidak boleh sama.', dupEl || input2);
+              addS1Error('Label tidak boleh sama.', input2);
             }
           }
 
@@ -11211,10 +11178,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
         const inp1 = document.getElementById('input-custom-label-1');
         const inp2 = document.getElementById('input-custom-label-2');
-        const inp3 = document.getElementById('input-custom-label-3');
         if (inp1) inp1.value = '';
         if (inp2) inp2.value = '';
-        if (inp3) inp3.value = '';
         if (badgeContainerDesk) badgeContainerDesk.classList.add('hidden');
         if (badgeContainerMob) badgeContainerMob.classList.add('hidden');
       } else {
@@ -15223,20 +15188,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-    const btnResetDraft = document.getElementById('btn-reset-form-draft');
-    if (btnResetDraft) {
-      btnResetDraft.addEventListener('click', () => {
-        if (confirm('Apakah Anda yakin ingin menghapus draft yang tersimpan dan mereset formulir ke awal?')) {
-          clearDraftStorage();
-          resetFormState();
-          renderForm();
-          if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
-            App.showToast('Draft formulir berhasil di-reset.', 'info');
-          }
-        }
-      });
-    }
-
     const btnStep1Next = document.getElementById('btn-step-1-next');
     if (btnStep1Next) {
       btnStep1Next.addEventListener('click', () => goToStep(2));
@@ -16296,13 +16247,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         const inp1 = document.getElementById('input-custom-label-1');
         const inp2 = document.getElementById('input-custom-label-2');
-        const inp3 = document.getElementById('input-custom-label-3');
         if (inp1 && !inp1.value.trim()) {
           inp1.value = labelText;
         } else if (inp2 && !inp2.disabled && !inp2.value.trim()) {
           inp2.value = labelText;
-        } else if (inp3 && !inp3.disabled && !inp3.value.trim()) {
-          inp3.value = labelText;
         } else if (inp1) {
           inp1.value = labelText;
         }
@@ -17440,15 +17388,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         primaryState.show_badge = toggleBadge.checked;
       }
       const wrapper2 = document.getElementById('wrapper-custom-label-2');
-      const wrapper3 = document.getElementById('wrapper-custom-label-3');
       const isL2Visible = wrapper2 ? !wrapper2.classList.contains('hidden') : false;
-      const isL3Visible = wrapper3 ? !wrapper3.classList.contains('hidden') : false;
 
       const l1 = document.getElementById('input-custom-label-1')?.value?.trim();
       const l2 = isL2Visible ? document.getElementById('input-custom-label-2')?.value?.trim() : '';
-      const l3 = isL3Visible ? document.getElementById('input-custom-label-3')?.value?.trim() : '';
-      if (l1 !== undefined || l2 !== undefined || l3 !== undefined) {
-        primaryState.custom_labels = [l1, l2, l3].filter(Boolean);
+      if (l1 !== undefined || l2 !== undefined) {
+        primaryState.custom_labels = [l1, l2].filter(Boolean);
       }
     }
 
@@ -17513,37 +17458,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
       const input1 = document.getElementById('input-custom-label-1');
       const input2 = document.getElementById('input-custom-label-2');
-      const input3 = document.getElementById('input-custom-label-3');
       const wrapper2 = document.getElementById('wrapper-custom-label-2');
-      const wrapper3 = document.getElementById('wrapper-custom-label-3');
       const isLabel2Visible = wrapper2 ? !wrapper2.classList.contains('hidden') : false;
-      const isLabel3Visible = wrapper3 ? !wrapper3.classList.contains('hidden') : false;
 
       const l1Val = (input1?.value || primaryState.custom_labels?.[0] || '').trim();
       const l2Val = (isLabel2Visible && input2 ? input2.value : (isLabel2Visible ? (primaryState.custom_labels?.[1] || '') : '')).trim();
-      const l3Val = (isLabel3Visible && input3 ? input3.value : (isLabel3Visible ? (primaryState.custom_labels?.[2] || '') : '')).trim();
 
       if (!l1Val) {
         addError('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.', input1);
       }
 
-      let hasDup = false;
-      let dupEl = null;
       if (l1Val && l2Val && l1Val.toLowerCase() === l2Val.toLowerCase()) {
-        hasDup = true;
-        dupEl = input2;
-      }
-      if (l3Val) {
-        if (l1Val && l3Val.toLowerCase() === l1Val.toLowerCase()) {
-          hasDup = true;
-          dupEl = input3;
-        } else if (l2Val && l3Val.toLowerCase() === l2Val.toLowerCase()) {
-          hasDup = true;
-          dupEl = input3;
-        }
-      }
-      if (hasDup) {
-        addError('Label tidak boleh sama.', dupEl || input2);
+        addError('Label tidak boleh sama.', input2);
       }
     }
     if (!primaryState.category_id || String(primaryState.category_id).trim() === '') {
