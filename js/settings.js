@@ -419,6 +419,9 @@
   }
 
   function hexToRgba(hex, alpha = 1) {
+    if (typeof Utils !== 'undefined' && typeof Utils.hexToRgba === 'function') {
+      return Utils.hexToRgba(hex, alpha);
+    }
     let c = hex.replace('#', '');
     if (c.length === 3) {
       c = c.split('').map(x => x + x).join('');
@@ -431,6 +434,9 @@
   }
 
   function escapeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
     if (!str) return '';
     return str.toString()
       .replace(/&/g, '&amp;')

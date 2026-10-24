@@ -1702,6 +1702,9 @@ const ProductForm = (() => {
   }
 
   function formatIDR(num) {
+    if (typeof Utils !== 'undefined' && typeof Utils.formatIDR === 'function') {
+      return Utils.formatIDR(num);
+    }
     if (isNaN(num) || num === null || num === undefined) return 'Rp0';
     return 'Rp' + Math.round(num).toLocaleString('id-ID');
   }
@@ -18065,6 +18068,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   }
 
   function escapeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
     if (!str) return '';
     return str.toString()
       .replace(/&/g, '&amp;')

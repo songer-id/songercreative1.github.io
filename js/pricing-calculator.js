@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ==============================================================================
  * POS BY SONGER CREATIVE - CORE PRICING ENGINE
  * Universal Pricing & Cost Calculation Engine (Storefront, PDP, Kasir POS & Product Form)
@@ -17,6 +17,8 @@
  *     - B6. Lt:          (Volume cairan liter x Nilai Variasi 1) + Variasi (2+3+4).
  *     - B7. KombStep:    Wajib kelipatan kuantitas (step_quantity).
  *                        Gross Utama = (Variasi 1 x Batches) + (Variasi (2+3+4) x Qty).
+ *     - B4. Paket:       (Harga Dasar Paket Varian 1 + Opsi Tambahan Variasi 2+3+4) x Qty Paket.
+ *                        Opsi gratis (is_included/is_free) tidak menambah harga namun tetap dihitung pada HPP modal.
  *     - B2. KombF/Norm:  (Variasi 1 + Variasi 2 + Variasi 3 + Variasi 4) x Qty.
  *  3. Layanan Extras (Di Luar Qty Utama / finishings.extra_3):
  *     - 'checkbox'/'checklist': 1 x Harga Satuan Ekstra.
@@ -45,6 +47,9 @@
 
   // Helper pemformat Rupiah
   function formatIDR(num) {
+    if (typeof Utils !== 'undefined' && typeof Utils.formatIDR === 'function') {
+      return Utils.formatIDR(num);
+    }
     if (isNaN(num) || num === null || num === undefined) return 'Rp0';
     return 'Rp' + Math.round(num).toLocaleString('id-ID');
   }
@@ -261,6 +266,34 @@
 
         unitGrossPrice = subtotalMainCombination / qty;
         unitCostPrice = totalCostMainCombination / qty;
+        break;
+      }
+
+      // B4. Paket (Bundle Promo / Layanan Bundel)
+      case 4: {
+        // Pada tipe Paket:
+        // - Harga dasar diambil dari paket terpilih (Variasi 1 / materials)
+        // - Finishing atau variasi tambahan yang ditandai gratis/termasuk paket (is_included / is_free)
+        //   tidak menambah harga jual, namun biaya HPP (cost_price) tetap dihitung.
+        // - Variasi tambahan yang berbayar (tidak gratis) akan ditambahkan ke harga paket.
+        let pkgExtraPrice = 0;
+        let pkgExtraCost = 0;
+
+        [selectedV2, selectedV3, selectedV4].forEach(v => {
+          if (v) {
+            const isIncluded = v.is_included === true || v.is_free === true || v.included_in_package === true;
+            if (!isIncluded) {
+              pkgExtraPrice += (parseFloat(v.price) || 0);
+            }
+            pkgExtraCost += (parseFloat(v.cost_price) || 0);
+          }
+        });
+
+        unitGrossPrice = v1Price + pkgExtraPrice;
+        unitCostPrice = v1Cost + pkgExtraCost;
+
+        subtotalMainCombination = unitGrossPrice * qty;
+        totalCostMainCombination = unitCostPrice * qty;
         break;
       }
 

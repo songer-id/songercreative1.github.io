@@ -5508,6 +5508,9 @@
   }
 
   function escapeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
     if (!str) return '';
     return String(str)
       .replace(/&/g, '&amp;')

@@ -152,6 +152,83 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   DYNAMIC THEME CSS VARIABLE BRIDGE & MOBILE-FIRST RADIUS (STAGE 1)
+   -------------------------------------------------------------------------- */
+/* Badges Brand */
+.badge-primary-brand {
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+.badge-primary-subtle {
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid rgba(51, 181, 137, 0.2);
+}
+
+.badge-secondary-accent {
+  background-color: var(--color-secondary) !important;
+  color: #ffffff !important;
+}
+
+.badge-secondary-subtle {
+  background-color: var(--color-secondary-subtle) !important;
+  color: var(--color-secondary-hover) !important;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* Toggle Switch ON State */
+input[type="checkbox"].toggle-brand:checked + div,
+input[type="checkbox"].toggle-theme:checked + div,
+.peer:checked ~ .peer-checked\:bg-primary-brand,
+.peer:checked ~ .toggle-switch-brand {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Focus Ring Input & Form Controls */
+.focus-ring-primary:focus,
+input.form-control-brand:focus,
+select.form-control-brand:focus,
+textarea.form-control-brand:focus {
+  border-color: var(--color-primary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px var(--color-primary-subtle) !important;
+}
+
+.focus-ring-secondary:focus {
+  border-color: var(--color-secondary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px var(--color-secondary-subtle) !important;
+}
+
+/* Mobile-First Radius & Controls Standards */
+.card-brand,
+.card-theme {
+  border-radius: 0.5rem !important; /* rounded-lg (8px) */
+}
+
+.control-brand,
+.input-brand,
+.btn-brand-radius {
+  border-radius: 0.375rem !important; /* rounded-md (6px) */
+}
+
+/* Radio & Checkbox Brand Active Accent */
+input[type="radio"].radio-brand:checked,
+input[type="checkbox"].checkbox-brand:checked {
+  accent-color: var(--color-primary) !important;
+}
+
+.chip-brand-active,
+.selection-pill-brand-active {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
    PDP & GALLERY STYLES
    -------------------------------------------------------------------------- */
 .pdp-thumbnail-active {

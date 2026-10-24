@@ -1647,6 +1647,9 @@ const CategoryManager = (() => {
   }
 
   function escapeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
     if (!str) return '';
     return str.toString()
       .replace(/&/g, '&amp;')

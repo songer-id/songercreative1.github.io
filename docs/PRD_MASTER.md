@@ -15,6 +15,7 @@
 > 4. **PRIORITAS MOBILE-FIRST**: Setiap perubahan antarmuka wajib dioptimalkan untuk layar ponsel (kartu `rounded-lg`, kontrol input/button `rounded-md`, touch target $\ge 44 \times 44\text{ px}$, tata letak rapat dan fluid wide tanpa horizontal scrollbar yang tidak diinginkan).
 > 5. **OTOMATISASI WARNA DINAMIS**: Semua komponen interaktif (tombol CTA, badge aktif, focus ring, radio/checkbox tercentang, subnavbar aktif) **WAJIB** terikat pada CSS Variables (`--color-primary`, `--color-primary-hover`, `--color-primary-subtle`, `--color-secondary`). Dilarang memakai class Tailwind warna statis seperti `emerald-*` mentah pada elemen interaktif brand.
 > 6. **ANTI-DUPLIKASI**: Dilarang membuat fungsi, state, atau event listener ganda; satukan dan manfaatkan modul inti yang telah terpasang.
+> 7. **STANDAR BAHASA INDONESIA BAKU & RAMAH PENGGUNA AWAM (SAAS UX WRITING)**: Seluruh teks antarmuka (label input, judul menu, tombol, placeholder, tooltip, pesan error, hingga notifikasi toast) **WAJIB** menggunakan Bahasa Indonesia yang baku, jelas, sopan, dan langsung mudah dipahami oleh pengguna awam (pemilik toko UMKM, kasir, maupun pembeli baru). Dilarang keras menampilkan jargon koding/teknis asing yang membingungkan (*payload, callback, slug, threshold, tier, mutasi state*) pada antarmuka pengguna; gunakan padanan praktis (contoh: *"Batas Minimal Pesanan"*, *"Tautan Singkat Toko"*, *"Uang Muka (DP)"*, *"Simpan Pengaturan"*).
 
 ---
 
@@ -49,6 +50,7 @@ D:\pos-songer-creative\
 │   ├── superadmin.js            # Logika CRUD Tenant, paket langganan, feature matrix
 │   └── superadmin.css           # Styling tema cockpit superadmin
 ├── js/
+│   ├── utils.js                 # Pustaka utilitas terpusat (formatIDR, escapeHtml, hexToRgba, generateSlug, formatDateID)
 │   ├── db.js                    # Database lokal client-side (100% localStorage terenkapsulasi)
 │   ├── admin-app.js             # Controller utama Admin SPA, POS kasir, pesanan, dashboard, CRM
 │   ├── buyer-store.js           # Controller Storefront (pencarian autocomplete, render kartu A/B/C)
@@ -94,7 +96,7 @@ Dilarang memodifikasi atau menghilangkan fungsionalitas berikut:
 6. **Antarmuka Kasir POS**: Touch grid katalog, filter kategori, keranjang belanja kasir, kalkulasi kembalian, cetak struk thermal 58mm/80mm, dan format invoice resmi.
 7. **Kustomizer Tema Visual**: Iframe live preview editor tema Shopify-style dengan sinkronisasi variabel CSS.
 
-### 1.3. Standar Desain Mobile-First & Sistem Warna Dinamis
+### 1.3. Standar Desain Mobile-First, Sistem Warna Dinamis & Standar Bahasa SaaS UX Writing
 - **Radius Border Tegas**:
   * Seluruh kartu seksi / kontainer modul: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
   * Seluruh elemen kontrol (input teks, select dropdown, textarea, tombol button, pills chip): `border-radius: 0.375rem !important;` (`rounded-md` / 6px).
@@ -103,6 +105,15 @@ Dilarang memodifikasi atau menghilangkan fungsionalitas berikut:
   * Warna Primer (`--color-primary`): Navbar, tab aktif, tombol utama, border aktif, focus ring.
   * Warna Sekunder / Aksen (`--color-secondary`): Tombol "Beli Sekarang", badge promo/diskon, bintang rating.
   * Warna Hover (`--color-primary-hover`, `--color-secondary-hover`) & Subtle (`--color-primary-subtle`, `--color-secondary-subtle`).
+- **Standar Bahasa Indonesia Baku & Ramah Pengguna Awam (SaaS UX Writing)**:
+  * Seluruh teks antarmuka pada Storefront, PDP, Admin SPA, POS Kasir, dan Pengaturan wajib menggunakan Bahasa Indonesia yang baku dan komunikatif.
+  * Hindari istilah teknis koding/asing yang membingungkan orang awam; gunakan istilah bisnis/operasional yang umum di Indonesia:
+    - *Slug / Permalink* -> Tautan Singkat / Alamat Web
+    - *Threshold / Minimum Qty* -> Batas Minimal Pesanan
+    - *Down Payment (DP)* -> Uang Muka (DP)
+    - *Wholesale Tier* -> Harga Grosir Bertingkat
+    - *Payload / Callback / Webhook* -> Data Transaksi / Notifikasi Otomatis
+    - *Save / Submit* -> Simpan Data / Simpan Perubahan
 
 ---
 
@@ -283,12 +294,12 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
 > [!NOTE]
 > Developer / Agent **WAJIB** mencentang `[x]` pada daftar tugas di bawah ini secara bertahap saat menyelesaikan setiap fase pengerjaan. Jangan menandai selesai sebelum verifikasi sintaks via Node.js dan git commit/push berhasil dilakukan.
 
-- [ ] **TAHAP 1: Fondasi Helper Terpusat, Pembersihan Dead Code & Bridge Warna Dinamis**
+- [x] **TAHAP 1: Fondasi Helper Terpusat, Pembersihan Dead Code & Bridge Warna Dinamis**
   - [x] Pembersihan file yatim: Hapus `js/app.js` dan `src/lib/pricing-calculator.js`.
   - [x] Inisialisasi dokumen master PRD kompas proyek di `docs/PRD_MASTER.md`.
-  - [ ] Pembuatan `js/utils.js` (helper tunggal: `formatIDR`, `escapeHtml`, `hexToRgba`, dsb.).
-  - [ ] Hubungkan `js/utils.js` ke seluruh file HTML aktif (`index.html`, `product.html`, `admin.html`, `settings.html`, `theme-editor.html`).
-  - [ ] Penguatan CSS variable bridge tema di `css/admin.css` & `css/style.css` agar 100% elemen interaktif terikat ke `--color-primary` dan `--color-secondary`.
+  - [x] Pembuatan `js/utils.js` (helper tunggal: `formatIDR`, `escapeHtml`, `hexToRgba`, dsb.).
+  - [x] Hubungkan `js/utils.js` ke seluruh file HTML aktif (`index.html`, `product.html`, `admin.html`, `settings.html`, `theme-editor.html`).
+  - [x] Penguatan CSS variable bridge tema di `css/admin.css` & `css/style.css` agar 100% elemen interaktif terikat ke `--color-primary` dan `--color-secondary`.
 
 - [ ] **TAHAP 2: Storefront Overhaul (Modal Popup Promosi, Flash Sale Real-Time & Filter/Sorting Lengkap)**
   - [ ] Implementasi modal pop-up promosi otomatis dengan delay detik, banner, tautan CTA, dan pengaman `sessionStorage` di `js/buyer-store.js` dan `index.html`.
@@ -297,7 +308,7 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
   - [ ] Integrasi Wishlist (Favorit) dan Riwayat Terakhir Dilihat (*Recently Viewed*).
 
 - [ ] **TAHAP 3: PDP & Pricing Engine Upgrade (4 Tipe Produk, Rumus Paket, Badge DP, Checkout Interaktif)**
-  - [ ] Perbaikan formula `price_type = 4 (Paket Promosi)` pada `js/pricing-calculator.js`.
+  - [x] Perbaikan formula `price_type = 4 (Paket Promosi)` pada `js/pricing-calculator.js`.
   - [ ] Penyesuaian antarmuka PDP (`product.html` & `js/pdp.js`) untuk 4 tipe produk (`FISIK_CETAK`, `DIGITAL`, `JASA`, `SUBSCRIPTION`).
   - [ ] Penambahan badge opsi Down Payment (DP) jika produk mengizinkan DP.
   - [ ] Pengalihan tombol "Beli Sekarang" dan "+ Keranjang" dari URL `wa.me` langsung ke sistem checkout terpadu.

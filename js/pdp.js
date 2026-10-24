@@ -218,6 +218,9 @@
   }
 
   function hexToRgba(hex, alpha = 0.12) {
+    if (typeof Utils !== 'undefined' && typeof Utils.hexToRgba === 'function') {
+      return Utils.hexToRgba(hex, alpha);
+    }
     if (!hex || typeof hex !== 'string') return `rgba(51, 181, 137, ${alpha})`;
     let clean = hex.replace('#', '');
     if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
@@ -1238,6 +1241,9 @@
   }
 
   function escapeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
     if (!str) return '';
     return str.toString()
       .replace(/&/g, '&amp;')

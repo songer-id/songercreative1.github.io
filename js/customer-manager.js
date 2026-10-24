@@ -9,11 +9,17 @@ const CustomerManager = (() => {
   let editingCustomerId = null;
 
   function formatIDR(num) {
-    if (isNaN(num) || num === null || num === undefined) return 'Rp 0';
-    return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+    if (typeof Utils !== 'undefined' && typeof Utils.formatIDR === 'function') {
+      return Utils.formatIDR(num);
+    }
+    if (isNaN(num) || num === null || num === undefined) return 'Rp0';
+    return 'Rp' + Math.round(num).toLocaleString('id-ID');
   }
 
   function escapeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
     if (!str) return '';
     return str.toString()
       .replace(/&/g, '&amp;')

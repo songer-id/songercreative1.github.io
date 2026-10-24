@@ -32,6 +32,9 @@ const BuyerStore = (() => {
   let countdownInterval = null;
 
   function formatIDR(num) {
+    if (typeof Utils !== 'undefined' && typeof Utils.formatIDR === 'function') {
+      return Utils.formatIDR(num);
+    }
     if (isNaN(num) || num === null || num === undefined) return 'Rp0';
     return 'Rp' + Math.round(num).toLocaleString('id-ID');
   }
@@ -6589,6 +6592,9 @@ const BuyerStore = (() => {
   }
 
   function escapeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
     if (!str) return '';
     return str.toString()
       .replace(/&/g, '&amp;')
