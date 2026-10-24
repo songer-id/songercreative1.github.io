@@ -861,7 +861,7 @@ const ProductForm = (() => {
         <div class="w-full relative">
           
           <!-- WIZARD FORM COLUMN -->
-          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[360px]' : ''} ${currentStep === 2 ? 'space-y-0' : 'space-y-4 sm:space-y-6'} transition-all duration-300">
+          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[300px] xl:pr-[340px]' : ''} ${currentStep === 2 ? 'space-y-0' : 'space-y-4 sm:space-y-6'} transition-all duration-300">
             
             <!-- ============================================== -->
             <!-- STEP 1 PANE: INFORMASI PRODUK -->
@@ -1380,11 +1380,7 @@ const ProductForm = (() => {
 
         </aside>
 
-        <!-- FLOATING STRIP BUTTON TO EXPAND DESKTOP SIDEBAR WHEN CLOSED -->
-        <button type="button" id="btn-expand-preview-sidebar" class="${isLivePreviewOpen || !primaryState.is_active ? 'hidden' : 'hidden lg:flex'} fixed right-0 top-1/2 -translate-y-1/2 z-30 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-3.5 px-2.5 rounded-l-lg shadow-2xl flex flex-col items-center gap-2 cursor-pointer transition select-none group" title="Buka Live Preview">
-          <i class="bi bi-eye text-base group-hover:scale-110 transition-transform"></i>
-          <span class="text-[11px] font-extrabold uppercase tracking-wider" style="writing-mode: vertical-rl; text-orientation: mixed;">Live Preview</span>
-        </button>
+        <!-- FLOATING STRIP BUTTON TO EXPAND DESKTOP SIDEBAR HAS BEEN MOVED TO SUBNAVBAR [PRATINJAU] -->
         <!-- MOBILE FLOATING ACTION BUTTON (FAB) (Posisikan di tengah bawah) -->
         <button type="button" id="btn-fab-live-preview" class="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 active:scale-95 text-white px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none">
           <i class="bi bi-eye text-sm"></i>
@@ -5724,27 +5720,31 @@ const ProductForm = (() => {
 
     return `
       <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
-      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full">
-        <nav class="flex items-center overflow-x-auto scrollbar-none px-2 sm:px-6" id="step2-subnav-links">
-          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-info" data-step2-target="card-step2-info">
+      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full flex items-center justify-between px-3 sm:px-6">
+        <nav class="flex items-center overflow-x-auto scrollbar-none flex-1 min-w-0" id="step2-subnav-links">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-info" data-step2-target="card-step2-info">
             Informasi Produk
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-sales" data-step2-target="card-step2-sales">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-sales" data-step2-target="card-step2-sales">
             Informasi Penjualan
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-shipping" data-step2-target="card-step2-shipping">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-shipping" data-step2-target="card-step2-shipping">
             Pengiriman
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-promo" data-step2-target="card-step2-promo">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-promo" data-step2-target="card-step2-promo">
             Program Promo
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-description" data-step2-target="card-step2-description">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-description" data-step2-target="card-step2-description">
             Deskripsi Produk
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-others" data-step2-target="card-step2-others">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-others" data-step2-target="card-step2-others">
             Lainnya
           </button>
         </nav>
+        <button type="button" id="btn-subnav-toggle-preview" class="ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none ${!primaryState.is_active ? 'hidden' : ''} ${isLivePreviewOpen ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}" title="${isLivePreviewOpen ? 'Tutup Panel Pratinjau' : 'Buka Panel Pratinjau'}">
+          <i class="bi bi-eye text-sm ${isLivePreviewOpen ? 'text-emerald-600' : 'text-slate-500'}"></i>
+          <span>Pratinjau</span>
+        </button>
       </div>
 
       <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
@@ -11069,9 +11069,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const tid = tab.getAttribute('data-step2-target') || tab.getAttribute('data-target');
       if (tid === targetId) {
         activeTabEl = tab;
-        tab.className = 'step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+        tab.className = 'step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
       } else {
-        tab.className = 'step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+        tab.className = 'step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
       }
     });
 
@@ -11991,6 +11991,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     const btnSubmit = document.getElementById('btn-submit-product');
     if (btnSubmit) btnSubmit.onclick = () => handleFormSubmit(false);
+
+    // Tombol Pratinjau di bar Sub-Navbar Step 2
+    const btnSubnavPreview = document.getElementById('btn-subnav-toggle-preview');
+    if (btnSubnavPreview) {
+      btnSubnavPreview.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.innerWidth >= 1024) {
+          if (typeof setSidebarState === 'function') {
+            setSidebarState(!isLivePreviewOpen);
+          } else if (typeof ProductForm.setSidebarState === 'function') {
+            ProductForm.setSidebarState(!isLivePreviewOpen);
+          }
+        } else {
+          if (typeof openMobilePreview === 'function') {
+            openMobilePreview();
+          }
+        }
+      };
+    }
 
     // Card 1 Event Listeners di Step 2
     const step2Name = document.getElementById('step2-input-name');
@@ -14911,10 +14931,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   }
 
 
-        const btnToggleSidebar = document.getElementById('btn-toggle-preview-sidebar');
+    const btnToggleSidebar = document.getElementById('btn-toggle-preview-sidebar');
     const btnExpandSidebar = document.getElementById('btn-expand-preview-sidebar');
     const sidebar = document.getElementById('desktop-preview-sidebar');
     const wizardCol = document.getElementById('wizard-form-col');
+
+    function updateSubnavPreviewButtonState(isOpen) {
+      const btn = document.getElementById('btn-subnav-toggle-preview');
+      if (!btn) return;
+      if (!primaryState.is_active) {
+        btn.classList.add('hidden');
+        return;
+      }
+      btn.classList.remove('hidden');
+      if (isOpen) {
+        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100';
+        btn.title = 'Tutup Panel Pratinjau';
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'bi bi-eye text-sm text-emerald-600';
+      } else {
+        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200';
+        btn.title = 'Buka Panel Pratinjau';
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'bi bi-eye text-sm text-slate-500';
+      }
+    }
 
     function setSidebarState(isOpen) {
       if (!primaryState.is_active && isOpen) return;
@@ -14929,7 +14970,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           btnExpandSidebar.classList.remove('lg:flex');
         }
         if (wizardCol) {
-          wizardCol.classList.add('lg:pr-[320px]', 'xl:pr-[360px]');
+          wizardCol.classList.remove('lg:pr-[320px]', 'xl:pr-[360px]');
+          wizardCol.classList.add('lg:pr-[300px]', 'xl:pr-[340px]');
         }
       } else {
         if (sidebar) {
@@ -14937,18 +14979,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           sidebar.classList.add('translate-x-full');
         }
         if (btnExpandSidebar) {
-          if (primaryState.is_active) {
-            btnExpandSidebar.classList.remove('hidden');
-            btnExpandSidebar.classList.add('lg:flex');
-          } else {
-            btnExpandSidebar.classList.add('hidden');
-            btnExpandSidebar.classList.remove('lg:flex');
-          }
+          btnExpandSidebar.classList.add('hidden');
+          btnExpandSidebar.classList.remove('lg:flex');
         }
         if (wizardCol) {
-          wizardCol.classList.remove('lg:pr-[320px]', 'xl:pr-[360px]');
+          wizardCol.classList.remove('lg:pr-[300px]', 'xl:pr-[340px]', 'lg:pr-[320px]', 'xl:pr-[360px]');
         }
       }
+      updateSubnavPreviewButtonState(isOpen);
     }
 
     function updateStorefrontVisibility(isActive) {
@@ -14977,11 +15015,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (isLivePreviewOpen) {
           setSidebarState(true);
         } else {
-          if (btnExpandSidebar) {
-            btnExpandSidebar.classList.remove('hidden');
-            btnExpandSidebar.classList.add('lg:flex');
-          }
+          setSidebarState(false);
         }
+        updateSubnavPreviewButtonState(isLivePreviewOpen);
       } else {
         // OFF: Sembunyikan Poin 3 dan otomatis buka kunci galeri foto dengan rasio 1:1
         if (sectionPoint3) sectionPoint3.classList.add('hidden');
@@ -15001,18 +15037,32 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           fabMob.classList.add('hidden');
         }
         closeMobilePreview();
+        updateSubnavPreviewButtonState(false);
       }
       updateStep1SequentialGatingDOM();
     }
 
     ProductForm.setSidebarState = setSidebarState;
     ProductForm.updateStorefrontVisibility = updateStorefrontVisibility;
+    ProductForm.updateSubnavPreviewButtonState = updateSubnavPreviewButtonState;
 
     if (btnToggleSidebar) {
       btnToggleSidebar.addEventListener('click', () => setSidebarState(false));
     }
     if (btnExpandSidebar) {
       btnExpandSidebar.addEventListener('click', () => setSidebarState(true));
+    }
+    const btnSubnavToggle = document.getElementById('btn-subnav-toggle-preview');
+    if (btnSubnavToggle) {
+      btnSubnavToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.innerWidth >= 1024) {
+          setSidebarState(!isLivePreviewOpen);
+        } else {
+          openMobilePreview();
+        }
+      });
     }
 
     // Dual Header Buttons: [Preview] vs [Uji Coba]
@@ -16893,6 +16943,25 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Delegasi Klik File Picker & Aksi Galeri (Berlaku global di level document)
     document.addEventListener('click', (e) => {
+      // 0. Tombol Pratinjau di bar Sub-Navbar Step 2
+      const togglePreviewBtn = e.target.closest('#btn-subnav-toggle-preview');
+      if (togglePreviewBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.innerWidth >= 1024) {
+          if (typeof setSidebarState === 'function') {
+            setSidebarState(!isLivePreviewOpen);
+          } else if (typeof ProductForm.setSidebarState === 'function') {
+            ProductForm.setSidebarState(!isLivePreviewOpen);
+          }
+        } else {
+          if (typeof openMobilePreview === 'function') {
+            openMobilePreview();
+          }
+        }
+        return;
+      }
+
       // 0a. Tab Subnavbar Step 2 (Scroll Smooth ke Seksi Kartu Terkait & Aktifkan Tab)
       const navTab = e.target.closest('.step2-nav-tab') ||
                      e.target.closest('.step2-subnav-link') ||
