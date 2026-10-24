@@ -1,0 +1,336 @@
+# MASTER PRD (PRODUCT REQUIREMENT DOCUMENT) & ARSITEKTUR SISTEM
+## POS & E-COMMERCE PERCETAKAN TERPADU - SONGER CREATIVE
+**Single Source of Truth (SSOT) & Technical Compass**  
+**Dokumen Acuan**: `docs/PRD_MASTER.md`  
+**Status Proyek**: Aktif - Tahap Pengembangan Menyeluruh  
+**Terakhir Diperbarui**: 25 Oktober 2026  
+
+---
+
+> [!IMPORTANT]
+> **PROTOKOL WAJIB AGENT / DEVELOPER (ATURAN MUTLAK):**
+> 1. Dokumen ini adalah **KOMPAS UTAMA & SINGLE SOURCE OF TRUTH (SSOT)** proyek `D:\pos-songer-creative\`.
+> 2. **SEBELUM** memulai tugas pengerjaan apa pun dan **SESUDAH** menyelesaikan tugas apa pun, developer/agent **WAJIB** membaca dokumen ini serta memperbarui status tanda centang `[x]` pada **BAGIAN 4 (Master Checklist Urutan Pengerjaan)**.
+> 3. **DILARANG MERUSAK ATAU MENGUBAH FITUR STABIL**: Fitur yang bertanda `[✅ SUDAH SESUAI & STABIL]` di bawah ini tidak boleh dirombak perilakunya atau dirusak alur datanya.
+> 4. **PRIORITAS MOBILE-FIRST**: Setiap perubahan antarmuka wajib dioptimalkan untuk layar ponsel (kartu `rounded-lg`, kontrol input/button `rounded-md`, touch target $\ge 44 \times 44\text{ px}$, tata letak rapat dan fluid wide tanpa horizontal scrollbar yang tidak diinginkan).
+> 5. **OTOMATISASI WARNA DINAMIS**: Semua komponen interaktif (tombol CTA, badge aktif, focus ring, radio/checkbox tercentang, subnavbar aktif) **WAJIB** terikat pada CSS Variables (`--color-primary`, `--color-primary-hover`, `--color-primary-subtle`, `--color-secondary`). Dilarang memakai class Tailwind warna statis seperti `emerald-*` mentah pada elemen interaktif brand.
+> 6. **ANTI-DUPLIKASI**: Dilarang membuat fungsi, state, atau event listener ganda; satukan dan manfaatkan modul inti yang telah terpasang.
+
+---
+
+## DAFTAR ISI
+1. [BAGIAN 1: Peta Arsitektur Aktual & Guardrails Kestabilan](#bagian-1-peta-arsitektur-aktual--guardrails-kestabilan)
+2. [BAGIAN 2: Keputusan Bisnis Mutlak yang Telah Dikunci](#bagian-2-keputusan-bisnis-mutlak-yang-telah-dikunci)
+3. [BAGIAN 3: Spesifikasi Detail Isi & Fungsi Setiap Menu](#bagian-3-spesifikasi-detail-isi--fungsi-setiap-menu)
+   - [Menu 1: Storefront / Etalase Pembeli](#menu-1-storefront--etalase-pembeli-indexhtml--jsbuyer-storejs)
+   - [Menu 2: Halaman Detail Produk / PDP & Kalkulator](#menu-2-halaman-detail-produk--pdp--kalkulator-producthtml-jspdpjs-jspricing-calculatorjs)
+   - [Menu 3: Keranjang, Checkout Terpadu & Member Area](#menu-3-keranjang-checkout-terpadu--member-area-pelanggan)
+   - [Menu 4: Seller Center - Form Produk, Kategori, Stok & Pesanan](#menu-4-seller-center---form-produk-kategori-stok--pesanan-adminhtml)
+   - [Menu 5: Aplikasi Kasir POS](#menu-5-aplikasi-kasir-pos-view-pos-cashier-di-adminhtml--jsadmin-appjs)
+   - [Menu 6: Marketing, Kupon, Affiliate & CMS Terpadu](#menu-6-marketing-kupon-affiliate-admin--cms-terpadu)
+   - [Menu 7: Pengaturan Toko & Integrasi API](#menu-7-pengaturan-toko--integrasi-api-settingshtml-jssettingsjs)
+   - [Menu 8: Refactoring Helper & Persiapan Migrasi Backend](#menu-8-refactoring-helper--persiapan-migrasi-backend)
+4. [BAGIAN 4: Master Checklist Urutan Pengerjaan (Actionable Phases)](#bagian-4-master-checklist-urutan-pengerjaan-actionable-phases)
+
+---
+
+## BAGIAN 1: Peta Arsitektur Aktual & Guardrails Kestabilan
+
+### 1.1. Inventaris Berkas Aktif (Active Project Files)
+```
+D:\pos-songer-creative\
+├── index.html                   # Storefront utama pembeli (Katalog, Header, Banner, Floating Kupon)
+├── product.html                 # Detail Produk (PDP), kalkulator harga PxL, galeri foto, ulasan
+├── admin.html                   # Shell SPA Seller Center & POS Kasir (Router Hash)
+├── settings.html                # Form identitas toko, tema 2 warna, logo/favicon, printer thermal
+├── theme-editor.html            # Wadah kustomizer tema Shopify-style (dimuat via iframe)
+├── superadmin/
+│   ├── superadmin.html          # Panel Superadmin Multi-Tenant SaaS independen
+│   ├── superadmin.js            # Logika CRUD Tenant, paket langganan, feature matrix
+│   └── superadmin.css           # Styling tema cockpit superadmin
+├── js/
+│   ├── db.js                    # Database lokal client-side (100% localStorage terenkapsulasi)
+│   ├── admin-app.js             # Controller utama Admin SPA, POS kasir, pesanan, dashboard, CRM
+│   ├── buyer-store.js           # Controller Storefront (pencarian autocomplete, render kartu A/B/C)
+│   ├── product-form.js          # Engine form produk 2-step, live preview, kompresi foto WebP
+│   ├── category-manager.js      # CRUD Kategori utama & Sub-Kategori etalase
+│   ├── product-list.js          # Tabel katalog admin, search, filter status, aksi edit/hapus
+│   ├── promo-manager.js         # Pengelolaan banner promo, kupon diskon, voucher
+│   ├── review-manager.js        # Moderasi ulasan (approve / reject)
+│   ├── customer-manager.js      # CRM pelanggan, riwayat transaksi kasir/web
+│   ├── pricing-calculator.js    # Engine kalkulasi harga (PxL M², Kg, Lt, KombStep, KombF)
+│   ├── pdp.js                   # Interaksi PDP, kalkulasi live, integrasi cart & checkout
+│   ├── settings.js              # Sinkronisasi form pengaturan toko & printer
+│   └── theme-editor.js          # Live theme preview & generator variabel CSS
+├── css/
+│   ├── admin.css                # CSS utama Admin, sticky subnav, radius tegas, mobile layout
+│   ├── storefront.css           # Styling pendukung katalog etalase toko
+│   └── style.css                # Bridge variabel warna dual-color branding
+│   └── theme-editor.css         # Styling antarmuka kustomizer tema
+├── src/
+│   └── lib/
+│       ├── invoice/
+│       │   └── invoice-generator.js # Standarisasi nomor faktur [A/B]-[Prefix]-[00001]-[MMYY]
+│       ├── db-local/
+│       │   └── offline-db.js        # Modul IndexedDB lokal (disiapkan untuk transaksi offline POS)
+│       └── prisma/
+│           └── client.js            # Singleton client Prisma (disiapkan untuk Node backend)
+├── prisma/
+│   ├── schema.prisma            # 16 Model tabel PostgreSQL Multi-Tenant
+│   └── seed.js                  # Data seeder awal tenant Songer Creative
+├── schema.sql                   # Skrip DDL PostgreSQL awal
+├── Buka-Aplikasi.bat            # Launcher instan Windows (index.html / admin.html)
+├── Buka-Preview-HP.bat          # Launcher preview lokal jaringan Wi-Fi
+└── serve.ps1                    # Server HTTP PowerShell ringan untuk pengujian mobile
+```
+
+### 1.2. Fitur-Fitur Teruji yang Wajib Dipertahankan (`[✅ SUDAH SESUAI & STABIL]`)
+Dilarang memodifikasi atau menghilangkan fungsionalitas berikut:
+1. **3 Varian Kartu Produk Etalase**: Model A (Standard Cetak PxL), Model B (Portofolio/Jasa 1 Baris Tebal), dan Model C (Retail/Shopee-style dengan dual-footer badge & timer).
+2. **Galeri Foto 10 Slot**: Kompresi senyap HTML5 Canvas ke format WebP/JPEG (`quality: 0.8`), rasio foto 1:1 dan 4:3 instan, badge "Cover", serta tombol reordering.
+3. **Subnavbar Sticky Step 2**: Menempel rapat `top: 0` persis di bawah topbar admin, membentang penuh 100% *edge-to-edge* di mobile tanpa margin/padding bocor, dengan smooth scrolling ke seksi kartu.
+4. **Form Produk 2 Tahap (Progressive Gating)**: Step 1 (Pilihan Jenis Fisik/Non Fisik, Model Kartu A/B/C, Nama, Foto, 2 Label Khusus terkunci) dan Step 2 (6 Kartu Seksi dengan validasi harga HPP dan live preview).
+5. **Kalkulator Harga Cetak Multi-Rumus**: PxL Meter Persegi (min. 1.0 m²), Bobot Kg, Volume Liter, KombStep (kelipatan kuantitas), dan Normal/KombF.
+6. **Antarmuka Kasir POS**: Touch grid katalog, filter kategori, keranjang belanja kasir, kalkulasi kembalian, cetak struk thermal 58mm/80mm, dan format invoice resmi.
+7. **Kustomizer Tema Visual**: Iframe live preview editor tema Shopify-style dengan sinkronisasi variabel CSS.
+
+### 1.3. Standar Desain Mobile-First & Sistem Warna Dinamis
+- **Radius Border Tegas**:
+  * Seluruh kartu seksi / kontainer modul: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
+  * Seluruh elemen kontrol (input teks, select dropdown, textarea, tombol button, pills chip): `border-radius: 0.375rem !important;` (`rounded-md` / 6px).
+  * Menghilangkan *nested double borders* (kotak di dalam kotak) pada tampilan mobile.
+- **Sistem Dual-Color Branding**:
+  * Warna Primer (`--color-primary`): Navbar, tab aktif, tombol utama, border aktif, focus ring.
+  * Warna Sekunder / Aksen (`--color-secondary`): Tombol "Beli Sekarang", badge promo/diskon, bintang rating.
+  * Warna Hover (`--color-primary-hover`, `--color-secondary-hover`) & Subtle (`--color-primary-subtle`, `--color-secondary-subtle`).
+
+---
+
+## BAGIAN 2: Keputusan Bisnis Mutlak yang Telah Dikunci
+
+Berdasarkan analisis kebutuhan operasional bisnis percetakan terpadu, keputusan berikut telah dikunci secara mutlak:
+
+1. **Alur Pengiriman File Desain Cetak (No Heavy Upload on Web):**
+   - **TIDAK ADA** formulir upload file desain berat (TIFF, CDR, PSD, PDF ratusan MB) pada saat checkout di website. Hal ini untuk mencegah kegagalan checkout akibat koneksi lambat dan beban server/kuota penyimpanan.
+   - Pengiriman file cetak dilakukan oleh pelanggan **melalui WhatsApp resmi toko setelah pesanan terbentuk**, dengan wajib mencantumkan **Nomor Invoice** yang didapat saat checkout.
+   - Instruksi pengiriman file ini dikirimkan secara otomatis ke nomor WhatsApp pelanggan melalui gateway Fonnte segera setelah order dibuat.
+
+2. **Kebijakan Manajemen Stok (Finished Goods Only):**
+   - Sistem stok hanya memotong kuantitas **Produk Jadi** (bukan bahan mentah per meter lari/roll).
+   - Mendukung toggle **Stok Tanpa Batas (Unlimited Stock)** untuk produk cetak kustom, jasa desain, dan produk digital.
+   - Setiap mutasi penambahan stok, penjualan via Web, penjualan via POS Kasir, retur, atau penyesuaian wajib tercatat dalam tabel log **Riwayat Mutasi Stok**.
+
+3. **Down Payment (DP) Fleksibel Per-Produk:**
+   - Dikonfigurasi pada Form Produk: Merchant dapat mengaktifkan opsi DP (`is_dp_enabled: true`), memilih jenis DP (Persentase `%` atau Nominal `Rp`), dan menentukan nilai minimal DP.
+   - Jika suatu produk di keranjang mengizinkan DP, pelanggan di Website maupun kasir di POS dapat memilih opsi: **"Bayar Lunas (100%)"** atau **"Bayar Uang Muka (DP)"**.
+   - Pelunasan sisa tagihan dapat dilakukan melalui Member Area Pelanggan (Website) atau pelunasan langsung di Kasir POS sebelum barang diambil/dikirim.
+
+4. **Sistem Checkout Terpadu (Menggantikan Direct WA & Mock VA):**
+   - Menghapus tombol direct `wa.me` sebagai tombol beli utama di PDP.
+   - Menghapus simulasi statis Virtual Account dummy (`#btn-simulate-gateway-paid`).
+   - Menerapkan alur **Checkout Terpadu Resmi**:
+     1. Pembayaran Online Otomatis via **Payment Gateway DOKU** (QRIS Dinamis, Virtual Account Bank, E-Wallet).
+     2. Pembayaran Manual via **Transfer Bank** (dengan instruksi nomor rekening resmi & konfirmasi mutasi).
+     3. Pembayaran Kasir / Bayar di Tempat (**COD**) khusus kurir lokal toko yang diizinkan.
+
+5. **Integrasi Ekspedisi Resmi (KiriminAja & Kurir Lokal Toko):**
+   - Kurir Nasional Otomatis: Menggunakan agregator logistik **KiriminAja** (JNE, J&T, SiCepat, Anteraja, Pos Indonesia) dengan kalkulasi ongkos kirim otomatis berdasarkan berat riil vs berat volumetrik paket $(P \times L \times T) \div 6.000$.
+   - Kurir Lokal Toko: Tarif manual per Satu Desa (flat/gratis) dan Satu Kecamatan, melayani pengantaran kilat armada toko sendiri.
+
+6. **Sistem Komisi Affiliate Shortlink Terukur:**
+   - Besaran komisi affiliate dapat diatur pada 2 tingkatan: **Per-Produk** (prioritas tertinggi) dan **Per-Kategori** (fallback), dengan default fallback global toko.
+   - Cookie referral disimpan selama **30 hari** pada peramban calon pembeli.
+   - **Aturan Pencairan Komisi**: Komisi referral **HANYA BERPINDAH DARI STATUS 'PENDING' KE 'ACTIVE' (DAPAT DICATAT/DITARIK)** apabila status pesanan telah mencapai **`COMPLETED` (Selesai)** dan status pembayaran **`PAID` (Lunas)**. Jika pesanan dibatalkan atau direfund, komisi otomatis hangus (`CANCELLED`).
+
+---
+
+## BAGIAN 3: Spesifikasi Detail Isi & Fungsi Setiap Menu
+
+### Menu 1: Storefront / Etalase Pembeli (`index.html` & `js/buyer-store.js`)
+1. **Modal Popup Promosi Interaktif (Prioritas Utama):**
+   - Muncul otomatis saat pembeli mengakses toko web.
+   - Dilengkapi parameter: gambar banner promo, judul, deskripsi singkat, tombol CTA menuju produk/kategori tertentu, tombol close `[✕]`, dan pengaturan waktu jeda kemunculan (`delay_seconds`).
+   - Menggunakan pengaman `sessionStorage` (`has_seen_promo_popup`) agar tidak muncul berulang kali mengganggu pembeli dalam 1 sesi browsing.
+2. **Modul Flash Sale Real-Time:**
+   - Menampilkan countdown timer berjalan mundur (*hours : minutes : seconds*).
+   - Menampilkan *progress bar* kuota stok promo (misal: "Terjual 80% - Sisa 4 slot").
+   - Menampilkan harga promo coret. Ketika waktu habis atau stok habis, harga otomatis kembali normal tanpa reload halaman.
+3. **Pencarian, Filter & Sorting Lengkap:**
+   - Pencarian cerdas dengan autocomplete suggestion & mobile search drawer.
+   - Filter bertingkat: Kategori Utama, Sub-Kategori, dan Slider/Input Rentang Harga (Harga Minimum s/d Harga Maksimum).
+   - Opsi Pengurutan (*Sorting*): Produk Terbaru, Terlaris (*Sales Count*), Harga Terendah, dan Harga Tertinggi.
+   - Fitur **Wishlist (Favorit)** & **Recently Viewed Products (Terakhir Dilihat)** tersimpan di `localStorage`.
+
+### Menu 2: Halaman Detail Produk / PDP & Kalkulator (`product.html`, `js/pdp.js`, `js/pricing-calculator.js`)
+1. **Perbaikan Engine Kalkulator (`js/pricing-calculator.js`):**
+   - Mengaktifkan kembali dan menyempurnakan `price_type = 4 (Paket Promosi / Grosir Tier)`.
+   - Memastikan seluruh variasi dan add-ons (wajib / multi-pilihan bebas) terkalkulasi presisi tanpa bug pembulatan desimal.
+2. **Penyesuaian Antarmuka PDP untuk 4 Tipe Produk:**
+   - **`FISIK_CETAK`**: Menampilkan konfigurator PxL, bahan, finishing, peringatan berat pengiriman, dan kotak informasi instruksi: *"File desain dikirimkan via WhatsApp setelah invoice diterbitkan"*.
+   - **`DIGITAL`**: Menyembunyikan form ukuran/berat pengiriman; menampilkan badge *"Produk Digital - Tautan unduhan instan aktif setelah pembayaran terverifikasi"*.
+   - **`JASA`**: Menampilkan form input teks/catatan instruksi kustom pekerjaan dari pelanggan.
+   - **`SUBSCRIPTION`**: Menampilkan radio pilihan siklus tagihan (Bulanan vs Tahunan) dengan kalkulasi diskon periode.
+3. **Badge Opsi Down Payment (DP):**
+   - Jika produk memiliki `is_dp_enabled: true`, PDP menampilkan badge informasi: *"Bisa DP Mulai Rp ... / ...%"*.
+4. **Tombol Beli Mengarah ke Checkout Terpadu:**
+   - Tombol "+ Keranjang" menambahkan item ke Cart Drawer.
+   - Tombol "Beli Sekarang" langsung membuka halaman/modal Checkout Terpadu dengan rincian item terpilih (bukan lagi tautan `wa.me`).
+
+### Menu 3: Keranjang, Checkout Terpadu & Member Area Pelanggan
+1. **Alur Keranjang & Checkout Terpadu:**
+   - Manajemen Multi-Alamat: Pembeli dapat memilih alamat tersimpan atau input alamat baru (Provinsi, Kota/Kabupaten, Kecamatan, Kode Pos).
+   - Logika Kondisional Kurir: Jika seluruh keranjang berisi produk `DIGITAL` atau `JASA`, bagian pilihan ekspedisi otomatis disembunyikan (*free shipping non-fisik*).
+   - Opsi Ekspedisi: Memilih layanan kurir otomatis via KiriminAja (JNE, J&T, SiCepat) atau Kurir Lokal Toko (Satu Desa / Kecamatan) beserta ongkir real-time.
+   - Kupon Voucher: Form input kode voucher belanja dengan validasi minimal belanja, masa berlaku, dan kuota pemakaian.
+   - Perhitungan Pajak (PPN %): Otomatis ditambahkan ke ringkasan tagihan jika toko mengaktifkan PPN.
+   - Opsi Pembayaran: Radio pilihan **"Bayar Lunas (100%)"** atau **"Bayar DP (Uang Muka)"** (jika produk memenuhi syarat), dilanjutkan pemilihan metode pembayaran DOKU / Transfer Bank / QRIS.
+2. **Member Area Pelanggan (Customer Portal):**
+   - Sistem Otentikasi: Login via Email/Password dan opsi Login Cepat via Google OAuth.
+   - Riwayat Pesanan: Daftar pesanan aktif, pelacakan resi ekspedisi, dan tombol **"Pelunasan Sisa DP"** jika pesanan berstatus `DP_PAID`.
+   - Halaman Unduhan Digital: Tautan unduhan aman untuk produk bertipe `DIGITAL` dengan pembatasan kuota unduhan (*download limit*).
+   - Kelola Subscription: Informasi masa aktif langganan dan tombol perpanjangan.
+   - **Dashboard Affiliate Pelanggan**:
+     * Pembuatan link referral instan (*Short URL Generator*).
+     * Statistik real-time: Jumlah Klik, Konversi Pesanan, dan Total Komisi (Tertunda vs Siap Cair).
+     * Form data rekening bank / e-wallet untuk pencairan dana.
+     * Tombol pengajuan penarikan saldo (*Request Withdrawal*).
+
+### Menu 4: Seller Center - Form Produk, Kategori, Stok & Pesanan (`admin.html`)
+1. **Perluasan Form Produk (`js/product-form.js`):**
+   - Pilihan 4 Tipe Produk di Step 1: `Fisik Cetak`, `Produk Digital`, `Layanan Jasa`, dan `Langganan (Subscription)`.
+   - Konfigurasi Produk Digital: Upload berkas master / input tautan aman Google Drive, serta pembatasan kuota download per transaksi.
+   - Konfigurasi Down Payment (DP): Toggle aktifkan DP, jenis DP (Persen / Nominal), dan nilai minimal DP.
+   - Konfigurasi Affiliate Per-Produk: Input nominal/persentase komisi khusus untuk produk tertentu.
+2. **Perluasan Manajemen Kategori (`js/category-manager.js`):**
+   - Input persentase Komisi Affiliate Per-Kategori (sebagai fallback komisi produk).
+3. **Modul Baru: Riwayat Mutasi Stok (`#view-stock-mutation`):**
+   - Tabel catatan historis pergerakan stok: Tanggal, Nama Produk/Varian, Jenis Mutasi (Masuk, Keluar Web, Keluar POS, Koreksi Stok, Retur), Kuantitas, Sisa Stok, dan Keterangan/No. Faktur.
+4. **Manajemen Pesanan dengan 3 Lapis Status Terpadu (`#view-orders`):**
+   - **`payment_status`**:
+     * `UNPAID`: Belum ada pembayaran masuk.
+     * `DP_PAID`: Uang muka sudah diterima (menampilkan rincian nominal masuk & sisa tagihan yang belum dibayar).
+     * `PAID`: Pembayaran lunas 100%.
+     * `REFUNDED`: Dana dikembalikan ke pelanggan.
+   - **`order_status`**:
+     * `PENDING` $\rightarrow$ `WAITING_PAYMENT` $\rightarrow$ `PAID` $\rightarrow$ `PROCESSING` $\rightarrow$ `SHIPPED` (dilengkapi input nomor resi pengiriman) $\rightarrow$ `DELIVERED` $\rightarrow$ `COMPLETED` (memicu pencairan komisi affiliate & membuka hak ulasan) $\rightarrow$ `CANCELLED`.
+   - **`production_status` (Sub-status operasional percetakan saat `PROCESSING`):**
+     * `WAITING_FILE` (Menunggu pengiriman file cetak via WA).
+     * `DESIGN_QUEUE` (Pemeriksaan file / antrean desain grafis).
+     * `PRINTING` (Proses cetak mesin produksi).
+     * `FINISHING` (Proses laminasi, cutting, keling mata ayam, jilid).
+     * `READY_TO_SHIP` (Selesai dipacking, siap dijemput kurir / diambil di toko).
+
+### Menu 5: Aplikasi Kasir POS (`#view-pos-cashier` di `admin.html` & `js/admin-app.js`)
+1. **Dukungan Pembayaran Down Payment (DP) di Kasir:**
+   - Kasir dapat memilih mode "Bayar Lunas" atau "Terima Uang Muka (DP)".
+   - Menghitung sisa piutang pelanggan dan mencatatnya ke dalam database faktur.
+2. **Pencetakan Struk Thermal Kasir Informatif:**
+   - Desain struk thermal 58mm / 80mm mencantumkan: Nomor Faktur, Nama Kasir, Rincian Item/Ukuran PxL, Nominal Pembayaran (Lunas atau DP), Sisa Tagihan (jika DP), dan QR Code verifikasi.
+3. **Manajemen Pelanggan Cepat (Quick Add Customer):**
+   - Tombol "+ Pelanggan Baru" langsung dari layar kasir tanpa perlu berpindah ke modul CRM.
+4. **Integrasi IndexedDB & Shared Invoice Counter:**
+   - Menghubungkan kasir dengan `offline-db.js` agar transaksi kasir tetap dapat berjalan lancar saat koneksi offline.
+   - Format nomor faktur terpadu yang sinkron antara transaksi Web (`A-...`) dan Kasir POS (`B-...`) melalui `InvoiceGenerator`.
+
+### Menu 6: Marketing, Kupon, Affiliate Admin & CMS Terpadu
+1. **Pengaturan Modal Popup Promosi:**
+   - Form upload banner, input tautan tujuan, pengaturan jeda detik, dan toggle aktif/nonaktif di `promo-manager.js`.
+2. **Pengaturan Flash Sale & Kupon Voucher:**
+   - Penjadwalan tanggal & jam mulai/selesai Flash Sale.
+   - Generator kupon diskon (potongan flat / persen, minimal belanja, batas kuota pemakaian).
+3. **Menu Manajemen Affiliate Admin:**
+   - Tabel data affiliator, statistik performa referral per member.
+   - Daftar permohonan penarikan saldo (*Withdrawal Requests*), verifikasi transfer, dan tombol persetujuan (*Approve & Mark Paid*).
+4. **Modul CMS & Manajemen Konten Website:**
+   - **Blog & Artikel SEO**: Editor artikel percetakan, tips desain, slug otomatis, meta title & meta description untuk optimasi Google.
+   - **Banner Slider**: Pengelolaan slide banner promosi utama etalase toko.
+   - **Testimoni & Portofolio**: Galeri hasil cetak dan testimoni klien terpercaya.
+   - **Halaman Statis (Custom Pages)**: Editor halaman Tentang Kami, Syarat & Ketentuan Layanan, serta Kebijakan Privasi Toko.
+
+### Menu 7: Pengaturan Toko & Integrasi API (`settings.html`, `js/settings.js`)
+Menambahkan antarmuka formulir pengaturan terstruktur:
+1. **Tab Payment Gateway (DOKU & Rekening Manual):**
+   - Pengaturan DOKU: Client ID, Secret Key, Shared Key, Toggle Mode Sandbox vs Production.
+   - Rekening Manual & QRIS: Tambah daftar rekening bank (BCA, Mandiri, BRI, BNI) dan upload file gambar QRIS toko.
+2. **Tab Ekspedisi & Kurir (KiriminAja & Lokal):**
+   - Pengaturan KiriminAja: API Key, Lokasi Kecamatan Asal (*Origin Code*), pilihan kurir ekspedisi yang diaktifkan.
+   - Pengaturan Kurir Toko: Tarif kurir satu desa, satu kecamatan, dan toggle layanan COD.
+3. **Tab Pajak Transaksi (PPN):**
+   - Toggle aktifkan PPN dan persentase tarif pajak (misal: 11%).
+4. **Tab WhatsApp Gateway Fonnte & Notifikasi Otomatis:**
+   - Input API Token Fonnte & status koneksi device WhatsApp toko.
+   - Editor 6 Template Pesan WhatsApp Otomatis:
+     1. *Pesanan Dibuat (Menunggu Pembayaran / DP)*.
+     2. *Instruksi Pengiriman File Desain Cetak (Khusus Produk Fisik Cetak)*.
+     3. *Pembayaran Berhasil Dikonfirmasi (Lunas / DP Masuk)*.
+     4. *Perubahan Status Produksi (Sedang Dicetak / Finishing)*.
+     5. *Pesanan Dikirim (Disertai Nomor Resi Pelacakan)*.
+     6. *Pesanan Selesai & Permintaan Ulasan Bintang*.
+   - Fitur **WhatsApp Broadcast Massal**: Pengiriman pesan siaran promo berkala ke kontak pelanggan tersimpan dengan antrean (*queue*) dan jeda acak (*delay interval*) untuk mencegah pemblokiran nomor WhatsApp.
+
+### Menu 8: Refactoring Helper & Persiapan Migrasi Backend
+1. **Penyatuan Helper Duplikat (`js/utils.js`):**
+   - Mengekstrak fungsi yang terduplikasi di banyak berkas (`formatIDR`, `escapeHtml`, `hexToRgba`, kalkulator persentase) ke dalam satu pustaka utilitas tunggal `js/utils.js`.
+2. **Pembaruan Skema Prisma ORM (`prisma/schema.prisma`):**
+   - Menambahkan kolom-kolom baru sesuai spesifikasi di atas (`product_type`, `is_dp_enabled`, `dp_type`, `dp_value`, `affiliate_commission_type`, `affiliate_commission_rate`, tabel `StockMutation`, tabel `PopupPromo`, tabel `AffiliateProfile`, tabel `AffiliateWithdrawal`, tabel `CMSArticle`, tabel `VoucherCode`).
+3. **Penyusunan REST API Server / Jembatan Migrasi:**
+   - Menyediakan endpoint REST API terstruktur untuk menjembatani front-end dengan database PostgreSQL/Prisma, serta menyiapkan rute migrasi bertahap menuju arsitektur Laravel 12 + React 18 (Inertia.js v2) di masa depan.
+
+---
+
+## BAGIAN 4: Master Checklist Urutan Pengerjaan (Actionable Phases)
+
+> [!NOTE]
+> Developer / Agent **WAJIB** mencentang `[x]` pada daftar tugas di bawah ini secara bertahap saat menyelesaikan setiap fase pengerjaan. Jangan menandai selesai sebelum verifikasi sintaks via Node.js dan git commit/push berhasil dilakukan.
+
+- [ ] **TAHAP 1: Fondasi Helper Terpusat, Pembersihan Dead Code & Bridge Warna Dinamis**
+  - [x] Pembersihan file yatim: Hapus `js/app.js` dan `src/lib/pricing-calculator.js`.
+  - [x] Inisialisasi dokumen master PRD kompas proyek di `docs/PRD_MASTER.md`.
+  - [ ] Pembuatan `js/utils.js` (helper tunggal: `formatIDR`, `escapeHtml`, `hexToRgba`, dsb.).
+  - [ ] Hubungkan `js/utils.js` ke seluruh file HTML aktif (`index.html`, `product.html`, `admin.html`, `settings.html`, `theme-editor.html`).
+  - [ ] Penguatan CSS variable bridge tema di `css/admin.css` & `css/style.css` agar 100% elemen interaktif terikat ke `--color-primary` dan `--color-secondary`.
+
+- [ ] **TAHAP 2: Storefront Overhaul (Modal Popup Promosi, Flash Sale Real-Time & Filter/Sorting Lengkap)**
+  - [ ] Implementasi modal pop-up promosi otomatis dengan delay detik, banner, tautan CTA, dan pengaman `sessionStorage` di `js/buyer-store.js` dan `index.html`.
+  - [ ] Implementasi modul Flash Sale interaktif (countdown timer berjalan mundur, progress bar kuota, dan harga coret otomatis).
+  - [ ] Penyempurnaan filter rentang harga (Min-Max) dan pengurutan (Terbaru, Terlaris, Termurah, Termahal).
+  - [ ] Integrasi Wishlist (Favorit) dan Riwayat Terakhir Dilihat (*Recently Viewed*).
+
+- [ ] **TAHAP 3: PDP & Pricing Engine Upgrade (4 Tipe Produk, Rumus Paket, Badge DP, Checkout Interaktif)**
+  - [ ] Perbaikan formula `price_type = 4 (Paket Promosi)` pada `js/pricing-calculator.js`.
+  - [ ] Penyesuaian antarmuka PDP (`product.html` & `js/pdp.js`) untuk 4 tipe produk (`FISIK_CETAK`, `DIGITAL`, `JASA`, `SUBSCRIPTION`).
+  - [ ] Penambahan badge opsi Down Payment (DP) jika produk mengizinkan DP.
+  - [ ] Pengalihan tombol "Beli Sekarang" dan "+ Keranjang" dari URL `wa.me` langsung ke sistem checkout terpadu.
+
+- [ ] **TAHAP 4: Sistem Keranjang, Checkout Terpadu (Multi-Alamat, KiriminAja, DOKU, DP) & Member Area Pelanggan**
+  - [ ] Pembuatan modul keranjang belanja dan checkout multi-step di web.
+  - [ ] Pengaturan multi-alamat pengiriman dan kalkulasi ongkir (KiriminAja vs Kurir Lokal).
+  - [ ] Pemilihan mode pembayaran Lunas (100%) vs Bayar DP (Uang Muka).
+  - [ ] Integrasi instruksi pembayaran DOKU, Transfer Bank, dan QRIS.
+  - [ ] Pembuatan Member Area Pelanggan (Login OAuth, Riwayat Pesanan & Pelunasan DP, Unduhan Digital, Dashboard Affiliate).
+
+- [ ] **TAHAP 5: Form Produk, Kategori, Riwayat Mutasi Stok & Manajemen Pesanan 3 Lapis Status**
+  - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk, konfigurasi DP, dan komisi affiliate produk.
+  - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
+  - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
+  - [ ] Upgrade **Manajemen Pesanan 3 Lapis Status** (`payment_status`, `order_status`, `production_status`) di Admin Panel.
+
+- [ ] **TAHAP 6: POS Kasir Upgrade (Dukungan DP, Tambah Pelanggan, Integrasi IndexedDB & Shared Invoice Counter)**
+  - [ ] Dukungan input pembayaran Down Payment (DP) langsung di layar Kasir POS.
+  - [ ] Pembaruan cetak struk thermal 58mm/80mm memuat rincian DP dan sisa tagihan.
+  - [ ] Fitur tambah pelanggan cepat (*Quick Add Customer*) di layar POS.
+  - [ ] Integrasi modul IndexedDB `offline-db.js` dan shared invoice sequence.
+
+- [ ] **TAHAP 7: Marketing Engine, Affiliate System (Per-Produk/Kategori & Withdrawal), serta CMS Terpadu**
+  - [ ] Pengaturan promosi popup, kupon voucher, dan flash sale di `js/promo-manager.js`.
+  - [ ] Pembuatan modul Affiliate Admin (Audit komisi referral & verifikasi approval pencairan saldo).
+  - [ ] Pembuatan modul CMS Terpadu di Admin Panel (Blog & Artikel SEO, Banner Slider, Testimoni, Halaman Statis).
+
+- [ ] **TAHAP 8: Pengaturan Integrasi Terpadu (DOKU, KiriminAja, PPN, Fonnte Broadcast) & Persiapan Migrasi Backend**
+  - [ ] Pembuatan tab konfigurasi DOKU, KiriminAja, Pajak PPN, dan WhatsApp Fonnte di `settings.html` dan `js/settings.js`.
+  - [ ] Pembuatan fitur WhatsApp Broadcast massal dengan proteksi anti-ban delay queue.
+  - [ ] Pembaruan skema `prisma/schema.prisma` mencakup seluruh entitas baru.
+  - [ ] Pembuatan REST API endpoint Node.js / penyusunan rute migrasi ke Laravel 12 + React 18 (Inertia.js v2).
+
+---
+*Dokumen ini sah dan mengikat seluruh alur kerja pengembangan proyek POS By Songer Creative.*
