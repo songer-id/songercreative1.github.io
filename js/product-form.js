@@ -844,7 +844,7 @@ const ProductForm = (() => {
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
 
     container.innerHTML = `
-      <div class="w-full max-w-none space-y-5 sm:space-y-6 pb-8 sm:pb-12" id="product-form-wrapper">
+      <div class="w-full max-w-none ${currentStep === 2 ? 'space-y-0' : 'space-y-5 sm:space-y-6'} pb-8 sm:pb-12" id="product-form-wrapper">
         
         <!-- Header Top Bar (Hanya tampil di Step 1) -->
         <div id="product-form-top-bar" class="${currentStep === 2 ? 'hidden' : 'flex'} items-center justify-between border-b border-slate-200 pb-3 gap-3">
@@ -861,7 +861,7 @@ const ProductForm = (() => {
         <div class="w-full relative">
           
           <!-- WIZARD FORM COLUMN -->
-          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[360px]' : ''} space-y-4 sm:space-y-6 transition-all duration-300">
+          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[360px]' : ''} ${currentStep === 2 ? 'space-y-0' : 'space-y-4 sm:space-y-6'} transition-all duration-300">
             
             <!-- ============================================== -->
             <!-- STEP 1 PANE: INFORMASI PRODUK -->
@@ -1147,7 +1147,7 @@ const ProductForm = (() => {
             <!-- ============================================== -->
             <!-- STEP 2 PANE: MURNI STEP 2 DENGAN 6 CARD GATING -->
             <!-- ============================================== -->
-            <div id="step-pane-2" class="space-y-6 ${currentStep === 2 ? 'block' : 'hidden'}">
+            <div id="step-pane-2" class="space-y-0 ${currentStep === 2 ? 'block' : 'hidden'}">
               ${currentStep === 2 ? renderStep2Content() : ''}
             </div>
           </div>
@@ -11191,6 +11191,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const p1 = document.getElementById('step-pane-1');
     const p2 = document.getElementById('step-pane-2');
     const topBar = document.getElementById('product-form-top-bar');
+    const wrapper = document.getElementById('product-form-wrapper');
+    const wizardCol = document.getElementById('wizard-form-col');
+
     if (topBar) {
       if (currentStep === 2) {
         topBar.classList.add('hidden');
@@ -11201,9 +11204,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
+    if (wrapper) {
+      if (currentStep === 2) {
+        wrapper.classList.remove('space-y-5', 'sm:space-y-6');
+        wrapper.classList.add('space-y-0');
+      } else {
+        wrapper.classList.add('space-y-5', 'sm:space-y-6');
+        wrapper.classList.remove('space-y-0');
+      }
+    }
+
+    if (wizardCol) {
+      if (currentStep === 2) {
+        wizardCol.classList.remove('space-y-4', 'sm:space-y-6');
+        wizardCol.classList.add('space-y-0');
+      } else {
+        wizardCol.classList.add('space-y-4', 'sm:space-y-6');
+        wizardCol.classList.remove('space-y-0');
+      }
+    }
+
     if (p1) p1.className = `space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}`;
     if (p2) {
-      p2.className = `space-y-6 ${currentStep === 2 ? 'block' : 'hidden'}`;
+      p2.className = `space-y-0 ${currentStep === 2 ? 'block' : 'hidden'}`;
       if (currentStep === 2) {
         p2.innerHTML = renderStep2Content();
         bindStep2InteractiveEvents();
