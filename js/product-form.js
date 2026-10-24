@@ -10990,161 +10990,213 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     };
   }
 
+  // --------------------------------------------------------------------------
+  // MODUL SCOPE: VALIDASI HARGA TUNGGAL (ANGKA 0 SAH)
+  // --------------------------------------------------------------------------
+  function validateSinglePrice(value, isBlur = false) {
+    if (typeof value === 'boolean') {
+      const el = (typeof document !== 'undefined') ? document.getElementById('input-single-price') : null;
+      const errEl = (typeof document !== 'undefined') ? document.getElementById('single-price-error-msg') : null;
+      const isBlurMode = value;
+      if (!el) return true;
+      const raw = (el.value || '').trim();
+      if (raw === '' || raw === null) {
+        if (isBlurMode) {
+          if (errEl) { errEl.textContent = 'Wajib di isi'; errEl.classList.remove('hidden'); }
+          el.classList.remove('border-slate-300');
+          el.classList.add('border-red-500');
+          return false;
+        }
+        return false;
+      }
+      const num = Number(raw);
+      if (isNaN(num) || num < 0) {
+        if (isBlurMode) {
+          if (errEl) { errEl.textContent = 'Harga Jual minimal bernilai 0'; errEl.classList.remove('hidden'); }
+          el.classList.remove('border-slate-300');
+          el.classList.add('border-red-500');
+          return false;
+        }
+        return false;
+      }
+      if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
+      el.classList.remove('border-red-500');
+      el.classList.add('border-slate-300');
+      if (typeof validateSingleCost === 'function') {
+        try { validateSingleCost(false); } catch (_) {}
+      }
+      return true;
+    }
+
+    if (value === undefined || value === null) return false;
+    const raw = String(value).trim();
+    if (raw === '') return false;
+    const num = Number(raw);
+    if (isNaN(num) || num < 0) return false;
+    return true; // Angka 0 diakui sah
+  }
+
+  // --------------------------------------------------------------------------
+  // MODUL SCOPE: NAVIGASI WIZARD STEP & VISIBILITAS FORM
+  // --------------------------------------------------------------------------
+  function updateStepVisibility() {
+    const p1 = document.getElementById('step-pane-1');
+    const p2 = document.getElementById('step-pane-2');
+    const topBar = document.getElementById('product-form-top-bar');
+    if (topBar) {
+      if (currentStep === 2) {
+        topBar.classList.add('hidden');
+        topBar.classList.remove('flex');
+      } else {
+        topBar.classList.remove('hidden');
+        topBar.classList.add('flex');
+      }
+    }
+
+    if (p1) p1.className = `space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}`;
+    if (p2) {
+      p2.className = `space-y-6 ${currentStep === 2 ? 'block' : 'hidden'}`;
+      if (currentStep === 2) {
+        p2.innerHTML = renderStep2Content();
+        bindStep2InteractiveEvents();
+        initStep2SubnavObserver();
+      }
+    }
+
+    if (currentStep === 1) {
+      previewTestState.sidebarTab = 'preview';
+      isPreviewTestMode = false;
+      previewTestState.isDrawerOpen = false;
+    }
+    updatePreviewSidebarHeader();
+
+    if (window.lucide) window.lucide.createIcons();
+    updateProductCardLivePreview();
+  }
+
+  function handleProductNameValidation(val, isStep1 = true) {
+    const trimmed = (val || '').trim();
+    const s1Inp = document.getElementById('input-prod-name');
+    const s2Inp = document.getElementById('step2-input-name');
+    const s1Count = document.getElementById('name-char-count');
+    const s2Count = document.getElementById('step2-name-char-count');
+    const s1Err = document.getElementById('name-min-length-error');
+    const s2Err = document.getElementById('step2-name-min-length-error');
+
+    const charLen = (val || '').length;
+    if (s1Count) s1Count.textContent = `${charLen} / 150`;
+    if (s2Count) s2Count.textContent = `${charLen} / 150`;
+
+    if (trimmed.length > 0 && trimmed.length < 5) {
+      if (s1Err) s1Err.classList.remove('hidden');
+      if (s2Err) s2Err.classList.remove('hidden');
+      if (s1Inp) s1Inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+      if (s2Inp) s2Inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+    } else {
+      if (s1Err) s1Err.classList.add('hidden');
+      if (s2Err) s2Err.classList.add('hidden');
+      if (s1Inp) s1Inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+      if (s2Inp) s2Inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+    }
+  }
+
+  function goToStep(step) {
+    if (step < 1 || step > 2) return;
+
+    if (step < currentStep) {
+      // Mundur ke langkah sebelumnya: sinkronisasi data yang terisi tanpa blocking error
+      if (typeof syncStateFromDOM === 'function') {
+        try { syncStateFromDOM(); } catch (_) {}
+      }
+    }
+
+    if (step > currentStep) {
+      if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+
+      // Validasi Step 1 jika ingin maju dari Step 1 ke Step 2
+      if (currentStep === 1) {
+        const s1Errors = [];
+        let firstInvalidEl = null;
+
+        function addS1Error(msg, el) {
+          s1Errors.push(msg);
+          if (!firstInvalidEl && el) firstInvalidEl = el;
+        }
+
+        if (!primaryState.product_type || (primaryState.product_type !== 'physical' && primaryState.product_type !== 'non_physical')) {
+          addS1Error('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).', document.getElementById('section-step1-input1-type') || document.getElementById('product-type-selector-group'));
+        }
+        if (primaryState.is_active && !primaryState.card_variant) {
+          addS1Error('Pilih Jenis Model Kartu Produk terlebih dahulu.', document.getElementById('section-step1-input3-cardmodel') || document.querySelector('input[name="card_variant_radio"]')?.closest('label'));
+        }
+        if (primaryState.is_active && (!primaryState.images || primaryState.images.length === 0) && !primaryState.image_url) {
+          addS1Error('Foto produk wajib diunggah minimal 1 foto sebagai cover.', document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('input-prod-image'));
+        }
+        if (!primaryState.name || primaryState.name.trim().length < 5) {
+          addS1Error('Nama Produk wajib diisi minimal 5 karakter.', document.getElementById('input-prod-name'));
+          const s1NameInput = document.getElementById('input-prod-name');
+          const s1MinLenErr = document.getElementById('name-min-length-error');
+          if (s1MinLenErr) s1MinLenErr.classList.remove('hidden');
+          if (s1NameInput) {
+            s1NameInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          }
+        }
+        if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
+          const input1 = document.getElementById('input-custom-label-1');
+          const input2 = document.getElementById('input-custom-label-2');
+          const wrapper2 = document.getElementById('wrapper-custom-label-2');
+          const isLabel2Visible = wrapper2 ? !wrapper2.classList.contains('hidden') : false;
+
+          const l1 = (input1?.value || primaryState.custom_labels?.[0] || '').trim();
+          const l2 = (isLabel2Visible && input2 ? input2.value : (isLabel2Visible ? (primaryState.custom_labels?.[1] || '') : '')).trim();
+
+          if (!l1) {
+            addS1Error('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.', input1);
+          }
+
+          if (l1 && l2 && l1.toLowerCase() === l2.toLowerCase()) {
+            addS1Error('Label tidak boleh sama.', input2);
+          }
+        }
+
+        if (s1Errors.length > 0) {
+          showWizardErrorBanner(s1Errors);
+          if (firstInvalidEl) {
+            firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (typeof firstInvalidEl.focus === 'function' && firstInvalidEl.tagName !== 'DIV') {
+              firstInvalidEl.focus();
+            }
+          }
+          return;
+        }
+      }
+    }
+
+    hideWizardErrorBanner();
+    currentStep = step;
+    if (step === 2) {
+      isPreviewTestMode = false;
+      previewTestState.sidebarTab = 'preview';
+      previewTestState.isDrawerOpen = false;
+      if (!previewTestState.qty || previewTestState.qty < (primaryState.min_order || 1)) {
+        previewTestState.qty = primaryState.min_order || 1;
+      }
+    }
+    updateStepVisibility();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const vp = document.getElementById('admin-main-viewport');
+    if (vp) vp.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   if (typeof window !== 'undefined') {
     window.showWizardErrorBanner = showWizardErrorBanner;
     window.hideWizardErrorBanner = hideWizardErrorBanner;
     window.validatePrerequisitesBeforeCustomDimension = validatePrerequisitesBeforeCustomDimension;
+    window.goToStep = goToStep;
+    window.validateSinglePrice = validateSinglePrice;
   }
 
   function bindFormEvents() {
-    function updateStepVisibility() {
-      const p1 = document.getElementById('step-pane-1');
-      const p2 = document.getElementById('step-pane-2');
-      const topBar = document.getElementById('product-form-top-bar');
-      if (topBar) {
-        if (currentStep === 2) {
-          topBar.classList.add('hidden');
-          topBar.classList.remove('flex');
-        } else {
-          topBar.classList.remove('hidden');
-          topBar.classList.add('flex');
-        }
-      }
-
-      if (p1) p1.className = `space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}`;
-      if (p2) {
-        p2.className = `space-y-6 ${currentStep === 2 ? 'block' : 'hidden'}`;
-        if (currentStep === 2) {
-          p2.innerHTML = renderStep2Content();
-          bindStep2InteractiveEvents();
-          initStep2SubnavObserver();
-        }
-      }
-
-      if (currentStep === 1) {
-        previewTestState.sidebarTab = 'preview';
-        isPreviewTestMode = false;
-        previewTestState.isDrawerOpen = false;
-      }
-      updatePreviewSidebarHeader();
-
-      if (window.lucide) window.lucide.createIcons();
-      updateProductCardLivePreview();
-    }
-
-    function handleProductNameValidation(val, isStep1 = true) {
-      const trimmed = (val || '').trim();
-      const s1Inp = document.getElementById('input-prod-name');
-      const s2Inp = document.getElementById('step2-input-name');
-      const s1Count = document.getElementById('name-char-count');
-      const s2Count = document.getElementById('step2-name-char-count');
-      const s1Err = document.getElementById('name-min-length-error');
-      const s2Err = document.getElementById('step2-name-min-length-error');
-
-      const charLen = (val || '').length;
-      if (s1Count) s1Count.textContent = `${charLen} / 150`;
-      if (s2Count) s2Count.textContent = `${charLen} / 150`;
-
-      if (trimmed.length > 0 && trimmed.length < 5) {
-        if (s1Err) s1Err.classList.remove('hidden');
-        if (s2Err) s2Err.classList.remove('hidden');
-        if (s1Inp) s1Inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-        if (s2Inp) s2Inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-      } else {
-        if (s1Err) s1Err.classList.add('hidden');
-        if (s2Err) s2Err.classList.add('hidden');
-        if (s1Inp) s1Inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-        if (s2Inp) s2Inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-      }
-    }
-
-    function goToStep(step) {
-      if (step < 1 || step > 2) return;
-
-      if (step < currentStep) {
-        // Mundur ke langkah sebelumnya: sinkronisasi data yang terisi tanpa blocking error
-        if (typeof syncStateFromDOM === 'function') {
-          try { syncStateFromDOM(); } catch (_) {}
-        }
-      }
-
-      if (step > currentStep) {
-        syncStateFromDOM();
-
-        // Validasi Step 1 jika ingin maju dari Step 1 ke Step 2
-        if (currentStep === 1) {
-          const s1Errors = [];
-          let firstInvalidEl = null;
-
-          function addS1Error(msg, el) {
-            s1Errors.push(msg);
-            if (!firstInvalidEl && el) firstInvalidEl = el;
-          }
-
-          if (!primaryState.product_type || (primaryState.product_type !== 'physical' && primaryState.product_type !== 'non_physical')) {
-            addS1Error('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).', document.getElementById('section-step1-input1-type') || document.getElementById('product-type-selector-group'));
-          }
-          if (primaryState.is_active && !primaryState.card_variant) {
-            addS1Error('Pilih Jenis Model Kartu Produk terlebih dahulu.', document.getElementById('section-step1-input3-cardmodel') || document.querySelector('input[name="card_variant_radio"]')?.closest('label'));
-          }
-          if (primaryState.is_active && (!primaryState.images || primaryState.images.length === 0) && !primaryState.image_url) {
-            addS1Error('Foto produk wajib diunggah minimal 1 foto sebagai cover.', document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('input-prod-image'));
-          }
-          if (!primaryState.name || primaryState.name.trim().length < 5) {
-            addS1Error('Nama Produk wajib diisi minimal 5 karakter.', document.getElementById('input-prod-name'));
-            const s1NameInput = document.getElementById('input-prod-name');
-            const s1MinLenErr = document.getElementById('name-min-length-error');
-            if (s1MinLenErr) s1MinLenErr.classList.remove('hidden');
-            if (s1NameInput) {
-              s1NameInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-            }
-          }
-          if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
-            const input1 = document.getElementById('input-custom-label-1');
-            const input2 = document.getElementById('input-custom-label-2');
-            const wrapper2 = document.getElementById('wrapper-custom-label-2');
-            const isLabel2Visible = wrapper2 ? !wrapper2.classList.contains('hidden') : false;
-
-            const l1 = (input1?.value || primaryState.custom_labels?.[0] || '').trim();
-            const l2 = (isLabel2Visible && input2 ? input2.value : (isLabel2Visible ? (primaryState.custom_labels?.[1] || '') : '')).trim();
-
-            if (!l1) {
-              addS1Error('Label 1 wajib diisi jika Tambahkan Label Khusus diaktifkan.', input1);
-            }
-
-            if (l1 && l2 && l1.toLowerCase() === l2.toLowerCase()) {
-              addS1Error('Label tidak boleh sama.', input2);
-            }
-          }
-
-          if (s1Errors.length > 0) {
-            showWizardErrorBanner(s1Errors);
-            if (firstInvalidEl) {
-              firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              if (typeof firstInvalidEl.focus === 'function' && firstInvalidEl.tagName !== 'DIV') {
-                firstInvalidEl.focus();
-              }
-            }
-            return;
-          }
-        }
-      }
-
-      hideWizardErrorBanner();
-      currentStep = step;
-      if (step === 2) {
-        isPreviewTestMode = false;
-        previewTestState.sidebarTab = 'preview';
-        previewTestState.isDrawerOpen = false;
-        if (!previewTestState.qty || previewTestState.qty < (primaryState.min_order || 1)) {
-          previewTestState.qty = primaryState.min_order || 1;
-        }
-      }
-      updateStepVisibility();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      const vp = document.getElementById('admin-main-viewport');
-      if (vp) vp.scrollTo({ top: 0, behavior: 'smooth' });
-    }
 
     // SINKRONISASI TAMPILAN LABEL KHUSUS BERDASARKAN VARIAN KARTU (MODEL 2 = OFF & READONLY/DISABLED)
     function syncCustomLabelsUIForVariant(variantCode) {
@@ -12021,34 +12073,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const singlePriceErr = document.getElementById('single-price-error-msg');
     const singleCostErr = document.getElementById('single-cost-error-msg');
 
-    function validateSinglePrice(isBlur = false) {
-      if (!singlePrice) return true;
-      const raw = (singlePrice.value || '').trim();
-      if (raw === '' || raw === null) {
-        if (isBlur) {
-          if (singlePriceErr) { singlePriceErr.textContent = 'Wajib di isi'; singlePriceErr.classList.remove('hidden'); }
-          singlePrice.classList.remove('border-slate-300');
-          singlePrice.classList.add('border-red-500');
-          return false;
-        }
-        return false;
-      }
-      const num = parseFloat(raw);
-      if (isNaN(num) || num < 0) {
-        if (isBlur) {
-          if (singlePriceErr) { singlePriceErr.textContent = 'Harga Jual minimal bernilai 0'; singlePriceErr.classList.remove('hidden'); }
-          singlePrice.classList.remove('border-slate-300');
-          singlePrice.classList.add('border-red-500');
-          return false;
-        }
-        return false;
-      }
-      if (singlePriceErr) { singlePriceErr.textContent = ''; singlePriceErr.classList.add('hidden'); }
-      singlePrice.classList.remove('border-red-500');
-      singlePrice.classList.add('border-slate-300');
-      validateSingleCost(false);
-      return true;
-    }
+    // Validasi harga tunggal terpusat di modul scope ProductForm (validateSinglePrice)
 
     function validateSingleCost(isBlur = false) {
       if (!singleCost) return true;
@@ -18026,12 +18051,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     updateSandboxCalculation,
     renderCustomDimensionCard,
     validatePrerequisitesBeforeCustomDimension,
-    getEffectiveRuleForOption,
+    goToStep,
+    validateSinglePrice,
     renderDimensionRulesSectionHtml
   };
 })();
 
 window.ProductForm = ProductForm;
+window.goToStep = ProductForm.goToStep;
+window.validateSinglePrice = ProductForm.validateSinglePrice;
 window.renderOptionDimCalcControl = ProductForm.renderOptionDimCalcControl;
 window.renderSandboxCalculationResultsHtml = ProductForm.renderSandboxCalculationResultsHtml;
 window.updateSandboxCalculation = ProductForm.updateSandboxCalculation;
