@@ -5721,24 +5721,24 @@ const ProductForm = (() => {
 
     return `
       <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
-      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-40 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300">
+      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300">
         <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-info" data-step2-target="card-step2-info">
             Informasi Produk
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-sales">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-sales" data-step2-target="card-step2-sales">
             Informasi Penjualan
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-shipping">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-shipping" data-step2-target="card-step2-shipping">
             Pengiriman
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-promo">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-promo" data-step2-target="card-step2-promo">
             Program Promo
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-description">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-description" data-step2-target="card-step2-description">
             Deskripsi Produk
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-others">
+          <button type="button" class="step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-others" data-step2-target="card-step2-others">
             Lainnya
           </button>
         </nav>
@@ -11037,6 +11037,154 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   }
 
   // --------------------------------------------------------------------------
+  // MODUL SCOPE: SUB-NAVBAR STEP 2 SCROLL SPY & TAB NAVIGATION
+  // --------------------------------------------------------------------------
+  let isProgrammaticTabScroll = false;
+  let scrollSpyLockTimer = null;
+  let currentStep2ActiveCardId = 'card-step2-info';
+
+  function centerActiveSubnavTab(tabEl) {
+    if (!tabEl) return;
+    const navContainer = document.getElementById('step2-subnav-links');
+    if (!navContainer) return;
+
+    const tabLeft = tabEl.offsetLeft;
+    const tabWidth = tabEl.offsetWidth;
+    const containerWidth = navContainer.clientWidth;
+    const targetScrollLeft = tabLeft - (containerWidth / 2) + (tabWidth / 2);
+
+    navContainer.scrollTo({
+      left: Math.max(0, targetScrollLeft),
+      behavior: 'smooth'
+    });
+  }
+
+  function setActiveStep2NavTab(targetId, shouldCenter = true) {
+    const tabs = document.querySelectorAll('.step2-nav-tab, .step2-subnav-link');
+    let activeTabEl = null;
+    tabs.forEach(tab => {
+      const tid = tab.getAttribute('data-step2-target') || tab.getAttribute('data-target');
+      if (tid === targetId) {
+        activeTabEl = tab;
+        tab.className = 'step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+      } else {
+        tab.className = 'step2-nav-tab step2-subnav-link px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+      }
+    });
+
+    if (activeTabEl && shouldCenter) {
+      centerActiveSubnavTab(activeTabEl);
+    }
+  }
+
+  function scrollToStep2Card(targetId) {
+    if (!targetId) return;
+    const el = document.getElementById(targetId);
+    if (!el) return;
+
+    isProgrammaticTabScroll = true;
+    currentStep2ActiveCardId = targetId;
+    setActiveStep2NavTab(targetId, true);
+
+    const vp = document.getElementById('admin-main-viewport');
+    if (vp) {
+      const vpRect = vp.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const subnavEl = document.getElementById('step2-subnav-fixed') || document.getElementById('step2-subnav');
+      const subnavHeight = subnavEl ? subnavEl.offsetHeight : 48;
+      // Gulirkan viewport secara mulus ke seksi kartu dengan offset tepat di bawah subnav sticky
+      const targetScroll = vp.scrollTop + (elRect.top - vpRect.top) - subnavHeight - 8;
+      vp.scrollTo({
+        top: Math.max(0, targetScroll),
+        behavior: 'smooth'
+      });
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    clearTimeout(scrollSpyLockTimer);
+    scrollSpyLockTimer = setTimeout(() => {
+      isProgrammaticTabScroll = false;
+    }, 500);
+  }
+
+  function handleStep2ScrollSpy() {
+    if (currentStep !== 2 || isProgrammaticTabScroll) return;
+
+    const vp = document.getElementById('admin-main-viewport');
+    if (!vp) return;
+
+    const cardIds = [
+      'card-step2-info',
+      'card-step2-sales',
+      'card-step2-shipping',
+      'card-step2-promo',
+      'card-step2-description',
+      'card-step2-others'
+    ];
+
+    const vpRect = vp.getBoundingClientRect();
+    const subnavEl = document.getElementById('step2-subnav-fixed') || document.getElementById('step2-subnav');
+    const subnavHeight = subnavEl ? subnavEl.offsetHeight : 48;
+    const triggerLine = vpRect.top + subnavHeight + 60;
+
+    let activeId = null;
+
+    for (let i = 0; i < cardIds.length; i++) {
+      const card = document.getElementById(cardIds[i]);
+      if (!card) continue;
+      const rect = card.getBoundingClientRect();
+      if (rect.top <= triggerLine) {
+        activeId = cardIds[i];
+      }
+    }
+
+    // Jika scroll sudah mendekati dasar kontainer, aktifkan kartu terakhir yang terlihat
+    if (vp.scrollHeight - vp.scrollTop - vp.clientHeight < 40) {
+      for (let i = cardIds.length - 1; i >= 0; i--) {
+        if (document.getElementById(cardIds[i])) {
+          activeId = cardIds[i];
+          break;
+        }
+      }
+    }
+
+    if (!activeId) {
+      activeId = cardIds[0];
+    }
+
+    if (activeId !== currentStep2ActiveCardId) {
+      currentStep2ActiveCardId = activeId;
+      setActiveStep2NavTab(activeId, true);
+    }
+  }
+
+  function initStep2SubnavObserver() {
+    const tabs = document.querySelectorAll('.step2-nav-tab, .step2-subnav-link');
+    tabs.forEach(tab => {
+      tab.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetId = tab.getAttribute('data-step2-target') || tab.getAttribute('data-target');
+        scrollToStep2Card(targetId);
+      };
+    });
+
+    const vp = document.getElementById('admin-main-viewport');
+    if (vp && !vp.dataset.step2Scrollbound) {
+      vp.dataset.step2Scrollbound = 'true';
+      vp.addEventListener('scroll', () => {
+        if (currentStep === 2 && !isProgrammaticTabScroll) {
+          requestAnimationFrame(handleStep2ScrollSpy);
+        }
+      }, { passive: true });
+    }
+
+    // Jalankan sekali saat inisialisasi agar tab awal aktif
+    handleStep2ScrollSpy();
+  }
+
+  // --------------------------------------------------------------------------
   // MODUL SCOPE: NAVIGASI WIZARD STEP & VISIBILITAS FORM
   // --------------------------------------------------------------------------
   function updateStepVisibility() {
@@ -11368,139 +11516,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
-    // SUB-NAVBAR ANCHOR SCROLL SPY & AUTO-SCROLL HORIZONTAL TAB DI MOBILE
-    let isProgrammaticTabScroll = false;
-    let scrollSpyLockTimer = null;
-    let currentStep2ActiveCardId = 'card-step2-info';
-
-    function centerActiveSubnavTab(tabEl) {
-      if (!tabEl) return;
-      const navContainer = document.getElementById('step2-subnav-links');
-      if (!navContainer) return;
-
-      const tabLeft = tabEl.offsetLeft;
-      const tabWidth = tabEl.offsetWidth;
-      const containerWidth = navContainer.clientWidth;
-      const targetScrollLeft = tabLeft - (containerWidth / 2) + (tabWidth / 2);
-
-      navContainer.scrollTo({
-        left: Math.max(0, targetScrollLeft),
-        behavior: 'smooth'
-      });
-    }
-
-    function setActiveStep2NavTab(targetId, shouldCenter = true) {
-      const tabs = document.querySelectorAll('.step2-nav-tab');
-      let activeTabEl = null;
-      tabs.forEach(tab => {
-        if (tab.getAttribute('data-target') === targetId) {
-          activeTabEl = tab;
-          tab.className = 'step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent';
-        } else {
-          tab.className = 'step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent';
-        }
-      });
-
-      if (activeTabEl && shouldCenter) {
-        centerActiveSubnavTab(activeTabEl);
-      }
-    }
-
-    function handleStep2ScrollSpy() {
-      if (currentStep !== 2 || isProgrammaticTabScroll) return;
-
-      const vp = document.getElementById('admin-main-viewport');
-      if (!vp) return;
-
-      const cardIds = [
-        'card-step2-info',
-        'card-step2-sales',
-        'card-step2-shipping',
-        'card-step2-promo',
-        'card-step2-description',
-        'card-step2-others'
-      ];
-
-      const vpRect = vp.getBoundingClientRect();
-      const triggerLine = vpRect.top + 130; // 130px di bawah batas atas viewport (tepat di bawah sub-navbar sticky)
-
-      let activeId = null;
-
-      for (let i = 0; i < cardIds.length; i++) {
-        const card = document.getElementById(cardIds[i]);
-        if (!card) continue;
-        const rect = card.getBoundingClientRect();
-        if (rect.top <= triggerLine) {
-          activeId = cardIds[i];
-        }
-      }
-
-      // Jika scroll sudah mendekati dasar kontainer, aktifkan kartu terakhir yang terlihat
-      if (vp.scrollHeight - vp.scrollTop - vp.clientHeight < 30) {
-        for (let i = cardIds.length - 1; i >= 0; i--) {
-          if (document.getElementById(cardIds[i])) {
-            activeId = cardIds[i];
-            break;
-          }
-        }
-      }
-
-      if (!activeId) {
-        activeId = cardIds[0];
-      }
-
-      if (activeId !== currentStep2ActiveCardId) {
-        currentStep2ActiveCardId = activeId;
-        setActiveStep2NavTab(activeId, true);
-      }
-    }
-
-    function initStep2SubnavObserver() {
-      const tabs = document.querySelectorAll('.step2-nav-tab');
-      tabs.forEach(tab => {
-        tab.onclick = (e) => {
-          e.preventDefault();
-          const targetId = tab.getAttribute('data-target');
-          const el = document.getElementById(targetId);
-          if (!el) return;
-
-          isProgrammaticTabScroll = true;
-          currentStep2ActiveCardId = targetId;
-          setActiveStep2NavTab(targetId, true);
-
-          const vp = document.getElementById('admin-main-viewport');
-          if (vp) {
-            const vpRect = vp.getBoundingClientRect();
-            const elRect = el.getBoundingClientRect();
-            const offset = 120; // 7.5rem (Topbar 64px + Subnav ~48px + margin aman)
-            vp.scrollBy({
-              top: elRect.top - vpRect.top - offset,
-              behavior: 'smooth'
-            });
-          } else {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-
-          clearTimeout(scrollSpyLockTimer);
-          scrollSpyLockTimer = setTimeout(() => {
-            isProgrammaticTabScroll = false;
-          }, 450);
-        };
-      });
-
-      const vp = document.getElementById('admin-main-viewport');
-      if (vp && !vp.dataset.step2Scrollbound) {
-        vp.dataset.step2Scrollbound = 'true';
-        vp.addEventListener('scroll', () => {
-          if (currentStep === 2 && !isProgrammaticTabScroll) {
-            requestAnimationFrame(handleStep2ScrollSpy);
-          }
-        }, { passive: true });
-      }
-
-      // Jalankan sekali saat inisialisasi agar tab awal aktif dan berada di posisi yang tepat
-      handleStep2ScrollSpy();
-    }
+    // SUB-NAVBAR ANCHOR SCROLL SPY & TAB NAVIGATION TERPUSAT DI MODUL SCOPE (initStep2SubnavObserver)
 
   // =====================================================================
   // LOGIKA PERGESERAN OTOMATIS (SHIFT-UP) VARIASI 1–4 SAAT DI-CLOSE (✕)
@@ -16851,7 +16867,24 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Delegasi Klik File Picker & Aksi Galeri (Berlaku global di level document)
     document.addEventListener('click', (e) => {
-      // 0. Tombol Navigasi Kembali Step 2 & Kembali ke Daftar
+      // 0a. Tab Subnavbar Step 2 (Scroll Smooth ke Seksi Kartu Terkait & Aktifkan Tab)
+      const navTab = e.target.closest('.step2-nav-tab') ||
+                     e.target.closest('.step2-subnav-link') ||
+                     e.target.closest('#step2-subnav-links button') ||
+                     e.target.closest('#step2-subnav-links a') ||
+                     e.target.closest('[data-step2-target]') ||
+                     e.target.closest('#step2-subnav-fixed [data-target]');
+      if (navTab) {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetId = navTab.getAttribute('data-step2-target') || navTab.getAttribute('data-target');
+        if (targetId && typeof scrollToStep2Card === 'function') {
+          scrollToStep2Card(targetId);
+        }
+        return;
+      }
+
+      // 0b. Tombol Navigasi Kembali Step 2 & Kembali ke Daftar
       const backStep2Btn = e.target.closest('#btn-step-2-prev');
       if (backStep2Btn) {
         e.preventDefault();
@@ -18053,6 +18086,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     validatePrerequisitesBeforeCustomDimension,
     goToStep,
     validateSinglePrice,
+    scrollToStep2Card,
+    initStep2SubnavObserver,
     renderDimensionRulesSectionHtml
   };
 })();
@@ -18060,6 +18095,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 window.ProductForm = ProductForm;
 window.goToStep = ProductForm.goToStep;
 window.validateSinglePrice = ProductForm.validateSinglePrice;
+window.scrollToStep2Card = ProductForm.scrollToStep2Card;
+window.initStep2SubnavObserver = ProductForm.initStep2SubnavObserver;
 window.renderOptionDimCalcControl = ProductForm.renderOptionDimCalcControl;
 window.renderSandboxCalculationResultsHtml = ProductForm.renderSandboxCalculationResultsHtml;
 window.updateSandboxCalculation = ProductForm.updateSandboxCalculation;
