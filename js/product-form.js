@@ -724,6 +724,22 @@ const ProductForm = (() => {
     return true;
   }
 
+  function renderFormErrorBannerHtml() {
+    return `
+      <!-- Visual Error Summary Container (Compact SaaS with Close Button) -->
+      <div id="form-error-banner" class="hidden p-2.5 sm:p-3 rounded-md border border-red-200 bg-red-50/95 text-red-800 text-xs shadow-xs relative transition-all mb-3 animate-shake">
+        <button type="button" onclick="document.getElementById('form-error-banner')?.classList.add('hidden')" class="absolute top-2 right-2 text-red-400 hover:text-red-700 p-1 text-sm leading-none cursor-pointer" aria-label="Tutup">
+          &times;
+        </button>
+        <div class="flex items-center gap-1.5 font-bold mb-1 pr-6 text-xs text-red-900">
+          <i class="bi bi-exclamation-triangle-fill text-red-600 shrink-0"></i>
+          <span>Mohon lengkapi formulir sebelum melanjutkan:</span>
+        </div>
+        <ul id="form-error-list" class="list-disc list-inside text-[11px] space-y-0.5 pl-1 text-red-700 font-medium"></ul>
+      </div>
+    `;
+  }
+
   function renderForm() {
     const container = document.getElementById('form-container');
     if (!container) return;
@@ -733,22 +749,6 @@ const ProductForm = (() => {
     const currentSubs = primaryState.category_id ? DB.getSubCategories(primaryState.category_id) : [];
     const customLabelsHistory = (typeof DB !== 'undefined' && DB.getCustomLabelsHistory) ? DB.getCustomLabelsHistory() : ['Best Seller', 'Produk Populer', 'Desain Custom', 'Promo Terbatas', 'Termurah', 'Premium Quality', 'Pengerjaan Cepat', 'Garansi 100%'];
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
-
-    function renderFormErrorBannerHtml() {
-      return `
-        <!-- Visual Error Summary Container (Compact SaaS with Close Button) -->
-        <div id="form-error-banner" class="hidden p-2.5 sm:p-3 rounded-xl border border-red-200 bg-red-50/95 text-red-800 text-xs shadow-xs relative transition-all mb-3 animate-shake">
-          <button type="button" onclick="document.getElementById('form-error-banner')?.classList.add('hidden')" class="absolute top-2 right-2 text-red-400 hover:text-red-700 p-1 text-sm leading-none cursor-pointer" aria-label="Tutup">
-            &times;
-          </button>
-          <div class="flex items-center gap-1.5 font-bold mb-1 pr-6 text-xs text-red-900">
-            <i class="bi bi-exclamation-triangle-fill text-red-600 shrink-0"></i>
-            <span>Mohon lengkapi formulir sebelum melanjutkan:</span>
-          </div>
-          <ul id="form-error-list" class="list-disc list-inside text-[11px] space-y-0.5 pl-1 text-red-700 font-medium"></ul>
-        </div>
-      `;
-    }
 
     container.innerHTML = `
       <div class="max-w-7xl mx-auto space-y-6 pb-24 sm:pb-28" id="product-form-wrapper">
@@ -777,7 +777,7 @@ const ProductForm = (() => {
               ${currentStep === 1 ? renderFormErrorBannerHtml() : ''}
               
               <!-- 1 KARTU UTAMA: INFORMASI PRODUK -->
-              <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card">
+              <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card">
                 <!-- Header Card -->
                 <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
@@ -792,15 +792,15 @@ const ProductForm = (() => {
                   </div>
                   <div class="grid grid-cols-2 gap-2.5" id="product-type-selector-group">
                     <!-- Fisik -->
-                    <label class="p-3 rounded-xl border ${primaryState.product_type === 'physical' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-2 select-none text-center">
-                      <input type="radio" name="product_type_radio" value="physical" ${primaryState.product_type === 'physical' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                      <span class="font-bold text-xs ${primaryState.product_type === 'physical' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Fisik</span>
+                    <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.product_type === 'physical' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                      <input type="radio" name="product_type_radio" value="physical" ${primaryState.product_type === 'physical' ? 'checked' : ''} class="sr-only" />
+                      <span>Fisik</span>
                     </label>
 
                     <!-- Non Fisik -->
-                    <label class="p-3 rounded-xl border ${primaryState.product_type === 'non_physical' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-2 select-none text-center">
-                      <input type="radio" name="product_type_radio" value="non_physical" ${primaryState.product_type === 'non_physical' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                      <span class="font-bold text-xs ${primaryState.product_type === 'non_physical' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Non Fisik</span>
+                    <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.product_type === 'non_physical' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                      <input type="radio" name="product_type_radio" value="non_physical" ${primaryState.product_type === 'non_physical' ? 'checked' : ''} class="sr-only" />
+                      <span>Non Fisik</span>
                     </label>
                   </div>
                   <!-- Deskripsi Dinamis Jenis Produk -->
@@ -855,21 +855,21 @@ const ProductForm = (() => {
 
                     <div class="grid grid-cols-3 gap-2" id="card-model-selector-group">
                       <!-- Kartu Klasik -->
-                      <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center">
-                        <input type="radio" name="card_variant_radio" value="A" ${primaryState.card_variant === 'A' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                        <span class="font-bold text-xs ${primaryState.card_variant === 'A' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Kartu Klasik</span>
+                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                        <input type="radio" name="card_variant_radio" value="A" ${primaryState.card_variant === 'A' ? 'checked' : ''} class="sr-only" />
+                        <span>Kartu Klasik</span>
                       </label>
 
                       <!-- Kartu Minimalis -->
-                      <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center">
-                        <input type="radio" name="card_variant_radio" value="B" ${primaryState.card_variant === 'B' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                        <span class="font-bold text-xs ${primaryState.card_variant === 'B' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Kartu Minimalis</span>
+                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                        <input type="radio" name="card_variant_radio" value="B" ${primaryState.card_variant === 'B' ? 'checked' : ''} class="sr-only" />
+                        <span>Kartu Minimalis</span>
                       </label>
 
                       <!-- Kartu Detail -->
-                      <label class="p-2.5 sm:p-3 rounded-xl border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center">
-                        <input type="radio" name="card_variant_radio" value="C" ${primaryState.card_variant === 'C' ? 'checked' : ''} class="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
-                        <span class="font-bold text-xs ${primaryState.card_variant === 'C' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'}">Kartu Detail</span>
+                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                        <input type="radio" name="card_variant_radio" value="C" ${primaryState.card_variant === 'C' ? 'checked' : ''} class="sr-only" />
+                        <span>Kartu Detail</span>
                       </label>
                     </div>
 
@@ -886,7 +886,7 @@ const ProductForm = (() => {
                   </div>
 
                   <!-- State Terkunci Poin 4, 5, 6 jika Model Kartu Belum Dipilih (Etalase Aktif) -->
-                  <div id="step1-cardmodel-gated-placeholder" class="bg-white rounded-xl border border-slate-200/80 shadow-2xs p-5 sm:p-6 select-none mt-4 ${primaryState.is_active && !primaryState.card_variant ? 'block' : 'hidden'}">
+                  <div id="step1-cardmodel-gated-placeholder" class="bg-white rounded-lg border border-slate-200/80 shadow-2xs p-5 sm:p-6 select-none mt-4 ${primaryState.is_active && !primaryState.card_variant ? 'block' : 'hidden'}">
                     <h3 class="text-base font-bold text-slate-400">Foto & Identitas Produk</h3>
                     <p class="text-xs text-slate-400 mt-2">Tersedia setelah memilih model kartu produk</p>
                   </div>
@@ -901,15 +901,13 @@ const ProductForm = (() => {
                         <div class="flex items-center justify-between flex-wrap gap-2">
                           <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
                             <span>Foto Produk</span> <span class="text-red-500">*</span>
-                            <span class="text-[11px] font-normal text-slate-500 ml-1">(Galeri Maksimal 10 Slot)</span>
                           </label>
                           <span id="gallery-ratio-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Rasio ${getActiveCardRatioInfo().ratioText}</span>
                         </div>
-                        <p class="text-xs text-slate-500 mt-0.5">Foto pertama otomatis menjadi Cover Utama. Urutkan posisi foto atau ganti cover dengan mudah.</p>
                       </div>
 
                       <div>
-                        <div id="file-size-error-banner" class="hidden mb-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2">
+                        <div id="file-size-error-banner" class="hidden mb-3 p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2">
                           <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
                           <span id="file-size-error-msg">Pemberitahuan pemrosesan gambar</span>
                         </div>
@@ -940,7 +938,7 @@ const ProductForm = (() => {
                         maxlength="150"
                         value="${escapeHtml(primaryState.name)}"
                         placeholder="Contoh: Kemeja Formal Pria Premium, Tumbler Stainless Steel, Paket Hampers Spesial" 
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-slate-800 text-sm font-medium transition outline-none"
+                        class="w-full px-3 h-9 sm:h-10 rounded-md border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-slate-800 text-[13px] sm:text-sm placeholder:text-[13px] placeholder:font-normal placeholder:text-slate-400 font-medium transition outline-none"
                       />
                       <p id="name-min-length-error" class="hidden text-[11px] font-semibold text-red-600 mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle-fill"></i><span>Nama produk minimal harus 5 karakter.</span></p>
                     </div>
@@ -964,8 +962,6 @@ const ProductForm = (() => {
                       </div>
 
                       <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false) ? 'space-y-4' : 'hidden'}">
-                        <p id="custom-labels-suggestion-text" class="text-xs text-slate-500 hidden transition-all duration-200">Saran: Gunakan 1–2 kata singkat per label (maks. 10–12 karakter) agar seluruh label muat di kartu.</p>
-
                         <div class="space-y-2">
                           <div class="flex flex-wrap gap-1.5" id="custom-labels-preset-group">
                             <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Free Ongkir">+ Free Ongkir</button>
@@ -977,7 +973,7 @@ const ProductForm = (() => {
                           </div>
                         </div>
 
-                        <div id="grid-custom-labels-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+                        <div id="grid-custom-labels-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                           <div id="wrapper-custom-label-1">
                             <div class="flex items-center justify-between mb-1">
                               <label for="input-custom-label-1" class="block text-[11px] font-semibold text-slate-700">
@@ -1025,35 +1021,6 @@ const ProductForm = (() => {
                                   </button>
                                 </div>
                                 <div id="error-custom-label-2" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
-                              </div>
-                            `;
-                          })()}
-                          ${(() => {
-                            const l1 = (primaryState.custom_labels?.[0] || '').trim();
-                            const l2 = (primaryState.custom_labels?.[1] || '').trim();
-                            const canShowLabel3 = l1.length > 0 && l1.length <= 15 && l2.length > 0 && l2.length <= 12 && (l1.length + l2.length <= 16);
-                            return `
-                              <div id="wrapper-custom-label-3" class="${canShowLabel3 ? '' : 'hidden'}">
-                                <div class="flex items-center justify-between mb-1">
-                                  <label for="input-custom-label-3" class="block text-[11px] font-semibold text-slate-700">
-                                    Label 3 (Opsional)
-                                  </label>
-                                  <div id="warn-label-3" class="hidden"></div>
-                                </div>
-                                <div class="relative flex items-center">
-                                  <input 
-                                    type="text" 
-                                    id="input-custom-label-3" 
-                                    list="custom-labels-history-list"
-                                    value="${escapeHtml(primaryState.custom_labels?.[2] || '')}" 
-                                    placeholder="Slot 3 (misal: Garansi 100%)" 
-                                    class="input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium"
-                                  />
-                                  <button type="button" class="btn-clear-custom-label absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.custom_labels?.[2] || '').trim() ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-custom-label-3" title="Hapus label">
-                                    <i class="bi bi-x-lg text-[10px] font-bold"></i>
-                                  </button>
-                                </div>
-                                <div id="error-custom-label-3" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                               </div>
                             `;
                           })()}
@@ -5453,7 +5420,7 @@ const ProductForm = (() => {
       const canMoveRight = idx < images.length - 1;
 
       html += `
-        <div style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-2xl ${isMain ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-slate-200 hover:border-slate-300'} bg-slate-100 overflow-hidden group shadow-2xs select-none transition-all duration-200 shrink-0" data-index="${idx}">
+        <div style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-lg ${isMain ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border border-slate-200 hover:border-slate-300'} bg-slate-100 overflow-hidden group shadow-2xs select-none transition-all duration-200 shrink-0" data-index="${idx}">
           <!-- Gambar Slot -->
           <img src="${imgSrc}" class="w-full h-full object-cover select-none" alt="Foto ${slotNum}" loading="lazy" />
 
@@ -5461,7 +5428,7 @@ const ProductForm = (() => {
           <div class="absolute top-1.5 inset-x-1.5 flex items-center justify-between pointer-events-none z-10">
             ${isMain ? `
               <span class="pointer-events-auto bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-1 tracking-tight">
-                <i data-lucide="star" class="w-2.5 h-2.5 fill-white"></i> Foto Utama
+                Cover
               </span>
             ` : `
               <span class="pointer-events-auto bg-slate-900/80 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow font-mono">
@@ -5514,7 +5481,7 @@ const ProductForm = (() => {
       const isFirstSlot = images.length === 0;
 
       html += `
-        <div id="btn-slot-add-photo" data-action="add-photo" style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-1.5 sm:p-2.5 select-none shadow-2xs overflow-hidden shrink-0" title="Unggah foto produk baru (${images.length}/10)">
+        <div id="btn-slot-add-photo" data-action="add-photo" style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-lg border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-1.5 sm:p-2.5 select-none shadow-2xs overflow-hidden shrink-0" title="Unggah foto produk baru (${images.length}/10)">
           <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-700 shadow-xs mb-1 transition-transform group-hover:scale-105 shrink-0">
             <i data-lucide="camera" class="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5"></i>
           </div>
@@ -5683,7 +5650,7 @@ const ProductForm = (() => {
         ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
-        <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-info">
+        <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-info">
           <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
             <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
           </div>
@@ -5797,7 +5764,7 @@ const ProductForm = (() => {
 
         <!-- CARD 2: INFORMASI PENJUALAN (GATED) -->
         ${missingCard1.length > 0 ? renderFlashbackCard('Informasi Penjualan', 'bi-shop', missingCard1, 'card-step2-sales') : `
-          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-sales">
+          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-sales">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Penjualan</h2>
             </div>
@@ -5972,7 +5939,7 @@ const ProductForm = (() => {
 
         <!-- CARD 3: PENGIRIMAN (GATED) -->
         ${missingCard2.length > 0 ? renderFlashbackCard('Pengiriman', 'bi-truck', missingCard2, 'card-step2-shipping') : `
-          <div id="card-step2-shipping" class="block bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 step2-section-card">
+          <div id="card-step2-shipping" class="block bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 step2-section-card">
             <!-- Header Kartu dengan Toggle Switch Utama -->
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-3">
               <div>
@@ -6266,7 +6233,7 @@ const ProductForm = (() => {
 
         <!-- CARD 4: PROGRAM PROMO (GATED) -->
         ${missingCard3.length > 0 ? renderFlashbackCard('Program Promo', 'bi-tag', missingCard3, 'card-step2-promo') : `
-          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-promo">
+          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-promo">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
               <label class="relative inline-flex items-center cursor-pointer">
@@ -6373,7 +6340,7 @@ const ProductForm = (() => {
 
         <!-- CARD 5: DESKRIPSI PRODUK (GATED) -->
         ${missingCard4.length > 0 ? renderFlashbackCard('Deskripsi Produk', 'bi-file-text', missingCard4, 'card-step2-description') : `
-          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-description">
+          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-description">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">
                 Deskripsi Produk <span class="text-red-500">*</span>
@@ -6424,7 +6391,7 @@ const ProductForm = (() => {
 
         <!-- CARD 6: LAINNYA (GATED) -->
         ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
-          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
+          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Lainnya & Konfigurasi Tambahan</h2>
             </div>
@@ -15137,13 +15104,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = r.closest('label');
           if (lbl) {
             if (r.checked) {
-              lbl.className = 'p-3 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
-              const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-emerald-950 font-extrabold';
+              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
             } else {
-              lbl.className = 'p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
-              const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-slate-800';
+              lbl.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
             }
           }
         });
@@ -15170,13 +15133,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = r.closest('label');
           if (lbl) {
             if (r.checked) {
-              lbl.className = 'p-2.5 sm:p-3 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center';
-              const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-emerald-950 font-extrabold';
+              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
             } else {
-              lbl.className = 'p-2.5 sm:p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-1.5 select-none text-center';
-              const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-slate-800';
+              lbl.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
             }
           }
         });
@@ -15201,19 +15160,42 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // -------------------------------------------------------------
-    // LOGIKA OTOMASI PENGUNCIAN & VALIDASI PANJANG LABEL KHUSUS
+    // LOGIKA OTOMASI PENGUNCIAN & VALIDASI PANJANG LABEL KHUSUS (MAKSIMAL 2 LABEL)
     // -------------------------------------------------------------
+    function updateQuickLabelChipsLockState() {
+      const input1 = document.getElementById('input-custom-label-1');
+      const input2 = document.getElementById('input-custom-label-2');
+      const wrapper2 = document.getElementById('wrapper-custom-label-2');
+
+      const val1 = (input1?.value || '').trim();
+      const val2 = (wrapper2 && !wrapper2.classList.contains('hidden') && input2 && !input2.disabled) ? (input2.value || '').trim() : '';
+
+      const filledSlots = [val1, val2].filter(Boolean);
+      const filledCount = filledSlots.length;
+      const activeLowerLabels = filledSlots.map(s => s.toLowerCase());
+
+      document.querySelectorAll('.btn-preset-label-step1').forEach(btn => {
+        const rawPreset = (btn.getAttribute('data-label') || btn.textContent || '').replace(/^\+\s*/, '').trim().toLowerCase();
+        const isCurrentlyActive = activeLowerLabels.includes(rawPreset);
+
+        if (isCurrentlyActive || filledCount >= 2) {
+          btn.disabled = true;
+          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold opacity-40 cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200 pointer-events-none transition';
+        } else {
+          btn.disabled = false;
+          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer';
+        }
+      });
+    }
+
     function updateCustomLabelsLockState() {
       const toggle = document.getElementById('toggle-enable-custom-labels');
       const container = document.getElementById('container-custom-labels-inputs');
       const input1 = document.getElementById('input-custom-label-1');
       const input2 = document.getElementById('input-custom-label-2');
-      const input3 = document.getElementById('input-custom-label-3');
       const wrapper2 = document.getElementById('wrapper-custom-label-2');
-      const wrapper3 = document.getElementById('wrapper-custom-label-3');
       const charCount1 = document.getElementById('char-count-label-1');
       const warn2 = document.getElementById('warn-label-2');
-      const warn3 = document.getElementById('warn-label-3');
 
       if (primaryState.card_variant === 'B') {
         syncCustomLabelsUIForVariant('B');
@@ -15243,37 +15225,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
 
       const val2 = (input2 ? input2.value || '' : '').trim();
-      const len2 = val2.length;
 
       // 1. Kondisi Label 1 & Label 2
-      if (len1 === 0) {
+      if (len1 === 0 || len1 > 15) {
         if (wrapper2) wrapper2.classList.add('hidden');
-        if (wrapper3) wrapper3.classList.add('hidden');
         if (input2) {
           input2.value = '';
           input2.disabled = true;
           input2.className = 'input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
         }
-        if (input3) {
-          input3.value = '';
-          input3.disabled = true;
-        }
         if (warn2) warn2.classList.add('hidden');
-        if (warn3) warn3.classList.add('hidden');
-      } else if (len1 > 15) {
-        if (wrapper2) wrapper2.classList.add('hidden');
-        if (wrapper3) wrapper3.classList.add('hidden');
-        if (input2) {
-          input2.value = '';
-          input2.disabled = true;
-          input2.className = 'input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed font-medium';
-        }
-        if (input3) {
-          input3.value = '';
-          input3.disabled = true;
-        }
-        if (warn2) warn2.classList.add('hidden');
-        if (warn3) warn3.classList.add('hidden');
       } else {
         // 1 <= len1 <= 15 -> Tampilkan dan aktifkan input Label 2
         if (wrapper2) wrapper2.classList.remove('hidden');
@@ -15282,31 +15243,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           input2.className = 'input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium';
         }
         if (warn2) warn2.classList.add('hidden');
-
-        // 2. Kondisi Label 3: Hanya dirender/tampil jika Label 1 dan Label 2 telah terisi & memenuhi syarat kapasitas
-        const canShowLabel3 = (len2 > 0 && len2 <= 12 && (len1 + len2 <= 16));
-
-        if (canShowLabel3) {
-          if (wrapper3) wrapper3.classList.remove('hidden');
-          if (input3) {
-            input3.disabled = false;
-            input3.className = 'input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium';
-          }
-          if (warn3) warn3.classList.add('hidden');
-        } else {
-          if (wrapper3) wrapper3.classList.add('hidden');
-          if (input3) {
-            input3.value = '';
-            input3.disabled = true;
-          }
-          if (warn3) warn3.classList.add('hidden');
-        }
       }
 
       // Toggle tombol silang (clear X) di masing-masing input slot
       const clearBtn1 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-1"]');
       const clearBtn2 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-2"]');
-      const clearBtn3 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-3"]');
 
       if (clearBtn1) {
         if ((input1?.value || '').trim().length > 0) {
@@ -15326,26 +15267,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           clearBtn2.classList.remove('flex');
         }
       }
-      if (clearBtn3) {
-        if ((input3?.value || '').trim().length > 0 && wrapper3 && !wrapper3.classList.contains('hidden')) {
-          clearBtn3.classList.remove('hidden');
-          clearBtn3.classList.add('flex');
-        } else {
-          clearBtn3.classList.add('hidden');
-          clearBtn3.classList.remove('flex');
-        }
-      }
 
-      // 3. Validasi Keunikan Label Khusus (tidak boleh ada yang sama persis)
+      // Validasi Keunikan Label Khusus (tidak boleh sama)
       const err1 = document.getElementById('error-custom-label-1');
       const err2 = document.getElementById('error-custom-label-2');
-      const err3 = document.getElementById('error-custom-label-3');
-      const val3 = (input3 && !input3.disabled && wrapper3 && !wrapper3.classList.contains('hidden')) ? (input3.value || '').trim() : '';
 
-      [err1, err2, err3].forEach(el => {
+      [err1, err2].forEach(el => {
         if (el) { el.textContent = ''; el.classList.add('hidden'); }
       });
-      [input1, input2, input3].forEach(inp => {
+      [input1, input2].forEach(inp => {
         if (inp && !inp.disabled) {
           inp.classList.remove('border-red-500');
           if (!inp.classList.contains('border-slate-300')) inp.classList.add('border-slate-300');
@@ -15363,50 +15293,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
       }
 
-      if (val3) {
-        if (val1 && val3.toLowerCase() === val1.toLowerCase()) {
-          if (err3) {
-            err3.textContent = 'Label tidak boleh sama';
-            err3.classList.remove('hidden');
-          }
-          if (input3) {
-            input3.classList.remove('border-slate-300');
-            input3.classList.add('border-red-500');
-          }
-        } else if (val2 && val3.toLowerCase() === val2.toLowerCase()) {
-          if (err3) {
-            err3.textContent = 'Label tidak boleh sama';
-            err3.classList.remove('hidden');
-          }
-          if (input3) {
-            input3.classList.remove('border-slate-300');
-            input3.classList.add('border-red-500');
-          }
-        }
-      }
+      // Kunci atau buka kunci chip rekomendasi aksi cepat jika sudah 2 label terisi
+      updateQuickLabelChipsLockState();
 
-      // 4. Nonaktifkan preset yang sudah terpakai
-      const actVal1 = (input1?.value || '').trim().toLowerCase();
-      const actVal2 = (input2 && !input2.disabled && wrapper2 && !wrapper2.classList.contains('hidden')) ? (input2.value || '').trim().toLowerCase() : '';
-      const actVal3 = (input3 && !input3.disabled && wrapper3 && !wrapper3.classList.contains('hidden')) ? (input3.value || '').trim().toLowerCase() : '';
-      const activeLowerLabels = [actVal1, actVal2, actVal3].filter(Boolean);
-
-      document.querySelectorAll('.btn-preset-label-step1').forEach(btn => {
-        const rawPreset = (btn.getAttribute('data-label') || btn.textContent || '').replace(/^\+\s*/, '').trim().toLowerCase();
-        if (activeLowerLabels.includes(rawPreset)) {
-          btn.disabled = true;
-          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold opacity-40 cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200 pointer-events-none transition';
-        } else {
-          btn.disabled = false;
-          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer';
-        }
-      });
-
-      // Update primaryState.custom_labels
+      // Update primaryState.custom_labels (maksimal 2 label)
       const effectiveL1 = (input1?.value || '').trim();
       const effectiveL2 = (wrapper2 && !wrapper2.classList.contains('hidden') && input2 && !input2.disabled) ? (input2.value || '').trim() : '';
-      const effectiveL3 = (wrapper3 && !wrapper3.classList.contains('hidden') && input3 && !input3.disabled) ? (input3.value || '').trim() : '';
-      const validLabels = [effectiveL1, effectiveL2, effectiveL3].filter(Boolean);
+      const validLabels = [effectiveL1, effectiveL2].filter(Boolean);
       primaryState.custom_labels = validLabels;
 
       const capInfoEl = document.getElementById('custom-labels-capacity-info');
@@ -15427,6 +15320,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
         primaryState.show_badge = toggleLabels.checked;
         updateCustomLabelsLockState();
+        updateQuickLabelChipsLockState();
       });
     }
 
@@ -15440,8 +15334,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const active = document.activeElement;
         const slots = [
           document.getElementById('input-custom-label-1'),
-          document.getElementById('input-custom-label-2'),
-          document.getElementById('input-custom-label-3')
+          document.getElementById('input-custom-label-2')
         ];
         if (!slots.includes(active) && labelSuggestionText) {
           labelSuggestionText.classList.add('hidden');
@@ -15450,12 +15343,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // Step 1 Custom Label Slots Input Listeners
-    ['input-custom-label-1', 'input-custom-label-2', 'input-custom-label-3'].forEach(id => {
+    ['input-custom-label-1', 'input-custom-label-2'].forEach(id => {
       const inp = document.getElementById(id);
       if (inp) {
         inp.addEventListener('input', () => {
           showLabelSuggestion();
           updateCustomLabelsLockState();
+          updateQuickLabelChipsLockState();
         });
         inp.addEventListener('focus', showLabelSuggestion);
         inp.addEventListener('blur', hideLabelSuggestion);
@@ -15473,12 +15367,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           inp.value = '';
           inp.focus();
           updateCustomLabelsLockState();
+          updateQuickLabelChipsLockState();
           updateProductCardLivePreview();
         }
       });
     });
 
-    // Step 1 Preset Label Buttons
+    // Step 1 Preset Label Buttons (Aksi Cepat)
     document.querySelectorAll('.btn-preset-label-step1').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -15486,23 +15381,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const lbl = btn.getAttribute('data-label') || '';
         const l1 = document.getElementById('input-custom-label-1');
         const l2 = document.getElementById('input-custom-label-2');
-        const l3 = document.getElementById('input-custom-label-3');
         const wrapper2 = document.getElementById('wrapper-custom-label-2');
-        const wrapper3 = document.getElementById('wrapper-custom-label-3');
         const isL2Visible = wrapper2 && !wrapper2.classList.contains('hidden');
-        const isL3Visible = wrapper3 && !wrapper3.classList.contains('hidden');
 
         if (l1 && !l1.value.trim()) {
           l1.value = lbl;
         } else if (l2 && isL2Visible && !l2.disabled && !l2.value.trim()) {
           l2.value = lbl;
-        } else if (l3 && isL3Visible && !l3.disabled && !l3.value.trim()) {
-          l3.value = lbl;
         } else if (l1) {
           l1.value = lbl;
         }
 
         updateCustomLabelsLockState();
+        updateQuickLabelChipsLockState();
         updateProductCardLivePreview();
       });
     });
@@ -15848,13 +15739,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const labelWrapper = rad.closest('label');
         if (labelWrapper) {
           if (rad.checked) {
-            labelWrapper.className = 'p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition space-y-1.5 block select-none';
+            labelWrapper.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
           } else {
-            labelWrapper.className = 'p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition space-y-1.5 block select-none';
-          }
-          const textSpan = labelWrapper.querySelector('span');
-          if (textSpan) {
-            textSpan.className = `font-bold text-xs ${rad.checked ? 'text-emerald-900' : 'text-slate-800'}`;
+            labelWrapper.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
           }
         }
       });
@@ -16590,13 +16477,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = radio.closest('label');
           if (lbl) {
             if (radio.checked) {
-              lbl.className = 'p-3 rounded-xl border border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
-              const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-emerald-950 font-extrabold';
+              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
             } else {
-              lbl.className = 'p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-2 select-none text-center';
-              const txt = lbl.querySelector('span');
-              if (txt) txt.className = 'font-bold text-xs text-slate-800';
+              lbl.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
             }
           }
         });

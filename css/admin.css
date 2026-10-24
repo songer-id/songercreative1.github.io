@@ -750,14 +750,18 @@ body {
 
 /* ==========================================================================
    PRODUCT FORM ENTERPRISE SAAS BORDER-RADIUS PRECISION (8PX CARDS, 6PX INPUTS)
+   BERLAKU DI SEMUA UKURAN LAYAR (DESKTOP, TABLET, MOBILE)
    ========================================================================== */
+#view-product-form .step1-section-card,
+#view-product-form .step2-section-card,
+#view-product-form #step-pane-1 > div.bg-white,
+#view-product-form [id^="card-step2-"],
 #view-product-form .rounded-2xl,
 #view-product-form .rounded-3xl,
-#view-product-form [id^="card-step2-"],
 #view-product-form .bg-white.border.border-slate-200.shadow-xs,
 #view-product-form .bg-white.border.border-slate-200.shadow-sm {
   border-radius: 0.5rem !important;
-  /* 8px (rounded-lg) */
+  /* 8px (rounded-lg) tegas di semua layar */
 }
 
 #view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.rounded-full):not(.mat-input):not(.fin-input),
@@ -766,9 +770,21 @@ body {
 #view-product-form button.rounded-xl,
 #view-product-form button.rounded-2xl,
 #view-product-form .input-custom-label-slot,
-#view-product-form .btn-primary-brand {
+#view-product-form .btn-primary-brand,
+#view-product-form #product-type-selector-group label,
+#view-product-form #card-model-selector-group label {
   border-radius: 0.375rem !important;
-  /* 6px (rounded-md) */
+  /* 6px (rounded-md) tegas di semua layar */
+}
+
+/* Hapus kesan bertumpuk (nested / double borders) di semua ukuran layar */
+.step1-section-card .nested-card-box,
+.step2-section-card .nested-card-box,
+.step2-section-card .variation-card-block,
+.step2-section-card #card-extra-service,
+.step2-section-card #card-custom-dimension-pxl,
+.step2-section-card #local-delivery-rates-box {
+  box-shadow: none !important;
 }
 
 /* Mobile FAB Live Preview position (centered at bottom) */
@@ -1631,7 +1647,7 @@ input.toggle-same-cost:checked~div::after {
   #card-step2-others {
     background-color: #ffffff !important;
     border: 1px solid rgba(226, 232, 240, 0.8) !important;
-    border-radius: 0.75rem !important; /* rounded-xl (12px) */
+    border-radius: 0.5rem !important; /* rounded-lg (8px) tegas */
     padding: 0.875rem !important; /* p-3.5 (14px) */
     margin-bottom: 0.75rem !important; /* mb-3 */
     box-shadow: none !important;
