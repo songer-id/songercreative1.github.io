@@ -719,9 +719,12 @@ body {
    ========================================================================== */
 #step2-subnav-fixed,
 #step2-subnav-sticky {
-  top: 4rem !important;
-  /* right below h-16 navbar */
-  z-index: 30 !important;
+  position: sticky !important;
+  top: 0px !important;
+  /* menempel tepat di atas scroll container tanpa celah bocor */
+  z-index: 40 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 @media (max-width: 1023.98px) {
@@ -742,7 +745,7 @@ body {
 #card-step2-others,
 .step2-anchor-card,
 .step2-section-card {
-  scroll-margin-top: 7.5rem !important;
+  scroll-margin-top: 4.5rem !important;
 }
 
 /* ==========================================================================
@@ -1574,35 +1577,144 @@ input.toggle-same-cost:checked~div::after {
 }
 
 /* --------------------------------------------------------------------------
-   MOBILE SAAS HYGIENE & NESTED BORDERS ELIMINATION (< 640px)
+   MOBILE SAAS OVERHAUL: ZERO NESTED BORDERS & SKALA TIPOGRAFI STANDAR (< 640px)
    -------------------------------------------------------------------------- */
 @media (max-width: 640px) {
 
-  /* Kurangi padding horizontal berlebih pada wrapper luar form produk */
+  /* 1. Hilangkan Border Kontainer Pembungkus Luar di Mobile & Padding Rapi */
   #admin-main-viewport {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-    padding-bottom: 6.5rem !important;
+    padding: 0 !important;
+    background-color: #f8fafc !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
-  #view-product-form {
+  #view-product-form,
+  #product-form-wrapper,
+  #wizard-form-col {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0 !important;
     padding-bottom: 6rem !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
   }
 
-  /* Hilangkan border bertumpuk pada sub-card di dalam section cards */
-  .step2-section-card {
-    padding: 1rem 0.75rem !important;
-    border-radius: 0.875rem !important;
-  }
-
-  .step2-section-card #card-custom-dimension-pxl {
+  /* Subnavbar sticky di mobile: edge-to-edge menempel rapat di top: 0px tanpa celah bocor 1px pun */
+  #step2-subnav-fixed,
+  #step2-subnav-sticky {
+    position: sticky !important;
+    top: 0px !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: -0.75rem !important;
+    margin-right: -0.75rem !important;
+    width: calc(100% + 1.5rem) !important;
+    background-color: #ffffff !important;
+    z-index: 40 !important;
+    border-top: none !important;
     border-left: none !important;
     border-right: none !important;
-    border-top: none !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* 2. Kartu Seksi Utama: 1 Kartu Permukaan Putih Bersih di atas bg-slate-50 */
+  .step2-section-card,
+  .step1-section-card,
+  #step-pane-1 > div.bg-white,
+  #card-step2-sales,
+  #card-step2-shipping,
+  #card-step2-promo,
+  #card-step2-description,
+  #card-step2-others {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    border-radius: 0.75rem !important; /* rounded-xl (12px) */
+    padding: 0.875rem !important; /* p-3.5 (14px) */
+    margin-bottom: 0.75rem !important; /* mb-3 */
+    box-shadow: none !important;
+  }
+
+  /* Hapus kotak ber-border di dalam kartu seksi (Zero Nested Borders) */
+  .step2-section-card .variation-card-block,
+  .step2-section-card #card-extra-service,
+  .step2-section-card #card-custom-dimension-pxl,
+  .step2-section-card #local-delivery-rates-box,
+  .step2-section-card #section-card-footer-config {
+    border-left: none !important;
+    border-right: none !important;
     border-bottom: none !important;
+    box-shadow: none !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* 3. Standarisasi Skala Tipografi Mobile Standar SaaS */
+  /* Judul Seksi Utama (h2, h3, judul kartu seksi) */
+  #view-product-form h2,
+  #view-product-form h3,
+  .step2-section-card h2,
+  .step2-section-card h3,
+  .step1-section-card h2,
+  .step1-section-card h3 {
+    font-size: 0.9375rem !important; /* 15px */
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Label Field Input */
+  #view-product-form label:not(.cursor-pointer):not(.relative):not(.sr-only),
+  .step2-section-card label:not(.cursor-pointer):not(.relative):not(.sr-only),
+  .step1-section-card label:not(.cursor-pointer):not(.relative):not(.sr-only),
+  #view-product-form .input-field-label {
+    font-size: 0.75rem !important; /* 12px */
+    font-weight: 600 !important;
+    color: #334155 !important; /* slate-700 */
+    line-height: 1.35 !important;
+  }
+
+  /* Kotak Input, Select, & Placeholder */
+  #view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
+  #view-product-form select,
+  #view-product-form .custom-combobox-input,
+  .step2-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
+  .step2-section-card select,
+  .step1-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
+  .step1-section-card select {
+    min-height: 38px !important;
+    height: 38px !important;
+    font-size: 0.8125rem !important; /* 13px */
+    padding: 0.375rem 0.625rem !important;
+    border-radius: 0.5rem !important; /* 8px */
+  }
+
+  #view-product-form textarea,
+  .step2-section-card textarea,
+  .step1-section-card textarea {
+    font-size: 0.8125rem !important;
+    padding: 0.5rem 0.625rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  #view-product-form input::placeholder,
+  #view-product-form textarea::placeholder,
+  .step2-section-card input::placeholder,
+  .step2-section-card textarea::placeholder {
+    font-size: 0.8125rem !important; /* 13px */
+    color: #94a3b8 !important; /* slate-400 */
+  }
+
+  /* Teks Deskripsi / Keterangan Pendukung */
+  #view-product-form p,
+  .step2-section-card p,
+  .step1-section-card p,
+  #view-product-form .field-hint-text {
+    font-size: 0.6875rem !important; /* 11px */
+    line-height: 1.35 !important;
+    color: #64748b !important; /* slate-500 */
   }
 }
 

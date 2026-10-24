@@ -734,8 +734,24 @@ const ProductForm = (() => {
     const customLabelsHistory = (typeof DB !== 'undefined' && DB.getCustomLabelsHistory) ? DB.getCustomLabelsHistory() : ['Best Seller', 'Produk Populer', 'Desain Custom', 'Promo Terbatas', 'Termurah', 'Premium Quality', 'Pengerjaan Cepat', 'Garansi 100%'];
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
 
+    function renderFormErrorBannerHtml() {
+      return `
+        <!-- Visual Error Summary Container (Compact SaaS with Close Button) -->
+        <div id="form-error-banner" class="hidden p-2.5 sm:p-3 rounded-xl border border-red-200 bg-red-50/95 text-red-800 text-xs shadow-xs relative transition-all mb-3 animate-shake">
+          <button type="button" onclick="document.getElementById('form-error-banner')?.classList.add('hidden')" class="absolute top-2 right-2 text-red-400 hover:text-red-700 p-1 text-sm leading-none cursor-pointer" aria-label="Tutup">
+            &times;
+          </button>
+          <div class="flex items-center gap-1.5 font-bold mb-1 pr-6 text-xs text-red-900">
+            <i class="bi bi-exclamation-triangle-fill text-red-600 shrink-0"></i>
+            <span>Mohon lengkapi formulir sebelum melanjutkan:</span>
+          </div>
+          <ul id="form-error-list" class="list-disc list-inside text-[11px] space-y-0.5 pl-1 text-red-700 font-medium"></ul>
+        </div>
+      `;
+    }
+
     container.innerHTML = `
-      <div class="max-w-7xl mx-auto space-y-6 pb-24 sm:pb-28">
+      <div class="max-w-7xl mx-auto space-y-6 pb-24 sm:pb-28" id="product-form-wrapper">
         
         <!-- Header Top Bar (Hanya tampil di Step 1) -->
         <div id="product-form-top-bar" class="${currentStep === 2 ? 'hidden' : 'flex'} items-center justify-between border-b border-slate-200 pb-3 gap-3">
@@ -752,23 +768,16 @@ const ProductForm = (() => {
         <div class="w-full relative">
           
           <!-- WIZARD FORM COLUMN -->
-          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[360px]' : ''} space-y-6 transition-all duration-300">
+          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[360px]' : ''} space-y-4 sm:space-y-6 transition-all duration-300">
             
-            <!-- Visual Error Summary Container -->
-            <div id="form-error-banner" class="hidden p-4 rounded-md border border-red-200 bg-red-50 text-red-800 text-sm animate-shake">
-              <div class="flex items-center gap-2 font-semibold mb-1">
-                <i data-lucide="alert-circle" class="w-5 h-5 text-red-600"></i> Mohon lengkapi formulir sebelum melanjutkan:
-              </div>
-              <ul id="form-error-list" class="list-disc list-inside text-xs space-y-1 pl-1"></ul>
-            </div>
-
             <!-- ============================================== -->
             <!-- STEP 1 PANE: INFORMASI PRODUK -->
             <!-- ============================================== -->
-            <div id="step-pane-1" class="space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}">
+            <div id="step-pane-1" class="space-y-4 sm:space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}">
+              ${currentStep === 1 ? renderFormErrorBannerHtml() : ''}
               
               <!-- 1 KARTU UTAMA: INFORMASI PRODUK -->
-              <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6">
+              <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card">
                 <!-- Header Card -->
                 <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
@@ -5645,35 +5654,36 @@ const ProductForm = (() => {
     };
 
     return `
-      <!-- 1. FIXED SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE) -->
-      <div id="step2-subnav-fixed" class="fixed top-16 left-0 lg:left-[4.5rem] ${isLivePreviewOpen && primaryState.is_active ? 'lg:right-[300px] xl:right-[340px]' : 'right-0'} z-30 bg-white border-b border-slate-200/80 transition-all duration-300">
+      <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE) -->
+      <div id="step2-subnav-fixed" class="sticky top-0 z-40 bg-white border-b border-slate-200/80 shadow-xs transition-all duration-300">
         <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
-          <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
             Informasi Produk
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-sales">
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-sales">
             Informasi Penjualan
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-shipping">
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-shipping">
             Pengiriman
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-promo">
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-promo">
             Program Promo
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-description">
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-description">
             Deskripsi Produk
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-others">
+          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-others">
             Lainnya
           </button>
         </nav>
       </div>
 
-      <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH FIXED SUBNAV) -->
-      <div class="space-y-6 pt-6">
+      <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
+      <div class="space-y-4 sm:space-y-6 pt-3 sm:pt-4">
+        ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
-        <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6 step2-section-card" id="card-step2-info">
+        <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-info">
           <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
             <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
           </div>
@@ -5787,7 +5797,7 @@ const ProductForm = (() => {
 
         <!-- CARD 2: INFORMASI PENJUALAN (GATED) -->
         ${missingCard1.length > 0 ? renderFlashbackCard('Informasi Penjualan', 'bi-shop', missingCard1, 'card-step2-sales') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-6 step2-section-card" id="card-step2-sales">
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-sales">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Penjualan</h2>
             </div>
@@ -5962,7 +5972,7 @@ const ProductForm = (() => {
 
         <!-- CARD 3: PENGIRIMAN (GATED) -->
         ${missingCard2.length > 0 ? renderFlashbackCard('Pengiriman', 'bi-truck', missingCard2, 'card-step2-shipping') : `
-          <div id="card-step2-shipping" class="block bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4 step2-section-card">
+          <div id="card-step2-shipping" class="block bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 step2-section-card">
             <!-- Header Kartu dengan Toggle Switch Utama -->
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-3">
               <div>
@@ -6151,8 +6161,8 @@ const ProductForm = (() => {
                   </div>
                 </div>
 
-                <!-- Bagian 3: Panel Pengaturan Tarif Ongkir Kurir Toko / Lokal -->
-                <div id="local-delivery-rates-box" class="${(couriersList.includes('local_store') || couriersList.includes('instant')) ? 'block' : 'hidden'} bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/70 space-y-3 transition">
+                <!-- Bagian 3: Panel Pengaturan Tarif Ongkir Kurir Toko / Lokal (Zero Nested Borders) -->
+                <div id="local-delivery-rates-box" class="${(couriersList.includes('local_store') || couriersList.includes('instant')) ? 'block' : 'hidden'} pt-3 border-t border-slate-100 space-y-3 transition">
                   <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-1.5">
                       <i class="bi bi-geo-alt-fill text-emerald-600 text-xs"></i>
@@ -6167,7 +6177,7 @@ const ProductForm = (() => {
                   </div>
 
                   <!-- Baris 1: Area Satu Desa / Kelurahan -->
-                  <div class="p-2.5 rounded-lg bg-white border border-slate-200/80 space-y-2">
+                  <div class="pt-2 border-t border-slate-100 space-y-2">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
                       <span class="text-xs font-bold text-slate-800">1. Area Satu Desa / Kelurahan:</span>
                       <!-- Pilihan Cepat: Gratis vs Tambah Ongkir -->
@@ -6203,7 +6213,7 @@ const ProductForm = (() => {
                   </div>
 
                   <!-- Baris 2: Area Satu Kecamatan (Beda Desa) -->
-                  <div class="p-2.5 rounded-lg bg-white border border-slate-200/80 space-y-2">
+                  <div class="pt-2 border-t border-slate-100 space-y-2">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
                       <span class="text-xs font-bold text-slate-800">2. Area Satu Kecamatan (Beda Desa):</span>
                       <!-- Pilihan Cepat: Gratis vs Tambah Ongkir -->
@@ -6256,7 +6266,7 @@ const ProductForm = (() => {
 
         <!-- CARD 4: PROGRAM PROMO (GATED) -->
         ${missingCard3.length > 0 ? renderFlashbackCard('Program Promo', 'bi-tag', missingCard3, 'card-step2-promo') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4 step2-section-card" id="card-step2-promo">
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-promo">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
               <label class="relative inline-flex items-center cursor-pointer">
@@ -6272,13 +6282,13 @@ const ProductForm = (() => {
 
             <div id="discount-controls-area" class="${primaryState.has_monthly_discount ? 'block' : 'hidden'} space-y-4 pt-1">
               <!-- Bagian A: Konfirmasi Promo Otomatis Bulanan / Event Besar -->
-              <div class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-start justify-between gap-3 select-none">
+              <div class="flex items-start justify-between gap-3 select-none">
                 <div class="space-y-0.5">
-                  <label for="chk-include-monthly-promo" class="text-xs font-bold text-emerald-950 cursor-pointer flex items-center gap-1.5">
+                  <label for="chk-include-monthly-promo" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
                     <i class="bi bi-calendar2-heart-fill text-emerald-600"></i>
                     <span>Sertakan di Promo Otomatis Bulanan / Event Besar</span>
                   </label>
-                  <p class="text-[11px] text-emerald-800/80 leading-relaxed">
+                  <p class="text-[11px] text-slate-500 leading-relaxed">
                     Produk otomatis diikutsertakan saat toko mengadakan kampanye Promo Bulanan atau Tanggal Kembar.
                   </p>
                 </div>
@@ -6294,15 +6304,15 @@ const ProductForm = (() => {
               </div>
 
               <!-- Bagian B: Mode Tampilan Promo Harian & Status Migrasi Otomatis -->
-              <div class="space-y-2">
+              <div class="space-y-1.5 border-t border-slate-100 pt-3">
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-bold text-slate-800">Mode Tampilan Promo:</span>
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-semibold">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Promo Harian
                   </span>
                 </div>
                 <!-- Deskripsi Dinamis Status Migrasi Otomatis (Ringkas 1 Baris Tanpa Ikon Berlebih) -->
-                <p id="promo-mode-dynamic-info" class="text-[11px] leading-relaxed p-2.5 rounded-xl border ${primaryState.include_in_monthly_promo !== false ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900 font-medium' : 'bg-slate-50 border-slate-200 text-slate-600'}">
+                <p id="promo-mode-dynamic-info" class="text-[11px] leading-relaxed ${primaryState.include_in_monthly_promo !== false ? 'text-emerald-800 font-medium' : 'text-slate-500'}">
                   ${primaryState.include_in_monthly_promo !== false 
                     ? 'Promo harian otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat kampanye aktif.' 
                     : 'Promo harian berjalan tetap tanpa terpengaruh Promo Bulanan.'}
@@ -6346,12 +6356,12 @@ const ProductForm = (() => {
                       class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-emerald-700 focus:border-emerald-500 outline-none"
                     />
                   </div>
-                  <div id="discount-auto-convert-box" class="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] flex items-center justify-between">
+                  <div id="discount-auto-convert-box" class="mt-2 text-slate-500 text-[11px] flex items-center justify-between">
                     <div class="flex items-center gap-1.5 font-medium">
                       <i class="bi bi-arrow-repeat text-emerald-600"></i>
                       <span id="discount-auto-convert-text">Sistem otomatis mengonversi antara [%] dan [IDR].</span>
                     </div>
-                    <span id="discount-auto-convert-badge" class="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-black text-[10px]">
+                    <span id="discount-auto-convert-badge" class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">
                       ${(primaryState.discount_value !== '' && primaryState.discount_value > 0) ? (primaryState.discount_type === 'percent' ? primaryState.discount_value + '%' : 'Rp' + Number(primaryState.discount_value).toLocaleString('id-ID')) : '0%'}
                     </span>
                   </div>
@@ -6363,7 +6373,7 @@ const ProductForm = (() => {
 
         <!-- CARD 5: DESKRIPSI PRODUK (GATED) -->
         ${missingCard4.length > 0 ? renderFlashbackCard('Deskripsi Produk', 'bi-file-text', missingCard4, 'card-step2-description') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4 step2-section-card" id="card-step2-description">
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-description">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">
                 Deskripsi Produk <span class="text-red-500">*</span>
@@ -6414,7 +6424,7 @@ const ProductForm = (() => {
 
         <!-- CARD 6: LAINNYA (GATED) -->
         ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
-          <div class="bg-white rounded-lg border border-slate-200 shadow-xs p-5 sm:p-6 space-y-5 step2-section-card" id="card-step2-others">
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Lainnya & Konfigurasi Tambahan</h2>
             </div>
@@ -6422,7 +6432,7 @@ const ProductForm = (() => {
             <!-- Footer Strip Khusus Kartu Detail -->
             <div 
               id="section-card-footer-config" 
-              class="${primaryState.card_variant === 'C' ? 'block' : 'hidden'} p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 space-y-4"
+              class="${primaryState.card_variant === 'C' ? 'block' : 'hidden'} border-t border-slate-100 pt-3 space-y-3"
             >
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
@@ -6435,7 +6445,7 @@ const ProductForm = (() => {
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+                <div class="space-y-1.5">
                   <span class="text-xs font-bold text-emerald-800 block">Footer 1 (Strip Atas):</span>
                   <input type="text" id="input-card-footer-text" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none" />
                   <select id="select-card-footer-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none">
@@ -6445,7 +6455,7 @@ const ProductForm = (() => {
                     <option value="shield-check" ${primaryState.footer_badge_icon === 'shield-check' ? 'selected' : ''}>Garansi (shield-check)</option>
                   </select>
                 </div>
-                <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+                <div class="space-y-1.5">
                   <span class="text-xs font-bold text-emerald-900 block">Footer 2 (Strip Bawah):</span>
                   <input type="text" id="input-card-footer-2-text" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none" />
                   <select id="select-card-footer-2-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none">
@@ -8405,7 +8415,7 @@ const ProductForm = (() => {
 
     return `
       <!-- Kartu / Tombol Pengaktif Input Ukuran (P x L) tepat di bawah Layanan Extras -->
-      <div id="card-custom-dimension-pxl" class="p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-3">
+      <div id="card-custom-dimension-pxl" class="border-t border-slate-100 pt-3 space-y-3">
         <div class="flex items-center justify-between gap-3">
           <div class="space-y-0.5">
             <div class="text-sm font-bold text-slate-900">Input Ukuran (P x L)</div>
@@ -8484,7 +8494,7 @@ const ProductForm = (() => {
             <div class="text-[11px] font-bold text-slate-700">Ketentuan Ukuran Minimal (Opsional)</div>
             <div class="flex flex-col gap-3 w-full">
               <!-- Kartu 1: Harga Jual — Minimal Ukuran -->
-              <div class="p-3 bg-slate-50/70 rounded-xl border-0 transition select-none flex flex-col justify-between gap-2.5 w-full">
+              <div class="pt-2 border-t border-slate-100 transition select-none flex flex-col justify-between gap-2.5 w-full">
                 <label for="chk-min-one-unit-price" class="flex items-start gap-2.5 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -8501,7 +8511,7 @@ const ProductForm = (() => {
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-price-inputs" class="${Boolean(primaryState.dim_min_one_price) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
-                  <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
+                  <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 text-xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8537,7 +8547,7 @@ const ProductForm = (() => {
               </div>
 
               <!-- Kartu 2: Biaya Modal / HPP — Minimal Ukuran -->
-              <div class="p-3 bg-slate-50/70 rounded-xl border-0 transition select-none flex flex-col justify-between gap-2.5 w-full">
+              <div class="pt-2 border-t border-slate-100 transition select-none flex flex-col justify-between gap-2.5 w-full">
                 <label for="chk-min-one-unit-hpp" class="flex items-start gap-2.5 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -8554,7 +8564,7 @@ const ProductForm = (() => {
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
-                  <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200/80 shadow-2xs">
+                  <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 text-xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
@@ -8951,9 +8961,9 @@ const ProductForm = (() => {
           ${renderCombinationMatrixTable()}
 
           <!-- Area Layanan Extra (Diletakkan SETELAH Tabel Kombinasi) -->
-          <div class="space-y-4 pt-2">
+          <div class="space-y-4 pt-1">
             ${!isExtraServiceActive ? `
-              <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-slate-100 p-2.5 rounded-lg border border-slate-200">
+              <div class="border-t border-slate-100 pt-3 flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
                 <button type="button" id="btn-trigger-extra-service" class="px-3.5 py-1.5 rounded-md bg-[#33b589] hover:bg-emerald-600 text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs">
                   <i class="bi bi-plus-lg text-xs"></i>
                   <span>Layanan Extra</span>
@@ -9003,7 +9013,7 @@ const ProductForm = (() => {
             </div>
 
             <!-- Produk Tunggal: Tabel Input Sederhana Harga Jual & HPP -->
-            <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/50 space-y-4">
+            <div class="border-t border-slate-100 pt-3 space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label for="input-single-price" class="block text-xs font-bold text-slate-800 mb-1">
@@ -9044,9 +9054,9 @@ const ProductForm = (() => {
             </div>
 
             <!-- Area Layanan Extra (Produk Tunggal tanpa Variasi) -->
-            <div class="space-y-4 pt-2">
+            <div class="border-t border-slate-100 pt-3">
               ${!primaryState.has_extra_service ? `
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-slate-100 p-2.5 rounded-lg border border-slate-200">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
                   <button type="button" id="btn-trigger-extra-service-normal" class="btn-trigger-extra-action px-3.5 py-1.5 rounded-md bg-[#33b589] hover:bg-emerald-600 text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs">
                     <i class="bi bi-plus-lg text-xs"></i>
                     <span>Layanan Extra</span>
@@ -14682,10 +14692,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       if (infoEl) {
         if (isIncluded) {
-          infoEl.className = 'text-[11px] leading-relaxed p-2.5 rounded-xl border bg-emerald-50/70 border-emerald-200 text-emerald-900 font-medium';
+          infoEl.className = 'text-[11px] leading-relaxed text-emerald-800 font-medium';
           infoEl.textContent = 'Promo harian otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat kampanye aktif.';
         } else {
-          infoEl.className = 'text-[11px] leading-relaxed p-2.5 rounded-xl border bg-slate-50 border-slate-200 text-slate-600';
+          infoEl.className = 'text-[11px] leading-relaxed text-slate-500';
           infoEl.textContent = 'Promo harian berjalan tetap tanpa terpengaruh Promo Bulanan.';
         }
       }
