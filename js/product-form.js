@@ -129,13 +129,17 @@ const ProductForm = (() => {
     order_multiple_type: 'all', // 'all' | 'per_variant'
     order_multiple_value: 1,
     order_multiples_by_variant: {}, // { [variantId]: 50 }
-    // Step 3: Promo, Pengiriman & Deskripsi
-    has_monthly_discount: false,
-    include_in_monthly_promo: true, // default true — konfirmasi ikut Promo Otomatis Bulanan / Event Besar
+    // Step 3: Promo, Pengiriman & Deskripsi (2 Toggle Mandiri: Auto Promo Bulanan & Promo Harian)
+    auto_monthly_promo: false, // Toggle Auto Promo Bulanan
+    monthly_discount_type: 'percent', // [%] Persen | [IDR] Potongan Rp
+    monthly_discount_value: '', // Nilai diskon bulanan
+    has_daily_promo: false, // Toggle Promo Harian
+    has_monthly_discount: false, // Alias has_daily_promo untuk kompatibilitas sistem & POS
+    include_in_monthly_promo: false, // Alias auto_monthly_promo
     promo_display_mode: 'daily', // Mode standar: 'daily' (Promo Harian)
-    discount_type: 'percent', // 'percent' | 'nominal'
-    discount_value: '', // kosong, tanpa default 0 agar penjual wajib mengisi secara sadar
-    monthly_promo_label: 'Promo Bulanan',
+    discount_type: 'percent', // Bentuk diskon harian: [%] Persen | [IDR] Potongan Rp
+    discount_value: '', // Nilai diskon harian
+    monthly_promo_label: 'Promo Spesial', // Label teks promo harian
     promo_start_date: null,
     promo_end_date: null,
     custom_labels: [],
@@ -386,13 +390,17 @@ const ProductForm = (() => {
       order_multiple_value: 1,
       order_multiples_by_variant: {},
       price_type: 2,
-      // Step 3: Promo, Pengiriman & Deskripsi
+      // Step 3: Promo, Pengiriman & Deskripsi (2 Toggle Mandiri: Auto Promo Bulanan & Promo Harian)
+      auto_monthly_promo: false,
+      monthly_discount_type: 'percent',
+      monthly_discount_value: '',
+      has_daily_promo: false,
       has_monthly_discount: false,
-      include_in_monthly_promo: true,
+      include_in_monthly_promo: false,
       promo_display_mode: 'daily',
       discount_type: 'percent',
       discount_value: '',
-      monthly_promo_label: 'Promo Bulanan',
+      monthly_promo_label: 'Promo Spesial',
       promo_start_date: null,
       promo_end_date: null,
       custom_labels: [],
@@ -602,13 +610,17 @@ const ProductForm = (() => {
       order_multiple_type: prod.order_multiple_type || 'all',
       order_multiple_value: prod.order_multiple_value || prod.step_quantity || 1,
       order_multiples_by_variant: prod.order_multiples_by_variant || {},
-      // Step 3: Promo, Pengiriman & Deskripsi
-      has_monthly_discount: Boolean(prod.has_monthly_discount),
-      include_in_monthly_promo: prod.include_in_monthly_promo !== undefined ? Boolean(prod.include_in_monthly_promo) : true,
+      // Step 3: Promo, Pengiriman & Deskripsi (2 Toggle Mandiri: Auto Promo Bulanan & Promo Harian)
+      auto_monthly_promo: prod.auto_monthly_promo !== undefined ? Boolean(prod.auto_monthly_promo) : (prod.include_in_monthly_promo !== undefined ? Boolean(prod.include_in_monthly_promo) : false),
+      monthly_discount_type: prod.monthly_discount_type || 'percent',
+      monthly_discount_value: (prod.monthly_discount_value !== undefined && prod.monthly_discount_value !== null && prod.monthly_discount_value !== '') ? prod.monthly_discount_value : '',
+      has_daily_promo: prod.has_daily_promo !== undefined ? Boolean(prod.has_daily_promo) : Boolean(prod.has_monthly_discount),
+      has_monthly_discount: prod.has_daily_promo !== undefined ? Boolean(prod.has_daily_promo) : Boolean(prod.has_monthly_discount),
+      include_in_monthly_promo: prod.auto_monthly_promo !== undefined ? Boolean(prod.auto_monthly_promo) : (prod.include_in_monthly_promo !== undefined ? Boolean(prod.include_in_monthly_promo) : false),
       promo_display_mode: prod.promo_display_mode || 'daily',
       discount_type: prod.discount_type || 'percent',
       discount_value: (prod.discount_value !== undefined && prod.discount_value !== null && prod.discount_value !== '') ? prod.discount_value : '',
-      monthly_promo_label: prod.monthly_promo_label || 'Promo Bulanan',
+      monthly_promo_label: prod.monthly_promo_label || prod.promo_label || 'Promo Spesial',
       promo_start_date: prod.promo_start_date || null,
       promo_end_date: prod.promo_end_date || null,
       custom_labels: prod.card_variant === 'B' ? [] : (Array.isArray(prod.custom_labels) ? [...prod.custom_labels] : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])),
@@ -724,6 +736,87 @@ const ProductForm = (() => {
     return true;
   }
 
+  // --------------------------------------------------------------------------
+  // AUTO-SAVE DRAFT REAL-TIME (STORAGE KEY: songer_add_product_draft)
+  // --------------------------------------------------------------------------
+  const DRAFT_STORAGE_KEY = 'songer_add_product_draft';
+
+  function saveDraftToStorage() {
+    if (formMode === 'edit') return;
+    try {
+      const draftData = {
+        primaryState: { ...primaryState },
+        materialsState: Array.isArray(materialsState) ? JSON.parse(JSON.stringify(materialsState)) : [],
+        finishingsState: finishingsState ? JSON.parse(JSON.stringify(finishingsState)) : {},
+        currentStep: currentStep || 1,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+    } catch (e) {
+      console.warn('[ProductForm] Gagal menyimpan draft otomatis ke localStorage:', e);
+    }
+  }
+
+  function loadDraftFromStorage() {
+    if (formMode === 'edit') return false;
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return false;
+      const draft = JSON.parse(raw);
+      if (!draft || !draft.primaryState) return false;
+
+      const p = draft.primaryState;
+      const hasContent = (p.name && p.name.trim() !== '') ||
+                         (p.product_type && p.product_type !== '') ||
+                         (Array.isArray(p.images) && p.images.length > 0) ||
+                         (p.category_id && p.category_id !== '') ||
+                         (p.description && p.description.trim() !== '') ||
+                         (draft.currentStep === 2);
+      if (!hasContent) return false;
+
+      Object.assign(primaryState, p);
+      if (Array.isArray(draft.materialsState) && draft.materialsState.length > 0) {
+        materialsState = draft.materialsState;
+      }
+      if (draft.finishingsState) {
+        finishingsState = draft.finishingsState;
+      }
+      if (draft.currentStep) {
+        currentStep = draft.currentStep;
+      }
+      return true;
+    } catch (e) {
+      console.warn('[ProductForm] Gagal memuat draft dari localStorage:', e);
+      return false;
+    }
+  }
+
+  function clearDraftStorage() {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  function hasStoredDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return false;
+      const draft = JSON.parse(raw);
+      if (!draft || !draft.primaryState) return false;
+      const p = draft.primaryState;
+      return Boolean(
+        (p.name && p.name.trim() !== '') ||
+        (p.product_type && p.product_type !== '') ||
+        (Array.isArray(p.images) && p.images.length > 0) ||
+        (p.category_id && p.category_id !== '') ||
+        (p.description && p.description.trim() !== '') ||
+        (draft.currentStep === 2)
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   function renderFormErrorBannerHtml() {
     return `
       <!-- Visual Error Summary Container (Compact SaaS with Close Button) -->
@@ -762,6 +855,16 @@ const ProductForm = (() => {
             <span>/</span>
             <span class="text-slate-800 font-semibold">${formMode === 'edit' ? 'Edit Produk' : 'Tambah Produk Baru'}</span>
           </div>
+          ${(formMode === 'create' && hasStoredDraft()) ? `
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                <i class="bi bi-clock-history"></i> Draft Tersimpan
+              </span>
+              <button type="button" id="btn-reset-form-draft" class="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-red-700 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-md transition cursor-pointer flex items-center gap-1" title="Hapus draft dan mulai isi dari awal">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset Formulir
+              </button>
+            </div>
+          ` : ''}
         </div>
 
         <!-- FORM MAIN CONTAINER WITH RIGHT PADDING WHEN PREVIEW SIDEBAR IS OPEN -->
@@ -4480,15 +4583,15 @@ const ProductForm = (() => {
       basePrice = materialsState[0].price;
     }
 
-    // 3. Hitung diskon promo bulanan & simulasi
+    // 3. Hitung diskon promo harian / bulanan & simulasi
     let hasDiscount = false;
     let discPercent = 0;
     let discountedPrice = basePrice;
-    const toggleDisc = document.getElementById('toggle-monthly-discount');
-    const isDiscChecked = toggleDisc ? toggleDisc.checked : primaryState.has_monthly_discount;
+    const toggleDaily = document.getElementById('toggle-promo-daily') || document.getElementById('toggle-monthly-discount');
+    const isDiscChecked = toggleDaily ? toggleDaily.checked : (primaryState.has_daily_promo || primaryState.has_monthly_discount);
     if (isDiscChecked) {
-      const discTypeSelect = document.getElementById('select-monthly-discount-type');
-      const discValInput = document.getElementById('input-discount-val');
+      const discTypeSelect = document.getElementById('select-promo-discount-type') || document.getElementById('select-monthly-discount-type');
+      const discValInput = document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val');
       const dType = discTypeSelect?.value || primaryState.discount_type || 'percent';
       const rawDVal = discValInput ? discValInput.value : primaryState.discount_value;
       const dVal = (rawDVal !== '' && rawDVal !== null && rawDVal !== undefined) ? (parseFloat(rawDVal) || 0) : 0;
@@ -6233,104 +6336,120 @@ const ProductForm = (() => {
 
         <!-- CARD 4: PROGRAM PROMO (GATED) -->
         ${missingCard3.length > 0 ? renderFlashbackCard('Program Promo', 'bi-tag', missingCard3, 'card-step2-promo') : `
-          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-promo">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="bg-white rounded-lg border border-slate-200/80 shadow-none p-3.5 sm:p-6 space-y-4 sm:space-y-5 step2-section-card" id="card-step2-promo">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  id="toggle-monthly-discount" 
-                  ${primaryState.has_monthly_discount ? 'checked' : ''} 
-                  class="sr-only peer"
-                />
-                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-              </label>
             </div>
 
-            <div id="discount-controls-area" class="${primaryState.has_monthly_discount ? 'block' : 'hidden'} space-y-4 pt-1">
-              <!-- Bagian A: Konfirmasi Promo Otomatis Bulanan / Event Besar -->
-              <div class="flex items-start justify-between gap-3 select-none">
+            <!-- SUB-BAGIAN 1: AUTO PROMO BULANAN -->
+            <div class="space-y-3 pt-1">
+              <div class="flex items-center justify-between gap-3 select-none">
                 <div class="space-y-0.5">
-                  <label for="chk-include-monthly-promo" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
-                    <i class="bi bi-calendar2-heart-fill text-emerald-600"></i>
-                    <span>Sertakan di Promo Otomatis Bulanan / Event Besar</span>
+                  <label for="toggle-promo-monthly" class="text-xs sm:text-sm font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
+                    <i class="bi bi-calendar2-heart text-emerald-600"></i>
+                    <span>Auto Promo Bulanan</span>
                   </label>
-                  <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Produk otomatis diikutsertakan saat toko mengadakan kampanye Promo Bulanan atau Tanggal Kembar.
+                  <p class="text-[11px] text-slate-500">
+                    Aktifkan diskon otomatis saat jadwal Promo Bulanan toko berlangsung.
                   </p>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
                   <input 
                     type="checkbox" 
-                    id="chk-include-monthly-promo" 
-                    ${primaryState.include_in_monthly_promo !== false ? 'checked' : ''} 
+                    id="toggle-promo-monthly" 
+                    ${primaryState.auto_monthly_promo ? 'checked' : ''} 
                     class="sr-only peer toggle-switch-input"
                   />
-                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                 </label>
               </div>
 
-              <!-- Bagian B: Mode Tampilan Promo Harian & Status Migrasi Otomatis -->
-              <div class="space-y-1.5 border-t border-slate-100 pt-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-800">Mode Tampilan Promo:</span>
-                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-semibold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Promo Harian
-                  </span>
-                </div>
-                <!-- Deskripsi Dinamis Status Migrasi Otomatis (Ringkas 1 Baris Tanpa Ikon Berlebih) -->
-                <p id="promo-mode-dynamic-info" class="text-[11px] leading-relaxed ${primaryState.include_in_monthly_promo !== false ? 'text-emerald-800 font-medium' : 'text-slate-500'}">
-                  ${primaryState.include_in_monthly_promo !== false 
-                    ? 'Promo harian otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat kampanye aktif.' 
-                    : 'Promo harian berjalan tetap tanpa terpengaruh Promo Bulanan.'}
-                </p>
-              </div>
-
-              <!-- Bagian C: Input Label & Nilai Potongan Diskon -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
-                <div>
-                  <div class="flex items-center justify-between gap-1 mb-1">
-                    <label for="input-monthly-promo-label" class="block text-xs font-bold text-slate-700">
-                      Label Teks Promo:
-                    </label>
-                    <span id="promo-label-migration-hint" class="text-[10px] text-emerald-700 font-medium ${primaryState.include_in_monthly_promo !== false ? 'block' : 'hidden'}">
-                      *Auto-menyesuaikan saat event
-                    </span>
-                  </div>
+              <!-- Kontainer Input Diskon Bulanan -->
+              <div id="promo-monthly-inputs-box" class="${primaryState.auto_monthly_promo ? 'block' : 'hidden'} space-y-2 pt-1">
+                <label class="block text-xs font-bold text-slate-700">Bentuk & Nilai Diskon Bulanan <span class="text-red-500">*</span>:</label>
+                <div class="flex items-center gap-2 max-w-md">
+                  <select id="select-monthly-promo-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500 shrink-0">
+                    <option value="percent" ${primaryState.monthly_discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
+                    <option value="nominal" ${primaryState.monthly_discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
+                  </select>
                   <input 
-                    type="text" 
-                    id="input-monthly-promo-label" 
-                    value="${escapeHtml(primaryState.monthly_promo_label || 'Promo Spesial')}"
-                    placeholder="Promo Spesial"
-                    class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:border-emerald-500 outline-none font-semibold"
+                    type="number" 
+                    id="input-monthly-promo-value" 
+                    min="0"
+                    step="any"
+                    value="${(primaryState.monthly_discount_value !== undefined && primaryState.monthly_discount_value !== null && primaryState.monthly_discount_value !== '') ? primaryState.monthly_discount_value : ''}"
+                    placeholder="Masukkan diskon"
+                    class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-emerald-700 focus:border-emerald-500 outline-none"
                   />
                 </div>
+              </div>
+            </div>
 
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Bentuk & Nilai Potongan Diskon <span class="text-red-500">*</span>:</label>
-                  <div class="flex items-center gap-2">
-                    <select id="select-monthly-discount-type" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500 shrink-0">
-                      <option value="percent" ${primaryState.discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
-                      <option value="nominal" ${primaryState.discount_type === 'nominal' ? 'selected' : ''}>[IDR] Rupiah</option>
-                    </select>
+            <!-- SUB-BAGIAN 2: PROMO HARIAN -->
+            <div class="space-y-3 border-t border-slate-100 pt-3.5">
+              <div class="flex items-center justify-between gap-3 select-none">
+                <div class="space-y-0.5">
+                  <label for="toggle-promo-daily" class="text-xs sm:text-sm font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
+                    <i class="bi bi-tag text-emerald-600"></i>
+                    <span>Promo Harian</span>
+                  </label>
+                  <p class="text-[11px] text-slate-500">
+                    Tampilkan harga coret dan diskon reguler setiap hari di etalase.
+                  </p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input 
+                    type="checkbox" 
+                    id="toggle-promo-daily" 
+                    ${primaryState.has_daily_promo ? 'checked' : ''} 
+                    class="sr-only peer toggle-switch-input"
+                  />
+                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              <!-- Kontainer Input Diskon Harian -->
+              <div id="promo-daily-inputs-box" class="${primaryState.has_daily_promo ? 'block' : 'hidden'} space-y-3 pt-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label for="input-promo-label" class="block text-xs font-bold text-slate-700 mb-1">
+                      Label Teks Promo:
+                    </label>
                     <input 
-                      type="number" 
-                      id="input-discount-val" 
-                      min="0"
-                      step="any"
-                      value="${(primaryState.discount_value !== undefined && primaryState.discount_value !== null && primaryState.discount_value !== '') ? primaryState.discount_value : ''}"
-                      placeholder="Masukkan diskon"
-                      class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-emerald-700 focus:border-emerald-500 outline-none"
+                      type="text" 
+                      id="input-promo-label" 
+                      value="${escapeHtml(primaryState.monthly_promo_label || 'Promo Spesial')}"
+                      placeholder="Contoh: Promo Spesial"
+                      class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs focus:border-emerald-500 outline-none font-semibold text-slate-800"
                     />
                   </div>
-                  <div id="discount-auto-convert-box" class="mt-2 text-slate-500 text-[11px] flex items-center justify-between">
-                    <div class="flex items-center gap-1.5 font-medium">
-                      <i class="bi bi-arrow-repeat text-emerald-600"></i>
-                      <span id="discount-auto-convert-text">Sistem otomatis mengonversi antara [%] dan [IDR].</span>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Bentuk & Nilai Potongan Diskon <span class="text-red-500">*</span>:</label>
+                    <div class="flex items-center gap-2">
+                      <select id="select-promo-discount-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500 shrink-0">
+                        <option value="percent" ${primaryState.discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
+                        <option value="nominal" ${primaryState.discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
+                      </select>
+                      <input 
+                        type="number" 
+                        id="input-promo-discount-value" 
+                        min="0"
+                        step="any"
+                        value="${(primaryState.discount_value !== undefined && primaryState.discount_value !== null && primaryState.discount_value !== '') ? primaryState.discount_value : ''}"
+                        placeholder="Masukkan diskon"
+                        class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-emerald-700 focus:border-emerald-500 outline-none"
+                      />
                     </div>
-                    <span id="discount-auto-convert-badge" class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">
-                      ${(primaryState.discount_value !== '' && primaryState.discount_value > 0) ? (primaryState.discount_type === 'percent' ? primaryState.discount_value + '%' : 'Rp' + Number(primaryState.discount_value).toLocaleString('id-ID')) : '0%'}
-                    </span>
+                    <div id="discount-auto-convert-box" class="mt-2 text-slate-500 text-[11px] flex items-center justify-between">
+                      <div class="flex items-center gap-1.5 font-medium">
+                        <i class="bi bi-arrow-repeat text-emerald-600"></i>
+                        <span id="discount-auto-convert-text">${primaryState.discount_type === 'percent' ? `Potongan diskon ${parseFloat(primaryState.discount_value) || 0}% dari harga dasar` : `Potongan langsung Rp${(parseFloat(primaryState.discount_value) || 0).toLocaleString('id-ID')}/pcs`}</span>
+                      </div>
+                      <span id="discount-auto-convert-badge" class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                        ${(primaryState.discount_value !== '' && primaryState.discount_value > 0) ? (primaryState.discount_type === 'percent' ? primaryState.discount_value + '%' : 'Rp' + Number(primaryState.discount_value).toLocaleString('id-ID')) : '0%'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -14618,78 +14737,106 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Inisialisasi hitungan volumetrik jika sudah ada nilai
     updateVolumetricWeightCalculation();
 
-    // Card 4: Promo Diskon
-    const togglePromo = document.getElementById('toggle-monthly-discount');
-    const promoArea = document.getElementById('discount-controls-area');
-    if (togglePromo) {
-      togglePromo.onchange = e => {
-        primaryState.has_monthly_discount = e.target.checked;
-        if (promoArea) promoArea.className = primaryState.has_monthly_discount ? 'block space-y-4 pt-1' : 'hidden';
-        updatePromoModeDynamicUI();
-        updateProductCardLivePreview();
-      };
-    }
-
-    const chkIncludeMonthly = document.getElementById('chk-include-monthly-promo');
-    if (chkIncludeMonthly) {
-      chkIncludeMonthly.onchange = e => {
+    // Card 4: Program Promo (2 Toggle Mandiri: Auto Promo Bulanan & Promo Harian)
+    const togglePromoMonthly = document.getElementById('toggle-promo-monthly');
+    const promoMonthlyInputsBox = document.getElementById('promo-monthly-inputs-box');
+    if (togglePromoMonthly) {
+      togglePromoMonthly.onchange = e => {
+        primaryState.auto_monthly_promo = e.target.checked;
         primaryState.include_in_monthly_promo = e.target.checked;
-        updatePromoModeDynamicUI();
+        if (promoMonthlyInputsBox) {
+          promoMonthlyInputsBox.classList.toggle('hidden', !e.target.checked);
+          promoMonthlyInputsBox.classList.toggle('block', e.target.checked);
+        }
         updateProductCardLivePreview();
+        saveDraftToStorage();
       };
     }
 
-    const promoLabelInp = document.getElementById('input-monthly-promo-label');
+    const selectMonthlyPromoType = document.getElementById('select-monthly-promo-type');
+    if (selectMonthlyPromoType) {
+      selectMonthlyPromoType.onchange = e => {
+        primaryState.monthly_discount_type = e.target.value || 'percent';
+        saveDraftToStorage();
+      };
+    }
+
+    const inputMonthlyPromoVal = document.getElementById('input-monthly-promo-value');
+    if (inputMonthlyPromoVal) {
+      inputMonthlyPromoVal.oninput = e => {
+        const raw = e.target.value;
+        primaryState.monthly_discount_value = (raw !== '' && raw !== null && raw !== undefined) ? (parseFloat(raw) || 0) : '';
+        saveDraftToStorage();
+      };
+    }
+
+    const togglePromoDaily = document.getElementById('toggle-promo-daily');
+    const promoDailyInputsBox = document.getElementById('promo-daily-inputs-box');
+    if (togglePromoDaily) {
+      togglePromoDaily.onchange = e => {
+        primaryState.has_daily_promo = e.target.checked;
+        primaryState.has_monthly_discount = e.target.checked;
+        if (promoDailyInputsBox) {
+          promoDailyInputsBox.classList.toggle('hidden', !e.target.checked);
+          promoDailyInputsBox.classList.toggle('block', e.target.checked);
+        }
+        updateDiscountAutoConvert();
+        updateProductCardLivePreview();
+        saveDraftToStorage();
+      };
+    }
+
+    const promoLabelInp = document.getElementById('input-promo-label');
     if (promoLabelInp) {
       promoLabelInp.oninput = e => {
         primaryState.monthly_promo_label = e.target.value || 'Promo Spesial';
         updateProductCardLivePreview();
+        saveDraftToStorage();
       };
     }
 
-    function updatePromoModeDynamicUI() {
-      const isIncluded = chkIncludeMonthly ? chkIncludeMonthly.checked : (primaryState.include_in_monthly_promo !== false);
-      const infoEl = document.getElementById('promo-mode-dynamic-info');
-      const labelHint = document.getElementById('promo-label-migration-hint');
-
-      if (labelHint) {
-        labelHint.classList.toggle('hidden', !isIncluded);
-        labelHint.classList.toggle('block', isIncluded);
-      }
-
-      if (infoEl) {
-        if (isIncluded) {
-          infoEl.className = 'text-[11px] leading-relaxed text-emerald-800 font-medium';
-          infoEl.textContent = 'Promo harian otomatis bermigrasi mengikuti Promo Bulanan / Event Besar saat kampanye aktif.';
-        } else {
-          infoEl.className = 'text-[11px] leading-relaxed text-slate-500';
-          infoEl.textContent = 'Promo harian berjalan tetap tanpa terpengaruh Promo Bulanan.';
-        }
-      }
-    }
-
-    // Jalankan inisialisasi awal UI dinamis promo
-    updatePromoModeDynamicUI();
-
-    const discValInp = document.getElementById('input-discount-val');
-    const discTypeSel = document.getElementById('select-monthly-discount-type');
+    const selectPromoType = document.getElementById('select-promo-discount-type');
+    const inputPromoVal = document.getElementById('input-promo-discount-value');
     const autoBadge = document.getElementById('discount-auto-convert-badge');
     const autoText = document.getElementById('discount-auto-convert-text');
 
-    function updatePromoLive() {
-      const rawVal = discValInp?.value;
-      const val = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : '';
-      const type = discTypeSel?.value || 'percent';
-      primaryState.discount_value = val;
-      primaryState.discount_type = type;
-      const numVal = parseFloat(val) || 0;
-      if (autoBadge) autoBadge.textContent = type === 'percent' ? `${numVal}%` : `Rp${numVal.toLocaleString('id-ID')}`;
-      if (autoText) autoText.textContent = type === 'percent' ? `Potongan diskon ${numVal}% dari harga dasar` : `Potongan langsung Rp${numVal.toLocaleString('id-ID')}/pcs`;
-      updateProductCardLivePreview();
+    function updateDiscountAutoConvert() {
+      const dType = selectPromoType ? selectPromoType.value : (primaryState.discount_type || 'percent');
+      const rawVal = inputPromoVal ? inputPromoVal.value : primaryState.discount_value;
+      const dVal = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
+
+      let basePrice = 25000;
+      if (materialsState.length > 0 && materialsState[0].price > 0) {
+        basePrice = materialsState[0].price;
+      }
+
+      if (dType === 'percent') {
+        const nomPotongan = Math.round(basePrice * (dVal / 100));
+        if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan sekitar Rp ${nomPotongan.toLocaleString('id-ID')} pada harga dasar ${formatIDR(basePrice)}.`;
+        if (autoBadge) autoBadge.textContent = `${Math.min(100, Math.round(dVal))}%`;
+      } else {
+        const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
+        if (autoText) autoText.textContent = `Potongan Rp ${dVal.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar ${formatIDR(basePrice)}.`;
+        if (autoBadge) autoBadge.textContent = `${pct}%`;
+      }
     }
 
-    if (discValInp) discValInp.oninput = updatePromoLive;
-    if (discTypeSel) discTypeSel.onchange = updatePromoLive;
+    function updatePromoDailyLive() {
+      const rawVal = inputPromoVal?.value;
+      const val = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : '';
+      const type = selectPromoType?.value || 'percent';
+      primaryState.discount_value = val;
+      primaryState.discount_type = type;
+      updateDiscountAutoConvert();
+      updateProductCardLivePreview();
+      saveDraftToStorage();
+    }
+
+    if (selectPromoType) selectPromoType.onchange = updatePromoDailyLive;
+    if (inputPromoVal) inputPromoVal.oninput = updatePromoDailyLive;
+
+    // Inisialisasi awal kalkulasi konversi diskon
+    updateDiscountAutoConvert();
 
     // Card 5: AI Description
     const btnAiGen = document.getElementById('btn-ai-generate-desc');
@@ -15072,6 +15219,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           AdminApp.navigateTo('products');
         } else {
           window.location.hash = '#products';
+        }
+      });
+    }
+
+    const btnResetDraft = document.getElementById('btn-reset-form-draft');
+    if (btnResetDraft) {
+      btnResetDraft.addEventListener('click', () => {
+        if (confirm('Apakah Anda yakin ingin menghapus draft yang tersimpan dan mereset formulir ke awal?')) {
+          clearDraftStorage();
+          resetFormState();
+          renderForm();
+          if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+            App.showToast('Draft formulir berhasil di-reset.', 'info');
+          }
         }
       });
     }
@@ -16380,49 +16541,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-    // Monthly Promo Toggle
-    const toggleDisc = document.getElementById('toggle-monthly-discount');
-    const discControls = document.getElementById('discount-controls-area');
-    if (toggleDisc && discControls) {
-      toggleDisc.addEventListener('change', e => {
-        primaryState.has_monthly_discount = e.target.checked;
-        discControls.classList.toggle('hidden', !e.target.checked);
-        updateDiscountAutoConvert();
-        updateProductCardLivePreview();
-      });
-    }
 
-    // Auto Convert Promo Info
-    function updateDiscountAutoConvert() {
-      const typeSelect = document.getElementById('select-monthly-discount-type');
-      const valInput = document.getElementById('input-discount-val');
-      const textEl = document.getElementById('discount-auto-convert-text');
-      const badgeEl = document.getElementById('discount-auto-convert-badge');
-      if (!typeSelect || !valInput || !textEl || !badgeEl) return;
-
-      const dType = typeSelect.value;
-      const dVal = parseFloat(valInput.value) || 0;
-
-      let basePrice = 25000;
-      if (materialsState.length > 0 && materialsState[0].price > 0) {
-        basePrice = materialsState[0].price;
-      }
-
-      if (dType === 'percent') {
-        const nomPotongan = Math.round(basePrice * (dVal / 100));
-        textEl.textContent = `Diskon ${dVal}% setara potongan sekitar Rp ${nomPotongan.toLocaleString('id-ID')} pada harga dasar ${formatIDR(basePrice)}.`;
-        badgeEl.textContent = `${Math.min(100, Math.round(dVal))}%`;
-      } else {
-        const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
-        textEl.textContent = `Potongan Rp ${dVal.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar ${formatIDR(basePrice)}.`;
-        badgeEl.textContent = `${pct}%`;
-      }
-    }
-
-    const discTypeSel = document.getElementById('select-monthly-discount-type');
-    const discValInp = document.getElementById('input-discount-val');
-    if (discTypeSel) discTypeSel.addEventListener('change', () => { updateDiscountAutoConvert(); updateProductCardLivePreview(); });
-    if (discValInp) discValInp.addEventListener('input', () => { updateDiscountAutoConvert(); updateProductCardLivePreview(); });
 
     // Promo Dates Listeners
     const pStartInp = document.getElementById('input-promo-start-date');
@@ -17179,18 +17298,41 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
-    // Step 2 Card 4: Promo & Diskon
-    const togglePromo = document.getElementById('toggle-monthly-discount');
-    if (togglePromo) primaryState.has_monthly_discount = togglePromo.checked;
+    // Step 2 Card 4: Program Promo (2 Toggle Mandiri: Auto Promo Bulanan & Promo Harian)
+    const togglePromoMonthly = document.getElementById('toggle-promo-monthly');
+    if (togglePromoMonthly) {
+      primaryState.auto_monthly_promo = togglePromoMonthly.checked;
+      primaryState.include_in_monthly_promo = togglePromoMonthly.checked;
+    }
+    const selectMonthlyPromoType = document.getElementById('select-monthly-promo-type');
+    if (selectMonthlyPromoType) {
+      primaryState.monthly_discount_type = selectMonthlyPromoType.value || 'percent';
+    }
+    const inputMonthlyPromoVal = document.getElementById('input-monthly-promo-value');
+    if (inputMonthlyPromoVal) {
+      const rawMVal = inputMonthlyPromoVal.value;
+      primaryState.monthly_discount_value = (rawMVal !== undefined && rawMVal !== null && rawMVal !== '') ? (parseFloat(rawMVal) || 0) : '';
+    }
 
-    const chkIncludeMonthly = document.getElementById('chk-include-monthly-promo');
-    if (chkIncludeMonthly) primaryState.include_in_monthly_promo = chkIncludeMonthly.checked;
-
+    const togglePromoDaily = document.getElementById('toggle-promo-daily') || document.getElementById('toggle-monthly-discount');
+    if (togglePromoDaily) {
+      primaryState.has_daily_promo = togglePromoDaily.checked;
+      primaryState.has_monthly_discount = togglePromoDaily.checked;
+    }
+    const inputPromoLabel = document.getElementById('input-promo-label') || document.getElementById('input-monthly-promo-label');
+    if (inputPromoLabel) {
+      primaryState.monthly_promo_label = inputPromoLabel.value || 'Promo Spesial';
+    }
+    const selectPromoType = document.getElementById('select-promo-discount-type') || document.getElementById('select-monthly-discount-type');
+    if (selectPromoType) {
+      primaryState.discount_type = selectPromoType.value || 'percent';
+    }
+    const inputPromoVal = document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val');
+    if (inputPromoVal) {
+      const rawDiscVal = inputPromoVal.value;
+      primaryState.discount_value = (rawDiscVal !== undefined && rawDiscVal !== null && rawDiscVal !== '') ? (parseFloat(rawDiscVal) || 0) : '';
+    }
     primaryState.promo_display_mode = 'daily';
-    primaryState.monthly_promo_label = document.getElementById('input-monthly-promo-label')?.value || 'Promo Spesial';
-    primaryState.discount_type = document.getElementById('select-monthly-discount-type')?.value || 'percent';
-    const rawDiscVal = document.getElementById('input-discount-val')?.value;
-    primaryState.discount_value = (rawDiscVal !== undefined && rawDiscVal !== null && rawDiscVal !== '') ? (parseFloat(rawDiscVal) || 0) : '';
     primaryState.promo_start_date = null;
     primaryState.promo_end_date = null;
 
@@ -17320,6 +17462,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     } else {
       primaryState.price_type = 2;
     }
+
+    // Auto-save draft ke localStorage jika dalam mode create
+    saveDraftToStorage();
   }
 
   function validateForm(isDraft = false) {
@@ -17680,13 +17825,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
-    // 3. Validasi Step 3: Promo & Deskripsi
-    if (primaryState.has_monthly_discount) {
+    // 3. Validasi Step 3: Promo & Deskripsi (Auto Promo Bulanan & Promo Harian)
+    if (primaryState.auto_monthly_promo) {
+      const mNum = parseFloat(primaryState.monthly_discount_value);
+      if (primaryState.monthly_discount_value === '' || isNaN(mNum) || mNum <= 0) {
+        addError('Nilai diskon bulanan wajib diisi dan harus lebih besar dari 0.', document.getElementById('input-monthly-promo-value'));
+      } else if (primaryState.monthly_discount_type === 'percent' && mNum > 100) {
+        addError('Persentase diskon bulanan maksimal 100%.', document.getElementById('input-monthly-promo-value'));
+      }
+    }
+
+    if (primaryState.has_daily_promo || primaryState.has_monthly_discount) {
       const dNum = parseFloat(primaryState.discount_value);
       if (primaryState.discount_value === '' || isNaN(dNum) || dNum <= 0) {
-        addError('Nilai potongan diskon wajib diisi dan harus lebih besar dari 0.', document.getElementById('input-discount-val'));
+        addError('Nilai potongan diskon harian wajib diisi dan harus lebih besar dari 0.', document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val'));
       } else if (primaryState.discount_type === 'percent' && dNum > 100) {
-        addError('Persentase diskon maksimal 100%.', document.getElementById('input-discount-val'));
+        addError('Persentase diskon harian maksimal 100%.', document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val'));
       }
     }
 
@@ -17861,6 +18015,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       try {
         if (formMode === 'create') {
           DB.createProduct(primaryState, validMaterials, allFinishings);
+          clearDraftStorage();
           App.showToast(isDraft ? 'Draf produk berhasil disimpan!' : 'Produk baru berhasil disimpan ke katalog!', 'success');
         } else {
           DB.updateProduct(currentEditingId, primaryState, validMaterials, allFinishings);
@@ -17901,15 +18056,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   return {
     init() {
       resetFormState();
+      loadDraftFromStorage();
       renderForm();
     },
     initCreate() {
       resetFormState();
+      loadDraftFromStorage();
       renderForm();
     },
     initEdit(id) {
       return loadProductForEdit(id);
     },
+    resetDraft() {
+      clearDraftStorage();
+      resetFormState();
+      renderForm();
+    },
+    saveDraftToStorage,
+    loadDraftFromStorage,
+    clearDraftStorage,
+    hasStoredDraft,
     updateLiveCardPreview: updateProductCardLivePreview,
     updateProductCardLivePreview,
     getLastProductFooterConfig,
