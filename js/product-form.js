@@ -2816,12 +2816,12 @@ const ProductForm = (() => {
       <div id="drawer-custom-dimension-section" class="space-y-1.5 pt-2 border-t border-slate-100">
         <div class="text-xs font-normal text-slate-600 mb-1.5">${escapeHtml(dimLabel)}</div>
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
-          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimLengthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimLengthVal) > 0 ? 'bg-white border-[#33b589]' : 'border-slate-200 focus-within:border-[#33b589] focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition">
+          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimLengthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimLengthVal) > 0 ? 'bg-white' : 'border-slate-200 focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition" style="${parseFloat(dimLengthVal) > 0 ? 'border-color: var(--color-primary) !important;' : ''}">
             <input type="number" step="any" min="0.01" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none pr-1" />
             <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
           <span class="text-xs font-semibold text-slate-400 px-0.5">×</span>
-          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimWidthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimWidthVal) > 0 ? 'bg-white border-[#33b589]' : 'border-slate-200 focus-within:border-[#33b589] focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition">
+          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimWidthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimWidthVal) > 0 ? 'bg-white' : 'border-slate-200 focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition" style="${parseFloat(dimWidthVal) > 0 ? 'border-color: var(--color-primary) !important;' : ''}">
             <input type="number" step="any" min="0.01" placeholder="Lebar (L)" value="${escapeHtml(dimWidthVal)}" class="input-shopee-dim-l w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none pr-1" />
             <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
@@ -3033,7 +3033,10 @@ const ProductForm = (() => {
     // Stok Display
     const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
 
-    let accentColor = '#059669';
+    const rootPrimaryColor = (typeof getComputedStyle !== 'undefined' && typeof document !== 'undefined')
+      ? (getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#33b589')
+      : '#33b589';
+    let accentColor = rootPrimaryColor;
     if (primaryState.card_variant === 'B') accentColor = '#0f172a';
     else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || '#047857';
 
@@ -3094,15 +3097,15 @@ const ProductForm = (() => {
               const itemImg = ex.image_url || ex.image;
               const priceVal = parseFloat(ex.price) || 0;
               const priceBadge = (!isNoneOption && priceVal > 0) 
-                ? `<span class="text-[10px] text-[#33b589] font-bold shrink-0">+${formatIDR(priceVal)}</span>` 
+                ? `<span class="text-[10px] font-bold shrink-0" style="color: var(--color-primary);">+${formatIDR(priceVal)}</span>` 
                 : '';
 
               return `
                 <div class="extra-item-row flex items-center justify-between p-2 rounded border transition ${
                   isItemActive 
-                    ? 'bg-white border-[#33b589] shadow-2xs is-active' 
+                    ? 'bg-white shadow-2xs is-active' 
                     : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                }" data-id="${exId}" data-type="${xt}">
+                }" style="${isItemActive ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${exId}" data-type="${xt}">
                   <!-- Sisi Kiri: Foto Kecil (jika ada) + Nama Opsi + (+Rp[Harga Jual]) -->
                   <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer select-none extra-item-trigger" data-id="${exId}" data-type="${xt}">
                     ${itemImg ? `
@@ -3124,10 +3127,10 @@ const ProductForm = (() => {
                         <button type="button" class="btn-extra-qty-plus w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer" data-id="${exId}">+</button>
                       </div>
                     ` : `
-                      <!-- Radio Button Bulat: Putih dengan titik/border hijau #33b589 saat aktif -->
-                      <button type="button" class="btn-extra-radio w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer transition ${isItemActive ? 'border-[#33b589] bg-white' : 'border-slate-300 bg-white hover:border-slate-400'}" data-id="${exId}">
+                      <!-- Radio Button Bulat: Putih dengan titik/border var(--color-primary) saat aktif -->
+                      <button type="button" class="btn-extra-radio w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer transition ${isItemActive ? 'is-active bg-white' : 'border-slate-300 bg-white hover:border-slate-400'}" style="${isItemActive ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${exId}">
                         ${isItemActive ? `
-                          <div class="w-2.5 h-2.5 rounded-full bg-[#33b589]"></div>
+                          <div class="w-2.5 h-2.5 rounded-full" style="background-color: var(--color-primary);"></div>
                         ` : ''}
                       </button>
                     `}
@@ -3432,9 +3435,11 @@ const ProductForm = (() => {
       if (box) {
         if (pNum > 0) {
           box.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
-          box.classList.add('bg-white', 'border-[#33b589]');
+          box.classList.add('bg-white');
+          box.style.borderColor = 'var(--color-primary)';
         } else {
-          box.classList.remove('bg-white', 'border-[#33b589]');
+          box.classList.remove('bg-white');
+          box.style.borderColor = '';
           box.classList.add('border-slate-200');
         }
       }
@@ -3446,9 +3451,11 @@ const ProductForm = (() => {
       if (box) {
         if (lNum > 0) {
           box.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
-          box.classList.add('bg-white', 'border-[#33b589]');
+          box.classList.add('bg-white');
+          box.style.borderColor = 'var(--color-primary)';
         } else {
-          box.classList.remove('bg-white', 'border-[#33b589]');
+          box.classList.remove('bg-white');
+          box.style.borderColor = '';
           box.classList.add('border-slate-200');
         }
       }
@@ -5006,7 +5013,10 @@ const ProductForm = (() => {
 
     // SIMULASI MINI PDP DETAIL PRODUK (KHUSUS STEP 2 - MODE UJI COBA INTERAKTIF)
     if (currentStep === 2) {
-      let accentColor = '#059669'; // Default Model 1 Emerald
+      const rootPrimaryColor = (typeof getComputedStyle !== 'undefined' && typeof document !== 'undefined')
+        ? (getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#33b589')
+        : '#33b589';
+      let accentColor = rootPrimaryColor; // Default Model 1 dari Pengaturan Tema
       if (variant === 'B') {
         accentColor = '#0f172a'; // Model 2 Dark Slate
       } else if (variant === 'C') {
@@ -5318,7 +5328,7 @@ const ProductForm = (() => {
                               ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;' 
                               : 'width: 36px; height: 36px;';
                             return `
-                              <button type="button" class="btn-preview-tier1 mini-pdp-var-chip rounded overflow-hidden border transition cursor-pointer relative shrink-0 flex items-center justify-center ${isSelected ? 'is-active border-2 shadow-xs' : 'border-transparent bg-slate-100 hover:bg-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${peekStyle} ${isSelected ? 'border-color: #33b589 !important;' : ''}" data-id="${m.id}" data-idx="${idx}" title="${escapeHtml(m.name)}">
+                              <button type="button" class="btn-preview-tier1 mini-pdp-var-chip rounded overflow-hidden border transition cursor-pointer relative shrink-0 flex items-center justify-center ${isSelected ? 'is-active border-2 shadow-xs' : 'border-transparent bg-slate-100 hover:bg-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${peekStyle} ${isSelected ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${m.id}" data-idx="${idx}" title="${escapeHtml(m.name)}">
                                 ${itemImg ? `
                                   <img src="${itemImg}" class="w-full h-full object-cover" alt="${escapeHtml(m.name)}" />
                                 ` : `
@@ -9036,7 +9046,7 @@ const ProductForm = (() => {
           <div class="space-y-4 pt-1">
             ${!isExtraServiceActive ? `
               <div class="border-t border-slate-100 pt-3 flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
-                <button type="button" id="btn-trigger-extra-service" class="px-3.5 py-1.5 rounded-md bg-[#33b589] hover:bg-emerald-600 text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs">
+                <button type="button" id="btn-trigger-extra-service" class="btn-primary-brand px-3.5 py-1.5 rounded-md text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs" style="background-color: var(--color-primary);">
                   <i class="bi bi-plus-lg text-xs"></i>
                   <span>Layanan Extra</span>
                 </button>
@@ -9129,7 +9139,7 @@ const ProductForm = (() => {
             <div class="border-t border-slate-100 pt-3">
               ${!primaryState.has_extra_service ? `
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
-                  <button type="button" id="btn-trigger-extra-service-normal" class="btn-trigger-extra-action px-3.5 py-1.5 rounded-md bg-[#33b589] hover:bg-emerald-600 text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs">
+                  <button type="button" id="btn-trigger-extra-service-normal" class="btn-trigger-extra-action btn-primary-brand px-3.5 py-1.5 rounded-md text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs" style="background-color: var(--color-primary);">
                     <i class="bi bi-plus-lg text-xs"></i>
                     <span>Layanan Extra</span>
                   </button>
