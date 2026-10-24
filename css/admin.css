@@ -716,23 +716,44 @@ body {
 
 /* ==========================================================================
    PRODUCT FORM STEP 2 FIXED SUB-NAVBAR & ANCHOR CARDS (SHOPEE-STYLE)
+   FLAT FLUSH FULL-WIDTH TANPA RADIUS BORDER & TIDAK MELAYANG (SEMUA LAYAR)
    ========================================================================== */
+#step2-subnav,
 #step2-subnav-fixed,
-#step2-subnav-sticky {
+#step2-subnav-sticky,
+.product-form-subnav {
   position: sticky !important;
-  top: 0px !important;
-  /* menempel tepat di atas scroll container tanpa celah bocor */
-  z-index: 40 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
+  border-radius: 0 !important;
+  -webkit-border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
+  border: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
   background-color: #ffffff !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  z-index: 40 !important;
 }
 
-@media (max-width: 1023.98px) {
-  #step2-subnav-fixed,
-  #step2-subnav-sticky {
-    left: 0 !important;
-    right: 0 !important;
-  }
+#view-product-form #step2-subnav,
+#view-product-form #step2-subnav-fixed,
+#view-product-form #step2-subnav-sticky,
+#view-product-form .product-form-subnav,
+#step-pane-2 > #step2-subnav-fixed {
+  border-radius: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
 }
 
 #step-pane-2 section[id^="card-step2-"],
@@ -1632,8 +1653,10 @@ input.toggle-same-cost:checked~div::after {
   }
 
   /* Subnavbar sticky di mobile: edge-to-edge menempel rapat di top: 0px tanpa celah bocor 1px pun */
+  #step2-subnav,
   #step2-subnav-fixed,
-  #step2-subnav-sticky {
+  #step2-subnav-sticky,
+  .product-form-subnav {
     position: sticky !important;
     top: 0px !important;
     left: 0 !important;
@@ -1643,6 +1666,7 @@ input.toggle-same-cost:checked~div::after {
     width: calc(100% + 1.5rem) !important;
     background-color: #ffffff !important;
     z-index: 40 !important;
+    border-radius: 0 !important;
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;

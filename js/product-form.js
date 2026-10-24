@@ -5720,28 +5720,34 @@ const ProductForm = (() => {
     };
 
     return `
-      <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE) -->
-      <div id="step2-subnav-fixed" class="sticky top-0 z-40 bg-white rounded-lg border-0 shadow-xs transition-all duration-300">
-        <nav class="flex items-center overflow-x-auto scrollbar-none px-4 sm:px-6" id="step2-subnav-links">
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
-            Informasi Produk
+      <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
+      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-40 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300">
+        <div class="flex items-center overflow-x-auto scrollbar-none px-3 sm:px-6 py-1 sm:py-1.5" id="step2-subnav-wrapper">
+          <button type="button" id="btn-step2-subnav-prev" class="btn-step2-back-action mr-2 sm:mr-3 px-2.5 sm:px-3 py-1.5 rounded-md border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition cursor-pointer select-none" title="Kembali ke Informasi Produk">
+            <i class="bi bi-arrow-left text-xs"></i>
+            <span>Kembali</span>
           </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-sales">
-            Informasi Penjualan
-          </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-shipping">
-            Pengiriman
-          </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-promo">
-            Program Promo
-          </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-description">
-            Deskripsi Produk
-          </button>
-          <button type="button" class="step2-nav-tab px-4 py-3 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-others">
-            Lainnya
-          </button>
-        </nav>
+          <nav class="flex items-center flex-1 min-w-0" id="step2-subnav-links">
+            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-info">
+              Informasi Produk
+            </button>
+            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-sales">
+              Informasi Penjualan
+            </button>
+            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-shipping">
+              Pengiriman
+            </button>
+            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-promo">
+              Program Promo
+            </button>
+            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-description">
+              Deskripsi Produk
+            </button>
+            <button type="button" class="step2-nav-tab px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent" data-target="card-step2-others">
+              Lainnya
+            </button>
+          </nav>
+        </div>
       </div>
 
       <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
@@ -11061,23 +11067,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     function goToStep(step) {
       if (step < 1 || step > 2) return;
 
-      if (currentStep === 2) {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        if (primaryState.has_custom_dimension) {
-          const dimUnitSel = document.getElementById('select-dimension-unit');
-          const unitVal = (dimUnitSel?.value || primaryState.custom_dimension_unit || primaryState.dimension_unit || '').trim();
-          if (!unitVal) {
-            showWizardErrorBanner(['Satuan Ukuran wajib dipilih terlebih dahulu.']);
-            if (dimUnitSel) {
-              dimUnitSel.classList.add('border-red-500');
-              dimUnitSel.classList.remove('border-slate-300');
-              dimUnitSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              try { dimUnitSel.focus(); } catch (_) {}
-            }
-            const unitErrEl = document.getElementById('custom-dimension-unit-error');
-            if (unitErrEl) unitErrEl.classList.remove('hidden');
-            return;
-          }
+      if (step < currentStep) {
+        // Mundur ke langkah sebelumnya: sinkronisasi data yang terisi tanpa blocking error
+        if (typeof syncStateFromDOM === 'function') {
+          try { syncStateFromDOM(); } catch (_) {}
         }
       }
 
@@ -11155,6 +11148,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
       updateStepVisibility();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      const vp = document.getElementById('admin-main-viewport');
+      if (vp) vp.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // SINKRONISASI TAMPILAN LABEL KHUSUS BERDASARKAN VARIAN KARTU (MODEL 2 = OFF & READONLY/DISABLED)
@@ -11879,22 +11874,33 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
   // BIND EVENT INTERAKTIF STEP 2
   function bindStep2InteractiveEvents() {
-    // Tombol Aksi Bawah Step 2
+    // Tombol Aksi Bawah & Subnav Step 2: Kembali ke Step 1
+    const handleStep2BackAction = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (formMode === 'edit') {
+        if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
+          App.navigate('list');
+        } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
+          AdminApp.navigateTo('products');
+        } else {
+          window.location.hash = '#products';
+        }
+      } else {
+        goToStep(1);
+      }
+    };
+
     const btn2Prev = document.getElementById('btn-step-2-prev');
     if (btn2Prev) {
-      btn2Prev.onclick = () => {
-        if (formMode === 'edit') {
-          if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
-            App.navigate('list');
-          } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
-            AdminApp.navigateTo('products');
-          } else {
-            window.location.hash = '#products';
-          }
-        } else {
-          goToStep(1);
-        }
-      };
+      btn2Prev.onclick = handleStep2BackAction;
+    }
+
+    const btnSubnavPrev = document.getElementById('btn-step2-subnav-prev');
+    if (btnSubnavPrev) {
+      btnSubnavPrev.onclick = handleStep2BackAction;
     }
 
     const btnDraft = document.getElementById('btn-save-draft');
@@ -14869,11 +14875,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (wizardCol) {
           wizardCol.classList.add('lg:pr-[320px]', 'xl:pr-[360px]');
         }
-        const subnavFixed = document.getElementById('step2-subnav-fixed');
-        if (subnavFixed) {
-          subnavFixed.classList.add('lg:right-[300px]', 'xl:right-[340px]');
-          subnavFixed.classList.remove('right-0');
-        }
       } else {
         if (sidebar) {
           sidebar.classList.remove('translate-x-0');
@@ -14890,11 +14891,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
         if (wizardCol) {
           wizardCol.classList.remove('lg:pr-[320px]', 'xl:pr-[360px]');
-        }
-        const subnavFixed = document.getElementById('step2-subnav-fixed');
-        if (subnavFixed) {
-          subnavFixed.classList.remove('lg:right-[300px]', 'xl:right-[340px]');
-          subnavFixed.classList.add('right-0');
         }
       }
     }
@@ -16841,6 +16837,25 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Delegasi Klik File Picker & Aksi Galeri (Berlaku global di level document)
     document.addEventListener('click', (e) => {
+      // 0. Tombol Navigasi Kembali Step 2 & Kembali ke Daftar
+      const backStep2Btn = e.target.closest('#btn-step-2-prev') || e.target.closest('#btn-step2-subnav-prev') || e.target.closest('.btn-step2-back-action');
+      if (backStep2Btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (formMode === 'edit') {
+          if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
+            App.navigate('list');
+          } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
+            AdminApp.navigateTo('products');
+          } else {
+            window.location.hash = '#products';
+          }
+        } else {
+          goToStep(1);
+        }
+        return;
+      }
+
       // 1. Pemicu dialog pilih berkas (Add Photo Slot)
       const addBtn = e.target.closest('#btn-slot-add-photo') || e.target.closest('#btn-step2-upload-more') || e.target.closest('[data-action="add-photo"]');
       if (addBtn) {
