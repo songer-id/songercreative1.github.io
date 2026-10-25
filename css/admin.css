@@ -190,9 +190,24 @@ textarea.form-control-brand:focus {
   border-radius: 0.375rem !important; /* rounded-md (6px) */
 }
 
-/* Radio & Checkbox Brand Active Accent */
-input[type="radio"].radio-brand:checked,
-input[type="checkbox"].checkbox-brand:checked {
+/* Radio & Checkbox Brand Active Accent & Pure Native (Hapus Total Ring / Outline Kotak Luar) */
+input[type="checkbox"],
+input[type="radio"],
+input[type="checkbox"]:focus,
+input[type="radio"]:focus,
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible,
+input[type="checkbox"]:checked,
+input[type="radio"]:checked,
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+input[type="checkbox"]:active,
+input[type="radio"]:active {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-offset-width: 0px !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
   accent-color: var(--color-primary) !important;
 }
 
@@ -1531,11 +1546,44 @@ input.toggle-same-cost:checked~div::after {
 }
 
 /* --------------------------------------------------------------------------
-   COMBINATION MATRIX & CUSTOM COMBOBOX POPOVER FIXES
+   COMBINATION MATRIX & EXTRA SERVICE LAYOUT FIXES (NO OVERLAP / NEGATIVE MARGIN)
    -------------------------------------------------------------------------- */
-#combination-matrix-section .overflow-x-auto {
-  padding-bottom: 75px !important;
-  margin-bottom: -55px !important;
+#combination-matrix-section {
+  position: relative !important;
+  margin-bottom: 1.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+#combination-matrix-section .overflow-x-auto,
+.variation-table-container {
+  position: relative !important;
+  overflow-x: auto !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0.25rem !important;
+}
+
+#extra-service-section,
+#extra-service-section-normal {
+  margin-top: 1.5rem !important;
+  padding-top: 1.25rem !important;
+  border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
+  clear: both !important;
+  position: relative !important;
+  z-index: 0 !important;
+}
+
+/* Tooltip Layanan Extras & Popovers */
+.tooltip-wrapper {
+  position: relative;
+}
+
+.tooltip-popover {
+  z-index: 50 !important;
+}
+
+.tooltip-wrapper:hover .tooltip-popover,
+.tooltip-wrapper:focus-within .tooltip-popover {
+  display: block !important;
 }
 
 .custom-combobox-wrapper {
@@ -2324,7 +2372,7 @@ body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
 }
 
 /* 7. Input Focus Border, Focus Ring, Checkbox/Radio Accent, & Combobox Hover */
-#view-product-form input:focus:not(.border-red-500),
+#view-product-form input:not([type="checkbox"]):not([type="radio"]):focus:not(.border-red-500),
 #view-product-form select:focus:not(.border-red-500),
 #view-product-form textarea:focus:not(.border-red-500),
 #view-product-form .input-custom-label-slot:focus,

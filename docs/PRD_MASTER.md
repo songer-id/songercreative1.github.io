@@ -304,6 +304,7 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
   - [x] Sinkronisasi 15 titik kebocoran warna tema brand (Step 1, Step 2, Modal Pop-up, FAB Preview, dan Pratinjau Kartu Produk) 100% terikat ke variabel CSS (--color-primary, --color-primary-hover, --color-primary-subtle).
   - [x] Sinkronisasi total warna hover, focus, dan active pada seluruh tombol CTA dan tautan aksi dengan turunan dinamis (--color-primary-hover, color-mix 85% primary + 15% black, tanpa jatuh ke hijau default).
   - [x] Pemulihan fungsi event binding Step 2 (Variasi Produk, Layanan Extra, Variasi 2/3/4, Grosir, Kelipatan) pada modul `js/product-form.js`.
+  - [x] Pemisahan tegas layout "List Variasi Produk" dan "Layanan Extras" (menghilangkan overlap negatif margin & tabrakan scrollbar), pembaharuan judul bersih "List Variasi Produk", pemindahan teks keterangan Layanan Extras ke dalam Tooltip interaktif (ikon ?), serta penghapusan total bingkai/outline ring kotak luar pada checkbox dan radio button.
 
 - [ ] **TAHAP 2: Storefront Overhaul (Modal Popup Promosi, Flash Sale Real-Time & Filter/Sorting Lengkap)**
   - [ ] Implementasi modal pop-up promosi otomatis dengan delay detik, banner, tautan CTA, dan pengaman `sessionStorage` di `js/buyer-store.js` dan `index.html`.

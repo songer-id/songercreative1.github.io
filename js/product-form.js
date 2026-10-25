@@ -1741,11 +1741,11 @@ const ProductForm = (() => {
               <label class="block font-bold text-slate-700">Tipe Kategori yang Ditambahkan:</label>
               <div class="grid grid-cols-2 gap-2">
                 <label class="p-2.5 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-2 bg-slate-50 hover:bg-emerald-50/40 transition">
-                  <input type="radio" name="quick_cat_type_radio" value="main" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+                  <input type="radio" name="quick_cat_type_radio" value="main" checked class="w-4 h-4 text-emerald-600 cursor-pointer" />
                   <span class="font-bold text-slate-800 text-xs">Kategori Utama</span>
                 </label>
                 <label class="p-2.5 rounded-xl border border-slate-200 cursor-pointer flex items-center gap-2 bg-slate-50 hover:bg-emerald-50/40 transition">
-                  <input type="radio" name="quick_cat_type_radio" value="sub" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+                  <input type="radio" name="quick_cat_type_radio" value="sub" class="w-4 h-4 text-emerald-600 cursor-pointer" />
                   <span class="font-bold text-slate-800 text-xs">Sub-Kategori</span>
                 </label>
               </div>
@@ -9014,7 +9014,18 @@ const ProductForm = (() => {
           <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2 border-b border-slate-200/80">
             <!-- Sisi Kiri: Judul, Input Nama Kelompok + (?) & Sub-label Opsi -->
             <div class="space-y-2 pr-8 sm:pr-0">
-              <div class="text-base font-bold text-slate-900">Layanan Extras</div>
+              <div class="flex items-center gap-2">
+                <div class="text-base font-bold text-slate-900">Layanan Extras</div>
+                <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
+                  <button type="button" class="w-5 h-5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center text-[11px] transition cursor-help border border-slate-300/80" title="Informasi Layanan Extras" aria-label="Informasi Layanan Extras">
+                    <i class="bi bi-question-circle"></i>
+                  </button>
+                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-64 sm:w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                    Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
+                    <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                  </div>
+                </div>
+              </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <div class="custom-combobox-wrapper relative w-full sm:w-64">
                   <input 
@@ -9157,16 +9168,21 @@ const ProductForm = (() => {
           ${renderCombinationMatrixTable()}
 
           <!-- Area Layanan Extra (Diletakkan SETELAH Tabel Kombinasi) -->
-          <div class="space-y-4 pt-1">
+          <div id="extra-service-section" class="mt-6 pt-5 border-t border-slate-200/80 clear-both relative z-0 space-y-4">
             ${!isExtraServiceActive ? `
-              <div class="border-t border-slate-100 pt-3 flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+              <div class="flex items-center gap-2.5 flex-wrap">
                 <button type="button" id="btn-trigger-extra-service" class="btn-primary-brand px-3.5 py-1.5 rounded-md text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs" style="background-color: var(--color-primary);">
                   <i class="bi bi-plus-lg text-xs"></i>
                   <span>Layanan Extra</span>
                 </button>
-                <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
-                  <i class="bi bi-exclamation-circle-fill text-slate-400 text-xs shrink-0"></i>
-                  <span>Terhitung Setelah Jumlah Qty Cth. Layanan Prioritas, Langsung Di proses Dll</span>
+                <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
+                  <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Layanan Extra" aria-label="Informasi Layanan Extra">
+                    <i class="bi bi-question-circle"></i>
+                  </button>
+                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-64 sm:w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                    Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
+                    <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                  </div>
                 </div>
               </div>
             ` : ''}
@@ -9251,16 +9267,21 @@ const ProductForm = (() => {
             </div>
 
             <!-- Area Layanan Extra (Produk Tunggal tanpa Variasi) -->
-            <div class="border-t border-slate-100 pt-3">
+            <div id="extra-service-section-normal" class="mt-6 pt-5 border-t border-slate-200/80 clear-both relative z-0 space-y-4">
               ${!primaryState.has_extra_service ? `
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+                <div class="flex items-center gap-2.5 flex-wrap">
                   <button type="button" id="btn-trigger-extra-service-normal" class="btn-trigger-extra-action btn-primary-brand px-3.5 py-1.5 rounded-md text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs" style="background-color: var(--color-primary);">
                     <i class="bi bi-plus-lg text-xs"></i>
                     <span>Layanan Extra</span>
                   </button>
-                  <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
-                    <i class="bi bi-exclamation-circle-fill text-slate-400 text-xs shrink-0"></i>
-                    <span>Terhitung Setelah Jumlah Qty Cth. Layanan Prioritas, Langsung Di proses Dll</span>
+                  <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
+                    <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Layanan Extra" aria-label="Informasi Layanan Extra">
+                      <i class="bi bi-question-circle"></i>
+                    </button>
+                    <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-64 sm:w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                      Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
+                      <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                    </div>
                   </div>
                 </div>
               ` : `
@@ -9288,16 +9309,16 @@ const ProductForm = (() => {
         <div class="space-y-4 pt-1">
           <!-- 2 Sub-pilihan: Ukuran Custom vs Ukuran Tetap -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="p-3 rounded-md border ${sizeType === 'custom' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
-              <input type="radio" name="size_pricing_type_radio" value="custom" ${sizeType === 'custom' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+            <label class="p-3 rounded-md border ${sizeType === 'custom' ? 'border-emerald-500 bg-emerald-50/40 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
+              <input type="radio" name="size_pricing_type_radio" value="custom" ${sizeType === 'custom' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
               <div>
                 <span class="font-bold text-xs ${sizeType === 'custom' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Ukuran Custom</span>
                 <span class="text-[11px] text-slate-500 block">P x L dinamis dengan satuan M, Dm, Cm, atau Mm.</span>
               </div>
             </label>
 
-            <label class="p-3 rounded-md border ${sizeType === 'fixed' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
-              <input type="radio" name="size_pricing_type_radio" value="fixed" ${sizeType === 'fixed' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+            <label class="p-3 rounded-md border ${sizeType === 'fixed' ? 'border-emerald-500 bg-emerald-50/40 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
+              <input type="radio" name="size_pricing_type_radio" value="fixed" ${sizeType === 'fixed' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
               <div>
                 <span class="font-bold text-xs ${sizeType === 'fixed' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Ukuran Tetap</span>
                 <span class="text-[11px] text-slate-500 block">Pilihan ukuran standar (S, M, L, XL, 2L, custom label).</span>
@@ -9483,9 +9504,9 @@ const ProductForm = (() => {
             
             <div class="space-y-3">
               <!-- Tidak Berulang -->
-              <div class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-emerald-500 bg-white ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white'} space-y-2">
+              <div class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-emerald-500 bg-white' : 'border-slate-200 bg-white'} space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+                  <input type="radio" name="period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
                   <span class="text-xs font-bold text-slate-800">Tidak Berulang</span>
                   <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
                     <i class="bi bi-question-circle text-xs"></i>
@@ -9502,9 +9523,9 @@ const ProductForm = (() => {
               </div>
 
               <!-- Berulang -->
-              <div class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-emerald-500 bg-white ring-1 ring-emerald-500/20' : 'border-slate-200 bg-white'} space-y-3">
+              <div class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-emerald-500 bg-white' : 'border-slate-200 bg-white'} space-y-3">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+                  <input type="radio" name="period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
                   <span class="text-xs font-bold text-slate-800">Berulang</span>
                   <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
                     <i class="bi bi-question-circle text-xs"></i>
@@ -9662,11 +9683,10 @@ const ProductForm = (() => {
 
     return `
       <!-- Tabel Matriks Kombinasi Utama -->
-      <div class="mt-6 space-y-3 step2-section-card variation-card-block" id="combination-matrix-section">
+      <div class="mt-6 space-y-3 step2-section-card variation-card-block relative mb-5 pb-1" id="combination-matrix-section">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <span>Tabel Kombinasi Variasi & Pengaturan Pembelian</span>
-            <span class="text-xs font-normal text-slate-500">(${displayMaterials.length} Baris Varian)</span>
+            <span>List Variasi Produk</span>
           </h4>
         </div>
 
@@ -9680,7 +9700,7 @@ const ProductForm = (() => {
           </div>
         ` : ''}
 
-        <div class="overflow-x-auto rounded-lg border border-slate-300 bg-white shadow-xs scrollbar-thin">
+        <div class="variation-table-container overflow-x-auto rounded-lg border border-slate-300 bg-white shadow-xs scrollbar-thin">
           <table class="combo-matrix-table w-full text-left text-xs border-collapse">
             <thead class="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold">
               <tr>
@@ -18007,7 +18027,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const totalDisplayRows = displayMats.length;
       const uploadedCount = displayMats.filter(m => m.image_url && m.image_url.trim() !== '').length;
       if (uploadedCount > 0 && uploadedCount < totalDisplayRows) {
-        addError('Foto pada Tabel Kombinasi Variasi belum seragam. Seluruh baris opsi wajib memiliki foto, atau kosongkan semua foto.', document.getElementById('combination-matrix-section') || document.getElementById('table-combination-variations'));
+        addError('Foto pada List Variasi Produk belum seragam. Seluruh baris opsi wajib memiliki foto, atau kosongkan semua foto.', document.getElementById('combination-matrix-section') || document.getElementById('table-combination-variations'));
       }
     }
 
