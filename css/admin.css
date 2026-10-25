@@ -2204,6 +2204,25 @@ input.toggle-same-cost:checked~div::after {
 }
 
 /* 6. Sub-Navbar Sticky Step 2 (.step2-nav-tab, .subnav-tab-active, .subnav-tab-inactive) & Tombol Pratinjau */
+#step2-subnav-fixed {
+  transition: all 0.25s ease;
+}
+
+#step2-subnav-fixed.preview-open #btn-subnav-toggle-preview,
+body:has(#desktop-preview-sidebar.translate-x-0) #btn-subnav-toggle-preview,
+body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
+  display: none !important;
+}
+
+#step2-subnav-fixed.preview-open #step2-subnav-links {
+  width: 100% !important;
+}
+
+.step2-subnav-link {
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
 .subnav-tab-active,
 #step2-subnav-fixed .subnav-tab-active,
 .step2-nav-tab.border-emerald-600,
@@ -2211,6 +2230,7 @@ input.toggle-same-cost:checked~div::after {
 .step2-nav-tab.active {
   color: var(--color-primary) !important;
   border-bottom-color: var(--color-primary) !important;
+  font-weight: 700 !important;
 }
 
 .subnav-tab-inactive,

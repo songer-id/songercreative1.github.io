@@ -105,6 +105,22 @@ const ProductForm = (() => {
     }
   }
 
+  /**
+   * Mengambil warna tema utama aktif dari settings / :root CSS
+   */
+  function getPrimaryThemeColor() {
+    try {
+      if (typeof DB !== 'undefined' && DB.getSettings) {
+        const s = DB.getSettings();
+        if (s && s.primary_color) return s.primary_color;
+        if (s && s.theme_color) return s.theme_color;
+      }
+      const rootColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+      if (rootColor) return rootColor;
+    } catch (_) {}
+    return '#33b589';
+  }
+
   // Primary metadata state
   let primaryState = {
     name: '',
@@ -228,16 +244,16 @@ const ProductForm = (() => {
     description: '',
     card_footer_text: 'Proses Hanya Dalam 1Jam',
     footer_badge_icon: 'truck',
-    footer_bg_color: '#059669',
+    footer_bg_color: getPrimaryThemeColor(),
     footer_text_color: '#ffffff',
     card_footer_2_text: 'Variasi Paket Tersedia/tidak tersedia',
     footer_2_badge_icon: 'minus',
-    footer_2_bg_color: '#047857',
+    footer_2_bg_color: getPrimaryThemeColor(),
     footer_2_text_color: '#ffffff',
     enable_countdown: true,
-    countdown_bg_color: '#059669',
+    countdown_bg_color: getPrimaryThemeColor(),
     countdown_text_color: '#ffffff',
-    countdown_border_color: '#059669',
+    countdown_border_color: getPrimaryThemeColor(),
     is_active: true
   };
 
@@ -375,13 +391,13 @@ const ProductForm = (() => {
     const f1Default = inheritedFooter?.f1 || {
       text: 'Proses Hanya Dalam 1Jam',
       icon: 'truck',
-      bg_color: '#059669',
+      bg_color: getPrimaryThemeColor(),
       text_color: '#ffffff'
     };
     const f2Default = inheritedFooter?.f2 || {
       text: 'Variasi Paket Tersedia/tidak tersedia',
       icon: 'minus',
-      bg_color: '#047857',
+      bg_color: getPrimaryThemeColor(),
       text_color: '#ffffff'
     };
 
@@ -494,9 +510,9 @@ const ProductForm = (() => {
       footer_2_bg_color: f2Default.bg_color,
       footer_2_text_color: f2Default.text_color,
       enable_countdown: true,
-      countdown_bg_color: '#059669',
+      countdown_bg_color: getPrimaryThemeColor(),
       countdown_text_color: '#ffffff',
-      countdown_border_color: '#059669',
+      countdown_border_color: getPrimaryThemeColor(),
       image_url: null,
       images: [],
       image_aspect_ratio: (initialCardVariant === 'C' ? '4:3' : (initialCardVariant === 'B' ? '3:4' : '1:1')),
@@ -599,12 +615,12 @@ const ProductForm = (() => {
       (prod.card_footer_text || prod.footer_bg_color) ? {
         text: prod.card_footer_text || 'Proses Hanya Dalam 1Jam',
         icon: prod.footer_badge_icon || 'truck',
-        bg_color: prod.footer_bg_color || '#059669',
+        bg_color: prod.footer_bg_color || getPrimaryThemeColor(),
         text_color: prod.footer_text_color || '#ffffff'
       } : (inheritedFooter?.f1 || {
         text: 'Proses Hanya Dalam 1Jam',
         icon: 'truck',
-        bg_color: '#059669',
+        bg_color: getPrimaryThemeColor(),
         text_color: '#ffffff'
       })
     );
@@ -613,12 +629,12 @@ const ProductForm = (() => {
       (prod.card_footer_2_text || prod.footer_2_bg_color) ? {
         text: prod.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
         icon: prod.footer_2_badge_icon || 'minus',
-        bg_color: prod.footer_2_bg_color || '#047857',
+        bg_color: prod.footer_2_bg_color || getPrimaryThemeColor(),
         text_color: prod.footer_2_text_color || '#ffffff'
       } : (inheritedFooter?.f2 || {
         text: 'Variasi Paket Tersedia/tidak tersedia',
         icon: 'minus',
-        bg_color: '#047857',
+        bg_color: getPrimaryThemeColor(),
         text_color: '#ffffff'
       })
     );
@@ -721,9 +737,9 @@ const ProductForm = (() => {
       footer_2_bg_color: f2Prod.bg_color,
       footer_2_text_color: f2Prod.text_color,
       enable_countdown: prod.enable_countdown !== undefined ? prod.enable_countdown : true,
-      countdown_bg_color: prod.countdown_bg_color || '#059669',
+      countdown_bg_color: prod.countdown_bg_color || getPrimaryThemeColor(),
       countdown_text_color: prod.countdown_text_color || '#ffffff',
-      countdown_border_color: prod.countdown_border_color || '#059669',
+      countdown_border_color: prod.countdown_border_color || getPrimaryThemeColor(),
       image_url: imgs.length > 0 ? imgs[0] : null,
       images: imgs,
       image_aspect_ratio: prod.image_aspect_ratio || (prod.card_variant === 'C' ? '4:3' : (prod.card_variant === 'B' ? '3:4' : '1:1')),
@@ -1216,6 +1232,12 @@ const ProductForm = (() => {
           </div>
         </div>
 
+        <!-- Floating Trigger Buka Preview di Step 1 saat Sidebar Tertutup -->
+        <button type="button" id="btn-expand-preview-sidebar" class="${(isLivePreviewOpen || !primaryState.is_active || currentStep !== 1) ? 'hidden' : 'hidden lg:flex'} btn-primary-brand fixed right-0 top-1/2 -translate-y-1/2 z-30 text-white py-3.5 px-2.5 rounded-l-lg shadow-xl flex flex-col items-center gap-1.5 cursor-pointer transition select-none group" title="Buka Pratinjau">
+          <i class="bi bi-eye text-base"></i>
+          <span class="text-[10px] font-bold tracking-wider [writing-mode:vertical-lr] uppercase">Pratinjau</span>
+        </button>
+
         <!-- DESKTOP FIXED OFF-CANVAS PREVIEW SIDEBAR (DOCK KANAN SEJATI) -->
         <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[300px] xl:w-[340px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}">
           
@@ -1224,7 +1246,7 @@ const ProductForm = (() => {
             <div id="desktop-preview-header-content" class="w-full max-w-[210px]">
               ${currentStep === 1 ? `
                 <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                  <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style="background-color: var(--color-primary-subtle); color: var(--color-primary);">
                     <i class="bi bi-eye"></i>
                   </div>
                   <span class="leading-tight text-[11px] font-bold">Preview<br><span class="text-[10px] text-slate-500 font-semibold">Kartu Produk</span></span>
@@ -1232,11 +1254,11 @@ const ProductForm = (() => {
               ` : `
                 <div class="flex flex-col gap-1 w-full">
                   <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-                    <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                    <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${previewTestState.sidebarTab === 'preview' ? 'color: var(--color-primary);' : ''}">
                       <i class="bi bi-eye"></i>
                       <span>Preview</span>
                     </button>
-                    <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                    <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${previewTestState.sidebarTab === 'test' ? 'background-color: var(--color-primary);' : ''}">
                       <i class="bi bi-lightning-charge-fill text-amber-300"></i>
                       <span>Uji Coba</span>
                     </button>
@@ -1312,15 +1334,15 @@ const ProductForm = (() => {
                   <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Harga</label>
                     <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-price-color" value="#059669" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-price-text" value="#059669" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
+                      <input type="color" id="cfg-price-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                      <input type="text" id="cfg-price-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
                     </div>
                   </div>
                   <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tombol Beli</label>
                     <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-btn-color" value="#059669" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-btn-text" value="#059669" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
+                      <input type="color" id="cfg-btn-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                      <input type="text" id="cfg-btn-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
                     </div>
                   </div>
                   <div>
@@ -1378,8 +1400,8 @@ const ProductForm = (() => {
                       <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
                         <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || '#059669'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || '#059669'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
@@ -1541,15 +1563,15 @@ const ProductForm = (() => {
                   <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Harga</label>
                     <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-price-color-mob" value="#059669" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-price-text-mob" value="#059669" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                      <input type="color" id="cfg-price-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                      <input type="text" id="cfg-price-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
                     </div>
                   </div>
                   <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tombol Beli</label>
                     <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-btn-color-mob" value="#059669" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-btn-text-mob" value="#059669" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                      <input type="color" id="cfg-btn-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                      <input type="text" id="cfg-btn-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
                     </div>
                   </div>
                   <div>
@@ -1613,8 +1635,8 @@ const ProductForm = (() => {
                       <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
                         <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-bg-color-mob" value="${primaryState.footer_bg_color || '#059669'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-bg-hex-mob" value="${primaryState.footer_bg_color || '#059669'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          <input type="color" id="cfg-footer-bg-color-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-footer-bg-hex-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
@@ -1809,13 +1831,15 @@ const ProductForm = (() => {
       return true;
     };
 
+    const defThemeColor = getPrimaryThemeColor();
+
     return {
       bg_color: getVal('cfg-bg-color', 'cfg-bg-color-mob', '#ffffff'),
       border_color: getVal('cfg-border-color', 'cfg-border-color-mob', '#e2e8f0'),
       border_radius: getVal('cfg-border-radius', 'cfg-border-radius-mob', '16px'),
       title_color: getVal('cfg-title-color', 'cfg-title-color-mob', '#0f172a'),
-      price_color: getVal('cfg-price-color', 'cfg-price-color-mob', '#059669'),
-      btn_color: getVal('cfg-btn-color', 'cfg-btn-color-mob', '#059669'),
+      price_color: getVal('cfg-price-color', 'cfg-price-color-mob', defThemeColor),
+      btn_color: getVal('cfg-btn-color', 'cfg-btn-color-mob', defThemeColor),
       show_rating: getChk('cfg-show-rating', 'cfg-show-rating-mob'),
       show_sales_count: getChk('cfg-show-sales', 'cfg-show-sales-mob'),
       show_strikethrough_price: getChk('cfg-show-strike', 'cfg-show-strike-mob'),
@@ -1825,18 +1849,18 @@ const ProductForm = (() => {
       show_category_badge: showBadgeVal,
       discount_badge_radius: document.getElementById('cfg-discount-badge-radius')?.value || '8px',
       discount_badge_text_color: document.getElementById('cfg-discount-badge-text-color')?.value || '#ffffff',
-      discount_badge_bg_color: document.getElementById('cfg-discount-badge-bg-color')?.value || '#059669',
-      discount_badge_border_color: document.getElementById('cfg-discount-badge-border-color')?.value || '#059669',
+      discount_badge_bg_color: document.getElementById('cfg-discount-badge-bg-color')?.value || defThemeColor,
+      discount_badge_border_color: document.getElementById('cfg-discount-badge-border-color')?.value || defThemeColor,
       badge_radius: document.getElementById('cfg-badge-radius')?.value || '6px',
       badge_text_color: document.getElementById('cfg-badge-text-color')?.value || '#047857',
       badge_bg_color: document.getElementById('cfg-badge-bg-color')?.value || '#ecfdf5',
       badge_border_color: document.getElementById('cfg-badge-border-color')?.value || '#a7f3d0',
       enable_countdown: enableCountdownVal,
       countdown_radius: document.getElementById('cfg-countdown-radius')?.value || '9999px',
-      countdown_bg_color: document.getElementById('cfg-countdown-bg-color')?.value || '#059669',
+      countdown_bg_color: document.getElementById('cfg-countdown-bg-color')?.value || defThemeColor,
       countdown_text_color: document.getElementById('cfg-countdown-text-color')?.value || '#ffffff',
       countdown_icon_color: document.getElementById('cfg-countdown-icon-color')?.value || '#ffffff',
-      countdown_border_color: document.getElementById('cfg-countdown-border-color')?.value || '#059669'
+      countdown_border_color: document.getElementById('cfg-countdown-border-color')?.value || defThemeColor
     };
   }
 
@@ -1850,6 +1874,7 @@ const ProductForm = (() => {
 
     const defaultCfg = configGroup[key] || {};
     const cfg = (!useDefault && primaryState.card_config) ? primaryState.card_config : defaultCfg;
+    const defThemeColor = getPrimaryThemeColor();
     
     const setVal = (id, val) => {
       const el = document.getElementById(id);
@@ -1867,10 +1892,10 @@ const ProductForm = (() => {
     setVal('cfg-border-radius', cfg.border_radius || '16px');
     setVal('cfg-title-color', cfg.title_color || '#0f172a');
     setVal('cfg-title-text', cfg.title_color || '#0f172a');
-    setVal('cfg-price-color', cfg.price_color || '#059669');
-    setVal('cfg-price-text', cfg.price_color || '#059669');
-    setVal('cfg-btn-color', cfg.btn_color || '#059669');
-    setVal('cfg-btn-text', cfg.btn_color || '#059669');
+    setVal('cfg-price-color', cfg.price_color || defThemeColor);
+    setVal('cfg-price-text', cfg.price_color || defThemeColor);
+    setVal('cfg-btn-color', cfg.btn_color || defThemeColor);
+    setVal('cfg-btn-text', cfg.btn_color || defThemeColor);
     
     let showRatingVal = cfg.show_rating !== false;
     let showSalesVal = cfg.show_sales !== false && cfg.show_sales_count !== false;
@@ -1890,10 +1915,10 @@ const ProductForm = (() => {
     setVal('cfg-discount-badge-radius', cfg.discount_badge_radius || '8px');
     setVal('cfg-discount-badge-text-color', cfg.discount_badge_text_color || '#ffffff');
     setVal('cfg-discount-badge-text-hex', cfg.discount_badge_text_color || '#ffffff');
-    setVal('cfg-discount-badge-bg-color', cfg.discount_badge_bg_color || '#059669');
-    setVal('cfg-discount-badge-bg-hex', cfg.discount_badge_bg_color || '#059669');
-    setVal('cfg-discount-badge-border-color', cfg.discount_badge_border_color || '#059669');
-    setVal('cfg-discount-badge-border-hex', cfg.discount_badge_border_color || '#059669');
+    setVal('cfg-discount-badge-bg-color', cfg.discount_badge_bg_color || defThemeColor);
+    setVal('cfg-discount-badge-bg-hex', cfg.discount_badge_bg_color || defThemeColor);
+    setVal('cfg-discount-badge-border-color', cfg.discount_badge_border_color || defThemeColor);
+    setVal('cfg-discount-badge-border-hex', cfg.discount_badge_border_color || defThemeColor);
 
     // Badge styling tokens
     const defBadgeText = variantCode === 'B' ? '#6b21a8' : '#047857';
@@ -1910,10 +1935,10 @@ const ProductForm = (() => {
 
     // Countdown styling tokens
     const cRadius = primaryState.countdown_radius || cfg.countdown_radius || '9999px';
-    const cBg = primaryState.countdown_bg_color || cfg.countdown_bg_color || '#059669';
+    const cBg = primaryState.countdown_bg_color || cfg.countdown_bg_color || defThemeColor;
     const cTxt = primaryState.countdown_text_color || cfg.countdown_text_color || '#ffffff';
     const cIco = primaryState.countdown_icon_color || cfg.countdown_icon_color || '#ffffff';
-    const cBrd = primaryState.countdown_border_color || cfg.countdown_border_color || '#059669';
+    const cBrd = primaryState.countdown_border_color || cfg.countdown_border_color || defThemeColor;
     setVal('cfg-countdown-radius', cRadius);
     setVal('cfg-countdown-bg-color', cBg);
     setVal('cfg-countdown-bg-hex', cBg);
@@ -1926,7 +1951,7 @@ const ProductForm = (() => {
     setChk('cfg-enable-countdown', primaryState.enable_countdown !== false && cfg.enable_countdown !== false);
 
     // Footer 1 styling tokens (khusus Versi C)
-    const fBg = primaryState.footer_bg_color || cfg.footer_bg_color || '#059669';
+    const fBg = primaryState.footer_bg_color || cfg.footer_bg_color || defThemeColor;
     const fTxt = primaryState.footer_text_color || cfg.footer_text_color || '#ffffff';
     setVal('cfg-footer-bg-color', fBg);
     setVal('cfg-footer-bg-hex', fBg);
@@ -4773,12 +4798,14 @@ const ProductForm = (() => {
     let rawPrice = document.getElementById('cfg-price-color')?.value;
     let rawBtn = document.getElementById('cfg-btn-color')?.value;
 
+    const defCardThemeColor = getPrimaryThemeColor();
+
     // Pastikan jika mode default atau belum diubah, bg_color = #ffffff (putih bersih), tidak pernah #000000!
     const safeBg = (!isCustomDesignActive || !rawBg || rawBg.toLowerCase() === '#000000') ? '#ffffff' : rawBg;
     const safeBorder = (!isCustomDesignActive || !rawBorder || rawBorder.toLowerCase() === '#000000') ? '#e2e8f0' : rawBorder;
     const safeTitle = (!isCustomDesignActive || !rawTitle || rawTitle.toLowerCase() === '#000000') ? '#0f172a' : rawTitle;
-    const safePrice = (!isCustomDesignActive || !rawPrice || rawPrice.toLowerCase() === '#000000') ? '#059669' : rawPrice;
-    const safeBtn = (!isCustomDesignActive || !rawBtn || rawBtn.toLowerCase() === '#000000') ? '#059669' : rawBtn;
+    const safePrice = (!isCustomDesignActive || !rawPrice || rawPrice.toLowerCase() === '#000000') ? defCardThemeColor : rawPrice;
+    const safeBtn = (!isCustomDesignActive || !rawBtn || rawBtn.toLowerCase() === '#000000') ? defCardThemeColor : rawBtn;
 
     const cfg = {
       bg_color: safeBg,
@@ -4802,7 +4829,7 @@ const ProductForm = (() => {
     // Discount Badge Custom Styles (pada foto produk)
     const discBadgeRadius = document.getElementById('cfg-discount-badge-radius')?.value || '8px';
     const discBadgeTextColor = document.getElementById('cfg-discount-badge-text-color')?.value || '#ffffff';
-    const discBadgeBgColor = document.getElementById('cfg-discount-badge-bg-color')?.value || '#059669';
+    const discBadgeBgColor = document.getElementById('cfg-discount-badge-bg-color')?.value || defCardThemeColor;
     const discBadgeBorderColor = document.getElementById('cfg-discount-badge-border-color')?.value || discBadgeBgColor;
     const discBadgeStyle = `background-color: ${discBadgeBgColor}; color: ${discBadgeTextColor}; border: 1px solid ${discBadgeBorderColor}; border-radius: ${discBadgeRadius};`;
 
@@ -4815,14 +4842,14 @@ const ProductForm = (() => {
 
     // Countdown Badge Custom Styles
     const countdownRadius = document.getElementById('cfg-countdown-radius')?.value || primaryState.countdown_radius || '9999px';
-    const countdownBgColor = document.getElementById('cfg-countdown-bg-color')?.value || primaryState.countdown_bg_color || '#059669';
+    const countdownBgColor = document.getElementById('cfg-countdown-bg-color')?.value || primaryState.countdown_bg_color || defCardThemeColor;
     const countdownTextColor = document.getElementById('cfg-countdown-text-color')?.value || primaryState.countdown_text_color || '#ffffff';
     const countdownIconColor = document.getElementById('cfg-countdown-icon-color')?.value || primaryState.countdown_icon_color || '#ffffff';
-    const countdownBorderColor = document.getElementById('cfg-countdown-border-color')?.value || primaryState.countdown_border_color || '#059669';
+    const countdownBorderColor = document.getElementById('cfg-countdown-border-color')?.value || primaryState.countdown_border_color || defCardThemeColor;
     const countdownStyle = `background-color: ${countdownBgColor}; color: ${countdownTextColor}; border: 1px solid ${countdownBorderColor}; border-radius: ${countdownRadius};`;
 
     // Footer 1 Custom Styles (Khusus Card C)
-    const footerBgColor = document.getElementById('cfg-footer-bg-color')?.value || primaryState.footer_bg_color || '#059669';
+    const footerBgColor = document.getElementById('cfg-footer-bg-color')?.value || primaryState.footer_bg_color || defCardThemeColor;
     const footerTextColor = document.getElementById('cfg-footer-text-color')?.value || primaryState.footer_text_color || '#ffffff';
     const footerTextInput = document.getElementById('input-card-footer-text');
     const footerText = (footerTextInput?.value || primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam').trim() || 'Proses Hanya Dalam 1Jam';
@@ -4830,7 +4857,7 @@ const ProductForm = (() => {
     const footerIcon = (footerIconSelect?.value || primaryState.footer_badge_icon || 'truck').trim() || 'truck';
 
     // Footer 2 Custom Styles (Khusus Card C)
-    const footer2BgColor = document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || '#047857';
+    const footer2BgColor = document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || defCardThemeColor;
     const footer2TextColor = document.getElementById('cfg-footer-2-text-color')?.value || primaryState.footer_2_text_color || '#ffffff';
     const footer2TextInput = document.getElementById('input-card-footer-2-text');
     const footer2Text = (footer2TextInput?.value || primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia').trim() || 'Variasi Paket Tersedia/tidak tersedia';
@@ -5804,8 +5831,8 @@ const ProductForm = (() => {
             Lainnya
           </button>
         </nav>
-        <button type="button" id="btn-subnav-toggle-preview" class="ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none ${!primaryState.is_active ? 'hidden' : ''} ${isLivePreviewOpen ? 'subnav-preview-active' : 'subnav-preview-inactive'}" title="${isLivePreviewOpen ? 'Tutup Panel Pratinjau' : 'Buka Panel Pratinjau'}">
-          <i class="bi bi-eye text-sm ${isLivePreviewOpen ? '' : 'text-slate-500'}"></i>
+        <button type="button" id="btn-subnav-toggle-preview" class="ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none ${(!primaryState.is_active || isLivePreviewOpen) ? 'hidden' : ''} subnav-preview-inactive" title="Buka Panel Pratinjau" style="${isLivePreviewOpen ? 'display: none !important;' : ''}">
+          <i class="bi bi-eye text-sm text-slate-500"></i>
           <span>Pratinjau</span>
         </button>
       </div>
@@ -9078,7 +9105,8 @@ const ProductForm = (() => {
               <button 
                 type="button" 
                 id="btn-trigger-variasi-2" 
-                class="px-4 py-2 rounded-md border border-dashed border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer ${!var1HasOption ? 'opacity-50 cursor-not-allowed' : ''}" 
+                class="btn-trigger-variasi-dashed px-4 py-2 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer ${!var1HasOption ? 'opacity-50 cursor-not-allowed' : ''}" 
+                style="border-color: var(--color-primary); color: var(--color-primary); background-color: #ffffff;"
                 title="${!var1HasOption ? 'Isi minimal 1 opsi pada Variasi 1 sebelum menambah Variasi 2' : 'Tambah Variasi 2'}"
               >
                 <i class="bi bi-plus-lg text-sm"></i>
@@ -9088,7 +9116,8 @@ const ProductForm = (() => {
               <button 
                 type="button" 
                 id="btn-trigger-variasi-3" 
-                class="px-4 py-2 rounded-md border border-dashed border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
+                class="btn-trigger-variasi-dashed px-4 py-2 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
+                style="border-color: var(--color-primary); color: var(--color-primary); background-color: #ffffff;"
               >
                 <i class="bi bi-plus-lg text-sm"></i>
                 <span>Tambah Variasi 3</span>
@@ -9097,7 +9126,8 @@ const ProductForm = (() => {
               <button 
                 type="button" 
                 id="btn-trigger-variasi-4" 
-                class="px-4 py-2 rounded-md border border-dashed border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
+                class="btn-trigger-variasi-dashed px-4 py-2 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
+                style="border-color: var(--color-primary); color: var(--color-primary); background-color: #ffffff;"
               >
                 <i class="bi bi-plus-lg text-sm"></i>
                 <span>Tambah Variasi 4</span>
@@ -9152,7 +9182,8 @@ const ProductForm = (() => {
                 <button 
                   type="button" 
                   id="btn-enable-variants" 
-                  class="px-3.5 py-1.5 rounded-md border transition cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                  class="px-3.5 py-1.5 rounded-md border border-dashed transition cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-white"
+                  style="border-color: var(--color-primary); color: var(--color-primary);"
                 >
                   <i class="bi bi-plus-lg"></i>
                   <span>Variasi Produk</span>
@@ -11306,6 +11337,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       previewTestState.isDrawerOpen = false;
     }
     updatePreviewSidebarHeader();
+    updateSubnavPreviewButtonState(isLivePreviewOpen);
 
     if (window.lucide) window.lucide.createIcons();
     updateProductCardLivePreview();
@@ -15002,36 +15034,73 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     function updateSubnavPreviewButtonState(isOpen) {
       const btn = document.getElementById('btn-subnav-toggle-preview');
-      if (!btn) return;
-      if (!primaryState.is_active) {
-        btn.classList.add('hidden');
-        return;
-      }
-      btn.classList.remove('hidden');
+      const btnExpand = document.getElementById('btn-expand-preview-sidebar');
+      const subnavFixed = document.getElementById('step2-subnav-fixed');
+
       if (isOpen) {
-        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none subnav-preview-active';
-        btn.title = 'Tutup Panel Pratinjau';
-        const icon = btn.querySelector('i');
-        if (icon) icon.className = 'bi bi-eye text-sm';
+        if (subnavFixed) subnavFixed.classList.add('preview-open');
+        // Saat panel pratinjau AKTIF / TERBUKA: Sembunyikan semua tombol pemicu pratinjau
+        if (btn) {
+          btn.classList.add('hidden');
+          btn.style.display = 'none';
+        }
+        if (btnExpand) {
+          btnExpand.classList.add('hidden');
+          btnExpand.classList.remove('lg:flex');
+          btnExpand.style.display = 'none';
+        }
       } else {
-        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none subnav-preview-inactive';
-        btn.title = 'Buka Panel Pratinjau';
-        const icon = btn.querySelector('i');
-        if (icon) icon.className = 'bi bi-eye text-sm text-slate-500';
+        if (subnavFixed) subnavFixed.classList.remove('preview-open');
+        // Saat panel pratinjau DITUTUP: Munculkan kembali tombol pemicu sesuai step aktif
+        if (primaryState.is_active) {
+          if (btn && currentStep === 2) {
+            btn.classList.remove('hidden');
+            btn.style.display = '';
+            btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none subnav-preview-inactive';
+            btn.title = 'Buka Panel Pratinjau';
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'bi bi-eye text-sm text-slate-500';
+          } else if (btn) {
+            btn.classList.add('hidden');
+            btn.style.display = 'none';
+          }
+
+          if (btnExpand && currentStep === 1) {
+            btnExpand.classList.remove('hidden');
+            btnExpand.classList.add('lg:flex');
+            btnExpand.style.display = '';
+          } else if (btnExpand) {
+            btnExpand.classList.add('hidden');
+            btnExpand.classList.remove('lg:flex');
+            btnExpand.style.display = 'none';
+          }
+        } else {
+          if (btn) {
+            btn.classList.add('hidden');
+            btn.style.display = 'none';
+          }
+          if (btnExpand) {
+            btnExpand.classList.add('hidden');
+            btnExpand.classList.remove('lg:flex');
+            btnExpand.style.display = 'none';
+          }
+        }
       }
     }
 
     function setSidebarState(isOpen) {
       if (!primaryState.is_active && isOpen) return;
       isLivePreviewOpen = isOpen;
+      const btnExpand = document.getElementById('btn-expand-preview-sidebar');
       if (isOpen) {
         if (sidebar) {
           sidebar.classList.remove('translate-x-full');
           sidebar.classList.add('translate-x-0');
         }
-        if (btnExpandSidebar) {
-          btnExpandSidebar.classList.add('hidden');
-          btnExpandSidebar.classList.remove('lg:flex');
+        if (btnExpand) {
+          btnExpand.classList.add('hidden');
+          btnExpand.classList.remove('lg:flex');
+          btnExpand.style.display = 'none';
         }
         if (wizardCol) {
           wizardCol.classList.remove('lg:pr-[320px]', 'xl:pr-[360px]');
@@ -15042,9 +15111,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           sidebar.classList.remove('translate-x-0');
           sidebar.classList.add('translate-x-full');
         }
-        if (btnExpandSidebar) {
-          btnExpandSidebar.classList.add('hidden');
-          btnExpandSidebar.classList.remove('lg:flex');
+        if (btnExpand) {
+          if (primaryState.is_active && currentStep === 1) {
+            btnExpand.classList.remove('hidden');
+            btnExpand.classList.add('lg:flex');
+            btnExpand.style.display = '';
+          } else {
+            btnExpand.classList.add('hidden');
+            btnExpand.classList.remove('lg:flex');
+            btnExpand.style.display = 'none';
+          }
         }
         if (wizardCol) {
           wizardCol.classList.remove('lg:pr-[300px]', 'xl:pr-[340px]', 'lg:pr-[320px]', 'xl:pr-[360px]');
@@ -15173,6 +15249,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       updateProductCardLivePreview();
       if (btnFabLivePreview) btnFabLivePreview.classList.add('hidden');
+      const btnSubnav = document.getElementById('btn-subnav-toggle-preview');
+      if (btnSubnav) {
+        btnSubnav.classList.add('hidden');
+        btnSubnav.style.display = 'none';
+      }
       document.body.classList.add('overflow-hidden');
       const vp = document.getElementById('admin-main-viewport');
       if (vp) vp.classList.add('overflow-hidden');
@@ -15189,6 +15270,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (vp) vp.classList.remove('overflow-hidden');
       if (btnFabLivePreview && primaryState.is_active) {
         btnFabLivePreview.classList.remove('hidden');
+      }
+      const btnSubnav = document.getElementById('btn-subnav-toggle-preview');
+      if (btnSubnav && primaryState.is_active && currentStep === 2 && !isLivePreviewOpen) {
+        btnSubnav.classList.remove('hidden');
+        btnSubnav.style.display = '';
       }
     }
 
@@ -18121,12 +18207,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Sync Footer Colors & Texts for Card Variant C
     const footer1Val = (document.getElementById('input-card-footer-text')?.value || primaryState.custom_footer_1?.text || primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam').trim();
     const footer1IconVal = document.getElementById('select-card-footer-icon')?.value || primaryState.custom_footer_1?.icon || primaryState.footer_badge_icon || 'truck';
-    const footer1BgVal = document.getElementById('cfg-footer-bg-color')?.value || primaryState.custom_footer_1?.bg_color || primaryState.footer_bg_color || '#059669';
+    const footer1BgVal = document.getElementById('cfg-footer-bg-color')?.value || primaryState.custom_footer_1?.bg_color || primaryState.footer_bg_color || getPrimaryThemeColor();
     const footer1TextColVal = document.getElementById('cfg-footer-text-color')?.value || primaryState.custom_footer_1?.text_color || primaryState.footer_text_color || '#ffffff';
 
     const footer2Val = (document.getElementById('input-card-footer-2-text')?.value || primaryState.custom_footer_2?.text || primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia').trim();
     const footer2IconVal = document.getElementById('select-card-footer-2-icon')?.value || primaryState.custom_footer_2?.icon || primaryState.footer_2_badge_icon || 'minus';
-    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || '#047857';
+    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || getPrimaryThemeColor();
     const footer2TextColVal = document.getElementById('cfg-footer-2-text-color')?.value || primaryState.custom_footer_2?.text_color || primaryState.footer_2_text_color || '#ffffff';
 
     primaryState.custom_footer_1 = {
