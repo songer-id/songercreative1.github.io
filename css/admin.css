@@ -2722,3 +2722,19 @@ input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-600 {
   background-image: none !important;
   background-color: var(--color-primary-hover) !important;
 }
+
+/* ==========================================================================
+   KOMISI AFILIASI PRODUK STYLES (DYNAMIC BRAND THEME)
+   ========================================================================== */
+.affiliate-type-btn.active-type {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary-hover) !important;
+  font-weight: 700 !important;
+}
+
+#btn-add-affiliate-tier:hover {
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+}

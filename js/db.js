@@ -2667,6 +2667,11 @@ const DB = (() => {
         order_multiple_type: productData.order_multiple_type || 'all',
         order_multiple_value: parseInt(productData.order_multiple_value) || 1,
         order_multiples_by_variant: productData.order_multiples_by_variant || {},
+        has_affiliate_commission: Boolean(productData.has_affiliate_commission),
+        affiliate_commission_type: productData.affiliate_commission_type || 'tiered',
+        affiliate_commission_value: parseFloat(productData.affiliate_commission_value) || 0,
+        affiliate_commission_tiers: Array.isArray(productData.affiliate_commission_tiers) ? productData.affiliate_commission_tiers : [],
+        affiliate_min_order_amount: parseFloat(productData.affiliate_min_order_amount) || 0,
         shipping_config: productData.shipping_config || {
           is_cod: false,
           couriers: ['pickup', 'instant', 'reguler'],
@@ -2844,6 +2849,11 @@ const DB = (() => {
         order_multiple_type: productData.order_multiple_type || products[index].order_multiple_type || 'all',
         order_multiple_value: parseInt(productData.order_multiple_value) || products[index].order_multiple_value || 1,
         order_multiples_by_variant: productData.order_multiples_by_variant || products[index].order_multiples_by_variant || {},
+        has_affiliate_commission: productData.has_affiliate_commission !== undefined ? Boolean(productData.has_affiliate_commission) : Boolean(products[index].has_affiliate_commission),
+        affiliate_commission_type: productData.affiliate_commission_type || products[index].affiliate_commission_type || 'tiered',
+        affiliate_commission_value: productData.affiliate_commission_value !== undefined ? (parseFloat(productData.affiliate_commission_value) || 0) : (products[index].affiliate_commission_value || 0),
+        affiliate_commission_tiers: Array.isArray(productData.affiliate_commission_tiers) ? productData.affiliate_commission_tiers : (products[index].affiliate_commission_tiers || []),
+        affiliate_min_order_amount: productData.affiliate_min_order_amount !== undefined ? (parseFloat(productData.affiliate_min_order_amount) || 0) : (products[index].affiliate_min_order_amount || 0),
         shipping_config: productData.shipping_config || products[index].shipping_config || {
           is_cod: false,
           couriers: ['pickup', 'instant', 'reguler'],
