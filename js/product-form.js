@@ -1366,7 +1366,7 @@ const ProductForm = (() => {
                   <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
                     <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${previewTestState.sidebarTab === 'preview' ? 'color: var(--color-primary);' : ''}">
                       <i class="bi bi-eye"></i>
-                      <span>Preview</span>
+                      <span>Pratinjau</span>
                     </button>
                     <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${previewTestState.sidebarTab === 'test' ? 'background-color: var(--color-primary);' : ''}">
                       <i class="bi bi-lightning-charge-fill text-amber-300"></i>
@@ -1374,6 +1374,13 @@ const ProductForm = (() => {
                     </button>
                   </div>
                   <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
+                  <div id="preview-test-mode-alert" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
+                    <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
+                    <span class="flex-1 font-medium preview-test-alert-text"></span>
+                    <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
+                      <i class="bi bi-x text-sm"></i>
+                    </button>
+                  </div>
                 </div>
               `}
             </div>
@@ -1597,16 +1604,23 @@ const ProductForm = (() => {
               ` : `
                 <div class="flex flex-col gap-1 w-full">
                   <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-                    <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                    <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'preview' ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${previewTestState.sidebarTab === 'preview' ? 'color: var(--color-primary);' : ''}">
                       <i class="bi bi-eye"></i>
-                      <span>Preview</span>
+                      <span>Pratinjau</span>
                     </button>
-                    <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+                    <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${previewTestState.sidebarTab === 'test' ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${previewTestState.sidebarTab === 'test' ? 'background-color: var(--color-primary);' : ''}">
                       <i class="bi bi-lightning-charge-fill text-amber-300"></i>
                       <span>Uji Coba</span>
                     </button>
                   </div>
                   <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
+                  <div id="preview-test-mode-alert-mob" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
+                    <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
+                    <span class="flex-1 font-medium preview-test-alert-text"></span>
+                    <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
+                      <i class="bi bi-x text-sm"></i>
+                    </button>
+                  </div>
                 </div>
               `}
             </div>
@@ -2424,6 +2438,48 @@ const ProductForm = (() => {
     return { valid: true };
   }
 
+  let previewTestAlertTimer = null;
+  function showPreviewTestModeAlert(message) {
+    const alerts = [
+      document.getElementById('preview-test-mode-alert'),
+      document.getElementById('preview-test-mode-alert-mob')
+    ].filter(Boolean);
+
+    if (previewTestAlertTimer) {
+      clearTimeout(previewTestAlertTimer);
+      previewTestAlertTimer = null;
+    }
+
+    alerts.forEach(el => {
+      const textEl = el.querySelector('.preview-test-alert-text');
+      if (textEl) textEl.textContent = message;
+      el.classList.remove('hidden');
+      const closeBtn = el.querySelector('.btn-close-preview-test-alert');
+      if (closeBtn) {
+        closeBtn.onclick = (e) => {
+          e.preventDefault();
+          el.classList.add('hidden');
+        };
+      }
+    });
+
+    previewTestAlertTimer = setTimeout(() => {
+      hidePreviewTestModeAlert();
+    }, 6000);
+  }
+
+  function hidePreviewTestModeAlert() {
+    const alerts = [
+      document.getElementById('preview-test-mode-alert'),
+      document.getElementById('preview-test-mode-alert-mob')
+    ].filter(Boolean);
+    alerts.forEach(el => el.classList.add('hidden'));
+    if (previewTestAlertTimer) {
+      clearTimeout(previewTestAlertTimer);
+      previewTestAlertTimer = null;
+    }
+  }
+
   function updatePreviewSidebarHeader() {
     const deskHeader = document.getElementById('desktop-preview-header-content');
     const mobHeader = document.getElementById('mobile-preview-header-content');
@@ -2447,32 +2503,46 @@ const ProductForm = (() => {
     const step2DeskHtml = `
       <div class="flex flex-col gap-1 w-full">
         <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-          <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+          <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">
             <i class="bi bi-eye"></i>
-            <span>Preview</span>
+            <span>Pratinjau</span>
           </button>
-          <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+          <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isTest ? 'background-color: var(--color-primary);' : ''}">
             <i class="bi bi-lightning-charge-fill text-amber-300"></i>
             <span>Uji Coba</span>
           </button>
         </div>
         <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
+        <div id="preview-test-mode-alert" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
+          <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
+          <span class="flex-1 font-medium preview-test-alert-text"></span>
+          <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
+            <i class="bi bi-x text-sm"></i>
+          </button>
+        </div>
       </div>
     `;
 
     const step2MobHtml = `
       <div class="flex flex-col gap-1 w-full">
         <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-          <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+          <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">
             <i class="bi bi-eye"></i>
-            <span>Preview</span>
+            <span>Pratinjau</span>
           </button>
-          <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}">
+          <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${isTest ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isTest ? 'background-color: var(--color-primary);' : ''}">
             <i class="bi bi-lightning-charge-fill text-amber-300"></i>
             <span>Uji Coba</span>
           </button>
         </div>
         <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
+        <div id="preview-test-mode-alert-mob" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
+          <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
+          <span class="flex-1 font-medium preview-test-alert-text"></span>
+          <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
+            <i class="bi bi-x text-sm"></i>
+          </button>
+        </div>
       </div>
     `;
 
@@ -2510,13 +2580,10 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast(check.reason, 'warning');
-            } else {
-              alert(check.reason);
-            }
+            showPreviewTestModeAlert(check.reason);
             return;
           }
+          hidePreviewTestModeAlert();
           previewTestState.sidebarTab = 'test';
           isPreviewTestMode = true;
           updatePreviewSidebarHeader();
@@ -2974,6 +3041,92 @@ const ProductForm = (() => {
     return `Ukuran dibawah ${thStr}${unitShort} tetap dihitung ${chStr}${unitShort}`;
   }
 
+  function renderDrawerVariationGroup(group, mode, groupIndex) {
+    const selectedOpt = group.options.find(opt => opt.id === group.selectedId);
+    const selectedName = selectedOpt ? selectedOpt.name : '';
+    const tierKey = group.tierKey;
+
+    // 1. MODE SELECT (Shadcn UI Custom Select Popover)
+    if (mode === 'select') {
+      return `
+        <div class="space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}">
+          <div class="text-xs font-medium text-slate-600 mb-1">${escapeHtml(group.label)}</div>
+          <div class="relative w-full shadcn-select-wrapper" data-tier="${tierKey}">
+            <button type="button" class="btn-shadcn-select-trigger w-full h-9 px-3 rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer select-none" data-tier="${tierKey}">
+              <span class="shadcn-select-value truncate ${selectedOpt ? 'font-semibold text-slate-900' : 'text-slate-400'}">
+                ${selectedOpt ? escapeHtml(selectedOpt.name) : `Pilih ${escapeHtml(group.label)}...`}
+              </span>
+              <i class="bi bi-chevron-down text-slate-400 text-[10px] ml-1.5 transition-transform duration-150"></i>
+            </button>
+            <div class="shadcn-select-popover hidden absolute left-0 right-0 top-full mt-1 rounded-md border border-slate-200 bg-white shadow-lg max-h-48 overflow-y-auto p-1 z-50">
+              ${group.options.map(opt => {
+                const isSelected = group.selectedId === opt.id;
+                return `
+                  <div class="btn-shadcn-select-item flex items-center justify-between px-2.5 py-1.5 rounded text-xs cursor-pointer transition ${isSelected ? 'font-bold bg-slate-50' : 'text-slate-700 hover:bg-slate-100/70'}" data-tier="${tierKey}" data-id="${opt.id}" style="${isSelected ? 'color: var(--color-primary);' : ''}">
+                    <span class="truncate">${escapeHtml(opt.name)}</span>
+                    ${isSelected ? '<i class="bi bi-check2 text-sm font-bold shrink-0 ml-1.5" style="color: var(--color-primary);"></i>' : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Chips list HTML
+    const chipsHtml = `
+      <div class="flex flex-wrap gap-1.5">
+        ${group.options.length > 0 ? group.options.map((opt) => {
+          const isSelected = group.selectedId === opt.id;
+          if (opt.image) {
+            return `
+              <button type="button" class="${group.btnClass} mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded text-[11px] font-medium transition cursor-pointer ${isSelected ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
+                <img src="${opt.image}" class="w-5 h-5 rounded-xs object-cover shrink-0 bg-slate-100" alt="${escapeHtml(opt.name)}" />
+                <span class="truncate max-w-[120px]">${escapeHtml(opt.name)}</span>
+              </button>
+            `;
+          }
+          return `
+            <button type="button" class="${group.btnClass} mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
+              <span>${escapeHtml(opt.name)}</span>
+            </button>
+          `;
+        }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
+      </div>
+    `;
+
+    // 2. MODE ACCORDION
+    if (mode === 'accordion') {
+      const isAccordionOpen = previewTestState.varAccordions?.[tierKey] !== undefined
+        ? Boolean(previewTestState.varAccordions[tierKey])
+        : (groupIndex === 0 || !selectedOpt);
+
+      return `
+        <div class="var-accordion-card space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}" data-tier="${tierKey}">
+          <div class="btn-toggle-var-accordion w-full py-2 px-2.5 bg-slate-50/80 hover:bg-slate-100/80 rounded-md flex items-center justify-between text-xs font-semibold text-slate-800 cursor-pointer transition select-none" data-tier="${tierKey}">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span>${escapeHtml(group.label)}</span>
+              <span class="var-accordion-selected-text text-[11px] text-slate-500 font-normal truncate">${selectedName ? `(${escapeHtml(selectedName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>'}</span>
+            </div>
+            <i class="bi bi-chevron-right text-slate-400 text-[10px] transition-transform duration-200 shrink-0 ${isAccordionOpen ? 'rotate-90' : ''}"></i>
+          </div>
+          <div class="var-accordion-body pt-1 ${isAccordionOpen ? '' : 'hidden'}">
+            ${chipsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. MODE DEFAULT
+    return `
+      <div class="space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}">
+        <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(group.label)}</div>
+        ${chipsHtml}
+      </div>
+    `;
+  }
+
   function buildShopeeDrawerHtml(actionType) {
     const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
@@ -3422,6 +3575,75 @@ const ProductForm = (() => {
       `;
     } else {
       // KASUS B: PRODUK MEMILIKI VARIASI
+      const activeVarGroups = [];
+      if (primaryState.has_variants && validMaterials.length > 0) {
+        activeVarGroups.push({
+          tierKey: 'tier1',
+          label: getVariationLabel('tier1', 'Variasi 1'),
+          btnClass: 'btn-shopee-tier1',
+          selectedId: previewTestState.selectedTier1Id,
+          options: validMaterials.map(m => ({
+            id: m.id,
+            name: m.name.trim(),
+            image: m.image_url || m.image
+          }))
+        });
+      }
+      if (primaryState.has_variation_2 && validV2.length > 0) {
+        activeVarGroups.push({
+          tierKey: 'tier2',
+          label: getVariationLabel('tier2', 'Variasi 2'),
+          btnClass: 'btn-shopee-tier2',
+          selectedId: previewTestState.selectedTier2Id,
+          options: validV2.map((f, idx) => ({
+            id: f.id || `v2_${idx}`,
+            name: f.name.trim(),
+            image: null
+          }))
+        });
+      }
+      if (primaryState.has_variation_3 && validV3.length > 0) {
+        activeVarGroups.push({
+          tierKey: 'tier3',
+          label: getVariationLabel('tier3', 'Variasi 3'),
+          btnClass: 'btn-shopee-tier3',
+          selectedId: previewTestState.selectedTier3Id,
+          options: validV3.map((f, idx) => ({
+            id: f.id || `v3_${idx}`,
+            name: f.name.trim(),
+            image: null
+          }))
+        });
+      }
+      if (primaryState.has_variation_4 && validV4.length > 0) {
+        activeVarGroups.push({
+          tierKey: 'tier4',
+          label: getVariationLabel('tier4', 'Variasi 4'),
+          btnClass: 'btn-shopee-tier4',
+          selectedId: previewTestState.selectedTier4Id,
+          options: validV4.map((f, idx) => ({
+            id: f.id || `v4_${idx}`,
+            name: f.name.trim(),
+            image: null
+          }))
+        });
+      }
+
+      const activeVarCount = activeVarGroups.length;
+      let drawerVarMode = 'default';
+      if (activeVarCount === 4 && activeVarGroups.every(g => g.options.length > 10)) {
+        drawerVarMode = 'select';
+      } else if (
+        (activeVarCount === 4 && activeVarGroups.every(g => g.options.length <= 10)) ||
+        (activeVarCount >= 2 && activeVarCount <= 3 && activeVarGroups.some(g => g.options.length > 15))
+      ) {
+        drawerVarMode = 'accordion';
+      } else {
+        drawerVarMode = 'default';
+      }
+
+      const renderedVariationsHtml = activeVarGroups.map((group, idx) => renderDrawerVariationGroup(group, drawerVarMode, idx)).join('');
+
       return `
         <div class="flex flex-col w-full overflow-hidden max-h-full bg-white">
           <div class="flex items-start gap-2.5 p-3 border-b border-slate-100 relative shrink-0">
@@ -3456,83 +3678,8 @@ const ProductForm = (() => {
           </div>
 
           <div class="overflow-y-auto max-h-[260px] p-3 space-y-3 flex-1 min-h-0">
-            <!-- Variasi 1 -->
-            <div class="space-y-1.5">
-              <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}</div>
-              <div class="flex flex-wrap gap-1.5">
-                ${validMaterials.map((m) => {
-                  const isSelected = previewTestState.selectedTier1Id === m.id;
-                  const itemImg = m.image_url || m.image;
-                  if (itemImg) {
-                    return `
-                      <button type="button" class="btn-shopee-tier1 mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded border text-[11px] font-medium transition cursor-pointer ${isSelected ? 'is-active' : ''}" data-tier="tier1" data-id="${m.id}">
-                        <img src="${itemImg}" class="w-5 h-5 rounded-xs object-cover shrink-0 bg-slate-100" alt="${escapeHtml(m.name)}" />
-                        <span class="truncate max-w-[120px]">${escapeHtml(m.name)}</span>
-                      </button>
-                    `;
-                  }
-                  return `
-                    <button type="button" class="btn-shopee-tier1 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier1" data-id="${m.id}">
-                      <span>${escapeHtml(m.name.trim())}</span>
-                    </button>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-
-            <!-- Variasi 2 -->
-            ${primaryState.has_variation_2 ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validV2.length > 0 ? validV2.map((f, idx) => {
-                    const fId = f.id || `v2_${idx}`;
-                    const isSelected = previewTestState.selectedTier2Id === fId;
-                    return `
-                      <button type="button" class="btn-shopee-tier2 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier2" data-id="${fId}">
-                        <span>${escapeHtml(f.name.trim())}</span>
-                      </button>
-                    `;
-                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
-                </div>
-              </div>
-            ` : ''}
-
-            <!-- Variasi 3 -->
-            ${primaryState.has_variation_3 ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier3', 'Variasi 3'))}</div>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validV3.length > 0 ? validV3.map((f, idx) => {
-                    const fId = f.id || `v3_${idx}`;
-                    const isSelected = previewTestState.selectedTier3Id === fId;
-                    return `
-                      <button type="button" class="btn-shopee-tier3 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier3" data-id="${fId}">
-                        <span>${escapeHtml(f.name.trim())}</span>
-                      </button>
-                    `;
-                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
-                </div>
-              </div>
-            ` : ''}
-
-            <!-- Variasi 4 -->
-            ${primaryState.has_variation_4 ? `
-              <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier4', 'Variasi 4'))}</div>
-                <div class="flex flex-wrap gap-1.5">
-                  ${validV4.length > 0 ? validV4.map((f, idx) => {
-                    const fId = f.id || `v4_${idx}`;
-                    const isSelected = previewTestState.selectedTier4Id === fId;
-                    return `
-                      <button type="button" class="btn-shopee-tier4 mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="tier4" data-id="${fId}">
-                        <span>${escapeHtml(f.name.trim())}</span>
-                      </button>
-                    `;
-                  }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
-                </div>
-              </div>
-            ` : ''}
+            <!-- Variasi Terautomasi (Mode Select / Accordion / Default) -->
+            ${renderedVariationsHtml}
 
             <!-- Input Ukuran (P x L) - DI ATAS LAYANAN EXTRAS! -->
             ${customDimensionDrawerHtml}
@@ -3965,13 +4112,10 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast(check.reason, 'warning');
-            } else {
-              alert(check.reason);
-            }
+            showPreviewTestModeAlert(check.reason);
             return;
           }
+          hidePreviewTestModeAlert();
           openShopeeCheckoutDrawer('buy');
         };
       });
@@ -4088,13 +4232,10 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast(check.reason, 'warning');
-            } else {
-              alert(check.reason);
-            }
+            showPreviewTestModeAlert(check.reason);
             return;
           }
+          hidePreviewTestModeAlert();
 
           const hasVariations = Boolean(primaryState.has_variants && (materialsState || []).some(m => m && m.name && m.name.trim() !== ''));
 
@@ -4123,13 +4264,10 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast(check.reason, 'warning');
-            } else {
-              alert(check.reason);
-            }
+            showPreviewTestModeAlert(check.reason);
             return;
           }
+          hidePreviewTestModeAlert();
 
           openShopeeCheckoutDrawer('buy');
         };
@@ -4244,12 +4382,134 @@ const ProductForm = (() => {
           };
         });
 
-        // Variasi di dalam Drawer
+        // 1. Akordeon Grup Variasi di dalam Drawer
+        container.querySelectorAll('.btn-toggle-var-accordion').forEach(header => {
+          header.onclick = (e) => {
+            e.preventDefault();
+            const tier = header.getAttribute('data-tier');
+            const card = header.closest('.var-accordion-card');
+            if (card) {
+              const body = card.querySelector('.var-accordion-body');
+              const chevron = header.querySelector('.bi-chevron-right');
+              if (body) {
+                const isNowHidden = !body.classList.contains('hidden');
+                body.classList.toggle('hidden', isNowHidden);
+                if (chevron) {
+                  chevron.classList.toggle('rotate-90', !isNowHidden);
+                }
+                previewTestState.varAccordions = previewTestState.varAccordions || {};
+                previewTestState.varAccordions[tier] = !isNowHidden;
+              }
+            }
+          };
+        });
+
+        // 2. Custom Select Popover Shadcn UI di dalam Drawer
+        container.querySelectorAll('.btn-shadcn-select-trigger').forEach(trigger => {
+          trigger.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const wrapper = trigger.closest('.shadcn-select-wrapper');
+            if (wrapper) {
+              const popover = wrapper.querySelector('.shadcn-select-popover');
+              const isCurrentlyOpen = popover && !popover.classList.contains('hidden');
+              container.querySelectorAll('.shadcn-select-popover').forEach(p => p.classList.add('hidden'));
+              container.querySelectorAll('.btn-shadcn-select-trigger .bi-chevron-down').forEach(c => c.classList.remove('rotate-180'));
+              if (popover && !isCurrentlyOpen) {
+                popover.classList.remove('hidden');
+                const chevron = trigger.querySelector('.bi-chevron-down');
+                if (chevron) chevron.classList.add('rotate-180');
+              }
+            }
+          };
+        });
+
+        const onDocClickCloseSelects = (e) => {
+          if (!e.target.closest('.shadcn-select-wrapper')) {
+            container.querySelectorAll('.shadcn-select-popover').forEach(p => p.classList.add('hidden'));
+            container.querySelectorAll('.btn-shadcn-select-trigger .bi-chevron-down').forEach(c => c.classList.remove('rotate-180'));
+          }
+        };
+        container.removeEventListener('click', onDocClickCloseSelects);
+        container.addEventListener('click', onDocClickCloseSelects);
+
+        container.querySelectorAll('.btn-shadcn-select-item').forEach(item => {
+          item.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const tier = item.getAttribute('data-tier');
+            const id = item.getAttribute('data-id');
+            const wrapper = item.closest('.shadcn-select-wrapper');
+
+            if (wrapper) {
+              const popover = wrapper.querySelector('.shadcn-select-popover');
+              if (popover) popover.classList.add('hidden');
+              const chevron = wrapper.querySelector('.btn-shadcn-select-trigger .bi-chevron-down');
+              if (chevron) chevron.classList.remove('rotate-180');
+            }
+
+            if (tier === 'tier1') {
+              previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
+              const selMat = (materialsState || []).find(m => m.id === previewTestState.selectedTier1Id);
+              const vImg = (selMat && (selMat.image_url || selMat.image)) ? (selMat.image_url || selMat.image) : (primaryState.images?.[0] || primaryState.image_url || null);
+              container.querySelectorAll('.drawer-header-img').forEach(img => {
+                if (vImg) img.src = vImg;
+              });
+              const stockText = getPreviewStockDisplay(selMat, materialsState);
+              container.querySelectorAll('.drawer-stock-display').forEach(st => {
+                st.textContent = stockText;
+              });
+            } else if (tier === 'tier2') {
+              previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
+            } else if (tier === 'tier3') {
+              previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
+            } else if (tier === 'tier4') {
+              previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
+            }
+
+            if (wrapper) {
+              const currentSelId = tier === 'tier1' ? previewTestState.selectedTier1Id
+                : tier === 'tier2' ? previewTestState.selectedTier2Id
+                : tier === 'tier3' ? previewTestState.selectedTier3Id
+                : previewTestState.selectedTier4Id;
+              const valEl = wrapper.querySelector('.shadcn-select-value');
+              if (valEl) {
+                const groupLabel = getVariationLabel(tier, tier === 'tier1' ? 'Variasi 1' : tier === 'tier2' ? 'Variasi 2' : tier === 'tier3' ? 'Variasi 3' : 'Variasi 4');
+                const optText = item.querySelector('span')?.textContent?.trim() || '';
+                if (currentSelId) {
+                  valEl.textContent = optText;
+                  valEl.className = 'shadcn-select-value truncate font-semibold text-slate-900';
+                } else {
+                  valEl.textContent = `Pilih ${groupLabel}...`;
+                  valEl.className = 'shadcn-select-value truncate text-slate-400';
+                }
+              }
+              wrapper.querySelectorAll('.btn-shadcn-select-item').forEach(it => {
+                const isItSel = it.getAttribute('data-id') === currentSelId;
+                it.className = `btn-shadcn-select-item flex items-center justify-between px-2.5 py-1.5 rounded text-xs cursor-pointer transition ${isItSel ? 'font-bold bg-slate-50' : 'text-slate-700 hover:bg-slate-100/70'}`;
+                it.style.color = isItSel ? 'var(--color-primary)' : '';
+                const oldCheck = it.querySelector('.bi-check2');
+                if (oldCheck) oldCheck.remove();
+                if (isItSel) {
+                  const checkIcon = document.createElement('i');
+                  checkIcon.className = 'bi bi-check2 text-sm font-bold shrink-0 ml-1.5';
+                  checkIcon.style.color = 'var(--color-primary)';
+                  it.appendChild(checkIcon);
+                }
+              });
+            }
+
+            updateShopeeDrawerLivePricing();
+          };
+        });
+
+        // 3. Tombol Chip Opsi Variasi di dalam Drawer (Mode Accordion & Default)
         container.querySelectorAll('.btn-shopee-tier1').forEach(btn => {
           btn.onclick = (e) => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
-            previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
+            const wasSelected = previewTestState.selectedTier1Id === id;
+            previewTestState.selectedTier1Id = wasSelected ? null : id;
             container.querySelectorAll('.btn-shopee-tier1').forEach(b => {
               if (b.getAttribute('data-id') === previewTestState.selectedTier1Id) {
                 b.classList.add('is-active');
@@ -4266,6 +4526,14 @@ const ProductForm = (() => {
             container.querySelectorAll('.drawer-stock-display').forEach(st => {
               st.textContent = stockText;
             });
+            const card = btn.closest('.var-accordion-card');
+            if (card) {
+              const textEl = card.querySelector('.var-accordion-selected-text');
+              if (textEl) {
+                const optName = btn.querySelector('span')?.textContent?.trim() || '';
+                textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
+              }
+            }
             updateShopeeDrawerLivePricing();
           };
         });
@@ -4274,7 +4542,8 @@ const ProductForm = (() => {
           btn.onclick = (e) => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
-            previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
+            const wasSelected = previewTestState.selectedTier2Id === id;
+            previewTestState.selectedTier2Id = wasSelected ? null : id;
             container.querySelectorAll('.btn-shopee-tier2').forEach(b => {
               if (b.getAttribute('data-id') === previewTestState.selectedTier2Id) {
                 b.classList.add('is-active');
@@ -4282,6 +4551,14 @@ const ProductForm = (() => {
                 b.classList.remove('is-active');
               }
             });
+            const card = btn.closest('.var-accordion-card');
+            if (card) {
+              const textEl = card.querySelector('.var-accordion-selected-text');
+              if (textEl) {
+                const optName = btn.querySelector('span')?.textContent?.trim() || '';
+                textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
+              }
+            }
             updateShopeeDrawerLivePricing();
           };
         });
@@ -4290,7 +4567,8 @@ const ProductForm = (() => {
           btn.onclick = (e) => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
-            previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
+            const wasSelected = previewTestState.selectedTier3Id === id;
+            previewTestState.selectedTier3Id = wasSelected ? null : id;
             container.querySelectorAll('.btn-shopee-tier3').forEach(b => {
               if (b.getAttribute('data-id') === previewTestState.selectedTier3Id) {
                 b.classList.add('is-active');
@@ -4298,6 +4576,14 @@ const ProductForm = (() => {
                 b.classList.remove('is-active');
               }
             });
+            const card = btn.closest('.var-accordion-card');
+            if (card) {
+              const textEl = card.querySelector('.var-accordion-selected-text');
+              if (textEl) {
+                const optName = btn.querySelector('span')?.textContent?.trim() || '';
+                textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
+              }
+            }
             updateShopeeDrawerLivePricing();
           };
         });
@@ -4306,7 +4592,8 @@ const ProductForm = (() => {
           btn.onclick = (e) => {
             e.preventDefault();
             const id = btn.getAttribute('data-id');
-            previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
+            const wasSelected = previewTestState.selectedTier4Id === id;
+            previewTestState.selectedTier4Id = wasSelected ? null : id;
             container.querySelectorAll('.btn-shopee-tier4').forEach(b => {
               if (b.getAttribute('data-id') === previewTestState.selectedTier4Id) {
                 b.classList.add('is-active');
@@ -4314,6 +4601,14 @@ const ProductForm = (() => {
                 b.classList.remove('is-active');
               }
             });
+            const card = btn.closest('.var-accordion-card');
+            if (card) {
+              const textEl = card.querySelector('.var-accordion-selected-text');
+              if (textEl) {
+                const optName = btn.querySelector('span')?.textContent?.trim() || '';
+                textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
+              }
+            }
             updateShopeeDrawerLivePricing();
           };
         });
@@ -5513,12 +5808,12 @@ const ProductForm = (() => {
       const drawerHtml = isDrawerOpen ? buildShopeeDrawerHtml(previewTestState.drawerActionType || 'buy') : '';
 
       const miniPdpHtml = `
-        <div class="mini-pdp-card w-full bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
+        <div class="mini-pdp-card w-full bg-white rounded-none border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
           <!-- AREA KONTEN UTAMA MINI PDP (SCROLLABLE) -->
           <div class="flex-1 overflow-y-auto">
             <div class="mini-pdp-scroll-content ${!isTestMode ? 'pointer-events-none select-none' : ''}">
               <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
-              <div class="relative w-full aspect-square bg-slate-100 overflow-hidden shrink-0">
+              <div class="relative w-full aspect-square bg-slate-100 overflow-hidden shrink-0 rounded-none">
                 ${displayMainImg ? `
                   <img src="${displayMainImg}" class="w-full h-full object-cover transition-all duration-300" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-slate-300\\'><i class=\\'bi bi-box-seam text-4xl\\'></i></div>';" />
                 ` : `
@@ -5657,20 +5952,26 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <!-- BAR TOMBOL AKSI BAWAH (MENEMPEL TETAP DI DASAR KARTU MINI PDP, TIDAK IKUT TERGESER SAAT KONTEN DI-SCROLL) -->
-          <div class="p-2.5 px-3 border-t border-slate-100 bg-white shrink-0 z-10 flex items-center gap-2 ${!isTestMode ? 'pointer-events-none select-none opacity-85' : ''}">
-            <!-- 1. Tombol Ikon Chat (WhatsApp) -->
-            <button type="button" class="btn-preview-chat-wa w-10 h-10 rounded-xl border border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs ${!isTestMode ? 'pointer-events-none select-none' : ''}" title="Chat WhatsApp ke Penjual">
-              <i class="bi bi-whatsapp text-lg"></i>
-            </button>
+          <!-- BAR TOMBOL AKSI BAWAH (SPLIT BAR FULL-BLEED MODERN TANPA RADIUS) -->
+          <div class="mini-pdp-bottom-bar flex items-stretch w-full h-12 bg-white border-t border-slate-200 rounded-none p-0 overflow-hidden select-none shrink-0 z-10 ${!isTestMode ? 'pointer-events-none select-none opacity-85' : ''}">
+            <!-- Sisi Kiri (Area 2 Ikon di Atas Latar Putih — lebar 42%) -->
+            <div class="w-[42%] flex items-center bg-white h-full shrink-0">
+              <!-- Tombol 1: Chat WhatsApp -->
+              <button type="button" class="btn-preview-chat-wa flex-1 h-full flex items-center justify-center cursor-pointer transition hover:bg-slate-50 border-0 outline-none ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="color: var(--color-primary);" title="Chat WhatsApp ke Penjual">
+                <i class="bi bi-whatsapp text-lg"></i>
+              </button>
 
-            <!-- 2. Tombol Ikon Cart (+ / Add to Cart) -->
-            <button type="button" class="btn-preview-add-cart w-10 h-10 rounded-xl border border-slate-300 hover:border-emerald-500 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition flex items-center justify-center shrink-0 cursor-pointer shadow-2xs ${!isTestMode ? 'pointer-events-none select-none' : ''}" title="Tambah ke Keranjang (+ Cart)">
-              <i class="bi bi-cart-plus text-lg"></i>
-            </button>
+              <!-- Garis Pemisah Tengah Vertikal -->
+              <div class="w-[1px] h-5 shrink-0" style="background-color: var(--color-primary); opacity: 0.65;"></div>
 
-            <!-- 3. Tombol Beli Sekarang -->
-            <button type="button" class="btn-preview-buy-now flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="background-color: ${accentColor};">
+              <!-- Tombol 2: Tambah ke Keranjang (+ Cart) -->
+              <button type="button" class="btn-preview-add-cart flex-1 h-full flex items-center justify-center cursor-pointer transition hover:bg-slate-50 border-0 outline-none ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="color: var(--color-primary);" title="Tambah ke Keranjang (+ Cart)">
+                <i class="bi bi-cart-plus text-lg"></i>
+              </button>
+            </div>
+
+            <!-- Sisi Kanan (Tombol Utama Beli Sekarang Full-Height & Edge-to-Edge — lebar 58%) -->
+            <button type="button" class="btn-preview-buy-now w-[58%] h-full flex items-center justify-center font-bold text-white text-sm tracking-wide cursor-pointer transition rounded-none border-0 outline-none active:opacity-90 ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
               <span>Beli Sekarang</span>
             </button>
           </div>
@@ -5678,7 +5979,7 @@ const ProductForm = (() => {
           <!-- DRAWER ROOT SCOPED INSIDE MINI PDP CARD (TERBUKA STABIL SAAT isDrawerOpen === true) -->
           <div class="mini-pdp-drawer-root absolute inset-0 z-30 ${isDrawerOpen ? 'flex' : 'hidden'} flex-col justify-end overflow-hidden ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}">
             <div class="mini-pdp-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}"></div>
-            <div class="mini-pdp-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 transform ${isDrawerOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300 ease-out flex flex-col ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'} overflow-hidden">
+            <div class="mini-pdp-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-none shadow-2xl border-t border-slate-200 transform ${isDrawerOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300 ease-out flex flex-col ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'} overflow-hidden">
               ${isDrawerOpen ? drawerHtml : ''}
             </div>
           </div>
@@ -9998,7 +10299,7 @@ const ProductForm = (() => {
                 </div>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
-                <div id="container-min-price-inputs" class="${Boolean(primaryState.dim_min_one_price) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
+                <div id="container-min-price-inputs" class="${Boolean(primaryState.dim_min_one_price) ? '' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
                   <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 text-xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
@@ -10059,7 +10360,7 @@ const ProductForm = (() => {
                 </div>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
-                <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
+                <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? '' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
                   <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 text-xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
@@ -14197,9 +14498,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
         primaryState.dim_min_one_price = e.target.checked;
         const cont = document.getElementById('container-min-price-inputs');
+        const box = document.getElementById('min-price-custom-box');
         if (cont) {
-          if (e.target.checked) cont.classList.remove('hidden');
-          else cont.classList.add('hidden');
+          cont.classList.toggle('hidden', !e.target.checked);
+          cont.classList.remove('opacity-40', 'pointer-events-none');
+        }
+        if (box) {
+          box.classList.remove('opacity-40', 'pointer-events-none');
         }
         updateSandboxCalculation();
         if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
@@ -14231,12 +14536,34 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
         primaryState.dim_min_one_cost = e.target.checked;
         const cont = document.getElementById('container-min-hpp-inputs');
+        const box = document.getElementById('min-hpp-custom-box');
         if (cont) {
-          if (e.target.checked) cont.classList.remove('hidden');
-          else cont.classList.add('hidden');
+          cont.classList.toggle('hidden', !e.target.checked);
+          cont.classList.remove('opacity-40', 'pointer-events-none');
+        }
+        if (box) {
+          box.classList.remove('opacity-40', 'pointer-events-none');
         }
         updateSandboxCalculation();
       };
+    }
+
+    // Sinkronisasi status tampilan kontainer batas minimal saat inisialisasi / navigasi
+    const pChk = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
+    const pCont = document.getElementById('container-min-price-inputs');
+    const pBox = document.getElementById('min-price-custom-box');
+    if (pChk && pCont) {
+      pCont.classList.toggle('hidden', !pChk.checked);
+      pCont.classList.remove('opacity-40', 'pointer-events-none');
+      if (pBox) pBox.classList.remove('opacity-40', 'pointer-events-none');
+    }
+    const hChk = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
+    const hCont = document.getElementById('container-min-hpp-inputs');
+    const hBox = document.getElementById('min-hpp-custom-box');
+    if (hChk && hCont) {
+      hCont.classList.toggle('hidden', !hChk.checked);
+      hCont.classList.remove('opacity-40', 'pointer-events-none');
+      if (hBox) hBox.classList.remove('opacity-40', 'pointer-events-none');
     }
 
     const inMinHppTh = document.getElementById('input-min-hpp-threshold');
@@ -16713,6 +17040,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (btn) {
         btn.onclick = (e) => {
           e.preventDefault();
+          const check = canActivateTestMode();
+          if (!check.allowed) {
+            showPreviewTestModeAlert(check.reason);
+            return;
+          }
+          hidePreviewTestModeAlert();
           previewTestState.sidebarTab = 'test';
           syncPreviewModeHeaderButtons();
           updateProductCardLivePreview();
