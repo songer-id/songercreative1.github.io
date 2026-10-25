@@ -2790,8 +2790,15 @@ button:focus-visible {
 .mini-pdp-card .aspect-square,
 .mini-pdp-card .aspect-square img,
 .mini-pdp-drawer-sheet,
-.mini-pdp-bottom-bar {
+.mini-pdp-bottom-bar,
+.spec-drawer-sheet,
+#btn-close-spec-drawer {
   border-radius: 0 !important;
+}
+
+.spec-drawer-sheet {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .shadcn-select-popover {

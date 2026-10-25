@@ -142,6 +142,12 @@ const ProductForm = (() => {
   // Primary metadata state
   let primaryState = {
     name: '',
+    brand: '',
+    product_origin: '',
+    warranty_period: 'Tidak Ada Garansi',
+    warranty_type: '',
+    is_preorder: false,
+    preorder_days: 7,
     product_type: '', // 'physical' | 'non_physical' - default '' pada create (wajib dipilih seller!)
     status: 'published', // 'published' | 'draft'
     is_active: true, // Tampilkan di Etalase Toko (default ON)
@@ -450,6 +456,12 @@ const ProductForm = (() => {
     previewTestState.dimError = false;
     primaryState = {
       name: '',
+      brand: '',
+      product_origin: '',
+      warranty_period: 'Tidak Ada Garansi',
+      warranty_type: '',
+      is_preorder: false,
+      preorder_days: 7,
       product_type: '', // Default '' (kosong, seller wajib memilih sendiri!)
       status: 'published',
       is_active: true, // Default Tampilkan di Etalase Toko = ON
@@ -687,6 +699,12 @@ const ProductForm = (() => {
 
     primaryState = {
       name: prod.name,
+      brand: prod.brand || '',
+      product_origin: prod.product_origin || '',
+      warranty_period: prod.warranty_period || 'Tidak Ada Garansi',
+      warranty_type: prod.warranty_type || '',
+      is_preorder: Boolean(prod.is_preorder),
+      preorder_days: parseInt(prod.preorder_days) || 7,
       product_type: prod.product_type || 'physical',
       status: prod.status || 'published',
       has_shipping: prod.has_shipping !== undefined ? Boolean(prod.has_shipping) : ((prod.product_type || 'physical') !== 'non_physical'),
@@ -3734,6 +3752,219 @@ const ProductForm = (() => {
     });
   }
 
+  // ==========================================================================
+  // PEMBANGUN & PENGONTROL DRAWER SPESIFIKASI MINI PDP
+  // ==========================================================================
+  function buildProductSpecDrawerHtml() {
+    let isAvailable = false;
+    if (primaryState.is_unlimited_stock || primaryState.stock === null || primaryState.stock === undefined || primaryState.stock_status === 'unlimited') {
+      isAvailable = true;
+    } else if (primaryState.has_variants && materialsState && materialsState.length > 0) {
+      const anyUnlimited = materialsState.some(m => m.stock === null || m.stock === undefined || m.stock === 'unlimited');
+      const totalMatStock = materialsState.reduce((sum, m) => sum + (parseInt(m.stock) || 0), 0);
+      isAvailable = anyUnlimited || totalMatStock > 0;
+    } else {
+      isAvailable = (parseInt(primaryState.stock) || 0) > 0;
+    }
+    const stockHtml = isAvailable 
+      ? '<span class="text-slate-800 font-medium">Tersedia</span>'
+      : '<span class="text-red-600 font-semibold">Habis</span>';
+
+    const rows = [
+      { label: 'Stok', valueHtml: stockHtml }
+    ];
+
+    const minQty = parseInt(primaryState.min_order) || 1;
+    if (minQty > 1) {
+      rows.push({
+        label: 'Min. Jumlah Pembelian',
+        valueHtml: `<span class="text-slate-800 font-medium">${minQty} pcs</span>`
+      });
+    }
+
+    if (primaryState.has_wholesale) {
+      const validTiers = Array.isArray(primaryState.wholesale_tiers) 
+        ? primaryState.wholesale_tiers.filter(t => t && ((parseInt(t.min_qty) || 0) > 0 || (parseFloat(t.price) || 0) > 0))
+        : [];
+      if (validTiers.length > 0) {
+        const firstMin = parseInt(validTiers[0].min_qty) || 1;
+        rows.push({
+          label: 'Harga Grosir',
+          valueHtml: `<span class="text-slate-800 font-medium">Tersedia (Mulai ≥ ${firstMin} pcs)</span>`
+        });
+      }
+    }
+
+    if (primaryState.has_order_multiple) {
+      const multVal = parseInt(primaryState.order_multiple_value) || 1;
+      if (multVal > 1) {
+        rows.push({
+          label: 'Kelipatan Pembelian',
+          valueHtml: `<span class="text-slate-800 font-medium">Kelipatan ${multVal} pcs</span>`
+        });
+      }
+    }
+
+    const brandVal = (primaryState.brand && primaryState.brand.trim()) ? escapeHtml(primaryState.brand.trim()) : '-';
+    rows.push({
+      label: 'Merek',
+      valueHtml: `<span class="text-slate-800 font-medium">${brandVal}</span>`
+    });
+
+    const warrantyPeriod = (primaryState.warranty_period && primaryState.warranty_period.trim()) ? primaryState.warranty_period.trim() : 'Tidak Ada Garansi';
+    rows.push({
+      label: 'Masa Garansi',
+      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(warrantyPeriod)}</span>`
+    });
+
+    if (warrantyPeriod !== 'Tidak Ada Garansi') {
+      const warrantyType = (primaryState.warranty_type && primaryState.warranty_type.trim()) ? primaryState.warranty_type.trim() : 'Garansi Toko';
+      rows.push({
+        label: 'Jenis Garansi',
+        valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(warrantyType)}</span>`
+      });
+    }
+
+    const skuVal = (primaryState.sku || primaryState.parent_sku || '').trim();
+    if (skuVal) {
+      rows.push({
+        label: 'SKU Induk',
+        valueHtml: `<span class="text-slate-800 font-medium font-mono">${escapeHtml(skuVal)}</span>`
+      });
+    }
+
+    if (Boolean(primaryState.is_preorder)) {
+      const poDays = parseInt(primaryState.preorder_days) || 7;
+      rows.push({
+        label: 'Pre-Order',
+        valueHtml: `<span class="text-slate-800 font-medium">Ya (Estimasi ${poDays} Hari)</span>`
+      });
+    }
+
+    const originVal = (primaryState.product_origin && primaryState.product_origin.trim()) ? escapeHtml(primaryState.product_origin.trim()) : '-';
+    rows.push({
+      label: 'Asal Produk',
+      valueHtml: `<span class="text-slate-800 font-medium">${originVal}</span>`
+    });
+
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+    const sellerCity = settings.city || settings.store_city || settings.address_city || 'Kota Seller (Otomatis)';
+    rows.push({
+      label: 'Dikirim Dari',
+      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(sellerCity)}</span>`
+    });
+
+    const rowsHtml = rows.map(r => `
+      <div class="flex items-center py-2.5">
+        <div class="text-slate-500 w-[42%] shrink-0 text-xs">${r.label}</div>
+        <div class="text-slate-800 font-medium w-[58%] text-xs truncate">${r.valueHtml}</div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="spec-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 opacity-100 cursor-pointer"></div>
+      <div class="spec-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden">
+        <!-- Header Drawer -->
+        <div class="border-b border-slate-200 w-full bg-white shrink-0">
+          <h3 class="text-sm font-bold text-slate-800 text-center py-3">Spesifikasi</h3>
+        </div>
+
+        <!-- Body Daftar Spesifikasi -->
+        <div class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto px-4 py-1">
+          ${rowsHtml}
+        </div>
+
+        <!-- Footer Tombol CTA Ok -->
+        <div class="p-0 border-t border-slate-200 shrink-0">
+          <button type="button" id="btn-close-spec-drawer" class="btn-close-spec-drawer w-full h-10 font-bold text-white text-xs uppercase tracking-wider rounded-none border-0 cursor-pointer flex items-center justify-center transition active:opacity-90" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
+            Ok
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function openProductSpecDrawer() {
+    syncStateFromDOM();
+    const roots = [
+      document.getElementById('preview-scoped-modal-root'),
+      document.getElementById('preview-scoped-modal-root-mob')
+    ].filter(Boolean);
+
+    const specDrawerHtml = buildProductSpecDrawerHtml();
+
+    roots.forEach(root => {
+      if (root.id === 'preview-scoped-modal-root') {
+        root.className = 'absolute inset-0 z-50 flex flex-col justify-end overflow-hidden p-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300';
+      } else {
+        root.className = 'absolute inset-0 z-[100] flex flex-col justify-end overflow-hidden p-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300';
+      }
+      root.innerHTML = specDrawerHtml;
+      root.classList.remove('hidden');
+
+      const sheet = root.querySelector('.spec-drawer-sheet');
+      const backdrop = root.querySelector('.spec-drawer-backdrop');
+      if (sheet && backdrop) {
+        sheet.classList.add('translate-y-full');
+        sheet.classList.remove('translate-y-0');
+        backdrop.classList.add('opacity-0');
+        backdrop.classList.remove('opacity-100');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            sheet.classList.remove('translate-y-full');
+            sheet.classList.add('translate-y-0');
+          });
+        });
+      }
+
+      root.querySelectorAll('.btn-close-spec-drawer, #btn-close-spec-drawer').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          closeProductSpecDrawer();
+        };
+      });
+
+      if (backdrop) {
+        backdrop.onclick = (e) => {
+          e.preventDefault();
+          closeProductSpecDrawer();
+        };
+      }
+    });
+  }
+
+  function closeProductSpecDrawer() {
+    const roots = [
+      document.getElementById('preview-scoped-modal-root'),
+      document.getElementById('preview-scoped-modal-root-mob')
+    ].filter(Boolean);
+
+    roots.forEach(root => {
+      const sheet = root.querySelector('.spec-drawer-sheet');
+      const backdrop = root.querySelector('.spec-drawer-backdrop');
+      if (sheet) {
+        sheet.classList.remove('translate-y-0');
+        sheet.classList.add('translate-y-full');
+      }
+      if (backdrop) {
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+      }
+      setTimeout(() => {
+        root.classList.add('hidden');
+        root.classList.remove('flex');
+        root.innerHTML = '';
+        if (root.id === 'preview-scoped-modal-root') {
+          root.className = 'absolute inset-0 z-50 hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs';
+        } else {
+          root.className = 'absolute inset-0 z-[100] hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs';
+        }
+      }, 250);
+    });
+  }
+
   function openShopeeCheckoutDrawer(actionType) {
     const isAlreadyOpen = previewTestState.isDrawerOpen;
     previewTestState.isDrawerOpen = true;
@@ -4056,6 +4287,16 @@ const ProductForm = (() => {
       document.getElementById('card-live-preview-box') || document.getElementById('product-card-preview-container'),
       document.getElementById('mobile-card-preview-container')
     ].filter(Boolean);
+
+    // Buka Drawer Spesifikasi (Aktif di mode Pratinjau maupun mode Uji Coba, Desktop & Mobile Sheet)
+    containers.forEach(container => {
+      container.querySelectorAll('.btn-open-spec-drawer').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          openProductSpecDrawer();
+        };
+      });
+    });
 
     if (!isTestMode) {
       // Di Mode Preview: Kunci seluruh interaksi, tidak ada event handler yang dipasang!
@@ -6007,6 +6248,17 @@ const ProductForm = (() => {
                   </div>
                 ` : '')}
 
+                <!-- Baris Pemicu Drawer Spesifikasi -->
+                <div class="pt-2 border-t border-slate-100">
+                  <div class="btn-open-spec-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 cursor-pointer hover:text-slate-900 select-none">
+                    <div class="truncate">
+                      <span class="font-bold text-slate-800">Spesifikasi</span>
+                      <span class="font-normal text-slate-400 text-[11px] truncate"> (Stok, Merek, Garansi, Dikirim Dari...)</span>
+                    </div>
+                    <i class="bi bi-chevron-right text-xs text-slate-400 shrink-0"></i>
+                  </div>
+                </div>
+
                 <!-- Deskripsi Produk -->
                 <div class="space-y-1 pt-2 border-t border-slate-100">
                   <span class="text-xs font-medium text-slate-600 block">Deskripsi Produk</span>
@@ -7303,6 +7555,8 @@ const ProductForm = (() => {
       height: ''
     };
     const couriersList = Array.isArray(shippingCfg.couriers) ? shippingCfg.couriers : ['pickup', 'local_store', 'reguler'];
+    const storeSettings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+    const sellerCity = storeSettings.city || storeSettings.store_city || storeSettings.address_city || 'Kota Toko Seller';
 
     const allCategories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
     const currentSubs = primaryState.category_id ? DB.getSubCategories(primaryState.category_id) : [];
@@ -8180,6 +8434,119 @@ const ProductForm = (() => {
               <div>
                 <label for="input-prod-barcode" class="block text-xs font-bold text-slate-800 mb-1">Barcode / EAN (Opsional):</label>
                 <input type="text" id="input-prod-barcode" value="${escapeHtml(primaryState.barcode || '')}" placeholder="899..." class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-mono outline-none" />
+              </div>
+            </div>
+
+            <!-- Spesifikasi Tambahan & Garansi -->
+            <div class="border-t border-slate-100 pt-4 space-y-4">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-[var(--color-primary-subtle)] text-[var(--color-primary)] flex items-center justify-center font-bold text-xs">
+                  <i class="bi bi-card-checklist"></i>
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900">Spesifikasi Tambahan & Garansi</h4>
+                  <p class="text-[10px] text-slate-500">Atribut spesifikasi produk yang tampil pada drawer spesifikasi di pratinjau pembeli.</p>
+                </div>
+              </div>
+
+              <!-- Baris 1: Merek & Asal Produk -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label for="input-product-brand" class="block text-xs font-bold text-slate-800 mb-1">Merek (Opsional):</label>
+                  <input 
+                    type="text" 
+                    id="input-product-brand" 
+                    value="${escapeHtml(primaryState.brand || '')}" 
+                    placeholder="Tanpa Merek / Masukkan merek..." 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)]" 
+                  />
+                </div>
+
+                <div>
+                  <label for="select-product-origin" class="block text-xs font-bold text-slate-800 mb-1">Asal Produk:</label>
+                  <select 
+                    id="select-product-origin" 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
+                  >
+                    <option value="" ${!primaryState.product_origin ? 'selected' : ''}>- (Pilih Asal Produk)</option>
+                    <option value="Dalam Negeri (Lokal)" ${primaryState.product_origin === 'Dalam Negeri (Lokal)' ? 'selected' : ''}>Dalam Negeri (Lokal)</option>
+                    <option value="Impor" ${primaryState.product_origin === 'Impor' ? 'selected' : ''}>Impor</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Baris 2: Masa Garansi & Jenis Garansi -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label for="select-warranty-period" class="block text-xs font-bold text-slate-800 mb-1">Masa Garansi:</label>
+                  <select 
+                    id="select-warranty-period" 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
+                  >
+                    ${['Tidak Ada Garansi', '3 Hari', '7 Hari', '14 Hari', '1 Bulan', '3 Bulan', '6 Bulan', '1 Tahun', '2 Tahun', 'Seumur Hidup'].map(opt => `
+                      <option value="${opt}" ${(primaryState.warranty_period || 'Tidak Ada Garansi') === opt ? 'selected' : ''}>${opt}</option>
+                    `).join('')}
+                  </select>
+                </div>
+
+                <div id="container-warranty-type" class="${(primaryState.warranty_period && primaryState.warranty_period !== 'Tidak Ada Garansi') ? 'block' : 'hidden'}">
+                  <label for="select-warranty-type" class="block text-xs font-bold text-slate-800 mb-1">Jenis Garansi:</label>
+                  <select 
+                    id="select-warranty-type" 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
+                  >
+                    ${['Garansi Toko', 'Garansi Resmi Produsen', 'Garansi Distributor', 'Garansi Internasional'].map(opt => `
+                      <option value="${opt}" ${(primaryState.warranty_type || 'Garansi Toko') === opt ? 'selected' : ''}>${opt}</option>
+                    `).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <!-- Baris 3: Pre-Order -->
+              <div class="space-y-2 pt-1 border-t border-slate-100">
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200/80">
+                  <div>
+                    <label for="toggle-is-preorder" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
+                      <span>Sistem Pre-Order (PO)</span>
+                    </label>
+                    <p class="text-[11px] text-slate-500">
+                      Aktifkan jika produk memerlukan waktu pengerjaan / inden sebelum dikirim.
+                    </p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input 
+                      type="checkbox" 
+                      id="toggle-is-preorder" 
+                      ${primaryState.is_preorder ? 'checked' : ''} 
+                      class="sr-only peer toggle-switch-input"
+                    />
+                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+                  </label>
+                </div>
+
+                <div id="container-preorder-days" class="${primaryState.is_preorder ? 'block' : 'hidden'} pl-1">
+                  <label for="input-preorder-days" class="block text-xs font-bold text-slate-800 mb-1">Estimasi Waktu Pre-Order (Hari):</label>
+                  <div class="flex items-center gap-2 max-w-[200px]">
+                    <input 
+                      type="number" 
+                      id="input-preorder-days" 
+                      min="1" 
+                      max="90" 
+                      value="${primaryState.preorder_days || 7}" 
+                      class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]" 
+                    />
+                    <span class="text-xs text-slate-500 font-semibold">Hari</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Baris 4: Lokasi Pengiriman (Read-only otomatis) -->
+              <div class="flex items-start gap-2.5 p-3 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600">
+                <i class="bi bi-geo-alt-fill text-[var(--color-primary)] text-sm shrink-0 mt-0.5"></i>
+                <div>
+                  <span class="font-bold text-slate-800 block">Dikirim Dari:</span>
+                  <span>${escapeHtml(sellerCity)} <span class="text-[11px] text-slate-400 font-normal">(Otomatis mengikuti lokasi pendaftaran toko seller di Pengaturan Toko)</span></span>
+                </div>
               </div>
             </div>
 
@@ -13775,6 +14142,84 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Card 6: Komisi Afiliasi Events (Dipanggil mandiri di awal)
     if (typeof bindAffiliateCommissionEvents === 'function') {
       try { bindAffiliateCommissionEvents(); } catch (_) {}
+    }
+
+    // Card 6: Spesifikasi & Garansi Events
+    const inpBrand = document.getElementById('input-product-brand');
+    if (inpBrand) {
+      inpBrand.oninput = (e) => {
+        primaryState.brand = e.target.value.trim();
+        updateProductCardLivePreview();
+      };
+    }
+
+    const selOrigin = document.getElementById('select-product-origin');
+    if (selOrigin) {
+      selOrigin.onchange = (e) => {
+        primaryState.product_origin = e.target.value;
+        updateProductCardLivePreview();
+      };
+    }
+
+    const selWarrantyPeriod = document.getElementById('select-warranty-period');
+    const containerWarrantyType = document.getElementById('container-warranty-type');
+    const selWarrantyType = document.getElementById('select-warranty-type');
+    if (selWarrantyPeriod) {
+      selWarrantyPeriod.onchange = (e) => {
+        primaryState.warranty_period = e.target.value;
+        if (e.target.value && e.target.value !== 'Tidak Ada Garansi') {
+          if (containerWarrantyType) containerWarrantyType.classList.remove('hidden');
+          if (!primaryState.warranty_type) {
+            primaryState.warranty_type = 'Garansi Toko';
+            if (selWarrantyType) selWarrantyType.value = 'Garansi Toko';
+          }
+        } else {
+          if (containerWarrantyType) containerWarrantyType.classList.add('hidden');
+          primaryState.warranty_type = '';
+        }
+        updateProductCardLivePreview();
+      };
+    }
+
+    if (selWarrantyType) {
+      selWarrantyType.onchange = (e) => {
+        primaryState.warranty_type = e.target.value;
+        updateProductCardLivePreview();
+      };
+    }
+
+    const togglePo = document.getElementById('toggle-is-preorder');
+    const containerPoDays = document.getElementById('container-preorder-days');
+    const inpPoDays = document.getElementById('input-preorder-days');
+    if (togglePo) {
+      togglePo.onchange = (e) => {
+        primaryState.is_preorder = e.target.checked;
+        if (e.target.checked) {
+          if (containerPoDays) containerPoDays.classList.remove('hidden');
+          if (!primaryState.preorder_days) {
+            primaryState.preorder_days = 7;
+            if (inpPoDays) inpPoDays.value = 7;
+          }
+        } else {
+          if (containerPoDays) containerPoDays.classList.add('hidden');
+        }
+        updateProductCardLivePreview();
+      };
+    }
+
+    if (inpPoDays) {
+      inpPoDays.oninput = (e) => {
+        primaryState.preorder_days = parseInt(e.target.value) || 7;
+        updateProductCardLivePreview();
+      };
+    }
+
+    const inpSku = document.getElementById('input-prod-sku');
+    if (inpSku) {
+      inpSku.oninput = (e) => {
+        primaryState.sku = e.target.value.trim();
+        updateProductCardLivePreview();
+      };
     }
     // Tombol Aksi Bawah & Subnav Step 2: Kembali ke Step 1
     const handleStep2BackAction = (e) => {
@@ -19681,6 +20126,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const barcodeInp = document.getElementById('input-prod-barcode');
     if (barcodeInp) primaryState.barcode = barcodeInp.value.trim();
 
+    // Step 2 Card 6: Spesifikasi & Garansi DOM sync
+    const brandInp = document.getElementById('input-product-brand');
+    if (brandInp) primaryState.brand = brandInp.value.trim();
+    const originSel = document.getElementById('select-product-origin');
+    if (originSel) primaryState.product_origin = originSel.value;
+    const warrantyPeriodSel = document.getElementById('select-warranty-period');
+    if (warrantyPeriodSel) primaryState.warranty_period = warrantyPeriodSel.value;
+    const warrantyTypeSel = document.getElementById('select-warranty-type');
+    if (warrantyTypeSel) primaryState.warranty_type = warrantyTypeSel.value;
+    const togglePo = document.getElementById('toggle-is-preorder');
+    if (togglePo) primaryState.is_preorder = togglePo.checked;
+    const poDaysInp = document.getElementById('input-preorder-days');
+    if (poDaysInp) primaryState.preorder_days = parseInt(poDaysInp.value) || 7;
+
     // Step 2 Card 6: Komisi Afiliasi DOM sync
     const toggleAffEl = document.getElementById('toggle-affiliate-commission');
     if (toggleAffEl) {
@@ -20458,11 +20917,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     scrollToStep2Card,
     initStep2SubnavObserver,
     renderDimensionRulesSectionHtml,
-    syncThemeCSSVariables
+    syncThemeCSSVariables,
+    openProductSpecDrawer,
+    closeProductSpecDrawer,
+    buildProductSpecDrawerHtml
   };
 })();
 
 window.ProductForm = ProductForm;
+window.openProductSpecDrawer = ProductForm.openProductSpecDrawer;
+window.closeProductSpecDrawer = ProductForm.closeProductSpecDrawer;
+window.buildProductSpecDrawerHtml = ProductForm.buildProductSpecDrawerHtml;
 window.goToStep = ProductForm.goToStep;
 window.validateSinglePrice = ProductForm.validateSinglePrice;
 window.scrollToStep2Card = ProductForm.scrollToStep2Card;
