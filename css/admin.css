@@ -410,10 +410,9 @@ input[type="checkbox"].checkbox-brand:checked {
   /* Active when collapsed: soft emerald tinted box, emerald green icon, rounded-lg */
   .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item.is-nav-active .nav-icon,
   .admin-sidebar-hover-expand:not(.is-expanded) .admin-nav-item.bg-emerald-50 .nav-icon {
-    background-color: #ecfdf5 !important;
-    /* bg-emerald-50 */
+    background-color: var(--color-primary-subtle) !important;
     border-color: transparent !important;
-    color: #33b589 !important;
+    color: var(--color-primary) !important;
     border-radius: 0.5rem !important;
     /* rounded-lg */
     box-shadow: none !important;
@@ -508,8 +507,8 @@ input[type="checkbox"].checkbox-brand:checked {
 
   .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .admin-nav-item.is-nav-active,
   .admin-sidebar-hover-expand:not(.is-expanded) .nav-group:hover .nav-submenu .admin-nav-item.bg-emerald-50 {
-    background-color: #ecfdf5 !important;
-    color: #047857 !important;
+    background-color: var(--color-primary-subtle) !important;
+    color: var(--color-primary) !important;
     font-weight: 700 !important;
   }
 
@@ -563,10 +562,10 @@ input[type="checkbox"].checkbox-brand:checked {
 
   .nav-submenu .admin-nav-item.is-nav-active,
   .nav-submenu .admin-nav-item.bg-emerald-50 {
-    background-color: #ecfdf5 !important;
+    background-color: var(--color-primary-subtle) !important;
     border: 1px solid transparent !important;
     border-color: transparent !important;
-    color: #047857 !important;
+    color: var(--color-primary) !important;
     border-radius: 0.5rem !important;
     /* rounded-lg */
     font-weight: 700 !important;
@@ -639,10 +638,10 @@ input[type="checkbox"].checkbox-brand:checked {
 
   .admin-sidebar-hover-expand .nav-submenu .admin-nav-item.is-nav-active,
   .admin-sidebar-hover-expand .nav-submenu .admin-nav-item.bg-emerald-50 {
-    background-color: #ecfdf5 !important;
+    background-color: var(--color-primary-subtle) !important;
     border: 1px solid transparent !important;
     border-color: transparent !important;
-    color: #047857 !important;
+    color: var(--color-primary) !important;
     border-radius: 0.5rem !important;
     /* rounded-lg */
     font-weight: 700 !important;
@@ -1047,8 +1046,8 @@ input[type="checkbox"].checkbox-brand:checked {
 
 .variation-table .mat-input:focus,
 .variation-table .fin-input:focus {
-  border-color: #10b981;
-  box-shadow: 0 0 0 1px #10b981;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
   outline: none;
 }
 
@@ -1071,9 +1070,9 @@ input[type="checkbox"].checkbox-brand:checked {
 }
 
 .variation-img-btn:hover {
-  color: #059669;
-  border-color: #10b981;
-  background-color: #ecfdf5;
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  background-color: var(--color-primary-subtle);
 }
 
 /* ==========================================================================
@@ -1084,7 +1083,7 @@ input[type="checkbox"].checkbox-brand:checked {
 }
 
 .variation-option-row:hover .border-slate-400 {
-  border-color: #059669;
+  border-color: var(--color-primary);
 }
 
 /* Mobile 2-column grid ergonomics for option strips (< 640px) */
@@ -1166,14 +1165,14 @@ label:has(#toggle-custom-dimension) > div::after {
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Checked State (Hijau #10b981 / bg-emerald-500) */
+/* Checked State (Brand Theme / var(--color-primary)) */
 input#toggle-shipping-enabled:checked ~ div,
 input#toggle-is-cod:checked ~ div,
 input#toggle-cod-enabled:checked ~ div,
 input#input-cod-enabled:checked ~ div,
 input#toggle-custom-dimension:checked ~ div,
 .toggle-switch-input:checked ~ .toggle-switch-track {
-  background-color: #10b981 !important;
+  background-color: var(--color-primary) !important;
 }
 
 input#toggle-shipping-enabled:checked ~ div::after,
@@ -1187,7 +1186,7 @@ input#toggle-custom-dimension:checked ~ div::after,
 
 input.toggle-same-price:checked~div,
 input.toggle-same-cost:checked~div {
-  background-color: #059669 !important;
+  background-color: var(--color-primary) !important;
 }
 
 input.toggle-same-price:checked~div::after,
@@ -1458,8 +1457,8 @@ input.toggle-same-cost:checked~div::after {
 .btn-shopee-tier3.is-active,
 .btn-shopee-tier4.is-active {
   background-color: #ffffff !important;
-  color: #33b589 !important;
-  border: 1px solid #33b589 !important;
+  color: var(--color-primary) !important;
+  border: 1px solid var(--color-primary) !important;
   font-weight: 600 !important;
 }
 
@@ -1471,7 +1470,7 @@ input.toggle-same-cost:checked~div::after {
 
 .extra-item-row.is-active {
   background-color: #ffffff !important;
-  border-color: #33b589 !important;
+  border-color: var(--color-primary) !important;
 }
 
 .extra-item-row:not(.is-active) {
@@ -2524,4 +2523,67 @@ label:has(input[type="radio"]:checked) span,
 .focus\:ring-emerald-200:focus,
 .focus\:ring-teal-500:focus {
   box-shadow: 0 0 0 2px var(--color-primary-subtle) !important;
+}
+
+/* 8. Toggle Peer Checked Overrides (Temuan #4) */
+.peer:checked ~ .peer-checked\:bg-emerald-500,
+.peer:checked ~ .peer-checked\:bg-emerald-600,
+input.peer:checked + div,
+input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-500,
+input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-600 {
+  background-color: var(--color-primary) !important;
+}
+
+/* 9. Group-Hover Slot Tambah Foto #btn-slot-add-photo (Temuan #8) */
+#btn-slot-add-photo:hover .group-hover\:bg-emerald-100,
+.group:hover .group-hover\:bg-emerald-100 {
+  background-color: var(--color-primary-subtle) !important;
+}
+#btn-slot-add-photo:hover [class*="group-hover:text-emerald-"],
+.group:hover [class*="group-hover:text-emerald-"] {
+  color: var(--color-primary) !important;
+}
+
+/* 10. Hover Tombol Dashed + Variasi Produk & + Variasi 2/3/4 (Temuan #9) */
+#btn-enable-variants:hover,
+.btn-trigger-variasi-dashed:hover,
+#btn-trigger-variasi-2:hover,
+#btn-trigger-variasi-3:hover,
+#btn-trigger-variasi-4:hover,
+#btn-add-wholesale-tier:hover,
+#btn-add-variant-multiple-row:hover {
+  background-color: var(--color-primary-subtle) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: var(--color-primary-hover) !important;
+}
+
+/* 11. Focus & Slash Opacity Classes (Temuan #10 & #13) */
+.focus\:bg-emerald-50\/30:focus,
+.focus\:bg-emerald-50\/40:focus,
+.bg-emerald-50\/80,
+.bg-emerald-50\/90,
+.bg-emerald-100\/70,
+.hover\:bg-emerald-50\/40:hover,
+.hover\:bg-emerald-50\/50:hover,
+.hover\:bg-emerald-50\/30:hover {
+  background-color: var(--color-primary-subtle) !important;
+}
+.border-emerald-100\/60,
+.border-emerald-200\/60,
+.border-emerald-200\/90 {
+  border-color: var(--color-primary) !important;
+}
+.ring-emerald-500\/20,
+.ring-emerald-500\/30 {
+  --tw-ring-color: var(--color-primary-subtle) !important;
+}
+
+/* 12. Floating Action Button Mobile Live Preview Override (Temuan #1) */
+#btn-fab-live-preview {
+  background-image: none !important;
+  background-color: var(--color-primary) !important;
+}
+#btn-fab-live-preview:hover {
+  background-image: none !important;
+  background-color: var(--color-primary-hover) !important;
 }

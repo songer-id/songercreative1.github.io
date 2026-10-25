@@ -288,13 +288,13 @@ const ProductForm = (() => {
           const f1 = p.custom_footer_1 ? { ...p.custom_footer_1 } : {
             text: p.card_footer_text || 'Proses Hanya Dalam 1Jam',
             icon: p.footer_badge_icon || 'truck',
-            bg_color: p.footer_bg_color || '#059669',
+            bg_color: p.footer_bg_color || getPrimaryThemeColor(),
             text_color: p.footer_text_color || '#ffffff'
           };
           const f2 = p.custom_footer_2 ? { ...p.custom_footer_2 } : {
             text: p.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
             icon: p.footer_2_badge_icon || 'minus',
-            bg_color: p.footer_2_bg_color || '#047857',
+            bg_color: p.footer_2_bg_color || getPrimaryThemeColor(),
             text_color: p.footer_2_text_color || '#ffffff'
           };
           return { f1, f2 };
@@ -1434,8 +1434,8 @@ const ProductForm = (() => {
                       <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
                         <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || '#047857'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || '#047857'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
@@ -1455,7 +1455,7 @@ const ProductForm = (() => {
                     <input type="checkbox" id="cfg-save-as-default-toggle" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
                     <span id="label-save-as-default-desk">Gunakan Thema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
                   </label>
-                  <button type="button" id="btn-save-card-design" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                  <button type="button" id="btn-save-card-design" class="btn-primary-brand w-full py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
                     <span>Simpan Perubahan</span>
                   </button>
@@ -1475,7 +1475,7 @@ const ProductForm = (() => {
 
         <!-- FLOATING STRIP BUTTON TO EXPAND DESKTOP SIDEBAR HAS BEEN MOVED TO SUBNAVBAR [PRATINJAU] -->
         <!-- MOBILE FLOATING ACTION BUTTON (FAB) (Posisikan di tengah bawah) -->
-        <button type="button" id="btn-fab-live-preview" class="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 active:scale-95 text-white px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none">
+        <button type="button" id="btn-fab-live-preview" class="btn-primary-brand lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 active:scale-95 text-white px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none">
           <i class="bi bi-eye text-sm"></i>
           <span>Live Preview</span>
         </button>
@@ -1669,8 +1669,8 @@ const ProductForm = (() => {
                       <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
                         <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-2-bg-color-mob" value="${primaryState.footer_2_bg_color || '#047857'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-2-bg-hex-mob" value="${primaryState.footer_2_bg_color || '#047857'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          <input type="color" id="cfg-footer-2-bg-color-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-footer-2-bg-hex-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
@@ -1690,7 +1690,7 @@ const ProductForm = (() => {
                     <input type="checkbox" id="cfg-save-as-default-toggle-mob" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
                     <span id="label-save-as-default-mob">Gunakan Thema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
                   </label>
-                  <button type="button" id="btn-save-card-design-mob" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                  <button type="button" id="btn-save-card-design-mob" class="btn-primary-brand w-full py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
                     <span>Simpan Perubahan</span>
                   </button>
@@ -1860,7 +1860,7 @@ const ProductForm = (() => {
       discount_badge_bg_color: document.getElementById('cfg-discount-badge-bg-color')?.value || defThemeColor,
       discount_badge_border_color: document.getElementById('cfg-discount-badge-border-color')?.value || defThemeColor,
       badge_radius: document.getElementById('cfg-badge-radius')?.value || '6px',
-      badge_text_color: document.getElementById('cfg-badge-text-color')?.value || '#047857',
+      badge_text_color: document.getElementById('cfg-badge-text-color')?.value || defThemeColor,
       badge_bg_color: document.getElementById('cfg-badge-bg-color')?.value || '#ecfdf5',
       badge_border_color: document.getElementById('cfg-badge-border-color')?.value || '#a7f3d0',
       enable_countdown: enableCountdownVal,
@@ -1929,7 +1929,7 @@ const ProductForm = (() => {
     setVal('cfg-discount-badge-border-hex', cfg.discount_badge_border_color || defThemeColor);
 
     // Badge styling tokens
-    const defBadgeText = variantCode === 'B' ? '#6b21a8' : '#047857';
+    const defBadgeText = variantCode === 'B' ? '#6b21a8' : defThemeColor;
     const defBadgeBg = variantCode === 'B' ? '#faf5ff' : '#ecfdf5';
     const defBadgeBorder = variantCode === 'B' ? '#e9d5ff' : '#a7f3d0';
 
@@ -1967,7 +1967,7 @@ const ProductForm = (() => {
     setVal('cfg-footer-text-hex', fTxt);
 
     // Footer 2 styling tokens (khusus Versi C)
-    const f2Bg = primaryState.footer_2_bg_color || cfg.footer_2_bg_color || '#047857';
+    const f2Bg = primaryState.footer_2_bg_color || cfg.footer_2_bg_color || defThemeColor;
     const f2Txt = primaryState.footer_2_text_color || cfg.footer_2_text_color || '#ffffff';
     setVal('cfg-footer-2-bg-color', f2Bg);
     setVal('cfg-footer-2-bg-hex', f2Bg);
@@ -3129,11 +3129,11 @@ const ProductForm = (() => {
     const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
 
     const rootPrimaryColor = (typeof getComputedStyle !== 'undefined' && typeof document !== 'undefined')
-      ? (getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#33b589')
-      : '#33b589';
+      ? (getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || getPrimaryThemeColor())
+      : getPrimaryThemeColor();
     let accentColor = rootPrimaryColor;
     if (primaryState.card_variant === 'B') accentColor = '#0f172a';
-    else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || '#047857';
+    else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || rootPrimaryColor;
 
     const noneItem = validExtras.find(ex => ex.is_default_none);
     const noneId = noneItem?.id;
@@ -3936,7 +3936,7 @@ const ProductForm = (() => {
               </div>
             `,
             secondaryBtnHtml: `
-              <button type="button" id="btn-copy-wa-sim" class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+              <button type="button" id="btn-copy-wa-sim" class="btn-primary-brand flex-1 py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
                 <i class="bi bi-clipboard"></i> Salin Pesan
               </button>
             `,
@@ -4843,7 +4843,7 @@ const ProductForm = (() => {
 
     // Badge Custom Styles (label khusus)
     const badgeRadius = document.getElementById('cfg-badge-radius')?.value || '6px';
-    const badgeTextColor = document.getElementById('cfg-badge-text-color')?.value || (variant === 'B' ? '#6b21a8' : '#047857');
+    const badgeTextColor = document.getElementById('cfg-badge-text-color')?.value || (variant === 'B' ? '#6b21a8' : defCardThemeColor);
     const badgeBgColor = document.getElementById('cfg-badge-bg-color')?.value || (variant === 'B' ? '#faf5ff' : '#ecfdf5');
     const badgeBorderColor = document.getElementById('cfg-badge-border-color')?.value || (variant === 'B' ? '#e9d5ff' : '#a7f3d0');
     const badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
@@ -5111,13 +5111,13 @@ const ProductForm = (() => {
     // SIMULASI MINI PDP DETAIL PRODUK (KHUSUS STEP 2 - MODE UJI COBA INTERAKTIF)
     if (currentStep === 2) {
       const rootPrimaryColor = (typeof getComputedStyle !== 'undefined' && typeof document !== 'undefined')
-        ? (getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#33b589')
-        : '#33b589';
+        ? (getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || getPrimaryThemeColor())
+        : getPrimaryThemeColor();
       let accentColor = rootPrimaryColor; // Default Model 1 dari Pengaturan Tema
       if (variant === 'B') {
         accentColor = '#0f172a'; // Model 2 Dark Slate
       } else if (variant === 'C') {
-        accentColor = primaryState.footer_bg_color || '#047857'; // Model 3 Teal
+        accentColor = primaryState.footer_bg_color || rootPrimaryColor; // Model 3 Teal
       }
       if (cfg && cfg.btn_color) {
         accentColor = cfg.btn_color;
@@ -6595,7 +6595,7 @@ const ProductForm = (() => {
                   <button type="button" id="btn-ai-desc-cancel" class="px-3.5 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
                     Batal
                   </button>
-                  <button type="button" id="btn-ai-desc-apply" class="px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                  <button type="button" id="btn-ai-desc-apply" class="btn-primary-brand px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                     <i class="bi bi-check-lg"></i>
                     <span>Gunakan Teks Ini</span>
                   </button>
@@ -7903,7 +7903,7 @@ const ProductForm = (() => {
           </div>
 
           <div class="pt-2 border-t border-slate-100 flex justify-end">
-            <button type="button" class="btn-close-help-rule px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer">
+            <button type="button" class="btn-close-help-rule btn-primary-brand px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-bold transition shadow-2xs cursor-pointer">
               Mengerti
             </button>
           </div>
@@ -8023,7 +8023,7 @@ const ProductForm = (() => {
             <button type="button" class="btn-close-option-rule-modal px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
               Batal
             </button>
-            <button type="button" id="btn-save-option-rule-modal" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer">
+            <button type="button" id="btn-save-option-rule-modal" class="btn-primary-brand px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-bold transition shadow-2xs cursor-pointer">
               Simpan Aturan
             </button>
           </div>
@@ -9733,8 +9733,8 @@ const ProductForm = (() => {
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
-            <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-wholesale-config">Tutup</button>
-            <button type="button" id="btn-save-wholesale-modal" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Simpan Pengaturan</button>
+            <button type="button" class="btn-close-modal px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-wholesale-config">Tutup</button>
+            <button type="button" id="btn-save-wholesale-modal" class="btn-primary-brand px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Simpan Pengaturan</button>
           </div>
         </div>
       </div>
@@ -9758,8 +9758,8 @@ const ProductForm = (() => {
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
-            <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-order-multiple-config">Tutup</button>
-            <button type="button" id="btn-save-multiple-modal" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Simpan Pengaturan</button>
+            <button type="button" class="btn-close-modal px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-order-multiple-config">Tutup</button>
+            <button type="button" id="btn-save-multiple-modal" class="btn-primary-brand px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Simpan Pengaturan</button>
           </div>
         </div>
       </div>
@@ -9791,8 +9791,8 @@ const ProductForm = (() => {
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
-            <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-specific-options">Batal</button>
-            <button type="button" id="btn-apply-specific-modal" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Terapkan Opsi</button>
+            <button type="button" class="btn-close-modal px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-specific-options">Batal</button>
+            <button type="button" id="btn-apply-specific-modal" class="btn-primary-brand px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Terapkan Opsi</button>
           </div>
         </div>
       </div>
