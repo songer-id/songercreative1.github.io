@@ -44,6 +44,67 @@ const ProductForm = (() => {
     return null;
   }
 
+  /**
+   * Sinkronisasi Variabel CSS Tema Dinamis (:root)
+   * Menghubungkan --color-primary, --color-primary-hover, --color-primary-subtle,
+   * dan --color-secondary dari DB.getSettings() saat form diinisialisasi atau dirender.
+   */
+  function syncThemeCSSVariables() {
+    try {
+      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
+      const primaryColor = settings.primary_color || '#33b589';
+
+      const calcHover = (hex, percent = -15) => {
+        if (!hex || typeof hex !== 'string') return '#28916d';
+        let clean = hex.replace('#', '');
+        if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+        if (clean.length !== 6) return '#28916d';
+        const num = parseInt(clean, 16);
+        let r = (num >> 16) + Math.round(255 * (percent / 100));
+        let g = ((num >> 8) & 0x00FF) + Math.round(255 * (percent / 100));
+        let b = (num & 0x0000FF) + Math.round(255 * (percent / 100));
+        r = Math.min(255, Math.max(0, r));
+        g = Math.min(255, Math.max(0, g));
+        b = Math.min(255, Math.max(0, b));
+        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+      };
+
+      const toSubtle = (hex, alpha = 0.12) => {
+        if (typeof Utils !== 'undefined' && typeof Utils.hexToRgba === 'function') {
+          return Utils.hexToRgba(hex, alpha);
+        }
+        if (!hex || typeof hex !== 'string') return `rgba(51, 181, 137, ${alpha})`;
+        let clean = hex.replace('#', '');
+        if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+        if (clean.length !== 6) return `rgba(51, 181, 137, ${alpha})`;
+        const r = parseInt(clean.substring(0, 2), 16);
+        const g = parseInt(clean.substring(2, 4), 16);
+        const b = parseInt(clean.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      };
+
+      const primaryHover = settings.primary_hover_color || calcHover(primaryColor, -15);
+      const primarySubtle = toSubtle(primaryColor, 0.12);
+
+      const secondaryColor = settings.secondary_color || '#f59e0b';
+      const secondaryHover = settings.secondary_hover_color || calcHover(secondaryColor, -15);
+      const secondarySubtle = toSubtle(secondaryColor, 0.14);
+
+      const root = document.documentElement;
+      if (root && root.style) {
+        root.style.setProperty('--color-primary', primaryColor);
+        root.style.setProperty('--color-primary-hover', primaryHover);
+        root.style.setProperty('--color-primary-subtle', primarySubtle);
+
+        root.style.setProperty('--color-secondary', secondaryColor);
+        root.style.setProperty('--color-secondary-hover', secondaryHover);
+        root.style.setProperty('--color-secondary-subtle', secondarySubtle);
+      }
+    } catch (err) {
+      console.warn('ProductForm: Gagal sinkronisasi variabel tema CSS', err);
+    }
+  }
+
   // Primary metadata state
   let primaryState = {
     name: '',
@@ -507,6 +568,7 @@ const ProductForm = (() => {
   }
 
   function loadProductForEdit(id) {
+    syncThemeCSSVariables();
     const prod = DB.getProductById(id);
     if (!prod) {
       alert('Produk tidak ditemukan!');
@@ -834,6 +896,7 @@ const ProductForm = (() => {
   }
 
   function renderForm() {
+    syncThemeCSSVariables();
     const container = document.getElementById('form-container');
     if (!container) return;
 
@@ -885,13 +948,13 @@ const ProductForm = (() => {
                   </div>
                   <div class="grid grid-cols-2 gap-2.5" id="product-type-selector-group">
                     <!-- Fisik -->
-                    <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.product_type === 'physical' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                    <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.product_type === 'physical' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 radio-card-selected' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
                       <input type="radio" name="product_type_radio" value="physical" ${primaryState.product_type === 'physical' ? 'checked' : ''} class="sr-only" />
                       <span>Fisik</span>
                     </label>
 
                     <!-- Non Fisik -->
-                    <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.product_type === 'non_physical' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                    <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.product_type === 'non_physical' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 radio-card-selected' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
                       <input type="radio" name="product_type_radio" value="non_physical" ${primaryState.product_type === 'non_physical' ? 'checked' : ''} class="sr-only" />
                       <span>Non Fisik</span>
                     </label>
@@ -948,19 +1011,19 @@ const ProductForm = (() => {
 
                     <div class="grid grid-cols-3 gap-2" id="card-model-selector-group">
                       <!-- Kartu Klasik -->
-                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'A' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 radio-card-selected' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
                         <input type="radio" name="card_variant_radio" value="A" ${primaryState.card_variant === 'A' ? 'checked' : ''} class="sr-only" />
                         <span>Kartu Klasik</span>
                       </label>
 
                       <!-- Kartu Minimalis -->
-                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'B' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 radio-card-selected' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
                         <input type="radio" name="card_variant_radio" value="B" ${primaryState.card_variant === 'B' ? 'checked' : ''} class="sr-only" />
                         <span>Kartu Minimalis</span>
                       </label>
 
                       <!-- Kartu Detail -->
-                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
+                      <label class="rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border ${primaryState.card_variant === 'C' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 radio-card-selected' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}">
                         <input type="radio" name="card_variant_radio" value="C" ${primaryState.card_variant === 'C' ? 'checked' : ''} class="sr-only" />
                         <span>Kartu Detail</span>
                       </label>
@@ -5601,7 +5664,7 @@ const ProductForm = (() => {
     return Object.values(DB.PRICE_TYPES).map(pt => {
       const isChecked = selectedId === pt.id;
       return `
-        <label class="p-3 rounded-xl border ${isChecked ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20 shadow-xs' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1 block">
+        <label class="p-3 rounded-xl border ${isChecked ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20 shadow-xs radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1 block">
           <div class="flex items-center justify-between">
             <span class="font-bold text-xs ${isChecked ? 'text-emerald-800' : 'text-slate-800'}">${pt.label}</span>
             <input 
@@ -5722,27 +5785,27 @@ const ProductForm = (() => {
       <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
       <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full flex items-center justify-between px-3 sm:px-6">
         <nav class="flex items-center overflow-x-auto scrollbar-none flex-1 min-w-0" id="step2-subnav-links">
-          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-info" data-step2-target="card-step2-info">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-active px-3 py-2.5 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-info" data-step2-target="card-step2-info">
             Informasi Produk
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-sales" data-step2-target="card-step2-sales">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-sales" data-step2-target="card-step2-sales">
             Informasi Penjualan
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-shipping" data-step2-target="card-step2-shipping">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-shipping" data-step2-target="card-step2-shipping">
             Pengiriman
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-promo" data-step2-target="card-step2-promo">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-promo" data-step2-target="card-step2-promo">
             Program Promo
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-description" data-step2-target="card-step2-description">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-description" data-step2-target="card-step2-description">
             Deskripsi Produk
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-others" data-step2-target="card-step2-others">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-others" data-step2-target="card-step2-others">
             Lainnya
           </button>
         </nav>
-        <button type="button" id="btn-subnav-toggle-preview" class="ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none ${!primaryState.is_active ? 'hidden' : ''} ${isLivePreviewOpen ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}" title="${isLivePreviewOpen ? 'Tutup Panel Pratinjau' : 'Buka Panel Pratinjau'}">
-          <i class="bi bi-eye text-sm ${isLivePreviewOpen ? 'text-emerald-600' : 'text-slate-500'}"></i>
+        <button type="button" id="btn-subnav-toggle-preview" class="ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none ${!primaryState.is_active ? 'hidden' : ''} ${isLivePreviewOpen ? 'subnav-preview-active' : 'subnav-preview-inactive'}" title="${isLivePreviewOpen ? 'Tutup Panel Pratinjau' : 'Buka Panel Pratinjau'}">
+          <i class="bi bi-eye text-sm ${isLivePreviewOpen ? '' : 'text-slate-500'}"></i>
           <span>Pratinjau</span>
         </button>
       </div>
@@ -5784,7 +5847,7 @@ const ProductForm = (() => {
                   Kategori Produk <span class="text-red-500">*</span>
                 </label>
               </div>
-              <button type="button" id="btn-quick-add-category-step2" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1 transition cursor-pointer" title="Tambah Kategori">
+              <button type="button" id="btn-quick-add-category-step2" class="text-xs font-bold hover:underline flex items-center gap-1 transition cursor-pointer" style="color: var(--color-primary);" title="Tambah Kategori">
                 <i class="bi bi-plus-circle"></i>
                 <span>Tambah Kategori</span>
               </button>
@@ -6466,7 +6529,7 @@ const ProductForm = (() => {
               <button 
                 type="button" 
                 id="btn-ai-generate-desc" 
-                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs transition cursor-pointer"
+                class="btn-primary-brand inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold text-white shadow-xs transition cursor-pointer"
                 title="Rangkai deskripsi produk secara otomatis dengan AI"
               >
                 <i class="bi bi-stars"></i>
@@ -9176,7 +9239,7 @@ const ProductForm = (() => {
         <div class="space-y-4 pt-1">
           <!-- 2 Sub-pilihan: Ukuran Custom vs Ukuran Tetap -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="p-3 rounded-md border ${sizeType === 'custom' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
+            <label class="p-3 rounded-md border ${sizeType === 'custom' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
               <input type="radio" name="size_pricing_type_radio" value="custom" ${sizeType === 'custom' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
               <div>
                 <span class="font-bold text-xs ${sizeType === 'custom' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Ukuran Custom</span>
@@ -9184,7 +9247,7 @@ const ProductForm = (() => {
               </div>
             </label>
 
-            <label class="p-3 rounded-md border ${sizeType === 'fixed' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
+            <label class="p-3 rounded-md border ${sizeType === 'fixed' ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
               <input type="radio" name="size_pricing_type_radio" value="fixed" ${sizeType === 'fixed' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
               <div>
                 <span class="font-bold text-xs ${sizeType === 'fixed' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Ukuran Tetap</span>
@@ -11069,9 +11132,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const tid = tab.getAttribute('data-step2-target') || tab.getAttribute('data-target');
       if (tid === targetId) {
         activeTabEl = tab;
-        tab.className = 'step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+        tab.className = 'step2-nav-tab step2-subnav-link subnav-tab-active px-3 py-2.5 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
       } else {
-        tab.className = 'step2-nav-tab step2-subnav-link px-3 py-2.5 text-xs md:text-sm font-medium text-slate-600 border-b-2 border-transparent hover:text-emerald-600 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+        tab.className = 'step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
       }
     });
 
@@ -11275,6 +11338,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   }
 
   function goToStep(step) {
+    syncThemeCSSVariables();
     if (step < 1 || step > 2) return;
 
     if (step < currentStep) {
@@ -14945,12 +15009,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
       btn.classList.remove('hidden');
       if (isOpen) {
-        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100';
+        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none subnav-preview-active';
         btn.title = 'Tutup Panel Pratinjau';
         const icon = btn.querySelector('i');
-        if (icon) icon.className = 'bi bi-eye text-sm text-emerald-600';
+        if (icon) icon.className = 'bi bi-eye text-sm';
       } else {
-        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200';
+        btn.className = 'ml-2 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer select-none subnav-preview-inactive';
         btn.title = 'Buka Panel Pratinjau';
         const icon = btn.querySelector('i');
         if (icon) icon.className = 'bi bi-eye text-sm text-slate-500';
@@ -15328,7 +15392,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = r.closest('label');
           if (lbl) {
             if (r.checked) {
-              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
+              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none radio-card-selected';
             } else {
               lbl.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
             }
@@ -15357,7 +15421,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = r.closest('label');
           if (lbl) {
             if (r.checked) {
-              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
+              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none radio-card-selected';
             } else {
               lbl.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
             }
@@ -15963,7 +16027,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const labelWrapper = rad.closest('label');
         if (labelWrapper) {
           if (rad.checked) {
-            labelWrapper.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
+            labelWrapper.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none radio-card-selected';
           } else {
             labelWrapper.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
           }
@@ -16545,7 +16609,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = r.closest('label');
           if (lbl) {
             if (r.checked) {
-              lbl.className = 'p-3 rounded-xl border border-emerald-500 bg-white ring-2 ring-emerald-500/20 shadow-xs cursor-pointer transition space-y-1 block';
+              lbl.className = 'p-3 rounded-xl border border-emerald-500 bg-white ring-2 ring-emerald-500/20 shadow-xs cursor-pointer transition space-y-1 block radio-card-selected';
             } else {
               lbl.className = 'p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition space-y-1 block';
             }
@@ -16656,7 +16720,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const lbl = radio.closest('label');
           if (lbl) {
             if (radio.checked) {
-              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none';
+              lbl.className = 'border-emerald-500 bg-emerald-50/70 text-emerald-700 ring-1 ring-emerald-500 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none radio-card-selected';
             } else {
               lbl.className = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 rounded-md text-center justify-center py-2.5 px-3 text-xs sm:text-[13px] font-semibold transition cursor-pointer flex items-center select-none border';
             }
@@ -16741,7 +16805,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const labelWrapper = rad.closest('label');
       if (labelWrapper) {
         if (rad.checked) {
-          labelWrapper.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500 bg-emerald-50/50 text-emerald-800 font-bold ring-1 ring-emerald-500/30 text-xs cursor-pointer transition select-none';
+          labelWrapper.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500 bg-emerald-50/50 text-emerald-800 font-bold ring-1 ring-emerald-500/30 text-xs cursor-pointer transition select-none radio-card-selected';
         } else {
           labelWrapper.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium text-xs cursor-pointer transition select-none';
         }
@@ -18186,7 +18250,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     validateSinglePrice,
     scrollToStep2Card,
     initStep2SubnavObserver,
-    renderDimensionRulesSectionHtml
+    renderDimensionRulesSectionHtml,
+    syncThemeCSSVariables
   };
 })();
 
@@ -18201,5 +18266,6 @@ window.updateSandboxCalculation = ProductForm.updateSandboxCalculation;
 window.validatePrerequisitesBeforeCustomDimension = ProductForm.validatePrerequisitesBeforeCustomDimension;
 window.getEffectiveRuleForOption = ProductForm.getEffectiveRuleForOption;
 window.renderDimensionRulesSectionHtml = ProductForm.renderDimensionRulesSectionHtml;
+window.syncProductFormTheme = ProductForm.syncThemeCSSVariables;
 
 

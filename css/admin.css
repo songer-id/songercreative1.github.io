@@ -2034,6 +2034,9 @@ input.toggle-same-cost:checked~div::after {
 
 /* 1. Tombol Utama, Tombol AI, FAB Live Preview, & Tab Mode Uji Coba Aktif */
 #view-product-form .btn-primary-brand,
+#btn-step-1-next,
+#btn-submit-product,
+#btn-submit-product-top,
 #btn-save-option-rule-modal,
 #btn-expand-preview-sidebar,
 #btn-fab-live-preview,
@@ -2044,7 +2047,10 @@ input.toggle-same-cost:checked~div::after {
 #btn-preview-mode-test.bg-emerald-600,
 #btn-preview-mode-test-mob.bg-emerald-600,
 #btn-trigger-extra-service,
-#btn-trigger-extra-service-normal {
+#btn-trigger-extra-service-normal,
+#btn-apply-bulk-price,
+#btn-apply-bulk-stock,
+#btn-apply-bulk-sku {
   background: var(--color-primary) !important;
   background-image: none !important;
   color: #ffffff !important;
@@ -2052,6 +2058,9 @@ input.toggle-same-cost:checked~div::after {
 }
 
 #view-product-form .btn-primary-brand:hover,
+#btn-step-1-next:hover,
+#btn-submit-product:hover,
+#btn-submit-product-top:hover,
 #btn-save-option-rule-modal:hover,
 #btn-expand-preview-sidebar:hover,
 #btn-fab-live-preview:hover,
@@ -2060,53 +2069,122 @@ input.toggle-same-cost:checked~div::after {
 #btn-save-card-design-mob:hover,
 #btn-ai-desc-apply:hover,
 #btn-trigger-extra-service:hover,
-#btn-trigger-extra-service-normal:hover {
+#btn-trigger-extra-service-normal:hover,
+#btn-apply-bulk-price:hover,
+#btn-apply-bulk-stock:hover,
+#btn-apply-bulk-sku:hover {
   background-color: var(--color-primary-hover) !important;
   border-color: var(--color-primary-hover) !important;
 }
 
-/* 2. Seluruh Toggle Switch (State ON / Checked) */
+/* 2. Tombol Aksi Teks / Sekunder (+ Tambah Kategori, Kembali ke Daftar) */
+#btn-quick-add-category-step2,
+#btn-quick-add-category,
+#view-product-form #btn-quick-add-category-step2,
+#view-product-form #btn-quick-add-category {
+  color: var(--color-primary) !important;
+}
+
+#btn-quick-add-category-step2:hover,
+#btn-quick-add-category:hover,
+#view-product-form #btn-quick-add-category-step2:hover,
+#view-product-form #btn-quick-add-category:hover,
+#btn-back-to-list:hover,
+#view-product-form #btn-back-to-list:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+/* 3. Seluruh Toggle Switch (State ON / Checked) & Kotak Simulasi Diskon */
 #view-product-form input.peer:checked ~ div,
+#view-product-form input.peer:checked + div,
 #view-product-form input.toggle-same-price:checked ~ div,
 #view-product-form input.toggle-same-cost:checked ~ div,
 #view-product-form input[type="checkbox"].peer:checked + div,
-#view-product-form input[type="checkbox"]:checked + div.peer-checked\:bg-emerald-600,
+#view-product-form input[type="checkbox"]:checked + div[class*="peer-checked:bg-"],
+#view-product-form input[type="checkbox"]:checked ~ div[class*="peer-checked:bg-"],
 #desktop-preview-sidebar input.peer:checked ~ div,
 #mobile-preview-sheet input.peer:checked ~ div {
   background-color: var(--color-primary) !important;
 }
 
-/* 3. Kotak Pilihan Radio & Kartu Interaktif saat Terpilih (Selected State) */
+/* Kotak "Simulasikan Diskon ON" di Panel Pratinjau Kanan */
+#desktop-preview-sidebar label:has(#cfg-simulate-countdown-preview:checked),
+#mobile-preview-sheet label:has(#cfg-simulate-countdown-preview-mob:checked) {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary-hover) !important;
+}
+
+#desktop-preview-sidebar label:has(#cfg-simulate-countdown-preview):hover,
+#mobile-preview-sheet label:has(#cfg-simulate-countdown-preview-mob):hover {
+  background-color: var(--color-primary-subtle) !important;
+}
+
+#cfg-simulate-countdown-preview,
+#cfg-simulate-countdown-preview-mob,
+#cfg-save-as-default-toggle,
+#cfg-save-as-default-toggle-mob {
+  accent-color: var(--color-primary) !important;
+}
+
+/* 4. Kotak Pilihan Radio & Kartu Interaktif saat Terpilih (Selected State) */
+#view-product-form .radio-card-selected,
 #view-product-form label.border-emerald-500,
 #view-product-form label[class*="ring-emerald-500"],
 #view-product-form label[class*="bg-emerald-50"],
 .sandbox-finishing-chip.border-emerald-500,
 .extra-item-row.is-active,
-#view-product-form .variation-option-row.ring-emerald-500 {
+#view-product-form .variation-option-row.ring-emerald-500,
+#product-type-selector-group label:has(input:checked),
+#card-model-selector-group label:has(input:checked),
+#card-model-selector-group label.radio-card-selected,
+#section-card-footer-config,
+#view-product-form label:has(input[name="price_type_radio"]:checked),
+#view-product-form label:has(input[name="size_pricing_type_radio"]:checked),
+#view-product-form label:has(input[name="photo_aspect_ratio"]:checked) {
   border-color: var(--color-primary) !important;
   background-color: var(--color-primary-subtle) !important;
   box-shadow: 0 0 0 1px var(--color-primary) !important;
 }
 
+#view-product-form .radio-card-selected span,
+#view-product-form .radio-card-selected div,
+#view-product-form label.border-emerald-500 span,
 #view-product-form label.border-emerald-500 [class*="text-emerald-"],
 #view-product-form label[class*="ring-emerald-500"] [class*="text-emerald-"],
 #view-product-form label[class*="border-emerald-"] span,
-#view-product-form label.border-emerald-500,
+#product-type-selector-group label:has(input:checked) span,
+#card-model-selector-group label:has(input:checked) span,
+#view-product-form label:has(input[name="price_type_radio"]:checked) span,
+#view-product-form label:has(input[name="size_pricing_type_radio"]:checked) span,
 .extra-item-row.is-active [class*="text-emerald-"] {
   color: var(--color-primary-hover) !important;
 }
 
-/* 4. Tombol Sekunder, Tombol Dashed (+ Tambah Variasi / Aturan / Grosir / Kelipatan), & Chip Preset */
-#view-product-form button[class*="border-dashed"][class*="border-emerald-"] {
+/* 5. Tombol Sekunder, Tombol Dashed (+ Tambah Variasi / Aturan / Grosir / Kelipatan), & Chip Preset */
+#view-product-form button[class*="border-dashed"][class*="border-emerald-"],
+#btn-trigger-variasi-2,
+#btn-trigger-variasi-3,
+#btn-trigger-variasi-4,
+#btn-add-wholesale-tier,
+#btn-add-variant-multiple-row {
   border-color: var(--color-primary) !important;
   color: var(--color-primary) !important;
 }
 
-#view-product-form button[class*="border-dashed"][class*="border-emerald-"]:hover {
+#view-product-form button[class*="border-dashed"][class*="border-emerald-"]:hover,
+#btn-trigger-variasi-2:hover,
+#btn-trigger-variasi-3:hover,
+#btn-trigger-variasi-4:hover,
+#btn-add-wholesale-tier:hover,
+#btn-add-variant-multiple-row:hover {
   background-color: var(--color-primary-subtle) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: var(--color-primary-hover) !important;
 }
 
 .btn-preset-label-step1,
+.btn-preset-label,
 #btn-toggle-wholesale,
 #btn-toggle-order-multiple,
 #btn-toggle-sandbox-calc,
@@ -2119,7 +2197,15 @@ input.toggle-same-cost:checked~div::after {
   color: var(--color-primary-hover) !important;
 }
 
-/* 5. Sub-Navbar Sticky Step 2 (.step2-nav-tab) */
+.btn-preset-label-step1:hover,
+.btn-preset-label:hover {
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+/* 6. Sub-Navbar Sticky Step 2 (.step2-nav-tab, .subnav-tab-active, .subnav-tab-inactive) & Tombol Pratinjau */
+.subnav-tab-active,
+#step2-subnav-fixed .subnav-tab-active,
 .step2-nav-tab.border-emerald-600,
 .step2-nav-tab.text-emerald-600,
 .step2-nav-tab.active {
@@ -2127,19 +2213,59 @@ input.toggle-same-cost:checked~div::after {
   border-bottom-color: var(--color-primary) !important;
 }
 
+.subnav-tab-inactive,
+#step2-subnav-fixed .subnav-tab-inactive {
+  color: #475569 !important; /* slate-600 */
+  border-bottom-color: transparent !important;
+}
+
+.subnav-tab-inactive:hover,
+#step2-subnav-fixed .subnav-tab-inactive:hover,
 .step2-nav-tab:hover {
   color: var(--color-primary-hover) !important;
   border-bottom-color: var(--color-primary-hover) !important;
+  background-color: var(--color-primary-subtle) !important;
 }
 
-/* 6. Input Focus Border, Focus Ring, Checkbox/Radio Accent, & Combobox Hover */
+/* Tombol Pratinjau Subnav (#btn-subnav-toggle-preview) */
+.subnav-preview-active,
+#view-product-form #btn-subnav-toggle-preview.subnav-preview-active,
+#view-product-form #btn-subnav-toggle-preview[class*="bg-emerald-"] {
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.subnav-preview-active i,
+#view-product-form #btn-subnav-toggle-preview.subnav-preview-active i,
+#view-product-form #btn-subnav-toggle-preview[class*="bg-emerald-"] i {
+  color: var(--color-primary) !important;
+}
+
+.subnav-preview-active:hover,
+#view-product-form #btn-subnav-toggle-preview.subnav-preview-active:hover {
+  background-color: var(--color-primary-subtle) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: var(--color-primary-hover) !important;
+}
+
+.subnav-preview-inactive:hover,
+#view-product-form #btn-subnav-toggle-preview.subnav-preview-inactive:hover {
+  background-color: #e2e8f0 !important;
+  color: var(--color-primary-hover) !important;
+}
+
+/* 7. Input Focus Border, Focus Ring, Checkbox/Radio Accent, & Combobox Hover */
 #view-product-form input:focus:not(.border-red-500),
 #view-product-form select:focus:not(.border-red-500),
 #view-product-form textarea:focus:not(.border-red-500),
 #view-product-form .input-custom-label-slot:focus,
+#view-product-form [class*="focus:border-emerald-"]:focus,
+#view-product-form [class*="focus-within:border-"]:focus-within,
 #drawer-custom-dimension-section .focus-within\:border-\[\#33b589\]:focus-within {
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 2px var(--color-primary-subtle) !important;
+  outline: none !important;
 }
 
 #view-product-form input[type="radio"],
@@ -2156,14 +2282,15 @@ input.toggle-same-cost:checked~div::after {
   color: var(--color-primary-hover) !important;
 }
 
-/* 7. Slot Foto Galeri & Badge Cover */
+/* 8. Slot Foto Galeri & Badge Cover */
 .gallery-thumb-slot.border-emerald-500,
 #view-product-form .gallery-thumb-slot[class*="border-emerald-"] {
   border-color: var(--color-primary) !important;
 }
 
 .gallery-thumb-slot span.bg-emerald-600,
-#step2-gallery-strip span.bg-emerald-600 {
+#step2-gallery-strip span.bg-emerald-600,
+.btn-set-main-image:hover {
   background-color: var(--color-primary) !important;
   color: #ffffff !important;
 }
@@ -2175,7 +2302,7 @@ input.toggle-same-cost:checked~div::after {
   color: var(--color-primary) !important;
 }
 
-/* 8. Chip Variasi & Radio di Mini PDP / Drawer Uji Coba */
+/* 9. Chip Variasi & Radio di Mini PDP / Drawer Uji Coba */
 .mini-pdp-var-chip.is-active,
 .btn-preview-tier1.is-active,
 .btn-preview-tier2.is-active,
@@ -2209,4 +2336,81 @@ input.toggle-same-cost:checked~div::after {
 
 .extra-item-row .text-\[\#33b589\] {
   color: var(--color-primary) !important;
+}
+
+/* 10. Scoped Override Pengaman Tailwind Emerald Classes di #view-product-form, #desktop-preview-sidebar, & #mobile-preview-sheet */
+#view-product-form .bg-emerald-500,
+#view-product-form .bg-emerald-600,
+#view-product-form .bg-emerald-700,
+#desktop-preview-sidebar .bg-emerald-600,
+#mobile-preview-sheet .bg-emerald-600,
+#desktop-preview-sidebar .bg-emerald-500,
+#mobile-preview-sheet .bg-emerald-500 {
+  background-color: var(--color-primary) !important;
+}
+
+#view-product-form .hover\:bg-emerald-600:hover,
+#view-product-form .hover\:bg-emerald-700:hover,
+#view-product-form .hover\:bg-emerald-500:hover,
+#desktop-preview-sidebar .hover\:bg-emerald-600:hover,
+#mobile-preview-sheet .hover\:bg-emerald-600:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+#view-product-form .text-emerald-500,
+#view-product-form .text-emerald-600,
+#view-product-form .text-emerald-700,
+#view-product-form .text-emerald-800,
+#view-product-form .text-emerald-950,
+#desktop-preview-sidebar .text-emerald-600,
+#mobile-preview-sheet .text-emerald-600 {
+  color: var(--color-primary) !important;
+}
+
+#view-product-form .hover\:text-emerald-600:hover,
+#view-product-form .hover\:text-emerald-700:hover,
+#desktop-preview-sidebar .hover\:text-emerald-600:hover,
+#mobile-preview-sheet .hover\:text-emerald-600:hover {
+  color: var(--color-primary-hover) !important;
+}
+
+#view-product-form .border-emerald-500,
+#view-product-form .border-emerald-600,
+#desktop-preview-sidebar .border-emerald-500,
+#mobile-preview-sheet .border-emerald-500 {
+  border-color: var(--color-primary) !important;
+}
+
+#view-product-form .hover\:border-emerald-500:hover,
+#view-product-form .hover\:border-emerald-600:hover {
+  border-color: var(--color-primary-hover) !important;
+}
+
+#view-product-form .bg-emerald-50,
+#view-product-form .bg-emerald-50\/40,
+#view-product-form .bg-emerald-50\/50,
+#view-product-form .bg-emerald-50\/70,
+#view-product-form .bg-emerald-100,
+#desktop-preview-sidebar .bg-emerald-50,
+#mobile-preview-sheet .bg-emerald-50 {
+  background-color: var(--color-primary-subtle) !important;
+}
+
+#view-product-form .hover\:bg-emerald-50:hover,
+#view-product-form .hover\:bg-emerald-100:hover {
+  background-color: var(--color-primary-subtle) !important;
+}
+
+#view-product-form .ring-emerald-500,
+#view-product-form [class*="ring-emerald-"] {
+  --tw-ring-color: var(--color-primary) !important;
+}
+
+#view-product-form .focus\:border-emerald-500:focus {
+  border-color: var(--color-primary) !important;
+}
+
+#view-product-form .focus\:ring-emerald-500:focus,
+#view-product-form .focus\:ring-emerald-200:focus {
+  box-shadow: 0 0 0 2px var(--color-primary-subtle) !important;
 }
