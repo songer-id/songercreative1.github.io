@@ -328,7 +328,7 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
   - [ ] Pembuatan Member Area Pelanggan (Login OAuth, Riwayat Pesanan & Pelunasan DP, Unduhan Digital, Dashboard Affiliate).
 
 - [ ] **TAHAP 5: Form Produk, Kategori, Riwayat Mutasi Stok & Manajemen Pesanan 3 Lapis Status**
-  - [x] Implementasi sistem **Komisi Afiliasi Produk** di `js/product-form.js` & `js/db.js` (3 jenis komisi: Persentase, Nominal Tetap, dan Bertingkat berdasarkan Qty dengan logika penambahan baris pintar, toggle aktivasi, syarat minimal nilai order, validasi ketat, dan auto-save draft).
+  - [x] Implementasi sistem **Komisi Afiliasi Produk** di `js/product-form.js`, `js/db.js`, & `css/admin.css` (3 jenis komisi: Persentase, Nominal Tetap, dan Bertingkat berdasarkan Qty dengan logika penambahan baris pintar, toggle aktivasi reaktif dengan delegasi event global click/change/input, tooltip popover informatif, syarat minimal nilai order, validasi ketat, dan auto-save draft).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

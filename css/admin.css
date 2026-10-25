@@ -2737,4 +2737,21 @@ input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-600 {
   background-color: var(--color-primary-subtle) !important;
   color: var(--color-primary-hover) !important;
   border-color: var(--color-primary-hover) !important;
+}
+
+#affiliate-commission-config-box.hidden {
+  display: none !important;
+}
+#affiliate-commission-config-box.block {
+  display: block !important;
+}
+#affiliate-mode-percentage.hidden,
+#affiliate-mode-fixed.hidden,
+#affiliate-mode-tiered.hidden {
+  display: none !important;
+}
+#affiliate-mode-percentage.block,
+#affiliate-mode-fixed.block,
+#affiliate-mode-tiered.block {
+  display: block !important;
 }

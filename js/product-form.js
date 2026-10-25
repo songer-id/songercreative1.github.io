@@ -5818,6 +5818,85 @@ const ProductForm = (() => {
   // ==========================================================================
   // RENDER & EVENT HANDLERS: KOMISI AFILIASI PRODUK (CLEAN FLAT SAAS LAYOUT)
   // ==========================================================================
+  function setAffiliateCommissionEnabled(enabled) {
+    primaryState.has_affiliate_commission = Boolean(enabled);
+    const toggle = document.getElementById('toggle-affiliate-commission');
+    if (toggle && toggle.checked !== primaryState.has_affiliate_commission) {
+      toggle.checked = primaryState.has_affiliate_commission;
+    }
+    const configBox = document.getElementById('affiliate-commission-config-box');
+    if (configBox) {
+      if (primaryState.has_affiliate_commission) {
+        configBox.classList.remove('hidden');
+        configBox.classList.add('block');
+        configBox.style.display = 'block';
+      } else {
+        configBox.classList.add('hidden');
+        configBox.classList.remove('block');
+        configBox.style.display = 'none';
+      }
+    }
+    const type = primaryState.affiliate_commission_type || 'tiered';
+    setAffiliateCommissionType(type);
+    saveDraftToStorage();
+  }
+
+  function setAffiliateCommissionType(type) {
+    primaryState.affiliate_commission_type = type;
+
+    const modePercent = document.getElementById('affiliate-mode-percentage');
+    const modeFixed = document.getElementById('affiliate-mode-fixed');
+    const modeTiered = document.getElementById('affiliate-mode-tiered');
+
+    if (modePercent) {
+      if (type === 'percentage') {
+        modePercent.classList.remove('hidden');
+        modePercent.classList.add('block');
+        modePercent.style.display = 'block';
+      } else {
+        modePercent.classList.add('hidden');
+        modePercent.classList.remove('block');
+        modePercent.style.display = 'none';
+      }
+    }
+    if (modeFixed) {
+      if (type === 'fixed') {
+        modeFixed.classList.remove('hidden');
+        modeFixed.classList.add('block');
+        modeFixed.style.display = 'block';
+      } else {
+        modeFixed.classList.add('hidden');
+        modeFixed.classList.remove('block');
+        modeFixed.style.display = 'none';
+      }
+    }
+    if (modeTiered) {
+      if (type === 'tiered') {
+        modeTiered.classList.remove('hidden');
+        modeTiered.classList.add('block');
+        modeTiered.style.display = 'block';
+      } else {
+        modeTiered.classList.add('hidden');
+        modeTiered.classList.remove('block');
+        modeTiered.style.display = 'none';
+      }
+    }
+
+    const typeBtns = document.querySelectorAll('.affiliate-type-btn');
+    typeBtns.forEach(btn => {
+      const bType = btn.getAttribute('data-type');
+      const isActive = (bType === type);
+      btn.classList.toggle('active-type', isActive);
+      btn.classList.toggle('border-slate-300', !isActive);
+      btn.classList.toggle('text-slate-700', !isActive);
+      btn.classList.toggle('bg-white', !isActive);
+      const radio = btn.querySelector('input[type="radio"]');
+      if (radio) radio.checked = isActive;
+    });
+
+    saveDraftToStorage();
+  }
+
   function renderAffiliateCommissionSection() {
     const isEnabled = Boolean(primaryState.has_affiliate_commission);
     const type = primaryState.affiliate_commission_type || 'tiered';
@@ -5839,16 +5918,16 @@ const ProductForm = (() => {
           <div class="flex items-center gap-1.5">
             <h3 class="text-xs sm:text-sm font-bold text-slate-900">Komisi Afiliasi</h3>
             <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-              <button type="button" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Komisi Afiliasi" aria-label="Informasi Komisi Afiliasi">
+              <button type="button" id="btn-tooltip-affiliate" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Komisi Afiliasi" aria-label="Informasi Komisi Afiliasi">
                 <i class="bi bi-question-circle"></i>
               </button>
-              <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
+              <div id="tooltip-popover-affiliate" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
                 Atur komisi khusus bagi afiliator yang berhasil menjual produk ini. Jika dinonaktifkan, produk akan mengikuti aturan komisi global di menu Marketing &gt; Affiliate.
                 <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
               </div>
             </div>
           </div>
-          <label class="relative inline-flex items-center cursor-pointer select-none">
+          <label class="relative inline-flex items-center cursor-pointer select-none" for="toggle-affiliate-commission">
             <input type="checkbox" id="toggle-affiliate-commission" class="sr-only peer" ${isEnabled ? 'checked' : ''}>
             <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-[var(--color-primary)] relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all peer-checked:after:translate-x-4"></div>
             <span class="ml-2 text-xs font-bold text-slate-700">Aktifkan Komisi Afiliasi untuk Produk Ini</span>
@@ -5856,7 +5935,7 @@ const ProductForm = (() => {
         </div>
 
         <!-- Panel Konfigurasi Komisi (Tampil saat Toggle ON) -->
-        <div id="affiliate-commission-config-box" class="${isEnabled ? 'block' : 'hidden'} space-y-4">
+        <div id="affiliate-commission-config-box" class="${isEnabled ? 'block' : 'hidden'} space-y-4" style="display: ${isEnabled ? 'block' : 'none'};">
           <!-- Pilihan Jenis Komisi (Selectable Buttons tanpa bulatan radio) -->
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-800">Jenis Komisi:</label>
@@ -5877,7 +5956,7 @@ const ProductForm = (() => {
           </div>
 
           <!-- Mode A: Persentase (%) -->
-          <div id="affiliate-mode-percentage" class="${type === 'percentage' ? 'block' : 'hidden'} space-y-1.5">
+          <div id="affiliate-mode-percentage" class="${type === 'percentage' ? 'block' : 'hidden'} space-y-1.5" style="display: ${type === 'percentage' ? 'block' : 'none'};">
             <label for="input-affiliate-percent" class="block text-xs font-bold text-slate-800">Besaran Komisi (%) <span class="text-red-500">*</span></label>
             <div class="relative w-full sm:w-64">
               <input type="number" id="input-affiliate-percent" step="0.1" min="0" max="100" value="${type === 'percentage' && val ? val : ''}" placeholder="Contoh: 2.5" class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-bold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]">
@@ -5887,7 +5966,7 @@ const ProductForm = (() => {
           </div>
 
           <!-- Mode B: Nominal Tetap (Rp) -->
-          <div id="affiliate-mode-fixed" class="${type === 'fixed' ? 'block' : 'hidden'} space-y-1.5">
+          <div id="affiliate-mode-fixed" class="${type === 'fixed' ? 'block' : 'hidden'} space-y-1.5" style="display: ${type === 'fixed' ? 'block' : 'none'};">
             <label for="input-affiliate-fixed" class="block text-xs font-bold text-slate-800">Besaran Komisi per Qty (Rp) <span class="text-red-500">*</span></label>
             <div class="relative w-full sm:w-64">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">Rp</span>
@@ -5897,7 +5976,7 @@ const ProductForm = (() => {
           </div>
 
           <!-- Mode C: Bertingkat -->
-          <div id="affiliate-mode-tiered" class="${type === 'tiered' ? 'block' : 'hidden'} space-y-2.5">
+          <div id="affiliate-mode-tiered" class="${type === 'tiered' ? 'block' : 'hidden'} space-y-2.5" style="display: ${type === 'tiered' ? 'block' : 'none'};">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-800">Aturan Komisi Bertingkat Berdasarkan Jumlah Pesanan:</span>
             </div>
@@ -5950,10 +6029,10 @@ const ProductForm = (() => {
             <div class="flex items-center gap-1.5 mb-1.5">
               <label for="input-affiliate-min-order" class="text-xs font-bold text-slate-800">Min. Nilai Pesanan (Rp)</label>
               <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                <button type="button" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Batas Minimum Nilai Pesanan" aria-label="Informasi Batas Minimum Nilai Pesanan">
+                <button type="button" id="btn-tooltip-min-order" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Batas Minimum Nilai Pesanan" aria-label="Informasi Batas Minimum Nilai Pesanan">
                   <i class="bi bi-question-circle"></i>
                 </button>
-                <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
+                <div id="tooltip-popover-min-order" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
                   Komisi hanya diberikan jika total nilai pesanan produk ini mencapai batas minimum. Isi 0 jika tanpa batas minimum.
                   <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                 </div>
@@ -6047,10 +6126,15 @@ const ProductForm = (() => {
         };
       }
       if (btnDel) {
-        btnDel.onclick = () => {
+        btnDel.onclick = (e) => {
+          e.preventDefault();
           if (primaryState.affiliate_commission_tiers.length <= 1) {
             if (typeof showToast === 'function') {
               showToast('Minimal harus tersisa 1 baris tingkat komisi!', 'warning');
+            } else if (typeof App !== 'undefined' && App.showToast) {
+              App.showToast('Minimal harus tersisa 1 baris tingkat komisi!', 'warning');
+            } else {
+              alert('Minimal harus tersisa 1 baris tingkat komisi!');
             }
             return;
           }
@@ -6063,28 +6147,31 @@ const ProductForm = (() => {
   }
 
   function addAffiliateTierRow() {
-    if (!Array.isArray(primaryState.affiliate_commission_tiers)) {
-      primaryState.affiliate_commission_tiers = [];
+    if (!Array.isArray(primaryState.affiliate_commission_tiers) || primaryState.affiliate_commission_tiers.length === 0) {
+      primaryState.affiliate_commission_tiers = [
+        { min_qty: 1, max_qty: 49, commission_pct: 0.5 },
+        { min_qty: 50, max_qty: 99, commission_pct: 2.0 },
+        { min_qty: 100, max_qty: null, commission_pct: 3.5 }
+      ];
+      renderAffiliateTiersTableBody();
+      saveDraftToStorage();
+      return;
     }
     const tiers = primaryState.affiliate_commission_tiers;
-    if (tiers.length === 0) {
-      tiers.push({ min_qty: 1, max_qty: 49, commission_pct: 0.5 });
+    const lastTier = tiers[tiers.length - 1];
+    let prevMin = parseInt(lastTier.min_qty) || 1;
+    let prevMax = (lastTier.max_qty !== null && lastTier.max_qty !== undefined && lastTier.max_qty !== '') ? parseInt(lastTier.max_qty) : null;
+    
+    if (prevMax !== null && !isNaN(prevMax)) {
+      const nextMin = prevMax + 1;
+      const nextPct = Number(((lastTier.commission_pct || 0) + 1.0).toFixed(1));
+      tiers.push({ min_qty: nextMin, max_qty: null, commission_pct: nextPct });
     } else {
-      const lastTier = tiers[tiers.length - 1];
-      let prevMin = parseInt(lastTier.min_qty) || 1;
-      let prevMax = (lastTier.max_qty !== null && lastTier.max_qty !== undefined && lastTier.max_qty !== '') ? parseInt(lastTier.max_qty) : null;
-      
-      if (prevMax !== null && !isNaN(prevMax)) {
-        const nextMin = prevMax + 1;
-        const nextPct = Number(((lastTier.commission_pct || 0) + 1.0).toFixed(1));
-        tiers.push({ min_qty: nextMin, max_qty: null, commission_pct: nextPct });
-      } else {
-        const newPrevMax = prevMin + 49;
-        lastTier.max_qty = newPrevMax;
-        const nextMin = newPrevMax + 1;
-        const nextPct = Number(((lastTier.commission_pct || 0) + 1.0).toFixed(1));
-        tiers.push({ min_qty: nextMin, max_qty: null, commission_pct: nextPct });
-      }
+      const newPrevMax = prevMin + 49;
+      lastTier.max_qty = newPrevMax;
+      const nextMin = newPrevMax + 1;
+      const nextPct = Number(((lastTier.commission_pct || 0) + 1.0).toFixed(1));
+      tiers.push({ min_qty: nextMin, max_qty: null, commission_pct: nextPct });
     }
     renderAffiliateTiersTableBody();
     saveDraftToStorage();
@@ -6092,51 +6179,45 @@ const ProductForm = (() => {
 
   function bindAffiliateCommissionEvents() {
     const toggleAff = document.getElementById('toggle-affiliate-commission');
-    const configBox = document.getElementById('affiliate-commission-config-box');
+    const isChecked = Boolean(primaryState.has_affiliate_commission);
+    
     if (toggleAff) {
-      toggleAff.onchange = e => {
-        primaryState.has_affiliate_commission = e.target.checked;
-        if (configBox) {
-          configBox.classList.toggle('hidden', !e.target.checked);
-          configBox.classList.toggle('block', e.target.checked);
-        }
-        saveDraftToStorage();
+      toggleAff.checked = isChecked;
+      toggleAff.onchange = (e) => {
+        setAffiliateCommissionEnabled(e.target.checked);
       };
     }
 
+    const configBox = document.getElementById('affiliate-commission-config-box');
+    if (configBox) {
+      if (isChecked) {
+        configBox.classList.remove('hidden');
+        configBox.classList.add('block');
+        configBox.style.display = 'block';
+      } else {
+        configBox.classList.add('hidden');
+        configBox.classList.remove('block');
+        configBox.style.display = 'none';
+      }
+    }
+
+    const type = primaryState.affiliate_commission_type || 'tiered';
+    setAffiliateCommissionType(type);
+
     const typeBtns = document.querySelectorAll('.affiliate-type-btn');
     typeBtns.forEach(btn => {
-      btn.onclick = () => {
-        const type = btn.getAttribute('data-type');
-        if (!type) return;
-        primaryState.affiliate_commission_type = type;
-        
-        const radio = btn.querySelector('input[type="radio"]');
-        if (radio) radio.checked = true;
-
-        typeBtns.forEach(b => {
-          const isActive = b.getAttribute('data-type') === type;
-          b.classList.toggle('active-type', isActive);
-          b.classList.toggle('border-slate-300', !isActive);
-          b.classList.toggle('text-slate-700', !isActive);
-          b.classList.toggle('bg-white', !isActive);
-        });
-
-        const modePercent = document.getElementById('affiliate-mode-percentage');
-        const modeFixed = document.getElementById('affiliate-mode-fixed');
-        const modeTiered = document.getElementById('affiliate-mode-tiered');
-
-        if (modePercent) modePercent.classList.toggle('hidden', type !== 'percentage');
-        if (modeFixed) modeFixed.classList.toggle('hidden', type !== 'fixed');
-        if (modeTiered) modeTiered.classList.toggle('hidden', type !== 'tiered');
-
-        saveDraftToStorage();
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const t = btn.getAttribute('data-type');
+        if (t) {
+          setAffiliateCommissionType(t);
+        }
       };
     });
 
     const inpPercent = document.getElementById('input-affiliate-percent');
     if (inpPercent) {
-      inpPercent.oninput = e => {
+      inpPercent.oninput = (e) => {
         const raw = e.target.value;
         primaryState.affiliate_commission_value = (raw !== '' && !isNaN(parseFloat(raw))) ? parseFloat(raw) : 0;
         saveDraftToStorage();
@@ -6145,7 +6226,7 @@ const ProductForm = (() => {
 
     const inpFixed = document.getElementById('input-affiliate-fixed');
     if (inpFixed) {
-      inpFixed.oninput = e => {
+      inpFixed.oninput = (e) => {
         const cleanVal = e.target.value.replace(/\D/g, '');
         const numVal = parseInt(cleanVal, 10) || 0;
         primaryState.affiliate_commission_value = numVal;
@@ -6156,7 +6237,7 @@ const ProductForm = (() => {
 
     const inpMinOrder = document.getElementById('input-affiliate-min-order');
     if (inpMinOrder) {
-      inpMinOrder.oninput = e => {
+      inpMinOrder.oninput = (e) => {
         const cleanVal = e.target.value.replace(/\D/g, '');
         const numVal = parseInt(cleanVal, 10) || 0;
         primaryState.affiliate_min_order_amount = numVal;
@@ -6167,7 +6248,8 @@ const ProductForm = (() => {
 
     const btnAddTier = document.getElementById('btn-add-affiliate-tier');
     if (btnAddTier) {
-      btnAddTier.onclick = () => {
+      btnAddTier.onclick = (e) => {
+        e.preventDefault();
         addAffiliateTierRow();
       };
     }
@@ -7315,6 +7397,78 @@ const ProductForm = (() => {
     if (!window._comboboxGlobalClickListener) {
       window._comboboxGlobalClickListener = true;
       document.addEventListener('click', (e) => {
+      // Delegasi Klik Tooltip Komisi Afiliasi
+      const affTooltipBtn = e.target.closest('#btn-tooltip-affiliate') || e.target.closest('#btn-tooltip-min-order');
+      if (affTooltipBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const wrapper = affTooltipBtn.closest('.tooltip-wrapper');
+        const popover = wrapper ? wrapper.querySelector('.tooltip-popover') : null;
+        if (popover) {
+          if (popover.classList.contains('hidden')) {
+            popover.classList.remove('hidden');
+            popover.classList.add('block');
+          } else {
+            popover.classList.add('hidden');
+            popover.classList.remove('block');
+          }
+        }
+        return;
+      }
+
+      // Delegasi Tutup Popover Tooltip saat klik di luar
+      if (!e.target.closest('.tooltip-wrapper')) {
+        document.querySelectorAll('#section-product-affiliate-commission .tooltip-popover.block').forEach(p => {
+          p.classList.remove('block');
+          p.classList.add('hidden');
+        });
+      }
+
+      // Delegasi Tombol Jenis Komisi Afiliasi
+      const affTypeBtn = e.target.closest('.affiliate-type-btn');
+      if (affTypeBtn) {
+        e.preventDefault();
+        const type = affTypeBtn.getAttribute('data-type');
+        if (type && typeof setAffiliateCommissionType === 'function') {
+          setAffiliateCommissionType(type);
+        }
+        return;
+      }
+
+      // Delegasi Tombol Tambah Tingkat Komisi
+      const addTierBtn = e.target.closest('#btn-add-affiliate-tier');
+      if (addTierBtn) {
+        e.preventDefault();
+        if (typeof addAffiliateTierRow === 'function') {
+          addAffiliateTierRow();
+        }
+        return;
+      }
+
+      // Delegasi Tombol Hapus Tingkat Komisi
+      const delTierBtn = e.target.closest('.btn-delete-affiliate-tier');
+      if (delTierBtn) {
+        e.preventDefault();
+        const idx = parseInt(delTierBtn.getAttribute('data-tier-index'), 10);
+        if (!isNaN(idx) && Array.isArray(primaryState.affiliate_commission_tiers)) {
+          if (primaryState.affiliate_commission_tiers.length <= 1) {
+            if (typeof showToast === 'function') {
+              showToast('Minimal harus tersisa 1 baris tingkat komisi!', 'warning');
+            } else if (typeof App !== 'undefined' && App.showToast) {
+              App.showToast('Minimal harus tersisa 1 baris tingkat komisi!', 'warning');
+            } else {
+              alert('Minimal harus tersisa 1 baris tingkat komisi!');
+            }
+            return;
+          }
+          primaryState.affiliate_commission_tiers.splice(idx, 1);
+          if (typeof renderAffiliateTiersTableBody === 'function') {
+            renderAffiliateTiersTableBody();
+          }
+          saveDraftToStorage();
+        }
+        return;
+      }
         if (!e.target.closest('.custom-combobox-wrapper')) {
           document.querySelectorAll('.custom-combobox-popover').forEach(p => p.classList.add('hidden'));
         }
@@ -12494,6 +12648,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
   // BIND EVENT INTERAKTIF STEP 2
   bindStep2InteractiveEvents = function() {
+    // Card 6: Komisi Afiliasi Events (Dipanggil mandiri di awal)
+    if (typeof bindAffiliateCommissionEvents === 'function') {
+      try { bindAffiliateCommissionEvents(); } catch (_) {}
+    }
     // Tombol Aksi Bawah & Subnav Step 2: Kembali ke Step 1
     const handleStep2BackAction = (e) => {
       if (e) {
@@ -17664,8 +17822,69 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
+    // Delegasi Input Real-Time Komisi Afiliasi (Anti-Lepas DOM)
+    document.addEventListener('input', (e) => {
+      if (e.target && e.target.id === 'input-affiliate-percent') {
+        const raw = e.target.value;
+        primaryState.affiliate_commission_value = (raw !== '' && !isNaN(parseFloat(raw))) ? parseFloat(raw) : 0;
+        saveDraftToStorage();
+      } else if (e.target && e.target.id === 'input-affiliate-fixed') {
+        const cleanVal = e.target.value.replace(/\D/g, '');
+        const numVal = parseInt(cleanVal, 10) || 0;
+        primaryState.affiliate_commission_value = numVal;
+        e.target.value = numVal > 0 ? numVal.toLocaleString('id-ID') : '';
+        saveDraftToStorage();
+      } else if (e.target && e.target.id === 'input-affiliate-min-order') {
+        const cleanVal = e.target.value.replace(/\D/g, '');
+        const numVal = parseInt(cleanVal, 10) || 0;
+        primaryState.affiliate_min_order_amount = numVal;
+        e.target.value = numVal > 0 ? numVal.toLocaleString('id-ID') : '0';
+        saveDraftToStorage();
+      } else if (e.target && e.target.classList) {
+        if (e.target.classList.contains('tier-min-qty')) {
+          const row = e.target.closest('tr[data-tier-index]');
+          const idx = parseInt(row?.getAttribute('data-tier-index'), 10);
+          if (!isNaN(idx) && primaryState.affiliate_commission_tiers && primaryState.affiliate_commission_tiers[idx]) {
+            primaryState.affiliate_commission_tiers[idx].min_qty = parseInt(e.target.value) || 1;
+            saveDraftToStorage();
+          }
+        } else if (e.target.classList.contains('tier-max-qty')) {
+          const row = e.target.closest('tr[data-tier-index]');
+          const idx = parseInt(row?.getAttribute('data-tier-index'), 10);
+          if (!isNaN(idx) && primaryState.affiliate_commission_tiers && primaryState.affiliate_commission_tiers[idx]) {
+            const val = e.target.value.trim();
+            primaryState.affiliate_commission_tiers[idx].max_qty = (val !== '' && !isNaN(parseInt(val))) ? parseInt(val) : null;
+            saveDraftToStorage();
+          }
+        } else if (e.target.classList.contains('tier-commission-pct')) {
+          const row = e.target.closest('tr[data-tier-index]');
+          const idx = parseInt(row?.getAttribute('data-tier-index'), 10);
+          if (!isNaN(idx) && primaryState.affiliate_commission_tiers && primaryState.affiliate_commission_tiers[idx]) {
+            const val = e.target.value.trim();
+            primaryState.affiliate_commission_tiers[idx].commission_pct = (val !== '' && !isNaN(parseFloat(val))) ? parseFloat(val) : 0;
+            saveDraftToStorage();
+          }
+        }
+      }
+    });
+
     // Delegasi Event Perubahan File Input (Change Event Bubbling)
     document.addEventListener('change', async (e) => {
+      // Delegasi Perubahan Toggle Komisi Afiliasi
+      if (e.target && e.target.id === 'toggle-affiliate-commission') {
+        if (typeof setAffiliateCommissionEnabled === 'function') {
+          setAffiliateCommissionEnabled(e.target.checked);
+        }
+        return;
+      }
+
+      // Delegasi Perubahan Radio Jenis Komisi
+      if (e.target && e.target.name === 'affiliate_commission_type') {
+        if (typeof setAffiliateCommissionType === 'function') {
+          setAffiliateCommissionType(e.target.value);
+        }
+        return;
+      }
       if (e.target && (e.target.id === 'input-prod-images-hidden' || e.target.id === 'input-prod-image')) {
         if (e.target.files && e.target.files.length > 0) {
           await handleImageFilesSelected(Array.from(e.target.files));
