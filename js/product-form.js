@@ -249,7 +249,9 @@ const ProductForm = (() => {
     monthly_promo_label: 'Promo Spesial', // Label teks promo harian
     promo_start_date: null,
     promo_end_date: null,
+    has_custom_labels: false,
     custom_labels: [],
+    custom_dimension_suggestions: [],
     shipping_config: (function() {
       const defLocal = getStoreDefaultLocalShipping();
       return {
@@ -510,7 +512,9 @@ const ProductForm = (() => {
       monthly_promo_label: 'Promo Spesial',
       promo_start_date: null,
       promo_end_date: null,
+      has_custom_labels: false,
       custom_labels: [],
+      custom_dimension_suggestions: [],
       shipping_config: (function() {
         const defLocal = getStoreDefaultLocalShipping();
         return {
@@ -743,7 +747,9 @@ const ProductForm = (() => {
       monthly_promo_label: prod.monthly_promo_label || prod.promo_label || 'Promo Spesial',
       promo_start_date: prod.promo_start_date || null,
       promo_end_date: prod.promo_end_date || null,
-      custom_labels: prod.card_variant === 'B' ? [] : (Array.isArray(prod.custom_labels) ? [...prod.custom_labels] : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])),
+      has_custom_labels: prod.has_custom_labels !== undefined ? Boolean(prod.has_custom_labels) : (Array.isArray(prod.custom_labels) && prod.custom_labels.length > 0),
+      custom_labels: prod.card_variant === 'B' ? [] : (Array.isArray(prod.custom_labels) ? [...prod.custom_labels].filter(Boolean) : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])),
+      custom_dimension_suggestions: Array.isArray(prod.custom_dimension_suggestions) ? prod.custom_dimension_suggestions.slice(0, 6) : [],
       shipping_config: (function() {
         const sc = prod.shipping_config || {};
         let rawCouriers = Array.isArray(sc.couriers) ? [...sc.couriers] : ['pickup', 'local_store', 'reguler'];
@@ -918,10 +924,25 @@ const ProductForm = (() => {
                          (Array.isArray(p.images) && p.images.length > 0) ||
                          (p.category_id && p.category_id !== '') ||
                          (p.description && p.description.trim() !== '') ||
+                         (p.has_custom_labels === true || (Array.isArray(p.custom_labels) && p.custom_labels.length > 0)) ||
                          (draft.currentStep === 2);
       if (!hasContent) return false;
 
       Object.assign(primaryState, p);
+      if (p.has_custom_labels !== undefined) {
+        primaryState.has_custom_labels = Boolean(p.has_custom_labels);
+      } else if (Array.isArray(p.custom_labels) && p.custom_labels.length > 0) {
+        primaryState.has_custom_labels = true;
+      }
+      if (Array.isArray(p.custom_labels)) {
+        primaryState.custom_labels = p.custom_labels.filter(Boolean);
+      }
+      if (p.show_badge !== undefined) {
+        primaryState.show_badge = Boolean(p.show_badge);
+      }
+      if (Array.isArray(p.custom_dimension_suggestions)) {
+        primaryState.custom_dimension_suggestions = p.custom_dimension_suggestions.slice(0, 6);
+      }
       if (Array.isArray(primaryState.affiliate_commission_tiers)) {
         const t = primaryState.affiliate_commission_tiers;
         const isLegacyDummy = t.length === 3 &&
@@ -1217,12 +1238,12 @@ const ProductForm = (() => {
                         </div>
                         <!-- TOGGLE SWITCH ON/OFF -->
                         <label class="relative inline-flex items-center select-none ${primaryState.card_variant === 'B' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}">
-                          <input type="checkbox" id="toggle-enable-custom-labels" class="sr-only peer" ${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false) ? 'checked' : ''} ${primaryState.card_variant === 'B' ? 'disabled' : ''}>
+                          <input type="checkbox" id="toggle-enable-custom-labels" class="sr-only peer" ${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && (primaryState.has_custom_labels !== false)) ? 'checked' : ''} ${primaryState.card_variant === 'B' ? 'disabled' : ''}>
                           <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
 
-                      <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false) ? 'space-y-4' : 'hidden'}">
+                      <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && (primaryState.has_custom_labels !== false)) ? 'space-y-4' : 'hidden'}">
                         <div class="space-y-2">
                           <div class="flex flex-wrap gap-1.5" id="custom-labels-preset-group">
                             <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Free Ongkir">+ Free Ongkir</button>
@@ -2988,9 +3009,33 @@ const ProductForm = (() => {
     const dimPricing = calculateCustomDimensionPricingForDrawer(dimLengthVal, dimWidthVal);
     const drawerMinDimNote = getDrawerMinimalDimensionNoteText();
 
+    const dimSuggestions = Array.isArray(primaryState.custom_dimension_suggestions) ? primaryState.custom_dimension_suggestions : [];
+    const dimSuggestionsHtml = dimSuggestions.length > 0 ? `
+      <div class="space-y-1 mb-2">
+        <div class="text-[11px] font-semibold text-slate-500">Saran Ukuran:</div>
+        <div class="flex flex-wrap gap-1.5">
+          ${dimSuggestions.map((s, idx) => {
+            const isMatch = (parseFloat(dimLengthVal) === parseFloat(s.p)) && (parseFloat(dimWidthVal) === parseFloat(s.l));
+            return `
+              <button 
+                type="button" 
+                class="btn-preview-dim-suggestion px-2.5 py-1 rounded-md text-xs font-semibold border transition cursor-pointer outline-none focus:outline-none ${isMatch ? 'text-white border-transparent' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}"
+                style="${isMatch ? 'background-color: var(--color-primary) !important;' : ''}"
+                data-p="${s.p}"
+                data-l="${s.l}"
+              >
+                ${s.p} × ${s.l}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : '';
+
     const customDimensionDrawerHtml = primaryState.has_custom_dimension ? `
       <div id="drawer-custom-dimension-section" class="space-y-1.5 pt-2 border-t border-slate-100">
         <div class="text-xs font-normal text-slate-600 mb-1.5">${escapeHtml(dimLabel)}</div>
+        ${dimSuggestionsHtml}
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
           <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimLengthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimLengthVal) > 0 ? 'bg-white' : 'border-slate-200 focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition" style="${parseFloat(dimLengthVal) > 0 ? 'border-color: var(--color-primary) !important;' : ''}">
             <input type="number" step="any" min="0.01" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none pr-1" />
@@ -4400,6 +4445,35 @@ const ProductForm = (() => {
               e.preventDefault();
               inp.blur();
             }
+          };
+        });
+
+        // Saran Ukuran Chip Click di dalam Drawer
+        container.querySelectorAll('.btn-preview-dim-suggestion').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const p = btn.getAttribute('data-p');
+            const l = btn.getAttribute('data-l');
+            previewTestState.dimLength = p;
+            previewTestState.dimWidth = l;
+            previewTestState.dimError = false;
+
+            container.querySelectorAll('.input-shopee-dim-p').forEach(inp => { inp.value = p; });
+            container.querySelectorAll('.input-shopee-dim-l').forEach(inp => { inp.value = l; });
+
+            container.querySelectorAll('.btn-preview-dim-suggestion').forEach(b => {
+              if (b.getAttribute('data-p') === p && b.getAttribute('data-l') === l) {
+                b.classList.add('text-white', 'border-transparent');
+                b.classList.remove('bg-white', 'border-slate-200', 'text-slate-700');
+                b.style.backgroundColor = 'var(--color-primary)';
+              } else {
+                b.classList.remove('text-white', 'border-transparent');
+                b.classList.add('bg-white', 'border-slate-200', 'text-slate-700');
+                b.style.backgroundColor = '';
+              }
+            });
+
+            updateShopeeDrawerLivePricing();
           };
         });
 
@@ -6505,8 +6579,9 @@ const ProductForm = (() => {
               <input type="text" readonly tabindex="-1" class="tier-min-qty w-full h-8 px-2.5 rounded-md border border-slate-200 text-xs font-semibold text-slate-500 bg-slate-100 cursor-not-allowed select-none outline-none focus:outline-none" placeholder="Otomatis" value="${minVal}">
             `}
           </td>
-          <td class="py-2 px-3">
+          <td class="py-2 px-3 align-top">
             <input type="number" min="1" class="tier-max-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:outline-none focus:border-[var(--color-primary)]" placeholder="Cth: 40" value="${maxVal}">
+            <div class="tier-max-qty-error text-[10px] text-red-500 font-semibold mt-0.5 hidden"></div>
           </td>
           <td class="py-2 px-3">
             <div class="relative">
@@ -6552,9 +6627,28 @@ const ProductForm = (() => {
       }
       if (maxInp) {
         maxInp.oninput = e => {
+          const raw = e.target.value.trim();
+          const parsedMax = raw !== '' ? parseInt(raw, 10) : '';
+          const currentMin = parseInt(primaryState.affiliate_commission_tiers[idx]?.min_qty, 10) || 1;
+          const td = maxInp.closest('td');
+          const errEl = td ? td.querySelector('.tier-max-qty-error') : null;
+
+          if (parsedMax !== '' && !isNaN(parsedMax) && parsedMax >= currentMin) {
+            maxInp.classList.remove('border-red-500', 'focus:border-red-500');
+            maxInp.classList.add('border-slate-300', 'focus:border-[var(--color-primary)]');
+            if (errEl) {
+              errEl.textContent = '';
+              errEl.classList.add('hidden');
+            }
+          } else if (errEl && !errEl.classList.contains('hidden')) {
+            if (parsedMax !== '' && !isNaN(parsedMax) && parsedMax < currentMin) {
+              errEl.textContent = `Min. ${currentMin}`;
+            } else {
+              errEl.textContent = 'Wajib diisi';
+            }
+          }
+
           if (primaryState.affiliate_commission_tiers[idx]) {
-            const raw = e.target.value.trim();
-            const parsedMax = raw !== '' ? parseInt(raw, 10) : '';
             primaryState.affiliate_commission_tiers[idx].max_qty = parsedMax;
 
             // Otomatisasi rantai Min. Qty baris berikutnya
@@ -6650,15 +6744,19 @@ const ProductForm = (() => {
 
       // 2. Validasi Max. Qty baris terakhir (harus >= lastMin)
       if (lastMax === null || isNaN(lastMax) || lastMax < lastMin) {
-        const msg = 'Silakan isi Max. Qty pada baris terakhir terlebih dahulu sebelum menambah tingkatan baru (minimal sama atau lebih besar dari Min. Qty ' + lastMin + ').';
-        if (typeof showToast === 'function') {
-          showToast(msg, 'warning');
-        } else if (typeof App !== 'undefined' && App.showToast) {
-          App.showToast(msg, 'warning');
-        } else {
-          alert(msg);
+        if (lastMaxInp) {
+          lastMaxInp.classList.remove('border-slate-300', 'focus:border-[var(--color-primary)]');
+          lastMaxInp.classList.add('border-red-500', 'focus:border-red-500');
+          const td = lastMaxInp.closest('td');
+          const errEl = td ? td.querySelector('.tier-max-qty-error') : null;
+          if (errEl) {
+            errEl.textContent = (lastMax !== null && !isNaN(lastMax) && lastMax < lastMin)
+              ? `Min. ${lastMin}`
+              : 'Wajib diisi';
+            errEl.classList.remove('hidden');
+          }
+          lastMaxInp.focus();
         }
-        if (lastMaxInp) lastMaxInp.focus();
         return;
       }
 
@@ -8112,6 +8210,23 @@ const ProductForm = (() => {
       });
     }
     return choices;
+  }
+
+  function renderDimensionSuggestionChipsHtml() {
+    const suggestions = Array.isArray(primaryState.custom_dimension_suggestions) ? primaryState.custom_dimension_suggestions : [];
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || 'cm';
+    const displayUnit = dimUnit === 'meter' ? 'm' : (dimUnit === 'mm' ? 'mm' : 'cm');
+    if (suggestions.length === 0) {
+      return '<span class="text-[11px] text-slate-400 italic">Belum ada saran ukuran yang ditambahkan.</span>';
+    }
+    return suggestions.map((s, idx) => `
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800">
+        ${s.p} × ${s.l} ${displayUnit}
+        <button type="button" class="btn-remove-dim-suggestion text-slate-400 hover:text-red-500 transition cursor-pointer outline-none focus:outline-none" data-idx="${idx}" title="Hapus Saran Ukuran">
+          &times;
+        </button>
+      </span>
+    `).join('');
   }
 
   function getDimensionMainComponentOptionsHtml() {
@@ -9783,7 +9898,7 @@ const ProductForm = (() => {
               <label for="select-dimension-unit" class="block text-xs font-bold text-slate-800">
                 Satuan Ukuran <span class="text-red-500">*</span>
               </label>
-              <select id="select-dimension-unit" class="w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-emerald-500 shadow-2xs">
+              <select id="select-dimension-unit" class="w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs">
                 <option value="" disabled ${!dimUnit ? 'selected' : ''}>Pilih Satuan Ukuran</option>
                 <option value="meter" ${dimUnit === 'meter' ? 'selected' : ''}>meter (m)</option>
                 <option value="cm" ${dimUnit === 'cm' ? 'selected' : ''}>centimeter (cm)</option>
@@ -9794,25 +9909,93 @@ const ProductForm = (() => {
             </div>
           </div>
 
+          <!-- Saran Ukuran Cepat (Opsional — Maksimal 6 Ukuran) -->
+          <div class="border-t border-slate-100 pt-3 mt-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-slate-800">Saran Ukuran Cepat (Opsional)</span>
+                <div class="relative group/tip inline-flex items-center">
+                  <span class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help transition">?</span>
+                  <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-64 p-2 bg-slate-800 text-white text-[11px] font-normal leading-snug rounded shadow-lg z-30 pointer-events-none">
+                    Tambahkan hingga 6 preset ukuran (P × L) yang sering dipesan agar pembeli dapat memilih ukuran secara instan di halaman produk.
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                  </div>
+                </div>
+              </div>
+              <span id="suggest-dim-count" class="text-[11px] font-semibold text-slate-400">
+                ${(primaryState.custom_dimension_suggestions || []).length} / 6
+              </span>
+            </div>
+
+            <!-- Baris Input Tambah Saran Ukuran -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-1">
+                <input 
+                  type="number" 
+                  step="any" 
+                  min="0.01" 
+                  id="input-suggest-dim-p" 
+                  placeholder="P" 
+                  class="w-20 h-8 sm:h-9 px-2 text-center text-xs font-semibold rounded-md border border-slate-300 text-slate-900 bg-white outline-none focus:border-[var(--color-primary)] transition"
+                  ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'disabled' : ''}
+                />
+                <span class="text-xs font-bold text-slate-400">×</span>
+                <input 
+                  type="number" 
+                  step="any" 
+                  min="0.01" 
+                  id="input-suggest-dim-l" 
+                  placeholder="L" 
+                  class="w-20 h-8 sm:h-9 px-2 text-center text-xs font-semibold rounded-md border border-slate-300 text-slate-900 bg-white outline-none focus:border-[var(--color-primary)] transition"
+                  ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'disabled' : ''}
+                />
+                <span id="suggest-dim-unit" class="text-xs font-semibold text-slate-500 ml-0.5">
+                  ${dimUnit === 'meter' ? 'm' : (dimUnit === 'mm' ? 'mm' : 'cm')}
+                </span>
+              </div>
+              <button 
+                type="button" 
+                id="btn-add-dimension-suggestion" 
+                class="h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'bg-slate-300 opacity-50 cursor-not-allowed' : 'btn-primary-brand'}"
+                ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'disabled' : ''}
+              >
+                + Tambah
+              </button>
+            </div>
+
+            <!-- Daftar Chip Saran Ukuran -->
+            <div id="dimension-suggestions-list" class="flex flex-wrap gap-1.5 pt-1">
+              ${renderDimensionSuggestionChipsHtml()}
+            </div>
+          </div>
+
           <!-- UI KETENTUAN UKURAN MINIMAL: HARGA JUAL VS BIAYA MODAL (HPP) -->
           <div class="space-y-2 pt-1">
             <div class="text-[11px] font-bold text-slate-700">Ketentuan Ukuran Minimal (Opsional)</div>
             <div class="flex flex-col gap-3 w-full">
               <!-- Kartu 1: Harga Jual — Minimal Ukuran -->
               <div class="pt-2 border-t border-slate-100 transition select-none flex flex-col justify-between gap-2.5 w-full">
-                <label for="chk-min-one-unit-price" class="flex items-start gap-2.5 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    id="chk-min-one-unit-price" 
-                    class="sr-only peer" 
-                    ${Boolean(primaryState.dim_min_one_price) ? 'checked' : ''}
-                  />
-                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
-                  <div class="space-y-0.5 min-w-0">
-                    <div class="text-xs font-bold text-slate-900 leading-tight">Atur Batas Minimal Pesanan (Harga Jual)</div>
-                    <p class="text-[11px] text-slate-500 leading-snug">Tetapkan batas luas minimum untuk penagihan harga jual ke pembeli.</p>
+                <div class="flex items-center justify-between gap-2.5">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <label for="chk-min-one-unit-price" class="text-xs font-bold text-slate-900 leading-tight cursor-pointer">Atur Batas Minimal Pesanan (Harga Jual)</label>
+                    <div class="relative group/tip inline-flex items-center">
+                      <span class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help transition">?</span>
+                      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-56 p-2 bg-slate-800 text-white text-[11px] font-normal leading-snug rounded shadow-lg z-30 pointer-events-none">
+                        Tetapkan batas luas minimum untuk penagihan harga jual ke pembeli.
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                      </div>
+                    </div>
                   </div>
-                </label>
+                  <label for="chk-min-one-unit-price" class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input 
+                      type="checkbox" 
+                      id="chk-min-one-unit-price" 
+                      class="sr-only peer" 
+                      ${Boolean(primaryState.dim_min_one_price) ? 'checked' : ''}
+                    />
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all relative shrink-0"></div>
+                  </label>
+                </div>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-price-inputs" class="${Boolean(primaryState.dim_min_one_price) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
@@ -9827,9 +10010,9 @@ const ProductForm = (() => {
                           id="input-min-price-threshold" 
                           value="${priceThresholdVal}" 
                           placeholder="Cth. 100" 
-                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
+                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
-                        <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
+                        <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
                       </div>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
@@ -9842,9 +10025,9 @@ const ProductForm = (() => {
                           id="input-min-price-charge" 
                           value="${priceChargeVal}" 
                           placeholder="Cth. 100" 
-                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
+                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
-                        <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
+                        <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -9853,19 +10036,27 @@ const ProductForm = (() => {
 
               <!-- Kartu 2: Biaya Modal / HPP — Minimal Ukuran -->
               <div class="pt-2 border-t border-slate-100 transition select-none flex flex-col justify-between gap-2.5 w-full">
-                <label for="chk-min-one-unit-hpp" class="flex items-start gap-2.5 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    id="chk-min-one-unit-hpp" 
-                    class="sr-only peer" 
-                    ${Boolean(primaryState.dim_min_one_cost) ? 'checked' : ''}
-                  />
-                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative shrink-0 mt-0.5"></div>
-                  <div class="space-y-0.5 min-w-0">
-                    <div class="text-xs font-bold text-slate-900 leading-tight">Atur Batas Minimal Pesanan (Biaya Modal / HPP)</div>
-                    <p class="text-[11px] text-slate-500 leading-snug">Tetapkan batas luas minimum untuk perhitungan modal/HPP bahan.</p>
+                <div class="flex items-center justify-between gap-2.5">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <label for="chk-min-one-unit-hpp" class="text-xs font-bold text-slate-900 leading-tight cursor-pointer">Atur Batas Minimal Pesanan (Biaya Modal / HPP)</label>
+                    <div class="relative group/tip inline-flex items-center">
+                      <span class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help transition">?</span>
+                      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-56 p-2 bg-slate-800 text-white text-[11px] font-normal leading-snug rounded shadow-lg z-30 pointer-events-none">
+                        Tetapkan batas luas minimum untuk perhitungan modal/HPP bahan.
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                      </div>
+                    </div>
                   </div>
-                </label>
+                  <label for="chk-min-one-unit-hpp" class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input 
+                      type="checkbox" 
+                      id="chk-min-one-unit-hpp" 
+                      class="sr-only peer" 
+                      ${Boolean(primaryState.dim_min_one_cost) ? 'checked' : ''}
+                    />
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all relative shrink-0"></div>
+                  </label>
+                </div>
                 
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? 'block' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
@@ -9880,9 +10071,9 @@ const ProductForm = (() => {
                           id="input-min-hpp-threshold" 
                           value="${hppThresholdVal}" 
                           placeholder="Cth. 50" 
-                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
+                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
-                        <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
+                        <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
                       </div>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
@@ -9895,9 +10086,9 @@ const ProductForm = (() => {
                           id="input-min-hpp-charge" 
                           value="${hppChargeVal}" 
                           placeholder="Cth. 50" 
-                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-emerald-500 outline-none text-xs shadow-2xs transition"
+                          class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
-                        <span class="unit-area-label text-[11px] font-bold text-emerald-700 shrink-0">${areaUnitLabel}</span>
+                        <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -13925,6 +14116,80 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
+    // Saran Ukuran Cepat (P x L) Event Listeners
+    const btnAddSuggestDim = document.getElementById('btn-add-dimension-suggestion');
+    const inpSuggestP = document.getElementById('input-suggest-dim-p');
+    const inpSuggestL = document.getElementById('input-suggest-dim-l');
+    const listSuggestEl = document.getElementById('dimension-suggestions-list');
+    const countSuggestEl = document.getElementById('suggest-dim-count');
+
+    function refreshDimSuggestionState() {
+      if (!Array.isArray(primaryState.custom_dimension_suggestions)) {
+        primaryState.custom_dimension_suggestions = [];
+      }
+      const count = primaryState.custom_dimension_suggestions.length;
+      if (countSuggestEl) countSuggestEl.textContent = `${count} / 6`;
+      const isMax = count >= 6;
+      if (inpSuggestP) inpSuggestP.disabled = isMax;
+      if (inpSuggestL) inpSuggestL.disabled = isMax;
+      if (btnAddSuggestDim) {
+        btnAddSuggestDim.disabled = isMax;
+        if (isMax) {
+          btnAddSuggestDim.className = 'h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none bg-slate-300 opacity-50 cursor-not-allowed';
+        } else {
+          btnAddSuggestDim.className = 'h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none btn-primary-brand';
+        }
+      }
+      if (listSuggestEl) {
+        listSuggestEl.innerHTML = renderDimensionSuggestionChipsHtml();
+        bindRemoveDimSuggestionChips();
+      }
+    }
+
+    function bindRemoveDimSuggestionChips() {
+      if (!listSuggestEl) return;
+      listSuggestEl.querySelectorAll('.btn-remove-dim-suggestion').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const idx = parseInt(btn.getAttribute('data-idx'), 10);
+          if (!isNaN(idx) && primaryState.custom_dimension_suggestions) {
+            primaryState.custom_dimension_suggestions.splice(idx, 1);
+            refreshDimSuggestionState();
+            saveDraftToStorage();
+            updateProductCardLivePreview();
+          }
+        };
+      });
+    }
+
+    if (btnAddSuggestDim) {
+      btnAddSuggestDim.onclick = (e) => {
+        e.preventDefault();
+        if (!Array.isArray(primaryState.custom_dimension_suggestions)) {
+          primaryState.custom_dimension_suggestions = [];
+        }
+        if (primaryState.custom_dimension_suggestions.length >= 6) return;
+        const pVal = parseFloat(inpSuggestP ? inpSuggestP.value : 0);
+        const lVal = parseFloat(inpSuggestL ? inpSuggestL.value : 0);
+        if (!pVal || pVal <= 0 || !lVal || lVal <= 0) {
+          if (!pVal && inpSuggestP) inpSuggestP.focus();
+          else if (!lVal && inpSuggestL) inpSuggestL.focus();
+          return;
+        }
+
+        const isDuplicate = primaryState.custom_dimension_suggestions.some(s => s.p === pVal && s.l === lVal);
+        if (!isDuplicate) {
+          primaryState.custom_dimension_suggestions.push({ p: pVal, l: lVal });
+          if (inpSuggestP) inpSuggestP.value = '';
+          if (inpSuggestL) inpSuggestL.value = '';
+          refreshDimSuggestionState();
+          saveDraftToStorage();
+          updateProductCardLivePreview();
+        }
+      };
+    }
+    bindRemoveDimSuggestionChips();
+
     // Pembulatan Ukuran Minimal (Harga Jual)
     const toggleDimMinOnePrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
     if (toggleDimMinOnePrice) {
@@ -16780,9 +17045,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (isCurrentlyActive || filledCount >= 2) {
           btn.disabled = true;
           btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold opacity-40 cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200 pointer-events-none transition';
+          btn.style.backgroundColor = '';
+          btn.style.color = '';
+          btn.style.borderColor = '';
         } else {
           btn.disabled = false;
-          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer';
+          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition cursor-pointer';
+          btn.style.backgroundColor = 'var(--color-primary-subtle)';
+          btn.style.color = 'var(--color-primary)';
+          btn.style.borderColor = 'var(--color-primary-subtle)';
         }
       });
     }
@@ -16910,7 +17181,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // Toggle Tambahkan Label Khusus
-    const toggleLabels = document.getElementById('toggle-enable-custom-labels');
+    const toggleLabels = document.getElementById('toggle-enable-custom-labels') || document.getElementById('toggle-custom-labels');
     if (toggleLabels) {
       toggleLabels.addEventListener('change', () => {
         if (primaryState.card_variant === 'B') {
@@ -16918,8 +17189,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           return;
         }
         primaryState.show_badge = toggleLabels.checked;
+        primaryState.has_custom_labels = toggleLabels.checked;
         updateCustomLabelsLockState();
         updateQuickLabelChipsLockState();
+        saveDraftToStorage();
+        updateProductCardLivePreview();
       });
     }
 
@@ -16949,6 +17223,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           showLabelSuggestion();
           updateCustomLabelsLockState();
           updateQuickLabelChipsLockState();
+          saveDraftToStorage();
         });
         inp.addEventListener('focus', showLabelSuggestion);
         inp.addEventListener('blur', hideLabelSuggestion);
@@ -16967,6 +17242,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           inp.focus();
           updateCustomLabelsLockState();
           updateQuickLabelChipsLockState();
+          saveDraftToStorage();
           updateProductCardLivePreview();
         }
       });
@@ -16993,9 +17269,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         updateCustomLabelsLockState();
         updateQuickLabelChipsLockState();
+        saveDraftToStorage();
         updateProductCardLivePreview();
       });
     });
+
+    // Otomatisasi inisialisasi state kuncian & kapasitas chip label khusus
+    updateCustomLabelsLockState();
+    updateQuickLabelChipsLockState();
 
     // Mobile FAB Scroll Auto-hide saat mentok bawah (agar anti-menutupi tombol aksi)
     const fabMobEl = document.getElementById('btn-fab-live-preview');
@@ -19061,18 +19342,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Custom Labels
     if (primaryState.card_variant === 'B') {
       primaryState.show_badge = false;
+      primaryState.has_custom_labels = false;
       primaryState.custom_labels = [];
     } else {
-      const toggleBadge = document.getElementById('toggle-enable-custom-labels');
+      const toggleBadge = document.getElementById('toggle-enable-custom-labels') || document.getElementById('toggle-custom-labels');
       if (toggleBadge) {
         primaryState.show_badge = toggleBadge.checked;
+        primaryState.has_custom_labels = toggleBadge.checked;
       }
+      const input1 = document.getElementById('input-custom-label-1');
+      const input2 = document.getElementById('input-custom-label-2');
       const wrapper2 = document.getElementById('wrapper-custom-label-2');
       const isL2Visible = wrapper2 ? !wrapper2.classList.contains('hidden') : false;
 
-      const l1 = document.getElementById('input-custom-label-1')?.value?.trim();
-      const l2 = isL2Visible ? document.getElementById('input-custom-label-2')?.value?.trim() : '';
-      if (l1 !== undefined || l2 !== undefined) {
+      // HANYA perbarui custom_labels dari DOM jika input1 benar-benar ada di DOM!
+      if (input1) {
+        const l1 = (input1.value || '').trim();
+        const l2 = (isL2Visible && input2) ? (input2.value || '').trim() : '';
         primaryState.custom_labels = [l1, l2].filter(Boolean);
       }
     }

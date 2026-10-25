@@ -2191,15 +2191,23 @@ input.toggle-same-cost:checked~div::after {
 }
 
 /* 3. Seluruh Toggle Switch (State ON / Checked) & Kotak Simulasi Diskon */
-#view-product-form input.peer:checked ~ div,
-#view-product-form input.peer:checked + div,
-#view-product-form input.toggle-same-price:checked ~ div,
-#view-product-form input.toggle-same-cost:checked ~ div,
-#view-product-form input[type="checkbox"].peer:checked + div,
+#view-product-form input.peer:checked + div.w-9,
+#view-product-form input.peer:checked + div.w-10,
+#view-product-form input.peer:checked + div.w-11,
+#view-product-form input.peer:checked + div.toggle-track,
+#view-product-form input.toggle-same-price:checked + div,
+#view-product-form input.toggle-same-cost:checked + div,
+#view-product-form input[type="checkbox"].peer:checked + div.w-9,
+#view-product-form input[type="checkbox"].peer:checked + div.w-10,
+#view-product-form input[type="checkbox"].peer:checked + div.w-11,
 #view-product-form input[type="checkbox"]:checked + div[class*="peer-checked:bg-"],
 #view-product-form input[type="checkbox"]:checked ~ div[class*="peer-checked:bg-"],
-#desktop-preview-sidebar input.peer:checked ~ div,
-#mobile-preview-sheet input.peer:checked ~ div {
+#desktop-preview-sidebar input.peer:checked ~ div[class*="peer-checked:bg-"],
+#desktop-preview-sidebar input.peer:checked + div.w-9,
+#desktop-preview-sidebar input.peer:checked + div.w-10,
+#mobile-preview-sheet input.peer:checked ~ div[class*="peer-checked:bg-"],
+#mobile-preview-sheet input.peer:checked + div.w-9,
+#mobile-preview-sheet input.peer:checked + div.w-10 {
   background-color: var(--color-primary) !important;
 }
 
@@ -2663,7 +2671,10 @@ label:has(input[type="radio"]:checked) span,
 /* 8. Toggle Peer Checked Overrides (Temuan #4) */
 .peer:checked ~ .peer-checked\:bg-emerald-500,
 .peer:checked ~ .peer-checked\:bg-emerald-600,
-input.peer:checked + div,
+input.peer:checked + div.w-9,
+input.peer:checked + div.w-10,
+input.peer:checked + div.w-11,
+input.peer:checked + div.toggle-track,
 input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-500,
 input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-600 {
   background-color: var(--color-primary) !important;
