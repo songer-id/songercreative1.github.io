@@ -2745,13 +2745,15 @@ input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-600 {
 #affiliate-commission-config-box.block {
   display: block !important;
 }
+#affiliate-mode-single.hidden,
+#affiliate-mode-tiered.hidden,
 #affiliate-mode-percentage.hidden,
-#affiliate-mode-fixed.hidden,
-#affiliate-mode-tiered.hidden {
+#affiliate-mode-fixed.hidden {
   display: none !important;
 }
+#affiliate-mode-single.block,
+#affiliate-mode-tiered.block,
 #affiliate-mode-percentage.block,
-#affiliate-mode-fixed.block,
-#affiliate-mode-tiered.block {
+#affiliate-mode-fixed.block {
   display: block !important;
 }

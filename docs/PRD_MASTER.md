@@ -250,7 +250,7 @@ Berdasarkan analisis kebutuhan operasional bisnis percetakan terpadu, keputusan 
    - Penjadwalan tanggal & jam mulai/selesai Flash Sale.
    - Generator kupon diskon (potongan flat / persen, minimal belanja, batas kuota pemakaian).
 3. **Menu Manajemen Affiliate Admin & Komisi Produk:**
-   - **Komisi Afiliasi Produk (Product-Level Commission)**: Pengaturan komisi khusus per-produk di menu Tambah/Edit Produk (`#section-product-affiliate-commission` di `js/product-form.js` & `js/db.js`) dengan 3 mode: Persentase (%), Nominal Tetap (Rp), dan Bertingkat (Tiered Qty dengan logika pintar penambahan baris), dilengkapi toggle aktivasi dan syarat minimal nilai belanja.
+   - **Komisi Afiliasi Produk (Product-Level Commission)**: Pengaturan komisi khusus per-produk di menu Tambah/Edit Produk (`#section-product-affiliate-commission` di `js/product-form.js` & `js/db.js`) dengan 2 mode terpadu: **Komisi Tunggal (Tetap)** dengan selector unit Persen (`%`) / Nominal (`Rp`), pengaturan Minimal Jumlah Pesanan (Min. Qty) paket dengan pembagian otomatis per satuan barang, dan **Komisi Bertingkat (Grosir)** dengan pilihan unit (`%` / `Rp`), clean empty state tanpa nilai default paksa, otomatisasi batas bawah baris berikutnya (`Min. Qty = Max. Qty sebelumnya + 1`), dilengkapi toggle aktivasi reaktif, tooltip popover profesional, syarat minimal nilai order belanja, serta ringkasan konversi setara secara real-time.
    - **Aturan Komisi Global & Fallback**: Jika komisi khusus per-produk dinonaktifkan, perhitungan komisi afiliator otomatis mengacu pada aturan komisi global di menu Marketing > Affiliate atau komisi per-kategori.
    - Tabel data affiliator, statistik performa referral per member.
    - Daftar permohonan penarikan saldo (*Withdrawal Requests*), verifikasi transfer, dan tombol persetujuan (*Approve & Mark Paid*).
@@ -328,7 +328,8 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
   - [ ] Pembuatan Member Area Pelanggan (Login OAuth, Riwayat Pesanan & Pelunasan DP, Unduhan Digital, Dashboard Affiliate).
 
 - [ ] **TAHAP 5: Form Produk, Kategori, Riwayat Mutasi Stok & Manajemen Pesanan 3 Lapis Status**
-  - [x] Implementasi sistem **Komisi Afiliasi Produk** di `js/product-form.js`, `js/db.js`, & `css/admin.css` (3 jenis komisi: Persentase, Nominal Tetap, dan Bertingkat berdasarkan Qty dengan logika penambahan baris pintar, toggle aktivasi reaktif dengan delegasi event global click/change/input, tooltip popover informatif, syarat minimal nilai order, validasi ketat, dan auto-save draft).
+  - [x] Penyempurnaan **Program Promo (Promo Bulanan)** di `js/product-form.js`: Pembersihan ikon dekoratif, penamaan baku "Promo Bulanan", serta kalkulasi real-time ringkasan konversi potongan nominal Rp vs persen (%) terhadap harga dasar produk.
+  - [x] Implementasi & Penyempurnaan sistem **Komisi Afiliasi Produk** di `js/product-form.js`, `js/db.js`, & `css/admin.css` (2 mode: Komisi Tunggal & Komisi Bertingkat dengan selector unit `%` / `Rp`, minimal Qty paket & pembagian otomatis per satuan, helper text kalkulasi per pcs, baris bertingkat otomatis tanpa nilai default paksa, toggle aktivasi reaktif, tooltip popover informatif, syarat minimal nilai order, validasi ketat, dan auto-save draft).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

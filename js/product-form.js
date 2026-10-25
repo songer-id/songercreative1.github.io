@@ -225,12 +225,15 @@ const ProductForm = (() => {
     order_multiple_value: 1,
     order_multiples_by_variant: {}, // { [variantId]: 50 }
     has_affiliate_commission: false,
-    affiliate_commission_type: 'tiered', // 'percentage' | 'fixed' | 'tiered'
-    affiliate_commission_value: 0,
+    affiliate_commission_mode: 'single', // 'single' | 'tiered'
+    affiliate_commission_type: 'single', // alias backward compatibility
+    affiliate_commission_unit: 'percentage', // 'percentage' | 'fixed'
+    affiliate_commission_value: '',
+    affiliate_min_qty: '',
+    affiliate_effective_unit_commission: 0,
+    affiliate_commission_tier_unit: 'percentage', // 'percentage' | 'fixed'
     affiliate_commission_tiers: [
-      { min_qty: 1, max_qty: 49, commission_pct: 0.5 },
-      { min_qty: 50, max_qty: 99, commission_pct: 2.0 },
-      { min_qty: 100, max_qty: null, commission_pct: 3.5 }
+      { min_qty: '', max_qty: '', commission_val: '' }
     ],
     affiliate_min_order_amount: 0,
     // Step 3: Promo, Pengiriman & Deskripsi (2 Toggle Mandiri: Auto Promo Bulanan & Promo Harian)
@@ -590,12 +593,15 @@ const ProductForm = (() => {
         label_extra_3: ''
       },
       has_affiliate_commission: false,
-      affiliate_commission_type: 'tiered',
-      affiliate_commission_value: 0,
+      affiliate_commission_mode: 'single',
+      affiliate_commission_type: 'single',
+      affiliate_commission_unit: 'percentage',
+      affiliate_commission_value: '',
+      affiliate_min_qty: '',
+      affiliate_effective_unit_commission: 0,
+      affiliate_commission_tier_unit: 'percentage',
       affiliate_commission_tiers: [
-        { min_qty: 1, max_qty: 49, commission_pct: 0.5 },
-        { min_qty: 50, max_qty: 99, commission_pct: 2.0 },
-        { min_qty: 100, max_qty: null, commission_pct: 3.5 }
+        { min_qty: '', max_qty: '', commission_val: '' }
       ],
       affiliate_min_order_amount: 0
     };
@@ -782,15 +788,16 @@ const ProductForm = (() => {
       description: prod.description || '',
       is_active: prod.is_active,
       has_affiliate_commission: prod.has_affiliate_commission !== undefined ? Boolean(prod.has_affiliate_commission) : false,
-      affiliate_commission_type: prod.affiliate_commission_type || 'tiered',
-      affiliate_commission_value: (prod.affiliate_commission_value !== undefined && prod.affiliate_commission_value !== null && prod.affiliate_commission_value !== '') ? (parseFloat(prod.affiliate_commission_value) || 0) : 0,
+      affiliate_commission_mode: prod.affiliate_commission_mode || (prod.affiliate_commission_type === 'tiered' ? 'tiered' : 'single'),
+      affiliate_commission_type: prod.affiliate_commission_mode || prod.affiliate_commission_type || 'single',
+      affiliate_commission_unit: prod.affiliate_commission_unit || (prod.affiliate_commission_type === 'fixed' ? 'fixed' : 'percentage'),
+      affiliate_commission_value: (prod.affiliate_commission_value !== undefined && prod.affiliate_commission_value !== null && prod.affiliate_commission_value !== '') ? prod.affiliate_commission_value : '',
+      affiliate_min_qty: (prod.affiliate_min_qty !== undefined && prod.affiliate_min_qty !== null && prod.affiliate_min_qty !== '') ? prod.affiliate_min_qty : '',
+      affiliate_effective_unit_commission: parseFloat(prod.affiliate_effective_unit_commission) || 0,
+      affiliate_commission_tier_unit: prod.affiliate_commission_tier_unit || 'percentage',
       affiliate_commission_tiers: (Array.isArray(prod.affiliate_commission_tiers) && prod.affiliate_commission_tiers.length > 0)
         ? JSON.parse(JSON.stringify(prod.affiliate_commission_tiers))
-        : [
-            { min_qty: 1, max_qty: 49, commission_pct: 0.5 },
-            { min_qty: 50, max_qty: 99, commission_pct: 2.0 },
-            { min_qty: 100, max_qty: null, commission_pct: 3.5 }
-          ],
+        : [{ min_qty: '', max_qty: '', commission_val: '' }],
       affiliate_min_order_amount: (prod.affiliate_min_order_amount !== undefined && prod.affiliate_min_order_amount !== null && prod.affiliate_min_order_amount !== '') ? (parseFloat(prod.affiliate_min_order_amount) || 0) : 0
     };
 
@@ -5818,6 +5825,86 @@ const ProductForm = (() => {
   // ==========================================================================
   // RENDER & EVENT HANDLERS: KOMISI AFILIASI PRODUK (CLEAN FLAT SAAS LAYOUT)
   // ==========================================================================
+  function getAffiliateSingleHelperInfo() {
+    let basePrice = 0;
+    if (materialsState.length > 0 && materialsState[0].price > 0) {
+      basePrice = materialsState[0].price;
+    } else if (primaryState.price > 0) {
+      basePrice = primaryState.price;
+    }
+
+    const unit = primaryState.affiliate_commission_unit || 'percentage';
+    const rawVal = primaryState.affiliate_commission_value;
+    const val = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
+    const rawMinQty = primaryState.affiliate_min_qty;
+    const minQty = (rawMinQty !== '' && rawMinQty !== null && rawMinQty !== undefined && parseInt(rawMinQty) > 0) ? parseInt(rawMinQty) : 1;
+
+    if (val <= 0) {
+      primaryState.affiliate_effective_unit_commission = 0;
+      return { isVisible: false, text: '', badge: '' };
+    }
+
+    let text = '';
+    let badge = '';
+
+    if (unit === 'fixed') {
+      if (minQty <= 1) {
+        primaryState.affiliate_effective_unit_commission = val;
+        const pct = basePrice > 0 ? ((val / basePrice) * 100).toFixed(1) : 0;
+        text = basePrice > 0 
+          ? `Komisi Rp ${val.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar Rp${basePrice.toLocaleString('id-ID')}.`
+          : `Komisi Rp ${val.toLocaleString('id-ID')} per pcs.`;
+        badge = `Rp ${val.toLocaleString('id-ID')}`;
+      } else {
+        const unitKomisi = Math.round(val / minQty);
+        primaryState.affiliate_effective_unit_commission = unitKomisi;
+        const pctSetara = basePrice > 0 ? ((unitKomisi / basePrice) * 100).toFixed(1) : 0;
+        text = basePrice > 0
+          ? `Total komisi Rp ${val.toLocaleString('id-ID')} untuk minimal ${minQty} pcs otomatis dihitung <b class="text-slate-900 font-bold">Rp ${unitKomisi.toLocaleString('id-ID')} / pcs</b> (setara ~${pctSetara}% dari harga dasar Rp${basePrice.toLocaleString('id-ID')} per pcs).`
+          : `Total komisi Rp ${val.toLocaleString('id-ID')} untuk minimal ${minQty} pcs = <b class="text-slate-900 font-bold">Rp ${unitKomisi.toLocaleString('id-ID')} / pcs</b>.`;
+        badge = `Rp ${unitKomisi.toLocaleString('id-ID')}/pcs`;
+      }
+    } else {
+      // percentage
+      const nomTotal1Pcs = basePrice > 0 ? Math.round(basePrice * (val / 100)) : 0;
+      if (minQty <= 1) {
+        primaryState.affiliate_effective_unit_commission = nomTotal1Pcs;
+        text = basePrice > 0 
+          ? `Komisi ${val}% setara sekitar Rp ${nomTotal1Pcs.toLocaleString('id-ID')} dari harga dasar Rp${basePrice.toLocaleString('id-ID')}.`
+          : `Komisi ${val}% dari harga dasar.`;
+        badge = `${val}%`;
+      } else {
+        const unitKomisi = minQty > 0 ? Math.round(nomTotal1Pcs / minQty) : nomTotal1Pcs;
+        const pctPerPcs = minQty > 0 ? Number((val / minQty).toFixed(2)) : val;
+        primaryState.affiliate_effective_unit_commission = unitKomisi;
+        text = basePrice > 0
+          ? `Komisi ${val}% dari harga satuan (Rp ${nomTotal1Pcs.toLocaleString('id-ID')}) dibagi untuk minimal ${minQty} pcs = <b class="text-slate-900 font-bold">Rp ${unitKomisi.toLocaleString('id-ID')} / pcs</b> (${pctPerPcs}% per pcs).`
+          : `Komisi ${val}% dibagi untuk minimal ${minQty} pcs = ${pctPerPcs}% per pcs.`;
+        badge = `~${pctPerPcs}%/pcs`;
+      }
+    }
+
+    return { isVisible: true, text, badge };
+  }
+
+  function updateAffiliateSingleHelper() {
+    const box = document.getElementById('affiliate-single-helper-box');
+    const textEl = document.getElementById('affiliate-single-helper-text');
+    const badgeEl = document.getElementById('affiliate-single-helper-badge');
+    const res = getAffiliateSingleHelperInfo();
+
+    if (!box || !textEl) return;
+    if (!res.isVisible) {
+      box.classList.add('hidden');
+      box.classList.remove('flex');
+    } else {
+      box.classList.remove('hidden');
+      box.classList.add('flex');
+      textEl.innerHTML = res.text;
+      if (badgeEl) badgeEl.textContent = res.badge;
+    }
+  }
+
   function setAffiliateCommissionEnabled(enabled) {
     primaryState.has_affiliate_commission = Boolean(enabled);
     const toggle = document.getElementById('toggle-affiliate-commission');
@@ -5836,42 +5923,31 @@ const ProductForm = (() => {
         configBox.style.display = 'none';
       }
     }
-    const type = primaryState.affiliate_commission_type || 'tiered';
-    setAffiliateCommissionType(type);
+    const mode = primaryState.affiliate_commission_mode || 'single';
+    setAffiliateCommissionMode(mode);
     saveDraftToStorage();
   }
 
-  function setAffiliateCommissionType(type) {
-    primaryState.affiliate_commission_type = type;
+  function setAffiliateCommissionMode(mode) {
+    primaryState.affiliate_commission_mode = mode;
+    primaryState.affiliate_commission_type = mode;
 
-    const modePercent = document.getElementById('affiliate-mode-percentage');
-    const modeFixed = document.getElementById('affiliate-mode-fixed');
+    const modeSingle = document.getElementById('affiliate-mode-single');
     const modeTiered = document.getElementById('affiliate-mode-tiered');
 
-    if (modePercent) {
-      if (type === 'percentage') {
-        modePercent.classList.remove('hidden');
-        modePercent.classList.add('block');
-        modePercent.style.display = 'block';
+    if (modeSingle) {
+      if (mode === 'single') {
+        modeSingle.classList.remove('hidden');
+        modeSingle.classList.add('block');
+        modeSingle.style.display = 'block';
       } else {
-        modePercent.classList.add('hidden');
-        modePercent.classList.remove('block');
-        modePercent.style.display = 'none';
-      }
-    }
-    if (modeFixed) {
-      if (type === 'fixed') {
-        modeFixed.classList.remove('hidden');
-        modeFixed.classList.add('block');
-        modeFixed.style.display = 'block';
-      } else {
-        modeFixed.classList.add('hidden');
-        modeFixed.classList.remove('block');
-        modeFixed.style.display = 'none';
+        modeSingle.classList.add('hidden');
+        modeSingle.classList.remove('block');
+        modeSingle.style.display = 'none';
       }
     }
     if (modeTiered) {
-      if (type === 'tiered') {
+      if (mode === 'tiered') {
         modeTiered.classList.remove('hidden');
         modeTiered.classList.add('block');
         modeTiered.style.display = 'block';
@@ -5885,7 +5961,7 @@ const ProductForm = (() => {
     const typeBtns = document.querySelectorAll('.affiliate-type-btn');
     typeBtns.forEach(btn => {
       const bType = btn.getAttribute('data-type');
-      const isActive = (bType === type);
+      const isActive = (bType === mode);
       btn.classList.toggle('active-type', isActive);
       btn.classList.toggle('border-slate-300', !isActive);
       btn.classList.toggle('text-slate-700', !isActive);
@@ -5894,21 +5970,22 @@ const ProductForm = (() => {
       if (radio) radio.checked = isActive;
     });
 
+    updateAffiliateSingleHelper();
     saveDraftToStorage();
   }
 
   function renderAffiliateCommissionSection() {
     const isEnabled = Boolean(primaryState.has_affiliate_commission);
-    const type = primaryState.affiliate_commission_type || 'tiered';
-    const val = primaryState.affiliate_commission_value || 0;
+    const mode = primaryState.affiliate_commission_mode || 'single';
+    const unit = primaryState.affiliate_commission_unit || 'percentage';
+    const val = (primaryState.affiliate_commission_value !== undefined && primaryState.affiliate_commission_value !== null) ? primaryState.affiliate_commission_value : '';
+    const minQty = (primaryState.affiliate_min_qty !== undefined && primaryState.affiliate_min_qty !== null) ? primaryState.affiliate_min_qty : '';
+    const tierUnit = primaryState.affiliate_commission_tier_unit || 'percentage';
     const tiers = Array.isArray(primaryState.affiliate_commission_tiers) && primaryState.affiliate_commission_tiers.length > 0
       ? primaryState.affiliate_commission_tiers
-      : [
-          { min_qty: 1, max_qty: 49, commission_pct: 0.5 },
-          { min_qty: 50, max_qty: 99, commission_pct: 2.0 },
-          { min_qty: 100, max_qty: null, commission_pct: 3.5 }
-        ];
+      : [{ min_qty: '', max_qty: '', commission_val: '' }];
     const minOrder = primaryState.affiliate_min_order_amount || 0;
+    const helper = getAffiliateSingleHelperInfo();
 
     return `
       <!-- Bagian Komisi Afiliasi Produk (Clean Flat & Compact SaaS Layout) -->
@@ -5936,50 +6013,92 @@ const ProductForm = (() => {
 
         <!-- Panel Konfigurasi Komisi (Tampil saat Toggle ON) -->
         <div id="affiliate-commission-config-box" class="${isEnabled ? 'block' : 'hidden'} space-y-4" style="display: ${isEnabled ? 'block' : 'none'};">
-          <!-- Pilihan Jenis Komisi (Selectable Buttons tanpa bulatan radio) -->
+          <!-- Pilihan Jenis Komisi: 2 Mode (Tunggal vs Bertingkat) -->
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-800">Jenis Komisi:</label>
-            <div class="grid grid-cols-3 gap-2">
-              <label class="affiliate-type-btn flex items-center justify-center px-3 h-9 rounded-md border text-xs font-bold cursor-pointer transition select-none ${type === 'percentage' ? 'active-type' : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'}" data-type="percentage">
-                <input type="radio" name="affiliate_commission_type" value="percentage" ${type === 'percentage' ? 'checked' : ''} class="sr-only">
-                <span>Persentase (%)</span>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="affiliate-type-btn flex items-center justify-center px-3 h-9 rounded-md border text-xs font-bold cursor-pointer transition select-none ${mode === 'single' ? 'active-type' : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'}" data-type="single">
+                <input type="radio" name="affiliate_commission_mode" value="single" ${mode === 'single' ? 'checked' : ''} class="sr-only">
+                <span>Komisi Tunggal (Tetap)</span>
               </label>
-              <label class="affiliate-type-btn flex items-center justify-center px-3 h-9 rounded-md border text-xs font-bold cursor-pointer transition select-none ${type === 'fixed' ? 'active-type' : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'}" data-type="fixed">
-                <input type="radio" name="affiliate_commission_type" value="fixed" ${type === 'fixed' ? 'checked' : ''} class="sr-only">
-                <span>Nominal Tetap</span>
-              </label>
-              <label class="affiliate-type-btn flex items-center justify-center px-3 h-9 rounded-md border text-xs font-bold cursor-pointer transition select-none ${type === 'tiered' ? 'active-type' : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'}" data-type="tiered">
-                <input type="radio" name="affiliate_commission_type" value="tiered" ${type === 'tiered' ? 'checked' : ''} class="sr-only">
-                <span>Bertingkat</span>
+              <label class="affiliate-type-btn flex items-center justify-center px-3 h-9 rounded-md border text-xs font-bold cursor-pointer transition select-none ${mode === 'tiered' ? 'active-type' : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'}" data-type="tiered">
+                <input type="radio" name="affiliate_commission_mode" value="tiered" ${mode === 'tiered' ? 'checked' : ''} class="sr-only">
+                <span>Komisi Bertingkat (Grosir)</span>
               </label>
             </div>
           </div>
 
-          <!-- Mode A: Persentase (%) -->
-          <div id="affiliate-mode-percentage" class="${type === 'percentage' ? 'block' : 'hidden'} space-y-1.5" style="display: ${type === 'percentage' ? 'block' : 'none'};">
-            <label for="input-affiliate-percent" class="block text-xs font-bold text-slate-800">Besaran Komisi (%) <span class="text-red-500">*</span></label>
-            <div class="relative w-full sm:w-64">
-              <input type="number" id="input-affiliate-percent" step="0.1" min="0" max="100" value="${type === 'percentage' && val ? val : ''}" placeholder="Contoh: 2.5" class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-bold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]">
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">%</span>
+          <!-- Mode 1: Komisi Tunggal (Tetap) -->
+          <div id="affiliate-mode-single" class="${mode === 'single' ? 'block' : 'hidden'} space-y-3" style="display: ${mode === 'single' ? 'block' : 'none'};">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 mb-1">Bentuk & Nilai Komisi Afiliasi <span class="text-red-500">*</span>:</label>
+              <div class="flex items-center gap-2 max-w-md">
+                <select id="select-affiliate-unit" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-[var(--color-primary)] shrink-0">
+                  <option value="percentage" ${unit === 'percentage' ? 'selected' : ''}>[%] Persen</option>
+                  <option value="fixed" ${unit === 'fixed' ? 'selected' : ''}>[IDR] Komisi Rp</option>
+                </select>
+                <input 
+                  type="number" 
+                  id="input-affiliate-single-value" 
+                  step="any" 
+                  min="0" 
+                  value="${val}" 
+                  placeholder="Masukkan nilai komisi..." 
+                  class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none"
+                />
+              </div>
             </div>
-            <div id="affiliate-percent-error" class="field-error-msg hidden mt-1 text-xs text-red-500 font-medium"></div>
+
+            <!-- Minimal Jumlah Pesanan (Qty) -->
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <label for="input-affiliate-min-qty" class="text-xs font-bold text-slate-800">Minimal Jumlah Pesanan (Qty):</label>
+                <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
+                  <button type="button" id="btn-tooltip-min-qty" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Minimal Jumlah Pesanan" aria-label="Informasi Minimal Jumlah Pesanan">
+                    <i class="bi bi-question-circle"></i>
+                  </button>
+                  <div id="tooltip-popover-min-qty" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-80 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
+                    Apabila batas minimal jumlah pesanan diterapkan, nilai komisi yang Anda masukkan dihitung sebagai total komisi paket untuk jumlah minimal tersebut (sistem otomatis membagi komisi per satuan barang). Contoh: Harga produk Rp10.000, Komisi Afiliasi Rp2.000, dan Minimal Pesanan 10 pcs. Maka sistem otomatis menghitung Rp2.000 ÷ 10 pcs = Rp200 per pcs sebagai komisi afiliator (cair saat pesanan minimal 10 pcs selesai).
+                    <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                  </div>
+                </div>
+              </div>
+              <input 
+                type="number" 
+                id="input-affiliate-min-qty" 
+                min="1" 
+                value="${minQty}" 
+                placeholder="Contoh: 10 (Kosongkan jika berlaku mulai 1 pcs)" 
+                class="w-full sm:w-80 px-3.5 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 focus:border-[var(--color-primary)] outline-none"
+              />
+            </div>
+
+            <!-- Teks Ringkasan Konversi & Pembagian Otomatis Real-Time -->
+            <div id="affiliate-single-helper-box" class="mt-2 text-slate-600 text-[11px] flex items-center justify-between ${helper.isVisible ? 'flex' : 'hidden'}">
+              <div class="flex items-center gap-1.5 font-medium">
+                <i class="bi bi-arrow-repeat text-[var(--color-primary)]"></i>
+                <span id="affiliate-single-helper-text">${helper.text}</span>
+              </div>
+              <span id="affiliate-single-helper-badge" class="px-2 py-0.5 rounded text-[var(--color-primary)] bg-[var(--color-primary-subtle)] font-bold text-[10px] shrink-0">
+                ${helper.badge}
+              </span>
+            </div>
+            <div id="affiliate-single-error" class="field-error-msg hidden mt-1 text-xs text-red-500 font-medium"></div>
           </div>
 
-          <!-- Mode B: Nominal Tetap (Rp) -->
-          <div id="affiliate-mode-fixed" class="${type === 'fixed' ? 'block' : 'hidden'} space-y-1.5" style="display: ${type === 'fixed' ? 'block' : 'none'};">
-            <label for="input-affiliate-fixed" class="block text-xs font-bold text-slate-800">Besaran Komisi per Qty (Rp) <span class="text-red-500">*</span></label>
-            <div class="relative w-full sm:w-64">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">Rp</span>
-              <input type="text" id="input-affiliate-fixed" value="${type === 'fixed' && val ? Number(val).toLocaleString('id-ID') : ''}" placeholder="Contoh: 1.500" class="w-full h-9 pl-10 pr-3 rounded-md border border-slate-300 text-xs font-bold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]">
-            </div>
-            <div id="affiliate-fixed-error" class="field-error-msg hidden mt-1 text-xs text-red-500 font-medium"></div>
-          </div>
-
-          <!-- Mode C: Bertingkat -->
-          <div id="affiliate-mode-tiered" class="${type === 'tiered' ? 'block' : 'hidden'} space-y-2.5" style="display: ${type === 'tiered' ? 'block' : 'none'};">
-            <div class="flex items-center justify-between">
+          <!-- Mode 2: Komisi Bertingkat (Grosir) -->
+          <div id="affiliate-mode-tiered" class="${mode === 'tiered' ? 'block' : 'hidden'} space-y-2.5" style="display: ${mode === 'tiered' ? 'block' : 'none'};">
+            <div class="flex items-center justify-between flex-wrap gap-2">
               <span class="text-xs font-bold text-slate-800">Aturan Komisi Bertingkat Berdasarkan Jumlah Pesanan:</span>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-semibold text-slate-600">Bentuk Komisi:</span>
+                <select id="select-affiliate-tier-unit" class="px-2.5 py-1 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-[var(--color-primary)]">
+                  <option value="percentage" ${tierUnit === 'percentage' ? 'selected' : ''}>[%] Persen</option>
+                  <option value="fixed" ${tierUnit === 'fixed' ? 'selected' : ''}>[IDR] Komisi Rp</option>
+                </select>
+              </div>
             </div>
+
             <div class="overflow-x-auto rounded-md border border-slate-200">
               <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold">
@@ -5991,34 +6110,40 @@ const ProductForm = (() => {
                   </tr>
                 </thead>
                 <tbody id="affiliate-tiers-table-body" class="divide-y divide-slate-100 bg-white">
-                  ${tiers.map((tier, idx) => `
-                    <tr data-tier-index="${idx}">
-                      <td class="py-2 px-3">
-                        <input type="number" min="1" class="tier-min-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" value="${tier.min_qty}">
-                      </td>
-                      <td class="py-2 px-3">
-                        <input type="number" min="1" class="tier-max-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="∞" value="${tier.max_qty !== null && tier.max_qty !== undefined && tier.max_qty !== '' ? tier.max_qty : ''}">
-                      </td>
-                      <td class="py-2 px-3">
-                        <div class="relative">
-                          <input type="number" step="0.1" min="0" max="100" class="tier-commission-pct w-full h-8 pl-2.5 pr-7 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" value="${tier.commission_pct !== undefined && tier.commission_pct !== null ? tier.commission_pct : ''}" placeholder="Cth: 2.5">
-                          <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">%</span>
-                        </div>
-                      </td>
-                      <td class="py-2 px-3 text-center">
-                        <button type="button" class="btn-delete-affiliate-tier w-7 h-7 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer" title="Hapus Tingkat Komisi" data-tier-index="${idx}">
-                          <i class="bi bi-trash text-sm"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  `).join('')}
+                  ${tiers.map((tier, idx) => {
+                    const minVal = (tier.min_qty !== null && tier.min_qty !== undefined) ? tier.min_qty : '';
+                    const maxVal = (tier.max_qty !== null && tier.max_qty !== undefined) ? tier.max_qty : '';
+                    const commVal = (tier.commission_val !== undefined && tier.commission_val !== null) ? tier.commission_val : (tier.commission_pct !== undefined && tier.commission_pct !== null ? tier.commission_pct : '');
+                    return `
+                      <tr data-tier-index="${idx}">
+                        <td class="py-2 px-3">
+                          <input type="number" min="1" class="tier-min-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="Cth: 1" value="${minVal}">
+                        </td>
+                        <td class="py-2 px-3">
+                          <input type="number" min="1" class="tier-max-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="Cth: 40" value="${maxVal}">
+                        </td>
+                        <td class="py-2 px-3">
+                          <div class="relative">
+                            ${tierUnit === 'fixed' ? '<span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">Rp</span>' : ''}
+                            <input type="number" step="any" min="0" class="tier-commission-val w-full h-8 ${tierUnit === 'fixed' ? 'pl-8 pr-2.5' : 'pl-2.5 pr-7'} rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="Masukkan komisi..." value="${commVal}">
+                            ${tierUnit === 'percentage' ? '<span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">%</span>' : ''}
+                          </div>
+                        </td>
+                        <td class="py-2 px-3 text-center">
+                          <button type="button" class="btn-delete-affiliate-tier w-7 h-7 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer" title="Hapus Tingkat Komisi" data-tier-index="${idx}">
+                            <i class="bi bi-trash text-sm"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
             <div class="pt-1">
               <button type="button" id="btn-add-affiliate-tier" class="px-3 py-1.5 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer" style="border-color: var(--color-primary); color: var(--color-primary); background-color: #ffffff;">
                 <i class="bi bi-plus-lg text-xs"></i>
-                <span>+ Tambah Tingkat Komisi</span>
+                <span>Tambah Tingkat Komisi</span>
               </button>
             </div>
             <div id="affiliate-tiered-error" class="field-error-msg hidden mt-1 text-xs text-red-500 font-medium"></div>
@@ -6051,38 +6176,44 @@ const ProductForm = (() => {
   function renderAffiliateTiersTableBody() {
     const tbody = document.getElementById('affiliate-tiers-table-body');
     if (!tbody) return;
-    const tiers = Array.isArray(primaryState.affiliate_commission_tiers) ? primaryState.affiliate_commission_tiers : [];
+    const tierUnit = primaryState.affiliate_commission_tier_unit || 'percentage';
+    let tiers = Array.isArray(primaryState.affiliate_commission_tiers) ? primaryState.affiliate_commission_tiers : [];
     
     if (tiers.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="4" class="p-3 text-center text-slate-400 italic">Belum ada aturan komisi bertingkat. Klik "+ Tambah Tingkat Komisi" untuk menambahkan.</td>
-        </tr>
-      `;
-      return;
+      tiers = [{ min_qty: '', max_qty: '', commission_val: '' }];
+      primaryState.affiliate_commission_tiers = tiers;
     }
 
-    tbody.innerHTML = tiers.map((tier, idx) => `
-      <tr data-tier-index="${idx}">
-        <td class="py-2 px-3">
-          <input type="number" min="1" class="tier-min-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" value="${tier.min_qty}">
-        </td>
-        <td class="py-2 px-3">
-          <input type="number" min="1" class="tier-max-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="∞" value="${tier.max_qty !== null && tier.max_qty !== undefined && tier.max_qty !== '' ? tier.max_qty : ''}">
-        </td>
-        <td class="py-2 px-3">
-          <div class="relative">
-            <input type="number" step="0.1" min="0" max="100" class="tier-commission-pct w-full h-8 pl-2.5 pr-7 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" value="${tier.commission_pct !== undefined && tier.commission_pct !== null ? tier.commission_pct : ''}" placeholder="Cth: 2.5">
-            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">%</span>
-          </div>
-        </td>
-        <td class="py-2 px-3 text-center">
-          <button type="button" class="btn-delete-affiliate-tier w-7 h-7 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer" title="Hapus Tingkat Komisi" data-tier-index="${idx}">
-            <i class="bi bi-trash text-sm"></i>
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = tiers.map((tier, idx) => {
+      const minVal = (tier.min_qty !== null && tier.min_qty !== undefined) ? tier.min_qty : '';
+      const maxVal = (tier.max_qty !== null && tier.max_qty !== undefined) ? tier.max_qty : '';
+      const commVal = (tier.commission_val !== undefined && tier.commission_val !== null) 
+        ? tier.commission_val 
+        : (tier.commission_pct !== undefined && tier.commission_pct !== null ? tier.commission_pct : '');
+
+      return `
+        <tr data-tier-index="${idx}">
+          <td class="py-2 px-3">
+            <input type="number" min="1" class="tier-min-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="Cth: 1" value="${minVal}">
+          </td>
+          <td class="py-2 px-3">
+            <input type="number" min="1" class="tier-max-qty w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="Cth: 40" value="${maxVal}">
+          </td>
+          <td class="py-2 px-3">
+            <div class="relative">
+              ${tierUnit === 'fixed' ? '<span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">Rp</span>' : ''}
+              <input type="number" step="any" min="0" class="tier-commission-val w-full h-8 ${tierUnit === 'fixed' ? 'pl-8 pr-2.5' : 'pl-2.5 pr-7'} rounded-md border border-slate-300 text-xs font-semibold text-slate-900 bg-white outline-none focus:border-[var(--color-primary)]" placeholder="Masukkan komisi..." value="${commVal}">
+              ${tierUnit === 'percentage' ? '<span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none pointer-events-none">%</span>' : ''}
+            </div>
+          </td>
+          <td class="py-2 px-3 text-center">
+            <button type="button" class="btn-delete-affiliate-tier w-7 h-7 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer" title="Hapus Tingkat Komisi" data-tier-index="${idx}">
+              <i class="bi bi-trash text-sm"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
 
     bindAffiliateTierTableEvents();
   }
@@ -6096,13 +6227,14 @@ const ProductForm = (() => {
       const idx = parseInt(row.getAttribute('data-tier-index'), 10);
       const minInp = row.querySelector('.tier-min-qty');
       const maxInp = row.querySelector('.tier-max-qty');
-      const pctInp = row.querySelector('.tier-commission-pct');
+      const commInp = row.querySelector('.tier-commission-val');
       const btnDel = row.querySelector('.btn-delete-affiliate-tier');
 
       if (minInp) {
         minInp.oninput = e => {
           if (primaryState.affiliate_commission_tiers[idx]) {
-            primaryState.affiliate_commission_tiers[idx].min_qty = parseInt(e.target.value) || 1;
+            const raw = e.target.value.trim();
+            primaryState.affiliate_commission_tiers[idx].min_qty = raw !== '' ? (parseInt(raw) || '') : '';
             saveDraftToStorage();
           }
         };
@@ -6110,17 +6242,32 @@ const ProductForm = (() => {
       if (maxInp) {
         maxInp.oninput = e => {
           if (primaryState.affiliate_commission_tiers[idx]) {
-            const val = e.target.value.trim();
-            primaryState.affiliate_commission_tiers[idx].max_qty = (val !== '' && !isNaN(parseInt(val))) ? parseInt(val) : null;
+            const raw = e.target.value.trim();
+            const parsedMax = raw !== '' ? parseInt(raw) : '';
+            primaryState.affiliate_commission_tiers[idx].max_qty = parsedMax;
+
+            // Otomatisasi Min. Qty baris berikutnya (Max. Qty Sebelumnya + 1)
+            if (parsedMax !== '' && !isNaN(parsedMax)) {
+              const nextIdx = idx + 1;
+              if (primaryState.affiliate_commission_tiers[nextIdx]) {
+                const nextMin = parsedMax + 1;
+                primaryState.affiliate_commission_tiers[nextIdx].min_qty = nextMin;
+                const nextRow = tbody.querySelector(`tr[data-tier-index="${nextIdx}"]`);
+                const nextMinInp = nextRow ? nextRow.querySelector('.tier-min-qty') : null;
+                if (nextMinInp) nextMinInp.value = nextMin;
+              }
+            }
             saveDraftToStorage();
           }
         };
       }
-      if (pctInp) {
-        pctInp.oninput = e => {
+      if (commInp) {
+        commInp.oninput = e => {
           if (primaryState.affiliate_commission_tiers[idx]) {
-            const val = e.target.value.trim();
-            primaryState.affiliate_commission_tiers[idx].commission_pct = (val !== '' && !isNaN(parseFloat(val))) ? parseFloat(val) : 0;
+            const raw = e.target.value.trim();
+            const parsedVal = raw !== '' ? (parseFloat(raw) || '') : '';
+            primaryState.affiliate_commission_tiers[idx].commission_val = parsedVal;
+            primaryState.affiliate_commission_tiers[idx].commission_pct = parsedVal;
             saveDraftToStorage();
           }
         };
@@ -6129,13 +6276,9 @@ const ProductForm = (() => {
         btnDel.onclick = (e) => {
           e.preventDefault();
           if (primaryState.affiliate_commission_tiers.length <= 1) {
-            if (typeof showToast === 'function') {
-              showToast('Minimal harus tersisa 1 baris tingkat komisi!', 'warning');
-            } else if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast('Minimal harus tersisa 1 baris tingkat komisi!', 'warning');
-            } else {
-              alert('Minimal harus tersisa 1 baris tingkat komisi!');
-            }
+            primaryState.affiliate_commission_tiers = [{ min_qty: '', max_qty: '', commission_val: '' }];
+            renderAffiliateTiersTableBody();
+            saveDraftToStorage();
             return;
           }
           primaryState.affiliate_commission_tiers.splice(idx, 1);
@@ -6147,31 +6290,17 @@ const ProductForm = (() => {
   }
 
   function addAffiliateTierRow() {
-    if (!Array.isArray(primaryState.affiliate_commission_tiers) || primaryState.affiliate_commission_tiers.length === 0) {
-      primaryState.affiliate_commission_tiers = [
-        { min_qty: 1, max_qty: 49, commission_pct: 0.5 },
-        { min_qty: 50, max_qty: 99, commission_pct: 2.0 },
-        { min_qty: 100, max_qty: null, commission_pct: 3.5 }
-      ];
-      renderAffiliateTiersTableBody();
-      saveDraftToStorage();
-      return;
+    if (!Array.isArray(primaryState.affiliate_commission_tiers)) {
+      primaryState.affiliate_commission_tiers = [];
     }
     const tiers = primaryState.affiliate_commission_tiers;
-    const lastTier = tiers[tiers.length - 1];
-    let prevMin = parseInt(lastTier.min_qty) || 1;
-    let prevMax = (lastTier.max_qty !== null && lastTier.max_qty !== undefined && lastTier.max_qty !== '') ? parseInt(lastTier.max_qty) : null;
-    
-    if (prevMax !== null && !isNaN(prevMax)) {
-      const nextMin = prevMax + 1;
-      const nextPct = Number(((lastTier.commission_pct || 0) + 1.0).toFixed(1));
-      tiers.push({ min_qty: nextMin, max_qty: null, commission_pct: nextPct });
+    if (tiers.length === 0) {
+      tiers.push({ min_qty: '', max_qty: '', commission_val: '' });
     } else {
-      const newPrevMax = prevMin + 49;
-      lastTier.max_qty = newPrevMax;
-      const nextMin = newPrevMax + 1;
-      const nextPct = Number(((lastTier.commission_pct || 0) + 1.0).toFixed(1));
-      tiers.push({ min_qty: nextMin, max_qty: null, commission_pct: nextPct });
+      const lastTier = tiers[tiers.length - 1];
+      let prevMax = (lastTier.max_qty !== null && lastTier.max_qty !== undefined && lastTier.max_qty !== '') ? parseInt(lastTier.max_qty) : null;
+      let nextMin = (prevMax !== null && !isNaN(prevMax)) ? prevMax + 1 : '';
+      tiers.push({ min_qty: nextMin, max_qty: '', commission_val: '' });
     }
     renderAffiliateTiersTableBody();
     saveDraftToStorage();
@@ -6201,8 +6330,8 @@ const ProductForm = (() => {
       }
     }
 
-    const type = primaryState.affiliate_commission_type || 'tiered';
-    setAffiliateCommissionType(type);
+    const mode = primaryState.affiliate_commission_mode || 'single';
+    setAffiliateCommissionMode(mode);
 
     const typeBtns = document.querySelectorAll('.affiliate-type-btn');
     typeBtns.forEach(btn => {
@@ -6210,27 +6339,45 @@ const ProductForm = (() => {
         e.preventDefault();
         const t = btn.getAttribute('data-type');
         if (t) {
-          setAffiliateCommissionType(t);
+          setAffiliateCommissionMode(t);
         }
       };
     });
 
-    const inpPercent = document.getElementById('input-affiliate-percent');
-    if (inpPercent) {
-      inpPercent.oninput = (e) => {
-        const raw = e.target.value;
-        primaryState.affiliate_commission_value = (raw !== '' && !isNaN(parseFloat(raw))) ? parseFloat(raw) : 0;
+    const selUnit = document.getElementById('select-affiliate-unit');
+    if (selUnit) {
+      selUnit.onchange = (e) => {
+        primaryState.affiliate_commission_unit = e.target.value;
+        updateAffiliateSingleHelper();
         saveDraftToStorage();
       };
     }
 
-    const inpFixed = document.getElementById('input-affiliate-fixed');
-    if (inpFixed) {
-      inpFixed.oninput = (e) => {
-        const cleanVal = e.target.value.replace(/\D/g, '');
-        const numVal = parseInt(cleanVal, 10) || 0;
-        primaryState.affiliate_commission_value = numVal;
-        e.target.value = numVal > 0 ? numVal.toLocaleString('id-ID') : '';
+    const inpSingleVal = document.getElementById('input-affiliate-single-value');
+    if (inpSingleVal) {
+      inpSingleVal.oninput = (e) => {
+        const raw = e.target.value.trim();
+        primaryState.affiliate_commission_value = raw !== '' ? (parseFloat(raw) || '') : '';
+        updateAffiliateSingleHelper();
+        saveDraftToStorage();
+      };
+    }
+
+    const inpMinQty = document.getElementById('input-affiliate-min-qty');
+    if (inpMinQty) {
+      inpMinQty.oninput = (e) => {
+        const raw = e.target.value.trim();
+        primaryState.affiliate_min_qty = raw !== '' ? (parseInt(raw) || '') : '';
+        updateAffiliateSingleHelper();
+        saveDraftToStorage();
+      };
+    }
+
+    const selTierUnit = document.getElementById('select-affiliate-tier-unit');
+    if (selTierUnit) {
+      selTierUnit.onchange = (e) => {
+        primaryState.affiliate_commission_tier_unit = e.target.value;
+        renderAffiliateTiersTableBody();
         saveDraftToStorage();
       };
     }
@@ -6254,6 +6401,7 @@ const ProductForm = (() => {
       };
     }
 
+    updateAffiliateSingleHelper();
     bindAffiliateTierTableEvents();
   }
 
@@ -6919,13 +7067,12 @@ const ProductForm = (() => {
               <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
             </div>
 
-            <!-- SUB-BAGIAN 1: AUTO PROMO BULANAN -->
+            <!-- SUB-BAGIAN 1: PROMO BULANAN (BERSIH TANPA IKON TIDAK PENTING) -->
             <div class="space-y-3 pt-1">
               <div class="flex items-center justify-between gap-3 select-none">
                 <div class="space-y-0.5">
                   <label for="toggle-promo-monthly" class="text-xs sm:text-sm font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
-                    <i class="bi bi-calendar2-heart text-emerald-600"></i>
-                    <span>Auto Promo Bulanan</span>
+                    <span>Promo Bulanan</span>
                   </label>
                   <p class="text-[11px] text-slate-500">
                     Aktifkan diskon otomatis saat jadwal Promo Bulanan toko berlangsung.
@@ -6938,7 +7085,7 @@ const ProductForm = (() => {
                     ${primaryState.auto_monthly_promo ? 'checked' : ''} 
                     class="sr-only peer toggle-switch-input"
                   />
-                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
                 </label>
               </div>
 
@@ -6946,7 +7093,7 @@ const ProductForm = (() => {
               <div id="promo-monthly-inputs-box" class="${primaryState.auto_monthly_promo ? 'block' : 'hidden'} space-y-2 pt-1">
                 <label class="block text-xs font-bold text-slate-700">Bentuk & Nilai Diskon Bulanan <span class="text-red-500">*</span>:</label>
                 <div class="flex items-center gap-2 max-w-md">
-                  <select id="select-monthly-promo-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500 shrink-0">
+                  <select id="select-monthly-promo-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-[var(--color-primary)] shrink-0">
                     <option value="percent" ${primaryState.monthly_discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
                     <option value="nominal" ${primaryState.monthly_discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
                   </select>
@@ -6957,18 +7104,25 @@ const ProductForm = (() => {
                     step="any"
                     value="${(primaryState.monthly_discount_value !== undefined && primaryState.monthly_discount_value !== null && primaryState.monthly_discount_value !== '') ? primaryState.monthly_discount_value : ''}"
                     placeholder="Masukkan diskon"
-                    class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-emerald-700 focus:border-emerald-500 outline-none"
+                    class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none"
                   />
+                </div>
+                <!-- Real-Time Helper Text Konversi Setara Promo Bulanan -->
+                <div id="monthly-discount-auto-convert-box" class="mt-2 text-slate-600 text-[11px] flex items-center justify-between hidden">
+                  <div class="flex items-center gap-1.5 font-medium">
+                    <i class="bi bi-arrow-repeat text-[var(--color-primary)]"></i>
+                    <span id="monthly-discount-auto-convert-text"></span>
+                  </div>
+                  <span id="monthly-discount-auto-convert-badge" class="px-2 py-0.5 rounded text-[var(--color-primary)] bg-[var(--color-primary-subtle)] font-bold text-[10px] shrink-0"></span>
                 </div>
               </div>
             </div>
 
-            <!-- SUB-BAGIAN 2: PROMO HARIAN -->
+            <!-- SUB-BAGIAN 2: PROMO HARIAN (BERSIH TANPA IKON TIDAK PENTING) -->
             <div class="space-y-3 border-t border-slate-100 pt-3.5">
               <div class="flex items-center justify-between gap-3 select-none">
                 <div class="space-y-0.5">
                   <label for="toggle-promo-daily" class="text-xs sm:text-sm font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
-                    <i class="bi bi-tag text-emerald-600"></i>
                     <span>Promo Harian</span>
                   </label>
                   <p class="text-[11px] text-slate-500">
@@ -6982,7 +7136,7 @@ const ProductForm = (() => {
                     ${primaryState.has_daily_promo ? 'checked' : ''} 
                     class="sr-only peer toggle-switch-input"
                   />
-                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                  <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
                 </label>
               </div>
 
@@ -6998,14 +7152,14 @@ const ProductForm = (() => {
                       id="input-promo-label" 
                       value="${escapeHtml(primaryState.monthly_promo_label || 'Promo Spesial')}"
                       placeholder="Contoh: Promo Spesial"
-                      class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs focus:border-emerald-500 outline-none font-semibold text-slate-800"
+                      class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs focus:border-[var(--color-primary)] outline-none font-semibold text-slate-800"
                     />
                   </div>
 
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Bentuk & Nilai Potongan Diskon <span class="text-red-500">*</span>:</label>
                     <div class="flex items-center gap-2">
-                      <select id="select-promo-discount-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-emerald-500 shrink-0">
+                      <select id="select-promo-discount-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-[var(--color-primary)] shrink-0">
                         <option value="percent" ${primaryState.discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
                         <option value="nominal" ${primaryState.discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
                       </select>
@@ -7016,15 +7170,15 @@ const ProductForm = (() => {
                         step="any"
                         value="${(primaryState.discount_value !== undefined && primaryState.discount_value !== null && primaryState.discount_value !== '') ? primaryState.discount_value : ''}"
                         placeholder="Masukkan diskon"
-                        class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-emerald-700 focus:border-emerald-500 outline-none"
+                        class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none"
                       />
                     </div>
-                    <div id="discount-auto-convert-box" class="mt-2 text-slate-500 text-[11px] flex items-center justify-between">
+                    <div id="discount-auto-convert-box" class="mt-2 text-slate-600 text-[11px] flex items-center justify-between">
                       <div class="flex items-center gap-1.5 font-medium">
-                        <i class="bi bi-arrow-repeat text-emerald-600"></i>
+                        <i class="bi bi-arrow-repeat text-[var(--color-primary)]"></i>
                         <span id="discount-auto-convert-text">${primaryState.discount_type === 'percent' ? `Potongan diskon ${parseFloat(primaryState.discount_value) || 0}% dari harga dasar` : `Potongan langsung Rp${(parseFloat(primaryState.discount_value) || 0).toLocaleString('id-ID')}/pcs`}</span>
                       </div>
-                      <span id="discount-auto-convert-badge" class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                      <span id="discount-auto-convert-badge" class="px-2 py-0.5 rounded text-[var(--color-primary)] bg-[var(--color-primary-subtle)] font-bold text-[10px] shrink-0">
                         ${(primaryState.discount_value !== '' && primaryState.discount_value > 0) ? (primaryState.discount_type === 'percent' ? primaryState.discount_value + '%' : 'Rp' + Number(primaryState.discount_value).toLocaleString('id-ID')) : '0%'}
                       </span>
                     </div>
@@ -7035,7 +7189,7 @@ const ProductForm = (() => {
           </div>
         `}
 
-        <!-- CARD 5: DESKRIPSI PRODUK (GATED) -->
+                <!-- CARD 5: DESKRIPSI PRODUK (GATED) -->
         ${missingCard4.length > 0 ? renderFlashbackCard('Deskripsi Produk', 'bi-file-text', missingCard4, 'card-step2-description') : `
           <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-description">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
@@ -7424,13 +7578,13 @@ const ProductForm = (() => {
         });
       }
 
-      // Delegasi Tombol Jenis Komisi Afiliasi
+      // Delegasi Tombol Jenis Komisi Afiliasi (Tunggal vs Bertingkat)
       const affTypeBtn = e.target.closest('.affiliate-type-btn');
       if (affTypeBtn) {
         e.preventDefault();
         const type = affTypeBtn.getAttribute('data-type');
-        if (type && typeof setAffiliateCommissionType === 'function') {
-          setAffiliateCommissionType(type);
+        if (type && typeof setAffiliateCommissionMode === 'function') {
+          setAffiliateCommissionMode(type);
         }
         return;
       }
@@ -15484,9 +15638,51 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Inisialisasi hitungan volumetrik jika sudah ada nilai
     updateVolumetricWeightCalculation();
 
-    // Card 4: Program Promo (2 Toggle Mandiri: Auto Promo Bulanan & Promo Harian)
+    // Card 4: Program Promo (2 Toggle Mandiri: Promo Bulanan & Promo Harian)
     const togglePromoMonthly = document.getElementById('toggle-promo-monthly');
     const promoMonthlyInputsBox = document.getElementById('promo-monthly-inputs-box');
+    const selectMonthlyPromoType = document.getElementById('select-monthly-promo-type');
+    const inputMonthlyPromoVal = document.getElementById('input-monthly-promo-value');
+
+    function updateMonthlyDiscountAutoConvert() {
+      const dType = selectMonthlyPromoType ? selectMonthlyPromoType.value : (primaryState.monthly_discount_type || 'percent');
+      const rawVal = inputMonthlyPromoVal ? inputMonthlyPromoVal.value : primaryState.monthly_discount_value;
+      const dVal = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
+      const box = document.getElementById('monthly-discount-auto-convert-box');
+      const autoText = document.getElementById('monthly-discount-auto-convert-text');
+      const autoBadge = document.getElementById('monthly-discount-auto-convert-badge');
+
+      let basePrice = 0;
+      if (materialsState.length > 0 && materialsState[0].price > 0) {
+        basePrice = materialsState[0].price;
+      } else if (primaryState.price > 0) {
+        basePrice = primaryState.price;
+      }
+
+      if (dVal <= 0 || basePrice <= 0) {
+        if (box) {
+          box.classList.add('hidden');
+          box.classList.remove('flex');
+        }
+        return;
+      }
+
+      if (box) {
+        box.classList.remove('hidden');
+        box.classList.add('flex');
+      }
+
+      if (dType === 'percent') {
+        const nomPotongan = Math.round(basePrice * (dVal / 100));
+        if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan Rp ${nomPotongan.toLocaleString('id-ID')} dari harga dasar ${formatIDR(basePrice)}.`;
+        if (autoBadge) autoBadge.textContent = `${Math.min(100, Math.round(dVal))}%`;
+      } else {
+        const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
+        if (autoText) autoText.textContent = `Potongan Rp ${dVal.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar ${formatIDR(basePrice)}.`;
+        if (autoBadge) autoBadge.textContent = `${pct}%`;
+      }
+    }
+
     if (togglePromoMonthly) {
       togglePromoMonthly.onchange = e => {
         primaryState.auto_monthly_promo = e.target.checked;
@@ -15495,27 +15691,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           promoMonthlyInputsBox.classList.toggle('hidden', !e.target.checked);
           promoMonthlyInputsBox.classList.toggle('block', e.target.checked);
         }
+        updateMonthlyDiscountAutoConvert();
         updateProductCardLivePreview();
         saveDraftToStorage();
       };
     }
 
-    const selectMonthlyPromoType = document.getElementById('select-monthly-promo-type');
     if (selectMonthlyPromoType) {
       selectMonthlyPromoType.onchange = e => {
         primaryState.monthly_discount_type = e.target.value || 'percent';
+        updateMonthlyDiscountAutoConvert();
         saveDraftToStorage();
       };
     }
 
-    const inputMonthlyPromoVal = document.getElementById('input-monthly-promo-value');
     if (inputMonthlyPromoVal) {
       inputMonthlyPromoVal.oninput = e => {
         const raw = e.target.value;
         primaryState.monthly_discount_value = (raw !== '' && raw !== null && raw !== undefined) ? (parseFloat(raw) || 0) : '';
+        updateMonthlyDiscountAutoConvert();
         saveDraftToStorage();
       };
     }
+
+    // Inisialisasi awal helper promo bulanan
+    updateMonthlyDiscountAutoConvert();
 
     const togglePromoDaily = document.getElementById('toggle-promo-daily');
     const promoDailyInputsBox = document.getElementById('promo-daily-inputs-box');
@@ -15551,15 +15751,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const dType = selectPromoType ? selectPromoType.value : (primaryState.discount_type || 'percent');
       const rawVal = inputPromoVal ? inputPromoVal.value : primaryState.discount_value;
       const dVal = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
+      const box = document.getElementById('discount-auto-convert-box');
 
-      let basePrice = 25000;
+      let basePrice = 0;
       if (materialsState.length > 0 && materialsState[0].price > 0) {
         basePrice = materialsState[0].price;
+      } else if (primaryState.price > 0) {
+        basePrice = primaryState.price;
+      }
+
+      if (dVal <= 0 || basePrice <= 0) {
+        if (box) {
+          box.classList.add('hidden');
+          box.classList.remove('flex');
+        }
+        return;
+      }
+
+      if (box) {
+        box.classList.remove('hidden');
+        box.classList.add('flex');
       }
 
       if (dType === 'percent') {
         const nomPotongan = Math.round(basePrice * (dVal / 100));
-        if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan sekitar Rp ${nomPotongan.toLocaleString('id-ID')} pada harga dasar ${formatIDR(basePrice)}.`;
+        if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan Rp ${nomPotongan.toLocaleString('id-ID')} dari harga dasar ${formatIDR(basePrice)}.`;
         if (autoBadge) autoBadge.textContent = `${Math.min(100, Math.round(dVal))}%`;
       } else {
         const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
@@ -17824,15 +18040,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Delegasi Input Real-Time Komisi Afiliasi (Anti-Lepas DOM)
     document.addEventListener('input', (e) => {
-      if (e.target && e.target.id === 'input-affiliate-percent') {
-        const raw = e.target.value;
-        primaryState.affiliate_commission_value = (raw !== '' && !isNaN(parseFloat(raw))) ? parseFloat(raw) : 0;
+      if (e.target && e.target.id === 'input-affiliate-single-value') {
+        const raw = e.target.value.trim();
+        primaryState.affiliate_commission_value = raw !== '' ? (parseFloat(raw) || '') : '';
+        if (typeof updateAffiliateSingleHelper === 'function') updateAffiliateSingleHelper();
         saveDraftToStorage();
-      } else if (e.target && e.target.id === 'input-affiliate-fixed') {
-        const cleanVal = e.target.value.replace(/\D/g, '');
-        const numVal = parseInt(cleanVal, 10) || 0;
-        primaryState.affiliate_commission_value = numVal;
-        e.target.value = numVal > 0 ? numVal.toLocaleString('id-ID') : '';
+      } else if (e.target && e.target.id === 'input-affiliate-min-qty') {
+        const raw = e.target.value.trim();
+        primaryState.affiliate_min_qty = raw !== '' ? (parseInt(raw) || '') : '';
+        if (typeof updateAffiliateSingleHelper === 'function') updateAffiliateSingleHelper();
+        saveDraftToStorage();
+      } else if (e.target && e.target.id === 'input-monthly-promo-value') {
+        const raw = e.target.value;
+        primaryState.monthly_discount_value = (raw !== '' && raw !== null && raw !== undefined) ? (parseFloat(raw) || 0) : '';
+        if (typeof updateMonthlyDiscountAutoConvert === 'function') updateMonthlyDiscountAutoConvert();
         saveDraftToStorage();
       } else if (e.target && e.target.id === 'input-affiliate-min-order') {
         const cleanVal = e.target.value.replace(/\D/g, '');
@@ -17879,10 +18100,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
 
       // Delegasi Perubahan Radio Jenis Komisi
-      if (e.target && e.target.name === 'affiliate_commission_type') {
-        if (typeof setAffiliateCommissionType === 'function') {
-          setAffiliateCommissionType(e.target.value);
+      if (e.target && (e.target.name === 'affiliate_commission_mode' || e.target.name === 'affiliate_commission_type')) {
+        if (typeof setAffiliateCommissionMode === 'function') {
+          setAffiliateCommissionMode(e.target.value);
         }
+        return;
+      }
+      if (e.target && e.target.id === 'select-affiliate-unit') {
+        primaryState.affiliate_commission_unit = e.target.value;
+        if (typeof updateAffiliateSingleHelper === 'function') updateAffiliateSingleHelper();
+        saveDraftToStorage();
+        return;
+      }
+      if (e.target && e.target.id === 'select-affiliate-tier-unit') {
+        primaryState.affiliate_commission_tier_unit = e.target.value;
+        if (typeof renderAffiliateTiersTableBody === 'function') renderAffiliateTiersTableBody();
+        saveDraftToStorage();
         return;
       }
       if (e.target && (e.target.id === 'input-prod-images-hidden' || e.target.id === 'input-prod-image')) {
@@ -18358,22 +18591,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (toggleAffEl) {
       primaryState.has_affiliate_commission = toggleAffEl.checked;
     }
-    const affTypeRadio = document.querySelector('input[name="affiliate_commission_type"]:checked');
-    if (affTypeRadio) {
-      primaryState.affiliate_commission_type = affTypeRadio.value;
+    const affModeRadio = document.querySelector('input[name="affiliate_commission_mode"]:checked');
+    if (affModeRadio) {
+      primaryState.affiliate_commission_mode = affModeRadio.value;
+      primaryState.affiliate_commission_type = affModeRadio.value;
     }
-    if (primaryState.affiliate_commission_type === 'percentage') {
-      const pInp = document.getElementById('input-affiliate-percent');
-      if (pInp) {
-        const rawP = pInp.value.trim();
-        primaryState.affiliate_commission_value = (rawP !== '' && !isNaN(parseFloat(rawP))) ? parseFloat(rawP) : 0;
-      }
-    } else if (primaryState.affiliate_commission_type === 'fixed') {
-      const fInp = document.getElementById('input-affiliate-fixed');
-      if (fInp) {
-        const cleanF = fInp.value.replace(/\D/g, '');
-        primaryState.affiliate_commission_value = parseInt(cleanF, 10) || 0;
-      }
+    const selAffUnit = document.getElementById('select-affiliate-unit');
+    if (selAffUnit) {
+      primaryState.affiliate_commission_unit = selAffUnit.value;
+    }
+    const inpAffSingle = document.getElementById('input-affiliate-single-value');
+    if (inpAffSingle) {
+      const rawS = inpAffSingle.value.trim();
+      primaryState.affiliate_commission_value = rawS !== '' ? (parseFloat(rawS) || '') : '';
+    }
+    const inpAffMinQty = document.getElementById('input-affiliate-min-qty');
+    if (inpAffMinQty) {
+      const rawQ = inpAffMinQty.value.trim();
+      primaryState.affiliate_min_qty = rawQ !== '' ? (parseInt(rawQ) || '') : '';
+    }
+    const selAffTierUnit = document.getElementById('select-affiliate-tier-unit');
+    if (selAffTierUnit) {
+      primaryState.affiliate_commission_tier_unit = selAffTierUnit.value;
     }
 
     const tierRows = document.querySelectorAll('#affiliate-tiers-table-body tr[data-tier-index]');
@@ -18381,12 +18620,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.affiliate_commission_tiers = Array.from(tierRows).map(row => {
         const minInp = row.querySelector('.tier-min-qty');
         const maxInp = row.querySelector('.tier-max-qty');
-        const pctInp = row.querySelector('.tier-commission-pct');
-        const minQty = parseInt(minInp?.value) || 1;
+        const commInp = row.querySelector('.tier-commission-val');
+        const minVal = minInp?.value?.trim();
         const maxVal = maxInp?.value?.trim();
-        const maxQty = (maxVal !== '' && maxVal !== null && maxVal !== undefined && !isNaN(parseInt(maxVal))) ? parseInt(maxVal) : null;
-        const commPct = parseFloat(pctInp?.value) || 0;
-        return { min_qty: minQty, max_qty: maxQty, commission_pct: commPct };
+        const commVal = commInp?.value?.trim();
+        return {
+          min_qty: (minVal !== '' && minVal !== undefined && !isNaN(parseInt(minVal))) ? parseInt(minVal) : '',
+          max_qty: (maxVal !== '' && maxVal !== undefined && !isNaN(parseInt(maxVal))) ? parseInt(maxVal) : '',
+          commission_val: (commVal !== '' && commVal !== undefined && !isNaN(parseFloat(commVal))) ? parseFloat(commVal) : '',
+          commission_pct: (commVal !== '' && commVal !== undefined && !isNaN(parseFloat(commVal))) ? parseFloat(commVal) : ''
+        };
       });
     }
 
@@ -18394,6 +18637,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (affMinOrderInp) {
       const cleanM = affMinOrderInp.value.replace(/\D/g, '');
       primaryState.affiliate_min_order_amount = parseInt(cleanM, 10) || 0;
+    }
+
+    if (typeof getAffiliateSingleHelperInfo === 'function') {
+      getAffiliateSingleHelperInfo();
     }
 
     // Custom Labels
@@ -18794,19 +19041,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // 4. Validasi Komisi Afiliasi (Jika Aktif)
     if (primaryState.has_affiliate_commission === true) {
-      if (primaryState.affiliate_commission_type === 'percentage') {
-        const pVal = parseFloat(primaryState.affiliate_commission_value);
-        if (isNaN(pVal) || pVal <= 0) {
-          addError('Besaran komisi persentase afiliasi wajib diisi dan harus lebih besar dari 0%.', document.getElementById('input-affiliate-percent') || document.getElementById('card-step2-others'));
-        } else if (pVal > 100) {
-          addError('Besaran komisi persentase afiliasi tidak boleh lebih dari 100%.', document.getElementById('input-affiliate-percent') || document.getElementById('card-step2-others'));
+      const mode = primaryState.affiliate_commission_mode || (primaryState.affiliate_commission_type === 'tiered' ? 'tiered' : 'single');
+      if (mode === 'single') {
+        const val = parseFloat(primaryState.affiliate_commission_value);
+        if (isNaN(val) || val <= 0) {
+          addError('Besaran nilai komisi afiliasi wajib diisi dan harus lebih besar dari 0.', document.getElementById('input-affiliate-single-value') || document.getElementById('card-step2-others'));
+        } else if (primaryState.affiliate_commission_unit === 'percentage' && val > 100) {
+          addError('Besaran komisi persentase afiliasi tidak boleh lebih dari 100%.', document.getElementById('input-affiliate-single-value') || document.getElementById('card-step2-others'));
         }
-      } else if (primaryState.affiliate_commission_type === 'fixed') {
-        const fVal = parseFloat(primaryState.affiliate_commission_value);
-        if (isNaN(fVal) || fVal <= 0) {
-          addError('Besaran komisi nominal afiliasi per qty wajib diisi dan harus lebih besar dari Rp 0.', document.getElementById('input-affiliate-fixed') || document.getElementById('card-step2-others'));
-        }
-      } else if (primaryState.affiliate_commission_type === 'tiered') {
+      } else if (mode === 'tiered') {
         const tiers = primaryState.affiliate_commission_tiers;
         if (!Array.isArray(tiers) || tiers.length === 0) {
           addError('Minimal harus ada 1 tingkatan komisi afiliasi bertingkat.', document.getElementById('btn-add-affiliate-tier') || document.getElementById('card-step2-others'));
@@ -18815,7 +19058,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const t = tiers[i];
             const minQty = parseInt(t.min_qty);
             if (isNaN(minQty) || minQty < 1) {
-              addError(`Min. Qty pada tingkat komisi ke-${i + 1} harus minimal 1.`, document.getElementById('affiliate-tiers-table-body') || document.getElementById('card-step2-others'));
+              addError(`Min. Qty pada tingkat komisi ke-${i + 1} harus diisi minimal 1.`, document.getElementById('affiliate-tiers-table-body') || document.getElementById('card-step2-others'));
               break;
             }
             if (t.max_qty !== null && t.max_qty !== undefined && t.max_qty !== '') {
@@ -18825,9 +19068,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                 break;
               }
             }
-            const pct = parseFloat(t.commission_pct);
-            if (isNaN(pct) || pct <= 0) {
-              addError(`Besaran komisi pada tingkat komisi ke-${i + 1} harus lebih besar dari 0%.`, document.getElementById('affiliate-tiers-table-body') || document.getElementById('card-step2-others'));
+            const val = parseFloat(t.commission_val !== undefined ? t.commission_val : t.commission_pct);
+            if (isNaN(val) || val <= 0) {
+              addError(`Besaran komisi pada tingkat komisi ke-${i + 1} harus diisi lebih besar dari 0.`, document.getElementById('affiliate-tiers-table-body') || document.getElementById('card-step2-others'));
+              break;
+            }
+            if (primaryState.affiliate_commission_tier_unit === 'percentage' && val > 100) {
+              addError(`Besaran komisi persentase pada tingkat komisi ke-${i + 1} tidak boleh lebih dari 100%.`, document.getElementById('affiliate-tiers-table-body') || document.getElementById('card-step2-others'));
               break;
             }
           }
