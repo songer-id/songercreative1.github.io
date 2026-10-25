@@ -6,13 +6,13 @@
 :root {
   /* 1. Warna Utama (Primary): Navbar, Header, Border Aktif, Tombol Primer */
   --color-primary: #33b589;
-  --color-primary-hover: #28916d;
-  --color-primary-subtle: rgba(51, 181, 137, 0.12);
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 85%, #000000);
+  --color-primary-subtle: color-mix(in srgb, var(--color-primary) 12%, #ffffff);
 
   /* 2. Warna Kedua (Secondary / Accent) */
   --color-secondary: #f59e0b;
-  --color-secondary-hover: #d97706;
-  --color-secondary-subtle: rgba(245, 158, 11, 0.14);
+  --color-secondary-hover: color-mix(in srgb, var(--color-secondary) 85%, #000000);
+  --color-secondary-subtle: color-mix(in srgb, var(--color-secondary) 14%, #ffffff);
 
   --color-base: #f8fafc;
 }
@@ -28,17 +28,35 @@ body {
    BRAND THEME BUTTONS & UTILITIES
    -------------------------------------------------------------------------- */
 .btn-primary-brand {
-  background-color: var(--color-primary);
-  color: #ffffff;
+  background-color: var(--color-primary) !important;
+  background-image: none !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-primary-brand:hover {
-  background-color: var(--color-primary-hover);
+.btn-primary-brand:hover,
+.btn-primary-brand:focus,
+.btn-primary-brand:active {
+  background-color: var(--color-primary-hover) !important;
+  background-image: none !important;
+  border-color: var(--color-primary-hover) !important;
+  color: #ffffff !important;
 }
 
 .btn-primary-brand:active {
   transform: scale(0.98);
+}
+
+.text-primary-brand {
+  color: var(--color-primary) !important;
+}
+
+.text-primary-brand:hover,
+.text-primary-brand:focus,
+.text-primary-brand:active {
+  color: var(--color-primary-hover) !important;
+  text-decoration-color: var(--color-primary-hover) !important;
 }
 
 .btn-secondary-accent {
@@ -2056,23 +2074,55 @@ input.toggle-same-cost:checked~div::after {
 }
 
 #view-product-form .btn-primary-brand:hover,
+#view-product-form .btn-primary-brand:focus,
+#view-product-form .btn-primary-brand:active,
 #btn-step-1-next:hover,
+#btn-step-1-next:focus,
+#btn-step-1-next:active,
 #btn-submit-product:hover,
+#btn-submit-product:focus,
+#btn-submit-product:active,
 #btn-submit-product-top:hover,
+#btn-submit-product-top:focus,
+#btn-submit-product-top:active,
 #btn-save-option-rule-modal:hover,
+#btn-save-option-rule-modal:focus,
+#btn-save-option-rule-modal:active,
 #btn-expand-preview-sidebar:hover,
 #btn-fab-live-preview:hover,
+#btn-fab-live-preview:focus,
+#btn-fab-live-preview:active,
 #btn-ai-generate-desc:hover,
+#btn-ai-generate-desc:focus,
+#btn-ai-generate-desc:active,
 #btn-save-card-design:hover,
+#btn-save-card-design:focus,
+#btn-save-card-design:active,
 #btn-save-card-design-mob:hover,
+#btn-save-card-design-mob:focus,
+#btn-save-card-design-mob:active,
 #btn-ai-desc-apply:hover,
+#btn-ai-desc-apply:focus,
+#btn-ai-desc-apply:active,
 #btn-trigger-extra-service:hover,
+#btn-trigger-extra-service:focus,
+#btn-trigger-extra-service:active,
 #btn-trigger-extra-service-normal:hover,
+#btn-trigger-extra-service-normal:focus,
+#btn-trigger-extra-service-normal:active,
 #btn-apply-bulk-price:hover,
+#btn-apply-bulk-price:focus,
+#btn-apply-bulk-price:active,
 #btn-apply-bulk-stock:hover,
-#btn-apply-bulk-sku:hover {
+#btn-apply-bulk-stock:focus,
+#btn-apply-bulk-stock:active,
+#btn-apply-bulk-sku:hover,
+#btn-apply-bulk-sku:focus,
+#btn-apply-bulk-sku:active {
   background-color: var(--color-primary-hover) !important;
+  background-image: none !important;
   border-color: var(--color-primary-hover) !important;
+  color: #ffffff !important;
 }
 
 /* 2. Tombol Aksi Teks / Sekunder (+ Tambah Kategori, Kembali ke Daftar) */
@@ -2391,20 +2441,46 @@ body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
 .bg-\[\#33b589\],
 #header-profile-avatar {
   background-color: var(--color-primary) !important;
+  background-image: none !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* 2. Global Hover Background Brand & Tombol Layanan Extra Hover */
 #btn-trigger-extra-service:hover,
+#btn-trigger-extra-service:focus,
+#btn-trigger-extra-service:active,
 #btn-trigger-extra-service-normal:hover,
+#btn-trigger-extra-service-normal:focus,
+#btn-trigger-extra-service-normal:active,
 .btn-trigger-extra-action:hover,
+.btn-trigger-extra-action:focus,
+.btn-trigger-extra-action:active,
 .btn-primary-brand:hover,
+.btn-primary-brand:focus,
+.btn-primary-brand:active,
+#btn-step-1-next:hover,
+#btn-step-1-next:focus,
+#btn-step-1-next:active,
+#btn-submit-product:hover,
+#btn-submit-product:focus,
+#btn-submit-product:active,
+#btn-ai-generate-desc:hover,
+#btn-ai-generate-desc:focus,
+#btn-ai-generate-desc:active,
 .hover\:bg-emerald-500:hover,
 .hover\:bg-emerald-600:hover,
 .hover\:bg-emerald-700:hover,
 .hover\:bg-emerald-800:hover,
 .hover\:bg-teal-600:hover,
-.hover\:bg-teal-700:hover {
+.hover\:bg-teal-700:hover,
+.hover\:from-emerald-700:hover,
+.hover\:to-teal-700:hover,
+.active\:bg-emerald-700:active,
+.focus\:bg-emerald-700:focus,
+.active\:bg-emerald-600:active,
+.focus\:bg-emerald-600:focus {
   background-color: var(--color-primary-hover) !important;
+  background-image: none !important;
   border-color: var(--color-primary-hover) !important;
   color: #ffffff !important;
 }
@@ -2460,6 +2536,7 @@ label:has(input[type="radio"]:checked) span,
 }
 
 /* 5. Global Hover Text Brand & Quick Add Category */
+.text-primary-brand,
 #btn-quick-add-category,
 #btn-quick-add-category-step2,
 #btn-quick-add-category i,
@@ -2467,15 +2544,25 @@ label:has(input[type="radio"]:checked) span,
   color: var(--color-primary) !important;
 }
 
+.text-primary-brand:hover,
+.text-primary-brand:focus,
+.text-primary-brand:active,
 #btn-quick-add-category:hover,
 #btn-quick-add-category-step2:hover,
+#btn-quick-add-category:focus,
+#btn-quick-add-category-step2:focus,
+#btn-quick-add-category:active,
+#btn-quick-add-category-step2:active,
 #btn-quick-add-category:hover i,
 #btn-quick-add-category-step2:hover i,
 .hover\:text-emerald-600:hover,
 .hover\:text-emerald-700:hover,
 .hover\:text-emerald-800:hover,
 .hover\:text-teal-600:hover,
-.hover\:text-teal-700:hover {
+.hover\:text-teal-700:hover,
+.group:hover .group-hover\:text-emerald-600,
+.group:hover .group-hover\:text-emerald-700,
+.group:hover .group-hover\:text-emerald-800 {
   color: var(--color-primary-hover) !important;
   text-decoration-color: var(--color-primary-hover) !important;
 }

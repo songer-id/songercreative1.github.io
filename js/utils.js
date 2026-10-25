@@ -37,6 +37,9 @@
     if (typeof root.formatDateID === 'undefined') {
       root.formatDateID = utils.formatDateID;
     }
+    if (typeof root.adjustColorBrightness === 'undefined') {
+      root.adjustColorBrightness = utils.adjustColorBrightness;
+    }
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -149,12 +152,41 @@
     return `${day} ${month} ${year}, ${hours}:${minutes} WIB`;
   }
 
+  /**
+   * Mengatur kecerahan warna HEX (menghasilkan warna lebih gelap untuk hover atau lebih terang)
+   * 
+   * @param {string} hex - Kode warna hex (misal: "#33b589" atau "33b589")
+   * @param {number} percent - Persentase penyesuaian (misal: -15 untuk 15% lebih gelap)
+   * @returns {string} Contoh: "#28916d"
+   */
+  function adjustColorBrightness(hex, percent = -15) {
+    if (!hex || typeof hex !== 'string') return '#28916d';
+    let cleanHex = hex.replace('#', '').trim();
+    if (cleanHex.length === 3) {
+      cleanHex = cleanHex.split('').map(c => c + c).join('');
+    }
+    if (cleanHex.length !== 6) {
+      return '#28916d';
+    }
+    const num = parseInt(cleanHex, 16);
+    if (isNaN(num)) return '#28916d';
+    const factor = Number(percent) || -15;
+    let r = (num >> 16) + Math.round(255 * (factor / 100));
+    let g = ((num >> 8) & 255) + Math.round(255 * (factor / 100));
+    let b = (num & 255) + Math.round(255 * (factor / 100));
+    r = Math.min(255, Math.max(0, r));
+    g = Math.min(255, Math.max(0, g));
+    b = Math.min(255, Math.max(0, b));
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  }
+
   return {
     formatIDR,
     formatCurrency,
     escapeHtml,
     hexToRgba,
     generateSlug,
-    formatDateID
+    formatDateID,
+    adjustColorBrightness
   };
 }));

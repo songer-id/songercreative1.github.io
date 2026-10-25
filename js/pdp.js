@@ -187,9 +187,13 @@
 
     // Injeksi Dual-Color Theme ke CSS Variables Root
     const primaryColor = settings.primary_color || '#33b589';
-    const primaryHover = settings.primary_hover_color || '#28916d';
+    const primaryHover = (typeof adjustColorBrightness === 'function')
+      ? adjustColorBrightness(primaryColor, -15)
+      : ((typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(primaryColor, -15) : (settings.primary_hover_color || primaryColor));
     const secondaryColor = settings.secondary_color || '#f59e0b';
-    const secondaryHover = settings.secondary_hover_color || '#d97706';
+    const secondaryHover = (typeof adjustColorBrightness === 'function')
+      ? adjustColorBrightness(secondaryColor, -15)
+      : ((typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(secondaryColor, -15) : (settings.secondary_hover_color || secondaryColor));
 
     const root = document.documentElement;
     root.style.setProperty('--color-primary', primaryColor);

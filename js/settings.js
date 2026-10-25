@@ -404,8 +404,16 @@
     }, 3500);
   }
 
-  function adjustColorBrightness(hex, percent) {
-    let num = parseInt(hex.replace('#', ''), 16);
+  function adjustColorBrightness(hex, percent = -15) {
+    if (typeof Utils !== 'undefined' && typeof Utils.adjustColorBrightness === 'function') {
+      return Utils.adjustColorBrightness(hex, percent);
+    }
+    if (!hex || typeof hex !== 'string') return '#28916d';
+    let clean = hex.replace('#', '').trim();
+    if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+    if (clean.length !== 6) return '#28916d';
+    let num = parseInt(clean, 16);
+    if (isNaN(num)) return '#28916d';
     let amt = Math.round(2.55 * percent);
     let R = (num >> 16) + amt;
     let G = (num >> 8 & 0x00FF) + amt;

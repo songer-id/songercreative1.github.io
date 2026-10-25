@@ -4994,7 +4994,9 @@
 
         // Colors
         primary_color: getInputValue('ctrl-hex-primary'),
+        primary_hover_color: (typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(getInputValue('ctrl-hex-primary'), -15) : undefined,
         secondary_color: getInputValue('ctrl-hex-secondary'),
+        secondary_hover_color: (typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(getInputValue('ctrl-hex-secondary'), -15) : undefined,
         body_bg_color: getInputValue('ctrl-hex-body-bg'),
 
         // Tipografi (Google Fonts)

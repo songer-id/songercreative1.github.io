@@ -1972,6 +1972,16 @@ const DB = (() => {
     updateSettings(newSettings) {
       const current = getTable(STORAGE_KEYS.SETTINGS) || DEFAULT_SETTINGS;
       const updated = { ...current, ...newSettings };
+      if (newSettings && newSettings.primary_color) {
+        if (typeof Utils !== 'undefined' && Utils.adjustColorBrightness) {
+          updated.primary_hover_color = Utils.adjustColorBrightness(newSettings.primary_color, -15);
+        }
+      }
+      if (newSettings && newSettings.secondary_color) {
+        if (typeof Utils !== 'undefined' && Utils.adjustColorBrightness) {
+          updated.secondary_hover_color = Utils.adjustColorBrightness(newSettings.secondary_color, -15);
+        }
+      }
       setTable(STORAGE_KEYS.SETTINGS, updated);
       return updated;
     },

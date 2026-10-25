@@ -91,11 +91,15 @@ const ProductForm = (() => {
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
       };
 
-      const primaryHover = settings.primary_hover_color || calcHover(primaryColor, -15);
+      const primaryHover = (typeof adjustColorBrightness === 'function')
+        ? adjustColorBrightness(primaryColor, -15)
+        : ((typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(primaryColor, -15) : calcHover(primaryColor, -15));
       const primarySubtle = toSubtle(primaryColor, 0.12);
 
       const secondaryColor = settings.secondary_color || '#f59e0b';
-      const secondaryHover = settings.secondary_hover_color || calcHover(secondaryColor, -15);
+      const secondaryHover = (typeof adjustColorBrightness === 'function')
+        ? adjustColorBrightness(secondaryColor, -15)
+        : ((typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(secondaryColor, -15) : calcHover(secondaryColor, -15));
       const secondarySubtle = toSubtle(secondaryColor, 0.14);
 
       const root = document.documentElement;
@@ -120,8 +124,14 @@ const ProductForm = (() => {
     try {
       if (typeof DB !== 'undefined' && DB.getSettings) {
         const s = DB.getSettings();
-        if (s && s.primary_color) return s.primary_color;
-        if (s && s.theme_color) return s.theme_color;
+        if (s && s.primary_color) {
+          syncThemeCSSVariables();
+          return s.primary_color;
+        }
+        if (s && s.theme_color) {
+          syncThemeCSSVariables();
+          return s.theme_color;
+        }
       }
       const rootColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
       if (rootColor) return rootColor;
@@ -1453,7 +1463,7 @@ const ProductForm = (() => {
                 <div class="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
                   <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
                     <input type="checkbox" id="cfg-save-as-default-toggle" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-desk">Gunakan Thema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
+                    <span id="label-save-as-default-desk">Gunakan Tema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
                   </label>
                   <button type="button" id="btn-save-card-design" class="btn-primary-brand w-full py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
@@ -1477,7 +1487,7 @@ const ProductForm = (() => {
         <!-- MOBILE FLOATING ACTION BUTTON (FAB) (Posisikan di tengah bawah) -->
         <button type="button" id="btn-fab-live-preview" class="btn-primary-brand lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 active:scale-95 text-white px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none">
           <i class="bi bi-eye text-sm"></i>
-          <span>Live Preview</span>
+          <span>Pratinjau</span>
         </button>
 
         <!-- MOBILE BOTTOM SHEET / DRAWER -->
@@ -1688,7 +1698,7 @@ const ProductForm = (() => {
                 <div class="pt-3 border-t border-slate-200 flex flex-col gap-2.5">
                   <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
                     <input type="checkbox" id="cfg-save-as-default-toggle-mob" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-mob">Gunakan Thema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
+                    <span id="label-save-as-default-mob">Gunakan Tema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
                   </label>
                   <button type="button" id="btn-save-card-design-mob" class="btn-primary-brand w-full py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
                     <i class="bi bi-check-lg"></i>
@@ -5818,24 +5828,24 @@ const ProductForm = (() => {
 
     return `
       <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
-      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full flex items-center justify-between px-3 sm:px-6">
-        <nav class="flex items-center overflow-x-auto scrollbar-none flex-1 min-w-0" id="step2-subnav-links">
-          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-active px-3 py-2.5 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-info" data-step2-target="card-step2-info">
-            Informasi Produk
+      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full flex items-center justify-between px-2 sm:px-6">
+        <nav class="flex items-center overflow-x-auto scrollbar-none flex-1 min-w-0 gap-0.5 sm:gap-1" id="step2-subnav-links">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-active px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-info" data-step2-target="card-step2-info">
+            Info Produk
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-sales" data-step2-target="card-step2-sales">
-            Informasi Penjualan
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-sales" data-step2-target="card-step2-sales">
+            Penjualan
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-shipping" data-step2-target="card-step2-shipping">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-shipping" data-step2-target="card-step2-shipping">
             Pengiriman
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-promo" data-step2-target="card-step2-promo">
-            Program Promo
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-promo" data-step2-target="card-step2-promo">
+            Promo
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-description" data-step2-target="card-step2-description">
-            Deskripsi Produk
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-description" data-step2-target="card-step2-description">
+            Deskripsi
           </button>
-          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none" data-target="card-step2-others" data-step2-target="card-step2-others">
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-others" data-step2-target="card-step2-others">
             Lainnya
           </button>
         </nav>
@@ -5882,7 +5892,7 @@ const ProductForm = (() => {
                   Kategori Produk <span class="text-red-500">*</span>
                 </label>
               </div>
-              <button type="button" id="btn-quick-add-category-step2" class="text-xs font-bold hover:underline flex items-center gap-1 transition cursor-pointer" style="color: var(--color-primary);" title="Tambah Kategori">
+              <button type="button" id="btn-quick-add-category-step2" class="text-primary-brand text-xs font-bold hover:underline flex items-center gap-1 transition cursor-pointer" title="Tambah Kategori">
                 <i class="bi bi-plus-circle"></i>
                 <span>Tambah Kategori</span>
               </button>
@@ -11171,9 +11181,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const tid = tab.getAttribute('data-step2-target') || tab.getAttribute('data-target');
       if (tid === targetId) {
         activeTabEl = tab;
-        tab.className = 'step2-nav-tab step2-subnav-link subnav-tab-active px-3 py-2.5 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+        tab.className = 'step2-nav-tab step2-subnav-link subnav-tab-active px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0';
       } else {
-        tab.className = 'step2-nav-tab step2-subnav-link subnav-tab-inactive px-3 py-2.5 text-xs md:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none';
+        tab.className = 'step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0';
       }
     });
 
@@ -16194,8 +16204,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const lblSaveDesk = document.getElementById('label-save-as-default-desk');
       const lblSaveMob = document.getElementById('label-save-as-default-mob');
       const modelNameText = variantCode === 'B' ? 'Kartu Minimalis' : (variantCode === 'C' ? 'Kartu Detail' : 'Kartu Klasik');
-      if (lblSaveDesk) lblSaveDesk.textContent = `Gunakan Thema Sebagai Default ${modelNameText}`;
-      if (lblSaveMob) lblSaveMob.textContent = `Gunakan Thema Sebagai Default ${modelNameText}`;
+      if (lblSaveDesk) lblSaveDesk.textContent = `Gunakan Tema Sebagai Default ${modelNameText}`;
+      if (lblSaveMob) lblSaveMob.textContent = `Gunakan Tema Sebagai Default ${modelNameText}`;
 
       // Pastikan checkbox default selalu false (unchecked) setiap kali model diubah
       const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
@@ -16442,8 +16452,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         const deskLbl = document.getElementById('label-save-as-default-desk');
         const mobLbl = document.getElementById('label-save-as-default-mob');
-        if (deskLbl) deskLbl.textContent = `Gunakan Thema Sebagai Default ${modelName}`;
-        if (mobLbl) mobLbl.textContent = `Gunakan Thema Sebagai Default ${modelName}`;
+        if (deskLbl) deskLbl.textContent = `Gunakan Tema Sebagai Default ${modelName}`;
+        if (mobLbl) mobLbl.textContent = `Gunakan Tema Sebagai Default ${modelName}`;
       } else {
         // [Default]: Menyembunyikan panel kustomisasi
         panelCustDesk?.classList.add('hidden');

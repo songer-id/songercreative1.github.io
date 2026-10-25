@@ -302,6 +302,7 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
   - [x] Penguatan CSS variable bridge tema di `css/admin.css` & `css/style.css` agar 100% elemen interaktif terikat ke `--color-primary` dan `--color-secondary`.
   - [x] Perbaikan menyeluruh pengikatan warna tema dinamis (Aktif, Selected, Focus, Hover) pada Sub-Navbar, Radio Cards, Action Buttons, Margin Badges, dan Sidebar Admin.
   - [x] Sinkronisasi 15 titik kebocoran warna tema brand (Step 1, Step 2, Modal Pop-up, FAB Preview, dan Pratinjau Kartu Produk) 100% terikat ke variabel CSS (--color-primary, --color-primary-hover, --color-primary-subtle).
+  - [x] Sinkronisasi total warna hover, focus, dan active pada seluruh tombol CTA dan tautan aksi dengan turunan dinamis (--color-primary-hover, color-mix 85% primary + 15% black, tanpa jatuh ke hijau default).
   - [x] Pemulihan fungsi event binding Step 2 (Variasi Produk, Layanan Extra, Variasi 2/3/4, Grosir, Kelipatan) pada modul `js/product-form.js`.
 
 - [ ] **TAHAP 2: Storefront Overhaul (Modal Popup Promosi, Flash Sale Real-Time & Filter/Sorting Lengkap)**

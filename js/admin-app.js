@@ -328,12 +328,21 @@ const AdminApp = (() => {
 
   function applyBrandTheme(settings) {
     const primaryColor = settings.primary_color || '#33b589';
-    const primaryHover = settings.primary_hover_color || adjustColorBrightness(primaryColor, -15);
-    const primarySubtle = hexToRgba(primaryColor, 0.12);
+    // Selalu hitung hover 15% lebih gelap dan subtle transparan dari primaryColor aktif
+    const primaryHover = (typeof adjustColorBrightness === 'function')
+      ? adjustColorBrightness(primaryColor, -15)
+      : ((typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(primaryColor, -15) : primaryColor);
+    const primarySubtle = (typeof hexToRgba === 'function')
+      ? hexToRgba(primaryColor, 0.12)
+      : ((typeof Utils !== 'undefined' && Utils.hexToRgba) ? Utils.hexToRgba(primaryColor, 0.12) : 'rgba(0,0,0,0.1)');
 
     const secondaryColor = settings.secondary_color || '#f59e0b';
-    const secondaryHover = settings.secondary_hover_color || adjustColorBrightness(secondaryColor, -15);
-    const secondarySubtle = hexToRgba(secondaryColor, 0.14);
+    const secondaryHover = (typeof adjustColorBrightness === 'function')
+      ? adjustColorBrightness(secondaryColor, -15)
+      : ((typeof Utils !== 'undefined' && Utils.adjustColorBrightness) ? Utils.adjustColorBrightness(secondaryColor, -15) : secondaryColor);
+    const secondarySubtle = (typeof hexToRgba === 'function')
+      ? hexToRgba(secondaryColor, 0.14)
+      : ((typeof Utils !== 'undefined' && Utils.hexToRgba) ? Utils.hexToRgba(secondaryColor, 0.14) : 'rgba(0,0,0,0.1)');
 
     const root = document.documentElement;
     root.style.setProperty('--color-primary', primaryColor);
@@ -2513,6 +2522,8 @@ const AdminApp = (() => {
         const secondaryColor = secInput?.value || '#f59e0b';
         const paperWidth = document.getElementById('setting-paper-width')?.value || '58mm';
         const footer = document.getElementById('setting-receipt-footer')?.value.trim();
+        const primaryHover = adjustColorBrightness(primaryColor, -15);
+        const secondaryHover = adjustColorBrightness(secondaryColor, -15);
 
         const updatedSettings = {
           ...settings,
@@ -2521,7 +2532,9 @@ const AdminApp = (() => {
           store_phone: phone,
           store_address: address,
           primary_color: primaryColor,
+          primary_hover_color: primaryHover,
           secondary_color: secondaryColor,
+          secondary_hover_color: secondaryHover,
           printer_paper_width: paperWidth,
           receipt_footer: footer
         };
