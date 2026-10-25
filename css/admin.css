@@ -678,9 +678,8 @@ input[type="checkbox"].checkbox-brand:checked {
 /* Active Nav Button Styling on Clean Dashboard (Dokani Style) */
 .admin-nav-item.is-nav-active,
 .admin-nav-item.bg-emerald-50 {
-  background-color: #ecfdf5 !important;
-  /* bg-emerald-50 */
-  color: #047857 !important;
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary-hover) !important;
   border: 1px solid transparent !important;
   border-color: transparent !important;
   border-radius: 0.5rem !important;
@@ -691,12 +690,12 @@ input[type="checkbox"].checkbox-brand:checked {
 
 .admin-nav-item.is-nav-active .nav-icon,
 .admin-nav-item.bg-emerald-50 .nav-icon {
-  color: #33b589 !important;
+  color: var(--color-primary) !important;
 }
 
 .admin-nav-item.is-nav-active .nav-label-text,
 .admin-nav-item.bg-emerald-50 .nav-label-text {
-  color: #047857 !important;
+  color: var(--color-primary-hover) !important;
   font-weight: 700 !important;
 }
 
@@ -2377,60 +2376,152 @@ body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
   background-color: var(--color-primary-hover) !important;
 }
 
-#view-product-form .text-emerald-500,
-#view-product-form .text-emerald-600,
-#view-product-form .text-emerald-700,
-#view-product-form .text-emerald-800,
-#view-product-form .text-emerald-950,
-#desktop-preview-sidebar .text-emerald-600,
-#mobile-preview-sheet .text-emerald-600 {
+/* ==========================================================================
+   GLOBAL EMERALD & TEAL BRAND THEME UNIFICATION (SWEEP 100%)
+   Mengalihkan SEMUA class utilitas Tailwind emerald & teal di seluruh admin panel
+   ke variabel CSS Brand (--color-primary, --color-primary-hover, --color-primary-subtle).
+   ========================================================================== */
+
+/* 1. Global Background Brand */
+.bg-emerald-500,
+.bg-emerald-600,
+.bg-emerald-700,
+.bg-teal-500,
+.bg-teal-600,
+.bg-teal-700,
+.bg-\[\#33b589\],
+#header-profile-avatar {
+  background-color: var(--color-primary) !important;
+}
+
+/* 2. Global Hover Background Brand & Tombol Layanan Extra Hover */
+#btn-trigger-extra-service:hover,
+#btn-trigger-extra-service-normal:hover,
+.btn-trigger-extra-action:hover,
+.btn-primary-brand:hover,
+.hover\:bg-emerald-500:hover,
+.hover\:bg-emerald-600:hover,
+.hover\:bg-emerald-700:hover,
+.hover\:bg-emerald-800:hover,
+.hover\:bg-teal-600:hover,
+.hover\:bg-teal-700:hover {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  color: #ffffff !important;
+}
+
+/* 3. Global Subtle Background */
+.bg-emerald-50,
+.bg-emerald-50\/40,
+.bg-emerald-50\/50,
+.bg-emerald-50\/60,
+.bg-emerald-50\/70,
+.bg-emerald-100,
+.bg-teal-50,
+.bg-teal-100,
+.bg-\[\#ecfdf5\],
+.hover\:bg-emerald-50:hover,
+.hover\:bg-emerald-100:hover,
+.hover\:bg-teal-50:hover {
+  background-color: var(--color-primary-subtle) !important;
+}
+
+/* 4. Global Text Brand & Radio Selected Child Text */
+.text-emerald-500,
+.text-emerald-600,
+.text-emerald-700,
+.text-emerald-800,
+.text-emerald-900,
+.text-emerald-950,
+.text-teal-500,
+.text-teal-600,
+.text-teal-700,
+.text-teal-800,
+.text-teal-900,
+.text-\[\#33b589\],
+.text-\[\#047857\],
+#sidebar-badge-seller-center,
+#admin-nav-group-toko-btn.text-\[\#33b589\],
+#admin-nav-group-toko-icon.text-\[\#33b589\],
+#admin-nav-group-settings-btn.text-\[\#33b589\],
+#admin-nav-group-settings-icon.text-\[\#33b589\],
+#admin-nav-group-marketing-btn.text-\[\#33b589\],
+#admin-nav-group-marketing-icon.text-\[\#33b589\],
+.radio-card-selected,
+.radio-card-selected span,
+.radio-card-selected div,
+label.border-emerald-500,
+label.border-emerald-500 span,
+label.border-emerald-500 div,
+label[class*="ring-emerald-"] span,
+label:has(input[type="radio"]:checked) span,
+#product-type-selector-group label:has(input:checked) span,
+#card-model-selector-group label:has(input:checked) span {
   color: var(--color-primary) !important;
 }
 
-#view-product-form .hover\:text-emerald-600:hover,
-#view-product-form .hover\:text-emerald-700:hover,
-#desktop-preview-sidebar .hover\:text-emerald-600:hover,
-#mobile-preview-sheet .hover\:text-emerald-600:hover {
-  color: var(--color-primary-hover) !important;
+/* 5. Global Hover Text Brand & Quick Add Category */
+#btn-quick-add-category,
+#btn-quick-add-category-step2,
+#btn-quick-add-category i,
+#btn-quick-add-category-step2 i {
+  color: var(--color-primary) !important;
 }
 
-#view-product-form .border-emerald-500,
-#view-product-form .border-emerald-600,
-#desktop-preview-sidebar .border-emerald-500,
-#mobile-preview-sheet .border-emerald-500 {
+#btn-quick-add-category:hover,
+#btn-quick-add-category-step2:hover,
+#btn-quick-add-category:hover i,
+#btn-quick-add-category-step2:hover i,
+.hover\:text-emerald-600:hover,
+.hover\:text-emerald-700:hover,
+.hover\:text-emerald-800:hover,
+.hover\:text-teal-600:hover,
+.hover\:text-teal-700:hover {
+  color: var(--color-primary-hover) !important;
+  text-decoration-color: var(--color-primary-hover) !important;
+}
+
+/* 6. Global Borders & Margin Badges */
+.border-emerald-100,
+.border-emerald-200,
+.border-emerald-300,
+.border-emerald-400,
+.border-emerald-500,
+.border-emerald-600,
+.border-teal-200,
+.border-teal-300,
+.border-teal-500,
+.border-\[\#33b589\],
+.live-margin-badge:not(.bg-red-50) {
   border-color: var(--color-primary) !important;
 }
 
-#view-product-form .hover\:border-emerald-500:hover,
-#view-product-form .hover\:border-emerald-600:hover {
+.live-margin-badge:not(.bg-red-50) {
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+}
+
+.hover\:border-emerald-500:hover,
+.hover\:border-emerald-600:hover {
   border-color: var(--color-primary-hover) !important;
 }
 
-#view-product-form .bg-emerald-50,
-#view-product-form .bg-emerald-50\/40,
-#view-product-form .bg-emerald-50\/50,
-#view-product-form .bg-emerald-50\/70,
-#view-product-form .bg-emerald-100,
-#desktop-preview-sidebar .bg-emerald-50,
-#mobile-preview-sheet .bg-emerald-50 {
-  background-color: var(--color-primary-subtle) !important;
+/* 7. Global Rings & Outlines */
+.ring-emerald-200,
+.ring-emerald-500,
+.ring-emerald-500\/20,
+.ring-emerald-500\/30,
+.ring-teal-500 {
+  --tw-ring-color: var(--color-primary-subtle) !important;
 }
 
-#view-product-form .hover\:bg-emerald-50:hover,
-#view-product-form .hover\:bg-emerald-100:hover {
-  background-color: var(--color-primary-subtle) !important;
-}
-
-#view-product-form .ring-emerald-500,
-#view-product-form [class*="ring-emerald-"] {
-  --tw-ring-color: var(--color-primary) !important;
-}
-
-#view-product-form .focus\:border-emerald-500:focus {
+.focus\:border-emerald-500:focus,
+.focus\:border-teal-500:focus {
   border-color: var(--color-primary) !important;
 }
 
-#view-product-form .focus\:ring-emerald-500:focus,
-#view-product-form .focus\:ring-emerald-200:focus {
+.focus\:ring-emerald-500:focus,
+.focus\:ring-emerald-200:focus,
+.focus\:ring-teal-500:focus {
   box-shadow: 0 0 0 2px var(--color-primary-subtle) !important;
 }

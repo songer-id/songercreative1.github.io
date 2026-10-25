@@ -3585,7 +3585,7 @@ const AdminApp = (() => {
                 <i data-lucide="sliders" class="w-4 h-4 text-emerald-600"></i>
                 <span>Inspektor Desain Toko</span>
               </h2>
-              <p class="text-[11px] text-slate-400">Atur kustomisasi tema &amp; branding storefront</p>
+              <p class="text-[11px] text-slate-400">Atur kustomisasi tema &amp; tampilan etalase toko</p>
             </div>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
               Shopify Studio

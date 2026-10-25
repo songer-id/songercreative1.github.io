@@ -300,6 +300,8 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
   - [x] Pembuatan `js/utils.js` (helper tunggal: `formatIDR`, `escapeHtml`, `hexToRgba`, dsb.).
   - [x] Hubungkan `js/utils.js` ke seluruh file HTML aktif (`index.html`, `product.html`, `admin.html`, `settings.html`, `theme-editor.html`).
   - [x] Penguatan CSS variable bridge tema di `css/admin.css` & `css/style.css` agar 100% elemen interaktif terikat ke `--color-primary` dan `--color-secondary`.
+  - [x] Perbaikan menyeluruh pengikatan warna tema dinamis (Aktif, Selected, Focus, Hover) pada Sub-Navbar, Radio Cards, Action Buttons, Margin Badges, dan Sidebar Admin.
+  - [x] Pemulihan fungsi event binding Step 2 (Variasi Produk, Layanan Extra, Variasi 2/3/4, Grosir, Kelipatan) pada modul `js/product-form.js`.
 
 - [ ] **TAHAP 2: Storefront Overhaul (Modal Popup Promosi, Flash Sale Real-Time & Filter/Sorting Lengkap)**
   - [ ] Implementasi modal pop-up promosi otomatis dengan delay detik, banner, tautan CTA, dan pengaman `sessionStorage` di `js/buyer-store.js` dan `index.html`.

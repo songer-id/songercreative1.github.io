@@ -12,7 +12,15 @@ const ProductForm = (() => {
   let formMode = 'create'; // 'create' | 'edit'
   let currentEditingId = null;
 
-  let currentStep = 1; // 1 | 2 | 3
+  // Forward declarations untuk handler interaktif & preview Step 2 yang diinisialisasi di bindFormEvents
+  let bindStep2InteractiveEvents = null;
+  let updateStep2CardGatingDOM = null;
+  let rebuildCombinationMatrix = null;
+  let closeAndShiftVariationTier = null;
+  let updateSubnavPreviewButtonState = null;
+  let setSidebarState = null;
+  let openMobilePreview = null;
+  let closeMobilePreview = null;
   let isLivePreviewOpen = true; // Desktop preview sidebar open/collapsed state
   let isPreviewTestMode = false;
 
@@ -5732,7 +5740,7 @@ const ProductForm = (() => {
     const profit = p - c;
     const percent = p > 0 ? Math.round((profit / p) * 100) : (c > 0 ? -100 : 0);
     if (profit >= 0) {
-      return `<span class="live-margin-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]" title="Margin Keuntungan Bersih: Rp ${profit.toLocaleString('id-ID')} (${percent}%)">Rp ${profit.toLocaleString('id-ID')} (${percent}%)</span>`;
+      return `<span class="live-margin-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px]" style="background-color: var(--color-primary-subtle); color: var(--color-primary); border: 1px solid var(--color-primary);" title="Margin Keuntungan Bersih: Rp ${profit.toLocaleString('id-ID')} (${percent}%)">Rp ${profit.toLocaleString('id-ID')} (${percent}%)</span>`;
     } else {
       return `<span class="live-margin-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 text-red-700 border border-red-200 font-bold text-[10px]" title="Margin Negatif (Rugi): -Rp ${Math.abs(profit).toLocaleString('id-ID')} (${percent}%)">-Rp ${Math.abs(profit).toLocaleString('id-ID')} (${percent}%)</span>`;
     }
@@ -11326,7 +11334,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       p2.className = `space-y-0 ${currentStep === 2 ? 'block' : 'hidden'}`;
       if (currentStep === 2) {
         p2.innerHTML = renderStep2Content();
-        bindStep2InteractiveEvents();
+        if (typeof bindStep2InteractiveEvents === 'function') {
+          bindStep2InteractiveEvents();
+        }
         initStep2SubnavObserver();
       }
     }
@@ -11337,7 +11347,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       previewTestState.isDrawerOpen = false;
     }
     updatePreviewSidebarHeader();
-    updateSubnavPreviewButtonState(isLivePreviewOpen);
+    if (typeof updateSubnavPreviewButtonState === 'function') {
+      updateSubnavPreviewButtonState(isLivePreviewOpen);
+    }
 
     if (window.lucide) window.lucide.createIcons();
     updateProductCardLivePreview();
@@ -11622,7 +11634,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // UPDATE PROGRESSIVE GATING STEP 2 DOM
     let prevCard1Valid = false;
-    function updateStep2CardGatingDOM(force = false) {
+    updateStep2CardGatingDOM = function(force = false) {
       if (currentStep !== 2) return;
       const isCard1Valid = (getMissingLabelsForCard(2).length === 0);
       if (force || isCard1Valid !== prevCard1Valid) {
@@ -11632,18 +11644,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const scrollY = window.scrollY;
         syncStateFromDOM();
         container.innerHTML = renderStep2Content();
-        bindStep2InteractiveEvents();
+        if (typeof bindStep2InteractiveEvents === 'function') {
+          bindStep2InteractiveEvents();
+        }
         initStep2SubnavObserver();
         window.scrollTo(0, scrollY);
       }
-    }
+    };
 
     // SUB-NAVBAR ANCHOR SCROLL SPY & TAB NAVIGATION TERPUSAT DI MODUL SCOPE (initStep2SubnavObserver)
 
   // =====================================================================
   // LOGIKA PERGESERAN OTOMATIS (SHIFT-UP) VARIASI 1–4 SAAT DI-CLOSE (✕)
   // =====================================================================
-  let rebuildCombinationMatrix = () => {
+  rebuildCombinationMatrix = () => {
     const section = document.getElementById('combination-matrix-section');
     if (section && typeof renderCombinationMatrixTable === 'function') {
       section.outerHTML = renderCombinationMatrixTable();
@@ -11653,7 +11667,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
   };
 
-  function closeAndShiftVariationTier(closedTierIndex) {
+  closeAndShiftVariationTier = function(closedTierIndex) {
     // 1. Panggil syncStateFromDOM() terlebih dahulu agar seluruh ketikan terbaru di DOM tersimpan ke state
     if (typeof syncStateFromDOM === 'function') {
       syncStateFromDOM();
@@ -12057,7 +12071,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   }
 
   // BIND EVENT INTERAKTIF STEP 2
-  function bindStep2InteractiveEvents() {
+  bindStep2InteractiveEvents = function() {
     // Tombol Aksi Bawah & Subnav Step 2: Kembali ke Step 1
     const handleStep2BackAction = (e) => {
       if (e) {
@@ -15032,7 +15046,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const sidebar = document.getElementById('desktop-preview-sidebar');
     const wizardCol = document.getElementById('wizard-form-col');
 
-    function updateSubnavPreviewButtonState(isOpen) {
+    updateSubnavPreviewButtonState = function(isOpen) {
       const btn = document.getElementById('btn-subnav-toggle-preview');
       const btnExpand = document.getElementById('btn-expand-preview-sidebar');
       const subnavFixed = document.getElementById('step2-subnav-fixed');
@@ -15086,9 +15100,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
         }
       }
-    }
+    };
 
-    function setSidebarState(isOpen) {
+    setSidebarState = function(isOpen) {
       if (!primaryState.is_active && isOpen) return;
       isLivePreviewOpen = isOpen;
       const btnExpand = document.getElementById('btn-expand-preview-sidebar');
@@ -15235,7 +15249,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const mobileBackdrop = document.getElementById('mobile-preview-backdrop');
     const mobileSheet = document.getElementById('mobile-preview-sheet');
 
-    function openMobilePreview() {
+    openMobilePreview = function() {
       if (!primaryState.is_active) return;
       // Aturan Saling Tutup: Jika Sidebar Menu Toko sedang terbuka di layar kecil/mobile, otomatis tutup
       const sidebarEl = document.getElementById('admin-main-sidebar');
@@ -15260,9 +15274,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       if (mobileBackdrop) mobileBackdrop.classList.remove('hidden');
       if (mobileSheet) mobileSheet.classList.remove('translate-y-full');
-    }
+    };
 
-    function closeMobilePreview() {
+    closeMobilePreview = function() {
       if (mobileSheet) mobileSheet.classList.add('translate-y-full');
       if (mobileBackdrop) mobileBackdrop.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
@@ -18327,6 +18341,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     getLastProductFooterConfig,
     validateForm,
     getPrimaryState: () => primaryState,
+    getMaterialsState: () => materialsState,
+    getFinishingsState: () => finishingsState,
+    bindStep2InteractiveEvents: () => { if (typeof bindStep2InteractiveEvents === 'function') bindStep2InteractiveEvents(); },
+    setSidebarState: (isOpen) => { if (typeof setSidebarState === 'function') setSidebarState(isOpen); },
     renderOptionDimCalcControl,
     renderSandboxCalculationResultsHtml,
     updateSandboxCalculation,
