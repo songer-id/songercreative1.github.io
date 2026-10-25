@@ -2756,4 +2756,18 @@ input[type="checkbox"]:checked ~ .peer-checked\:bg-emerald-600 {
 #affiliate-mode-percentage.block,
 #affiliate-mode-fixed.block {
   display: block !important;
-}
+}
+/* Hapus Outline Hitam Browser Bawaan pada Tombol dan Form Controls */
+#btn-add-affiliate-tier,
+#btn-add-affiliate-tier:focus,
+#btn-add-affiliate-tier:focus-visible,
+#btn-add-affiliate-tier:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--color-primary) !important;
+}
+
+button:focus,
+button:focus-visible {
+  outline: none !important;
+}
