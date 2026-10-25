@@ -3100,7 +3100,7 @@ const ProductForm = (() => {
     if (mode === 'accordion') {
       const isAccordionOpen = previewTestState.varAccordions?.[tierKey] !== undefined
         ? Boolean(previewTestState.varAccordions[tierKey])
-        : (groupIndex === 0 || !selectedOpt);
+        : (groupIndex === 0);
 
       return `
         <div class="var-accordion-card space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}" data-tier="${tierKey}">
@@ -3190,13 +3190,13 @@ const ProductForm = (() => {
         <div class="text-xs font-normal text-slate-600 mb-1.5">${escapeHtml(dimLabel)}</div>
         ${dimSuggestionsHtml}
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
-          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimLengthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimLengthVal) > 0 ? 'bg-white' : 'border-slate-200 focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition" style="${parseFloat(dimLengthVal) > 0 ? 'border-color: var(--color-primary) !important;' : ''}">
-            <input type="number" step="any" min="0.01" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none pr-1" />
+          <div class="drawer-dim-input-box relative flex items-center bg-slate-100 rounded-none border-0 px-2.5 h-8 transition shadow-none">
+            <input type="number" step="any" min="0.01" id="input-shopee-dim-p" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-xs font-semibold text-slate-800 bg-transparent rounded-none border-0 outline-none shadow-none appearance-none pr-1" />
             <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
           <span class="text-xs font-semibold text-slate-400 px-0.5">×</span>
-          <div class="relative flex items-center bg-slate-100 border ${dimError && !(parseFloat(dimWidthVal) > 0) ? 'border-red-500 bg-red-50/20' : (parseFloat(dimWidthVal) > 0 ? 'bg-white' : 'border-slate-200 focus-within:bg-white')} rounded-md px-2.5 py-1.5 transition" style="${parseFloat(dimWidthVal) > 0 ? 'border-color: var(--color-primary) !important;' : ''}">
-            <input type="number" step="any" min="0.01" placeholder="Lebar (L)" value="${escapeHtml(dimWidthVal)}" class="input-shopee-dim-l w-full text-[11px] font-medium text-slate-800 bg-transparent outline-none appearance-none pr-1" />
+          <div class="drawer-dim-input-box relative flex items-center bg-slate-100 rounded-none border-0 px-2.5 h-8 transition shadow-none">
+            <input type="number" step="any" min="0.01" id="input-shopee-dim-l" placeholder="Lebar (L)" value="${escapeHtml(dimWidthVal)}" class="input-shopee-dim-l w-full text-xs font-semibold text-slate-800 bg-transparent rounded-none border-0 outline-none shadow-none appearance-none pr-1" />
             <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
         </div>
@@ -3554,10 +3554,10 @@ const ProductForm = (() => {
 
           <div class="p-3 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
-            <div class="inline-flex items-center border border-slate-300 rounded-md overflow-hidden bg-white shadow-2xs">
-              <button type="button" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">-</button>
-              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty w-12 h-7 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
-              <button type="button" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">+</button>
+            <div class="drawer-qty-stepper inline-flex items-center rounded-none border-0 overflow-hidden bg-slate-100 shadow-none">
+              <button type="button" id="btn-shopee-qty-minus" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty <= minOrderQty ? 'disabled' : ''}>-</button>
+              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty input-shopee-qty w-12 h-7 text-center text-xs font-bold text-slate-800 bg-slate-50 rounded-none border-0 outline-none shadow-none appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
+              <button type="button" id="btn-shopee-qty-plus" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty >= maxOrderQty ? 'disabled' : ''}>+</button>
             </div>
           </div>
 
@@ -3692,10 +3692,10 @@ const ProductForm = (() => {
 
           <div class="p-3 pt-2 border-t border-slate-100 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
-            <div class="inline-flex items-center border border-slate-300 rounded-md overflow-hidden bg-white shadow-2xs">
-              <button type="button" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">-</button>
-              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty w-12 h-7 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
-              <button type="button" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : ''}">+</button>
+            <div class="drawer-qty-stepper inline-flex items-center rounded-none border-0 overflow-hidden bg-slate-100 shadow-none">
+              <button type="button" id="btn-shopee-qty-minus" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty <= minOrderQty ? 'disabled' : ''}>-</button>
+              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty input-shopee-qty w-12 h-7 text-center text-xs font-bold text-slate-800 bg-slate-50 rounded-none border-0 outline-none shadow-none appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
+              <button type="button" id="btn-shopee-qty-plus" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty >= maxOrderQty ? 'disabled' : ''}>+</button>
             </div>
           </div>
 
@@ -3761,6 +3761,51 @@ const ProductForm = (() => {
     }
   }
 
+  function updateDrawerQtyButtonsState() {
+    const curQ = previewTestState.qty || 1;
+    let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
+    const selectedMat = (primaryState.has_variants && previewTestState.selectedTier1Id)
+      ? ((materialsState || []).find(m => m.id === previewTestState.selectedTier1Id) || null)
+      : null;
+    if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+      minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
+    }
+
+    let maxOrderQty = Infinity;
+    if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+      maxOrderQty = parseInt(primaryState.max_order_qty);
+    } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+      maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
+    }
+    if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+      maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
+    }
+
+    document.querySelectorAll('.btn-shopee-qty-minus, .btn-preview-qty-minus').forEach(btn => {
+      if (curQ <= minOrderQty) {
+        btn.classList.add('opacity-40', 'cursor-not-allowed');
+        btn.classList.remove('cursor-pointer');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('opacity-40', 'cursor-not-allowed');
+        btn.classList.add('cursor-pointer');
+        btn.disabled = false;
+      }
+    });
+
+    document.querySelectorAll('.btn-shopee-qty-plus, .btn-preview-qty-plus').forEach(btn => {
+      if (curQ >= maxOrderQty && maxOrderQty !== Infinity) {
+        btn.classList.add('opacity-40', 'cursor-not-allowed');
+        btn.classList.remove('cursor-pointer');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('opacity-40', 'cursor-not-allowed');
+        btn.classList.add('cursor-pointer');
+        btn.disabled = false;
+      }
+    });
+  }
+
   function updateShopeeDrawerLivePricing() {
     const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
@@ -3770,6 +3815,7 @@ const ProductForm = (() => {
 
     const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
     const isAllVariationsSelected = checkAllVariationsSelected();
+    updateDrawerQtyButtonsState();
 
     const pInp = document.querySelector('.input-shopee-dim-p');
     const lInp = document.querySelector('.input-shopee-dim-l');
@@ -3796,37 +3842,13 @@ const ProductForm = (() => {
       }
     });
 
-    // Update border input P dan L
+    // Sinkronisasi nilai input P dan L tanpa manipulasi border
     document.querySelectorAll('.input-shopee-dim-p').forEach(inp => {
       if (inp.value !== pVal) inp.value = pVal;
-      const box = inp.parentElement;
-      if (box) {
-        if (pNum > 0) {
-          box.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
-          box.classList.add('bg-white');
-          box.style.borderColor = 'var(--color-primary)';
-        } else {
-          box.classList.remove('bg-white');
-          box.style.borderColor = '';
-          box.classList.add('border-slate-200');
-        }
-      }
     });
 
     document.querySelectorAll('.input-shopee-dim-l').forEach(inp => {
       if (inp.value !== lVal) inp.value = lVal;
-      const box = inp.parentElement;
-      if (box) {
-        if (lNum > 0) {
-          box.classList.remove('border-red-500', 'bg-red-50/20', 'border-slate-200');
-          box.classList.add('bg-white');
-          box.style.borderColor = 'var(--color-primary)';
-        } else {
-          box.classList.remove('bg-white');
-          box.style.borderColor = '';
-          box.classList.add('border-slate-200');
-        }
-      }
     });
 
     if (pNum > 0 && lNum > 0) {
@@ -4338,6 +4360,7 @@ const ProductForm = (() => {
               inp.value = nextQ;
             });
             updateShopeeDrawerLivePricing();
+            updateDrawerQtyButtonsState();
           };
         });
 
@@ -4353,6 +4376,7 @@ const ProductForm = (() => {
               inp.value = nextQ;
             });
             updateShopeeDrawerLivePricing();
+            updateDrawerQtyButtonsState();
           };
         });
 
@@ -4364,6 +4388,7 @@ const ProductForm = (() => {
               if (maxOrderQty !== Infinity && val > maxOrderQty) val = maxOrderQty;
               previewTestState.qty = val;
               updateShopeeDrawerLivePricing();
+              updateDrawerQtyButtonsState();
             }
           };
           inp.onchange = inp.onblur = (e) => {
@@ -4373,6 +4398,7 @@ const ProductForm = (() => {
             previewTestState.qty = val;
             inp.value = val;
             updateShopeeDrawerLivePricing();
+            updateDrawerQtyButtonsState();
           };
           inp.onkeydown = (e) => {
             if (e.key === 'Enter') {
@@ -4382,7 +4408,21 @@ const ProductForm = (() => {
           };
         });
 
-        // 1. Akordeon Grup Variasi di dalam Drawer
+        // Helper Buka 1 Akordeon Eksklusif & Tutup Lainnya
+        const autoAdvanceAccordion = (nextTier) => {
+          container.querySelectorAll('.var-accordion-card').forEach(c => {
+            const t = c.getAttribute('data-tier');
+            const b = c.querySelector('.var-accordion-body');
+            const ch = c.querySelector('.btn-toggle-var-accordion .bi-chevron-right');
+            const isTarget = (t === nextTier);
+            if (b) b.classList.toggle('hidden', !isTarget);
+            if (ch) ch.classList.toggle('rotate-90', isTarget);
+            previewTestState.varAccordions = previewTestState.varAccordions || {};
+            previewTestState.varAccordions[t] = isTarget;
+          });
+        };
+
+        // 1. Akordeon Grup Variasi di dalam Drawer (Single-Open / Eksklusif)
         container.querySelectorAll('.btn-toggle-var-accordion').forEach(header => {
           header.onclick = (e) => {
             e.preventDefault();
@@ -4390,15 +4430,26 @@ const ProductForm = (() => {
             const card = header.closest('.var-accordion-card');
             if (card) {
               const body = card.querySelector('.var-accordion-body');
-              const chevron = header.querySelector('.bi-chevron-right');
-              if (body) {
-                const isNowHidden = !body.classList.contains('hidden');
-                body.classList.toggle('hidden', isNowHidden);
-                if (chevron) {
-                  chevron.classList.toggle('rotate-90', !isNowHidden);
-                }
+              const isCurrentlyHidden = body ? body.classList.contains('hidden') : true;
+
+              // Tutup seluruh akordeon variasi lainnya di drawer
+              container.querySelectorAll('.var-accordion-card').forEach(otherCard => {
+                const otherTier = otherCard.getAttribute('data-tier');
+                const otherBody = otherCard.querySelector('.var-accordion-body');
+                const otherChevron = otherCard.querySelector('.btn-toggle-var-accordion .bi-chevron-right');
+                if (otherBody) otherBody.classList.add('hidden');
+                if (otherChevron) otherChevron.classList.remove('rotate-90');
                 previewTestState.varAccordions = previewTestState.varAccordions || {};
-                previewTestState.varAccordions[tier] = !isNowHidden;
+                previewTestState.varAccordions[otherTier] = false;
+              });
+
+              // Jika sebelumnya tertutup, buka hanya akordeon ini
+              if (isCurrentlyHidden && body) {
+                body.classList.remove('hidden');
+                const chevron = header.querySelector('.bi-chevron-right');
+                if (chevron) chevron.classList.add('rotate-90');
+                previewTestState.varAccordions = previewTestState.varAccordions || {};
+                previewTestState.varAccordions[tier] = true;
               }
             }
           };
@@ -4533,8 +4584,13 @@ const ProductForm = (() => {
                 const optName = btn.querySelector('span')?.textContent?.trim() || '';
                 textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
               }
+              // UX Pintar: Otomatis tutup Variasi 1 dan buka Variasi 2 jika Variasi 2 belum dipilih
+              if (!wasSelected && primaryState.has_variation_2 && !previewTestState.selectedTier2Id) {
+                autoAdvanceAccordion('tier2');
+              }
             }
             updateShopeeDrawerLivePricing();
+            updateDrawerQtyButtonsState();
           };
         });
 
@@ -4558,8 +4614,13 @@ const ProductForm = (() => {
                 const optName = btn.querySelector('span')?.textContent?.trim() || '';
                 textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
               }
+              // UX Pintar: Otomatis tutup Variasi 2 dan buka Variasi 3 jika Variasi 3 belum dipilih
+              if (!wasSelected && primaryState.has_variation_3 && !previewTestState.selectedTier3Id) {
+                autoAdvanceAccordion('tier3');
+              }
             }
             updateShopeeDrawerLivePricing();
+            updateDrawerQtyButtonsState();
           };
         });
 
@@ -4583,8 +4644,13 @@ const ProductForm = (() => {
                 const optName = btn.querySelector('span')?.textContent?.trim() || '';
                 textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
               }
+              // UX Pintar: Otomatis tutup Variasi 3 dan buka Variasi 4 jika Variasi 4 belum dipilih
+              if (!wasSelected && primaryState.has_variation_4 && !previewTestState.selectedTier4Id) {
+                autoAdvanceAccordion('tier4');
+              }
             }
             updateShopeeDrawerLivePricing();
+            updateDrawerQtyButtonsState();
           };
         });
 
@@ -6656,10 +6722,10 @@ const ProductForm = (() => {
           <div class="flex items-center gap-1.5">
             <h3 class="text-xs sm:text-sm font-bold text-slate-900">Komisi Afiliasi</h3>
             <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-              <button type="button" id="btn-tooltip-affiliate" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none" title="Informasi Komisi Afiliasi" aria-label="Informasi Komisi Afiliasi">
+              <button type="button" id="btn-tooltip-affiliate" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none">
                 <i class="bi bi-question-circle"></i>
               </button>
-              <div id="tooltip-popover-affiliate" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
+              <div id="tooltip-popover-affiliate" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                 Atur komisi khusus bagi afiliator yang berhasil menjual produk ini. Jika dinonaktifkan, produk akan mengikuti aturan komisi global di menu Marketing &gt; Affiliate.
                 <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
               </div>
@@ -6714,10 +6780,10 @@ const ProductForm = (() => {
               <div class="flex items-center gap-1.5 mb-1">
                 <label for="input-affiliate-min-qty" class="text-xs font-bold text-slate-800">Minimal Jumlah Pesanan (Qty):</label>
                 <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                  <button type="button" id="btn-tooltip-min-qty" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none" title="Informasi Minimal Jumlah Pesanan" aria-label="Informasi Minimal Jumlah Pesanan">
+                  <button type="button" id="btn-tooltip-min-qty" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none">
                     <i class="bi bi-question-circle"></i>
                   </button>
-                  <div id="tooltip-popover-min-qty" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-80 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
+                  <div id="tooltip-popover-min-qty" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                     Apabila batas minimal jumlah pesanan diterapkan, nilai komisi yang Anda masukkan dihitung sebagai total komisi paket untuk jumlah minimal tersebut (sistem otomatis membagi komisi per satuan barang). Contoh: Harga produk Rp10.000, Komisi Afiliasi Rp2.000, dan Minimal Pesanan 10 pcs. Maka sistem otomatis menghitung Rp2.000 ÷ 10 pcs = Rp200 per pcs sebagai komisi afiliator (cair saat pesanan minimal 10 pcs selesai).
                     <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                   </div>
@@ -6819,10 +6885,10 @@ const ProductForm = (() => {
             <div class="flex items-center gap-1.5 mb-1.5">
               <label for="input-affiliate-min-order" class="text-xs font-bold text-slate-800">Min. Nilai Pesanan (Rp)</label>
               <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                <button type="button" id="btn-tooltip-min-order" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none" title="Informasi Batas Minimum Nilai Pesanan" aria-label="Informasi Batas Minimum Nilai Pesanan">
+                <button type="button" id="btn-tooltip-min-order" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none">
                   <i class="bi bi-question-circle"></i>
                 </button>
-                <div id="tooltip-popover-min-order" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-xl pointer-events-none leading-relaxed">
+                <div id="tooltip-popover-min-order" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                   Komisi hanya diberikan jika total nilai pesanan produk ini mencapai batas minimum. Kosongkan jika tanpa batas minimum.
                   <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                 </div>
@@ -10217,9 +10283,9 @@ const ProductForm = (() => {
                 <span class="text-xs font-bold text-slate-800">Saran Ukuran Cepat (Opsional)</span>
                 <div class="relative group/tip inline-flex items-center">
                   <span class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help transition">?</span>
-                  <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-64 p-2 bg-slate-800 text-white text-[11px] font-normal leading-snug rounded shadow-lg z-30 pointer-events-none">
+                  <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] leading-relaxed rounded-md shadow-lg z-30 pointer-events-none">
                     Tambahkan hingga 6 preset ukuran (P × L) yang sering dipesan agar pembeli dapat memilih ukuran secara instan di halaman produk.
-                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
                   </div>
                 </div>
               </div>
@@ -10281,9 +10347,9 @@ const ProductForm = (() => {
                     <label for="chk-min-one-unit-price" class="text-xs font-bold text-slate-900 leading-tight cursor-pointer">Atur Batas Minimal Pesanan (Harga Jual)</label>
                     <div class="relative group/tip inline-flex items-center">
                       <span class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help transition">?</span>
-                      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-56 p-2 bg-slate-800 text-white text-[11px] font-normal leading-snug rounded shadow-lg z-30 pointer-events-none">
+                      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] leading-relaxed rounded-md shadow-lg z-30 pointer-events-none">
                         Tetapkan batas luas minimum untuk penagihan harga jual ke pembeli.
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
                       </div>
                     </div>
                   </div>
@@ -10342,9 +10408,9 @@ const ProductForm = (() => {
                     <label for="chk-min-one-unit-hpp" class="text-xs font-bold text-slate-900 leading-tight cursor-pointer">Atur Batas Minimal Pesanan (Biaya Modal / HPP)</label>
                     <div class="relative group/tip inline-flex items-center">
                       <span class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help transition">?</span>
-                      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-56 p-2 bg-slate-800 text-white text-[11px] font-normal leading-snug rounded shadow-lg z-30 pointer-events-none">
+                      <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover/tip:block w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] leading-relaxed rounded-md shadow-lg z-30 pointer-events-none">
                         Tetapkan batas luas minimum untuk perhitungan modal/HPP bahan.
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
                       </div>
                     </div>
                   </div>
@@ -10549,9 +10615,9 @@ const ProductForm = (() => {
                   </div>
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
-                <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" title="${escapeHtml(tooltipText)}">
+                <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" tabindex="0">
                   <i class="bi bi-question-circle-fill text-sm"></i>
-                  <div class="hidden group-hover:block absolute left-6 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                  <div class="hidden group-hover:block group-focus:block absolute left-6 top-0 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                     ${escapeHtml(tooltipText)}
                   </div>
                 </div>
@@ -10621,10 +10687,10 @@ const ProductForm = (() => {
               <div class="flex items-center gap-2">
                 <div class="text-base font-bold text-slate-900">Layanan Extras</div>
                 <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                  <button type="button" class="w-5 h-5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center text-[11px] transition cursor-help border border-slate-300/80" title="Informasi Layanan Extras" aria-label="Informasi Layanan Extras">
+                  <button type="button" class="w-5 h-5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center text-[11px] transition cursor-help border border-slate-300/80">
                     <i class="bi bi-question-circle"></i>
                   </button>
-                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-64 sm:w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                     Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
                     <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                   </div>
@@ -10654,9 +10720,9 @@ const ProductForm = (() => {
                   </div>
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
-                <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" title="Ubah nama label layanan ekstra di luar perhitungan qty. Contoh: Langsung Proses, Layanan Prioritas, Packaging Kayu">
+                <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" tabindex="0">
                   <i class="bi bi-question-circle-fill text-sm"></i>
-                  <div class="hidden group-hover:block absolute left-6 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                  <div class="hidden group-hover:block group-focus:block absolute left-6 top-0 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                     Ubah nama label layanan ekstra di luar perhitungan qty. Contoh: Langsung Proses, Layanan Prioritas, Packaging Kayu
                   </div>
                 </div>
@@ -10780,10 +10846,10 @@ const ProductForm = (() => {
                   <span>Layanan Extra</span>
                 </button>
                 <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                  <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Layanan Extra" aria-label="Informasi Layanan Extra">
+                  <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs">
                     <i class="bi bi-question-circle"></i>
                   </button>
-                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-64 sm:w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                     Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
                     <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                   </div>
@@ -10879,10 +10945,10 @@ const ProductForm = (() => {
                     <span>Layanan Extra</span>
                   </button>
                   <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                    <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs" title="Informasi Layanan Extra" aria-label="Informasi Layanan Extra">
+                    <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs">
                       <i class="bi bi-question-circle"></i>
                     </button>
-                    <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-64 sm:w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl pointer-events-none leading-relaxed">
+                    <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
                       Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
                       <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                     </div>

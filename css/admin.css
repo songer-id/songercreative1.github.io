@@ -2806,3 +2806,29 @@ button:focus-visible {
   background: #cbd5e1;
   border-radius: 4px;
 }
+
+/* ==========================================================================
+   DRAWER UJI COBA: ZERO BORDER & ZERO RADIUS (DIMENSION & QTY INPUTS)
+   ========================================================================== */
+.mini-pdp-drawer-sheet .input-shopee-dim-p,
+.mini-pdp-drawer-sheet .input-shopee-dim-l,
+.mini-pdp-drawer-sheet #input-shopee-dim-p,
+.mini-pdp-drawer-sheet #input-shopee-dim-l,
+.mini-pdp-drawer-sheet .drawer-dim-input-box,
+.mini-pdp-drawer-sheet .drawer-qty-stepper,
+.mini-pdp-drawer-sheet .input-preview-test-qty,
+.mini-pdp-drawer-sheet #input-preview-test-qty,
+.mini-pdp-drawer-sheet #input-shopee-qty,
+.mini-pdp-drawer-sheet .btn-shopee-qty-minus,
+.mini-pdp-drawer-sheet .btn-shopee-qty-plus {
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Standardized SaaS Custom Tooltip Popovers */
+.admin-help-tooltip,
+.tooltip-popover {
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25), 0 8px 10px -6px rgba(15, 23, 42, 0.2);
+}
