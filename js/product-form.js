@@ -7940,8 +7940,10 @@ const ProductForm = (() => {
         </button>
       </div>
 
-      <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
-      <div id="step2-cards-container" class="flex flex-col gap-4 pt-2 sm:pt-2.5 w-full bg-slate-50" style="display: flex !important; flex-direction: column !important; gap: 1rem !important; background-color: #f8fafc !important;">
+      <!-- PEMBUNGKUS KARTU & FOOTER STEP 2 (IDENTIK LEBAR & PADDING DENGAN STEP 1) -->
+      <div id="step2-content-wrapper" class="step2-content-wrapper w-full pt-2 sm:pt-3 pb-8 space-y-4 sm:space-y-5">
+        <!-- CONTAINER 7 KARTU PROGRESSIVE GATING -->
+        <div id="step2-cards-container" class="flex flex-col gap-4 w-full">
         ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
@@ -8905,10 +8907,10 @@ const ProductForm = (() => {
           </div>
         `}
 
-      </div>
+        </div>
 
-      <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
-      <div class="bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between flex-wrap gap-3 mt-4">
+        <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
+        <div id="step2-footer-actions" class="step2-footer-actions bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between flex-wrap gap-3 mt-4">
         <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
           <i class="bi bi-arrow-left"></i>
           <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>
@@ -8928,6 +8930,7 @@ const ProductForm = (() => {
             <span id="btn-submit-text">Simpan Produk</span>
           </button>
         </div>
+      </div>
       </div>
     `;
   }
@@ -13749,15 +13752,36 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
-    if (p1) p1.className = `space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}`;
+    if (p1) {
+      if (currentStep === 1) {
+        p1.classList.remove('hidden');
+        p1.classList.add('block');
+      } else {
+        p1.classList.add('hidden');
+        p1.classList.remove('block');
+      }
+    }
     if (p2) {
-      p2.className = `space-y-0 ${currentStep === 2 ? 'block' : 'hidden'}`;
       if (currentStep === 2) {
+        p2.classList.remove('hidden');
+        p2.classList.add('block');
         p2.innerHTML = renderStep2Content();
         if (typeof bindStep2InteractiveEvents === 'function') {
           bindStep2InteractiveEvents();
         }
         initStep2SubnavObserver();
+      } else {
+        p2.classList.add('hidden');
+        p2.classList.remove('block');
+        p2.innerHTML = '';
+      }
+    }
+    const subnavFixed = document.getElementById('step2-subnav-fixed');
+    if (subnavFixed) {
+      if (currentStep === 2) {
+        subnavFixed.classList.remove('hidden');
+      } else {
+        subnavFixed.classList.add('hidden');
       }
     }
 
@@ -17305,6 +17329,66 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Bind Semua Custom Comboboxes Popovers
     bindCustomComboboxes(document.getElementById('card-step2-sales'));
     bindCustomComboboxes(document.getElementById('card-step2-specs'));
+    function bindCustomSpecsEvents() {
+      const btnAdd = document.getElementById('btn-add-custom-spec-row');
+      const tbody = document.getElementById('custom-specs-tbody');
+      const countBadge = document.getElementById('custom-specs-count');
+
+      const updateSpecsUIState = () => {
+        const rows = tbody ? tbody.querySelectorAll('tr.custom-spec-row') : [];
+        if (countBadge) countBadge.textContent = `${rows.length} / 10`;
+        if (btnAdd) {
+          if (rows.length >= 10) {
+            btnAdd.disabled = true;
+            btnAdd.classList.add('opacity-40', 'cursor-not-allowed');
+          } else {
+            btnAdd.disabled = false;
+            btnAdd.classList.remove('opacity-40', 'cursor-not-allowed');
+          }
+        }
+      };
+
+      if (btnAdd && tbody) {
+        btnAdd.onclick = () => {
+          const rows = tbody.querySelectorAll('tr.custom-spec-row');
+          if (rows.length >= 10) return;
+          const newIndex = rows.length;
+          const tempDiv = document.createElement('tbody');
+          tempDiv.innerHTML = renderSingleSpecRowHtml({ title: '', value: '' }, newIndex);
+          const newRow = tempDiv.firstElementChild;
+          if (newRow) {
+            tbody.appendChild(newRow);
+            bindCustomComboboxes(newRow);
+            updateSpecsUIState();
+            if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+            if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+          }
+        };
+      }
+
+      if (tbody) {
+        tbody.onclick = (e) => {
+          const delBtn = e.target.closest('.btn-delete-spec-row');
+          if (delBtn) {
+            const tr = delBtn.closest('tr.custom-spec-row');
+            if (tr) {
+              tr.remove();
+              updateSpecsUIState();
+              if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+              if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+            }
+          }
+        };
+
+        tbody.oninput = (e) => {
+          if (e.target.matches('.input-spec-title, .input-spec-value')) {
+            if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+            if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+          }
+        };
+      }
+    }
+
     bindCustomSpecsEvents();
 
     // Card 3: Pengiriman

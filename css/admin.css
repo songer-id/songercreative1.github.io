@@ -885,13 +885,15 @@ input[type="radio"]:active {
     padding: 1.25rem 1.5rem 0.75rem 1.5rem !important;
   }
 
-  #step-pane-1 {
+  #step-pane-1,
+  #step2-content-wrapper {
     padding: 0 1.5rem !important;
   }
 
   #step-pane-2 > div.space-y-4,
-  #step-pane-2 > div.space-y-5 {
-    padding: 0.75rem 1.5rem 2.5rem 1.5rem !important;
+  #step-pane-2 > div.space-y-5,
+  #step2-cards-container {
+    padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -907,13 +909,15 @@ input[type="radio"]:active {
     padding: 1.5rem 1.5rem 0.75rem 1.5rem !important;
   }
 
-  #step-pane-1 {
+  #step-pane-1,
+  #step2-content-wrapper {
     padding: 0 1.5rem !important;
   }
 
   #step-pane-2 > div.space-y-4,
-  #step-pane-2 > div.space-y-5 {
-    padding: 0.75rem 1.5rem 3rem 1.5rem !important;
+  #step-pane-2 > div.space-y-5,
+  #step2-cards-container {
+    padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -1928,7 +1932,8 @@ input.toggle-same-cost:checked~div::after {
     width: 100% !important;
   }
 
-  #step-pane-1 {
+  #step-pane-1,
+  #step2-content-wrapper {
     padding-left: 0.375rem !important; /* px-1.5 tipis */
     padding-right: 0.375rem !important; /* px-1.5 tipis */
     padding-top: 0 !important;
@@ -2924,12 +2929,39 @@ button:focus-visible {
 /* ==========================================================================
    STEP 2 CARDS ISOLATION & GAP HOTFIX (7 KARTU TERPISAH MANDIRI)
    ========================================================================== */
-#step-pane-2,
+/* STEP PANE 1 & 2 STRICT VISIBILITY & ISOLATION */
+#step-pane-1.hidden,
+#step-pane-2.hidden,
+#step2-subnav-fixed.hidden,
+#step2-subnav-sticky.hidden,
+#step2-content-wrapper.hidden,
+.hidden {
+  display: none !important;
+}
+
+#step-pane-1:not(.hidden) {
+  display: block !important;
+}
+
+#step-pane-2:not(.hidden) {
+  display: block !important;
+  background-color: #f8fafc !important;
+}
+
+#step-pane-2 {
+  background-color: #f8fafc !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 #step2-cards-container {
-  background-color: #f8fafc !important; /* bg-slate-50 */
   display: flex !important;
   flex-direction: column !important;
   gap: 1rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .step2-section-card,
@@ -2945,4 +2977,50 @@ button:focus-visible {
   margin-bottom: 1rem !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+
+/* ==========================================================================
+   PENYELARASAN LEBAR KARTU STEP 1 & STEP 2 (IDENTIK 100%)
+   ========================================================================== */
+#step-pane-1,
+#step2-content-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+@media (max-width: 639px) {
+  #step-pane-1,
+  #step2-content-wrapper {
+    padding-left: 0.375rem !important; /* px-1.5 tipis */
+    padding-right: 0.375rem !important; /* px-1.5 tipis */
+    padding-top: 0 !important;
+    padding-bottom: 2rem !important;
+  }
+}
+
+#step-pane-2 {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  background-color: #f8fafc !important;
+}
+
+#step2-cards-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+
+#step2-footer-actions {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
