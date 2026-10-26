@@ -886,17 +886,15 @@ input[type="radio"]:active {
   }
 
   #step-pane-1,
+  #step2-cards-container,
   #step2-content-wrapper {
-    padding: 0 1.5rem !important;
-  }
-
-  #step-pane-2 > div.space-y-4,
-  #step-pane-2 > div.space-y-5,
-  #step2-cards-container {
-    padding: 0 !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 }
 
@@ -910,17 +908,15 @@ input[type="radio"]:active {
   }
 
   #step-pane-1,
+  #step2-cards-container,
   #step2-content-wrapper {
-    padding: 0 1.5rem !important;
-  }
-
-  #step-pane-2 > div.space-y-4,
-  #step-pane-2 > div.space-y-5,
-  #step2-cards-container {
-    padding: 0 !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 }
 
@@ -1010,7 +1006,7 @@ input[type="radio"]:active {
   border-right: none !important;
   border-bottom: 1px solid #e2e8f0 !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0 !important;
   width: 100% !important;
   max-width: none !important;
 }
@@ -1933,6 +1929,7 @@ input.toggle-same-cost:checked~div::after {
   }
 
   #step-pane-1,
+  #step2-cards-container,
   #step2-content-wrapper {
     padding-left: 0.375rem !important; /* px-1.5 tipis */
     padding-right: 0.375rem !important; /* px-1.5 tipis */
@@ -1941,6 +1938,8 @@ input.toggle-same-cost:checked~div::after {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   #step-pane-2 {
@@ -1948,18 +1947,6 @@ input.toggle-same-cost:checked~div::after {
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-  }
-
-  #step-pane-2 > div.space-y-4,
-  #step-pane-2 > div.space-y-5,
-  #step-pane-2 > div:not(#step2-subnav-fixed):not(#step2-subnav) {
-    padding-left: 0.375rem !important; /* px-1.5 tipis */
-    padding-right: 0.375rem !important; /* px-1.5 tipis */
-    padding-top: 0.5rem !important;
-    padding-bottom: 2.5rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
   }
 
   /* Subnavbar sticky di mobile: full-width edge-to-edge menempel rapat di sisi kiri dan kanan tanpa jeda */
@@ -2016,7 +2003,8 @@ input.toggle-same-cost:checked~div::after {
     padding: 0.75rem 0.625rem !important; /* Ruang dalam lapang dan proporsional */
     margin-left: 0 !important;
     margin-right: 0 !important;
-    margin-bottom: 0.5rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
     box-shadow: none !important;
     box-sizing: border-box !important;
   }
@@ -2956,44 +2944,25 @@ button:focus-visible {
   max-width: 100% !important;
 }
 
-#step2-cards-container {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 1rem !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-.step2-section-card,
-#card-step2-info,
-#card-step2-sales,
-#card-step2-shipping,
-#card-step2-promo,
-#card-step2-description,
-#card-step2-specs,
-#card-step2-others {
-  background-color: #ffffff !important;
-  border-radius: 0.5rem !important; /* rounded-lg (8px) */
-  margin-bottom: 1rem !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-
 /* ==========================================================================
    PENYELARASAN LEBAR KARTU STEP 1 & STEP 2 (IDENTIK 100%)
+   SERTA JARAK SERAGAM SUBNAV KE SECTION (12px) & ANTAR-SECTION (12px)
    ========================================================================== */
 #step-pane-1,
+#step2-cards-container,
 #step2-content-wrapper {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
   padding-left: 1.5rem !important;
   padding-right: 1.5rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 @media (max-width: 639px) {
   #step-pane-1,
+  #step2-cards-container,
   #step2-content-wrapper {
     padding-left: 0.375rem !important; /* px-1.5 tipis */
     padding-right: 0.375rem !important; /* px-1.5 tipis */
@@ -3010,17 +2979,41 @@ button:focus-visible {
   background-color: #f8fafc !important;
 }
 
+/* JARAK VERTICAL SERAGAM 0.75rem (12px) KONSISTEN */
 #step2-cards-container {
   display: flex !important;
   flex-direction: column !important;
-  gap: 1rem !important;
+  gap: 0.75rem !important; /* 12px seragam antar-kartu dan footer */
+  padding-top: 0.75rem !important; /* 12px jarak persis dari subnavbar ke kartu pertama */
+  padding-bottom: 2.5rem !important;
   width: 100% !important;
   max-width: 100% !important;
-  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.step2-section-card,
+#card-step2-info,
+#card-step2-sales,
+#card-step2-shipping,
+#card-step2-promo,
+#card-step2-description,
+#card-step2-specs,
+#card-step2-others {
+  background-color: #ffffff !important;
+  border-radius: 0.5rem !important; /* rounded-lg (8px) */
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 #step2-footer-actions {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }

@@ -7941,9 +7941,9 @@ const ProductForm = (() => {
       </div>
 
       <!-- PEMBUNGKUS KARTU & FOOTER STEP 2 (IDENTIK LEBAR & PADDING DENGAN STEP 1) -->
-      <div id="step2-content-wrapper" class="step2-content-wrapper w-full pt-2 sm:pt-3 pb-8 space-y-4 sm:space-y-5">
-        <!-- CONTAINER 7 KARTU PROGRESSIVE GATING -->
-        <div id="step2-cards-container" class="flex flex-col gap-4 w-full">
+      <div id="step2-content-wrapper" class="step2-content-wrapper w-full p-0 m-0 border-0">
+        <!-- CONTAINER 7 KARTU & FOOTER PROGRESSIVE GATING (JARAK 12px & LEBAR PERSIS STEP 1) -->
+        <div id="step2-cards-container" class="step2-cards-container w-full mx-auto flex flex-col gap-3">
         ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
@@ -8907,31 +8907,31 @@ const ProductForm = (() => {
           </div>
         `}
 
-        </div>
-
         <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
-        <div id="step2-footer-actions" class="step2-footer-actions bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between flex-wrap gap-3 mt-4">
-        <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
-          <i class="bi bi-arrow-left"></i>
-          <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>
-        </button>
-
-        <div class="flex items-center gap-3">
-          <!-- Tombol Simpan Draf -->
-          <button type="button" id="btn-save-draft" class="px-5 py-2.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer">
-            <i class="bi bi-file-earmark-text"></i>
-            <span>Simpan Draf</span>
+        <div id="step2-footer-actions" class="step2-footer-actions bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between flex-wrap gap-3">
+          <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
+            <i class="bi bi-arrow-left"></i>
+            <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>
           </button>
 
-          <!-- Tombol Simpan Produk -->
-          <button type="button" id="btn-submit-product" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-lg flex items-center gap-2 transition cursor-pointer">
-            <span id="btn-submit-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <i id="btn-submit-icon" class="bi bi-floppy"></i>
-            <span id="btn-submit-text">Simpan Produk</span>
-          </button>
+          <div class="flex items-center gap-3">
+            <!-- Tombol Simpan Draf -->
+            <button type="button" id="btn-save-draft" class="px-5 py-2.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer">
+              <i class="bi bi-file-earmark-text"></i>
+              <span>Simpan Draf</span>
+            </button>
+
+            <!-- Tombol Simpan Produk -->
+            <button type="button" id="btn-submit-product" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-lg flex items-center gap-2 transition cursor-pointer">
+              <span id="btn-submit-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <i id="btn-submit-icon" class="bi bi-floppy"></i>
+              <span id="btn-submit-text">Simpan Produk</span>
+            </button>
+          </div>
         </div>
-      </div>
-      </div>
+
+        </div> <!-- Close step2-cards-container -->
+      </div> <!-- Close step2-content-wrapper -->
     `;
   }
 
