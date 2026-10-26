@@ -2822,10 +2822,7 @@ button:focus-visible {
 .mini-pdp-card,
 .mini-pdp-card .aspect-square,
 .mini-pdp-card .aspect-square img,
-.mini-pdp-drawer-sheet,
-.mini-pdp-bottom-bar,
-.spec-drawer-sheet,
-#btn-close-spec-drawer {
+.mini-pdp-bottom-bar {
   border-radius: 0 !important;
 }
 
@@ -2902,3 +2899,50 @@ button:focus-visible {
   color: var(--color-primary) !important;
 }
 
+
+
+/* ==========================================================================
+   DRAWER BOTTOM-SHEET UPPER RADIUS & BUTTON OKE STYLING (TAHAP 2)
+   ========================================================================== */
+.mini-pdp-drawer-sheet,
+.spec-drawer-sheet,
+#shopee-checkout-drawer-sheet,
+#product-spec-drawer-sheet {
+  border-top-left-radius: 1rem !important;
+  border-top-right-radius: 1rem !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-radius: 1rem 1rem 0 0 !important;
+  overflow: hidden !important;
+}
+
+#btn-close-spec-drawer {
+  border-radius: 0.75rem !important; /* rounded-xl (12px) serasi dengan .btn-shopee-submit */
+  font-family: inherit !important;
+}
+
+/* ==========================================================================
+   STEP 2 CARDS ISOLATION & GAP HOTFIX (7 KARTU TERPISAH MANDIRI)
+   ========================================================================== */
+#step-pane-2,
+#step2-cards-container {
+  background-color: #f8fafc !important; /* bg-slate-50 */
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+}
+
+.step2-section-card,
+#card-step2-info,
+#card-step2-sales,
+#card-step2-shipping,
+#card-step2-promo,
+#card-step2-description,
+#card-step2-specs,
+#card-step2-others {
+  background-color: #ffffff !important;
+  border-radius: 0.5rem !important; /* rounded-lg (8px) */
+  margin-bottom: 1rem !important;
+  border: none !important;
+  box-shadow: none !important;
+}

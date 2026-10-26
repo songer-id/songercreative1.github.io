@@ -212,6 +212,21 @@ const ProductForm = (() => {
     
   // Global Delegasi Custom Combobox (Stok, Max Order, Spesifikasi, Variasi)
   document.addEventListener('click', (e) => {
+    // Delegasi klik tautan pengaturan lokasi -> menu Akun
+    const btnGotoAcc = e.target.closest('.btn-goto-account-settings');
+    if (btnGotoAcc) {
+      e.preventDefault();
+      if (typeof AdminApp !== 'undefined' && AdminApp.navigate) {
+        AdminApp.navigate('account');
+      } else if (typeof App !== 'undefined' && App.navigate) {
+        App.navigate('account');
+      } else {
+        const navAcc = document.getElementById('admin-nav-account') || document.querySelector('[data-view="account"], #nav-item-account, [data-target="account"]');
+        if (navAcc) navAcc.click();
+      }
+      return;
+    }
+  
     const comboboxInput = e.target.closest('.custom-combobox-input');
     if (comboboxInput) {
       const wrapper = comboboxInput.closest('.custom-combobox-wrapper');
@@ -3917,10 +3932,71 @@ const ProductForm = (() => {
       ? '<span class="text-slate-800 font-medium">Tersedia</span>'
       : '<span class="text-red-600 font-semibold">Habis</span>';
 
+    // 1. STOK (Wajib 1)
     const rows = [
       { label: 'Stok', valueHtml: stockHtml }
     ];
 
+    // 2. KONDISI (Wajib 2: Baru / Bekas, default Baru)
+    const conditionVal = (primaryState.condition === 'used' || primaryState.condition === 'bekas') ? 'Bekas' : 'Baru';
+    rows.push({
+      label: 'Kondisi',
+      valueHtml: `<span class="text-slate-800 font-medium">${conditionVal}</span>`
+    });
+
+    // 3. MEREK (Wajib 3: isian seller atau "-")
+    const brandVal = (primaryState.brand && primaryState.brand.trim()) ? escapeHtml(primaryState.brand.trim()) : '-';
+    rows.push({
+      label: 'Merek',
+      valueHtml: `<span class="text-slate-800 font-medium">${brandVal}</span>`
+    });
+
+    // 4. JENIS GARANSI & MASA GARANSI (Wajib 4 & 5 jika garansi aktif)
+    const rawPeriod = (primaryState.warranty_period && primaryState.warranty_period.trim()) ? primaryState.warranty_period.trim() : '';
+    const rawUnit = (primaryState.warranty_unit && primaryState.warranty_unit.trim()) ? primaryState.warranty_unit.trim() : '';
+    const hasWarranty = rawPeriod !== 'Tidak Ada Garansi' && rawPeriod !== 'Tidak Garansi' && rawPeriod !== '' && rawUnit !== 'Tidak Ada Garansi';
+    const warrantyType = (primaryState.warranty_type && primaryState.warranty_type.trim()) ? primaryState.warranty_type.trim() : (hasWarranty ? 'Garansi Toko' : 'Tidak Ada Garansi');
+
+    rows.push({
+      label: 'Jenis Garansi',
+      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(hasWarranty ? warrantyType : 'Tidak Ada Garansi')}</span>`
+    });
+
+    // Baris Masa Garansi HANYA jika garansi aktif (bukan "Tidak Ada Garansi")
+    if (hasWarranty) {
+      rows.push({
+        label: 'Masa Garansi',
+        valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(rawPeriod)}</span>`
+      });
+    }
+
+    // 5. PRODUK CUSTOM (Wajib 6: Ya jika Input Ukuran P x L atau Layanan Extra aktif, jika tidak: Tidak)
+    const isCustomProd = Boolean(primaryState.has_custom_dimension || primaryState.has_extra_service);
+    rows.push({
+      label: 'Produk Custom',
+      valueHtml: `<span class="text-slate-800 font-medium">${isCustomProd ? 'Ya' : 'Tidak'}</span>`
+    });
+
+    // 6. DIKIRIM DARI (Wajib 7: Kota seller dari pengaturan toko)
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+    const sellerCity = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation)
+      ? Utils.formatDynamicSellerLocation(settings, null)
+      : (settings.city || settings.store_city || settings.address_city || 'Lokasi Belum Diatur');
+    rows.push({
+      label: 'Dikirim Dari',
+      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(sellerCity)}</span>`
+    });
+
+    // 7. PRE-ORDER (Hanya tampil jika PO aktif, nilai durasi langsung tanpa "Ya/Tidak")
+    if (Boolean(primaryState.is_preorder)) {
+      const poDays = parseInt(primaryState.preorder_days) || 7;
+      rows.push({
+        label: 'Pre-Order',
+        valueHtml: `<span class="text-slate-800 font-medium">${poDays} Hari</span>`
+      });
+    }
+
+    // 8. BARIS-BARIS KONDISIONAL
     const minQty = parseInt(primaryState.min_order) || 1;
     if (minQty > 1) {
       rows.push({
@@ -3952,26 +4028,6 @@ const ProductForm = (() => {
       }
     }
 
-    const brandVal = (primaryState.brand && primaryState.brand.trim()) ? escapeHtml(primaryState.brand.trim()) : '-';
-    rows.push({
-      label: 'Merek',
-      valueHtml: `<span class="text-slate-800 font-medium">${brandVal}</span>`
-    });
-
-    const warrantyPeriod = (primaryState.warranty_period && primaryState.warranty_period.trim()) ? primaryState.warranty_period.trim() : 'Tidak Ada Garansi';
-    rows.push({
-      label: 'Masa Garansi',
-      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(warrantyPeriod)}</span>`
-    });
-
-    if (warrantyPeriod !== 'Tidak Ada Garansi') {
-      const warrantyType = (primaryState.warranty_type && primaryState.warranty_type.trim()) ? primaryState.warranty_type.trim() : 'Garansi Toko';
-      rows.push({
-        label: 'Jenis Garansi',
-        valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(warrantyType)}</span>`
-      });
-    }
-
     const skuVal = (primaryState.sku || primaryState.parent_sku || '').trim();
     if (skuVal) {
       rows.push({
@@ -3980,30 +4036,7 @@ const ProductForm = (() => {
       });
     }
 
-    if (Boolean(primaryState.is_preorder)) {
-      const poDays = parseInt(primaryState.preorder_days) || 7;
-      rows.push({
-        label: 'Pre-Order',
-        valueHtml: `<span class="text-slate-800 font-medium">Ya (Estimasi ${poDays} Hari)</span>`
-      });
-    }
-
-    const originVal = (primaryState.product_origin && primaryState.product_origin.trim()) ? escapeHtml(primaryState.product_origin.trim()) : '-';
-    rows.push({
-      label: 'Asal Produk',
-      valueHtml: `<span class="text-slate-800 font-medium">${originVal}</span>`
-    });
-
-    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
-    const sellerCity = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation)
-      ? Utils.formatDynamicSellerLocation(settings, null)
-      : (settings.city || settings.store_city || settings.address_city || 'Kota Seller (Otomatis)');
-    rows.push({
-      label: 'Dikirim Dari',
-      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(sellerCity)}</span>`
-    });
-
-    // Render custom_specs dynamically in spec drawer
+    // 9. TABEL SPESIFIKASI MANUAL SELLER (custom_specs)
     if (Array.isArray(primaryState.custom_specs) && primaryState.custom_specs.length > 0) {
       primaryState.custom_specs.forEach(cs => {
         if (cs && cs.title && cs.title.trim() && cs.value && cs.value.trim()) {
@@ -4018,7 +4051,10 @@ const ProductForm = (() => {
       });
     }
 
-    const rowsHtml = rows.map(r => `
+    // Batasi maksimal 10 baris (minimal 5 baris dijamin oleh baris-baris dasar di atas)
+    const finalRows = rows.slice(0, 10);
+
+    const rowsHtml = finalRows.map(r => `
       <div class="flex items-center py-2.5">
         <div class="text-slate-500 w-[42%] shrink-0 text-xs">${r.label}</div>
         <div class="text-slate-800 font-medium w-[58%] text-xs truncate">${r.valueHtml}</div>
@@ -4027,27 +4063,26 @@ const ProductForm = (() => {
 
     return `
       <div class="spec-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 opacity-100 cursor-pointer"></div>
-      <div class="spec-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden">
+      <div class="spec-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 1rem !important; border-top-right-radius: 1rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
         <!-- Header Drawer -->
         <div class="border-b border-slate-200 w-full bg-white shrink-0">
           <h3 class="text-sm font-bold text-slate-800 text-center py-3">Spesifikasi</h3>
         </div>
 
-        <!-- Body Daftar Spesifikasi -->
+        <!-- Body Daftar Spesifikasi (Maks 10 Baris) -->
         <div class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto px-4 py-1">
           ${rowsHtml}
         </div>
 
-        <!-- Footer Tombol CTA Ok -->
-        <div class="p-0 border-t border-slate-200 shrink-0">
-          <button type="button" id="btn-close-spec-drawer" class="btn-close-spec-drawer w-full h-10 font-bold text-white text-xs uppercase tracking-wider rounded-none border-0 cursor-pointer flex items-center justify-center transition active:opacity-90" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
-            Ok
+        <!-- Footer Tombol CTA Oke (Serasi dengan Tombol Drawer Beli Sekarang) -->
+        <div class="p-2.5 pt-2 border-t border-slate-100 shrink-0 bg-white">
+          <button type="button" id="btn-close-spec-drawer" class="btn-close-spec-drawer w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer flex items-center justify-center" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
+            Oke
           </button>
         </div>
       </div>
     `;
   }
-
   function openProductSpecDrawer() {
     syncStateFromDOM();
     const roots = [
@@ -6461,7 +6496,7 @@ const ProductForm = (() => {
           <!-- DRAWER ROOT SCOPED INSIDE MINI PDP CARD (TERBUKA STABIL SAAT isDrawerOpen === true) -->
           <div class="mini-pdp-drawer-root absolute inset-0 z-30 ${isDrawerOpen ? 'flex' : 'hidden'} flex-col justify-end overflow-hidden ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}">
             <div class="mini-pdp-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}"></div>
-            <div class="mini-pdp-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-none shadow-2xl border-t border-slate-200 transform ${isDrawerOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300 ease-out flex flex-col ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'} overflow-hidden">
+            <div class="mini-pdp-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl rounded-b-none shadow-2xl border-t border-slate-200" style="border-top-left-radius: 1rem !important; border-top-right-radius: 1rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; border-radius: 1rem 1rem 0 0 !important;" transform ${isDrawerOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300 ease-out flex flex-col ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'} overflow-hidden">
               ${isDrawerOpen ? drawerHtml : ''}
             </div>
           </div>
@@ -7715,9 +7750,9 @@ const ProductForm = (() => {
     return `
       <div class="flex items-center justify-between text-xs py-1.5 px-3 rounded-md bg-amber-50 text-amber-800 font-medium">
         <span class="flex items-center gap-1.5"><i class="bi bi-geo-alt-fill text-amber-600"></i> Lokasi Belum Diatur</span>
-        <a href="settings.html" class="text-[11px] font-bold text-[var(--color-primary)] hover:underline inline-flex items-center gap-1">
+        <button type="button" class="btn-goto-account-settings text-[11px] font-bold text-[var(--color-primary)] hover:underline inline-flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0">
           <span>Atur Lokasi di Pengaturan Akun →</span>
-        </a>
+        </button>
       </div>
     `;
   }
@@ -7906,7 +7941,7 @@ const ProductForm = (() => {
       </div>
 
       <!-- CONTAINER 6 KARTU PROGRESSIVE GATING (RAPAT & PROPORSIONAL DI BAWAH STICKY SUBNAV) -->
-      <div class="space-y-4 sm:space-y-5 pt-2 sm:pt-2.5 w-full">
+      <div id="step2-cards-container" class="flex flex-col gap-4 pt-2 sm:pt-2.5 w-full bg-slate-50" style="display: flex !important; flex-direction: column !important; gap: 1rem !important; background-color: #f8fafc !important;">
         ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
@@ -8238,7 +8273,8 @@ const ProductForm = (() => {
                     <div class="flex items-center gap-1.5 mb-1">
                       <label for="input-package-weight" class="text-xs font-bold text-slate-800">
                         Berat Paket <span class="text-red-500">*</span>:
-                                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                      </label>
+                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                         <i class="bi bi-question-circle text-xs"></i>
                         <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                           Berat paket dalam gram. Digunakan oleh ekspedisi logistik untuk menghitung tarif ongkos kirim kiloan.
@@ -8809,6 +8845,11 @@ const ProductForm = (() => {
                     <span class="text-xs text-slate-500 font-semibold">Hari</span>
                   </div>
                 </div>
+              </div>
+
+              <!-- Tabel Atribut & Spesifikasi Tambahan Manual Seller -->
+              <div class="pt-2 border-t border-slate-100">
+                ${renderCustomSpecsTableHtml()}
               </div>
             </div>
           </div>
@@ -11234,6 +11275,7 @@ const ProductForm = (() => {
           <i class="bi bi-exclamation-triangle-fill shrink-0 text-red-500 text-sm"></i>
           <span>Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.</span>
         </div>
+      </div>
     `;
   }
 

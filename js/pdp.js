@@ -706,16 +706,50 @@
       const warrantyPeriod = (prod.warranty_period && prod.warranty_period.trim()) ? prod.warranty_period.trim() : 'Tidak Ada Garansi';
       const warrantyType = (prod.warranty_type && prod.warranty_type.trim()) ? prod.warranty_type.trim() : 'Garansi Toko';
 
+      // 1. Stok
+      let isAvailable = false;
+      if (prod.is_unlimited_stock || prod.stock === null || prod.stock === undefined || prod.stock_status === 'unlimited') {
+        isAvailable = true;
+      } else {
+        isAvailable = (parseInt(prod.stock) || 0) > 0;
+      }
+      const stockVal = isAvailable ? 'Tersedia' : 'Habis';
+
+      // 2. Kondisi (Baru / Bekas)
+      const conditionVal = (prod.condition === 'used' || prod.condition === 'bekas') ? 'Bekas' : 'Baru';
+
+      // 3. Merek (brandVal)
+      // 4. Jenis Garansi & Masa Garansi
+      const hasWarranty = warrantyPeriod !== 'Tidak Ada Garansi' && warrantyPeriod !== 'Tidak Garansi' && warrantyPeriod !== '';
+
+      // 5. Produk Custom
+      const isCustomProd = Boolean(prod.has_custom_dimension || prod.has_extra_service);
+
       const specsRows = [
+        { label: 'Stok', val: stockVal },
+        { label: 'Kondisi', val: conditionVal },
         { label: 'Merek', val: brandVal },
-        { label: 'Asal Produk', val: originVal },
-        { label: 'Masa Garansi', val: escapeHtml(warrantyPeriod) },
-        ...(warrantyPeriod !== 'Tidak Ada Garansi' ? [{ label: 'Jenis Garansi', val: escapeHtml(warrantyType) }] : []),
+        { label: 'Jenis Garansi', val: escapeHtml(hasWarranty ? warrantyType : 'Tidak Ada Garansi') },
+        ...(hasWarranty ? [{ label: 'Masa Garansi', val: escapeHtml(warrantyPeriod) }] : []),
+        { label: 'Produk Custom', val: isCustomProd ? 'Ya' : 'Tidak' },
         { label: 'Dikirim Dari', val: escapeHtml(sellerLocation) }
       ];
 
-      if (prod.is_preorder) {
-        specsRows.push({ label: 'Pre-Order', val: `Ya (${prod.preorder_days || 7} Hari)` });
+      // Pre-Order: durasi harinya saja, tanpa kata Ya/Tidak
+      if (Boolean(prod.is_preorder)) {
+        specsRows.push({ label: 'Pre-Order', val: `${prod.preorder_days || 7} Hari` });
+      }
+
+      if (parseInt(prod.min_order) > 1) {
+        specsRows.push({ label: 'Min. Jumlah Pembelian', val: `${prod.min_order} pcs` });
+      }
+
+      if (prod.has_wholesale) {
+        specsRows.push({ label: 'Harga Grosir', val: 'Tersedia' });
+      }
+
+      if (prod.has_order_multiple && parseInt(prod.order_multiple_value) > 1) {
+        specsRows.push({ label: 'Kelipatan Pembelian', val: `Kelipatan ${prod.order_multiple_value} pcs` });
       }
 
       if (Array.isArray(prod.custom_specs) && prod.custom_specs.length > 0) {
@@ -734,7 +768,7 @@
           <div>
             <h4 class="font-bold text-slate-900 text-sm mb-3">Spesifikasi Produk:</h4>
             <div class="bg-slate-50/70 rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-              ${specsRows.map(r => `
+              ${specsRows.slice(0, 10).map(r => `
                 <div class="flex items-center py-2.5 px-4 text-xs">
                   <span class="text-slate-500 w-1/3 shrink-0">${r.label}</span>
                   <span class="text-slate-800 font-semibold w-2/3">${r.val}</span>
@@ -1048,7 +1082,7 @@
     const btnSettings = document.getElementById('btn-open-settings');
     if (btnSettings) {
       btnSettings.addEventListener('click', () => {
-        window.location.href = 'settings.html';
+        window.location.href = 'admin.html#account';
       });
     }
   }
