@@ -1167,7 +1167,7 @@ const ProductForm = (() => {
               <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card w-full">
                 <!-- Header Card -->
                 <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-                  <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
+                  <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Informasi Produk</h2>
                 </div>
 
                 <!-- Input 1: Jenis Produk / Layanan ([Fisik] | [Non Fisik]) -->
@@ -2371,11 +2371,10 @@ const ProductForm = (() => {
 
   function getPreviewStockDisplay(selectedMat, validMaterials) {
     if (!primaryState.has_variants) {
-      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
-      const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
-      if (isUnl) return 'Unlimited';
       const stockInp = document.getElementById('input-stock-qty');
-      const s = stockInp ? parseInt(stockInp.value) : (primaryState.stock !== null ? parseInt(primaryState.stock) : NaN);
+      const val = stockInp ? stockInp.value.trim() : (primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null ? String(primaryState.stock) : ''));
+      if (val.toLowerCase() === 'unlimited' || val.toLowerCase() === 'tanpa batas' || primaryState.is_unlimited_stock) return 'Unlimited';
+      const s = parseInt(val, 10);
       return (isNaN(s) || s < 0) ? '0' : String(s);
     } else {
       const stockMode = primaryState.stock_mode_tiers?.tier1 || '';
@@ -2422,12 +2421,11 @@ const ProductForm = (() => {
 
     // Cek stok jika tidak unlimited
     if (!primaryState.has_variants) {
-      const unlCheck = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
-      const isUnl = unlCheck ? unlCheck.checked : Boolean(primaryState.is_unlimited_stock);
+      const stockInp = document.getElementById('input-stock-qty');
+      const val = stockInp ? stockInp.value.trim() : (primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null ? String(primaryState.stock) : ''));
+      const isUnl = val.toLowerCase() === 'unlimited' || val.toLowerCase() === 'tanpa batas' || Boolean(primaryState.is_unlimited_stock);
       if (!isUnl) {
-        const stockInp = document.getElementById('input-stock-qty');
-        const valFromInp = stockInp ? parseInt(stockInp.value) : NaN;
-        const s = !isNaN(valFromInp) ? valFromInp : (primaryState.stock !== null ? parseInt(primaryState.stock) : NaN);
+        const s = parseInt(val, 10);
         if (isNaN(s) || s < 0) {
           return { allowed: false, reason: 'Tentukan Stok produk terlebih dahulu untuk menggunakan Mode Uji Coba.' };
         }
@@ -7659,7 +7657,8 @@ const ProductForm = (() => {
     const missingCard2 = getMissingLabelsForCard(3);
     const missingCard3 = getMissingLabelsForCard(4);
     const missingCard4 = getMissingLabelsForCard(5);
-    const missingCard5 = getMissingLabelsForCard(6);
+    const missingCardSpecs = getMissingLabelsForCard(6);
+    const missingCard5 = getMissingLabelsForCard(7);
 
     const vLabels = primaryState.variation_labels || {
       label_product: 'Produk',
@@ -7671,8 +7670,8 @@ const ProductForm = (() => {
     };
 
     return `
-      <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH) -->
-      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-50 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full flex items-center justify-between px-2 sm:px-6">
+      <!-- 1. STICKY SUB-NAVBAR ANCHOR (CLEAN SHOPEE STYLE - FLAT FLUSH FULL WIDTH - z-25) -->
+      <div id="step2-subnav-fixed" class="product-form-subnav sticky top-0 z-25 bg-white rounded-none border-0 border-b border-slate-200/80 shadow-xs transition-all duration-300 w-full flex items-center justify-between px-2 sm:px-6">
         <nav class="flex items-center overflow-x-auto scrollbar-none flex-1 min-w-0 gap-0.5 sm:gap-1" id="step2-subnav-links">
           <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-active px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-info" data-step2-target="card-step2-info">
             Info Produk
@@ -7688,6 +7687,9 @@ const ProductForm = (() => {
           </button>
           <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-description" data-step2-target="card-step2-description">
             Deskripsi
+          </button>
+          <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-specs" data-step2-target="card-step2-specs">
+            Spesifikasi
           </button>
           <button type="button" class="step2-nav-tab step2-subnav-link subnav-tab-inactive px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent transition-colors whitespace-nowrap cursor-pointer bg-transparent select-none shrink-0" data-target="card-step2-others" data-step2-target="card-step2-others">
             Lainnya
@@ -7706,7 +7708,7 @@ const ProductForm = (() => {
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
         <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card w-full" id="card-step2-info">
           <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-            <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Produk</h2>
+            <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Informasi Produk</h2>
           </div>
 
           <!-- Input Nama Produk -->
@@ -7820,7 +7822,7 @@ const ProductForm = (() => {
         ${missingCard1.length > 0 ? renderFlashbackCard('Informasi Penjualan', 'bi-shop', missingCard1, 'card-step2-sales') : `
           <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-5 sm:space-y-6 step2-section-card" id="card-step2-sales">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-              <h2 class="text-base sm:text-lg font-bold text-slate-900">Informasi Penjualan</h2>
+              <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Informasi Penjualan</h2>
             </div>
 
 
@@ -7837,37 +7839,38 @@ const ProductForm = (() => {
             <div id="single-product-purchase-settings" class="${(primaryState.pricing_model === 'normal' && !primaryState.has_variants) ? 'space-y-6' : 'hidden'}">
               <hr class="border-slate-100" />
 
-              <!-- Stok Produk -->
-              <div class="space-y-3" id="single-product-stock-section">
-                <!-- Baris Label Stok Produk & Checkbox Unlimited (Di Atas Kotak Input) -->
+              <!-- Stok Produk (Combobox: Nilai Rekomendasi Unlimited + Input Manual) -->
+              <div class="space-y-2" id="single-product-stock-section">
                 <div class="flex items-center justify-between pb-1 border-b border-slate-100 flex-wrap gap-2">
-                  <label class="block text-xs font-bold text-slate-800">
+                  <label for="input-stock-qty" class="block text-xs font-bold text-slate-800">
                     Stok Produk <span class="text-red-500">*</span>
                   </label>
-                  <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
-                    <input 
-                      type="checkbox" 
-                      id="chk-unlimited-stock" 
-                      data-alias="toggle-unlimited-stock"
-                      ${primaryState.is_unlimited_stock ? 'checked' : ''} 
-                      class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
-                    />
-                    <span>Unlimited</span>
-                  </label>
+                  <span class="text-[10px] text-slate-400">Pilih "Unlimited" jika stok tanpa batas</span>
                 </div>
 
-                <!-- Kotak Input Angka Stok (Berada di Bawah Baris Checkbox) -->
-                <div id="stock-input-wrapper" class="block">
-                  <label for="input-stock-qty" class="block text-[11px] font-semibold text-slate-600 mb-1">Jumlah Kuota Stok Fisik Tersedia:</label>
-                  <input 
-                    type="${primaryState.is_unlimited_stock ? 'text' : 'number'}" 
-                    id="input-stock-qty" 
-                    min="0"
-                    value="${primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : '')}" 
-                    placeholder="${primaryState.is_unlimited_stock ? 'Unlimited' : '0'}"
-                    ${primaryState.is_unlimited_stock ? 'readonly' : ''}
-                    class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold outline-none ${primaryState.is_unlimited_stock ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-800 focus:border-emerald-500'}"
-                  />
+                <div class="custom-combobox-wrapper relative w-full sm:w-64">
+                  <div class="relative flex items-center">
+                    <input 
+                      type="text" 
+                      id="input-stock-qty" 
+                      class="custom-combobox-input w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white text-slate-800 focus:border-[var(--color-primary)]" 
+                      placeholder="Ketik angka atau pilih" 
+                      value="${primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : '')}" 
+                      autocomplete="off" 
+                    />
+                    <button type="button" id="btn-clear-stock-qty" class="absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.is_unlimited_stock || (primaryState.stock !== null && primaryState.stock !== undefined && String(primaryState.stock).trim() !== '')) ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" title="Kosongkan stok">
+                      <i class="bi bi-x-lg text-[10px] font-bold"></i>
+                    </button>
+                  </div>
+
+                  <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
+                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
+                    <div class="max-h-48 overflow-y-auto">
+                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] cursor-pointer font-medium flex items-center justify-between transition" data-value="Unlimited">
+                        <span>Unlimited (Tanpa Batas Stok)</span>
+                      </div>
+                    </div>
+                  </div>
                   <div id="single-stock-error-msg" class="field-error-msg hidden mt-1 text-xs text-red-500"></div>
                 </div>
               </div>
@@ -7997,7 +8000,7 @@ const ProductForm = (() => {
             <!-- Header Kartu dengan Toggle Switch Utama -->
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between gap-3">
               <div>
-                <h2 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Pengiriman & Dimensi Paket</h2>
+                <h2 class="text-base sm:text-lg font-bold leading-tight" style="color: var(--color-primary) !important;">Pengiriman & Dimensi Paket</h2>
                 <span class="text-[11px] text-slate-500 block mt-0.5">Atur kurir, ongkir, berat, dimensi, dan sistem COD</span>
               </div>
               <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
@@ -8306,7 +8309,7 @@ const ProductForm = (() => {
         ${missingCard3.length > 0 ? renderFlashbackCard('Program Promo', 'bi-tag', missingCard3, 'card-step2-promo') : `
           <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-5 step2-section-card" id="card-step2-promo">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-              <h2 class="text-base sm:text-lg font-bold text-slate-900">Program Promo</h2>
+              <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Program Promo</h2>
             </div>
 
             <!-- SUB-BAGIAN 1: PROMO BULANAN (BERSIH TANPA IKON TIDAK PENTING) -->
@@ -8435,7 +8438,7 @@ const ProductForm = (() => {
         ${missingCard4.length > 0 ? renderFlashbackCard('Deskripsi Produk', 'bi-file-text', missingCard4, 'card-step2-description') : `
           <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-description">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
-              <h2 class="text-base sm:text-lg font-bold text-slate-900">
+              <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">
                 Deskripsi Produk <span class="text-red-500">*</span>
               </h2>
               <button 
@@ -8482,52 +8485,14 @@ const ProductForm = (() => {
           </div>
         `}
 
-        <!-- CARD 6: LAINNYA (GATED) -->
-        ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
-          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
+        <!-- CARD 6: SPESIFIKASI (GATED) -->
+        ${missingCardSpecs.length > 0 ? renderFlashbackCard('Spesifikasi', 'bi-card-checklist', missingCardSpecs, 'card-step2-specs') : `
+          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-specs">
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-              <h2 class="text-base sm:text-lg font-bold text-slate-900">Lainnya & Konfigurasi Tambahan</h2>
+              <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Spesifikasi</h2>
             </div>
 
-            <!-- Footer Strip Khusus Kartu Detail -->
-            <div 
-              id="section-card-footer-config" 
-              class="${primaryState.card_variant === 'C' ? 'block' : 'hidden'} border-t border-slate-100 pt-3 space-y-3"
-            >
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                  <i class="bi bi-layout-text-window-reverse"></i>
-                </div>
-                <div>
-                  <h4 class="text-xs font-bold text-slate-900">Dua Strip Footer Kartu Etalase (Khusus Kartu Detail)</h4>
-                  <p class="text-[10px] text-slate-500">Merapikan tinggi kartu etalase agar seragam presisi.</p>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="space-y-1.5">
-                  <span class="text-xs font-bold text-emerald-800 block">Footer 1 (Strip Atas):</span>
-                  <input type="text" id="input-card-footer-text" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none" />
-                  <select id="select-card-footer-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none">
-                    <option value="truck" ${primaryState.footer_badge_icon === 'truck' ? 'selected' : ''}>Kirim Cepat (truck)</option>
-                    <option value="clock" ${primaryState.footer_badge_icon === 'clock' ? 'selected' : ''}>Jam / Waktu (clock)</option>
-                    <option value="zap" ${primaryState.footer_badge_icon === 'zap' ? 'selected' : ''}>Kilat / Express (zap)</option>
-                    <option value="shield-check" ${primaryState.footer_badge_icon === 'shield-check' ? 'selected' : ''}>Garansi (shield-check)</option>
-                  </select>
-                </div>
-                <div class="space-y-1.5">
-                  <span class="text-xs font-bold text-emerald-900 block">Footer 2 (Strip Bawah):</span>
-                  <input type="text" id="input-card-footer-2-text" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none" />
-                  <select id="select-card-footer-2-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-emerald-500 outline-none">
-                    <option value="minus" ${primaryState.footer_2_badge_icon === 'minus' ? 'selected' : ''}>Strip / Variasi (minus)</option>
-                    <option value="layers" ${primaryState.footer_2_badge_icon === 'layers' ? 'selected' : ''}>Pilihan Paket (layers)</option>
-                    <option value="shield-check" ${primaryState.footer_2_badge_icon === 'shield-check' ? 'selected' : ''}>Garansi Uang Kembali (shield-check)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Kondisi, Pre-Order, SKU -->
+            <!-- Kondisi, SKU Induk, Barcode -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
               <div>
                 <label for="select-prod-condition" class="block text-xs font-bold text-slate-800 mb-1">Kondisi Produk:</label>
@@ -8548,18 +8513,8 @@ const ProductForm = (() => {
               </div>
             </div>
 
-            <!-- Spesifikasi Tambahan & Garansi -->
-            <div class="border-t border-slate-100 pt-4 space-y-4">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-md bg-[var(--color-primary-subtle)] text-[var(--color-primary)] flex items-center justify-center font-bold text-xs">
-                  <i class="bi bi-card-checklist"></i>
-                </div>
-                <div>
-                  <h4 class="text-xs font-bold text-slate-900">Spesifikasi Tambahan & Garansi</h4>
-                  <p class="text-[10px] text-slate-500">Atribut spesifikasi produk yang tampil pada drawer spesifikasi di pratinjau pembeli.</p>
-                </div>
-              </div>
-
+            <!-- Merek, Asal Produk, Masa Garansi, Jenis Garansi, Pre-Order -->
+            <div class="space-y-4 pt-2 border-t border-slate-100">
               <!-- Baris 1: Merek & Asal Produk (Input Teks Manual) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -8665,8 +8620,53 @@ const ProductForm = (() => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        `}
 
+        <!-- CARD 7: LAINNYA (GATED) -->
+        ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
+          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Lainnya & Konfigurasi Tambahan</h2>
+            </div>
 
+            <!-- Footer Strip Khusus Kartu Detail -->
+            <div 
+              id="section-card-footer-config" 
+              class="${primaryState.card_variant === 'C' ? 'block' : 'hidden'} border-t border-slate-100 pt-3 space-y-3"
+            >
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-[var(--color-primary-subtle)] text-[var(--color-primary)] flex items-center justify-center font-bold text-xs">
+                  <i class="bi bi-layout-text-window-reverse"></i>
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900">Dua Strip Footer Kartu Etalase (Khusus Kartu Detail)</h4>
+                  <p class="text-[10px] text-slate-500">Merapikan tinggi kartu etalase agar seragam presisi.</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1.5">
+                  <span class="text-xs font-bold text-slate-800 block">Footer 1 (Strip Atas):</span>
+                  <input type="text" id="input-card-footer-text" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
+                  <select id="select-card-footer-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
+                    <option value="truck" ${primaryState.footer_badge_icon === 'truck' ? 'selected' : ''}>Kirim Cepat (truck)</option>
+                    <option value="clock" ${primaryState.footer_badge_icon === 'clock' ? 'selected' : ''}>Jam / Waktu (clock)</option>
+                    <option value="zap" ${primaryState.footer_badge_icon === 'zap' ? 'selected' : ''}>Kilat / Express (zap)</option>
+                    <option value="shield-check" ${primaryState.footer_badge_icon === 'shield-check' ? 'selected' : ''}>Garansi (shield-check)</option>
+                  </select>
+                </div>
+                <div class="space-y-1.5">
+                  <span class="text-xs font-bold text-slate-800 block">Footer 2 (Strip Bawah):</span>
+                  <input type="text" id="input-card-footer-2-text" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
+                  <select id="select-card-footer-2-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
+                    <option value="minus" ${primaryState.footer_2_badge_icon === 'minus' ? 'selected' : ''}>Strip / Variasi (minus)</option>
+                    <option value="layers" ${primaryState.footer_2_badge_icon === 'layers' ? 'selected' : ''}>Pilihan Paket (layers)</option>
+                    <option value="shield-check" ${primaryState.footer_2_badge_icon === 'shield-check' ? 'selected' : ''}>Garansi Uang Kembali (shield-check)</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <!-- Komisi Afiliasi Produk -->
@@ -13412,6 +13412,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       'card-step2-shipping',
       'card-step2-promo',
       'card-step2-description',
+      'card-step2-specs',
       'card-step2-others'
     ];
 
@@ -14608,26 +14609,57 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       updateProductCardLivePreview();
     }
 
-    // Single Stock Input (Produk Tunggal)
+    // Single Stock Input (Produk Tunggal - Combobox Rekomendasi Unlimited + Input Angka)
     const singleStock = document.getElementById('input-stock-qty');
     const singleStockErr = document.getElementById('single-stock-error-msg');
+    const clearStockBtn = document.getElementById('btn-clear-stock-qty');
+
+    function syncStockStateAndClearBtn(val) {
+      const trimmed = (val || '').trim();
+      const isUnl = trimmed.toLowerCase() === 'unlimited' || trimmed.toLowerCase() === 'tanpa batas';
+
+      if (isUnl) {
+        primaryState.is_unlimited_stock = true;
+        primaryState.stock = null;
+        if (materialsState.length > 0) materialsState[0].stock = null;
+      } else if (trimmed === '') {
+        primaryState.is_unlimited_stock = false;
+        primaryState.stock = null;
+        if (materialsState.length > 0) materialsState[0].stock = null;
+      } else {
+        const num = parseInt(trimmed, 10);
+        primaryState.is_unlimited_stock = false;
+        primaryState.stock = isNaN(num) ? null : Math.max(0, num);
+        if (materialsState.length > 0) materialsState[0].stock = primaryState.stock;
+      }
+
+      if (clearStockBtn) {
+        if (trimmed.length > 0) {
+          clearStockBtn.classList.remove('hidden');
+          clearStockBtn.classList.add('flex');
+        } else {
+          clearStockBtn.classList.remove('flex');
+          clearStockBtn.classList.add('hidden');
+        }
+      }
+    }
 
     function validateSingleStock(isBlur = false) {
       if (!singleStock) return true;
-      const unl = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
-      if (unl && unl.checked) {
+      const raw = (singleStock.value || '').trim();
+      const isUnl = raw.toLowerCase() === 'unlimited' || raw.toLowerCase() === 'tanpa batas' || primaryState.is_unlimited_stock;
+      if (isUnl) {
         if (singleStockErr) { singleStockErr.textContent = ''; singleStockErr.classList.add('hidden'); }
         singleStock.classList.remove('border-red-500');
         singleStock.classList.add('border-slate-300');
         return true;
       }
-      const raw = (singleStock.value || '').trim();
-      if (raw === '' || isNaN(parseInt(raw)) || parseInt(raw) < 0) {
+      if (raw === '' || isNaN(parseInt(raw, 10)) || parseInt(raw, 10) < 0) {
         if (isBlur) {
           singleStock.classList.remove('border-slate-300');
           singleStock.classList.add('border-red-500');
           if (singleStockErr) {
-            singleStockErr.textContent = 'Stok produk wajib diisi (minimal "0")';
+            singleStockErr.textContent = 'Stok produk wajib diisi angka (minimal "0") atau pilih "Unlimited"';
             singleStockErr.classList.remove('hidden');
           }
           return false;
@@ -14650,13 +14682,27 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
     if (singleStock) {
       singleStock.disabled = false;
-      singleStock.oninput = () => {
-        primaryState.stock = singleStock.value.trim() === '' ? null : parseInt(singleStock.value);
-        if (materialsState.length > 0) materialsState[0].stock = primaryState.stock;
+      singleStock.readOnly = false;
+      singleStock.oninput = (e) => {
+        syncStockStateAndClearBtn(e.target.value);
         validateSingleStock(false);
         updateProductCardLivePreview();
       };
       singleStock.onblur = () => validateSingleStock(true);
+    }
+
+    if (clearStockBtn) {
+      clearStockBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (singleStock) {
+          singleStock.value = '';
+          syncStockStateAndClearBtn('');
+          validateSingleStock(false);
+          updateProductCardLivePreview();
+          singleStock.focus();
+        }
+      };
     }
 
     // Kustomisasi Label Input pada Setiap Variasi Real-Time Sync
@@ -16786,43 +16832,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // =====================================================================
     // STEP 2 CONTROLS LAINNYA (STOK, PENGIRIMAN, PROMO, AI)
-    // =====================================================================
-    // Stok Unlimited Toggle
-    const unlStock = document.getElementById('chk-unlimited-stock') || document.getElementById('toggle-unlimited-stock');
-    const stockWrap = document.getElementById('stock-input-wrapper');
-    const stockQtyInput = document.getElementById('input-stock-qty');
-    const stockErr = document.getElementById('single-stock-error-msg');
-    if (unlStock) {
-      unlStock.onchange = e => {
-        primaryState.is_unlimited_stock = e.target.checked;
-        if (stockWrap) stockWrap.className = 'block';
-        if (primaryState.is_unlimited_stock) {
-          if (stockQtyInput) {
-            stockQtyInput.type = 'text';
-            stockQtyInput.value = 'Unlimited';
-            stockQtyInput.placeholder = 'Unlimited';
-            stockQtyInput.readOnly = true;
-            stockQtyInput.classList.remove('border-red-500', 'bg-white', 'text-slate-800');
-            stockQtyInput.classList.add('border-slate-300', 'bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-          }
-          if (stockErr) {
-            stockErr.textContent = '';
-            stockErr.classList.add('hidden');
-          }
-        } else {
-          if (stockQtyInput) {
-            stockQtyInput.type = 'number';
-            stockQtyInput.readOnly = false;
-            stockQtyInput.disabled = false;
-            stockQtyInput.value = (primaryState.stock !== null && primaryState.stock !== undefined) ? primaryState.stock : '';
-            stockQtyInput.placeholder = '0';
-            stockQtyInput.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-            stockQtyInput.classList.add('bg-white', 'text-slate-800');
-          }
-        }
-        updateProductCardLivePreview();
-      };
-    }
+
 
     // Maksimal Pembelian (Combobox Normal Mode)
     const normalMaxInp = document.getElementById('input-normal-max-order');

@@ -1,3 +1,19 @@
+
+/* Global Text Selection Brand Colors (Zero hardcoded emerald) */
+::selection,
+::-moz-selection {
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+}
+
+input::selection,
+textarea::selection,
+input::-moz-selection,
+textarea::-moz-selection {
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+}
+
 /* ==========================================================================
    POS BY SONGER CREATIVE - ADMIN & POS KASIR DEDICATED STYLESHEET
    Dedicated styling for Admin Panel, Dokani Sidebar, POS Kasir, and Thermal Receipt.
@@ -916,7 +932,7 @@ input[type="radio"]:active {
   right: 0 !important;
   width: 100% !important;
   max-width: none !important;
-  z-index: 50 !important;
+  z-index: 25 !important;
   border-radius: 0 !important;
   margin: 0 !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
@@ -939,7 +955,7 @@ input[type="radio"]:active {
   right: 0 !important;
   width: 100% !important;
   max-width: none !important;
-  z-index: 50 !important;
+  z-index: 25 !important;
   border-radius: 0 !important;
   margin: 0 !important;
   background-color: #ffffff !important;
@@ -2856,3 +2872,33 @@ button:focus-visible {
 .tooltip-popover {
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25), 0 8px 10px -6px rgba(15, 23, 42, 0.2);
 }
+
+
+/* Mobile Sidebar & Backdrop Z-Index Hierarchy (Subnavbar z-25 < Backdrop z-60 < Sidebar z-70) */
+#sidebar-mobile-backdrop,
+#sidebar-backdrop,
+#sidebar-overlay {
+  z-index: 60 !important;
+}
+
+@media (max-width: 1023px) {
+  #admin-main-sidebar,
+  #sidebar,
+  aside#admin-main-sidebar {
+    z-index: 70 !important;
+  }
+}
+
+/* Card Section Header Brand Colors (Step 1 & Step 2) */
+.step1-section-card h2,
+.step2-section-card h2,
+#card-step2-info h2,
+#card-step2-sales h2,
+#card-step2-shipping h2,
+#card-step2-promo h2,
+#card-step2-description h2,
+#card-step2-specs h2,
+#card-step2-others h2 {
+  color: var(--color-primary) !important;
+}
+
