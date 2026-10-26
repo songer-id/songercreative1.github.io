@@ -2724,6 +2724,7 @@ const DB = (() => {
           bg_color: productData.footer_2_bg_color || null,
           text_color: productData.footer_2_text_color || null
         },
+        custom_specs: Array.isArray(productData.custom_specs) ? productData.custom_specs : [],
         brand: productData.brand ? productData.brand.trim() : '',
         product_origin: productData.product_origin ? productData.product_origin.trim() : '',
         warranty_unit: productData.warranty_unit || 'Tidak Ada Garansi',
@@ -2933,6 +2934,7 @@ const DB = (() => {
           bg_color: products[index].footer_2_bg_color || null,
           text_color: products[index].footer_2_text_color || null
         }),
+        custom_specs: Array.isArray(productData.custom_specs) ? productData.custom_specs : (products[index].custom_specs || []),
         brand: productData.brand !== undefined ? productData.brand.trim() : (products[index].brand || ''),
         product_origin: productData.product_origin !== undefined ? productData.product_origin.trim() : (products[index].product_origin || ''),
         warranty_unit: productData.warranty_unit !== undefined ? productData.warranty_unit : (products[index].warranty_unit || 'Tidak Ada Garansi'),

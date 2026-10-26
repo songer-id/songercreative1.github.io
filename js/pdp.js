@@ -718,6 +718,17 @@
         specsRows.push({ label: 'Pre-Order', val: `Ya (${prod.preorder_days || 7} Hari)` });
       }
 
+      if (Array.isArray(prod.custom_specs) && prod.custom_specs.length > 0) {
+        prod.custom_specs.forEach(cs => {
+          if (cs && cs.title && cs.title.trim() && cs.value && cs.value.trim()) {
+            const existing = specsRows.find(r => r.label.toLowerCase() === cs.title.trim().toLowerCase());
+            if (!existing) {
+              specsRows.push({ label: escapeHtml(cs.title.trim()), val: escapeHtml(cs.value.trim()) });
+            }
+          }
+        });
+      }
+
       specsEl.innerHTML = `
         <div class="space-y-4">
           <div>
