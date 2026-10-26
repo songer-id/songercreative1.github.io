@@ -213,15 +213,17 @@ Cakupan utama Roadmap:
 
 ---
 
-## 🎛️ 7. Standar Antarmuka: Native HTML5 `<datalist>` Murni, Integrasi Edit Produk & Modal Batal Cerdas
+## 🎛️ 7. Standar Antarmuka: Popover Ramping Terkendali (`clean-datalist-popover`), Integrasi Edit Produk & Modal Batal Cerdas
 
-### A. Standar Default "Input & Pilih" (Native HTML5 `<datalist>` Murni)
-- **Mandat Penggunaan Native HTML5 `<datalist>`:** Seluruh elemen input yang membutuhkan pilihan saran cepat atau pengetikan nilai bebas di Step 1 dan Step 2 wajib menggunakan native HTML5 `<input list="...">` yang berpasangan dengan `<datalist id="...">` murni bawaan browser.
+### A. Standar Default "Input & Pilih" (Controlled Clean Callout Popover)
+- **Mandat Popover Ramping Terkendali (`.clean-datalist-popover`):** Seluruh elemen input yang membutuhkan pilihan saran cepat atau pengetikan nilai bebas di Step 1 dan Step 2 menggunakan arsitektur popover ramping bergaya callout (`clean-datalist-popover`) dengan atribut `data-datalist-id` (tanpa atribut native `list` bawaan browser agar tidak memicu popup OS Chromium yang melayang saat scroll).
 - **Karakteristik & Keunggulan Tampilan Ramping:**
-  - Mengeliminasi popover custom lebar yang kaku dan raksasa. Menghasilkan kotak pop-up ramping bawaan browser dengan callout segitiga native dan indikator panah `▼` (`::-webkit-calendar-picker-indicator`) yang elegan saat difokuskan atau diarahkan kursor.
-  - Sangat cepat, efisien, zero footprint overhead (tanpa wrapper div kompleks), dan mendukung navigasi keyboard serta mobile picker bawaan sistem operasi.
-  - Pengguna bebas memilih opsi saran instan yang disediakan atau mengetikkan nilai kustom sendiri secara leluasa.
-  - Terpasang seragam pada Step 1 (*Label Khusus 1 & 2, Teks Footer Model C*) dan Step 2 (*Stok Produk Unlimited, Maksimal Jumlah Pembelian Unlimited, Max Order Tabel Variasi, Nama Grup Variasi 1–4, Layanan Extras, Merek, Asal Produk, dan Judul Tabel Spesifikasi Manual*).
+  - **Auto-Dismiss saat Scroll Luar:** Dilengkapi event listener scroll global (`window`, `document`, `#admin-main-viewport`) yang otomatis menutup daftar saran saat pengguna menggulir halaman di luar popover, sementara scroll di dalam popover tetap berjalan lancar.
+  - **Tampilkan Seluruh Opsi Saat Berisi Nilai:** Saat input difokuskan, diklik, atau ditekan anak panah `▼`, seluruh opsi saran tetap tampil lengkap (tidak terfilter oleh teks yang sudah ada), dilengkapi highlight aksen brand (`var(--color-primary-subtle)`) dan centang aktif (`bi-check2`). Pemfilteran hanya aktif saat pengetikan keyboard.
+  - **Seragamkan Kontrol Kanan (`▼` saat Kosong, `×` saat Berisi Nilai):** Saat input kosong muncul anak panah `▼` (klik untuk buka penuh saran); saat terisi nilai otomatis beralih ke tombol `×` untuk membersihkan nilai, mereset counter/chip/pratinjau, dan membuka kembali saran lengkap.
+  - **Standar Nilai Saran:** Nilai `"Unlimited"` untuk Stok Produk Tanpa Variasi (`#input-stock-qty`) dan nilai `"Tanpa Batas"` untuk seluruh input Maksimal Pembelian / Max. Order (`#input-normal-max-order` dan `.combo-max-order-input`).
+  - **List Variasi Produk Seragam:** Seluruh input dan tombol di tabel List Variasi Produk menggunakan sudut tegas `rounded-md` (`6px`) dan bebas ikon pada tombol Harga Grosir & Kelipatan Order.
+  - **Cakupan 9 Elemen Input/Pilih:** Terpasang seragam pada Step 1 (*Label Khusus 1 & 2, Teks Footer Model C*) dan Step 2 (*Stok Produk Unlimited, Maksimal Pembelian Tanpa Batas, Max. Order Tabel Variasi, Nama Grup Variasi 1–4, Layanan Extras, Merek, Asal Produk, dan Judul Tabel Spesifikasi Manual*).
 
 ### B. Integrasi Edit Produk dari Daftar Produk ke Sistem Form Produk Baru (`ProductForm`)
 - Tombol aksi **Edit** pada tabel produk (`.btn-edit-product`) secara otomatis mencatat menu asal (`lastActiveMenuBeforeForm = 'products'`), memuat data produk secara presisi ke dalam `primaryState` Step 1 & Step 2, dan membuka tampilan form baru (`view-product-form`).

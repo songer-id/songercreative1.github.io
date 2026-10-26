@@ -449,8 +449,9 @@ const ProductForm = (() => {
   }
 
   // ==========================================================================
-  // CUSTOM POPOVER DROPDOWN BERSIH (GAYA SHADCN SELECT KOMPAK)
-  // Menempel rapat persis di bawah input (top-full mt-1), tanpa offset melayang
+  // CUSTOM POPOVER DROPDOWN BERSIH (GAYA CALLOUT RAMPING TERKENDALI)
+  // Ramping, kompak, tanpa atribut 'list' native agar tidak melayang saat scroll,
+  // dan otomatis menutup saat terjadi scroll di luar kotak saran
   // ==========================================================================
   function getOptionsForDatalist(listId) {
     let options = [];
@@ -480,58 +481,175 @@ const ProductForm = (() => {
           }
         } catch (_) {}
       }
+    } else if (listId === 'footer-texts-history-list') {
+      const defaultFooters = [
+        'Proses Hanya Dalam 1Jam',
+        'Variasi Paket Tersedia/tidak tersedia',
+        'Proses Cepat & Garansi Kualitas',
+        'Siap Kirim Seluruh Indonesia',
+        'Bahan Premium Berkualitas',
+        'Garansi 100% Produk Original'
+      ];
+      defaultFooters.forEach(f => {
+        if (!options.includes(f)) options.push(f);
+      });
+      if (typeof DB !== 'undefined' && typeof DB.getFooterTextsHistory === 'function') {
+        try {
+          const history = DB.getFooterTextsHistory();
+          if (Array.isArray(history)) {
+            history.forEach(h => {
+              const val = (typeof h === 'string' ? h : h?.name || '').trim();
+              if (val && !options.includes(val)) options.push(val);
+            });
+          }
+        } catch (_) {}
+      }
+    } else if (listId === 'datalist-stock-unlimited') {
+      options = ['Unlimited'];
+    } else if (listId === 'datalist-max-order-unlimited') {
+      options = ['Tanpa Batas'];
     }
     return options;
   }
 
+  function closeAllCleanDatalistPopovers(exceptPopover = null) {
+    document.querySelectorAll('.clean-datalist-popover').forEach(p => {
+      if (p !== exceptPopover && !p.classList.contains('hidden')) {
+        p.classList.add('hidden');
+      }
+    });
+  }
+
+  // Scroll listener global (passive, capture) untuk menutup popover saat halaman di-scroll di luar popover
+  if (!window._cleanDatalistScrollBound) {
+    window._cleanDatalistScrollBound = true;
+    const handleScrollOutside = (e) => {
+      if (e.target && e.target.closest && e.target.closest('.clean-datalist-popover')) {
+        return; // biarkan di dalam popover scroll mulus
+      }
+      closeAllCleanDatalistPopovers();
+    };
+
+    window.addEventListener('scroll', handleScrollOutside, { passive: true, capture: true });
+    document.addEventListener('scroll', handleScrollOutside, { passive: true, capture: true });
+    const mainViewport = document.getElementById('admin-main-viewport');
+    if (mainViewport) {
+      mainViewport.addEventListener('scroll', handleScrollOutside, { passive: true, capture: true });
+    }
+  }
+
+  // Event listener global: tutup popover saat klik di luar
+  if (!window._cleanDatalistClickOutsideBound) {
+    window._cleanDatalistClickOutsideBound = true;
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.clean-datalist-wrapper') && !e.target.closest('.clean-datalist-popover')) {
+        closeAllCleanDatalistPopovers();
+      }
+    });
+  }
+
   function bindCleanDatalistPopovers(scope = document) {
     if (!scope) return;
-    const inputs = scope.querySelectorAll('input[list], input[data-datalist], .clean-datalist-input');
+    const inputs = scope.querySelectorAll('input[list], input[data-datalist], input[data-datalist-id], .clean-datalist-input');
     
     inputs.forEach(input => {
-      const datalistId = input.getAttribute('data-datalist') || input.getAttribute('list');
+      const datalistId = input.getAttribute('data-datalist-id') || input.getAttribute('data-datalist') || input.getAttribute('list');
       if (!datalistId) return;
 
-      // Catat data-datalist dan hilangkan atribut 'list' agar browser Chromium
-      // TIDAK membuka native pop-up OS yang terkena bug floating/offset melayang ke bawah
+      // Pindahkan nilai atribut 'list' ke data-datalist-id & data-datalist, lalu hapus atribut 'list'
+      // agar browser Chromium TIDAK PERNAH membuka popup OS native yang melayang saat scroll
+      input.setAttribute('data-datalist-id', datalistId);
       input.setAttribute('data-datalist', datalistId);
       input.removeAttribute('list');
       input.setAttribute('autocomplete', 'off');
       input.classList.add('clean-datalist-input');
+      if (!input.classList.contains('pr-8')) {
+        input.classList.add('pr-8');
+      }
 
       // Pastikan wrapper parent memiliki class relative dan clean-datalist-wrapper
       let wrapper = input.parentElement;
       if (!wrapper) return;
-      if (wrapper.tagName === 'TD' || !wrapper.classList.contains('relative')) {
-        wrapper.classList.add('relative');
+      if (wrapper.tagName === 'TD') {
+        const cellWrapper = document.createElement('div');
+        cellWrapper.className = 'relative inline-flex items-center clean-datalist-wrapper';
+        wrapper.insertBefore(cellWrapper, input);
+        cellWrapper.appendChild(input);
+        wrapper = cellWrapper;
+      } else {
+        if (!wrapper.classList.contains('relative')) {
+          wrapper.classList.add('relative');
+        }
+        wrapper.classList.add('clean-datalist-wrapper');
       }
-      wrapper.classList.add('clean-datalist-wrapper');
 
-      // Tambahkan panah segitiga kecil (▼) ramping di kanan jika belum ada
+      // Tambahkan anak panah (▼) di kanan jika belum ada
       let arrow = wrapper.querySelector(':scope > .clean-datalist-arrow');
-      if (!arrow && !wrapper.querySelector('.btn-clear-custom-label')) {
+      if (!arrow) {
         arrow = document.createElement('span');
-        arrow.className = 'clean-datalist-arrow absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[8px] select-none';
+        arrow.className = 'clean-datalist-arrow absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[8px] select-none cursor-pointer p-1 transition flex items-center justify-center leading-none z-10';
         arrow.innerHTML = '▼';
+        arrow.title = 'Buka daftar pilihan';
         wrapper.appendChild(arrow);
+      }
+
+      // Tambahkan tombol silang (×) jika belum ada
+      let clearBtn = wrapper.querySelector(':scope > .btn-clear-datalist') || wrapper.querySelector(':scope > .btn-clear-custom-label');
+      if (!clearBtn) {
+        clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'btn-clear-datalist absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 cursor-pointer p-1 items-center justify-center select-none hidden leading-none z-10';
+        clearBtn.title = 'Hapus nilai';
+        clearBtn.innerHTML = '<i class="bi bi-x-lg text-[10px] font-bold"></i>';
+        wrapper.appendChild(clearBtn);
+      }
+
+      function syncControlButtons() {
+        const hasVal = (input.value || '').trim().length > 0;
+        if (hasVal) {
+          if (arrow) {
+            arrow.classList.add('hidden');
+            arrow.classList.remove('flex');
+          }
+          if (clearBtn) {
+            clearBtn.classList.remove('hidden');
+            clearBtn.classList.add('flex');
+          }
+        } else {
+          if (arrow) {
+            arrow.classList.remove('hidden');
+            arrow.classList.add('flex');
+          }
+          if (clearBtn) {
+            clearBtn.classList.add('hidden');
+            clearBtn.classList.remove('flex');
+          }
+        }
       }
 
       // Pastikan elemen popover bersih ada tepat di bawah input
       let popover = wrapper.querySelector(':scope > .clean-datalist-popover');
       if (!popover) {
         popover = document.createElement('div');
-        popover.className = 'clean-datalist-popover absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 hidden';
+        popover.className = 'clean-datalist-popover absolute left-0 top-full mt-1.5 min-w-[160px] max-w-[240px] w-max bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 hidden select-none';
         wrapper.appendChild(popover);
       }
 
-      // Cegah pendaftaran listener berulang
-      if (input.dataset.cleanDatalistBound === 'true') return;
-      input.dataset.cleanDatalistBound = 'true';
-
-      function renderItems(filterText = '') {
+      function renderItems(filterText = '', isExplicitOpen = false) {
         const options = getOptionsForDatalist(datalistId);
-        const q = (filterText || '').toLowerCase().trim();
-        const filtered = q ? options.filter(opt => opt.toLowerCase().includes(q)) : options;
+        const currentVal = (input.value || '').trim();
+        const currentValLower = currentVal.toLowerCase();
+
+        let filtered = options;
+        if (!isExplicitOpen && filterText.trim()) {
+          const q = filterText.toLowerCase().trim();
+          const exactMatch = options.some(opt => opt.toLowerCase() === q);
+          if (exactMatch) {
+            filtered = options;
+          } else {
+            filtered = options.filter(opt => opt.toLowerCase().includes(q));
+          }
+        }
 
         if (filtered.length === 0) {
           popover.innerHTML = '<div class="px-3 py-2 text-[11px] text-slate-400 italic text-center select-none">Tidak ada saran yang cocok</div>';
@@ -540,11 +658,11 @@ const ProductForm = (() => {
         }
 
         popover.innerHTML = filtered.map(opt => {
-          const isSelected = input.value.trim().toLowerCase() === opt.toLowerCase();
+          const isSelected = currentValLower === opt.toLowerCase();
           return `
-            <div class="clean-datalist-item px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold bg-slate-50 text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(opt)}">
+            <div class="clean-datalist-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(opt)}">
               <span>${escapeSafeHtml(opt)}</span>
-              ${isSelected ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)]"></i>' : ''}
+              ${isSelected ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
             </div>
           `;
         }).join('');
@@ -555,7 +673,7 @@ const ProductForm = (() => {
             const val = item.getAttribute('data-value') || '';
             input.value = val;
 
-            // Logika sinkronisasi khusus untuk Stok & Maksimal Order Unlimited
+            // Logika sinkronisasi khusus untuk Stok & Maksimal Order Unlimited / Tanpa Batas
             if (input.id === 'input-stock-qty') {
               if (val.trim().toLowerCase() === 'unlimited') {
                 primaryState.is_unlimited_stock = true;
@@ -565,25 +683,43 @@ const ProductForm = (() => {
                 primaryState.stock = parseInt(val, 10) || 0;
               }
             } else if (input.id === 'input-normal-max-order') {
-              if (val.trim().toLowerCase() === 'unlimited') {
+              const vLow = val.trim().toLowerCase();
+              if (vLow === 'tanpa batas' || vLow === 'unlimited' || vLow === '') {
+                input.value = 'Tanpa Batas';
                 primaryState.is_unlimited_max_order = true;
                 primaryState.max_order = null;
+                primaryState.max_order_type = 'unlimited';
+                primaryState.max_order_qty = null;
               } else {
                 primaryState.is_unlimited_max_order = false;
                 primaryState.max_order = parseInt(val, 10) || null;
+                primaryState.max_order_type = 'per_order';
+                primaryState.max_order_qty = primaryState.max_order;
               }
             } else if (input.classList.contains('combo-max-order-input')) {
               const matId = input.getAttribute('data-mat-id');
-              if (matId && primaryState.materials) {
-                const mat = primaryState.materials.find(m => String(m.id) === String(matId));
+              const vLow = val.trim().toLowerCase();
+              const isNoLimit = (vLow === 'tanpa batas' || vLow === 'unlimited' || vLow === '');
+              if (isNoLimit) {
+                input.value = 'Tanpa Batas';
+              }
+              if (matId && materialsState) {
+                const mat = materialsState.find(m => String(m.id) === String(matId));
                 if (mat) {
-                  mat.max_order = val.trim().toLowerCase() === 'unlimited' ? 'Unlimited' : val;
+                  mat.max_order = isNoLimit ? 'Tanpa Batas' : (parseInt(val, 10) || val);
+                }
+              }
+              if (matId && primaryState.materials) {
+                const matP = primaryState.materials.find(m => String(m.id) === String(matId));
+                if (matP) {
+                  matP.max_order = isNoLimit ? 'Tanpa Batas' : (parseInt(val, 10) || val);
                 }
               }
             }
 
             input.dispatchEvent(new Event('input', { bubbles: true }));
             input.dispatchEvent(new Event('change', { bubbles: true }));
+            syncControlButtons();
             popover.classList.add('hidden');
           });
         });
@@ -592,11 +728,29 @@ const ProductForm = (() => {
       }
 
       function openMenu() {
-        document.querySelectorAll('.clean-datalist-popover').forEach(p => {
-          if (p !== popover) p.classList.add('hidden');
-        });
-        renderItems(input.value);
+        closeAllCleanDatalistPopovers(popover);
+        renderItems('', true); // isExplicitOpen = true: Tampilkan seluruh daftar saran tanpa filter
+        try {
+          const rect = input.getBoundingClientRect();
+          const screenW = window.innerWidth;
+          if (rect.left + 240 > screenW - 12) {
+            popover.style.left = 'auto';
+            popover.style.right = '0';
+            popover.classList.add('callout-right');
+          } else {
+            popover.style.left = '0';
+            popover.style.right = 'auto';
+            popover.classList.remove('callout-right');
+          }
+        } catch (_) {}
       }
+
+      // Cegah pendaftaran listener berulang
+      if (input.dataset.cleanDatalistBound === 'true') {
+        syncControlButtons();
+        return;
+      }
+      input.dataset.cleanDatalistBound = 'true';
 
       input.addEventListener('focus', () => {
         openMenu();
@@ -609,7 +763,30 @@ const ProductForm = (() => {
       });
 
       input.addEventListener('input', () => {
-        renderItems(input.value);
+        syncControlButtons();
+        renderItems(input.value, false);
+      });
+
+      input.addEventListener('change', () => {
+        syncControlButtons();
+      });
+
+      arrow.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        input.focus();
+        openMenu();
+      });
+
+      clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.focus();
+        syncControlButtons();
+        openMenu();
       });
 
       input.addEventListener('keydown', (e) => {
@@ -649,16 +826,8 @@ const ProductForm = (() => {
           popover.classList.add('hidden');
         }, 150);
       });
-    });
-  }
 
-  // Event listener global: tutup popover saat klik di luar
-  if (!window._cleanDatalistClickOutsideBound) {
-    window._cleanDatalistClickOutsideBound = true;
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.clean-datalist-wrapper') && !e.target.closest('.clean-datalist-popover')) {
-        document.querySelectorAll('.clean-datalist-popover').forEach(p => p.classList.add('hidden'));
-      }
+      syncControlButtons();
     });
   }
 
@@ -8498,7 +8667,7 @@ const ProductForm = (() => {
 
               
 
-              <!-- Maksimal Jumlah Pembelian (Native Datalist: Unlimited + Input Manual) -->
+              <!-- Maksimal Jumlah Pembelian (Native Datalist: Tanpa Batas + Input Manual) -->
               <div class="space-y-3">
                 <div class="flex items-center gap-1.5 pb-1 ">
                   <label for="input-normal-max-order" class="block text-xs font-bold text-slate-800">
@@ -8507,7 +8676,7 @@ const ProductForm = (() => {
                   <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
                     <i class="bi bi-question-circle text-xs"></i>
                     <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan. Pilih 'Unlimited' untuk pembelian tanpa batas.
+                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan. Pilih 'Tanpa Batas' untuk pembelian tanpa batas.
                     </div>
                   </div>
                 </div>
@@ -8518,8 +8687,8 @@ const ProductForm = (() => {
                     id="input-normal-max-order" 
                     list="datalist-max-order-unlimited"
                     class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800" 
-                    placeholder="Ketik atau pilih" 
-                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Unlimited' : primaryState.max_order}" 
+                    placeholder="Tanpa Batas / Angka" 
+                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Tanpa Batas' : primaryState.max_order}" 
                     autocomplete="off" 
                   />
                 </div>
@@ -9306,7 +9475,6 @@ const ProductForm = (() => {
         </datalist>
 
         <datalist id="datalist-max-order-unlimited">
-          <option value="Unlimited"></option>
           <option value="Tanpa Batas"></option>
         </datalist>
 
@@ -12170,7 +12338,7 @@ const ProductForm = (() => {
     const rows = displayMaterials.map((mat, idx) => {
       const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
       const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
-      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Unlimited' : mat.max_order) : '';
+      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : mat.max_order) : 'Tanpa Batas';
 
       function renderScopeCell(tier) {
         const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
@@ -12179,12 +12347,12 @@ const ProductForm = (() => {
 
         return `
           <div class="flex flex-col items-center gap-1">
-            <select class="combo-scope-select px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold bg-white text-slate-700 outline-none cursor-pointer focus:border-emerald-500 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}">
+            <select class="combo-scope-select px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold bg-white text-slate-700 outline-none cursor-pointer focus:border-[var(--color-primary)] shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}">
               <option value="umum" ${scope === 'umum' ? 'selected' : ''}>Umum</option>
               <option value="spesifik" ${scope === 'spesifik' ? 'selected' : ''}>Spesifik</option>
             </select>
             ${scope === 'spesifik' ? `
-              <button type="button" class="btn-open-specific-modal px-2.5 py-1 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold cursor-pointer transition flex items-center gap-1 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+              <button type="button" class="btn-open-specific-modal px-2.5 py-1 rounded-md bg-[var(--color-primary-subtle)] hover:bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-[10px] font-bold cursor-pointer transition flex items-center gap-1 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
                 <span>${count > 0 ? `${count} Dipilih` : 'Pilih Opsi'}</span>
                 <i class="bi bi-gear-fill text-[9px]"></i>
               </button>
@@ -12199,7 +12367,7 @@ const ProductForm = (() => {
           <td class="p-3 align-middle text-center min-w-[120px]">
             <div class="flex flex-col items-center gap-1.5">
               <input type="file" accept="image/*" class="hidden combo-var1-file-input" data-id="${mat.id}" id="combo-img-${mat.id}" />
-              <label for="combo-img-${mat.id}" class="w-12 h-10 border border-dashed ${(!mat.image_url && isImageRuleViolated) ? 'border-red-500 bg-red-50 text-red-600 ring-2 ring-red-400/20' : 'border-emerald-500 text-emerald-600 bg-emerald-50/40 hover:bg-emerald-50'} rounded flex items-center justify-center cursor-pointer transition overflow-hidden shadow-2xs" title="${(!mat.image_url && isImageRuleViolated) ? 'Foto wajib diunggah karena opsi lain memiliki foto' : 'Unggah Foto Opsi'}">
+              <label for="combo-img-${mat.id}" class="w-12 h-10 border border-dashed ${(!mat.image_url && isImageRuleViolated) ? 'border-red-500 bg-red-50 text-red-600 ring-2 ring-red-400/20' : 'border-[var(--color-primary)] text-[var(--color-primary)] bg-[var(--color-primary-subtle)]/40 hover:bg-[var(--color-primary-subtle)]'} rounded-md flex items-center justify-center cursor-pointer transition overflow-hidden shadow-2xs" title="${(!mat.image_url && isImageRuleViolated) ? 'Foto wajib diunggah karena opsi lain memiliki foto' : 'Unggah Foto Opsi'}">
                 ${mat.image_url ? `<img src="${mat.image_url}" class="w-full h-full object-cover" />` : `<i class="bi bi-image text-sm"></i>`}
               </label>
               ${(!mat.image_url && isImageRuleViolated) ? `<span class="text-[10px] text-red-600 font-bold">Wajib diisi</span>` : ''}
@@ -12222,7 +12390,7 @@ const ProductForm = (() => {
             <input 
               type="number" 
               min="1" 
-              class="combo-min-order-input w-20 px-3 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-emerald-500 shadow-2xs" 
+              class="combo-min-order-input w-20 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
               data-mat-id="${mat.id}" 
               value="${minOrderVal}" 
             />
@@ -12232,10 +12400,10 @@ const ProductForm = (() => {
           <td class="p-3 align-middle text-center min-w-[125px]">
             <input 
               type="text" 
-              class="combo-max-order-input w-28 sm:w-32 px-2.5 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+              class="combo-max-order-input w-28 sm:w-32 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
               data-mat-id="${mat.id}" 
               value="${maxOrderVal}" 
-              placeholder="Unlimited / Angka" 
+              placeholder="Tanpa Batas / Angka" 
               list="datalist-max-order-unlimited"
               autocomplete="off" 
             />
@@ -12244,10 +12412,9 @@ const ProductForm = (() => {
           <!-- Kolom Harga Grosir -->
           <td class="p-3 align-middle text-center min-w-[140px]">
             ${!primaryState.has_wholesale ? `
-              <div class="px-3 py-1.5 rounded-full bg-slate-200 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
+              <div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
             ` : `
-              <button type="button" class="btn-open-wholesale-modal px-3 py-1.5 rounded-full bg-white border border-emerald-500 text-emerald-700 hover:bg-emerald-50 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition" data-mat-id="${mat.id}">
-                <i class="bi bi-tag-fill text-xs"></i>
+              <button type="button" class="btn-open-wholesale-modal px-3 py-1.5 rounded-md bg-white border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold cursor-pointer inline-flex items-center justify-center shadow-2xs transition" data-mat-id="${mat.id}">
                 <span>${primaryState.wholesale_mode === 'tiered' ? 'Mode Bertingkat' : 'Mode Normal'}</span>
               </button>
             `}
@@ -12256,10 +12423,9 @@ const ProductForm = (() => {
           <!-- Kolom Kelipatan Order -->
           <td class="p-3 align-middle text-center min-w-[140px]">
             ${!primaryState.has_order_multiple ? `
-              <div class="px-3 py-1.5 rounded-full bg-slate-200 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
+              <div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
             ` : `
-              <button type="button" class="btn-open-multiple-modal px-3 py-1.5 rounded-full bg-white border border-emerald-500 text-emerald-700 hover:bg-emerald-50 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition" data-mat-id="${mat.id}">
-                <i class="bi bi-layers-fill text-xs"></i>
+              <button type="button" class="btn-open-multiple-modal px-3 py-1.5 rounded-md bg-white border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold cursor-pointer inline-flex items-center justify-center shadow-2xs transition" data-mat-id="${mat.id}">
                 <span>${primaryState.order_multiple_type === 'per_variant' ? 'Mode Spesifik' : 'Mode Global'}</span>
               </button>
             `}
@@ -12300,13 +12466,13 @@ const ProductForm = (() => {
                 <th class="p-3 text-center min-w-[140px]">
                   <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
                     <span>Harga Grosir</span>
-                    <input type="checkbox" id="chk-combo-header-wholesale" class="accent-emerald-600 rounded cursor-pointer" ${primaryState.has_wholesale ? 'checked' : ''} />
+                    <input type="checkbox" id="chk-combo-header-wholesale" class="rounded cursor-pointer focus:ring-0 outline-none shadow-none" style="accent-color: var(--color-primary);" ${primaryState.has_wholesale ? 'checked' : ''} />
                   </label>
                 </th>
                 <th class="p-3 text-center min-w-[140px]">
                   <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
                     <span>Kelipatan Order</span>
-                    <input type="checkbox" id="chk-combo-header-order-multiple" class="accent-emerald-600 rounded cursor-pointer" ${primaryState.has_order_multiple ? 'checked' : ''} />
+                    <input type="checkbox" id="chk-combo-header-order-multiple" class="rounded cursor-pointer focus:ring-0 outline-none shadow-none" style="accent-color: var(--color-primary);" ${primaryState.has_order_multiple ? 'checked' : ''} />
                   </label>
                 </th>
               </tr>
@@ -16858,7 +17024,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (!raw) {
               item.max_order = null;
             } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
-              item.max_order = 'Unlimited';
+              item.max_order = 'Tanpa Batas';
             } else {
               item.max_order = parseInt(raw) || null;
             }
@@ -16871,9 +17037,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const item = materialsState.find(m => m.id === matId);
           if (item) {
             const raw = (inp.value || '').trim();
-            if (raw === '0' || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw.toLowerCase() === 'unlimited') {
-              inp.value = 'Unlimited';
-              item.max_order = 'Unlimited';
+            if (!raw || raw === '0' || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw.toLowerCase() === 'unlimited') {
+              inp.value = 'Tanpa Batas';
+              item.max_order = 'Tanpa Batas';
             }
           }
         };
@@ -17294,7 +17460,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       normalMaxInp.onchange = handleNormalMaxInput;
       normalMaxInp.onblur = (e) => {
         if (!primaryState.max_order || primaryState.max_order === 0 || String(primaryState.max_order).toLowerCase() === 'unlimited' || String(primaryState.max_order).toLowerCase() === 'tanpa batas' || String(primaryState.max_order).toLowerCase() === 'tanpa max order') {
-          normalMaxInp.value = 'Unlimited';
+          normalMaxInp.value = 'Tanpa Batas';
         }
       };
     }
@@ -20367,9 +20533,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
-    // Inisialisasi Custom Popover Dropdown Bersih (Shadcn Select Kompak) untuk seluruh input Step 1
+    // Inisialisasi Custom Popover Dropdown Bersih (Gaya Callout Ramping) untuk seluruh input Step 1, Step 2, & Preview
     if (typeof bindCleanDatalistPopovers === 'function') {
-      bindCleanDatalistPopovers(document.getElementById('step-pane-1') || document);
+      bindCleanDatalistPopovers(document);
     }
   }
 

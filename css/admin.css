@@ -1339,22 +1339,51 @@ input[data-datalist],
   filter: none !important;
 }
 
-/* Native HTML5 <datalist> Indicator Styling: Tampilkan panah segitiga native bawaan browser yang presisi dan ramping */
-input[list]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.15s ease;
+/* Sembunyikan sepenuhnya indikator native browser picker agar 100% menggunakan custom popover terkendali */
+input::-webkit-calendar-picker-indicator {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-input[list]:hover::-webkit-calendar-picker-indicator,
-input[list]:focus::-webkit-calendar-picker-indicator {
-  opacity: 1;
-}
-
-/* Custom Popover Dropdown Bersih (Gaya Shadcn Select Kompak - Menempel Rapat Persis di Bawah Input) */
+/* Custom Popover Dropdown Bersih (Gaya Callout Ramping - Menempel Rapat di Bawah Input) */
 .clean-datalist-popover {
+  position: absolute !important;
+  left: 0 !important;
+  top: calc(100% + 5px) !important;
+  min-width: 160px !important;
+  max-width: 240px !important;
+  width: max-content !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.375rem !important; /* rounded-md */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  z-index: 9999 !important;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Callout Arrow (segitiga penunjuk kecil di atas popover) */
+.clean-datalist-popover::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border-left: 1px solid #cbd5e1;
+  border-top: 1px solid #cbd5e1;
+  transform: rotate(45deg);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.clean-datalist-popover.callout-right::before {
+  left: auto !important;
+  right: 14px !important;
 }
 
 .clean-datalist-popover::-webkit-scrollbar {
@@ -1372,32 +1401,70 @@ input[list]:focus::-webkit-calendar-picker-indicator {
 
 .clean-datalist-item:hover,
 .clean-datalist-item.is-selected {
-  background-color: var(--color-primary-subtle, #f0fdf4) !important;
-  color: var(--color-primary, #059669) !important;
+  background-color: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Input padding-right agar teks tidak menabrak kontrol kanan (▼ / ×) */
+.clean-datalist-input {
+  padding-right: 2rem !important;
 }
 
 .clean-datalist-arrow {
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.15s ease;
+  line-height: 1;
+  z-index: 5;
 }
 
 .clean-datalist-wrapper:focus-within .clean-datalist-arrow {
   transform: translateY(-50%) rotate(180deg);
-  color: var(--color-primary, #059669);
+  color: var(--color-primary);
 }
 
-.clean-datalist-wrapper:has(.btn-clear-custom-label.flex) .clean-datalist-arrow {
+.clean-datalist-wrapper:has(.btn-clear-custom-label.flex) .clean-datalist-arrow,
+.clean-datalist-wrapper:has(.btn-clear-datalist.flex) .clean-datalist-arrow {
   display: none !important;
 }
 
-/* Tombol Hapus Cepat (×) pada Input Bertipe Input & Pilih (input[list]) */
+/* Tombol Hapus Cepat (×) pada Seluruh Input Bertipe Input & Pilih */
+.btn-clear-datalist,
+.btn-clear-custom-label,
 .btn-clear-datalist-input {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  cursor: pointer;
   transition: all 0.15s ease;
   line-height: 1;
+  z-index: 5;
 }
 
+.btn-clear-datalist:hover,
+.btn-clear-custom-label:hover,
 .btn-clear-datalist-input:hover {
   color: #ef4444 !important;
-  background-color: #f1f5f9;
+}
+
+/* Penyeragaman Sudut rounded-md pada Seluruh Kontrol di List Variasi Produk */
+#combination-matrix-section input,
+#combination-matrix-section select,
+#combination-matrix-section button,
+#combination-matrix-section .combo-min-order-input,
+#combination-matrix-section .combo-max-order-input,
+#combination-matrix-section .combo-scope-select,
+#combination-matrix-section .btn-open-wholesale-modal,
+#combination-matrix-section .btn-open-multiple-modal,
+#combination-matrix-section .btn-open-specific-modal {
+  border-radius: 0.375rem !important; /* 6px rounded-md */
 }
 
 /* ==========================================================================
