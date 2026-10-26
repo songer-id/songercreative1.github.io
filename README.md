@@ -213,16 +213,15 @@ Cakupan utama Roadmap:
 
 ---
 
-## 🎛️ 7. Standar Antarmuka: Custom Combobox (Shadcn UI), Integrasi Edit Produk & Modal Batal Cerdas
+## 🎛️ 7. Standar Antarmuka: Native HTML5 `<datalist>` Murni, Integrasi Edit Produk & Modal Batal Cerdas
 
-### A. Standar Default "Input & Pilih" (Custom Combobox Shadcn UI)
-- **Dilarang Menggunakan `<datalist>` Native Browser:** Seluruh elemen `<datalist>` dan atribut `list="..."` bawaan browser dieliminasi total karena tidak konsisten lintas peramban/perangkat dan tidak dapat diatur warna tema brand-nya.
-- **Standarisasi Komponen Custom Combobox:**
-  - Desain popover melayang modern: `rounded-md border border-slate-200 bg-white shadow-lg max-h-48 overflow-y-auto p-1 z-50` dengan *scrollbar* tipis halus.
-  - Efek hover & selected state terikat 100% ke CSS variables (`background-color: var(--color-primary-subtle); color: var(--color-primary);`).
-  - Dilengkapi indikator centang aktif (`<i class="bi bi-check2"></i>`) pada nilai yang sedang terpilih serta tombol bersihkan nilai (*clear button* `×`) di sisi kanan input.
-  - Saat input diklik atau difokuskan, seluruh daftar saran ditampilkan utuh untuk memudahkan penggantian opsi, dan otomatis memfilter saat pengguna mengetik manual.
-  - Berlaku seragam di Step 1 (*Label Khusus 1 & 2*) dan Step 2 (*Stok Produk, Maksimal Jumlah Pembelian, Max Order Tabel Variasi, Nama Grup Variasi 1–4, Layanan Extras, Merek, Asal Produk, dan Judul Spesifikasi*).
+### A. Standar Default "Input & Pilih" (Native HTML5 `<datalist>` Murni)
+- **Mandat Penggunaan Native HTML5 `<datalist>`:** Seluruh elemen input yang membutuhkan pilihan saran cepat atau pengetikan nilai bebas di Step 1 dan Step 2 wajib menggunakan native HTML5 `<input list="...">` yang berpasangan dengan `<datalist id="...">` murni bawaan browser.
+- **Karakteristik & Keunggulan Tampilan Ramping:**
+  - Mengeliminasi popover custom lebar yang kaku dan raksasa. Menghasilkan kotak pop-up ramping bawaan browser dengan callout segitiga native dan indikator panah `▼` (`::-webkit-calendar-picker-indicator`) yang elegan saat difokuskan atau diarahkan kursor.
+  - Sangat cepat, efisien, zero footprint overhead (tanpa wrapper div kompleks), dan mendukung navigasi keyboard serta mobile picker bawaan sistem operasi.
+  - Pengguna bebas memilih opsi saran instan yang disediakan atau mengetikkan nilai kustom sendiri secara leluasa.
+  - Terpasang seragam pada Step 1 (*Label Khusus 1 & 2, Teks Footer Model C*) dan Step 2 (*Stok Produk Unlimited, Maksimal Jumlah Pembelian Unlimited, Max Order Tabel Variasi, Nama Grup Variasi 1–4, Layanan Extras, Merek, Asal Produk, dan Judul Tabel Spesifikasi Manual*).
 
 ### B. Integrasi Edit Produk dari Daftar Produk ke Sistem Form Produk Baru (`ProductForm`)
 - Tombol aksi **Edit** pada tabel produk (`.btn-edit-product`) secara otomatis mencatat menu asal (`lastActiveMenuBeforeForm = 'products'`), memuat data produk secara presisi ke dalam `primaryState` Step 1 & Step 2, dan membuka tampilan form baru (`view-product-form`).

@@ -224,59 +224,6 @@ const ProductForm = (() => {
         const navAcc = document.getElementById('admin-nav-account') || document.querySelector('[data-view="account"], #nav-item-account, [data-target="account"]');
         if (navAcc) navAcc.click();
       }
-      return;
-    }
-  
-    const comboboxInput = e.target.closest('.custom-combobox-input');
-    if (comboboxInput) {
-      const wrapper = comboboxInput.closest('.custom-combobox-wrapper');
-      if (wrapper) {
-        const popover = wrapper.querySelector('.custom-combobox-popover');
-        if (popover) {
-          document.querySelectorAll('.custom-combobox-popover').forEach(p => {
-            if (p !== popover) p.classList.add('hidden');
-          });
-          popover.classList.remove('hidden');
-          return;
-        }
-      }
-    }
-
-    const comboboxItem = e.target.closest('.combobox-item');
-    if (comboboxItem) {
-      const wrapper = comboboxItem.closest('.custom-combobox-wrapper');
-      if (wrapper) {
-        const input = wrapper.querySelector('.custom-combobox-input');
-        const popover = wrapper.querySelector('.custom-combobox-popover');
-        const val = comboboxItem.getAttribute('data-value');
-        if (input && val !== null) {
-          input.value = val;
-          if (popover) popover.classList.add('hidden');
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          return;
-        }
-      }
-    }
-
-    if (!e.target.closest('.custom-combobox-wrapper')) {
-      document.querySelectorAll('.custom-combobox-popover').forEach(p => p.classList.add('hidden'));
-    }
-  });
-
-  document.addEventListener('focusin', (e) => {
-    const comboboxInput = e.target.closest('.custom-combobox-input');
-    if (comboboxInput) {
-      const wrapper = comboboxInput.closest('.custom-combobox-wrapper');
-      if (wrapper) {
-        const popover = wrapper.querySelector('.custom-combobox-popover');
-        if (popover) {
-          document.querySelectorAll('.custom-combobox-popover').forEach(p => {
-            if (p !== popover) p.classList.add('hidden');
-          });
-          popover.classList.remove('hidden');
-        }
-      }
     }
   });
 
@@ -1614,7 +1561,7 @@ const ProductForm = (() => {
                         </div>
 
                         <div id="grid-custom-labels-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-                          <div id="wrapper-custom-label-1" class="custom-combobox-wrapper relative">
+                          <div id="wrapper-custom-label-1" class="relative">
                             <div class="flex items-center justify-between mb-1">
                               <label for="input-custom-label-1" class="block text-[11px] font-semibold text-slate-700">
                                 Label 1 <span class="text-red-500">*</span>
@@ -1625,25 +1572,15 @@ const ProductForm = (() => {
                               <input 
                                 type="text" 
                                 id="input-custom-label-1" 
+                                list="custom-labels-history-list"
                                 autocomplete="off"
                                 value="${escapeHtml(primaryState.custom_labels?.[0] || '')}" 
                                 placeholder="Slot 1 (misal: Free Ongkir)" 
-                                class="input-custom-label-slot custom-combobox-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
+                                class="input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
                               />
                               <button type="button" class="btn-clear-custom-label absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.custom_labels?.[0] || '').trim() ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-custom-label-1" title="Hapus label">
                                 <i class="bi bi-x-lg text-[10px] font-bold"></i>
                               </button>
-                            </div>
-                            <div class="custom-combobox-popover hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 text-left">
-                              <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Pilihan Label Rekomendasi</div>
-                              <div class="py-1">
-                                ${getCustomLabelRecommendations().map(lbl => `
-                                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 cursor-pointer font-medium flex items-center justify-between rounded-md transition ${(primaryState.custom_labels?.[0] || '').trim().toLowerCase() === lbl.toLowerCase() ? 'is-selected' : ''}" data-value="${escapeHtml(lbl)}">
-                                    <span>${escapeHtml(lbl)}</span>
-                                    <i class="bi bi-check2 text-sm font-bold ${(primaryState.custom_labels?.[0] || '').trim().toLowerCase() === lbl.toLowerCase() ? '' : 'hidden'}"></i>
-                                  </div>
-                                `).join('')}
-                              </div>
                             </div>
                             <div id="error-custom-label-1" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                           </div>
@@ -1651,7 +1588,7 @@ const ProductForm = (() => {
                             const l1 = (primaryState.custom_labels?.[0] || '').trim();
                             const canShowLabel2 = l1.length > 0 && l1.length <= 15;
                             return `
-                              <div id="wrapper-custom-label-2" class="custom-combobox-wrapper relative ${canShowLabel2 ? '' : 'hidden'}">
+                              <div id="wrapper-custom-label-2" class="relative ${canShowLabel2 ? '' : 'hidden'}">
                                 <div class="flex items-center justify-between mb-1">
                                   <label for="input-custom-label-2" class="block text-[11px] font-semibold text-slate-700">
                                     Label 2 (Opsional)
@@ -1662,31 +1599,33 @@ const ProductForm = (() => {
                                   <input 
                                     type="text" 
                                     id="input-custom-label-2" 
+                                    list="custom-labels-history-list"
                                     autocomplete="off"
                                     value="${escapeHtml(primaryState.custom_labels?.[1] || '')}" 
                                     placeholder="Slot 2 (misal: Best Seller)" 
-                                    class="input-custom-label-slot custom-combobox-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
+                                    class="input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
                                   />
                                   <button type="button" class="btn-clear-custom-label absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.custom_labels?.[1] || '').trim() ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-custom-label-2" title="Hapus label">
                                     <i class="bi bi-x-lg text-[10px] font-bold"></i>
                                   </button>
-                                </div>
-                                <div class="custom-combobox-popover hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 text-left">
-                                  <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Pilihan Label Rekomendasi</div>
-                                  <div class="py-1">
-                                    ${getCustomLabelRecommendations().map(lbl => `
-                                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 cursor-pointer font-medium flex items-center justify-between rounded-md transition ${(primaryState.custom_labels?.[1] || '').trim().toLowerCase() === lbl.toLowerCase() ? 'is-selected' : ''}" data-value="${escapeHtml(lbl)}">
-                                        <span>${escapeHtml(lbl)}</span>
-                                        <i class="bi bi-check2 text-sm font-bold ${(primaryState.custom_labels?.[1] || '').trim().toLowerCase() === lbl.toLowerCase() ? '' : 'hidden'}"></i>
-                                      </div>
-                                    `).join('')}
-                                  </div>
                                 </div>
                                 <div id="error-custom-label-2" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                               </div>
                             `;
                           })()}
                         </div>
+
+                        <!-- Native HTML5 Datalist untuk Label Khusus (Persis Gambar 2) -->
+                        <datalist id="custom-labels-history-list">
+                          <option value="Best Seller"></option>
+                          <option value="Produk Populer"></option>
+                          <option value="Desain Custom"></option>
+                          <option value="Promo Terbatas"></option>
+                          <option value="Termurah"></option>
+                          <option value="Free Ongkir"></option>
+                          <option value="Garansi 100%"></option>
+                          <option value="Siap 1 Jam"></option>
+                        </datalist>
 
                         <!-- Indikator Info Kapasitas Baris Label Pintar -->
                         <div id="custom-labels-capacity-info" class="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 pt-1">
@@ -1895,7 +1834,7 @@ const ProductForm = (() => {
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
-                      <input type="text" id="input-card-footer-text-side" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -1921,7 +1860,7 @@ const ProductForm = (() => {
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
-                      <input type="text" id="input-card-footer-2-text-side" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -2138,7 +2077,7 @@ const ProductForm = (() => {
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
-                      <input type="text" id="input-card-footer-text-mob" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -2164,7 +2103,7 @@ const ProductForm = (() => {
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
-                      <input type="text" id="input-card-footer-2-text-mob" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -2272,14 +2211,22 @@ const ProductForm = (() => {
           </div>
         </div>
 
-        <!-- Datalist native browser telah dihapus, distandarisasi menggunakan Custom Combobox Shadcn UI -->
+        <!-- Native HTML5 Datalist untuk Teks Footer Model C (Persis Gambar 2) -->
+        <datalist id="footer-texts-history-list">
+          <option value="Proses Hanya Dalam 1Jam"></option>
+          <option value="Variasi Paket Tersedia"></option>
+          <option value="Garansi Kualitas 100%"></option>
+          <option value="Bisa Cetak Satuan"></option>
+          <option value="Kirim Cepat Hari Ini"></option>
+          <option value="Desain Custom Tersedia"></option>
+          <option value="Siap Pakai & Praktis"></option>
+        </datalist>
 
       </div>
     `;
 
     if (window.lucide) window.lucide.createIcons();
     bindFormEvents();
-    bindCustomComboboxes(document.getElementById("step-pane-1"));
     updateProductCardLivePreview();
   }
 
@@ -8025,26 +7972,14 @@ const ProductForm = (() => {
     return `
       <tr class="custom-spec-row" data-index="${index}">
         <td class="py-1.5 pr-2 align-top">
-          <div class="custom-combobox-wrapper relative w-full">
-            <input 
-              type="text" 
-              class="input-spec-title custom-combobox-input w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
-              placeholder="Ketik atau pilih judul..." 
-              value="${escapeHtml(title)}"
-              autocomplete="off" 
-            />
-            <div class="custom-combobox-popover hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-md py-1 z-50 text-left">
-              <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Pilihan Judul Rekomendasi</div>
-              <div class="max-h-48 overflow-y-auto">
-                ${SPEC_TITLE_RECOMMENDATIONS.map(rec => `
-                  <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] cursor-pointer font-medium flex items-center justify-between rounded-md transition ${(title || '').trim().toLowerCase() === rec.toLowerCase() ? 'is-selected' : ''}" data-value="${escapeHtml(rec)}">
-                    <span>${escapeHtml(rec)}</span>
-                    <i class="bi bi-check2 text-sm font-bold ${(title || '').trim().toLowerCase() === rec.toLowerCase() ? '' : 'hidden'}"></i>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          </div>
+          <input 
+            type="text" 
+            class="input-spec-title w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
+            placeholder="Ketik atau pilih judul..." 
+            value="${escapeHtml(title)}"
+            list="datalist-spec-titles"
+            autocomplete="off" 
+          />
         </td>
         <td class="py-1.5 px-2 align-top">
           <input 
@@ -8288,30 +8223,16 @@ const ProductForm = (() => {
                   
                 </div>
 
-                <div class="custom-combobox-wrapper relative w-full sm:w-64">
-                  <div class="relative flex items-center">
-                    <input 
-                      type="text" 
-                      id="input-stock-qty" 
-                      class="custom-combobox-input w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white text-slate-800 focus:border-[var(--color-primary)]" 
-                      placeholder="Ketik angka atau pilih" 
-                      value="${primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : '')}" 
-                      autocomplete="off" 
-                    />
-                    <button type="button" id="btn-clear-stock-qty" class="absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.is_unlimited_stock || (primaryState.stock !== null && primaryState.stock !== undefined && String(primaryState.stock).trim() !== '')) ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" title="Kosongkan stok">
-                      <i class="bi bi-x-lg text-[10px] font-bold"></i>
-                    </button>
-                  </div>
-
-                  <div class="custom-combobox-popover hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-md py-1 z-50 text-left">
-                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
-                    <div class="max-h-48 overflow-y-auto">
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] cursor-pointer font-medium flex items-center justify-between rounded-md transition ${primaryState.is_unlimited_stock ? 'is-selected' : ''}" data-value="Unlimited">
-                        <span>Unlimited</span>
-                        <i class="bi bi-check2 text-sm font-bold ${primaryState.is_unlimited_stock ? '' : 'hidden'}"></i>
-                      </div>
-                    </div>
-                  </div>
+                <div class="relative w-full sm:w-64">
+                  <input 
+                    type="text" 
+                    id="input-stock-qty" 
+                    list="datalist-stock-unlimited"
+                    class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white text-slate-800 focus:border-[var(--color-primary)]" 
+                    placeholder="Ketik angka atau pilih" 
+                    value="${primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : '')}" 
+                    autocomplete="off" 
+                  />
                   <div id="single-stock-error-msg" class="field-error-msg hidden mt-1 text-xs text-red-500"></div>
                 </div>
               </div>
@@ -8337,7 +8258,7 @@ const ProductForm = (() => {
 
               
 
-              <!-- Maksimal Jumlah Pembelian (Combobox: Nilai Rekomendasi + Input Manual) -->
+              <!-- Maksimal Jumlah Pembelian (Native Datalist: Unlimited + Input Manual) -->
               <div class="space-y-3">
                 <div class="flex items-center gap-1.5 pb-1 ">
                   <label for="input-normal-max-order" class="block text-xs font-bold text-slate-800">
@@ -8346,35 +8267,24 @@ const ProductForm = (() => {
                   <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
                     <i class="bi bi-question-circle text-xs"></i>
                     <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan. Pilih 'Tanpa Max Order' untuk pembelian tanpa batas.
+                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan. Pilih 'Unlimited' untuk pembelian tanpa batas.
                     </div>
                   </div>
                 </div>
 
-                <div class="custom-combobox-wrapper relative w-full sm:w-64">
-                  <div class="relative flex items-center">
-                    <input 
-                      type="text" 
-                      id="input-normal-max-order" 
-                      class="custom-combobox-input w-full h-9 pl-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800" 
-                      placeholder="Ketik atau pilih" 
-                      value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Unlimited' : primaryState.max_order}" 
-                      autocomplete="off" 
-                    />
-                    <button type="button" class="btn-clear-combobox absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.max_order !== null && primaryState.max_order !== undefined && String(primaryState.max_order).trim() !== '') ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-normal-max-order" title="Kosongkan nilai">
-                      <i class="bi bi-x-lg text-[10px] font-bold"></i>
-                    </button>
-                  </div>
-                  <div class="custom-combobox-popover hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg py-1 z-50 text-left">
-                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
-                    <div class="max-h-48 overflow-y-auto py-1">
-                      <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] cursor-pointer font-medium flex items-center justify-between rounded-md transition ${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'is-selected' : ''}" data-value="Unlimited">
-                        <span>Unlimited</span>
-                        <i class="bi bi-check2 text-sm font-bold ${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? '' : 'hidden'}"></i>
-                      </div>
-                    </div>
-                  </div>
+                <div class="w-full sm:w-64">
+                  <input 
+                    type="text" 
+                    id="input-normal-max-order" 
+                    list="datalist-max-order-unlimited"
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800" 
+                    placeholder="Ketik atau pilih" 
+                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Unlimited' : primaryState.max_order}" 
+                    autocomplete="off" 
+                  />
                 </div>
+                
+              </div>
                 
               </div>
 
@@ -8951,60 +8861,30 @@ const ProductForm = (() => {
             <div class="space-y-4 pt-2 border-t border-slate-100">
               <!-- Baris 1: Merek & Asal Produk (Custom Combobox Shadcn UI) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="custom-combobox-wrapper relative">
+                <div>
                   <label for="input-product-brand" class="block text-xs font-bold text-slate-800 mb-1">Merek (Opsional):</label>
-                  <div class="relative flex items-center">
-                    <input 
-                      type="text" 
-                      id="input-product-brand" 
-                      autocomplete="off"
-                      value="${escapeHtml(primaryState.brand || '')}" 
-                      placeholder="Tanpa Merek / Masukkan merek..." 
-                      class="custom-combobox-input w-full h-9 pl-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white" 
-                    />
-                    <button type="button" class="btn-clear-combobox absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.brand || '').trim() ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-product-brand" title="Hapus nilai">
-                      <i class="bi bi-x-lg text-[10px] font-bold"></i>
-                    </button>
-                  </div>
-                  <div class="custom-combobox-popover hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 text-left">
-                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Saran Merek</div>
-                    <div class="py-1">
-                      ${['Tanpa Merek / OEM', 'Custom', 'Songer Creative', 'Lokal'].map(b => `
-                        <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 cursor-pointer font-medium flex items-center justify-between rounded-md transition ${(primaryState.brand || '').trim().toLowerCase() === b.toLowerCase() ? 'is-selected' : ''}" data-value="${escapeHtml(b)}">
-                          <span>${escapeHtml(b)}</span>
-                          <i class="bi bi-check2 text-sm font-bold ${(primaryState.brand || '').trim().toLowerCase() === b.toLowerCase() ? '' : 'hidden'}"></i>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>
+                  <input 
+                    type="text" 
+                    id="input-product-brand" 
+                    list="datalist-product-brands"
+                    autocomplete="off"
+                    value="${escapeHtml(primaryState.brand || '')}" 
+                    placeholder="Tanpa Merek / Masukkan merek..." 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white" 
+                  />
                 </div>
 
-                <div class="custom-combobox-wrapper relative">
+                <div>
                   <label for="input-product-origin" class="block text-xs font-bold text-slate-800 mb-1">Asal Produk:</label>
-                  <div class="relative flex items-center">
-                    <input 
-                      type="text" 
-                      id="input-product-origin" 
-                      autocomplete="off"
-                      value="${escapeHtml(primaryState.product_origin || '')}" 
-                      placeholder="Contoh: Indonesia, Lokal, Impor..." 
-                      class="custom-combobox-input w-full h-9 pl-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white" 
-                    />
-                    <button type="button" class="btn-clear-combobox absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.product_origin || '').trim() ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-product-origin" title="Hapus nilai">
-                      <i class="bi bi-x-lg text-[10px] font-bold"></i>
-                    </button>
-                  </div>
-                  <div class="custom-combobox-popover hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 text-left">
-                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Saran Asal Produk</div>
-                    <div class="py-1">
-                      ${['Lokal', 'Indonesia', 'Impor', 'Jawa Timur', 'Surabaya', 'Lamongan'].map(o => `
-                        <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 cursor-pointer font-medium flex items-center justify-between rounded-md transition ${(primaryState.product_origin || '').trim().toLowerCase() === o.toLowerCase() ? 'is-selected' : ''}" data-value="${escapeHtml(o)}">
-                          <span>${escapeHtml(o)}</span>
-                          <i class="bi bi-check2 text-sm font-bold ${(primaryState.product_origin || '').trim().toLowerCase() === o.toLowerCase() ? '' : 'hidden'}"></i>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>
+                  <input 
+                    type="text" 
+                    id="input-product-origin" 
+                    list="datalist-product-origins"
+                    autocomplete="off"
+                    value="${escapeHtml(primaryState.product_origin || '')}" 
+                    placeholder="Contoh: Indonesia, Lokal, Impor..." 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white" 
+                  />
                 </div>
               </div>
 
@@ -9122,7 +9002,7 @@ const ProductForm = (() => {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="space-y-1.5">
                   <span class="text-xs font-bold text-slate-800 block">Footer 1 (Strip Atas):</span>
-                  <input type="text" id="input-card-footer-text" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
+                  <input type="text" id="input-card-footer-text" list="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
                   <select id="select-card-footer-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
                     <option value="truck" ${primaryState.footer_badge_icon === 'truck' ? 'selected' : ''}>Kirim Cepat (truck)</option>
                     <option value="clock" ${primaryState.footer_badge_icon === 'clock' ? 'selected' : ''}>Jam / Waktu (clock)</option>
@@ -9132,7 +9012,7 @@ const ProductForm = (() => {
                 </div>
                 <div class="space-y-1.5">
                   <span class="text-xs font-bold text-slate-800 block">Footer 2 (Strip Bawah):</span>
-                  <input type="text" id="input-card-footer-2-text" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
+                  <input type="text" id="input-card-footer-2-text" list="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
                   <select id="select-card-footer-2-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
                     <option value="minus" ${primaryState.footer_2_badge_icon === 'minus' ? 'selected' : ''}>Strip / Variasi (minus)</option>
                     <option value="layers" ${primaryState.footer_2_badge_icon === 'layers' ? 'selected' : ''}>Pilihan Paket (layers)</option>
@@ -9140,6 +9020,17 @@ const ProductForm = (() => {
                   </select>
                 </div>
               </div>
+              <!-- Native HTML5 Datalist untuk Teks Footer Model C (Persis Gambar 2) -->
+              <datalist id="footer-texts-history-list">
+                <option value="Proses Hanya Dalam 1Jam"></option>
+                <option value="Variasi Paket Tersedia"></option>
+                <option value="Garansi Kualitas 100%"></option>
+                <option value="Bisa Cetak Satuan"></option>
+                <option value="Kirim Cepat Hari Ini"></option>
+                <option value="Desain Custom Tersedia"></option>
+                <option value="Siap Pakai & Praktis"></option>
+                ${(typeof DB !== 'undefined' && typeof DB.getFooterTextsHistory === 'function') ? (DB.getFooterTextsHistory() || []).map(txt => `<option value="${escapeHtml(txt)}"></option>`).join('') : ''}
+              </datalist>
             </div>
 
             <!-- Komisi Afiliasi Produk -->
@@ -9167,8 +9058,63 @@ const ProductForm = (() => {
               <i id="btn-submit-icon" class="bi bi-floppy"></i>
               <span id="btn-submit-text">Simpan Produk</span>
             </button>
-          </div>
-        </div>
+        </div> <!-- Close step2-footer-actions -->
+
+        <!-- Native HTML5 Datalists untuk Seluruh Input & Pilih Step 2 (Persis Gambar 2) -->
+        <datalist id="datalist-stock-unlimited">
+          <option value="Unlimited"></option>
+        </datalist>
+
+        <datalist id="datalist-max-order-unlimited">
+          <option value="Unlimited"></option>
+          <option value="Tanpa Batas"></option>
+        </datalist>
+
+        <datalist id="datalist-variation-labels">
+          <option value="Bahan Utama"></option>
+          <option value="Ukuran"></option>
+          <option value="Finishing"></option>
+          <option value="Laminasi"></option>
+          <option value="Warna"></option>
+          <option value="Ketebalan"></option>
+          <option value="Model"></option>
+          <option value="Kemasan"></option>
+        </datalist>
+
+        <datalist id="datalist-extra-service-labels">
+          <option value="Layanan Prioritas"></option>
+          <option value="Langsung Proses"></option>
+          <option value="Jasa Desain"></option>
+          <option value="Packing Tambahan"></option>
+          <option value="Packing Kayu"></option>
+          <option value="Wrapping Bubble"></option>
+        </datalist>
+
+        <datalist id="datalist-product-brands">
+          <option value="Tanpa Merek"></option>
+          <option value="Custom / Merk Sendiri"></option>
+          <option value="Songer Creative"></option>
+          <option value="Lokal"></option>
+        </datalist>
+
+        <datalist id="datalist-product-origins">
+          <option value="Indonesia (Lokal)"></option>
+          <option value="Impor"></option>
+          <option value="Jawa Timur"></option>
+          <option value="Surabaya"></option>
+          <option value="Lamongan"></option>
+        </datalist>
+
+        <datalist id="datalist-spec-titles">
+          <option value="Dimensi (PxLxT)"></option>
+          <option value="Bahan / Material"></option>
+          <option value="Berat Bersih"></option>
+          <option value="Finishing / Tekstur"></option>
+          <option value="Ketebalan"></option>
+          <option value="Isi per Paket"></option>
+          <option value="SKU Induk"></option>
+          <option value="Asal Produk"></option>
+        </datalist>
 
         </div> <!-- Close step2-cards-container -->
       </div> <!-- Close step2-content-wrapper -->
@@ -9245,38 +9191,6 @@ const ProductForm = (() => {
     return activeInputs;
   }
 
-  // KUNCI REKOMENDASI JUDUL VARIASI YANG SUDAH DIGUNAKAN DI VARIASI LAIN PADA COMBOBOX
-  function updateVariationTitleComboboxRecommendations() {
-    const activeInputs = getActiveVariationLabelInputs();
-
-    activeInputs.forEach(input => {
-      const wrapper = input.closest('.custom-combobox-wrapper');
-      if (!wrapper) return;
-      const popover = wrapper.querySelector('.custom-combobox-popover');
-      if (!popover) return;
-
-      // Ambil judul yang terpakai di kartu variasi LAIN yang aktif
-      const otherUsedTitles = new Set();
-      activeInputs.forEach(other => {
-        if (other !== input) {
-          const val = (other.value || '').trim().toLowerCase();
-          if (val) otherUsedTitles.add(val);
-        }
-      });
-
-      popover.querySelectorAll('.combobox-item').forEach(item => {
-        const itemVal = (item.getAttribute('data-value') || item.textContent || '').trim().toLowerCase();
-        if (itemVal && otherUsedTitles.has(itemVal)) {
-          item.classList.add('opacity-40', 'pointer-events-none', 'cursor-not-allowed');
-          item.setAttribute('title', 'Judul variasi sudah digunakan');
-        } else {
-          item.classList.remove('opacity-40', 'pointer-events-none', 'cursor-not-allowed');
-          item.removeAttribute('title');
-        }
-      });
-    });
-  }
-
   // VALIDASI REAL-TIME ANTI-DUPLIKAT ANTAR JUDUL VARIASI (BERURUTAN DARI ATAS KE BAWAH)
   function refreshVariationTitleDuplicateErrors() {
     const targetInputs = getActiveVariationLabelInputs();
@@ -9286,8 +9200,8 @@ const ProductForm = (() => {
     let firstDuplicateEl = null;
 
     targetInputs.forEach(input => {
-      const wrapper = input.closest('.custom-combobox-wrapper');
-      const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
+      const parent = input.parentElement;
+      const errEl = parent ? parent.querySelector('.label-dup-error-msg') : null;
       const val = (input.value || '').trim();
       const normTitle = val.toLowerCase();
 
@@ -9325,123 +9239,15 @@ const ProductForm = (() => {
       }
     });
 
-    updateVariationTitleComboboxRecommendations();
     return { hasDuplicate, firstDuplicateEl, targetInputs };
   }
 
-  // Helper Binding Custom Combobox Popover (Rekomendasi + Input Manual - Shadcn UI Style)
-  function bindCustomComboboxes(root = document) {
-    if (!root) return;
-    root.querySelectorAll('.custom-combobox-wrapper').forEach(wrapper => {
-      const input = wrapper.querySelector('.custom-combobox-input');
-      const popover = wrapper.querySelector('.custom-combobox-popover');
-      if (!input || !popover) return;
+  // Delegasi Event Listener Global untuk Tooltip & Tingkat Komisi Afiliasi
+  function initAffiliateGlobalListeners() {
+    if (window._affiliateGlobalClickListener) return;
+    window._affiliateGlobalClickListener = true;
 
-      const updatePopoverItemsState = (currentVal) => {
-        const normVal = (currentVal || '').trim().toLowerCase();
-        popover.querySelectorAll('.combobox-item').forEach(item => {
-          const itemVal = (item.getAttribute('data-value') || item.textContent || '').trim().toLowerCase();
-          const isMatch = Boolean(normVal && itemVal === normVal);
-          const checkIcon = item.querySelector('.bi-check2');
-          if (checkIcon) {
-            if (isMatch) checkIcon.classList.remove('hidden');
-            else checkIcon.classList.add('hidden');
-          }
-          if (isMatch) item.classList.add('is-selected');
-          else item.classList.remove('is-selected');
-        });
-      };
-
-      const show = () => {
-        document.querySelectorAll('.custom-combobox-popover').forEach(p => {
-          if (p !== popover) p.classList.add('hidden');
-        });
-        if (input.classList.contains('input-variation-label')) {
-          updateVariationTitleComboboxRecommendations();
-        }
-        // Tampilkan seluruh item saran saat popover dibuka
-        popover.querySelectorAll('.combobox-item').forEach(item => {
-          item.classList.remove('hidden');
-        });
-        updatePopoverItemsState(input.value);
-
-        // Smart flip: jika berada di baris-baris bawah atau dekat dasar viewport
-        const rect = wrapper.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const tr = wrapper.closest('tr');
-        const isTable = Boolean(wrapper.closest('#combination-matrix-section'));
-        const isNearBottomRow = tr && (!tr.nextElementSibling || !tr.nextElementSibling.nextElementSibling);
-        if ((spaceBelow < 120 && rect.top > 90) || (isTable && isNearBottomRow)) {
-          popover.classList.remove('top-full', 'mt-1');
-          popover.classList.add('bottom-full', 'mb-1');
-        } else {
-          popover.classList.remove('bottom-full', 'mb-1');
-          popover.classList.add('top-full', 'mt-1');
-        }
-        popover.classList.remove('hidden');
-      };
-
-      input.onfocus = show;
-      input.onclick = (e) => {
-        e.stopPropagation();
-        show();
-      };
-
-      input.oninput = (e) => {
-        const q = e.target.value.toLowerCase().trim();
-        popover.querySelectorAll('.combobox-item').forEach(item => {
-          const val = (item.getAttribute('data-value') || item.textContent || '').toLowerCase().trim();
-          if (!q || val.includes(q)) {
-            item.classList.remove('hidden');
-          } else {
-            item.classList.add('hidden');
-          }
-        });
-        updatePopoverItemsState(e.target.value);
-        popover.classList.remove('hidden');
-
-        // Toggle clear button jika ada
-        const clearBtn = wrapper.querySelector('.btn-clear-combobox') || wrapper.querySelector('.btn-clear-custom-label') || wrapper.querySelector('#btn-clear-stock-qty');
-        if (clearBtn) {
-          if (e.target.value.trim()) {
-            clearBtn.classList.remove('hidden');
-            clearBtn.classList.add('flex');
-          } else {
-            clearBtn.classList.remove('flex');
-            clearBtn.classList.add('hidden');
-          }
-        }
-      };
-
-      popover.querySelectorAll('.combobox-item').forEach(item => {
-        item.onclick = (e) => {
-          e.stopPropagation();
-          if (item.classList.contains('pointer-events-none') || item.classList.contains('cursor-not-allowed')) {
-            return;
-          }
-          const chosenVal = item.getAttribute('data-value') || item.textContent.trim();
-          input.value = chosenVal;
-          popover.classList.add('hidden');
-          updatePopoverItemsState(chosenVal);
-
-          // Toggle clear button
-          const clearBtn = wrapper.querySelector('.btn-clear-combobox') || wrapper.querySelector('.btn-clear-custom-label') || wrapper.querySelector('#btn-clear-stock-qty');
-          if (clearBtn) {
-            clearBtn.classList.remove('hidden');
-            clearBtn.classList.add('flex');
-          }
-
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-        };
-      });
-    });
-
-    updateVariationTitleComboboxRecommendations();
-
-    if (!window._comboboxGlobalClickListener) {
-      window._comboboxGlobalClickListener = true;
-      document.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
       // Delegasi Klik Tooltip Komisi Afiliasi
       const affTooltipBtn = e.target.closest('#btn-tooltip-affiliate') || e.target.closest('#btn-tooltip-min-order');
       if (affTooltipBtn) {
@@ -9515,30 +9321,7 @@ const ProductForm = (() => {
         }
         return;
       }
-        // Delegasi Tombol Clear Combobox
-        const clearBtn = e.target.closest('.btn-clear-combobox');
-        if (clearBtn) {
-          e.preventDefault();
-          e.stopPropagation();
-          const targetId = clearBtn.getAttribute('data-target');
-          const wrapper = clearBtn.closest('.custom-combobox-wrapper');
-          const input = targetId ? document.getElementById(targetId) : wrapper?.querySelector('.custom-combobox-input');
-          if (input) {
-            input.value = '';
-            clearBtn.classList.remove('flex');
-            clearBtn.classList.add('hidden');
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            input.focus();
-          }
-          return;
-        }
-
-        if (!e.target.closest('.custom-combobox-wrapper')) {
-          document.querySelectorAll('.custom-combobox-popover').forEach(p => p.classList.add('hidden'));
-        }
-      });
-    }
+    });
   }
 
   // =========================================================================
@@ -11256,26 +11039,17 @@ const ProductForm = (() => {
             <label for="input-custom-dimension-label" class="block text-xs font-bold text-slate-800">
               Nama Label Ukuran <span class="text-red-500">*</span>
             </label>
-            <div class="custom-combobox-wrapper relative w-full sm:w-80">
+            <div class="relative w-full sm:w-80">
               <input 
                 type="text" 
                 id="input-custom-dimension-label" 
                 data-tier="custom_dimension" 
                 value="${escapeHtml(labelVal)}" 
                 placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, dll" 
+                list="datalist-variation-labels"
                 autocomplete="off" 
-                class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+                class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
               />
-              <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
-                <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
-                <div class="max-h-48 overflow-y-auto">
-                  ${recs.map(rec => `
-                    <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
-                      <span>${escapeHtml(rec)}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
               <div class="label-dup-error-msg hidden mt-1"></div>
               <div id="custom-dimension-label-error" class="hidden text-[11px] text-red-500 font-semibold mt-1">Nama Label Ukuran (P x L) wajib diisi.</div>
             </div>
@@ -11627,7 +11401,7 @@ const ProductForm = (() => {
             <div class="space-y-2 pr-8 sm:pr-0">
               <div class="text-base font-bold text-slate-900">${title}</div>
               <div class="flex items-center gap-2 flex-wrap">
-                <div class="custom-combobox-wrapper relative w-full sm:w-64">
+                <div class="relative w-full sm:w-64">
                   <input 
                     type="text" 
                     id="${inputLabelId}" 
@@ -11635,19 +11409,10 @@ const ProductForm = (() => {
                     data-label-key="${labelKey}" 
                     value="${escapeHtml(labelVal)}" 
                     placeholder="${placeholderLabel}" 
+                    list="datalist-variation-labels"
                     autocomplete="off" 
-                    class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+                    class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
                   />
-                  <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
-                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
-                    <div class="max-h-48 overflow-y-auto">
-                      ${getVariationLabelRecommendations(tier).map(rec => `
-                        <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
-                          <span>${escapeHtml(rec)}</span>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
                 <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" tabindex="0">
@@ -11732,7 +11497,7 @@ const ProductForm = (() => {
                 </div>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
-                <div class="custom-combobox-wrapper relative w-full sm:w-64">
+                <div class="relative w-full sm:w-64">
                   <input 
                     type="text" 
                     id="input-var-label-extra3" 
@@ -11740,19 +11505,10 @@ const ProductForm = (() => {
                     data-label-key="label_extra_3" 
                     value="${escapeHtml(labelVal)}" 
                     placeholder="Cth. Langsung Proses, Dll" 
+                    list="datalist-extra-service-labels"
                     autocomplete="off" 
-                    class="input-variation-label custom-combobox-input w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+                    class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
                   />
-                  <div class="custom-combobox-popover hidden absolute left-0 top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 text-left">
-                    <div class="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none border-b border-slate-100">Nilai yang direkomendasikan</div>
-                    <div class="max-h-48 overflow-y-auto">
-                      ${getVariationLabelRecommendations('extra_3').map(rec => `
-                        <div class="combobox-item px-3 py-1.5 text-xs text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] cursor-pointer font-medium flex items-center justify-between transition" data-value="${escapeHtml(rec)}">
-                          <span>${escapeHtml(rec)}</span>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
                 <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" tabindex="0">
@@ -12282,7 +12038,7 @@ const ProductForm = (() => {
     const rows = displayMaterials.map((mat, idx) => {
       const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
       const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
-      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : mat.max_order) : '';
+      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Unlimited' : mat.max_order) : '';
 
       function renderScopeCell(tier) {
         const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
@@ -12340,24 +12096,17 @@ const ProductForm = (() => {
             />
           </td>
 
-          <!-- Kolom Max. Order (Custom Combobox Popover) -->
+          <!-- Kolom Max. Order (Native Datalist) -->
           <td class="p-3 align-middle text-center min-w-[125px]">
-            <div class="custom-combobox-wrapper relative inline-block w-28 sm:w-32">
-              <input 
-                type="text" 
-                class="combo-max-order-input custom-combobox-input w-full px-2.5 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
-                data-mat-id="${mat.id}" 
-                value="${maxOrderVal}" 
-                placeholder="Ketik atau pilih" 
-                autocomplete="off" 
-              />
-              <div class="custom-combobox-popover max-order-popover hidden absolute left-1/2 -translate-x-1/2 top-full mt-1 w-32 p-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 text-left">
-                <button type="button" class="combobox-item btn-select-max-unlimited w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] rounded-md transition cursor-pointer flex items-center justify-between" data-value="Tanpa Batas">
-                  <span>Tanpa Batas</span>
-                  <i class="bi bi-check2 text-sm font-bold ${(maxOrderVal === 'Tanpa Batas' || maxOrderVal === 'Unlimited') ? '' : 'hidden'}"></i>
-                </button>
-              </div>
-            </div>
+            <input 
+              type="text" 
+              class="combo-max-order-input w-28 sm:w-32 px-2.5 py-1.5 rounded-full border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+              data-mat-id="${mat.id}" 
+              value="${maxOrderVal}" 
+              placeholder="Unlimited / Angka" 
+              list="datalist-max-order-unlimited"
+              autocomplete="off" 
+            />
           </td>
 
           <!-- Kolom Harga Grosir -->
@@ -13655,7 +13404,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     activeVariationCards.forEach(({ labelDefault, inputEl }) => {
       if (inputEl) {
         const val = (inputEl.value || '').trim();
-        const wrapper = inputEl.closest('.custom-combobox-wrapper');
+        const wrapper = inputEl.closest('.relative') || inputEl.parentElement;
         const errEl = wrapper ? wrapper.querySelector('.label-dup-error-msg') : null;
         if (!val) {
           addError(`Judul ${labelDefault} wajib diisi.`, inputEl);
@@ -15258,6 +15007,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         validateSingleStock(false);
         updateProductCardLivePreview();
       };
+      singleStock.onchange = (e) => {
+        syncStockStateAndClearBtn(e.target.value);
+        validateSingleStock(false);
+        updateProductCardLivePreview();
+      };
       singleStock.onblur = () => validateSingleStock(true);
     }
 
@@ -15528,7 +15282,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             // Auto-scroll halus ke bagian yang belum valid dengan ring highlight merah
             if (prereqResult.firstInvalidEl) {
               const el = prereqResult.firstInvalidEl;
-              const targetScrollEl = el.closest('table, .variation-card-block, .step2-section-card, .form-group, .custom-combobox-wrapper') || el;
+              const targetScrollEl = el.closest('table, .variation-card-block, .step2-section-card, .form-group') || el;
               targetScrollEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
               targetScrollEl.classList.add('ring-2', 'ring-red-400', 'transition-all');
@@ -15568,8 +15322,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             refreshDimensionRulesDOM();
             refreshSandboxFinishingList();
 
-            const dimCard = document.getElementById('card-custom-dimension-pxl');
-            if (dimCard) bindCustomComboboxes(dimCard);
             const dimLabelInp = document.getElementById('input-custom-dimension-label');
             if (dimLabelInp) {
               if (!dimLabelInp.value) {
@@ -16951,25 +16703,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // 1c. Tombol Popover Max Order Tanpa Batas
-      document.querySelectorAll('.btn-select-max-unlimited').forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const wrapper = btn.closest('.custom-combobox-wrapper');
-          const inp = wrapper?.querySelector('.combo-max-order-input');
-          const popover = wrapper?.querySelector('.custom-combobox-popover');
-          if (inp) {
-            inp.value = 'Tanpa Batas';
-            const matId = inp.getAttribute('data-mat-id');
-            const item = materialsState.find(m => m.id === matId);
-            if (item) item.max_order = 'Tanpa Batas';
-            inp.dispatchEvent(new Event('input', { bubbles: true }));
-            inp.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          if (popover) popover.classList.add('hidden');
-        };
-      });
-
       // 2. Min. Order per Baris
       document.querySelectorAll('.combo-min-order-input').forEach(inp => {
         inp.oninput = (e) => {
@@ -16979,9 +16712,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // 3. Max. Order per Baris (Combobox: Mendukung 'Tanpa Batas' / 'Tanpa Max Order' / Angka)
+      // 3. Max. Order per Baris (Native Datalist: Mendukung 'Unlimited' / 'Tanpa Batas' / Angka)
       document.querySelectorAll('.combo-max-order-input').forEach(inp => {
-        inp.oninput = (e) => {
+        const handleComboMax = (e) => {
           const matId = inp.getAttribute('data-mat-id');
           const item = materialsState.find(m => m.id === matId);
           if (item) {
@@ -16989,25 +16722,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (!raw) {
               item.max_order = null;
             } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
-              item.max_order = 'Tanpa Batas';
+              item.max_order = 'Unlimited';
             } else {
               item.max_order = parseInt(raw) || null;
             }
           }
         };
+        inp.oninput = handleComboMax;
+        inp.onchange = handleComboMax;
         inp.onblur = (e) => {
           const matId = inp.getAttribute('data-mat-id');
           const item = materialsState.find(m => m.id === matId);
           if (item) {
             const raw = (inp.value || '').trim();
             if (raw === '0' || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw.toLowerCase() === 'unlimited') {
-              inp.value = 'Tanpa Batas';
-              item.max_order = 'Tanpa Batas';
+              inp.value = 'Unlimited';
+              item.max_order = 'Unlimited';
             }
           }
         };
       });
-      bindCustomComboboxes(document.getElementById('combination-matrix-section'));
 
       // 4. Dropdown Scope (Umum vs Spesifik)
       document.querySelectorAll('.combo-scope-select').forEach(sel => {
@@ -17407,7 +17141,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Maksimal Pembelian (Combobox Normal Mode)
     const normalMaxInp = document.getElementById('input-normal-max-order');
     if (normalMaxInp) {
-      normalMaxInp.oninput = (e) => {
+      const handleNormalMaxInput = (e) => {
         const raw = e.target.value.trim();
         if (!raw || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
           primaryState.max_order = null;
@@ -17420,9 +17154,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           primaryState.max_order_type = num ? 'per_order' : 'unlimited';
         }
       };
+      normalMaxInp.oninput = handleNormalMaxInput;
+      normalMaxInp.onchange = handleNormalMaxInput;
       normalMaxInp.onblur = (e) => {
         if (!primaryState.max_order || primaryState.max_order === 0 || String(primaryState.max_order).toLowerCase() === 'unlimited' || String(primaryState.max_order).toLowerCase() === 'tanpa batas' || String(primaryState.max_order).toLowerCase() === 'tanpa max order') {
-          normalMaxInp.value = 'Tanpa Batas';
+          normalMaxInp.value = 'Unlimited';
         }
       };
     }
@@ -17640,9 +17376,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       bindInlineMultipleEvents();
     }
 
-    // Bind Semua Custom Comboboxes Popovers
-    bindCustomComboboxes(document.getElementById('card-step2-sales'));
-    bindCustomComboboxes(document.getElementById('card-step2-specs'));
+    // Init Affiliate Listeners
+    initAffiliateGlobalListeners();
+
     function bindCustomSpecsEvents() {
       const btnAdd = document.getElementById('btn-add-custom-spec-row');
       const tbody = document.getElementById('custom-specs-tbody');
@@ -17672,7 +17408,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const newRow = tempDiv.firstElementChild;
           if (newRow) {
             tbody.appendChild(newRow);
-            bindCustomComboboxes(newRow);
             updateSpecsUIState();
             if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
             if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
@@ -18847,12 +18582,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     ['input-custom-label-1', 'input-custom-label-2'].forEach(id => {
       const inp = document.getElementById(id);
       if (inp) {
-        inp.addEventListener('input', () => {
+        const handleCustomLabelChange = () => {
           showLabelSuggestion();
           updateCustomLabelsLockState();
           updateQuickLabelChipsLockState();
           saveDraftToStorage();
-        });
+          if (typeof updateProductCardLivePreview === 'function') {
+            updateProductCardLivePreview();
+          }
+        };
+        inp.addEventListener('input', handleCustomLabelChange);
+        inp.addEventListener('change', handleCustomLabelChange);
         inp.addEventListener('focus', showLabelSuggestion);
         inp.addEventListener('blur', hideLabelSuggestion);
       }
@@ -19701,11 +19441,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     };
 
     [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(el => {
-      if (el) el.addEventListener('input', e => {
-        syncF1Str(e.target.value);
-        syncStateFromDOM();
-        updateProductCardLivePreview();
-      });
+      if (el) {
+        const handleF1Input = e => {
+          syncF1Str(e.target.value);
+          syncStateFromDOM();
+          updateProductCardLivePreview();
+        };
+        el.addEventListener('input', handleF1Input);
+        el.addEventListener('change', handleF1Input);
+      }
     });
 
     [cfgF1Bg, cfgF1BgHex, cfgF1BgSide, cfgF1BgHexSide, cfgF1BgMob, cfgF1BgHexMob].forEach(el => {
@@ -19765,11 +19509,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     };
 
     [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(el => {
-      if (el) el.addEventListener('input', e => {
-        syncF2Str(e.target.value);
-        syncStateFromDOM();
-        updateProductCardLivePreview();
-      });
+      if (el) {
+        const handleF2Input = e => {
+          syncF2Str(e.target.value);
+          syncStateFromDOM();
+          updateProductCardLivePreview();
+        };
+        el.addEventListener('input', handleF2Input);
+        el.addEventListener('change', handleF2Input);
+      }
     });
 
     [cfgF2Bg, cfgF2BgHex, cfgF2BgSide, cfgF2BgHexSide, cfgF2BgMob, cfgF2BgHexMob].forEach(el => {

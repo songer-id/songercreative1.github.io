@@ -401,6 +401,21 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - **Skenario A (Tambah Produk Baru)**: Jika form masih kosong bersih, langsung menutup form dan membuka menu asal tanpa modal konfirmasi. Jika sudah terdapat data/nilai yang diisi, menampilkan modal konfirmasi *"Batalkan Pembuatan Produk Baru?"* dengan opsi `[Ya, Batalkan]` (membersihkan state, menghapus draft lokal `songer_add_product_draft`, dan kembali ke menu asal) serta opsi `[Tidak]` (menutup modal, seluruh data form terjaga utuh 100%).
       - **Skenario B (Edit Produk)**: Jika tidak ada perubahan nilai dari data awal produk (`!hasEditProductChanged()`), langsung keluar dan kembali ke menu Daftar Produk tanpa modal konfirmasi. Jika terdapat perubahan nilai, menampilkan modal konfirmasi *"Batalkan Perubahan Produk?"* dengan deskripsi *"Perubahan pada produk ini tidak akan disimpan."*
     - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=6.9`.
+  - [x] **Hotfix Standarisasi Native HTML5 `<datalist>` Murni untuk Seluruh Tipe Input & Pilih di Step 1 & Step 2 (`js/product-form.js`, `css/admin.css`, `admin.html`, `docs/PRD_MASTER.md`, `README.md`)**:
+    - **Eliminasi Total Popover Custom Combobox Lebar**: Menghapus seluruh container popover custom (`.custom-combobox-popover`), fungsi `bindCustomComboboxes`, dan event listeners terkait yang melebar seukuran input.
+    - **Penerapan Native HTML5 `<datalist>` Murni**: Menerapkan `<input list="...">` berpasangan dengan `<datalist id="...">` murni bawaan browser yang ramping, responsif, dan menampilkan callout serta panah dropdown segitiga native `▼` (`::-webkit-calendar-picker-indicator` dijaga aktif dan elegan).
+    - **Cakupan Lengkap 9 Elemen Input & Pilih**:
+      1. Step 1 — Label Khusus 1 & 2 (`#input-custom-label-1` & `#input-custom-label-2`): `list="custom-labels-history-list"` + `<datalist id="custom-labels-history-list">` (8 rekomendasi default + riwayat DB).
+      2. Step 1 / 2 — Teks Footer Model C (`#input-card-footer-text` & `#input-card-footer-2-text`, desktop side & mobile drawer): `list="footer-texts-history-list"` + `<datalist id="footer-texts-history-list">`.
+      3. Step 2 — Stok Tanpa Variasi (`#input-stock-qty`): `list="datalist-stock-unlimited"` + `<datalist id="datalist-stock-unlimited"><option value="Unlimited"></datalist>`, sinkron dengan `primaryState.is_unlimited_stock` dan `primaryState.stock = null`.
+      4. Step 2 — Maksimal Jumlah Pembelian (`#input-normal-max-order`) & Max Order Tabel Variasi (`.combo-max-order-input`): `list="datalist-max-order-unlimited"` + `<datalist id="datalist-max-order-unlimited"><option value="Unlimited"></datalist>`.
+      5. Step 2 — Nama Grup Variasi 1–4 (`.input-variation-label`): `list="datalist-variation-labels"` + `<datalist id="datalist-variation-labels">`.
+      6. Step 2 — Layanan Extras (`#input-var-label-extra3`): `list="datalist-extra-service-labels"` + `<datalist id="datalist-extra-service-labels">`.
+      7. Step 2 — Merek (`#input-product-brand`): `list="datalist-product-brands"` + `<datalist id="datalist-product-brands">`.
+      8. Step 2 — Asal Produk (`#input-product-origin`): `list="datalist-product-origins"` + `<datalist id="datalist-product-origins">`.
+      9. Step 2 — Judul Tabel Spesifikasi Manual (`.input-spec-title`): `list="datalist-spec-titles"` + `<datalist id="datalist-spec-titles">`.
+    - **Preservasi Integrasi Edit Produk & Modal Batal Cerdas**: Menjaga 100% alur klik Edit dari menu produk (`loadProductForEdit`, `initEdit`) dan modal pembatalan cerdas (`handleFormCancel`, `showCancelConfirmationModal`).
+    - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=7.0`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

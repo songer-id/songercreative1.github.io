@@ -1308,67 +1308,15 @@ input.toggle-same-cost:checked~div::after {
   border-radius: 0px !important;
 }
 
-/* Custom Combobox Popover (Rekomendasi + Input Manual - Shadcn UI Style) */
-.custom-combobox-wrapper {
-  position: relative;
-}
-
-.custom-combobox-popover {
-  animation: comboboxFadeIn 0.15s ease-out;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
-  border-radius: 0.375rem !important; /* rounded-md */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
-}
-
-.custom-combobox-popover::-webkit-scrollbar {
-  width: 5px;
-}
-
-.custom-combobox-popover::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-combobox-popover::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.4);
-  border-radius: 9999px;
-}
-
-.combobox-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-radius: 0.375rem !important; /* rounded-md */
-  transition: all 0.15s ease;
-  user-select: none;
+/* Native HTML5 <datalist> Indicator Styling - Ramping Bawaan Browser (Persis Gambar 2) */
+input[list]::-webkit-calendar-picker-indicator {
   cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
 }
 
-.combobox-item:hover,
-.combobox-item.active {
-  background-color: var(--color-primary-subtle) !important;
-  color: var(--color-primary) !important;
-}
-
-.combobox-item.is-selected {
-  font-weight: 600;
-  color: var(--color-primary) !important;
-}
-
-.combobox-item .bi-check2 {
-  color: var(--color-primary) !important;
-}
-
-@keyframes comboboxFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+input[list]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 /* ==========================================================================
@@ -1659,14 +1607,6 @@ input.toggle-same-cost:checked~div::after {
 .tooltip-wrapper:hover .tooltip-popover,
 .tooltip-wrapper:focus-within .tooltip-popover {
   display: block !important;
-}
-
-.custom-combobox-wrapper {
-  position: relative !important;
-}
-
-.custom-combobox-popover {
-  z-index: 60 !important;
 }
 
 /* Custom Label Clear Button (X) */
@@ -2093,7 +2033,6 @@ input.toggle-same-cost:checked~div::after {
   /* Kotak Input, Select, & Placeholder */
   #view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
   #view-product-form select,
-  #view-product-form .custom-combobox-input,
   .step2-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
   .step2-section-card select,
   .step1-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
@@ -2466,12 +2405,6 @@ body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
 #mobile-preview-sheet input[type="checkbox"],
 #drawer-custom-dimension-section input[type="checkbox"] {
   accent-color: var(--color-primary) !important;
-}
-
-.combobox-item:hover,
-#view-product-form .custom-combobox-dropdown div:hover {
-  background-color: var(--color-primary-subtle) !important;
-  color: var(--color-primary-hover) !important;
 }
 
 /* 8. Slot Foto Galeri & Badge Cover */
