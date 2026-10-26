@@ -621,15 +621,32 @@ const AdminApp = (() => {
     if (btnCloseDetailBottom) btnCloseDetailBottom.addEventListener('click', closeOrderDetailModal);
     if (btnSaveDetailStatus) btnSaveDetailStatus.addEventListener('click', handleSaveOrderDetailStatus);
     if (btnPrintDetailReceipt) btnPrintDetailReceipt.addEventListener('click', handlePrintOrderDetailReceipt);
+
+    // Global delegation untuk aksi Edit Produk dari daftar produk agar membuka Form Produk baru
+    document.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.btn-edit-product');
+      if (editBtn) {
+        e.preventDefault();
+        const id = editBtn.getAttribute('data-id');
+        if (id) {
+          if (typeof window.ProductForm !== 'undefined') {
+            window.ProductForm.lastActiveMenuBeforeForm = (currentView && !['create-product', 'create', 'edit-product', 'edit'].includes(currentView)) ? currentView : 'products';
+          }
+          navigate('edit', id);
+        }
+      }
+    });
   }
 
   // ----------------------------------------------------------------------------
   // 4. NAVIGATION CONTROLLER
   // ----------------------------------------------------------------------------
-  // ----------------------------------------------------------------------------
-  // 4. NAVIGATION CONTROLLER
-  // ----------------------------------------------------------------------------
+  let lastActiveMenuBeforeForm = 'products';
+
   function navigate(viewName, param = null) {
+    if (currentView && !['create-product', 'create', 'edit-product', 'edit'].includes(currentView)) {
+      lastActiveMenuBeforeForm = currentView;
+    }
     currentView = viewName;
 
     // View containers
@@ -713,14 +730,17 @@ const AdminApp = (() => {
       if (views['create-product']) views['create-product'].classList.remove('hidden');
       if (typeof window.ProductForm !== 'undefined' || typeof ProductForm !== 'undefined') {
         const pf = window.ProductForm || ProductForm;
-        if (typeof pf.init === 'function') pf.init();
-        else if (typeof pf.initCreate === 'function') pf.initCreate();
+        pf.lastActiveMenuBeforeForm = lastActiveMenuBeforeForm || 'products';
+        if (typeof pf.initCreate === 'function') pf.initCreate();
+        else if (typeof pf.init === 'function') pf.init();
       }
     } else if (viewName === 'edit-product' || viewName === 'edit') {
       if (views['edit-product']) views['edit-product'].classList.remove('hidden');
       if (typeof window.ProductForm !== 'undefined' || typeof ProductForm !== 'undefined') {
         const pf = window.ProductForm || ProductForm;
+        pf.lastActiveMenuBeforeForm = lastActiveMenuBeforeForm || 'products';
         if (typeof pf.initEdit === 'function') pf.initEdit(param);
+        else if (typeof pf.loadProductForEdit === 'function') pf.loadProductForEdit(param);
       }
     } else if (viewName === 'categories') {
       if (views.categories) views.categories.classList.remove('hidden');

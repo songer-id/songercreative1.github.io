@@ -516,7 +516,7 @@ const ProductList = (() => {
           <div class="flex items-center justify-center gap-1.5">
             <button 
               type="button" 
-              class="btn-edit-product p-1.5 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition border border-slate-200"
+              class="btn-edit-product p-1.5 rounded-lg text-slate-600 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] transition border border-slate-200 cursor-pointer"
               data-id="${prod.id}" 
               title="Edit Produk"
             >
@@ -714,6 +714,9 @@ const ProductList = (() => {
     document.querySelectorAll('.btn-edit-product').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
+        if (typeof window.ProductForm !== 'undefined') {
+          window.ProductForm.lastActiveMenuBeforeForm = 'products';
+        }
         App.navigate('edit', id);
       });
     });

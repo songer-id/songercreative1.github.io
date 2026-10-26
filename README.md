@@ -211,4 +211,27 @@ Cakupan utama Roadmap:
 6. **AI Content Generation:** Generator deskripsi instan dan rancangan manajemen token kuota per-tenant.
 7. **Frontend Modernization:** Rencana konversi imperatif JS ke komponen modular React 18 + Inertia.js v2.
 
+---
 
+## 🎛️ 7. Standar Antarmuka: Custom Combobox (Shadcn UI), Integrasi Edit Produk & Modal Batal Cerdas
+
+### A. Standar Default "Input & Pilih" (Custom Combobox Shadcn UI)
+- **Dilarang Menggunakan `<datalist>` Native Browser:** Seluruh elemen `<datalist>` dan atribut `list="..."` bawaan browser dieliminasi total karena tidak konsisten lintas peramban/perangkat dan tidak dapat diatur warna tema brand-nya.
+- **Standarisasi Komponen Custom Combobox:**
+  - Desain popover melayang modern: `rounded-md border border-slate-200 bg-white shadow-lg max-h-48 overflow-y-auto p-1 z-50` dengan *scrollbar* tipis halus.
+  - Efek hover & selected state terikat 100% ke CSS variables (`background-color: var(--color-primary-subtle); color: var(--color-primary);`).
+  - Dilengkapi indikator centang aktif (`<i class="bi bi-check2"></i>`) pada nilai yang sedang terpilih serta tombol bersihkan nilai (*clear button* `×`) di sisi kanan input.
+  - Saat input diklik atau difokuskan, seluruh daftar saran ditampilkan utuh untuk memudahkan penggantian opsi, dan otomatis memfilter saat pengguna mengetik manual.
+  - Berlaku seragam di Step 1 (*Label Khusus 1 & 2*) dan Step 2 (*Stok Produk, Maksimal Jumlah Pembelian, Max Order Tabel Variasi, Nama Grup Variasi 1–4, Layanan Extras, Merek, Asal Produk, dan Judul Spesifikasi*).
+
+### B. Integrasi Edit Produk dari Daftar Produk ke Sistem Form Produk Baru (`ProductForm`)
+- Tombol aksi **Edit** pada tabel produk (`.btn-edit-product`) secara otomatis mencatat menu asal (`lastActiveMenuBeforeForm = 'products'`), memuat data produk secara presisi ke dalam `primaryState` Step 1 & Step 2, dan membuka tampilan form baru (`view-product-form`).
+- Menyimpan snapshot kondisi awal produk (`initialEditSnapshot`) untuk mendeteksi perubahan nilai secara akurat.
+
+### C. Modal Konfirmasi Batal Cerdas (SaaS UX Writing)
+- **Skenario Tambah Produk Baru (`!isEditMode`):**
+  - Jika form masih kosong bersih: Langsung menutup form dan kembali ke menu asal tanpa memunculkan modal popup.
+  - Jika ada data yang telah diisi: Memunculkan modal popup konfirmasi *"Batalkan Pembuatan Produk Baru?"* dengan opsi `[Ya, Batalkan]` (bersihkan form, hapus draft lokal, dan kembali ke menu asal) dan `[Tidak]` (tutup modal saja, data form tetap terjaga utuh 100%).
+- **Skenario Edit Produk (`isEditMode === true`):**
+  - Jika tidak ada perubahan nilai dari data awal: Langsung kembali ke menu Daftar Produk tanpa modal.
+  - Jika terdapat perubahan nilai: Memunculkan modal popup konfirmasi *"Batalkan Perubahan Produk?"* dengan deskripsi *"Perubahan pada produk ini tidak akan disimpan."*
