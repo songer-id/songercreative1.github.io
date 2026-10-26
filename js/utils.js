@@ -180,6 +180,85 @@
     return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
   }
 
+  /**
+   * Format hirarki lokasi otomatis Seller vs Buyer untuk spesifikasi produk & pratinjau PDP
+   * @param {Object} sellerLocation - Data lokasi toko seller { country, province, city, district, village, show_location }
+   * @param {Object|null} buyerLocation - Data lokasi pembeli (jika tersedia / terdeteksi)
+   * @returns {string} String representasi lokasi terformat
+   */
+  function formatDynamicSellerLocation(sellerLocation, buyerLocation) {
+    if (!sellerLocation || typeof sellerLocation !== 'object') {
+      return 'Indonesia';
+    }
+
+    const getVal = (obj, ...keys) => {
+      if (!obj || typeof obj !== 'object') return '';
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') {
+          return String(obj[k]).trim();
+        }
+      }
+      return '';
+    };
+
+    const sCountry = getVal(sellerLocation, 'country', 'store_country') || 'Indonesia';
+    const sProvince = getVal(sellerLocation, 'province', 'store_province');
+    const sCity = getVal(sellerLocation, 'city', 'store_city', 'address_city');
+    const sDistrict = getVal(sellerLocation, 'district', 'store_district', 'subdistrict');
+    const sVillage = getVal(sellerLocation, 'village', 'store_village', 'kelurahan', 'desa');
+
+    const hasBuyerLocation = Boolean(
+      buyerLocation && 
+      typeof buyerLocation === 'object' && 
+      (buyerLocation.country || buyerLocation.province || buyerLocation.city || buyerLocation.district || buyerLocation.village)
+    );
+
+    if (hasBuyerLocation) {
+      const bCountry = getVal(buyerLocation, 'country') || 'Indonesia';
+      const bProvince = getVal(buyerLocation, 'province');
+      const bCity = getVal(buyerLocation, 'city');
+      const bDistrict = getVal(buyerLocation, 'district', 'subdistrict');
+
+      const norm = (str) => str.toLowerCase().replace(/^(kab\.?|kabupaten|kota|kec\.?|kecamatan|desa|kel\.?|kelurahan)\s+/i, '').trim();
+
+      // 1. Luar Negara Seller -> Tampilkan Negara
+      if (bCountry && sCountry && norm(bCountry) !== norm(sCountry)) {
+        return sCountry;
+      }
+
+      // 2. Satu Negara, Luar Provinsi Seller -> Tampilkan Provinsi
+      if (bProvince && sProvince && norm(bProvince) !== norm(sProvince)) {
+        return sProvince;
+      }
+
+      // 3. Satu Provinsi, Beda Kota/Kabupaten -> Tampilkan Kota/Kabupaten
+      if (bCity && sCity && norm(bCity) !== norm(sCity)) {
+        return sCity;
+      }
+
+      // 4. Satu Kota/Kabupaten, Beda Kecamatan -> Tampilkan Kecamatan
+      if (bDistrict && sDistrict && norm(bDistrict) !== norm(sDistrict)) {
+        return sDistrict.startsWith('Kec.') ? sDistrict : `Kec. ${sDistrict}`;
+      }
+
+      // 5. Satu Kecamatan dengan Seller -> Tampilkan Desa/Kelurahan
+      if (bDistrict && sDistrict && norm(bDistrict) === norm(sDistrict)) {
+        if (sVillage) {
+          return (sVillage.startsWith('Desa ') || sVillage.startsWith('Kel. ')) ? sVillage : `Desa ${sVillage}`;
+        }
+        return sDistrict.startsWith('Kec.') ? sDistrict : `Kec. ${sDistrict}`;
+      }
+    }
+
+    // 6. Fallback Default (buyer location belum diketahui / mode pratinjau umum)
+    if (sCity && sProvince) {
+      return `${sCity}, ${sProvince}`;
+    }
+    if (sCity) return sCity;
+    if (sProvince) return sProvince;
+    return sCountry || 'Indonesia';
+  }
+
   return {
     formatIDR,
     formatCurrency,
@@ -187,6 +266,11 @@
     hexToRgba,
     generateSlug,
     formatDateID,
-    adjustColorBrightness
+    adjustColorBrightness,
+    formatDynamicSellerLocation
   };
 }));
+
+if (typeof window !== 'undefined') {
+  window.formatDynamicSellerLocation = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation) ? Utils.formatDynamicSellerLocation : null;
+}

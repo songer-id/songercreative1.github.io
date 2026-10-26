@@ -693,6 +693,58 @@
       descEl.textContent = prod.description || 'Produk percetakan berkualitas tinggi dengan hasil cetak tajam, warna solid, dan daya tahan maksimal.';
     }
 
+    // Spesifikasi Produk Tab
+    const specsEl = document.getElementById('tab-content-specs');
+    if (specsEl) {
+      const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+      const sellerLocation = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation) 
+        ? Utils.formatDynamicSellerLocation(settings, null) 
+        : (settings.city || 'Indonesia');
+
+      const originVal = (prod.product_origin && prod.product_origin.trim()) ? escapeHtml(prod.product_origin.trim()) : '-';
+      const brandVal = (prod.brand && prod.brand.trim()) ? escapeHtml(prod.brand.trim()) : '-';
+      const warrantyPeriod = (prod.warranty_period && prod.warranty_period.trim()) ? prod.warranty_period.trim() : 'Tidak Ada Garansi';
+      const warrantyType = (prod.warranty_type && prod.warranty_type.trim()) ? prod.warranty_type.trim() : 'Garansi Toko';
+
+      const specsRows = [
+        { label: 'Merek', val: brandVal },
+        { label: 'Asal Produk', val: originVal },
+        { label: 'Masa Garansi', val: escapeHtml(warrantyPeriod) },
+        ...(warrantyPeriod !== 'Tidak Ada Garansi' ? [{ label: 'Jenis Garansi', val: escapeHtml(warrantyType) }] : []),
+        { label: 'Dikirim Dari', val: escapeHtml(sellerLocation) }
+      ];
+
+      if (prod.is_preorder) {
+        specsRows.push({ label: 'Pre-Order', val: `Ya (${prod.preorder_days || 7} Hari)` });
+      }
+
+      specsEl.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <h4 class="font-bold text-slate-900 text-sm mb-3">Spesifikasi Produk:</h4>
+            <div class="bg-slate-50/70 rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+              ${specsRows.map(r => `
+                <div class="flex items-center py-2.5 px-4 text-xs">
+                  <span class="text-slate-500 w-1/3 shrink-0">${r.label}</span>
+                  <span class="text-slate-800 font-semibold w-2/3">${r.val}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <h4 class="font-bold text-slate-900 text-sm mb-2">Panduan Menyiapkan File Cetak:</h4>
+            <ul class="space-y-1.5 list-disc pl-5 text-xs text-slate-600">
+              <li>Format file yang didukung: <strong>PDF, TIFF, CDR, AI, PSD, atau JPG kualitas tinggi</strong>.</li>
+              <li>Gunakan profil warna <strong>CMYK</strong> untuk hasil cetak yang akurat (bukan RGB).</li>
+              <li>Resolusi file minimal <strong>150 - 300 DPI</strong> dengan skala 1:1.</li>
+              <li>Pastikan seluruh teks telah di-convert ke kurva/outline agar font tidak hilang.</li>
+            </ul>
+          </div>
+        </div>
+      `;
+    }
+
     // Tab Review Count
     const tabCount = document.getElementById('pdp-tab-review-count');
     if (tabCount) {

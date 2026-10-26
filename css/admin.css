@@ -1239,16 +1239,33 @@ input.toggle-same-cost:checked~div::after {
   word-break: break-word !important;
 }
 
+/* Help Popover Tooltip Clamping & Responsiveness (Mencegah overflow keluar layar HP) */
+.btn-help-popover .admin-help-tooltip,
+.admin-help-tooltip,
+.tooltip-popover,
+.tooltip-wrapper .tooltip-popover,
+.group:has(> .bi-question-circle) > div[class*="bg-slate-900"],
+.group:has(> .bi-question-circle-fill) > div[class*="bg-slate-900"],
+.group > div[class*="bg-slate-900"] {
+  max-width: min(280px, calc(100vw - 32px)) !important;
+  width: max-content !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
 @media (max-width: 640px) {
   .btn-help-popover .admin-help-tooltip,
   .admin-help-tooltip,
+  .tooltip-popover,
+  .tooltip-wrapper .tooltip-popover,
   .group:has(> .bi-question-circle) > div[class*="bg-slate-900"],
   .group:has(> .bi-question-circle-fill) > div[class*="bg-slate-900"],
   .group > div[class*="bg-slate-900"] {
-    left: auto !important;
-    right: -8px !important;
-    top: calc(100% + 4px) !important;
-    transform: none !important;
+    max-width: calc(100vw - 32px) !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
   }
 }
 

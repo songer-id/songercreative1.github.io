@@ -139,11 +139,88 @@ const ProductForm = (() => {
     return '#33b589';
   }
 
+
+  // Helper parsing & formatting masa garansi (Angka manual + Satuan Hari/Bulan/Tahun)
+  function parseWarrantyPeriod(rawPeriod) {
+    if (!rawPeriod || typeof rawPeriod !== 'string') {
+      return { unit: 'Tidak Ada Garansi', duration: '' };
+    }
+    const trimmed = rawPeriod.trim();
+    if (trimmed === 'Tidak Ada Garansi' || trimmed === '-' || trimmed === '') {
+      return { unit: 'Tidak Ada Garansi', duration: '' };
+    }
+    if (trimmed.toLowerCase() === 'seumur hidup') {
+      return { unit: 'Seumur Hidup', duration: '' };
+    }
+    const match = trimmed.match(/^(\d+)\s*(hari|bulan|tahun)$/i);
+    if (match) {
+      const dur = match[1];
+      const uRaw = match[2].toLowerCase();
+      const u = uRaw === 'hari' ? 'Hari' : (uRaw === 'bulan' ? 'Bulan' : 'Tahun');
+      return { unit: u, duration: dur };
+    }
+    return { unit: 'Tidak Ada Garansi', duration: '' };
+  }
+
+  function computeWarrantyPeriod(unit, duration) {
+    if (!unit || unit === 'Tidak Ada Garansi') return 'Tidak Ada Garansi';
+    if (unit === 'Seumur Hidup') return 'Seumur Hidup';
+    const durNum = parseInt(duration, 10);
+    if (isNaN(durNum) || durNum <= 0) {
+      return unit;
+    }
+    return `${durNum} ${unit}`;
+  }
+
+  // Viewport Boundary Clamping untuk Tooltip Mobile agar tidak terpotong keluar layar
+  function clampTooltipToViewport(tipEl) {
+    if (!tipEl || typeof tipEl.getBoundingClientRect !== 'function') return;
+
+    tipEl.style.removeProperty('--tw-translate-x');
+    tipEl.style.transform = '';
+
+    requestAnimationFrame(() => {
+      const rect = tipEl.getBoundingClientRect();
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const minPadding = 12;
+
+      let shiftX = 0;
+      if (rect.left < minPadding) {
+        shiftX = minPadding - rect.left;
+      } else if (rect.right > (vw - minPadding)) {
+        shiftX = (vw - minPadding) - rect.right;
+      }
+
+      if (Math.abs(shiftX) > 0.5) {
+        tipEl.style.transform = `translateX(${Math.round(shiftX)}px)`;
+      } else {
+        tipEl.style.transform = '';
+      }
+    });
+  }
+
+  if (!window._tooltipClampingInitialized) {
+    window._tooltipClampingInitialized = true;
+    const handleTooltipTrigger = (e) => {
+      const trigger = e.target.closest('.btn-help-popover, .tooltip-wrapper, .group:has(.admin-help-tooltip), .group:has(.tooltip-popover)');
+      if (!trigger) return;
+      const tip = trigger.querySelector('.admin-help-tooltip, .tooltip-popover');
+      if (tip) {
+        clampTooltipToViewport(tip);
+      }
+    };
+    document.addEventListener('pointerover', handleTooltipTrigger, { passive: true });
+    document.addEventListener('focusin', handleTooltipTrigger, { passive: true });
+    document.addEventListener('click', handleTooltipTrigger, { passive: true });
+  }
+
   // Primary metadata state
   let primaryState = {
     name: '',
     brand: '',
     product_origin: '',
+    warranty_unit: 'Tidak Ada Garansi',
+    warranty_duration: '',
     warranty_period: 'Tidak Ada Garansi',
     warranty_type: '',
     is_preorder: false,
@@ -458,6 +535,8 @@ const ProductForm = (() => {
       name: '',
       brand: '',
       product_origin: '',
+      warranty_unit: 'Tidak Ada Garansi',
+      warranty_duration: '',
       warranty_period: 'Tidak Ada Garansi',
       warranty_type: '',
       is_preorder: false,
@@ -697,11 +776,19 @@ const ProductForm = (() => {
       })
     );
 
+    const parsedWarranty = parseWarrantyPeriod(prod.warranty_period || prod.warranty_unit);
+    const wUnit = prod.warranty_unit || parsedWarranty.unit;
+    const wDur = (prod.warranty_duration !== undefined && prod.warranty_duration !== null && prod.warranty_duration !== '')
+      ? String(prod.warranty_duration)
+      : parsedWarranty.duration;
+
     primaryState = {
       name: prod.name,
       brand: prod.brand || '',
       product_origin: prod.product_origin || '',
-      warranty_period: prod.warranty_period || 'Tidak Ada Garansi',
+      warranty_unit: wUnit,
+      warranty_duration: wDur,
+      warranty_period: prod.warranty_period || computeWarrantyPeriod(wUnit, wDur),
       warranty_type: prod.warranty_type || '',
       is_preorder: Boolean(prod.is_preorder),
       preorder_days: parseInt(prod.preorder_days) || 7,
@@ -1417,8 +1504,12 @@ const ProductForm = (() => {
 
             <!-- Card Live Box Container -->
             <div class="flex justify-center w-full py-3 bg-slate-50/60 rounded-lg border border-dashed border-slate-200">
-              <div id="product-card-preview-container" class="w-full max-w-[240px]">
+              <div id="product-card-preview-container" class="w-full max-w-[260px] relative overflow-hidden">
                 <div id="card-live-preview-box">
+                  <!-- Rendered dynamically -->
+                </div>
+                <!-- Scoped Preview Simulation Modal (Scoped inside Desktop Preview Container) -->
+                <div id="preview-scoped-modal-root" class="absolute inset-0 z-50 hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs">
                   <!-- Rendered dynamically -->
                 </div>
               </div>
@@ -1593,10 +1684,7 @@ const ProductForm = (() => {
 
 
 
-          <!-- Scoped Preview Simulation Modal (Scoped inside Desktop Sidebar) -->
-          <div id="preview-scoped-modal-root" class="absolute inset-0 z-50 hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs">
-            <!-- Rendered dynamically -->
-          </div>
+
 
         </aside>
 
@@ -1654,8 +1742,12 @@ const ProductForm = (() => {
             </label>
 
             <!-- Card Preview Box -->
-            <div class="w-full max-w-[260px]">
+            <div class="w-full max-w-[260px] relative overflow-hidden">
               <div id="mobile-card-preview-container">
+                <!-- Rendered dynamically -->
+              </div>
+              <!-- Scoped Preview Simulation Modal (Mobile Scoped inside Preview Container) -->
+              <div id="preview-scoped-modal-root-mob" class="absolute inset-0 z-[100] hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs">
                 <!-- Rendered dynamically -->
               </div>
             </div>
@@ -1835,10 +1927,7 @@ const ProductForm = (() => {
 
 
 
-          <!-- Scoped Preview Simulation Modal (Mobile Scoped) -->
-          <div id="preview-scoped-modal-root-mob" class="absolute inset-0 z-[100] hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs">
-            <!-- Rendered dynamically -->
-          </div>
+
 
         </div>
 
@@ -2670,6 +2759,9 @@ const ProductForm = (() => {
     `;
 
     roots.forEach(root => {
+      root.className = root.id === 'preview-scoped-modal-root'
+        ? 'absolute inset-0 z-50 flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs'
+        : 'absolute inset-0 z-[100] flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs';
       root.innerHTML = modalInner;
       root.classList.remove('hidden');
 
@@ -3848,7 +3940,9 @@ const ProductForm = (() => {
     });
 
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
-    const sellerCity = settings.city || settings.store_city || settings.address_city || 'Kota Seller (Otomatis)';
+    const sellerCity = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation)
+      ? Utils.formatDynamicSellerLocation(settings, null)
+      : (settings.city || settings.store_city || settings.address_city || 'Kota Seller (Otomatis)');
     rows.push({
       label: 'Dikirim Dari',
       valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(sellerCity)}</span>`
@@ -7926,6 +8020,23 @@ const ProductForm = (() => {
             <!-- Kontainer Pengaturan Pengiriman (Aktif Saat ON) -->
             <div id="shipping-config-body" class="${primaryState.has_shipping ? 'block' : 'hidden'} space-y-5">
               
+              <!-- Petunjuk Lokasi Asal Pengiriman Otomatis -->
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-start gap-2.5">
+                <i class="bi bi-geo-alt-fill text-[var(--color-primary)] text-sm shrink-0 mt-0.5"></i>
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-800 flex items-center justify-between flex-wrap gap-1">
+                    <span>Lokasi Asal Pengiriman Toko:</span>
+                    <a href="settings.html" class="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--color-primary)] hover:underline">
+                      <span>Akun / Pengaturan Toko</span>
+                      <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                    </a>
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Lokasi asal pengiriman otomatis mengikuti lokasi toko Anda. Pastikan lokasi telah diaktifkan dan dilengkapi pada menu <b>Akun / Pengaturan Toko</b>.
+                  </p>
+                </div>
+              </div>
+
               <!-- Bagian 1: Berat & Ukuran Paket (Mobile-First Compact) -->
               <div class="space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -8449,7 +8560,7 @@ const ProductForm = (() => {
                 </div>
               </div>
 
-              <!-- Baris 1: Merek & Asal Produk -->
+              <!-- Baris 1: Merek & Asal Produk (Input Teks Manual) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label for="input-product-brand" class="block text-xs font-bold text-slate-800 mb-1">Merek (Opsional):</label>
@@ -8463,33 +8574,48 @@ const ProductForm = (() => {
                 </div>
 
                 <div>
-                  <label for="select-product-origin" class="block text-xs font-bold text-slate-800 mb-1">Asal Produk:</label>
-                  <select 
-                    id="select-product-origin" 
-                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
-                  >
-                    <option value="" ${!primaryState.product_origin ? 'selected' : ''}>- (Pilih Asal Produk)</option>
-                    <option value="Dalam Negeri (Lokal)" ${primaryState.product_origin === 'Dalam Negeri (Lokal)' ? 'selected' : ''}>Dalam Negeri (Lokal)</option>
-                    <option value="Impor" ${primaryState.product_origin === 'Impor' ? 'selected' : ''}>Impor</option>
-                  </select>
+                  <label for="input-product-origin" class="block text-xs font-bold text-slate-800 mb-1">Asal Produk:</label>
+                  <input 
+                    type="text" 
+                    id="input-product-origin" 
+                    value="${escapeHtml(primaryState.product_origin || '')}" 
+                    placeholder="Contoh: Indonesia, Lokal, Impor..." 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)]" 
+                  />
                 </div>
               </div>
 
-              <!-- Baris 2: Masa Garansi & Jenis Garansi -->
+              <!-- Baris 2: Masa Garansi (Dropdown Satuan + Input Angka Manual) & Jenis Garansi -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label for="select-warranty-period" class="block text-xs font-bold text-slate-800 mb-1">Masa Garansi:</label>
-                  <select 
-                    id="select-warranty-period" 
-                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
-                  >
-                    ${['Tidak Ada Garansi', '3 Hari', '7 Hari', '14 Hari', '1 Bulan', '3 Bulan', '6 Bulan', '1 Tahun', '2 Tahun', 'Seumur Hidup'].map(opt => `
-                      <option value="${opt}" ${(primaryState.warranty_period || 'Tidak Ada Garansi') === opt ? 'selected' : ''}>${opt}</option>
-                    `).join('')}
-                  </select>
+                  <label for="select-warranty-unit" class="block text-xs font-bold text-slate-800 mb-1">Masa Garansi:</label>
+                  <div class="flex items-center gap-2">
+                    <select 
+                      id="select-warranty-unit" 
+                      class="flex-1 h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
+                    >
+                      <option value="Tidak Ada Garansi" ${(primaryState.warranty_unit || 'Tidak Ada Garansi') === 'Tidak Ada Garansi' ? 'selected' : ''}>Tidak Ada Garansi</option>
+                      <option value="Hari" ${primaryState.warranty_unit === 'Hari' ? 'selected' : ''}>Hari</option>
+                      <option value="Bulan" ${primaryState.warranty_unit === 'Bulan' ? 'selected' : ''}>Bulan</option>
+                      <option value="Tahun" ${primaryState.warranty_unit === 'Tahun' ? 'selected' : ''}>Tahun</option>
+                      <option value="Seumur Hidup" ${primaryState.warranty_unit === 'Seumur Hidup' ? 'selected' : ''}>Seumur Hidup</option>
+                    </select>
+
+                    <div id="container-warranty-duration" class="${['Hari', 'Bulan', 'Tahun'].includes(primaryState.warranty_unit) ? 'flex' : 'hidden'} items-center gap-1 w-24 shrink-0">
+                      <input 
+                        type="number" 
+                        id="input-warranty-duration" 
+                        min="1" 
+                        max="365"
+                        value="${primaryState.warranty_duration || ''}" 
+                        placeholder="Jumlah" 
+                        class="w-full h-9 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div id="container-warranty-type" class="${(primaryState.warranty_period && primaryState.warranty_period !== 'Tidak Ada Garansi') ? 'block' : 'hidden'}">
+                <div id="container-warranty-type" class="${(primaryState.warranty_unit && primaryState.warranty_unit !== 'Tidak Ada Garansi') ? 'block' : 'hidden'}">
                   <label for="select-warranty-type" class="block text-xs font-bold text-slate-800 mb-1">Jenis Garansi:</label>
                   <select 
                     id="select-warranty-type" 
@@ -8540,14 +8666,7 @@ const ProductForm = (() => {
                 </div>
               </div>
 
-              <!-- Baris 4: Lokasi Pengiriman (Read-only otomatis) -->
-              <div class="flex items-start gap-2.5 p-3 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600">
-                <i class="bi bi-geo-alt-fill text-[var(--color-primary)] text-sm shrink-0 mt-0.5"></i>
-                <div>
-                  <span class="font-bold text-slate-800 block">Dikirim Dari:</span>
-                  <span>${escapeHtml(sellerCity)} <span class="text-[11px] text-slate-400 font-normal">(Otomatis mengikuti lokasi pendaftaran toko seller di Pengaturan Toko)</span></span>
-                </div>
-              </div>
+
             </div>
 
             <!-- Komisi Afiliasi Produk -->
@@ -8806,6 +8925,7 @@ const ProductForm = (() => {
           if (popover.classList.contains('hidden')) {
             popover.classList.remove('hidden');
             popover.classList.add('block');
+            clampTooltipToViewport(popover);
           } else {
             popover.classList.add('hidden');
             popover.classList.remove('block');
@@ -14153,32 +14273,59 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       };
     }
 
-    const selOrigin = document.getElementById('select-product-origin');
-    if (selOrigin) {
-      selOrigin.onchange = (e) => {
-        primaryState.product_origin = e.target.value;
+    const inpOrigin = document.getElementById('input-product-origin');
+    if (inpOrigin) {
+      inpOrigin.oninput = (e) => {
+        primaryState.product_origin = e.target.value.trim();
         updateProductCardLivePreview();
       };
     }
 
-    const selWarrantyPeriod = document.getElementById('select-warranty-period');
+    const selWarrantyUnit = document.getElementById('select-warranty-unit');
+    const inpWarrantyDuration = document.getElementById('input-warranty-duration');
+    const containerWarrantyDuration = document.getElementById('container-warranty-duration');
     const containerWarrantyType = document.getElementById('container-warranty-type');
     const selWarrantyType = document.getElementById('select-warranty-type');
-    if (selWarrantyPeriod) {
-      selWarrantyPeriod.onchange = (e) => {
-        primaryState.warranty_period = e.target.value;
-        if (e.target.value && e.target.value !== 'Tidak Ada Garansi') {
-          if (containerWarrantyType) containerWarrantyType.classList.remove('hidden');
+
+    function syncWarrantyInputsUI() {
+      const unit = selWarrantyUnit ? selWarrantyUnit.value : 'Tidak Ada Garansi';
+      const isCustomDuration = ['Hari', 'Bulan', 'Tahun'].includes(unit);
+      const hasWarranty = unit !== 'Tidak Ada Garansi';
+
+      if (containerWarrantyDuration) {
+        if (isCustomDuration) {
+          containerWarrantyDuration.classList.remove('hidden');
+          containerWarrantyDuration.classList.add('flex');
+        } else {
+          containerWarrantyDuration.classList.add('hidden');
+          containerWarrantyDuration.classList.remove('flex');
+        }
+      }
+
+      if (containerWarrantyType) {
+        if (hasWarranty) {
+          containerWarrantyType.classList.remove('hidden');
           if (!primaryState.warranty_type) {
             primaryState.warranty_type = 'Garansi Toko';
             if (selWarrantyType) selWarrantyType.value = 'Garansi Toko';
           }
         } else {
-          if (containerWarrantyType) containerWarrantyType.classList.add('hidden');
+          containerWarrantyType.classList.add('hidden');
           primaryState.warranty_type = '';
         }
-        updateProductCardLivePreview();
-      };
+      }
+
+      primaryState.warranty_unit = unit;
+      primaryState.warranty_duration = (isCustomDuration && inpWarrantyDuration) ? inpWarrantyDuration.value.trim() : '';
+      primaryState.warranty_period = computeWarrantyPeriod(primaryState.warranty_unit, primaryState.warranty_duration);
+      updateProductCardLivePreview();
+    }
+
+    if (selWarrantyUnit) {
+      selWarrantyUnit.onchange = syncWarrantyInputsUI;
+    }
+    if (inpWarrantyDuration) {
+      inpWarrantyDuration.oninput = syncWarrantyInputsUI;
     }
 
     if (selWarrantyType) {
@@ -20129,10 +20276,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Step 2 Card 6: Spesifikasi & Garansi DOM sync
     const brandInp = document.getElementById('input-product-brand');
     if (brandInp) primaryState.brand = brandInp.value.trim();
-    const originSel = document.getElementById('select-product-origin');
-    if (originSel) primaryState.product_origin = originSel.value;
-    const warrantyPeriodSel = document.getElementById('select-warranty-period');
-    if (warrantyPeriodSel) primaryState.warranty_period = warrantyPeriodSel.value;
+    const originInp = document.getElementById('input-product-origin') || document.getElementById('select-product-origin');
+    if (originInp) primaryState.product_origin = originInp.value.trim();
+    const warrantyUnitSel = document.getElementById('select-warranty-unit');
+    const warrantyDurInp = document.getElementById('input-warranty-duration');
+    if (warrantyUnitSel) {
+      primaryState.warranty_unit = warrantyUnitSel.value;
+      primaryState.warranty_duration = warrantyDurInp ? warrantyDurInp.value.trim() : '';
+      primaryState.warranty_period = computeWarrantyPeriod(primaryState.warranty_unit, primaryState.warranty_duration);
+    } else {
+      const warrantyPeriodSel = document.getElementById('select-warranty-period');
+      if (warrantyPeriodSel) primaryState.warranty_period = warrantyPeriodSel.value;
+    }
     const warrantyTypeSel = document.getElementById('select-warranty-type');
     if (warrantyTypeSel) primaryState.warranty_type = warrantyTypeSel.value;
     const togglePo = document.getElementById('toggle-is-preorder');

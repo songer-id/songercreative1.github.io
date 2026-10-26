@@ -2725,7 +2725,9 @@ const DB = (() => {
           text_color: productData.footer_2_text_color || null
         },
         brand: productData.brand ? productData.brand.trim() : '',
-        product_origin: productData.product_origin || '',
+        product_origin: productData.product_origin ? productData.product_origin.trim() : '',
+        warranty_unit: productData.warranty_unit || 'Tidak Ada Garansi',
+        warranty_duration: productData.warranty_duration !== undefined && productData.warranty_duration !== null ? String(productData.warranty_duration).trim() : '',
         warranty_period: productData.warranty_period || 'Tidak Ada Garansi',
         warranty_type: productData.warranty_type || '',
         is_preorder: Boolean(productData.is_preorder),
@@ -2932,7 +2934,9 @@ const DB = (() => {
           text_color: products[index].footer_2_text_color || null
         }),
         brand: productData.brand !== undefined ? productData.brand.trim() : (products[index].brand || ''),
-        product_origin: productData.product_origin !== undefined ? productData.product_origin : (products[index].product_origin || ''),
+        product_origin: productData.product_origin !== undefined ? productData.product_origin.trim() : (products[index].product_origin || ''),
+        warranty_unit: productData.warranty_unit !== undefined ? productData.warranty_unit : (products[index].warranty_unit || 'Tidak Ada Garansi'),
+        warranty_duration: productData.warranty_duration !== undefined ? String(productData.warranty_duration).trim() : (products[index].warranty_duration || ''),
         warranty_period: productData.warranty_period !== undefined ? productData.warranty_period : (products[index].warranty_period || 'Tidak Ada Garansi'),
         warranty_type: productData.warranty_type !== undefined ? productData.warranty_type : (products[index].warranty_type || ''),
         is_preorder: productData.is_preorder !== undefined ? Boolean(productData.is_preorder) : Boolean(products[index].is_preorder),
