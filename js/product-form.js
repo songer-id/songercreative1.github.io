@@ -1007,8 +1007,8 @@ const ProductForm = (() => {
         label_extra_2: 'Finishing Tambahan 2',
         label_extra_3: 'Finishing Tambahan 3'
       },
-      // Step 2: Informasi Penjualan
-      pricing_model: prod.pricing_model || (prod.price_type === 1 ? 'size' : (prod.price_type === 5 ? 'weight' : (prod.price_type === 6 ? 'volume' : 'normal'))),
+      // Step 2: Informasi Penjualan (Normalisasi ke Form Baru 7 Kartu Mandiri)
+      pricing_model: 'normal',
       has_variants: prod.has_variants !== undefined ? Boolean(prod.has_variants) : ((prod.materials && prod.materials.length > 1) ? true : false),
       size_pricing_type: prod.size_pricing_type || 'custom',
       size_unit: prod.size_unit || 'Cm',
@@ -1019,9 +1019,9 @@ const ProductForm = (() => {
       stock: prod.stock !== undefined ? prod.stock : null,
       is_unlimited_stock: prod.is_unlimited_stock !== undefined ? Boolean(prod.is_unlimited_stock) : (prod.stock === null || prod.stock === undefined),
       min_order: prod.min_order || 1,
-      max_order: prod.max_order || null,
-      max_order_type: prod.max_order_type || (prod.max_order ? 'per_order' : 'unlimited'),
-      max_order_qty: prod.max_order_qty !== undefined ? prod.max_order_qty : (prod.max_order || null),
+      max_order: (prod.max_order === 0 || prod.max_order === '0' || prod.max_order === 'Unlimited' || prod.max_order === 'Tanpa Batas' || !prod.max_order) ? null : (parseInt(prod.max_order) || null),
+      max_order_type: (prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? 'per_order' : 'unlimited',
+      max_order_qty: (prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? (parseInt(prod.max_order) || null) : null,
       max_order_period: prod.max_order_period || {
         start_date: getTodayDateString(),
         max_qty: 10,
@@ -1146,10 +1146,20 @@ const ProductForm = (() => {
     primaryState.has_layer_4 = primaryState.has_variation_4;
     primaryState.has_extra_service = Boolean(prod.has_extra_service || prod.has_layer_5 || finishingsState.extra_3.length > 0);
     primaryState.has_layer_5 = primaryState.has_extra_service;
-    primaryState.has_custom_dimension = prod.has_custom_dimension !== undefined ? Boolean(prod.has_custom_dimension) : false;
+    const isLegacyDimension = Boolean(
+      prod.has_custom_dimension || 
+      prod.pricing_model === 'dimension' || 
+      prod.pricing_model === 'size' || 
+      prod.price_type === 1 || 
+      prod.custom_dimension_label || 
+      prod.dimension_main_component || 
+      (prod.dimension_rules && prod.dimension_rules.length > 0)
+    );
+    primaryState.has_custom_dimension = isLegacyDimension;
+    primaryState.pricing_model = 'normal';
     primaryState.custom_dimension_label = prod.custom_dimension_label || '';
     primaryState.dimension_main_component = prod.dimension_main_component || '';
-    primaryState.dimension_unit = prod.dimension_unit || prod.custom_dimension_unit || '';
+    primaryState.dimension_unit = prod.dimension_unit || prod.custom_dimension_unit || prod.size_unit || '';
     primaryState.custom_dimension_unit = primaryState.dimension_unit;
     primaryState.dim_min_one_price = prod.dim_min_one_price !== undefined ? Boolean(prod.dim_min_one_price) : false;
     primaryState.min_area_threshold = (prod.min_area_threshold !== undefined && prod.min_area_threshold !== null && prod.min_area_threshold !== '') ? parseFloat(prod.min_area_threshold) : null;
@@ -11761,118 +11771,10 @@ const ProductForm = (() => {
       `;
     }
 
-    // 2. BERDASAR UKURAN
-    if (model === 'size') {
-      const sizeType = primaryState.size_pricing_type || 'custom';
-      const sizeUnit = primaryState.size_unit || 'Cm';
-
-      return `
-        <div class="space-y-4 pt-1">
-          <!-- 2 Sub-pilihan: Ukuran Custom vs Ukuran Tetap -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="p-3 rounded-md border ${sizeType === 'custom' ? 'border-emerald-500 bg-emerald-50/40 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
-              <input type="radio" name="size_pricing_type_radio" value="custom" ${sizeType === 'custom' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
-              <div>
-                <span class="font-bold text-xs ${sizeType === 'custom' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Ukuran Custom</span>
-                <span class="text-[11px] text-slate-500 block">P x L dinamis dengan satuan M, Dm, Cm, atau Mm.</span>
-              </div>
-            </label>
-
-            <label class="p-3 rounded-md border ${sizeType === 'fixed' ? 'border-emerald-500 bg-emerald-50/40 radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition flex items-center gap-3 block select-none">
-              <input type="radio" name="size_pricing_type_radio" value="fixed" ${sizeType === 'fixed' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
-              <div>
-                <span class="font-bold text-xs ${sizeType === 'fixed' ? 'text-emerald-950 font-extrabold' : 'text-slate-800'} block">Ukuran Tetap</span>
-                <span class="text-[11px] text-slate-500 block">Pilihan ukuran standar (S, M, L, XL, 2L, custom label).</span>
-              </div>
-            </label>
-          </div>
-
-          ${sizeType === 'custom' ? `
-            <!-- Ukuran Custom: Dropdown Satuan Ukuran + Tabel Input Variasi -->
-            <div class="space-y-3 p-4 rounded-md border border-slate-200 bg-slate-50/50">
-              <div class="flex items-center gap-3 flex-wrap">
-                <label for="select-size-unit" class="text-xs font-bold text-slate-800">Satuan Ukuran:</label>
-                <select id="select-size-unit" class="px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white">
-                  <option value="M" ${sizeUnit === 'M' ? 'selected' : ''}>M (Meter)</option>
-                  <option value="Dm" ${sizeUnit === 'Dm' ? 'selected' : ''}>Dm (Desimeter)</option>
-                  <option value="Cm" ${sizeUnit === 'Cm' ? 'selected' : ''}>Cm (Sentimeter)</option>
-                  <option value="Mm" ${sizeUnit === 'Mm' ? 'selected' : ''}>Mm (Milimeter)</option>
-                </select>
-                <span class="text-[11px] text-slate-400">Harga di bawah adalah tarif dasar per 1 satuan persegi</span>
-              </div>
-
-              ${renderHierarchicalVariationsSection()}
-            </div>
-          ` : `
-            <!-- Ukuran Tetap: Saran Ukuran Umum + Tabel Input Variasi -->
-            <div class="space-y-3 p-4 rounded-md border border-slate-200 bg-slate-50/50">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <label class="block text-xs font-bold text-slate-800">Saran Ukuran Cepat:</label>
-                  <span class="text-[11px] text-slate-500">Klik untuk langsung menambahkan ukuran ke tabel variasi.</span>
-                </div>
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <button type="button" class="btn-quick-add-size px-2.5 py-1 rounded-md text-xs font-bold bg-white border border-slate-300 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition cursor-pointer" data-size="S">S</button>
-                  <button type="button" class="btn-quick-add-size px-2.5 py-1 rounded-md text-xs font-bold bg-white border border-slate-300 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition cursor-pointer" data-size="M">M</button>
-                  <button type="button" class="btn-quick-add-size px-2.5 py-1 rounded-md text-xs font-bold bg-white border border-slate-300 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition cursor-pointer" data-size="L">L</button>
-                  <button type="button" class="btn-quick-add-size px-2.5 py-1 rounded-md text-xs font-bold bg-white border border-slate-300 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition cursor-pointer" data-size="XL">XL</button>
-                  <button type="button" class="btn-quick-add-size px-2.5 py-1 rounded-md text-xs font-bold bg-white border border-slate-300 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition cursor-pointer" data-size="2L">2L</button>
-                  <button type="button" class="btn-quick-add-size px-2.5 py-1 rounded-md text-xs font-bold bg-white border border-slate-300 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition cursor-pointer" data-size="3L">3L</button>
-                </div>
-              </div>
-
-              ${renderHierarchicalVariationsSection()}
-            </div>
-          `}
-        </div>
-      `;
-    }
-
-    // 3. BERDASAR BERAT
-    if (model === 'weight') {
-      const weightUnit = primaryState.weight_unit || 'Kg';
-      return `
-        <div class="space-y-4 pt-1 p-4 rounded-md border border-slate-200 bg-slate-50/50">
-          <div class="flex items-center gap-3 flex-wrap">
-            <label for="select-weight-unit" class="text-xs font-bold text-slate-800">Satuan Berat:</label>
-            <select id="select-weight-unit" class="px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white">
-              <option value="Kg" ${weightUnit === 'Kg' ? 'selected' : ''}>Kg (Kilogram)</option>
-              <option value="gram" ${weightUnit === 'gram' ? 'selected' : ''}>gram</option>
-              <option value="ons" ${weightUnit === 'ons' ? 'selected' : ''}>ons</option>
-              <option value="ton" ${weightUnit === 'ton' ? 'selected' : ''}>ton</option>
-            </select>
-            <span class="text-[11px] text-slate-400">Harga di bawah adalah tarif dasar per satuan berat terpilih</span>
-          </div>
-
-          ${renderHierarchicalVariationsSection()}
-        </div>
-      `;
-    }
-
-    // 4. BERDASAR VOLUME
-    if (model === 'volume') {
-      const volumeUnit = primaryState.volume_unit || 'Liter';
-      return `
-        <div class="space-y-4 pt-1 p-4 rounded-md border border-slate-200 bg-slate-50/50">
-          <div class="flex items-center gap-3 flex-wrap">
-            <label for="select-volume-unit" class="text-xs font-bold text-slate-800">Satuan Volume:</label>
-            <select id="select-volume-unit" class="px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white">
-              <option value="Liter" ${volumeUnit === 'Liter' ? 'selected' : ''}>Liter</option>
-              <option value="ml" ${volumeUnit === 'ml' ? 'selected' : ''}>ml (Mililiter)</option>
-              <option value="galon" ${volumeUnit === 'galon' ? 'selected' : ''}>galon</option>
-              <option value="drum" ${volumeUnit === 'drum' ? 'selected' : ''}>drum</option>
-              <option value="cc" ${volumeUnit === 'cc' ? 'selected' : ''}>cc</option>
-            </select>
-            <span class="text-[11px] text-slate-400">Harga di bawah adalah tarif dasar per satuan volume terpilih</span>
-          </div>
-
-          ${renderHierarchicalVariationsSection()}
-        </div>
-      `;
-    }
-
     return '';
   }
+
+
 
   // Sub-Renderer: Maksimal Order
   function renderMaxOrderSection() {
@@ -18560,30 +18462,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-    // Teks Saran Dinamis: Tampilkan hanya saat fokus/ketik pada input label khusus
-    const labelSuggestionText = document.getElementById('custom-labels-suggestion-text');
-    function showLabelSuggestion() {
-      if (labelSuggestionText) labelSuggestionText.classList.remove('hidden');
-    }
-    function hideLabelSuggestion() {
-      setTimeout(() => {
-        const active = document.activeElement;
-        const slots = [
-          document.getElementById('input-custom-label-1'),
-          document.getElementById('input-custom-label-2')
-        ];
-        if (!slots.includes(active) && labelSuggestionText) {
-          labelSuggestionText.classList.add('hidden');
-        }
-      }, 150);
-    }
-
     // Step 1 Custom Label Slots Input Listeners
     ['input-custom-label-1', 'input-custom-label-2'].forEach(id => {
       const inp = document.getElementById(id);
       if (inp) {
         const handleCustomLabelChange = () => {
-          showLabelSuggestion();
           updateCustomLabelsLockState();
           updateQuickLabelChipsLockState();
           saveDraftToStorage();
@@ -18593,8 +18476,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
         inp.addEventListener('input', handleCustomLabelChange);
         inp.addEventListener('change', handleCustomLabelChange);
-        inp.addEventListener('focus', showLabelSuggestion);
-        inp.addEventListener('blur', hideLabelSuggestion);
       }
     });
 

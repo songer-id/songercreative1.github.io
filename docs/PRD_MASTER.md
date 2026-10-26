@@ -415,7 +415,7 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       8. Step 2 — Asal Produk (`#input-product-origin`): `list="datalist-product-origins"` + `<datalist id="datalist-product-origins">`.
       9. Step 2 — Judul Tabel Spesifikasi Manual (`.input-spec-title`): `list="datalist-spec-titles"` + `<datalist id="datalist-spec-titles">`.
     - **Preservasi Integrasi Edit Produk & Modal Batal Cerdas**: Menjaga 100% alur klik Edit dari menu produk (`loadProductForEdit`, `initEdit`) dan modal pembatalan cerdas (`handleFormCancel`, `showCancelConfirmationModal`).
-    - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=7.0`.
+    - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=7.2`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

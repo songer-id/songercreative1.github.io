@@ -1308,15 +1308,27 @@ input.toggle-same-cost:checked~div::after {
   border-radius: 0px !important;
 }
 
-/* Native HTML5 <datalist> Indicator Styling - Ramping Bawaan Browser (Persis Gambar 2) */
+/* Native HTML5 <datalist> Indicator Styling: Tampilkan panah segitiga native bawaan browser yang presisi dan ramping (Gambar 2) */
 input[list]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.15s ease;
 }
 
-input[list]::-webkit-calendar-picker-indicator:hover {
+input[list]:hover::-webkit-calendar-picker-indicator,
+input[list]:focus::-webkit-calendar-picker-indicator {
   opacity: 1;
+}
+
+/* Tombol Hapus Cepat (×) pada Input Bertipe Input & Pilih (input[list]) */
+.btn-clear-datalist-input {
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-clear-datalist-input:hover {
+  color: #ef4444 !important;
+  background-color: #f1f5f9;
 }
 
 /* ==========================================================================
