@@ -432,6 +432,236 @@ const ProductForm = (() => {
     return null;
   }
 
+  function escapeSafeHtml(str) {
+    if (typeof Utils !== 'undefined' && typeof Utils.escapeHtml === 'function') {
+      return Utils.escapeHtml(str);
+    }
+    if (typeof escapeHtml === 'function') {
+      return escapeHtml(str);
+    }
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // ==========================================================================
+  // CUSTOM POPOVER DROPDOWN BERSIH (GAYA SHADCN SELECT KOMPAK)
+  // Menempel rapat persis di bawah input (top-full mt-1), tanpa offset melayang
+  // ==========================================================================
+  function getOptionsForDatalist(listId) {
+    let options = [];
+    const datalist = document.getElementById(listId);
+    if (datalist) {
+      options = Array.from(datalist.querySelectorAll('option'))
+        .map(o => (o.value || o.textContent || '').trim())
+        .filter(Boolean);
+    }
+    // Khusus label khusus Step 1: gabungkan dengan riwayat dari DB
+    if (listId === 'custom-labels-history-list') {
+      const defaultLabels = [
+        'Best Seller', 'Produk Populer', 'Desain Custom', 'Promo Terbatas',
+        'Termurah', 'Free Ongkir', 'Garansi 100%', 'Siap 1 Jam'
+      ];
+      defaultLabels.forEach(lbl => {
+        if (!options.includes(lbl)) options.push(lbl);
+      });
+      if (typeof DB !== 'undefined' && typeof DB.getCustomLabelsHistory === 'function') {
+        try {
+          const history = DB.getCustomLabelsHistory();
+          if (Array.isArray(history)) {
+            history.forEach(h => {
+              const val = (typeof h === 'string' ? h : h?.name || '').trim();
+              if (val && !options.includes(val)) options.push(val);
+            });
+          }
+        } catch (_) {}
+      }
+    }
+    return options;
+  }
+
+  function bindCleanDatalistPopovers(scope = document) {
+    if (!scope) return;
+    const inputs = scope.querySelectorAll('input[list], input[data-datalist], .clean-datalist-input');
+    
+    inputs.forEach(input => {
+      const datalistId = input.getAttribute('data-datalist') || input.getAttribute('list');
+      if (!datalistId) return;
+
+      // Catat data-datalist dan hilangkan atribut 'list' agar browser Chromium
+      // TIDAK membuka native pop-up OS yang terkena bug floating/offset melayang ke bawah
+      input.setAttribute('data-datalist', datalistId);
+      input.removeAttribute('list');
+      input.setAttribute('autocomplete', 'off');
+      input.classList.add('clean-datalist-input');
+
+      // Pastikan wrapper parent memiliki class relative dan clean-datalist-wrapper
+      let wrapper = input.parentElement;
+      if (!wrapper) return;
+      if (wrapper.tagName === 'TD' || !wrapper.classList.contains('relative')) {
+        wrapper.classList.add('relative');
+      }
+      wrapper.classList.add('clean-datalist-wrapper');
+
+      // Tambahkan panah segitiga kecil (▼) ramping di kanan jika belum ada
+      let arrow = wrapper.querySelector(':scope > .clean-datalist-arrow');
+      if (!arrow && !wrapper.querySelector('.btn-clear-custom-label')) {
+        arrow = document.createElement('span');
+        arrow.className = 'clean-datalist-arrow absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[8px] select-none';
+        arrow.innerHTML = '▼';
+        wrapper.appendChild(arrow);
+      }
+
+      // Pastikan elemen popover bersih ada tepat di bawah input
+      let popover = wrapper.querySelector(':scope > .clean-datalist-popover');
+      if (!popover) {
+        popover = document.createElement('div');
+        popover.className = 'clean-datalist-popover absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 hidden';
+        wrapper.appendChild(popover);
+      }
+
+      // Cegah pendaftaran listener berulang
+      if (input.dataset.cleanDatalistBound === 'true') return;
+      input.dataset.cleanDatalistBound = 'true';
+
+      function renderItems(filterText = '') {
+        const options = getOptionsForDatalist(datalistId);
+        const q = (filterText || '').toLowerCase().trim();
+        const filtered = q ? options.filter(opt => opt.toLowerCase().includes(q)) : options;
+
+        if (filtered.length === 0) {
+          popover.innerHTML = '<div class="px-3 py-2 text-[11px] text-slate-400 italic text-center select-none">Tidak ada saran yang cocok</div>';
+          popover.classList.remove('hidden');
+          return;
+        }
+
+        popover.innerHTML = filtered.map(opt => {
+          const isSelected = input.value.trim().toLowerCase() === opt.toLowerCase();
+          return `
+            <div class="clean-datalist-item px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold bg-slate-50 text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(opt)}">
+              <span>${escapeSafeHtml(opt)}</span>
+              ${isSelected ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)]"></i>' : ''}
+            </div>
+          `;
+        }).join('');
+
+        popover.querySelectorAll('.clean-datalist-item').forEach(item => {
+          item.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const val = item.getAttribute('data-value') || '';
+            input.value = val;
+
+            // Logika sinkronisasi khusus untuk Stok & Maksimal Order Unlimited
+            if (input.id === 'input-stock-qty') {
+              if (val.trim().toLowerCase() === 'unlimited') {
+                primaryState.is_unlimited_stock = true;
+                primaryState.stock = null;
+              } else {
+                primaryState.is_unlimited_stock = false;
+                primaryState.stock = parseInt(val, 10) || 0;
+              }
+            } else if (input.id === 'input-normal-max-order') {
+              if (val.trim().toLowerCase() === 'unlimited') {
+                primaryState.is_unlimited_max_order = true;
+                primaryState.max_order = null;
+              } else {
+                primaryState.is_unlimited_max_order = false;
+                primaryState.max_order = parseInt(val, 10) || null;
+              }
+            } else if (input.classList.contains('combo-max-order-input')) {
+              const matId = input.getAttribute('data-mat-id');
+              if (matId && primaryState.materials) {
+                const mat = primaryState.materials.find(m => String(m.id) === String(matId));
+                if (mat) {
+                  mat.max_order = val.trim().toLowerCase() === 'unlimited' ? 'Unlimited' : val;
+                }
+              }
+            }
+
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            popover.classList.add('hidden');
+          });
+        });
+
+        popover.classList.remove('hidden');
+      }
+
+      function openMenu() {
+        document.querySelectorAll('.clean-datalist-popover').forEach(p => {
+          if (p !== popover) p.classList.add('hidden');
+        });
+        renderItems(input.value);
+      }
+
+      input.addEventListener('focus', () => {
+        openMenu();
+      });
+
+      input.addEventListener('click', () => {
+        if (popover.classList.contains('hidden')) {
+          openMenu();
+        }
+      });
+
+      input.addEventListener('input', () => {
+        renderItems(input.value);
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (popover.classList.contains('hidden')) {
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            openMenu();
+          }
+          return;
+        }
+        const items = Array.from(popover.querySelectorAll('.clean-datalist-item'));
+        const activeIdx = items.findIndex(el => el.classList.contains('bg-slate-100'));
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          popover.classList.add('hidden');
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextIdx = activeIdx < items.length - 1 ? activeIdx + 1 : 0;
+          items.forEach((el, idx) => el.classList.toggle('bg-slate-100', idx === nextIdx));
+          items[nextIdx]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevIdx = activeIdx > 0 ? activeIdx - 1 : items.length - 1;
+          items.forEach((el, idx) => el.classList.toggle('bg-slate-100', idx === prevIdx));
+          items[prevIdx]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+          if (activeIdx >= 0 && items[activeIdx]) {
+            e.preventDefault();
+            items[activeIdx].dispatchEvent(new MouseEvent('mousedown'));
+          }
+        }
+      });
+
+      input.addEventListener('blur', () => {
+        setTimeout(() => {
+          popover.classList.add('hidden');
+        }, 150);
+      });
+    });
+  }
+
+  // Event listener global: tutup popover saat klik di luar
+  if (!window._cleanDatalistClickOutsideBound) {
+    window._cleanDatalistClickOutsideBound = true;
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.clean-datalist-wrapper') && !e.target.closest('.clean-datalist-popover')) {
+        document.querySelectorAll('.clean-datalist-popover').forEach(p => p.classList.add('hidden'));
+      }
+    });
+  }
+
   // Helper: Tanggal & Waktu Lokal untuk Pengaturan Periode Maksimal Order
   function getTodayDateString() {
     const d = new Date();
@@ -16559,6 +16789,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (section) {
         section.outerHTML = renderCombinationMatrixTable();
         bindCombinationMatrixEvents();
+        if (typeof bindCleanDatalistPopovers === 'function') {
+          const newSec = document.getElementById('combination-matrix-section');
+          if (newSec) bindCleanDatalistPopovers(newSec);
+        }
       }
     }
     const refreshCombinationMatrixDOM = refreshCombinationMatrixTable;
@@ -17310,6 +17544,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const newRow = tempDiv.firstElementChild;
           if (newRow) {
             tbody.appendChild(newRow);
+            if (typeof bindCleanDatalistPopovers === 'function') {
+              bindCleanDatalistPopovers(newRow);
+            }
             updateSpecsUIState();
             if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
             if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
@@ -17778,6 +18015,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Card 6: Komisi Afiliasi Events
     bindAffiliateCommissionEvents();
+
+    // Inisialisasi Custom Popover Dropdown Bersih (Shadcn Select Kompak) untuk seluruh input Step 2
+    if (typeof bindCleanDatalistPopovers === 'function') {
+      bindCleanDatalistPopovers(document.getElementById('step-pane-2') || document);
+    }
   }
 
 
@@ -20124,6 +20366,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         e.target.value = '';
       }
     });
+
+    // Inisialisasi Custom Popover Dropdown Bersih (Shadcn Select Kompak) untuk seluruh input Step 1
+    if (typeof bindCleanDatalistPopovers === 'function') {
+      bindCleanDatalistPopovers(document.getElementById('step-pane-1') || document);
+    }
   }
 
   function syncStateFromDOM() {

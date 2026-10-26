@@ -1308,7 +1308,38 @@ input.toggle-same-cost:checked~div::after {
   border-radius: 0px !important;
 }
 
-/* Native HTML5 <datalist> Indicator Styling: Tampilkan panah segitiga native bawaan browser yang presisi dan ramping (Gambar 2) */
+/* ==========================================================================
+   DROPDOWN & DATALIST POPOVER STYLING (PRESISI MENEMPEL TEPAT DI BAWAH INPUT)
+   ========================================================================== */
+input[list],
+input[data-datalist],
+.clean-datalist-input {
+  position: relative;
+}
+
+/* Pastikan wrapper/container input tidak memiliki overflow-hidden yang memotong dropdown */
+.custom-combobox-wrapper,
+.clean-datalist-wrapper,
+.input-group-container,
+.step1-section-card,
+.step2-section-card {
+  overflow: visible !important;
+}
+
+/* Hilangkan transform, perspective, atau filter pada container agar stacking context koordinat popover presisi */
+#admin-main-viewport,
+#view-product-form,
+#form-container,
+#product-form-wrapper,
+#wizard-form-col,
+#step-pane-1,
+#step-pane-2 {
+  transform: none !important;
+  perspective: none !important;
+  filter: none !important;
+}
+
+/* Native HTML5 <datalist> Indicator Styling: Tampilkan panah segitiga native bawaan browser yang presisi dan ramping */
 input[list]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
@@ -1318,6 +1349,44 @@ input[list]::-webkit-calendar-picker-indicator {
 input[list]:hover::-webkit-calendar-picker-indicator,
 input[list]:focus::-webkit-calendar-picker-indicator {
   opacity: 1;
+}
+
+/* Custom Popover Dropdown Bersih (Gaya Shadcn Select Kompak - Menempel Rapat Persis di Bawah Input) */
+.clean-datalist-popover {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.clean-datalist-popover::-webkit-scrollbar {
+  width: 5px;
+}
+
+.clean-datalist-popover::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.clean-datalist-item {
+  transition: all 0.15s ease;
+}
+
+.clean-datalist-item:hover,
+.clean-datalist-item.is-selected {
+  background-color: var(--color-primary-subtle, #f0fdf4) !important;
+  color: var(--color-primary, #059669) !important;
+}
+
+.clean-datalist-arrow {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.clean-datalist-wrapper:focus-within .clean-datalist-arrow {
+  transform: translateY(-50%) rotate(180deg);
+  color: var(--color-primary, #059669);
+}
+
+.clean-datalist-wrapper:has(.btn-clear-custom-label.flex) .clean-datalist-arrow {
+  display: none !important;
 }
 
 /* Tombol Hapus Cepat (×) pada Input Bertipe Input & Pilih (input[list]) */
