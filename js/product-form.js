@@ -4835,19 +4835,13 @@ const ProductForm = (() => {
 
   // Helper Ringkasan Keterangan Opsi Terpilih di Drawer Shopee-Style
   function buildDrawerSelectedOptionsDescriptionsHtml() {
-    const lines = [];
+    const descriptions = [];
 
     // Variasi 1
     if (primaryState.has_variants && previewTestState.selectedTier1Id) {
       const mat = (materialsState || []).find(m => m.id === previewTestState.selectedTier1Id);
       if (mat && mat.description && String(mat.description).trim() !== '') {
-        const title = getVariationLabel('tier1', 'Variasi 1');
-        lines.push(`
-          <div class="text-[11px] leading-snug text-slate-500">
-            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
-            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(mat.description).trim())}</span>
-          </div>
-        `);
+        descriptions.push(String(mat.description).trim());
       }
     }
 
@@ -4855,13 +4849,7 @@ const ProductForm = (() => {
     if (primaryState.has_variation_2 && previewTestState.selectedTier2Id) {
       const v2 = (finishingsState.main || []).find((f, idx) => (f.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
       if (v2 && v2.description && String(v2.description).trim() !== '') {
-        const title = getVariationLabel('tier2', 'Variasi 2');
-        lines.push(`
-          <div class="text-[11px] leading-snug text-slate-500">
-            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
-            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(v2.description).trim())}</span>
-          </div>
-        `);
+        descriptions.push(String(v2.description).trim());
       }
     }
 
@@ -4869,13 +4857,7 @@ const ProductForm = (() => {
     if (primaryState.has_variation_3 && previewTestState.selectedTier3Id) {
       const v3 = (finishingsState.extra_1 || []).find((f, idx) => (f.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
       if (v3 && v3.description && String(v3.description).trim() !== '') {
-        const title = getVariationLabel('tier3', 'Variasi 3');
-        lines.push(`
-          <div class="text-[11px] leading-snug text-slate-500">
-            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
-            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(v3.description).trim())}</span>
-          </div>
-        `);
+        descriptions.push(String(v3.description).trim());
       }
     }
 
@@ -4883,17 +4865,13 @@ const ProductForm = (() => {
     if (primaryState.has_variation_4 && previewTestState.selectedTier4Id) {
       const v4 = (finishingsState.extra_2 || []).find((f, idx) => (f.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
       if (v4 && v4.description && String(v4.description).trim() !== '') {
-        const title = getVariationLabel('tier4', 'Variasi 4');
-        lines.push(`
-          <div class="text-[11px] leading-snug text-slate-500">
-            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
-            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(v4.description).trim())}</span>
-          </div>
-        `);
+        descriptions.push(String(v4.description).trim());
       }
     }
 
-    return lines.join('');
+    if (descriptions.length === 0) return '';
+
+    return `<div class="text-[11px] font-normal text-slate-400 leading-relaxed">${descriptions.map(d => escapeHtml(d)).join(', ')}</div>`;
   }
 
   function updateDrawerSelectedOptionsDescriptions() {
@@ -4906,6 +4884,132 @@ const ProductForm = (() => {
         container.classList.remove('hidden');
       } else {
         container.innerHTML = '';
+        container.classList.add('hidden');
+      }
+    });
+  }
+
+  // Helper Teks Peringatan / Informasi Penyesuaian Ketentuan Pesanan di Bawah Drawer
+  function buildShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount) {
+    const minOrder = rule?.min_order || 1;
+    const maxOrder = (rule?.max_order !== undefined && rule?.max_order !== null) ? rule.max_order : Infinity;
+    const stepMult = rule?.order_multiple || 1;
+    const wholesaleTiers = rule?.wholesale_tiers || (primaryState.has_wholesale && Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : []);
+    const hasDiscount = Boolean(primaryState.has_discount);
+
+    // 1. Peringatan Batas Maksimal Pesanan
+    if (maxOrder !== Infinity && curQty >= maxOrder) {
+      const msg = hasDiscount
+        ? `Harga promo berlaku untuk maksimal ${maxOrder} pcs`
+        : `Maksimal pembelian ${maxOrder} pcs per pesanan`;
+      return {
+        text: msg,
+        colorClass: 'text-amber-600',
+        icon: 'bi-exclamation-triangle-fill'
+      };
+    }
+
+    // 2. Peringatan Batas Minimal Pesanan
+    if (minOrder > 1 && curQty <= minOrder) {
+      return {
+        text: `Minimal pembelian ${minOrder} pcs`,
+        colorClass: 'text-amber-600',
+        icon: 'bi-info-circle-fill'
+      };
+    }
+
+    // 3. Peringatan Kelipatan Pesanan (jika Qty bukan kelipatan kelipatan yang ditentukan)
+    if (stepMult > 1 && (curQty % stepMult !== 0)) {
+      return {
+        text: `Jumlah pesanan wajib kelipatan ${stepMult} pcs`,
+        colorClass: 'text-amber-600',
+        icon: 'bi-info-circle-fill'
+      };
+    }
+
+    // 4. Status / Informasi Harga Grosir
+    if (primaryState.has_wholesale && Array.isArray(wholesaleTiers) && wholesaleTiers.length > 0) {
+      const validTiers = wholesaleTiers
+        .map(t => ({
+          min_qty: parseInt(t.min_qty) || 0,
+          discount: parseFloat(t.price || t.discount || 0)
+        }))
+        .filter(t => t.min_qty > 0 && t.discount > 0)
+        .sort((a, b) => a.min_qty - b.min_qty);
+
+      if (validTiers.length > 0) {
+        const activeTiers = validTiers.filter(t => curQty >= t.min_qty);
+        if (activeTiers.length > 0) {
+          const currentTier = activeTiers[activeTiers.length - 1];
+          const wholesaleUnitPrice = Math.max(0, unitPriceAfterDiscount - currentTier.discount);
+          return {
+            text: `Harga grosir Rp${Math.round(wholesaleUnitPrice).toLocaleString('id-ID')}/pcs diterapkan`,
+            colorClass: 'text-slate-600 font-medium',
+            icon: 'bi-tag-fill'
+          };
+        } else {
+          const firstTier = validTiers[0];
+          const firstTierPrice = Math.max(0, unitPriceAfterDiscount - firstTier.discount);
+          return {
+            text: `Beli min. ${firstTier.min_qty} pcs untuk harga grosir Rp${Math.round(firstTierPrice).toLocaleString('id-ID')}/pcs`,
+            colorClass: 'text-slate-500',
+            icon: 'bi-tag'
+          };
+        }
+      }
+    }
+
+    // 5. Informasi Kelipatan Pesanan (jika aktif)
+    if (stepMult > 1) {
+      return {
+        text: `Jumlah pesanan wajib kelipatan ${stepMult} pcs`,
+        colorClass: 'text-slate-500',
+        icon: 'bi-info-circle'
+      };
+    }
+
+    // 6. Informasi Minimal Pembelian (jika min_order > 1)
+    if (minOrder > 1) {
+      return {
+        text: `Minimal pembelian ${minOrder} pcs`,
+        colorClass: 'text-slate-500',
+        icon: 'bi-info-circle'
+      };
+    }
+
+    return null;
+  }
+
+  function renderShopeeDrawerOrderNoticeHtml(rule, curQty, unitPriceAfterDiscount) {
+    const notice = buildShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount);
+    if (!notice) {
+      return `<div id="shopee-drawer-order-notice" class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white hidden"><div class="drawer-order-notice-content text-[11px] leading-tight"></div></div>`;
+    }
+    return `
+      <div id="shopee-drawer-order-notice" class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
+        <div class="drawer-order-notice-content flex items-center gap-1.5 text-[11px] leading-tight ${notice.colorClass}">
+          <i class="bi ${notice.icon} shrink-0 text-xs"></i>
+          <span class="truncate">${escapeHtml(notice.text)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount) {
+    const noticeContainers = document.querySelectorAll('#shopee-drawer-order-notice');
+    if (!noticeContainers.length) return;
+    const notice = buildShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount);
+    noticeContainers.forEach(container => {
+      if (notice) {
+        container.innerHTML = `
+          <div class="drawer-order-notice-content flex items-center gap-1.5 text-[11px] leading-tight ${notice.colorClass}">
+            <i class="bi ${notice.icon} shrink-0 text-xs"></i>
+            <span class="truncate">${escapeHtml(notice.text)}</span>
+          </div>
+        `;
+        container.classList.remove('hidden');
+      } else {
+        container.innerHTML = '<div class="drawer-order-notice-content text-[11px] leading-tight"></div>';
         container.classList.add('hidden');
       }
     });
@@ -5135,6 +5239,9 @@ const ProductForm = (() => {
     // Evaluasi Harga Final
     let grandTotalPrice = 0;
     let grandStrikePrice = 0;
+    let headerUnitPrice = 0;
+    let headerStrikeUnitPrice = 0;
+    let baseUnitPriceAfterDiscount = 0;
     let wholesaleInfo = { hasDiscount: false, discountPerPcs: 0, bannerText: '' };
 
     if (primaryState.has_custom_dimension && dimPricing.isValid) {
@@ -5149,11 +5256,14 @@ const ProductForm = (() => {
           step2StrikePrice = effUnitPrice * 2;
         }
       }
+      baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
+      headerUnitPrice = finalUnitPrice;
+      headerStrikeUnitPrice = (step2StrikePrice || effUnitPrice);
       grandTotalPrice = finalUnitPrice * curQty;
       grandStrikePrice = (step2StrikePrice || effUnitPrice) * curQty;
     } else {
@@ -5167,16 +5277,21 @@ const ProductForm = (() => {
           step2StrikePrice = displayBasePrice * 2;
         }
       }
+      baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
+      headerUnitPrice = finalUnitPrice + extrasActivePrice;
+      headerStrikeUnitPrice = (step2StrikePrice || displayBasePrice) + extrasActivePrice;
       const productSubtotal = finalUnitPrice * curQty;
       grandTotalPrice = productSubtotal + extrasActivePrice;
       const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
       grandStrikePrice = strikeSubtotal + extrasActivePrice;
     }
+
+    const orderNoticeHtml = renderShopeeDrawerOrderNoticeHtml(rule, curQty, baseUnitPriceAfterDiscount);
 
     // Stok Display
     const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
@@ -5310,10 +5425,10 @@ const ProductForm = (() => {
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${effHasDiscount ? `
-                <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(headerStrikeUnitPrice).toLocaleString('id-ID')}</div>
               ` : `
-                <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
@@ -5351,10 +5466,7 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
-            <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
-            <span class="drawer-total-price text-sm font-extrabold" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</span>
-          </div>
+          ${orderNoticeHtml}
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
             <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
@@ -5443,10 +5555,10 @@ const ProductForm = (() => {
             <div class="flex-1 pr-6 min-w-0">
               ${isAllVariationsSelected ? `
                 ${effHasDiscount ? `
-                  <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
-                  <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(headerStrikeUnitPrice).toLocaleString('id-ID')}</div>
                 ` : `
-                  <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
                   <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
                 `}
                 <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5 hidden">Pilih varian dahulu</div>
@@ -5496,10 +5608,7 @@ const ProductForm = (() => {
             </div>
           </div>
 
-          <div class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
-            <span class="text-xs font-semibold text-slate-500">Total Pembayaran:</span>
-            <span class="drawer-total-price text-sm font-extrabold" style="color: ${accentColor};">${isAllVariationsSelected ? `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}` : '-'}</span>
-          </div>
+          ${orderNoticeHtml}
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
             <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
@@ -6022,6 +6131,9 @@ const ProductForm = (() => {
 
     let grandTotalPrice = 0;
     let grandStrikePrice = 0;
+    let headerUnitPrice = 0;
+    let headerStrikeUnitPrice = 0;
+    let baseUnitPriceAfterDiscount = 0;
     let wholesaleInfo = { hasDiscount: false, discountPerPcs: 0, bannerText: '' };
 
     if (primaryState.has_custom_dimension && dimPricing.isValid) {
@@ -6036,11 +6148,14 @@ const ProductForm = (() => {
           step2StrikePrice = effUnitPrice * 2;
         }
       }
+      baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
+      headerUnitPrice = finalUnitPrice;
+      headerStrikeUnitPrice = (step2StrikePrice || effUnitPrice);
       grandTotalPrice = finalUnitPrice * curQty;
       grandStrikePrice = (step2StrikePrice || effUnitPrice) * curQty;
     } else {
@@ -6054,11 +6169,14 @@ const ProductForm = (() => {
           step2StrikePrice = displayBasePrice * 2;
         }
       }
+      baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
+      headerUnitPrice = finalUnitPrice + extrasActivePrice;
+      headerStrikeUnitPrice = (step2StrikePrice || displayBasePrice) + extrasActivePrice;
       const productSubtotal = finalUnitPrice * curQty;
       grandTotalPrice = productSubtotal + extrasActivePrice;
       const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
@@ -6084,13 +6202,13 @@ const ProductForm = (() => {
       if (hasVariations && !isAllVariationsSelected) {
         el.textContent = drawerPriceRangeString;
       } else {
-        el.textContent = `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}`;
+        el.textContent = `Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}`;
       }
     });
 
     document.querySelectorAll('.drawer-header-strike-price').forEach(el => {
       if (effHasDiscount && (!hasVariations || isAllVariationsSelected)) {
-        el.textContent = `Rp${Math.round(grandStrikePrice).toLocaleString('id-ID')}`;
+        el.textContent = `Rp${Math.round(headerStrikeUnitPrice).toLocaleString('id-ID')}`;
         el.classList.remove('hidden');
       } else {
         el.classList.add('hidden');
@@ -6105,13 +6223,7 @@ const ProductForm = (() => {
       }
     });
 
-    document.querySelectorAll('.drawer-total-price').forEach(el => {
-      if (hasVariations && !isAllVariationsSelected) {
-        el.textContent = '-';
-      } else {
-        el.textContent = `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}`;
-      }
-    });
+    updateShopeeDrawerOrderNotice(rule, curQty, baseUnitPriceAfterDiscount);
 
     updateDrawerSelectedOptionsDescriptions();
   }

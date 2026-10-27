@@ -589,6 +589,22 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menyematkan wadah khusus `#drawer-selected-options-descriptions` di bagian paling bawah area variasi drawer persis di atas garis pemisah Jumlah Pesanan / Footer.
       - Merangkum keterangan opsi aktif dari Variasi 1 s.d. Variasi 4 dengan format `[Judul Variasi]: [Keterangan Opsi]` (`text-[11px] leading-snug text-slate-500`).
       - Menyembunyikan kontainer secara otomatis (`hidden`) jika tidak ada variasi aktif yang memiliki keterangan, dan memperbarui isinya secara real-time pada setiap perubahan pilihan variasi (Chip, Accordion, maupun Shadcn Popover Select).
+  - [x] **Penyempurnaan Form Produk Bagian 18: Revisi Format Keterangan Opsi Terpilih Drawer, Harga Header Murni Satuan, dan Penggantian Total Pembayaran Menjadi Teks Ketentuan/Peringatan Order (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Revisi Format Keterangan Opsi Terpilih di Dalam Drawer (`buildDrawerSelectedOptionsDescriptionsHtml`)**:
+      - Menghapus judul variasi (`[Judul Variasi]:`) dan menghapus seluruh teks tebal (`font-medium` / `font-bold`).
+      - Menggabungkan nilai keterangan dari Variasi 1 s.d. Variasi 4 yang sedang terpilih menggunakan pemisah tanda koma dan spasi (`, `) dalam satu baris teks mengalir abu-abu tipis (`text-[11px] font-normal text-slate-400 leading-relaxed`).
+      - Menyembunyikan kontainer `#drawer-selected-options-descriptions` secara otomatis (`hidden`) apabila tidak ada variasi terpilih yang memiliki keterangan.
+    - **Harga di Header Atas Drawer Murni Harga Satuan Tanpa Dikali Qty**:
+      - Memastikan harga utama pada header drawer (`.drawer-header-price` dan `.drawer-header-strike-price`) murni menampilkan harga satuan efektif (per 1 pcs) dari kombinasi varian, ukuran P×L, dan layanan ekstra yang dipilih.
+      - Menjamin angka Qty (`+` / `-`) tidak melipatgandakan harga di header atas drawer, melainkan hanya menyesuaikan harga satuan secara dinamis jika kuantitas memenuhi tier Harga Grosir atau batas promo diskon.
+    - **Penggantian Total Pembayaran Menjadi Teks Peringatan / Ketentuan Order Reaktif (`#shopee-drawer-order-notice`)**:
+      - Menghilangkan sepenuhnya teks `"Total Pembayaran:"` beserta nominal total harga dari bagian bawah drawer.
+      - Menggantikannya dengan wadah teks penyesuaian/peringatan ketentuan pesanan yang reaktif (`#shopee-drawer-order-notice`):
+        - Peringatan batas maksimal/promo: `"Harga promo berlaku untuk maksimal ${maxOrder} pcs"` atau `"Maksimal pembelian ${maxOrder} pcs per pesanan"`.
+        - Peringatan batas minimal order: `"Minimal pembelian ${minOrder} pcs"`.
+        - Ketentuan kelipatan pesanan: `"Jumlah pesanan wajib kelipatan ${stepMult} pcs"`.
+        - Status / penawaran harga grosir: `"Harga grosir Rp[nominal]/pcs diterapkan"` atau `"Beli min. [N] pcs untuk harga grosir Rp[nominal]/pcs"`.
+      - Ditampilkan dengan tipografi rapi (`text-[11px] font-normal text-amber-600` atau warna proporsional) dan otomatis tersembunyi (`hidden`) jika tidak ada ketentuan aktif pada kondisi saat itu.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
