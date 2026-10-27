@@ -715,19 +715,17 @@
       }
       const stockVal = isAvailable ? 'Tersedia' : 'Habis';
 
-      // 2. Kondisi (Baru / Bekas)
-      const conditionVal = (prod.condition === 'used' || prod.condition === 'bekas') ? 'Bekas' : 'Baru';
+      // 2. Merek (brandVal sudah dideklarasikan di atas)
 
-      // 3. Merek (brandVal)
-      // 4. Jenis Garansi & Masa Garansi
-      const hasWarranty = warrantyPeriod !== 'Tidak Ada Garansi' && warrantyPeriod !== 'Tidak Garansi' && warrantyPeriod !== '';
+      // 3. Jenis Garansi & 4. Masa Garansi
+      const hasWarranty = warrantyPeriod !== 'Tidak Ada Garansi' && warrantyPeriod !== 'Tidak Garansi' && warrantyPeriod !== '' && warrantyPeriod !== '-';
 
       // 5. Produk Custom
       const isCustomProd = Boolean(prod.has_custom_dimension || prod.has_extra_service);
 
+      // KELOMPOK A — Baris Wajib yang Selalu Ditampilkan
       const specsRows = [
         { label: 'Stok', val: stockVal },
-        { label: 'Kondisi', val: conditionVal },
         { label: 'Merek', val: brandVal },
         { label: 'Jenis Garansi', val: escapeHtml(hasWarranty ? warrantyType : 'Tidak Ada Garansi') },
         ...(hasWarranty ? [{ label: 'Masa Garansi', val: escapeHtml(warrantyPeriod) }] : []),
@@ -735,23 +733,43 @@
         { label: 'Dikirim Dari', val: escapeHtml(sellerLocation) }
       ];
 
-      // Pre-Order: durasi harinya saja, tanpa kata Ya/Tidak
+      // KELOMPOK B — Baris Kondisional & Tabel Manual (Dibatasi min 5 & max 10):
+      // 7. Kondisi Produk (Baru / Bekas)
+      const conditionVal = (prod.condition === 'used' || prod.condition === 'bekas') ? 'Bekas' : 'Baru';
+      specsRows.push({ label: 'Kondisi Produk', val: conditionVal });
+
+      // 8. Pre-Order: durasi harinya saja, tanpa kata Ya/Tidak
       if (Boolean(prod.is_preorder)) {
         specsRows.push({ label: 'Pre-Order', val: `${prod.preorder_days || 7} Hari` });
       }
 
+      // 9. Min. Pembelian
       if (parseInt(prod.min_order) > 1) {
-        specsRows.push({ label: 'Min. Jumlah Pembelian', val: `${prod.min_order} pcs` });
+        specsRows.push({ label: 'Min. Pembelian', val: `${prod.min_order} pcs` });
       }
 
+      // 10. Harga Grosir
       if (prod.has_wholesale) {
         specsRows.push({ label: 'Harga Grosir', val: 'Tersedia' });
       }
 
+      // 11. Kelipatan Pembelian
       if (prod.has_order_multiple && parseInt(prod.order_multiple_value) > 1) {
         specsRows.push({ label: 'Kelipatan Pembelian', val: `Kelipatan ${prod.order_multiple_value} pcs` });
       }
 
+      // 12. Asal Produk
+      if (prod.product_origin && prod.product_origin.trim()) {
+        specsRows.push({ label: 'Asal Produk', val: escapeHtml(prod.product_origin.trim()) });
+      }
+
+      // 13. SKU Induk
+      const skuVal = (prod.sku || prod.parent_sku || '').trim();
+      if (skuVal) {
+        specsRows.push({ label: 'SKU Induk', val: escapeHtml(skuVal) });
+      }
+
+      // 14. Tabel Spesifikasi Manual Seller
       if (Array.isArray(prod.custom_specs) && prod.custom_specs.length > 0) {
         prod.custom_specs.forEach(cs => {
           if (cs && cs.title && cs.title.trim() && cs.value && cs.value.trim()) {

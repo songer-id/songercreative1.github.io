@@ -3924,12 +3924,12 @@ const ProductForm = (() => {
         <div class="text-xs font-normal text-slate-600 mb-1.5">${escapeHtml(dimLabel)}</div>
         ${dimSuggestionsHtml}
         <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
-          <div class="drawer-dim-input-box relative flex items-center bg-slate-100 rounded-none border-0 px-2.5 h-8 transition shadow-none">
+          <div class="dim-input-box drawer-dim-input-box relative flex items-center bg-slate-100 rounded-none border-0 px-2.5 h-8 transition shadow-none">
             <input type="number" step="any" min="0.01" id="input-shopee-dim-p" placeholder="Panjang (P)" value="${escapeHtml(dimLengthVal)}" class="input-shopee-dim-p w-full text-xs font-semibold text-slate-800 bg-transparent rounded-none border-0 outline-none shadow-none appearance-none pr-1" />
             <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
           <span class="text-xs font-semibold text-slate-400 px-0.5">×</span>
-          <div class="drawer-dim-input-box relative flex items-center bg-slate-100 rounded-none border-0 px-2.5 h-8 transition shadow-none">
+          <div class="dim-input-box drawer-dim-input-box relative flex items-center bg-slate-100 rounded-none border-0 px-2.5 h-8 transition shadow-none">
             <input type="number" step="any" min="0.01" id="input-shopee-dim-l" placeholder="Lebar (L)" value="${escapeHtml(dimWidthVal)}" class="input-shopee-dim-l w-full text-xs font-semibold text-slate-800 bg-transparent rounded-none border-0 outline-none shadow-none appearance-none pr-1" />
             <span class="text-[10px] font-bold text-slate-400 select-none ml-1 shrink-0">${displayUnit}</span>
           </div>
@@ -4229,10 +4229,10 @@ const ProductForm = (() => {
                   <div class="pl-2 border-l border-slate-200 shrink-0 flex items-center justify-end">
                     ${isQtyType ? `
                       <!-- Stepper Qty: [- [input] +] -->
-                      <div class="inline-flex items-center border border-slate-300 rounded overflow-hidden bg-white shadow-2xs">
-                        <button type="button" class="btn-extra-qty-minus w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer ${extraItemQty <= 0 ? 'opacity-40 cursor-not-allowed' : ''}" data-id="${exId}">-</button>
-                        <input type="number" class="input-extra-qty w-9 h-6 text-center text-xs font-bold text-slate-800 border-x border-slate-200 outline-none focus:bg-emerald-50/40 appearance-none" data-id="${exId}" value="${extraItemQty}" min="0" />
-                        <button type="button" class="btn-extra-qty-plus w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs select-none cursor-pointer" data-id="${exId}">+</button>
+                      <div class="extra-qty-stepper inline-flex items-center rounded-none border-0 overflow-hidden bg-slate-100 shadow-none">
+                        <button type="button" class="btn-extra-qty-minus btn-shopee-extra-minus w-6 h-6 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none cursor-pointer rounded-none border-0 outline-none shadow-none ${extraItemQty <= 0 ? 'opacity-40 cursor-not-allowed' : ''}" data-id="${exId}">-</button>
+                        <input type="number" class="input-extra-qty input-shopee-extra-qty w-9 h-6 text-center text-xs font-bold text-slate-800 bg-slate-50 rounded-none border-0 outline-none shadow-none appearance-none" data-id="${exId}" value="${extraItemQty}" min="0" />
+                        <button type="button" class="btn-extra-qty-plus btn-shopee-extra-plus w-6 h-6 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none cursor-pointer rounded-none border-0 outline-none shadow-none" data-id="${exId}">+</button>
                       </div>
                     ` : `
                       <!-- Radio Button Bulat: Putih dengan titik/border var(--color-primary) saat aktif -->
@@ -4486,29 +4486,23 @@ const ProductForm = (() => {
       ? '<span class="text-slate-800 font-medium">Tersedia</span>'
       : '<span class="text-red-600 font-semibold">Habis</span>';
 
-    // 1. STOK (Wajib 1)
+    // KELOMPOK A — Baris Wajib yang Selalu Ditampilkan:
+    // 1. Stok
     const rows = [
       { label: 'Stok', valueHtml: stockHtml }
     ];
 
-    // 2. KONDISI (Wajib 2: Baru / Bekas, default Baru)
-    const conditionVal = (primaryState.condition === 'used' || primaryState.condition === 'bekas') ? 'Bekas' : 'Baru';
-    rows.push({
-      label: 'Kondisi',
-      valueHtml: `<span class="text-slate-800 font-medium">${conditionVal}</span>`
-    });
-
-    // 3. MEREK (Wajib 3: isian seller atau "-")
+    // 2. Merek (isian seller atau "-")
     const brandVal = (primaryState.brand && primaryState.brand.trim()) ? escapeHtml(primaryState.brand.trim()) : '-';
     rows.push({
       label: 'Merek',
       valueHtml: `<span class="text-slate-800 font-medium">${brandVal}</span>`
     });
 
-    // 4. JENIS GARANSI & MASA GARANSI (Wajib 4 & 5 jika garansi aktif)
+    // 3. Jenis Garansi & 4. Masa Garansi
     const rawPeriod = (primaryState.warranty_period && primaryState.warranty_period.trim()) ? primaryState.warranty_period.trim() : '';
     const rawUnit = (primaryState.warranty_unit && primaryState.warranty_unit.trim()) ? primaryState.warranty_unit.trim() : '';
-    const hasWarranty = rawPeriod !== 'Tidak Ada Garansi' && rawPeriod !== 'Tidak Garansi' && rawPeriod !== '' && rawUnit !== 'Tidak Ada Garansi';
+    const hasWarranty = rawPeriod !== 'Tidak Ada Garansi' && rawPeriod !== 'Tidak Garansi' && rawPeriod !== '' && rawPeriod !== '-' && rawUnit !== 'Tidak Ada Garansi';
     const warrantyType = (primaryState.warranty_type && primaryState.warranty_type.trim()) ? primaryState.warranty_type.trim() : (hasWarranty ? 'Garansi Toko' : 'Tidak Ada Garansi');
 
     rows.push({
@@ -4516,7 +4510,7 @@ const ProductForm = (() => {
       valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(hasWarranty ? warrantyType : 'Tidak Ada Garansi')}</span>`
     });
 
-    // Baris Masa Garansi HANYA jika garansi aktif (bukan "Tidak Ada Garansi")
+    // 4. Masa Garansi HANYA tampilkan jika nilai garansi selain "Tidak Ada Garansi"
     if (hasWarranty) {
       rows.push({
         label: 'Masa Garansi',
@@ -4524,14 +4518,14 @@ const ProductForm = (() => {
       });
     }
 
-    // 5. PRODUK CUSTOM (Wajib 6: Ya jika Input Ukuran P x L atau Layanan Extra aktif, jika tidak: Tidak)
+    // 5. Produk Custom (Ya jika has_custom_dimension === true / produk custom PxL atau layanan extra, jika tidak: Tidak)
     const isCustomProd = Boolean(primaryState.has_custom_dimension || primaryState.has_extra_service);
     rows.push({
       label: 'Produk Custom',
       valueHtml: `<span class="text-slate-800 font-medium">${isCustomProd ? 'Ya' : 'Tidak'}</span>`
     });
 
-    // 6. DIKIRIM DARI (Wajib 7: Kota seller dari pengaturan toko)
+    // 6. Dikirim Dari (Otomatis dari fungsi hirarki lokasi seller)
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
     const sellerCity = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation)
       ? Utils.formatDynamicSellerLocation(settings, null)
@@ -4541,7 +4535,17 @@ const ProductForm = (() => {
       valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(sellerCity)}</span>`
     });
 
-    // 7. PRE-ORDER (Hanya tampil jika PO aktif, nilai durasi langsung tanpa "Ya/Tidak")
+    // KELOMPOK B — Baris Kondisional & Tabel Manual (Total baris dibatasi min 5 & max 10):
+    // 7. Kondisi Produk (Tautkan langsung dari #select-prod-condition / primaryState.condition)
+    const condEl = document.getElementById('select-prod-condition');
+    const curCond = condEl ? condEl.value : (primaryState.condition || 'new');
+    const conditionVal = (curCond === 'used' || curCond === 'bekas') ? 'Bekas' : 'Baru';
+    rows.push({
+      label: 'Kondisi Produk',
+      valueHtml: `<span class="text-slate-800 font-medium">${conditionVal}</span>`
+    });
+
+    // 8. Pre-Order (Jika is_preorder === true, tampilkan langsung durasi harinya saja tanpa "Ya/Tidak")
     if (Boolean(primaryState.is_preorder)) {
       const poDays = parseInt(primaryState.preorder_days) || 7;
       rows.push({
@@ -4550,28 +4554,24 @@ const ProductForm = (() => {
       });
     }
 
-    // 8. BARIS-BARIS KONDISIONAL
+    // 9. Min. Pembelian (Jika min_order > 1)
     const minQty = parseInt(primaryState.min_order) || 1;
     if (minQty > 1) {
       rows.push({
-        label: 'Min. Jumlah Pembelian',
+        label: 'Min. Pembelian',
         valueHtml: `<span class="text-slate-800 font-medium">${minQty} pcs</span>`
       });
     }
 
+    // 10. Harga Grosir (Jika grosir aktif)
     if (primaryState.has_wholesale) {
-      const validTiers = Array.isArray(primaryState.wholesale_tiers) 
-        ? primaryState.wholesale_tiers.filter(t => t && ((parseInt(t.min_qty) || 0) > 0 || (parseFloat(t.price) || 0) > 0))
-        : [];
-      if (validTiers.length > 0) {
-        const firstMin = parseInt(validTiers[0].min_qty) || 1;
-        rows.push({
-          label: 'Harga Grosir',
-          valueHtml: `<span class="text-slate-800 font-medium">Tersedia (Mulai ≥ ${firstMin} pcs)</span>`
-        });
-      }
+      rows.push({
+        label: 'Harga Grosir',
+        valueHtml: `<span class="text-slate-800 font-medium">Tersedia</span>`
+      });
     }
 
+    // 11. Kelipatan Pembelian (Jika kelipatan aktif)
     if (primaryState.has_order_multiple) {
       const multVal = parseInt(primaryState.order_multiple_value) || 1;
       if (multVal > 1) {
@@ -4582,6 +4582,16 @@ const ProductForm = (() => {
       }
     }
 
+    // 12. Asal Produk (jika diisi seller)
+    const originVal = (primaryState.product_origin || '').trim();
+    if (originVal) {
+      rows.push({
+        label: 'Asal Produk',
+        valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(originVal)}</span>`
+      });
+    }
+
+    // 13. SKU Induk (jika diisi seller)
     const skuVal = (primaryState.sku || primaryState.parent_sku || '').trim();
     if (skuVal) {
       rows.push({
@@ -4590,7 +4600,7 @@ const ProductForm = (() => {
       });
     }
 
-    // 9. TABEL SPESIFIKASI MANUAL SELLER (custom_specs)
+    // 14. Baris-baris dari Tabel Spesifikasi Manual (custom_specs) yang diisi seller
     if (Array.isArray(primaryState.custom_specs) && primaryState.custom_specs.length > 0) {
       primaryState.custom_specs.forEach(cs => {
         if (cs && cs.title && cs.title.trim() && cs.value && cs.value.trim()) {
@@ -4605,7 +4615,7 @@ const ProductForm = (() => {
       });
     }
 
-    // Batasi maksimal 10 baris (minimal 5 baris dijamin oleh baris-baris dasar di atas)
+    // Kunci Batas Jumlah Baris: Selalu minimal 5 baris & dipotong maksimal 10 baris
     const finalRows = rows.slice(0, 10);
 
     const rowsHtml = finalRows.map(r => `
@@ -4617,20 +4627,20 @@ const ProductForm = (() => {
 
     return `
       <div class="spec-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 opacity-100 cursor-pointer"></div>
-      <div class="spec-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 1rem !important; border-top-right-radius: 1rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
+      <div class="spec-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
         <!-- Header Drawer -->
         <div class="border-b border-slate-200 w-full bg-white shrink-0">
           <h3 class="text-sm font-bold text-slate-800 text-center py-3">Spesifikasi</h3>
         </div>
 
-        <!-- Body Daftar Spesifikasi (Maks 10 Baris) -->
+        <!-- Body Daftar Spesifikasi (Min 5, Maks 10 Baris) -->
         <div class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto px-4 py-1">
           ${rowsHtml}
         </div>
 
-        <!-- Footer Tombol CTA Oke (Serasi dengan Tombol Drawer Beli Sekarang) -->
-        <div class="p-2.5 pt-2 border-t border-slate-100 shrink-0 bg-white">
-          <button type="button" id="btn-close-spec-drawer" class="btn-close-spec-drawer w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer flex items-center justify-center" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
+        <!-- Footer Tombol CTA Oke (Serasi dengan Tombol Drawer Beli Sekarang / Keranjang) -->
+        <div class="p-2.5 pt-0 shrink-0 bg-white">
+          <button type="button" id="btn-close-spec-drawer" class="btn-close-spec-drawer btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold tracking-wide text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer flex items-center justify-center" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
             Oke
           </button>
         </div>
@@ -7050,7 +7060,7 @@ const ProductForm = (() => {
           <!-- DRAWER ROOT SCOPED INSIDE MINI PDP CARD (TERBUKA STABIL SAAT isDrawerOpen === true) -->
           <div class="mini-pdp-drawer-root absolute inset-0 z-30 ${isDrawerOpen ? 'flex' : 'hidden'} flex-col justify-end overflow-hidden ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}">
             <div class="mini-pdp-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}"></div>
-            <div class="mini-pdp-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl rounded-b-none shadow-2xl border-t border-slate-200" style="border-top-left-radius: 1rem !important; border-top-right-radius: 1rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; border-radius: 1rem 1rem 0 0 !important;" transform ${isDrawerOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300 ease-out flex flex-col ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'} overflow-hidden">
+            <div class="mini-pdp-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-xl rounded-b-none shadow-2xl border-t border-slate-200" style="border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; border-radius: 0.75rem 0.75rem 0 0 !important;" transform ${isDrawerOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300 ease-out flex flex-col ${isDrawerOpen ? 'pointer-events-auto' : 'pointer-events-none'} overflow-hidden">
               ${isDrawerOpen ? drawerHtml : ''}
             </div>
           </div>
@@ -8302,8 +8312,8 @@ const ProductForm = (() => {
     if (isLocationValid) return '';
 
     return `
-      <div class="flex items-center justify-between text-xs py-1.5 px-3 rounded-md bg-amber-50 text-amber-800 font-medium">
-        <span class="flex items-center gap-1.5"><i class="bi bi-geo-alt-fill text-amber-600"></i> Lokasi Belum Diatur</span>
+      <div class="flex items-center justify-between text-xs py-1.5 px-3 rounded-md bg-amber-50 text-amber-800 font-medium border-0 shadow-none">
+        <span class="flex items-center gap-1.5"><i class="bi bi-geo-alt-fill text-amber-600"></i> Lokasi Belum Setting</span>
         <button type="button" class="btn-goto-account-settings text-[11px] font-bold text-[var(--color-primary)] hover:underline inline-flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0">
           <span>Atur Lokasi di Pengaturan Akun →</span>
         </button>
@@ -8313,14 +8323,14 @@ const ProductForm = (() => {
 
   // Rekomendasi Judul Spesifikasi Tambahan
   const SPEC_TITLE_RECOMMENDATIONS = [
-    'Dimensi (P×L×T)',
-    'Bahan / Material',
-    'Asal Produk',
-    'SKU Induk',
+    'Dimensi (PxLxT)',
+    'Bahan',
     'Berat Bersih',
-    'Finishing / Tekstur',
+    'Finishing',
     'Ketebalan',
-    'Isi per Paket'
+    'Isi per Paket',
+    'Asal Produk',
+    'SKU Induk'
   ];
 
   // Helper render tabel spesifikasi tambahan manual [Judul] [Keterangan]
@@ -8330,7 +8340,7 @@ const ProductForm = (() => {
       : [];
 
     return `
-      <div class="pt-3">
+      <div class="pt-2">
         <div class="flex items-center justify-between mb-2">
           <div>
             <h3 class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
@@ -8362,8 +8372,8 @@ const ProductForm = (() => {
         <div class="mt-2.5">
           <button 
             type="button" 
-            id="btn-add-custom-spec-row" 
-            class="px-3.5 py-1.5 rounded-md border border-dashed transition cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-white hover:bg-slate-50 ${specs.length >= 10 ? 'opacity-40 cursor-not-allowed' : ''}"
+            id="btn-add-spec-row" 
+            class="btn-add-spec-row btn-add-custom-spec-row px-3.5 py-1.5 rounded-md border border-dashed transition cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-white hover:bg-slate-50 ${specs.length >= 10 ? 'opacity-40 cursor-not-allowed' : ''}"
             style="border-color: var(--color-primary); color: var(--color-primary);"
             ${specs.length >= 10 ? 'disabled' : ''}
           >
@@ -8381,14 +8391,17 @@ const ProductForm = (() => {
     return `
       <tr class="custom-spec-row" data-index="${index}">
         <td class="py-1.5 pr-2 align-top">
-          <input 
-            type="text" 
-            class="input-spec-title w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
-            placeholder="Ketik atau pilih judul..." 
-            value="${escapeHtml(title)}"
-            list="datalist-spec-titles"
-            autocomplete="off" 
-          />
+          <div class="relative w-full clean-datalist-wrapper">
+            <input 
+              type="text" 
+              class="input-spec-title clean-datalist-input clean-datalist-popover w-full h-9 px-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
+              placeholder="Ketik atau pilih judul..." 
+              value="${escapeHtml(title)}"
+              data-datalist-id="datalist-spec-titles"
+              data-datalist="datalist-spec-titles"
+              autocomplete="off" 
+            />
+          </div>
         </td>
         <td class="py-1.5 px-2 align-top">
           <input 
@@ -9210,25 +9223,25 @@ const ProductForm = (() => {
                 id="input-prod-desc" 
                 rows="5" 
                 placeholder="Jelaskan spesifikasi produk, keunggulan bahan, kelengkapan, dan catatan penting untuk pemesan..."
-                class="w-full px-4 py-2.5 rounded-md border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-slate-800 text-sm transition outline-none resize-y"
+                class="w-full px-4 py-2.5 rounded-md border border-slate-300 focus:border-[var(--color-primary)] text-slate-800 text-sm transition outline-none resize-y"
               >${escapeHtml(primaryState.description)}</textarea>
 
-              <div id="ai-description-preview-box" class="hidden mt-3 bg-emerald-50/60 border border-emerald-200 rounded-md p-4 space-y-3 transition">
-                <div class="flex items-center justify-between pb-2 border-b border-emerald-100 flex-wrap gap-2">
+              <div id="ai-description-preview-box" class="hidden mt-3 bg-slate-50 border border-slate-200 rounded-md p-4 space-y-3 transition">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/80 flex-wrap gap-2">
                   <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
+                    <div class="w-6 h-6 rounded-md text-white flex items-center justify-center text-xs shadow-xs" style="background-color: var(--color-primary);">
                       <i class="bi bi-stars"></i>
                     </div>
                     <span class="text-xs font-bold text-slate-900">Hasil Rangkaian Deskripsi AI</span>
                   </div>
-                  <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">Pratinjau Siap Digunakan</span>
+                  <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full" style="color: var(--color-primary); background-color: var(--color-primary-subtle);">Pratinjau Siap Digunakan</span>
                 </div>
-                <div id="ai-description-preview-text" class="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white/95 p-3.5 rounded-md border border-emerald-100 max-h-64 overflow-y-auto font-sans"></div>
-                <div class="flex items-center justify-end gap-2 pt-1 border-t border-emerald-100/60">
+                <div id="ai-description-preview-text" class="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white/95 p-3.5 rounded-md border border-slate-200 max-h-64 overflow-y-auto font-sans"></div>
+                <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-200/80">
                   <button type="button" id="btn-ai-desc-cancel" class="px-3.5 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer">
                     Batal
                   </button>
-                  <button type="button" id="btn-ai-desc-apply" class="btn-primary-brand px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                  <button type="button" id="btn-ai-desc-apply" class="btn-primary-brand px-4 py-1.5 rounded-md text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
                     <i class="bi bi-check-lg"></i>
                     <span>Gunakan Teks Ini</span>
                   </button>
@@ -9241,7 +9254,7 @@ const ProductForm = (() => {
         <!-- CARD 6: SPESIFIKASI (GATED) -->
         ${missingCardSpecs.length > 0 ? renderFlashbackCard('Spesifikasi', 'bi-card-checklist', missingCardSpecs, 'card-step2-specs') : `
           <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-specs">
-            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div class="flex items-center justify-between pb-1">
               <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Spesifikasi</h2>
             </div>
 
@@ -9267,7 +9280,7 @@ const ProductForm = (() => {
             </div>
 
             <!-- Merek, Asal Produk, Masa Garansi, Jenis Garansi, Pre-Order -->
-            <div class="space-y-4 pt-2 border-t border-slate-100">
+            <div class="space-y-4 pt-1">
               <!-- Baris 1: Merek & Asal Produk (Custom Combobox Shadcn UI) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -9318,10 +9331,10 @@ const ProductForm = (() => {
                         type="number" 
                         id="input-warranty-duration" 
                         min="1" 
-                        max="365"
+                        max="365" 
                         value="${primaryState.warranty_duration || ''}" 
                         placeholder="Jumlah" 
-                        class="w-full h-9 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]"
+                        class="w-full h-9 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]" 
                       />
                     </div>
                   </div>
@@ -9341,8 +9354,8 @@ const ProductForm = (() => {
               </div>
 
               <!-- Baris 3: Pre-Order -->
-              <div class="space-y-2 pt-1 border-t border-slate-100">
-                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200/80">
+              <div class="space-y-2 pt-1">
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border-0 shadow-none">
                   <div>
                     <label for="toggle-is-preorder" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
                       <span>Sistem Pre-Order (PO)</span>
@@ -9379,7 +9392,7 @@ const ProductForm = (() => {
               </div>
 
               <!-- Tabel Atribut & Spesifikasi Tambahan Manual Seller -->
-              <div class="pt-2 border-t border-slate-100">
+              <div class="pt-1">
                 ${renderCustomSpecsTableHtml()}
               </div>
             </div>
@@ -9515,13 +9528,13 @@ const ProductForm = (() => {
 
         <datalist id="datalist-spec-titles">
           <option value="Dimensi (PxLxT)"></option>
-          <option value="Bahan / Material"></option>
+          <option value="Bahan"></option>
           <option value="Berat Bersih"></option>
-          <option value="Finishing / Tekstur"></option>
+          <option value="Finishing"></option>
           <option value="Ketebalan"></option>
           <option value="Isi per Paket"></option>
-          <option value="SKU Induk"></option>
           <option value="Asal Produk"></option>
+          <option value="SKU Induk"></option>
         </datalist>
 
         </div> <!-- Close step2-cards-container -->
@@ -17682,9 +17695,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     initAffiliateGlobalListeners();
 
     function bindCustomSpecsEvents() {
-      const btnAdd = document.getElementById('btn-add-custom-spec-row');
+      const btnAdd = document.getElementById('btn-add-spec-row') || document.getElementById('btn-add-custom-spec-row');
       const tbody = document.getElementById('custom-specs-tbody');
-      const countBadge = document.getElementById('custom-specs-count');
+      const countBadge = document.getElementById('custom-specs-counter') || document.getElementById('custom-specs-count');
 
       const updateSpecsUIState = () => {
         const rows = tbody ? tbody.querySelectorAll('tr.custom-spec-row') : [];

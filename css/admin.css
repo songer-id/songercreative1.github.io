@@ -2963,18 +2963,34 @@ button:focus-visible {
 /* ==========================================================================
    DRAWER UJI COBA: ZERO BORDER & ZERO RADIUS (DIMENSION & QTY INPUTS)
    ========================================================================== */
-.mini-pdp-drawer-sheet .input-shopee-dim-p,
-.mini-pdp-drawer-sheet .input-shopee-dim-l,
+#desktop-preview-sidebar .mini-pdp-drawer-sheet input,
+#mobile-preview-sheet .mini-pdp-drawer-sheet input,
+.mini-pdp-drawer-sheet .drawer-qty-stepper,
+.mini-pdp-drawer-sheet .drawer-qty-stepper button,
+.mini-pdp-drawer-sheet .drawer-qty-stepper input,
+.mini-pdp-drawer-sheet .extra-qty-stepper,
+.mini-pdp-drawer-sheet .extra-qty-stepper button,
+.mini-pdp-drawer-sheet .extra-qty-stepper input,
 .mini-pdp-drawer-sheet #input-shopee-dim-p,
 .mini-pdp-drawer-sheet #input-shopee-dim-l,
+.mini-pdp-drawer-sheet .dim-input-box,
 .mini-pdp-drawer-sheet .drawer-dim-input-box,
-.mini-pdp-drawer-sheet .drawer-qty-stepper,
+.mini-pdp-drawer-sheet .input-shopee-dim-p,
+.mini-pdp-drawer-sheet .input-shopee-dim-l,
 .mini-pdp-drawer-sheet .input-preview-test-qty,
 .mini-pdp-drawer-sheet #input-preview-test-qty,
 .mini-pdp-drawer-sheet #input-shopee-qty,
 .mini-pdp-drawer-sheet .btn-shopee-qty-minus,
-.mini-pdp-drawer-sheet .btn-shopee-qty-plus {
+.mini-pdp-drawer-sheet .btn-shopee-qty-plus,
+.mini-pdp-drawer-sheet .btn-extra-qty-minus,
+.mini-pdp-drawer-sheet .btn-extra-qty-plus,
+.mini-pdp-drawer-sheet .btn-shopee-extra-minus,
+.mini-pdp-drawer-sheet .btn-shopee-extra-plus,
+.mini-pdp-drawer-sheet .input-extra-qty,
+.mini-pdp-drawer-sheet .input-shopee-extra-qty {
   border: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
   border-radius: 0 !important;
   outline: none !important;
   box-shadow: none !important;
@@ -3024,11 +3040,11 @@ button:focus-visible {
 .spec-drawer-sheet,
 #shopee-checkout-drawer-sheet,
 #product-spec-drawer-sheet {
-  border-top-left-radius: 1rem !important;
-  border-top-right-radius: 1rem !important;
+  border-top-left-radius: 0.75rem !important; /* 12px / rounded-t-xl */
+  border-top-right-radius: 0.75rem !important;
   border-bottom-left-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
-  border-radius: 1rem 1rem 0 0 !important;
+  border-radius: 0.75rem 0.75rem 0 0 !important;
   overflow: hidden !important;
 }
 
