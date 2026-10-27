@@ -3275,7 +3275,7 @@ const ProductForm = (() => {
 
   function formatVariationReactiveHeader(groupLabel, optionCount, selectedOptionName) {
     if (selectedOptionName && String(selectedOptionName).trim() !== '') {
-      return `${escapeHtml(groupLabel)}: <span class="font-bold text-slate-800">${escapeHtml(String(selectedOptionName).trim())}</span>`;
+      return `${escapeHtml(groupLabel)} <span class="font-normal text-slate-400 ml-1.5">${escapeHtml(String(selectedOptionName).trim())}</span>`;
     }
     return `Tersedia (${optionCount || 0}) ${escapeHtml(groupLabel)}`;
   }
@@ -4716,23 +4716,17 @@ const ProductForm = (() => {
           }
         }
 
-        const wrapperParent = wrapper.parentElement;
-        const selectHeader = wrapperParent?.querySelector('.text-xs.font-medium.text-slate-600.mb-1');
-        if (selectHeader) {
-          const totalOpts = wrapper.querySelectorAll('.btn-shadcn-select-item').length;
-          selectHeader.innerHTML = formatVariationReactiveHeader(groupLabel, totalOpts, selectedOptName);
-        }
       });
 
       // 3. Update Akordeon Selected Text
       container.querySelectorAll(`.var-accordion-card[data-tier="${tierKey}"]`).forEach(card => {
-        const titleSpan = card.querySelector('.btn-toggle-var-accordion > div > span');
-        const activeBtn = card.querySelector(`.btn-shopee-${tierKey}.is-active`);
-        const optName = activeBtn ? (activeBtn.querySelector('span')?.textContent?.trim() || '') : '';
-        const groupLabel = getVariationLabel(tierKey, tierKey === 'tier2' ? 'Variasi 2' : tierKey === 'tier3' ? 'Variasi 3' : 'Variasi 4');
-        const totalOpts = card.querySelectorAll(`.btn-shopee-${tierKey}`).length;
-        if (titleSpan) {
-          titleSpan.innerHTML = formatVariationReactiveHeader(groupLabel, totalOpts, optName);
+        const textEl = card.querySelector('.var-accordion-selected-text');
+        if (textEl) {
+          const currentSelId = (tierKey === 'tier2') ? previewTestState.selectedTier2Id
+            : ((tierKey === 'tier3') ? previewTestState.selectedTier3Id : previewTestState.selectedTier4Id);
+          const activeBtn = card.querySelector(`.btn-shopee-${tierKey}.is-active`);
+          const optName = activeBtn ? (activeBtn.querySelector('span')?.textContent?.trim() || '') : '';
+          textEl.innerHTML = (currentSelId && optName) ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
         }
       });
     });
@@ -4748,16 +4742,11 @@ const ProductForm = (() => {
       ? getAllowedVariationOptions(activeTier1Id, tierKey)
       : { isSpecific: false, allowedIds: null };
 
-    // Format Header Reaktif Sesuai Aturan Poin 2:
-    // Belum dipilih: "Tersedia [(Jumlah Opsi)] [Judul Variasi]" (contoh: "Tersedia (3) Bahan Utama")
-    // Sudah dipilih: "[Judul Variasi]: [Nilai Opsi]" (contoh: "Bahan Utama: FC")
-    const reactiveTitleHtml = formatVariationReactiveHeader(group.label, group.options.length, selectedName);
-
     // 1. MODE SELECT (Shadcn UI Custom Select Popover)
     if (mode === 'select') {
       return `
         <div class="space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}">
-          <div class="text-xs font-medium text-slate-600 mb-1">${reactiveTitleHtml}</div>
+          <div class="text-xs font-medium text-slate-600 mb-1">${escapeHtml(group.label)}</div>
           <div class="relative w-full shadcn-select-wrapper" data-tier="${tierKey}">
             <button type="button" class="btn-shadcn-select-trigger w-full h-9 px-3 rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer select-none" data-tier="${tierKey}">
               <span class="shadcn-select-value truncate ${selectedOpt ? 'font-semibold text-slate-900' : 'text-slate-400'}">
@@ -4817,7 +4806,8 @@ const ProductForm = (() => {
         <div class="var-accordion-card space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}" data-tier="${tierKey}">
           <div class="btn-toggle-var-accordion w-full py-2 px-2.5 bg-slate-50/80 hover:bg-slate-100/80 rounded-md flex items-center justify-between text-xs font-semibold text-slate-800 cursor-pointer transition select-none" data-tier="${tierKey}">
             <div class="flex items-center gap-1.5 min-w-0">
-              <span>${reactiveTitleHtml}</span>
+              <span>${escapeHtml(group.label)}</span>
+              <span class="var-accordion-selected-text text-[11px] text-slate-500 font-normal truncate">${selectedName ? `(${escapeHtml(selectedName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>'}</span>
             </div>
             <i class="bi bi-chevron-right text-slate-400 text-[10px] transition-transform duration-200 shrink-0 ${isAccordionOpen ? 'rotate-90' : ''}"></i>
           </div>
@@ -4831,7 +4821,7 @@ const ProductForm = (() => {
     // 3. MODE DEFAULT
     return `
       <div class="space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}">
-        <div class="text-xs font-medium text-slate-600 mb-1.5">${reactiveTitleHtml}</div>
+        <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(group.label)}</div>
         ${chipsHtml}
       </div>
     `;
@@ -5151,17 +5141,14 @@ const ProductForm = (() => {
       }).join(', ');
     }
 
-    const reactiveExtrasHeader = activeExtrasSelected.length > 0
-      ? `${escapeHtml(extraLabel)}: <span class="font-bold text-slate-800">${escapeHtml(extrasStatusText)}</span>`
-      : `Tersedia (${nonDefaultExtras.length}) ${escapeHtml(extraLabel)}`;
-
     const isAccordionOpen = Boolean(previewTestState.isExtrasAccordionOpen);
 
     const extrasAccordionHtml = `
       <div class="space-y-1.5 pt-2 border-t border-slate-100">
         <div class="btn-toggle-extras-accordion flex items-center justify-between gap-2 py-1 cursor-pointer select-none group" data-action="toggle-extras" title="Klik untuk membuka / menutup opsi ekstra">
           <div class="flex items-center gap-1.5 min-w-0">
-            <span class="text-xs font-medium text-slate-600 truncate">${reactiveExtrasHeader}</span>
+            <span class="text-xs font-medium text-slate-600">${escapeHtml(extraLabel)}</span>
+            <span class="text-[11px] text-slate-500 font-normal truncate">(${escapeHtml(extrasStatusText || (isNoneSelected ? defaultNoneName : 'Pilih layanan'))})</span>
           </div>
           <div class="flex items-center gap-1 text-slate-400 group-hover:text-slate-600 transition shrink-0">
             <i class="bi ${isAccordionOpen ? 'bi-chevron-down' : 'bi-chevron-right'} text-xs"></i>
@@ -7802,6 +7789,39 @@ const ProductForm = (() => {
       if (hasCustomDim) summaryParts.push(getCustomDimensionLabel());
       if (hasExtras) summaryParts.push(`${validExtras.length > 0 ? validExtras.length + ' ' : ''}${getVariationLabel('extras', 'Layanan Extras')}`);
 
+      let extrasSelectedName = '';
+      if (hasExtras && validExtras.length > 0) {
+        const activeEx = validExtras.filter((ex, idx) => {
+          if (ex.is_default_none) return false;
+          const exId = ex.id || `ex_${idx}`;
+          const xt = String(ex.extra_type || '').toLowerCase();
+          if (xt === 'qty') {
+            const q = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
+            return q > 0;
+          }
+          return Boolean(previewTestState.selectedExtras[exId]);
+        });
+        if (activeEx.length === 1) {
+          const singleEx = activeEx[0];
+          const xt = String(singleEx.extra_type || '').toLowerCase();
+          if (xt === 'qty') {
+            const q = previewTestState.extraQty?.[singleEx.id] || 1;
+            extrasSelectedName = `${singleEx.name.trim()} (${q}x)`;
+          } else {
+            extrasSelectedName = singleEx.name.trim();
+          }
+        } else if (activeEx.length > 1) {
+          extrasSelectedName = activeEx.map(ex => {
+            const xt = String(ex.extra_type || '').toLowerCase();
+            if (xt === 'qty') {
+              const q = previewTestState.extraQty?.[ex.id] || 1;
+              return `${ex.name.trim()} (${q}x)`;
+            }
+            return ex.name.trim();
+          }).join(', ');
+        }
+      }
+
       const hasExtraTiers = summaryParts.length > 0;
 
       const isTestMode = Boolean(previewTestState.sidebarTab === 'test');
@@ -7937,8 +7957,10 @@ const ProductForm = (() => {
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
                     <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                       <div class="truncate">
-                        <span class="font-bold text-slate-800">Pilihan Variasi</span>
-                        <span class="font-normal text-slate-500"> (${summaryParts.join(', ')})</span>
+                        ${(!primaryState.has_variants && !primaryState.has_variation_2 && hasExtras && !hasTier3 && !hasTier4 && !hasCustomDim)
+                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader(getVariationLabel('extras', 'Layanan Extras'), validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)}</span>`
+                          : `<span class="font-bold text-slate-800">Pilihan Variasi</span><span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>`
+                        }
                       </div>
                       <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                     </div>

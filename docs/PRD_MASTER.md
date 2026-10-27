@@ -552,12 +552,12 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
     - **Validasi Wajib Layanan Ekstra (Extras) pada Uji Coba (`canActivateTestMode`)**:
       - Memastikan setiap baris extras aktif yang terisi namanya wajib melengkapi: *Jenis Input* (`extra_type` wajib dipilih), *Harga Satuan* (`price >= 0`), dan *Stok* (`stock >= 0` atau berstatus *Unlimited*).
       - Menampilkan rincian kekurangan parameter extras secara spesifik pada modal popup pratinjau (contoh: *"Jenis Input Extras (Packaging Kayu)"*, *"Harga Satuan Extras (Packaging Kayu)"*, *"Stok Extras (Packaging Kayu)"*).
-    - **Format Reaktif Label Variasi & Extras pada Pratinjau (Mini PDP & Drawer)**:
-      - Menstandarkan format label header grup pada Mini PDP dan Drawer (mode Default, Accordion, maupun Shadcn Select):
-        - Jika belum ada opsi yang dipilih: Tampilkan format `"Tersedia [(Jumlah Opsi)] [Judul Variasi]"` (contoh: *"Tersedia (3) Bahan Utama"*).
-        - Jika ada opsi yang dipilih: Tampilkan format `"[Judul Variasi]: [Nilai Opsi]"` (contoh: *"Bahan Utama: FC"*).
-      - Menerapkan format serupa pada Layanan Extras: `"Tersedia [(Jumlah Opsi)] [Judul Extras]"` saat belum dipilih, dan `"[Judul Extras]: [Nilai Opsi]"` saat sudah dipilih.
-      - Memperbarui label secara reaktif (*real-time*) saat pengguna memilih opsi variasi/extras di pratinjau.
+    - **Format Label Reaktif di Luar Drawer vs Murni Normal di Dalam Drawer**:
+      - **Di Dalam Drawer (Shopee-Style / Mini PDP Drawer)**: Render teks Judul Variasi dan Layanan Extras secara normal dan murni apa adanya tanpa penggabungan teks opsi aktif.
+      - **Di Luar Drawer (Live Preview Kartu Etalase Mini PDP)**:
+        - Jika belum ada opsi yang dipilih: Tampilkan `"Tersedia [(Jumlah Opsi)] [Judul Variasi]"` (contoh: *"Tersedia (3) Bahan Utama"*).
+        - Jika sudah ada opsi yang dipilih: Tampilkan penggabungan antara Judul Variasi (tebal standar) dan Nilai Opsi (teks abu-abu tipis) dengan struktur `[Judul Variasi] <span class="font-normal text-slate-400 ml-1.5">[Nilai Opsi]</span>` (contoh: *Bahan Utama <span class="font-normal text-slate-400 ml-1.5">FC</span>*).
+        - Berlaku konsisten untuk Variasi 1 s.d. 4 dan Layanan Extras di kartu pratinjau.
     - **Pembersihan Tampilan Placeholder/Default Nama Produk pada Opsi Kosong**:
       - Menghilangkan perilaku yang menampilkan nilai dari nama produk pada label variasi/opsi yang masih kosong di kartu pratinjau.
       - Memperbarui format pesan bagian yang belum lengkap pada pratinjau:
