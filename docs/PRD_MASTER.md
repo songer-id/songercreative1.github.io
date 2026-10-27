@@ -558,12 +558,13 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
         - Jika belum ada opsi yang dipilih: Tampilkan `"Tersedia [(Jumlah Opsi)] [Judul Variasi]"` (contoh: *"Tersedia (3) Bahan Utama"*).
         - Jika sudah ada opsi yang dipilih: Tampilkan penggabungan antara Judul Variasi (tebal standar) dan Nilai Opsi (teks abu-abu tipis) dengan struktur `[Judul Variasi] <span class="font-normal text-slate-400 ml-1.5">[Nilai Opsi]</span>` (contoh: *Bahan Utama <span class="font-normal text-slate-400 ml-1.5">FC</span>*).
         - Berlaku konsisten untuk Variasi 1 s.d. 4 dan Layanan Extras di kartu pratinjau.
-    - **Pembersihan Total Fallback Nama Produk & Format Standar Label Reaktif Kosong Ketat**:
-      - **Hapus Total Penarikan Nama Produk pada Label Variasi**: Menghilangkan sepenuhnya perilaku/variabel yang mengambil `primaryState.name` atau nama produk sebagai nama variasi atau opsi pada kartu pratinjau dan `materialsState`.
-      - **Standar Label Reaktif Kosong Ketat (Mini PDP)**:
-        - Jika variasi aktif namun judul grup variasi belum ditentukan / kosong / berupa placeholder bawaan (`"Cth. Bahan Utama, Dll"` atau `""`): Tampilkan nama standar tier-nya secara spesifik: `"Variasi 1"`, `"Variasi 2"`, `"Variasi 3"`, atau `"Variasi 4"`.
-        - Jika judul grup variasi sudah diisi kustom oleh merchant namun opsi-opsinya masih kosong / belum ada yang dipilih: Tampilkan format `"[Judul Variasi Kustom] Opsi 1"` (contoh: *Bahan Utama Opsi 1*).
-        - Jika sudah ada opsi yang dipilih di luar drawer: Tampilkan format `[Judul Variasi] <span class="font-normal text-slate-400 ml-1.5">[Nilai Opsi]</span>` (tanpa ada jejak nama produk sama sekali).
+    - **Pembersihan Total Fallback Nama Produk & Kunci Mutlak Format Label Luar Drawer**:
+      - **Hapus Total Penarikan Nama Produk & Format `Opsi 1`**: Menghilangkan sepenuhnya format `[Judul] Opsi 1` serta perilaku/variabel yang mengambil `primaryState.name` atau nama produk sebagai nama variasi atau opsi pada kartu pratinjau dan `materialsState`.
+      - **Kunci Format Reaktif di Luar Drawer (Live Preview Mini PDP)**:
+        - Jika belum ada opsi yang dipilih (atau opsi masih kosong): Wajib menampilkan format **`Tersedia [(Jumlah Opsi)] [Judul Variasi]`** (contoh: *Tersedia (1) Bahan Utama* atau *Tersedia (2) Ukuran*).
+        - Jika sudah ada opsi yang dipilih: Wajib menampilkan format **`[Judul Variasi] <span class="font-normal text-slate-400 ml-1.5">[Nilai Opsi]</span>`** (contoh: *Bahan Utama <span class="font-normal text-slate-400 ml-1.5">FC</span>*).
+        - Jika judul grup belum diisi merchant, otomatis menggunakan default tier (`"Variasi 1"`, `"Variasi 2"`, dst).
+      - **Pertahankan Judul Murni di Dalam Drawer (Shopee-Style Drawer)**: Di dalam drawer modal, judul variasi tetap dirender murni apa adanya (`[Judul Variasi]`) tanpa tambahan teks opsi terpilih.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

@@ -3263,27 +3263,36 @@ const ProductForm = (() => {
 
   function formatVariationReactiveHeader(tierKeyOrGroupLabel, optCountOrSelected, maybeSelected) {
     let tierKey = 'tier1';
+    let optionCount = 0;
     let selectedOptionName = '';
 
     if (maybeSelected !== undefined) {
-      // Signature kompatibilitas: (groupLabel, optionCount, selectedOptionName)
+      // Signature 3 argumen: (tierKeyOrGroupLabel, optionCount, selectedOptionName)
       const lbl = String(tierKeyOrGroupLabel || '').toLowerCase();
       if (lbl.includes('variasi 2') || lbl.includes('tier2') || lbl.includes('main')) tierKey = 'tier2';
       else if (lbl.includes('variasi 3') || lbl.includes('tier3') || lbl.includes('extra_1')) tierKey = 'tier3';
       else if (lbl.includes('variasi 4') || lbl.includes('tier4') || lbl.includes('extra_2')) tierKey = 'tier4';
       else if (lbl.includes('extras') || lbl.includes('layanan')) tierKey = 'extras';
       else tierKey = 'tier1';
+
+      optionCount = typeof optCountOrSelected === 'number' ? optCountOrSelected : (parseInt(optCountOrSelected) || 0);
       selectedOptionName = maybeSelected || '';
     } else {
-      // Signature langsung: (tierKey, selectedOptionName)
+      // Signature 2 argumen
       tierKey = tierKeyOrGroupLabel || 'tier1';
-      selectedOptionName = optCountOrSelected || '';
+      if (typeof optCountOrSelected === 'number') {
+        optionCount = optCountOrSelected;
+        selectedOptionName = '';
+      } else {
+        selectedOptionName = optCountOrSelected || '';
+      }
     }
 
     const titleInfo = getVariationGroupTitleInfo(tierKey);
     const groupLabel = titleInfo.effectiveTitle;
 
-    // 1. Jika sudah ada opsi yang dipilih di luar drawer:
+    // 1. Jika sudah ada opsi yang dipilih:
+    // Wajib menampilkan format: [Judul Variasi] <span class="font-normal text-slate-400 ml-1.5">[Nilai Opsi]</span>
     if (selectedOptionName && String(selectedOptionName).trim() !== '') {
       const cleanVal = String(selectedOptionName).trim();
       const prodName = (primaryState.name || '').trim();
@@ -3293,13 +3302,9 @@ const ProductForm = (() => {
       }
     }
 
-    // 2. Jika judul grup variasi sudah diisi kustom oleh merchant namun opsi-opsinya masih kosong / belum ada yang dipilih:
-    if (titleInfo.hasCustomTitle) {
-      return `${escapeHtml(titleInfo.effectiveTitle)} Opsi 1`;
-    }
-
-    // 3. Jika variasi aktif namun judul grup variasi belum ditentukan / kosong / masih berupa placeholder bawaan:
-    return escapeHtml(titleInfo.defaultLabel);
+    // 2. Jika belum ada opsi yang dipilih (atau opsi masih kosong):
+    // Wajib menampilkan format: Tersedia [(Jumlah Opsi)] [Judul Variasi]
+    return `Tersedia (${optionCount || 0}) ${escapeHtml(groupLabel)}`;
   }
 
   function getCustomDimensionLabel() {
@@ -3564,9 +3569,7 @@ const ProductForm = (() => {
 
         if (validOpts.length === 0) {
           const titleInfo = getVariationGroupTitleInfo(group.tier);
-          const missingMsg = titleInfo.hasCustomTitle 
-            ? `${titleInfo.effectiveTitle} Opsi 1` 
-            : titleInfo.defaultLabel;
+          const missingMsg = titleInfo.effectiveTitle;
 
           missingItems.push(missingMsg);
           const firstInp = document.querySelector(`#${group.cardId} input[data-field="name"]`);
@@ -3657,9 +3660,7 @@ const ProductForm = (() => {
 
       if (primaryState.has_extra_service && validExtras.length === 0) {
         const extraTitleInfo = getVariationGroupTitleInfo('extras');
-        const missingMsg = extraTitleInfo.hasCustomTitle 
-          ? `${extraTitleInfo.effectiveTitle} Opsi 1` 
-          : extraTitleInfo.defaultLabel;
+        const missingMsg = extraTitleInfo.effectiveTitle;
         missingItems.push(missingMsg);
         const exNameInp = document.querySelector('#card-extra-service input[data-field="name"]');
         if (!firstInvalidEl) firstInvalidEl = exNameInp || document.getElementById('card-extra-service');
@@ -7943,7 +7944,7 @@ const ProductForm = (() => {
                 <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
                 ${primaryState.has_variants ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier1', selectedMat ? selectedMat.name : '')}</div>
+                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier1', validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
                     ${validMaterials.length > 0 ? (
                       hasAnyTier1Image ? `
                         <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
@@ -7978,7 +7979,7 @@ const ProductForm = (() => {
                           }).join('')}
                         </div>
                       `
-                    ) : `<span class="text-[10px] text-slate-400 italic">${getVariationGroupTitleInfo('tier1').hasCustomTitle ? `${escapeHtml(getVariationGroupTitleInfo('tier1').effectiveTitle)} Opsi 1` : 'Variasi 1'} belum diisi</span>`}
+                    ) : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationGroupTitleInfo('tier1').effectiveTitle)} belum diisi</span>`}
                   </div>
                 ` : ''}
 
@@ -7988,13 +7989,13 @@ const ProductForm = (() => {
                     ${hasExtraTiers ? `
                       <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                         <div class="truncate">
-                          ${formatVariationReactiveHeader('tier2', selectedV2 ? selectedV2.name : '')}
+                          ${formatVariationReactiveHeader('tier2', validV2.length, selectedV2 ? selectedV2.name : '')}
                           <span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>
                         </div>
                         <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                       </div>
                     ` : `
-                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier2', selectedV2 ? selectedV2.name : '')}</div>
+                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier2', validV2.length, selectedV2 ? selectedV2.name : '')}</div>
                     `}
                     <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap">
                       ${validV2.length > 0 ? validV2.map((f, idx) => {
@@ -8005,7 +8006,7 @@ const ProductForm = (() => {
                             <span>${escapeHtml(f.name.trim())}</span>
                           </button>
                         `;
-                      }).join('') : `<span class="text-[10px] text-slate-400 italic">${getVariationGroupTitleInfo('tier2').hasCustomTitle ? `${escapeHtml(getVariationGroupTitleInfo('tier2').effectiveTitle)} Opsi 1` : 'Variasi 2'} belum diisi</span>`}
+                      }).join('') : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationGroupTitleInfo('tier2').effectiveTitle)} belum diisi</span>`}
                     </div>
                   </div>
                 ` : (hasExtraTiers ? `
@@ -8013,7 +8014,7 @@ const ProductForm = (() => {
                     <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                       <div class="truncate">
                         ${(!primaryState.has_variants && !primaryState.has_variation_2 && hasExtras && !hasTier3 && !hasTier4 && !hasCustomDim)
-                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader('extras', extrasSelectedName)}</span>`
+                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader('extras', validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)}</span>`
                           : `<span class="font-bold text-slate-800">Pilihan Variasi</span><span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>`
                         }
                       </div>
