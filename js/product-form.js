@@ -3335,36 +3335,232 @@ const ProductForm = (() => {
     }
   }
 
+  function focusAndHighlightValidationTarget(targetEl) {
+    if (!targetEl) return;
+    const isInsideStep1 = Boolean(
+      (typeof targetEl.closest === 'function' && targetEl.closest('#step-pane-1')) ||
+      targetEl.id === 'input-prod-name' ||
+      targetEl.id === 'select-prod-category' ||
+      targetEl.id === 'section-step1-basic'
+    );
+    if (isInsideStep1 && currentStep !== 1) {
+      if (typeof goToStep === 'function') goToStep(1);
+    }
+    setTimeout(() => {
+      const el = (targetEl.id ? document.getElementById(targetEl.id) : null) || targetEl;
+      if (el) {
+        const scrollBox = (typeof el.closest === 'function')
+          ? (el.closest('.variation-option-row, tr, .step2-section-card, .form-group') || el)
+          : el;
+        if (typeof scrollBox.scrollIntoView === 'function') {
+          scrollBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TR' && el.tagName !== 'TABLE') {
+          try { el.focus({ preventScroll: true }); } catch (err) {}
+        }
+        if (scrollBox.classList) {
+          scrollBox.classList.add('ring-2', 'ring-amber-400', 'transition-all');
+          setTimeout(() => {
+            scrollBox.classList.remove('ring-2', 'ring-amber-400');
+          }, 3000);
+        }
+      }
+    }, 200);
+  }
+
   function canActivateTestMode() {
     if (currentStep === 1) {
       return { allowed: false, reason: 'Mode Uji Coba khusus untuk menguji tampilan Detail Produk di Step 2.' };
     }
 
-    let hasPrice = false;
+    // 1. Validasi Nama Produk (Wajib di semua mode)
+    const prodNameInp = document.getElementById('input-prod-name');
+    const prodNameVal = (prodNameInp?.value || primaryState.name || '').trim();
+    if (!prodNameVal) {
+      return {
+        allowed: false,
+        reason: 'Mohon lengkapi Nama Produk, Kategori, Harga Jual, Stok Produk, dan Maksimal Jumlah Pembelian terlebih dahulu.',
+        targetEl: prodNameInp || document.getElementById('input-prod-name'),
+        field: 'Nama Produk'
+      };
+    }
+
+    // 2. Validasi Kategori (Wajib di semua mode)
+    const catSelect = document.getElementById('select-prod-category');
+    const catVal = (catSelect?.value || primaryState.category_id || '').trim();
+    if (!catVal) {
+      return {
+        allowed: false,
+        reason: 'Mohon lengkapi Nama Produk, Kategori, Harga Jual, Stok Produk, dan Maksimal Jumlah Pembelian terlebih dahulu.',
+        targetEl: catSelect || document.getElementById('select-prod-category'),
+        field: 'Kategori'
+      };
+    }
+
+    // ==========================================================================
+    // 1. VALIDASI PRASYARAT MODE TANPA VARIASI (has_variants === false)
+    // ==========================================================================
     if (!primaryState.has_variants) {
+      const missingFields = [];
+      let firstInvalidEl = null;
+
+      // Harga Jual
       const singlePriceInp = document.getElementById('input-single-price');
-      const valFromInp = singlePriceInp ? parseFloat(singlePriceInp.value) : NaN;
-      const p = !isNaN(valFromInp) ? valFromInp : (parseFloat(materialsState[0]?.price) || parseFloat(primaryState.price) || 0);
-      hasPrice = (!isNaN(p) && p > 0);
-    } else {
-      const validMats = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
-      hasPrice = validMats.some(m => !isNaN(parseFloat(m.price)) && parseFloat(m.price) > 0);
-    }
+      const valFromInp = singlePriceInp && singlePriceInp.value.trim() !== '' ? parseFloat(singlePriceInp.value) : NaN;
+      const priceVal = !isNaN(valFromInp) ? valFromInp : parseFloat(primaryState.price);
+      const isPriceValid = (!isNaN(priceVal) && priceVal > 0);
+      if (!isPriceValid) {
+        missingFields.push('Harga Jual');
+        if (!firstInvalidEl) firstInvalidEl = singlePriceInp || document.getElementById('input-single-price');
+      }
 
-    if (!hasPrice) {
-      return { allowed: false, reason: 'Tentukan Harga Jual produk terlebih dahulu untuk menggunakan Mode Uji Coba.' };
-    }
-
-    // Cek stok jika tidak unlimited
-    if (!primaryState.has_variants) {
+      // Stok Produk
       const stockInp = document.getElementById('input-stock-qty');
-      const val = stockInp ? stockInp.value.trim() : (primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null ? String(primaryState.stock) : ''));
-      const isUnl = val.toLowerCase() === 'unlimited' || val.toLowerCase() === 'tanpa batas' || Boolean(primaryState.is_unlimited_stock);
-      if (!isUnl) {
-        const s = parseInt(val, 10);
-        if (isNaN(s) || s < 0) {
-          return { allowed: false, reason: 'Tentukan Stok produk terlebih dahulu untuk menggunakan Mode Uji Coba.' };
-        }
+      const rawStock = stockInp ? stockInp.value.trim() : (primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? String(primaryState.stock).trim() : ''));
+      const isStockUnlimited = Boolean(primaryState.is_unlimited_stock) || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
+      let isStockValid = false;
+      if (isStockUnlimited) {
+        isStockValid = true;
+      } else if (rawStock !== '') {
+        const parsedStock = parseInt(rawStock, 10);
+        isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
+      }
+      if (!isStockValid) {
+        missingFields.push('Stok Produk');
+        if (!firstInvalidEl) firstInvalidEl = stockInp || document.getElementById('input-stock-qty');
+      }
+
+      // Maksimal Jumlah Pembelian (Max. Order)
+      const maxOrderInp = document.getElementById('input-normal-max-order');
+      const rawMaxOrder = maxOrderInp ? maxOrderInp.value.trim() : (primaryState.max_order !== null && primaryState.max_order !== undefined ? String(primaryState.max_order).trim() : '');
+      const isMaxOrderUnlimited = rawMaxOrder.toLowerCase() === 'tanpa batas' || rawMaxOrder.toLowerCase() === 'unlimited';
+      let isMaxOrderValid = false;
+      if (isMaxOrderUnlimited) {
+        isMaxOrderValid = true;
+      } else if (rawMaxOrder !== '') {
+        const parsedMax = parseInt(rawMaxOrder, 10);
+        isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
+      }
+      if (!isMaxOrderValid) {
+        missingFields.push('Maksimal Jumlah Pembelian');
+        if (!firstInvalidEl) firstInvalidEl = maxOrderInp || document.getElementById('input-normal-max-order');
+      }
+
+      if (missingFields.length > 0) {
+        return {
+          allowed: false,
+          reason: 'Mohon lengkapi Nama Produk, Kategori, Harga Jual, Stok Produk, dan Maksimal Jumlah Pembelian terlebih dahulu.',
+          targetEl: firstInvalidEl,
+          missingFields
+        };
+      }
+
+      return { allowed: true };
+    }
+
+    // ==========================================================================
+    // 2. VALIDASI PRASYARAT MODE VARIAN & TABEL LIST VARIASI (has_variants === true)
+    // ==========================================================================
+    const validMats = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+    if (validMats.length === 0) {
+      const firstMatNameInp = document.querySelector('.mat-input[data-field="name"]');
+      return {
+        allowed: false,
+        reason: 'Mohon buat dan isi minimal 1 opsi variasi terlebih dahulu.',
+        targetEl: firstMatNameInp || document.getElementById('card-variasi-1')
+      };
+    }
+
+    // Periksa Variasi 2, 3, 4 jika aktif
+    if (primaryState.has_variation_2) {
+      const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+      if (validV2.length === 0) {
+        const v2Inp = document.querySelector('#card-variasi-2 .fin-input[data-field="name"]');
+        return {
+          allowed: false,
+          reason: 'Mohon lengkapi nama opsi pada Variasi 2 yang sedang aktif.',
+          targetEl: v2Inp || document.getElementById('card-variasi-2')
+        };
+      }
+    }
+    if (primaryState.has_variation_3) {
+      const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+      if (validV3.length === 0) {
+        const v3Inp = document.querySelector('#card-variasi-3 .fin-input[data-field="name"]');
+        return {
+          allowed: false,
+          reason: 'Mohon lengkapi nama opsi pada Variasi 3 yang sedang aktif.',
+          targetEl: v3Inp || document.getElementById('card-variasi-3')
+        };
+      }
+    }
+    if (primaryState.has_variation_4) {
+      const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+      if (validV4.length === 0) {
+        const v4Inp = document.querySelector('#card-variasi-4 .fin-input[data-field="name"]');
+        return {
+          allowed: false,
+          reason: 'Mohon lengkapi nama opsi pada Variasi 4 yang sedang aktif.',
+          targetEl: v4Inp || document.getElementById('card-variasi-4')
+        };
+      }
+    }
+
+    // Periksa setiap baris kombinasi opsi variasi yang aktif dan sudah terisi nama opsinya:
+    // Wajib memiliki nilai Harga Jual dan Stok yang terisi valid
+    const stockModeTier1 = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
+    for (let i = 0; i < validMats.length; i++) {
+      const mat = validMats[i];
+      const rowEl = document.querySelector(`.variation-option-row[data-id="${mat.id}"]`);
+
+      // Cek Harga Jual dari DOM atau state
+      const priceInp = rowEl?.querySelector('input[data-field="price"]');
+      const rawPrice = priceInp && priceInp.value.trim() !== '' ? parseFloat(priceInp.value) : parseFloat(mat.price);
+      const isPriceValid = (!isNaN(rawPrice) && rawPrice > 0);
+
+      // Cek Stok dari DOM atau state
+      const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+      const rawStock = stockInp ? stockInp.value.trim() : (mat.stock !== null && mat.stock !== undefined ? String(mat.stock).trim() : '');
+      const isStockUnlimited = stockModeTier1 === 'unlimited' || mat.stock === null || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
+      let isStockValid = false;
+      if (isStockUnlimited) {
+        isStockValid = true;
+      } else if (rawStock !== '') {
+        const parsedStock = parseInt(rawStock, 10);
+        isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
+      }
+
+      if (!isPriceValid || !isStockValid) {
+        const targetInput = !isPriceValid ? (priceInp || rowEl) : (stockInp || rowEl);
+        return {
+          allowed: false,
+          reason: 'Mohon lengkapi Harga Jual, Stok, dan Max. Order pada seluruh baris variasi yang aktif.',
+          targetEl: targetInput || document.getElementById('card-variasi-1')
+        };
+      }
+    }
+
+    // Periksa tabel List Variasi Produk (#combination-matrix-section):
+    // Kolom Max. Order pada setiap baris variasi aktif wajib sudah ditentukan nilainya
+    for (let i = 0; i < validMats.length; i++) {
+      const mat = validMats[i];
+      const maxOrderInp = document.querySelector(`.combo-max-order-input[data-mat-id="${mat.id}"]`);
+      const rawMaxVal = maxOrderInp ? maxOrderInp.value.trim() : (mat.max_order !== null && mat.max_order !== undefined ? String(mat.max_order).trim() : '');
+      const isMaxOrderUnlimited = rawMaxVal.toLowerCase() === 'tanpa batas' || rawMaxVal.toLowerCase() === 'unlimited';
+      let isMaxOrderValid = false;
+      if (isMaxOrderUnlimited) {
+        isMaxOrderValid = true;
+      } else if (rawMaxVal !== '') {
+        const parsedMax = parseInt(rawMaxVal, 10);
+        isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
+      }
+
+      if (!isMaxOrderValid) {
+        return {
+          allowed: false,
+          reason: 'Mohon lengkapi Harga Jual, Stok, dan Max. Order pada seluruh baris variasi yang aktif.',
+          targetEl: maxOrderInp || document.getElementById('combination-matrix-section')
+        };
       }
     }
 
@@ -3624,6 +3820,7 @@ const ProductForm = (() => {
           const check = canActivateTestMode();
           if (!check.allowed) {
             showPreviewTestModeAlert(check.reason);
+            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
             return;
           }
           hidePreviewTestModeAlert();
@@ -5324,6 +5521,13 @@ const ProductForm = (() => {
   }
 
   function openShopeeCheckoutDrawer(actionType) {
+    const check = canActivateTestMode();
+    if (!check.allowed) {
+      showPreviewTestModeAlert(check.reason);
+      if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
+      return;
+    }
+    hidePreviewTestModeAlert();
     validateAndAdjustSpecificVariations();
     const isAlreadyOpen = previewTestState.isDrawerOpen;
     previewTestState.isDrawerOpen = true;
@@ -5737,6 +5941,7 @@ const ProductForm = (() => {
           const check = canActivateTestMode();
           if (!check.allowed) {
             showPreviewTestModeAlert(check.reason);
+            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
             return;
           }
           hidePreviewTestModeAlert();
@@ -5857,6 +6062,7 @@ const ProductForm = (() => {
           const check = canActivateTestMode();
           if (!check.allowed) {
             showPreviewTestModeAlert(check.reason);
+            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
             return;
           }
           hidePreviewTestModeAlert();
@@ -5889,6 +6095,7 @@ const ProductForm = (() => {
           const check = canActivateTestMode();
           if (!check.allowed) {
             showPreviewTestModeAlert(check.reason);
+            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
             return;
           }
           hidePreviewTestModeAlert();
@@ -19166,6 +19373,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const check = canActivateTestMode();
           if (!check.allowed) {
             showPreviewTestModeAlert(check.reason);
+            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
             return;
           }
           hidePreviewTestModeAlert();

@@ -518,6 +518,15 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menghasilkan log terminal yang jelas dan informatif yang merinci jumlah aset yang diperbarui per berkas.
     - **Pemasangan Meta Tag `No-Cache` di `<head>` Seluruh File HTML**:
       - Memasang 3 baris meta header anti-stale cache: `<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">`, `<meta http-equiv="Pragma" content="no-cache">`, `<meta http-equiv="Expires" content="0">` di seluruh 6 file HTML utama (`admin.html`, `index.html`, `product.html`, `settings.html`, `theme-editor.html`, `superadmin/superadmin.html`) untuk menjamin browser selalu memuat file HTML terbaru tanpa tertahan di cache lokal.
+  - [x] **Penyempurnaan Form Produk Bagian 12: Validasi Prasyarat Uji Coba Mode Tanpa Variasi & Mode Varian/Matrix (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Validasi Prasyarat Uji Coba Mode Tanpa Variasi (`has_variants === false`)**:
+      - Sistem memvalidasi kelengkapan 5 parameter wajib sebelum mengizinkan pengaktifan mode Uji Coba atau pembukaan drawer checkout: *Nama Produk*, *Kategori*, *Harga Jual* (> 0), *Stok Produk* (kuota valid atau Unlimited), dan *Maksimal Jumlah Pembelian* (nilai valid atau Tanpa Batas).
+      - Jika ada parameter yang belum terisi lengkap, pembukaan uji coba dibatalkan, sistem menampilkan notifikasi SaaS ramah (*"Mohon lengkapi Nama Produk, Kategori, Harga Jual, Stok Produk, dan Maksimal Jumlah Pembelian terlebih dahulu."*), dan secara otomatis mengarahkan fokus (`focus()`, `scrollIntoView()`, visual highlight ring) ke input pertama yang belum terisi lengkap (termasuk auto navigasi ke Step 1 jika Nama Produk atau Kategori belum diisi).
+    - **Validasi Prasyarat Uji Coba Mode Varian & Tabel List Variasi (`has_variants === true`)**:
+      - Memastikan minimal 1 nama opsi variasi pada Variasi 1 terisi, serta nama opsi pada Variasi 2–4 jika variasi tersebut aktif.
+      - Memvalidasi seluruh baris opsi variasi aktif wajib memiliki nilai *Harga Jual* (> 0) dan *Stok* yang terisi valid (kuota angka atau Unlimited).
+      - Pada tabel *List Variasi Produk* (`#combination-matrix-section`), memvalidasi kolom *Max. Order* pada setiap baris variasi aktif wajib sudah ditentukan nilainya (angka valid atau Tanpa Batas, tidak boleh kosong).
+      - Jika ada baris variasi atau Max. Order yang belum terisi, sistem memblokir pembukaan uji coba, menampilkan peringatan spesifik (*"Mohon lengkapi Harga Jual, Stok, dan Max. Order pada seluruh baris variasi yang aktif."*), dan mengarahkan fokus langsung ke input baris terkait.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
