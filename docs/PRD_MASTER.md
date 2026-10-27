@@ -527,6 +527,16 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Memvalidasi seluruh baris opsi variasi aktif wajib memiliki nilai *Harga Jual* (> 0) dan *Stok* yang terisi valid (kuota angka atau Unlimited).
       - Pada tabel *List Variasi Produk* (`#combination-matrix-section`), memvalidasi kolom *Max. Order* pada setiap baris variasi aktif wajib sudah ditentukan nilainya (angka valid atau Tanpa Batas, tidak boleh kosong).
       - Jika ada baris variasi atau Max. Order yang belum terisi, sistem memblokir pembukaan uji coba, menampilkan peringatan spesifik (*"Mohon lengkapi Harga Jual, Stok, dan Max. Order pada seluruh baris variasi yang aktif."*), dan mengarahkan fokus langsung ke input baris terkait.
+  - [x] **Penyempurnaan Form Produk Bagian 13: Modal Popup Peringatan Uji Coba, Pesan Dinamis Spesifik, & Validasi Layanan Extras (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Modal Popup Pratinjau Interaktif**:
+      - Mengganti banner kuning inline pada header pratinjau menjadi Modal Popup yang elegan di dalam area frame pratinjau (`#preview-scoped-modal-root` & `#preview-scoped-modal-root-mob`) dengan latar gelap transparan (`bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-2xs`) dan kotak modal putih bersih (`bg-white rounded-xl shadow-2xl p-4 sm:p-5 max-w-[240px] text-center space-y-3 animate-modal-pop`).
+      - Judul utama: *"Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu"*.
+      - Sub-pesan dinamis: Menyebutkan hanya parameter-parameter spesifik yang kosong atau belum valid dalam kotak kontras (`bg-amber-50/90 border-amber-200/80`).
+      - Tombol aksi: Tombol konfirmasi *"OK / Mengerti"* dengan aksen tema `var(--color-primary)` yang saat diklik otomatis menutup modal dan mengarahkan fokus kursor (`focus()`, `scrollIntoView()`, visual highlight ring 3 detik) langsung ke elemen input pertama yang belum lengkap.
+    - **Pesan Dinamis Spesifik (Hanya Bagian yang Belum Valid)**:
+      - Mode Tanpa Variasi: Memeriksa dan merinci secara spesifik jika *Nama Produk*, *Kategori*, *Harga Jual*, *Stok Produk*, atau *Maksimal Jumlah Pembelian* yang belum valid.
+      - Mode Varian & Matriks List Variasi: Memeriksa dan merinci nama baris opsi variasi yang belum valid (contoh: *Harga Jual (Merah)*, *Max. Order (Biru)*).
+      - Mode Layanan Ekstra (Extras): Memeriksa opsi layanan extras aktif (`primaryState.has_extra_service` / `finishingsState.extra_3`) dan merinci kekurangan pada *Jenis Input*, *Harga Satuan*, maupun *Stok* per opsi (contoh: *Jenis Input Extras (Packaging Kayu)*, *Harga Satuan Extras (Packaging Kayu)*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

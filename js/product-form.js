@@ -3370,51 +3370,48 @@ const ProductForm = (() => {
 
   function canActivateTestMode() {
     if (currentStep === 1) {
-      return { allowed: false, reason: 'Mode Uji Coba khusus untuk menguji tampilan Detail Produk di Step 2.' };
+      return { 
+        allowed: false, 
+        title: 'Mode Uji Coba Belum Tersedia',
+        missingItems: ['Beralih ke Step 2 untuk menguji pratinjau Detail Produk.'],
+        reason: 'Mode Uji Coba khusus untuk menguji tampilan Detail Produk di Step 2.' 
+      };
     }
 
-    // 1. Validasi Nama Produk (Wajib di semua mode)
+    const missingItems = [];
+    let firstInvalidEl = null;
+
+    // 1. Validasi Nama Produk (Step 1)
     const prodNameInp = document.getElementById('input-prod-name');
     const prodNameVal = (prodNameInp?.value || primaryState.name || '').trim();
     if (!prodNameVal) {
-      return {
-        allowed: false,
-        reason: 'Mohon lengkapi Nama Produk, Kategori, Harga Jual, Stok Produk, dan Maksimal Jumlah Pembelian terlebih dahulu.',
-        targetEl: prodNameInp || document.getElementById('input-prod-name'),
-        field: 'Nama Produk'
-      };
+      missingItems.push('Nama Produk');
+      if (!firstInvalidEl) firstInvalidEl = prodNameInp || document.getElementById('input-prod-name');
     }
 
-    // 2. Validasi Kategori (Wajib di semua mode)
+    // 2. Validasi Kategori (Step 1)
     const catSelect = document.getElementById('select-prod-category');
     const catVal = (catSelect?.value || primaryState.category_id || '').trim();
     if (!catVal) {
-      return {
-        allowed: false,
-        reason: 'Mohon lengkapi Nama Produk, Kategori, Harga Jual, Stok Produk, dan Maksimal Jumlah Pembelian terlebih dahulu.',
-        targetEl: catSelect || document.getElementById('select-prod-category'),
-        field: 'Kategori'
-      };
+      missingItems.push('Kategori Produk');
+      if (!firstInvalidEl) firstInvalidEl = catSelect || document.getElementById('select-prod-category');
     }
 
     // ==========================================================================
-    // 1. VALIDASI PRASYARAT MODE TANPA VARIASI (has_variants === false)
+    // KASUS A: PRODUK TANPA VARIASI (has_variants === false)
     // ==========================================================================
     if (!primaryState.has_variants) {
-      const missingFields = [];
-      let firstInvalidEl = null;
-
-      // Harga Jual
+      // A.1. Harga Jual
       const singlePriceInp = document.getElementById('input-single-price');
       const valFromInp = singlePriceInp && singlePriceInp.value.trim() !== '' ? parseFloat(singlePriceInp.value) : NaN;
       const priceVal = !isNaN(valFromInp) ? valFromInp : parseFloat(primaryState.price);
       const isPriceValid = (!isNaN(priceVal) && priceVal > 0);
       if (!isPriceValid) {
-        missingFields.push('Harga Jual');
+        missingItems.push('Harga Jual');
         if (!firstInvalidEl) firstInvalidEl = singlePriceInp || document.getElementById('input-single-price');
       }
 
-      // Stok Produk
+      // A.2. Stok Produk
       const stockInp = document.getElementById('input-stock-qty');
       const rawStock = stockInp ? stockInp.value.trim() : (primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? String(primaryState.stock).trim() : ''));
       const isStockUnlimited = Boolean(primaryState.is_unlimited_stock) || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
@@ -3426,11 +3423,11 @@ const ProductForm = (() => {
         isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
       }
       if (!isStockValid) {
-        missingFields.push('Stok Produk');
+        missingItems.push('Stok Produk');
         if (!firstInvalidEl) firstInvalidEl = stockInp || document.getElementById('input-stock-qty');
       }
 
-      // Maksimal Jumlah Pembelian (Max. Order)
+      // A.3. Maksimal Jumlah Pembelian
       const maxOrderInp = document.getElementById('input-normal-max-order');
       const rawMaxOrder = maxOrderInp ? maxOrderInp.value.trim() : (primaryState.max_order !== null && primaryState.max_order !== undefined ? String(primaryState.max_order).trim() : '');
       const isMaxOrderUnlimited = rawMaxOrder.toLowerCase() === 'tanpa batas' || rawMaxOrder.toLowerCase() === 'unlimited';
@@ -3442,126 +3439,159 @@ const ProductForm = (() => {
         isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
       }
       if (!isMaxOrderValid) {
-        missingFields.push('Maksimal Jumlah Pembelian');
+        missingItems.push('Maksimal Jumlah Pembelian');
         if (!firstInvalidEl) firstInvalidEl = maxOrderInp || document.getElementById('input-normal-max-order');
       }
+    } else {
+      // ==========================================================================
+      // KASUS B: PRODUK MEMILIKI VARIASI (has_variants === true)
+      // ==========================================================================
+      const validMats = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+      if (validMats.length === 0) {
+        missingItems.push('Minimal 1 Opsi Variasi 1');
+        const firstMatNameInp = document.querySelector('.mat-input[data-field="name"]');
+        if (!firstInvalidEl) firstInvalidEl = firstMatNameInp || document.getElementById('card-variasi-1');
+      } else {
+        // Cek nama opsi Variasi 2, 3, 4 jika aktif
+        if (primaryState.has_variation_2) {
+          const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+          if (validV2.length === 0) {
+            missingItems.push('Nama Opsi Variasi 2');
+            const v2Inp = document.querySelector('#card-variasi-2 .fin-input[data-field="name"]');
+            if (!firstInvalidEl) firstInvalidEl = v2Inp || document.getElementById('card-variasi-2');
+          }
+        }
+        if (primaryState.has_variation_3) {
+          const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+          if (validV3.length === 0) {
+            missingItems.push('Nama Opsi Variasi 3');
+            const v3Inp = document.querySelector('#card-variasi-3 .fin-input[data-field="name"]');
+            if (!firstInvalidEl) firstInvalidEl = v3Inp || document.getElementById('card-variasi-3');
+          }
+        }
+        if (primaryState.has_variation_4) {
+          const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+          if (validV4.length === 0) {
+            missingItems.push('Nama Opsi Variasi 4');
+            const v4Inp = document.querySelector('#card-variasi-4 .fin-input[data-field="name"]');
+            if (!firstInvalidEl) firstInvalidEl = v4Inp || document.getElementById('card-variasi-4');
+          }
+        }
 
-      if (missingFields.length > 0) {
-        return {
-          allowed: false,
-          reason: 'Mohon lengkapi Nama Produk, Kategori, Harga Jual, Stok Produk, dan Maksimal Jumlah Pembelian terlebih dahulu.',
-          targetEl: firstInvalidEl,
-          missingFields
-        };
+        // Cek Harga Jual dan Stok per baris variasi 1 aktif
+        const stockModeTier1 = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
+        for (let i = 0; i < validMats.length; i++) {
+          const mat = validMats[i];
+          const matLabel = mat.name.trim();
+          const rowEl = document.querySelector(`.variation-option-row[data-id="${mat.id}"]`);
+
+          const priceInp = rowEl?.querySelector('input[data-field="price"]');
+          const rawPrice = priceInp && priceInp.value.trim() !== '' ? parseFloat(priceInp.value) : parseFloat(mat.price);
+          const isPriceValid = (!isNaN(rawPrice) && rawPrice > 0);
+          if (!isPriceValid) {
+            missingItems.push(`Harga Jual (${matLabel})`);
+            if (!firstInvalidEl) firstInvalidEl = priceInp || rowEl;
+          }
+
+          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+          const rawStock = stockInp ? stockInp.value.trim() : (mat.stock !== null && mat.stock !== undefined ? String(mat.stock).trim() : '');
+          const isStockUnlimited = stockModeTier1 === 'unlimited' || mat.stock === null || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
+          let isStockValid = false;
+          if (isStockUnlimited) {
+            isStockValid = true;
+          } else if (rawStock !== '') {
+            const parsedStock = parseInt(rawStock, 10);
+            isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
+          }
+          if (!isStockValid) {
+            missingItems.push(`Stok (${matLabel})`);
+            if (!firstInvalidEl) firstInvalidEl = stockInp || rowEl;
+          }
+
+          // Cek Max. Order di tabel List Variasi Produk (#combination-matrix-section)
+          const maxOrderInp = document.querySelector(`.combo-max-order-input[data-mat-id="${mat.id}"]`);
+          const rawMaxVal = maxOrderInp ? maxOrderInp.value.trim() : (mat.max_order !== null && mat.max_order !== undefined ? String(mat.max_order).trim() : '');
+          const isMaxOrderUnlimited = rawMaxVal.toLowerCase() === 'tanpa batas' || rawMaxVal.toLowerCase() === 'unlimited';
+          let isMaxOrderValid = false;
+          if (isMaxOrderUnlimited) {
+            isMaxOrderValid = true;
+          } else if (rawMaxVal !== '') {
+            const parsedMax = parseInt(rawMaxVal, 10);
+            isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
+          }
+          if (!isMaxOrderValid) {
+            missingItems.push(`Max. Order (${matLabel})`);
+            if (!firstInvalidEl) firstInvalidEl = maxOrderInp || document.getElementById('combination-matrix-section');
+          }
+        }
       }
-
-      return { allowed: true };
     }
 
     // ==========================================================================
-    // 2. VALIDASI PRASYARAT MODE VARIAN & TABEL LIST VARIASI (has_variants === true)
+    // KASUS C: VALIDASI LAYANAN EKSTRA (EXTRAS) - Poin 2 & 3 Instruksi
     // ==========================================================================
-    const validMats = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
-    if (validMats.length === 0) {
-      const firstMatNameInp = document.querySelector('.mat-input[data-field="name"]');
+    const isExtrasActive = Boolean(primaryState.has_extra_service || (finishingsState.extra_3 && finishingsState.extra_3.length > 0));
+    if (isExtrasActive) {
+      const extraList = finishingsState.extra_3 || [];
+      const validExtras = extraList.filter(ex => !ex.is_default_none && ex.name && ex.name.trim() !== '');
+
+      if (primaryState.has_extra_service && validExtras.length === 0) {
+        missingItems.push('Minimal 1 Opsi Layanan Extras');
+        const exNameInp = document.querySelector('#card-extra-service input[data-field="name"]');
+        if (!firstInvalidEl) firstInvalidEl = exNameInp || document.getElementById('card-extra-service');
+      }
+
+      const stockModeExtras = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.extra_3) || '';
+      for (let i = 0; i < validExtras.length; i++) {
+        const ex = validExtras[i];
+        const exLabel = ex.name.trim();
+        const rowEl = document.querySelector(`.variation-option-row[data-tier="extra_3"][data-id="${ex.id}"]`) ||
+                      document.querySelectorAll(`.variation-option-row[data-tier="extra_3"]`)[i];
+
+        // 1. Jenis Input
+        const typeSel = rowEl?.querySelector('select.fin-extra-type');
+        const rawType = (typeSel?.value || ex.extra_type || '').trim();
+        if (!rawType) {
+          missingItems.push(`Jenis Input Extras (${exLabel})`);
+          if (!firstInvalidEl) firstInvalidEl = typeSel || rowEl || document.getElementById('card-extra-service');
+        }
+
+        // 2. Harga Satuan
+        const priceInp = rowEl?.querySelector('input[data-field="price"]');
+        const rawPrice = priceInp && priceInp.value.trim() !== '' ? parseFloat(priceInp.value) : parseFloat(ex.price);
+        const isPriceValid = (!isNaN(rawPrice) && rawPrice >= 0);
+        if (!isPriceValid) {
+          missingItems.push(`Harga Satuan Extras (${exLabel})`);
+          if (!firstInvalidEl) firstInvalidEl = priceInp || rowEl || document.getElementById('card-extra-service');
+        }
+
+        // 3. Stok Extras
+        const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+        const rawStock = stockInp ? stockInp.value.trim() : (ex.stock !== null && ex.stock !== undefined ? String(ex.stock).trim() : '');
+        const isStockUnlimited = stockModeExtras === 'unlimited' || ex.stock === null || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
+        let isStockValid = false;
+        if (isStockUnlimited) {
+          isStockValid = true;
+        } else if (rawStock !== '') {
+          const parsedStock = parseInt(rawStock, 10);
+          isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
+        }
+        if (!isStockValid) {
+          missingItems.push(`Stok Extras (${exLabel})`);
+          if (!firstInvalidEl) firstInvalidEl = stockInp || rowEl || document.getElementById('card-extra-service');
+        }
+      }
+    }
+
+    if (missingItems.length > 0) {
       return {
         allowed: false,
-        reason: 'Mohon buat dan isi minimal 1 opsi variasi terlebih dahulu.',
-        targetEl: firstMatNameInp || document.getElementById('card-variasi-1')
+        title: 'Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu',
+        missingItems: missingItems,
+        reason: 'Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu',
+        detailMessage: 'Bagian yang belum lengkap: ' + missingItems.join(', '),
+        targetEl: firstInvalidEl
       };
-    }
-
-    // Periksa Variasi 2, 3, 4 jika aktif
-    if (primaryState.has_variation_2) {
-      const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
-      if (validV2.length === 0) {
-        const v2Inp = document.querySelector('#card-variasi-2 .fin-input[data-field="name"]');
-        return {
-          allowed: false,
-          reason: 'Mohon lengkapi nama opsi pada Variasi 2 yang sedang aktif.',
-          targetEl: v2Inp || document.getElementById('card-variasi-2')
-        };
-      }
-    }
-    if (primaryState.has_variation_3) {
-      const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
-      if (validV3.length === 0) {
-        const v3Inp = document.querySelector('#card-variasi-3 .fin-input[data-field="name"]');
-        return {
-          allowed: false,
-          reason: 'Mohon lengkapi nama opsi pada Variasi 3 yang sedang aktif.',
-          targetEl: v3Inp || document.getElementById('card-variasi-3')
-        };
-      }
-    }
-    if (primaryState.has_variation_4) {
-      const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
-      if (validV4.length === 0) {
-        const v4Inp = document.querySelector('#card-variasi-4 .fin-input[data-field="name"]');
-        return {
-          allowed: false,
-          reason: 'Mohon lengkapi nama opsi pada Variasi 4 yang sedang aktif.',
-          targetEl: v4Inp || document.getElementById('card-variasi-4')
-        };
-      }
-    }
-
-    // Periksa setiap baris kombinasi opsi variasi yang aktif dan sudah terisi nama opsinya:
-    // Wajib memiliki nilai Harga Jual dan Stok yang terisi valid
-    const stockModeTier1 = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
-    for (let i = 0; i < validMats.length; i++) {
-      const mat = validMats[i];
-      const rowEl = document.querySelector(`.variation-option-row[data-id="${mat.id}"]`);
-
-      // Cek Harga Jual dari DOM atau state
-      const priceInp = rowEl?.querySelector('input[data-field="price"]');
-      const rawPrice = priceInp && priceInp.value.trim() !== '' ? parseFloat(priceInp.value) : parseFloat(mat.price);
-      const isPriceValid = (!isNaN(rawPrice) && rawPrice > 0);
-
-      // Cek Stok dari DOM atau state
-      const stockInp = rowEl?.querySelector('input[data-field="stock"]');
-      const rawStock = stockInp ? stockInp.value.trim() : (mat.stock !== null && mat.stock !== undefined ? String(mat.stock).trim() : '');
-      const isStockUnlimited = stockModeTier1 === 'unlimited' || mat.stock === null || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
-      let isStockValid = false;
-      if (isStockUnlimited) {
-        isStockValid = true;
-      } else if (rawStock !== '') {
-        const parsedStock = parseInt(rawStock, 10);
-        isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
-      }
-
-      if (!isPriceValid || !isStockValid) {
-        const targetInput = !isPriceValid ? (priceInp || rowEl) : (stockInp || rowEl);
-        return {
-          allowed: false,
-          reason: 'Mohon lengkapi Harga Jual, Stok, dan Max. Order pada seluruh baris variasi yang aktif.',
-          targetEl: targetInput || document.getElementById('card-variasi-1')
-        };
-      }
-    }
-
-    // Periksa tabel List Variasi Produk (#combination-matrix-section):
-    // Kolom Max. Order pada setiap baris variasi aktif wajib sudah ditentukan nilainya
-    for (let i = 0; i < validMats.length; i++) {
-      const mat = validMats[i];
-      const maxOrderInp = document.querySelector(`.combo-max-order-input[data-mat-id="${mat.id}"]`);
-      const rawMaxVal = maxOrderInp ? maxOrderInp.value.trim() : (mat.max_order !== null && mat.max_order !== undefined ? String(mat.max_order).trim() : '');
-      const isMaxOrderUnlimited = rawMaxVal.toLowerCase() === 'tanpa batas' || rawMaxVal.toLowerCase() === 'unlimited';
-      let isMaxOrderValid = false;
-      if (isMaxOrderUnlimited) {
-        isMaxOrderValid = true;
-      } else if (rawMaxVal !== '') {
-        const parsedMax = parseInt(rawMaxVal, 10);
-        isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
-      }
-
-      if (!isMaxOrderValid) {
-        return {
-          allowed: false,
-          reason: 'Mohon lengkapi Harga Jual, Stok, dan Max. Order pada seluruh baris variasi yang aktif.',
-          targetEl: maxOrderInp || document.getElementById('combination-matrix-section')
-        };
-      }
     }
 
     return { allowed: true };
@@ -3677,46 +3707,94 @@ const ProductForm = (() => {
     return { valid: true };
   }
 
-  let previewTestAlertTimer = null;
-  function showPreviewTestModeAlert(message) {
-    const alerts = [
-      document.getElementById('preview-test-mode-alert'),
-      document.getElementById('preview-test-mode-alert-mob')
+  function showPreviewTestModeAlert(checkOrMessage) {
+    const roots = [
+      document.getElementById('preview-scoped-modal-root'),
+      document.getElementById('preview-scoped-modal-root-mob')
     ].filter(Boolean);
 
-    if (previewTestAlertTimer) {
-      clearTimeout(previewTestAlertTimer);
-      previewTestAlertTimer = null;
-    }
+    if (roots.length === 0) return;
 
-    alerts.forEach(el => {
-      const textEl = el.querySelector('.preview-test-alert-text');
-      if (textEl) textEl.textContent = message;
-      el.classList.remove('hidden');
-      const closeBtn = el.querySelector('.btn-close-preview-test-alert');
-      if (closeBtn) {
-        closeBtn.onclick = (e) => {
+    const isObj = (typeof checkOrMessage === 'object' && checkOrMessage !== null);
+    const title = isObj && checkOrMessage.title ? checkOrMessage.title : 'Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu';
+    const items = isObj && Array.isArray(checkOrMessage.missingItems) && checkOrMessage.missingItems.length > 0
+      ? checkOrMessage.missingItems
+      : (isObj && checkOrMessage.reason ? [checkOrMessage.reason] : [String(checkOrMessage || 'Silahkan lengkapi data penjualan wajib.')]);
+    const targetEl = isObj ? checkOrMessage.targetEl : null;
+
+    const modalInner = `
+      <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-5 max-w-[240px] w-full text-center space-y-3 border border-slate-100 relative animate-modal-pop pointer-events-auto">
+        <div class="w-11 h-11 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl mx-auto shadow-inner">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+
+        <div class="space-y-1">
+          <h3 class="text-xs font-extrabold text-slate-900 leading-snug">
+            ${escapeHtml(title)}
+          </h3>
+          <p class="text-[10px] text-slate-500 font-medium leading-tight">
+            Lengkapi data berikut untuk menguji pratinjau produk.
+          </p>
+        </div>
+
+        <div class="text-left bg-amber-50/90 border border-amber-200/80 rounded-lg p-2.5 space-y-1 max-h-[140px] overflow-y-auto">
+          <span class="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">Bagian yang belum lengkap:</span>
+          <ul class="text-[10px] text-amber-800 list-disc list-inside space-y-0.5 leading-snug font-medium">
+            ${items.map(it => `<li>${escapeHtml(it)}</li>`).join('')}
+          </ul>
+        </div>
+
+        <button type="button" class="btn-confirm-validation-ok w-full py-2 px-3 rounded-lg text-white text-xs font-bold transition shadow-xs cursor-pointer btn-primary-brand" style="background-color: var(--color-primary);">
+          OK / Mengerti
+        </button>
+      </div>
+    `;
+
+    roots.forEach(root => {
+      root.className = 'absolute inset-0 bg-black/40 z-50 flex items-center justify-center p-4 pointer-events-auto backdrop-blur-2xs';
+      if (root.id === 'preview-scoped-modal-root-mob') {
+        root.style.zIndex = '100';
+      }
+      root.innerHTML = modalInner;
+      root.classList.remove('hidden');
+
+      const okBtn = root.querySelector('.btn-confirm-validation-ok');
+      if (okBtn) {
+        okBtn.onclick = (e) => {
           e.preventDefault();
-          el.classList.add('hidden');
+          hidePreviewTestModeAlert();
+          if (targetEl) {
+            focusAndHighlightValidationTarget(targetEl);
+          }
         };
       }
-    });
 
-    previewTestAlertTimer = setTimeout(() => {
-      hidePreviewTestModeAlert();
-    }, 6000);
+      root.onclick = (e) => {
+        if (e.target === root) {
+          hidePreviewTestModeAlert();
+          if (targetEl) {
+            focusAndHighlightValidationTarget(targetEl);
+          }
+        }
+      };
+    });
   }
 
   function hidePreviewTestModeAlert() {
-    const alerts = [
-      document.getElementById('preview-test-mode-alert'),
-      document.getElementById('preview-test-mode-alert-mob')
+    const roots = [
+      document.getElementById('preview-scoped-modal-root'),
+      document.getElementById('preview-scoped-modal-root-mob')
     ].filter(Boolean);
-    alerts.forEach(el => el.classList.add('hidden'));
-    if (previewTestAlertTimer) {
-      clearTimeout(previewTestAlertTimer);
-      previewTestAlertTimer = null;
-    }
+
+    roots.forEach(root => {
+      root.classList.add('hidden');
+      root.innerHTML = '';
+      if (root.id === 'preview-scoped-modal-root') {
+        root.className = 'absolute inset-0 z-50 hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs';
+      } else {
+        root.className = 'absolute inset-0 z-[100] hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs';
+      }
+    });
   }
 
   function updatePreviewSidebarHeader() {
@@ -3752,13 +3830,6 @@ const ProductForm = (() => {
           </button>
         </div>
         <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
-        <div id="preview-test-mode-alert" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
-          <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
-          <span class="flex-1 font-medium preview-test-alert-text"></span>
-          <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
-            <i class="bi bi-x text-sm"></i>
-          </button>
-        </div>
       </div>
     `;
 
@@ -3775,13 +3846,6 @@ const ProductForm = (() => {
           </button>
         </div>
         <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
-        <div id="preview-test-mode-alert-mob" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
-          <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
-          <span class="flex-1 font-medium preview-test-alert-text"></span>
-          <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
-            <i class="bi bi-x text-sm"></i>
-          </button>
-        </div>
       </div>
     `;
 
@@ -3819,8 +3883,7 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            showPreviewTestModeAlert(check.reason);
-            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
+            showPreviewTestModeAlert(check);
             return;
           }
           hidePreviewTestModeAlert();
@@ -5523,8 +5586,7 @@ const ProductForm = (() => {
   function openShopeeCheckoutDrawer(actionType) {
     const check = canActivateTestMode();
     if (!check.allowed) {
-      showPreviewTestModeAlert(check.reason);
-      if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
+      showPreviewTestModeAlert(check);
       return;
     }
     hidePreviewTestModeAlert();
@@ -5940,8 +6002,7 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            showPreviewTestModeAlert(check.reason);
-            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
+            showPreviewTestModeAlert(check);
             return;
           }
           hidePreviewTestModeAlert();
@@ -6061,8 +6122,7 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            showPreviewTestModeAlert(check.reason);
-            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
+            showPreviewTestModeAlert(check);
             return;
           }
           hidePreviewTestModeAlert();
@@ -6094,8 +6154,7 @@ const ProductForm = (() => {
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            showPreviewTestModeAlert(check.reason);
-            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
+            showPreviewTestModeAlert(check);
             return;
           }
           hidePreviewTestModeAlert();
@@ -19372,8 +19431,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           e.preventDefault();
           const check = canActivateTestMode();
           if (!check.allowed) {
-            showPreviewTestModeAlert(check.reason);
-            if (check.targetEl) focusAndHighlightValidationTarget(check.targetEl);
+            showPreviewTestModeAlert(check);
             return;
           }
           hidePreviewTestModeAlert();
