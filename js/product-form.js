@@ -3242,6 +3242,44 @@ const ProductForm = (() => {
     return stateVal || fallback;
   }
 
+  function getVariationGroupTitleInfo(tierKey) {
+    let defaultLabel = 'Variasi 1';
+    let key = 'label_tier_1';
+    let selector = '#input-var-label-tier1, [data-label-key="label_tier_1"]';
+
+    if (tierKey === 'tier2' || tierKey === 'main') {
+      defaultLabel = 'Variasi 2';
+      key = 'label_tier_2';
+      selector = '#input-var-label-main, #input-var-label-tier2, [data-label-key="label_tier_2"]';
+    } else if (tierKey === 'tier3' || tierKey === 'extra_1') {
+      defaultLabel = 'Variasi 3';
+      key = 'label_extra_1';
+      selector = '#input-var-label-extra_1, #input-var-label-extra1, [data-label-key="label_extra_1"]';
+    } else if (tierKey === 'tier4' || tierKey === 'extra_2') {
+      defaultLabel = 'Variasi 4';
+      key = 'label_extra_2';
+      selector = '#input-var-label-extra_2, #input-var-label-extra2, [data-label-key="label_extra_2"]';
+    } else if (tierKey === 'extras' || tierKey === 'extra_3') {
+      defaultLabel = 'Layanan Extras';
+      key = 'label_extra_3';
+      selector = '#input-var-label-extra3, #input-var-label-extra_3, #input-var-label-extra-services, [data-label-key="label_extra_3"]';
+    }
+
+    const domInp = selector ? document.querySelector(selector) : null;
+    const rawVal = domInp ? (domInp.value ? domInp.value.trim() : '') : ((key && primaryState.variation_labels?.[key]) ? String(primaryState.variation_labels[key]).trim() : '');
+    const hasCustomTitle = Boolean(rawVal && rawVal.toLowerCase() !== defaultLabel.toLowerCase());
+    const effectiveTitle = rawVal || defaultLabel;
+
+    return { defaultLabel, hasCustomTitle, effectiveTitle };
+  }
+
+  function formatVariationReactiveHeader(groupLabel, optionCount, selectedOptionName) {
+    if (selectedOptionName && String(selectedOptionName).trim() !== '') {
+      return `${escapeHtml(groupLabel)}: <span class="font-bold text-slate-800">${escapeHtml(String(selectedOptionName).trim())}</span>`;
+    }
+    return `Tersedia (${optionCount || 0}) ${escapeHtml(groupLabel)}`;
+  }
+
   function getCustomDimensionLabel() {
     const inp = document.getElementById('input-custom-dimension-label');
     if (inp && inp.value && inp.value.trim() !== '') {
@@ -3503,7 +3541,12 @@ const ProductForm = (() => {
         const validOpts = (group.list || []).filter(opt => opt && !opt.is_default_none && opt.name && opt.name.trim() !== '');
 
         if (validOpts.length === 0) {
-          missingItems.push(`Minimal 1 Opsi ${group.label}`);
+          const titleInfo = getVariationGroupTitleInfo(group.tier);
+          const missingMsg = titleInfo.hasCustomTitle 
+            ? `${titleInfo.effectiveTitle} Opsi 1` 
+            : titleInfo.defaultLabel;
+
+          missingItems.push(missingMsg);
           const firstInp = document.querySelector(`#${group.cardId} input[data-field="name"]`);
           if (!firstInvalidEl) firstInvalidEl = firstInp || document.getElementById(group.cardId);
           continue;
@@ -3591,7 +3634,11 @@ const ProductForm = (() => {
       const validExtras = extraList.filter(ex => !ex.is_default_none && ex.name && ex.name.trim() !== '');
 
       if (primaryState.has_extra_service && validExtras.length === 0) {
-        missingItems.push('Minimal 1 Opsi Layanan Extras');
+        const extraTitleInfo = getVariationGroupTitleInfo('extras');
+        const missingMsg = extraTitleInfo.hasCustomTitle 
+          ? `${extraTitleInfo.effectiveTitle} Opsi 1` 
+          : extraTitleInfo.defaultLabel;
+        missingItems.push(missingMsg);
         const exNameInp = document.querySelector('#card-extra-service input[data-field="name"]');
         if (!firstInvalidEl) firstInvalidEl = exNameInp || document.getElementById('card-extra-service');
       }
@@ -3604,7 +3651,7 @@ const ProductForm = (() => {
                       document.querySelectorAll(`.variation-option-row[data-tier="extra_3"]`)[i];
 
         // 1. Jenis Input
-        const typeSel = rowEl?.querySelector('select.fin-extra-type');
+        const typeSel = rowEl?.querySelector('select[data-field="extra_type"]') || rowEl?.querySelector('select.fin-extra-type');
         const rawType = (typeSel?.value || ex.extra_type || '').trim();
         if (!rawType) {
           missingItems.push(`Jenis Input Extras (${exLabel})`);
@@ -4658,8 +4705,8 @@ const ProductForm = (() => {
         });
 
         const valEl = wrapper.querySelector('.shadcn-select-value');
+        const groupLabel = getVariationLabel(tierKey, tierKey === 'tier2' ? 'Variasi 2' : tierKey === 'tier3' ? 'Variasi 3' : 'Variasi 4');
         if (valEl) {
-          const groupLabel = getVariationLabel(tierKey, tierKey === 'tier2' ? 'Variasi 2' : tierKey === 'tier3' ? 'Variasi 3' : 'Variasi 4');
           if (selectedOptName) {
             valEl.textContent = selectedOptName;
             valEl.className = 'shadcn-select-value truncate font-semibold text-slate-900';
@@ -4668,17 +4715,24 @@ const ProductForm = (() => {
             valEl.className = 'shadcn-select-value truncate text-slate-400';
           }
         }
+
+        const wrapperParent = wrapper.parentElement;
+        const selectHeader = wrapperParent?.querySelector('.text-xs.font-medium.text-slate-600.mb-1');
+        if (selectHeader) {
+          const totalOpts = wrapper.querySelectorAll('.btn-shadcn-select-item').length;
+          selectHeader.innerHTML = formatVariationReactiveHeader(groupLabel, totalOpts, selectedOptName);
+        }
       });
 
       // 3. Update Akordeon Selected Text
       container.querySelectorAll(`.var-accordion-card[data-tier="${tierKey}"]`).forEach(card => {
-        const textEl = card.querySelector('.var-accordion-selected-text');
-        if (textEl) {
-          const currentSelId = (tierKey === 'tier2') ? previewTestState.selectedTier2Id
-            : ((tierKey === 'tier3') ? previewTestState.selectedTier3Id : previewTestState.selectedTier4Id);
-          const activeBtn = card.querySelector(`.btn-shopee-${tierKey}.is-active`);
-          const optName = activeBtn ? (activeBtn.querySelector('span')?.textContent?.trim() || '') : '';
-          textEl.innerHTML = (currentSelId && optName) ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
+        const titleSpan = card.querySelector('.btn-toggle-var-accordion > div > span');
+        const activeBtn = card.querySelector(`.btn-shopee-${tierKey}.is-active`);
+        const optName = activeBtn ? (activeBtn.querySelector('span')?.textContent?.trim() || '') : '';
+        const groupLabel = getVariationLabel(tierKey, tierKey === 'tier2' ? 'Variasi 2' : tierKey === 'tier3' ? 'Variasi 3' : 'Variasi 4');
+        const totalOpts = card.querySelectorAll(`.btn-shopee-${tierKey}`).length;
+        if (titleSpan) {
+          titleSpan.innerHTML = formatVariationReactiveHeader(groupLabel, totalOpts, optName);
         }
       });
     });
@@ -4694,11 +4748,16 @@ const ProductForm = (() => {
       ? getAllowedVariationOptions(activeTier1Id, tierKey)
       : { isSpecific: false, allowedIds: null };
 
+    // Format Header Reaktif Sesuai Aturan Poin 2:
+    // Belum dipilih: "Tersedia [(Jumlah Opsi)] [Judul Variasi]" (contoh: "Tersedia (3) Bahan Utama")
+    // Sudah dipilih: "[Judul Variasi]: [Nilai Opsi]" (contoh: "Bahan Utama: FC")
+    const reactiveTitleHtml = formatVariationReactiveHeader(group.label, group.options.length, selectedName);
+
     // 1. MODE SELECT (Shadcn UI Custom Select Popover)
     if (mode === 'select') {
       return `
         <div class="space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}">
-          <div class="text-xs font-medium text-slate-600 mb-1">${escapeHtml(group.label)}</div>
+          <div class="text-xs font-medium text-slate-600 mb-1">${reactiveTitleHtml}</div>
           <div class="relative w-full shadcn-select-wrapper" data-tier="${tierKey}">
             <button type="button" class="btn-shadcn-select-trigger w-full h-9 px-3 rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer select-none" data-tier="${tierKey}">
               <span class="shadcn-select-value truncate ${selectedOpt ? 'font-semibold text-slate-900' : 'text-slate-400'}">
@@ -4758,8 +4817,7 @@ const ProductForm = (() => {
         <div class="var-accordion-card space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}" data-tier="${tierKey}">
           <div class="btn-toggle-var-accordion w-full py-2 px-2.5 bg-slate-50/80 hover:bg-slate-100/80 rounded-md flex items-center justify-between text-xs font-semibold text-slate-800 cursor-pointer transition select-none" data-tier="${tierKey}">
             <div class="flex items-center gap-1.5 min-w-0">
-              <span>${escapeHtml(group.label)}</span>
-              <span class="var-accordion-selected-text text-[11px] text-slate-500 font-normal truncate">${selectedName ? `(${escapeHtml(selectedName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>'}</span>
+              <span>${reactiveTitleHtml}</span>
             </div>
             <i class="bi bi-chevron-right text-slate-400 text-[10px] transition-transform duration-200 shrink-0 ${isAccordionOpen ? 'rotate-90' : ''}"></i>
           </div>
@@ -4773,7 +4831,7 @@ const ProductForm = (() => {
     // 3. MODE DEFAULT
     return `
       <div class="space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''}">
-        <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(group.label)}</div>
+        <div class="text-xs font-medium text-slate-600 mb-1.5">${reactiveTitleHtml}</div>
         ${chipsHtml}
       </div>
     `;
@@ -5070,7 +5128,8 @@ const ProductForm = (() => {
       return Boolean(previewTestState.selectedExtras[exId]);
     });
 
-    let extrasStatusText = isNoneSelected ? defaultNoneName : 'Pilih layanan';
+    const nonDefaultExtras = validExtras.filter(ex => !ex.is_default_none);
+    let extrasStatusText = '';
     if (activeExtrasSelected.length === 1) {
       const singleEx = activeExtrasSelected[0];
       const singleId = singleEx.id;
@@ -5082,16 +5141,27 @@ const ProductForm = (() => {
         extrasStatusText = singleEx.name.trim();
       }
     } else if (activeExtrasSelected.length > 1) {
-      extrasStatusText = `${activeExtrasSelected.length} dipilih`;
+      extrasStatusText = activeExtrasSelected.map(ex => {
+        const xt = String(ex.extra_type || '').toLowerCase();
+        if (xt === 'qty') {
+          const q = previewTestState.extraQty?.[ex.id] || 1;
+          return `${ex.name.trim()} (${q}x)`;
+        }
+        return ex.name.trim();
+      }).join(', ');
     }
+
+    const reactiveExtrasHeader = activeExtrasSelected.length > 0
+      ? `${escapeHtml(extraLabel)}: <span class="font-bold text-slate-800">${escapeHtml(extrasStatusText)}</span>`
+      : `Tersedia (${nonDefaultExtras.length}) ${escapeHtml(extraLabel)}`;
+
     const isAccordionOpen = Boolean(previewTestState.isExtrasAccordionOpen);
 
     const extrasAccordionHtml = `
       <div class="space-y-1.5 pt-2 border-t border-slate-100">
         <div class="btn-toggle-extras-accordion flex items-center justify-between gap-2 py-1 cursor-pointer select-none group" data-action="toggle-extras" title="Klik untuk membuka / menutup opsi ekstra">
           <div class="flex items-center gap-1.5 min-w-0">
-            <span class="text-xs font-medium text-slate-600">${escapeHtml(extraLabel)}</span>
-            <span class="text-[11px] text-slate-500 font-normal truncate">(${escapeHtml(extrasStatusText)})</span>
+            <span class="text-xs font-medium text-slate-600 truncate">${reactiveExtrasHeader}</span>
           </div>
           <div class="flex items-center gap-1 text-slate-400 group-hover:text-slate-600 transition shrink-0">
             <i class="bi ${isAccordionOpen ? 'bi-chevron-down' : 'bi-chevron-right'} text-xs"></i>
@@ -7798,7 +7868,7 @@ const ProductForm = (() => {
                 <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
                 ${primaryState.has_variants ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))}</div>
+                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier1', 'Variasi 1'), validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
                     ${validMaterials.length > 0 ? (
                       hasAnyTier1Image ? `
                         <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
@@ -7833,7 +7903,7 @@ const ProductForm = (() => {
                           }).join('')}
                         </div>
                       `
-                    ) : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi varian</span>'}
+                    ) : `<span class="text-[10px] text-slate-400 italic">${getVariationGroupTitleInfo('tier1').hasCustomTitle ? `${escapeHtml(getVariationGroupTitleInfo('tier1').effectiveTitle)} Opsi 1` : 'Variasi 1'} belum diisi</span>`}
                   </div>
                 ` : ''}
 
@@ -7843,13 +7913,13 @@ const ProductForm = (() => {
                     ${hasExtraTiers ? `
                       <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                         <div class="truncate">
-                          <span class="font-bold text-slate-800">Pilihan Variasi</span>
-                          <span class="font-normal text-slate-500"> (${summaryParts.join(', ')})</span>
+                          ${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}
+                          <span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>
                         </div>
                         <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                       </div>
                     ` : `
-                      <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))}</div>
+                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}</div>
                     `}
                     <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap">
                       ${validV2.length > 0 ? validV2.map((f, idx) => {
@@ -7860,7 +7930,7 @@ const ProductForm = (() => {
                             <span>${escapeHtml(f.name.trim())}</span>
                           </button>
                         `;
-                      }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
+                      }).join('') : `<span class="text-[10px] text-slate-400 italic">${getVariationGroupTitleInfo('tier2').hasCustomTitle ? `${escapeHtml(getVariationGroupTitleInfo('tier2').effectiveTitle)} Opsi 1` : 'Variasi 2'} belum diisi</span>`}
                     </div>
                   </div>
                 ` : (hasExtraTiers ? `

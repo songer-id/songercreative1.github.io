@@ -548,6 +548,21 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Memeriksa seluruh baris kombinasi pada tabel *List Variasi Produk*.
       - Memastikan kolom *Max. Order* pada setiap baris kombinasi aktif terisi nilai valid (angka > 0 atau status *"Tanpa Batas"*, tidak boleh kosong `""` / `null`).
       - Menampilkan pesan dinamis spesifik per baris kombinasi yang belum ditentukan nilai Max. Order-nya (contoh: *"Max. Order (Baris Kombinasi Merah)"*).
+  - [x] **Penyempurnaan Form Produk Bagian 15: Validasi Wajib Extras, Format Reaktif Label Variasi & Extras, serta Pembersihan Tampilan Placeholder Opsi Kosong pada Pratinjau (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Validasi Wajib Layanan Ekstra (Extras) pada Uji Coba (`canActivateTestMode`)**:
+      - Memastikan setiap baris extras aktif yang terisi namanya wajib melengkapi: *Jenis Input* (`extra_type` wajib dipilih), *Harga Satuan* (`price >= 0`), dan *Stok* (`stock >= 0` atau berstatus *Unlimited*).
+      - Menampilkan rincian kekurangan parameter extras secara spesifik pada modal popup pratinjau (contoh: *"Jenis Input Extras (Packaging Kayu)"*, *"Harga Satuan Extras (Packaging Kayu)"*, *"Stok Extras (Packaging Kayu)"*).
+    - **Format Reaktif Label Variasi & Extras pada Pratinjau (Mini PDP & Drawer)**:
+      - Menstandarkan format label header grup pada Mini PDP dan Drawer (mode Default, Accordion, maupun Shadcn Select):
+        - Jika belum ada opsi yang dipilih: Tampilkan format `"Tersedia [(Jumlah Opsi)] [Judul Variasi]"` (contoh: *"Tersedia (3) Bahan Utama"*).
+        - Jika ada opsi yang dipilih: Tampilkan format `"[Judul Variasi]: [Nilai Opsi]"` (contoh: *"Bahan Utama: FC"*).
+      - Menerapkan format serupa pada Layanan Extras: `"Tersedia [(Jumlah Opsi)] [Judul Extras]"` saat belum dipilih, dan `"[Judul Extras]: [Nilai Opsi]"` saat sudah dipilih.
+      - Memperbarui label secara reaktif (*real-time*) saat pengguna memilih opsi variasi/extras di pratinjau.
+    - **Pembersihan Tampilan Placeholder/Default Nama Produk pada Opsi Kosong**:
+      - Menghilangkan perilaku yang menampilkan nilai dari nama produk pada label variasi/opsi yang masih kosong di kartu pratinjau.
+      - Memperbarui format pesan bagian yang belum lengkap pada pratinjau:
+        - Jika variasi aktif dan judul grup belum ditentukan / semuanya kosong: Tuliskan spesifik `"Variasi 1"`, `"Variasi 2"`, `"Variasi 3"`, atau `"Variasi 4"`.
+        - Jika judul grup variasi sudah diisi kustom tapi opsi-opsinya masih kosong: Tuliskan `"[Judul Variasi] Opsi 1"` (contoh: *"Bahan Utama Opsi 1"*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
