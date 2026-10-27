@@ -508,8 +508,76 @@ const ProductForm = (() => {
       options = ['Unlimited'];
     } else if (listId === 'datalist-max-order-unlimited') {
       options = ['Tanpa Batas'];
+    } else if (listId === 'datalist-dimension-labels') {
+      options = ['Masukkan Ukuran', 'Ukuran Spanduk', 'Ukuran Kain'];
     }
     return options;
+  }
+
+  function isProductSessionTitleInput(el) {
+    if (!el) return false;
+    if (el.classList.contains('input-variation-label')) return true;
+    if (el.classList.contains('variation-name-input')) return true;
+    const tier = el.getAttribute('data-tier');
+    if (tier && (tier.startsWith('tier') || tier === 'main' || tier === 'extra_1' || tier === 'extra_2' || tier === 'extra_3' || tier === 'custom_dimension' || tier === 'dimension')) {
+      return true;
+    }
+    const id = el.id || '';
+    return id.startsWith('input-var-label-') || id === 'input-custom-dimension-label' || id === 'input-custom-dim-label' || id === 'input-extra-service-label' || (id.startsWith('input-var') && id.endsWith('-name'));
+  }
+
+  function getUsedSessionTitleValues(currentInput) {
+    const used = new Set();
+    const allSessionInputs = typeof getActiveVariationLabelInputs === 'function' ? getActiveVariationLabelInputs() : [];
+    const domInputs = document.querySelectorAll('.input-variation-label, .variation-name-input, #input-custom-dimension-label, #input-custom-dim-label, #input-var-label-extra3, #input-extra-service-label');
+    const combined = Array.from(new Set([...allSessionInputs, ...domInputs]));
+    
+    combined.forEach(inp => {
+      if (inp && inp !== currentInput) {
+        const val = (inp.value || '').trim();
+        if (val) {
+          used.add(val.toLowerCase());
+        }
+      }
+    });
+    return used;
+  }
+
+  function isSpecTitleInput(el) {
+    if (!el) return false;
+    return el.classList.contains('input-spec-title') || el.closest('#custom-specs-tbody') !== null;
+  }
+
+  function getUsedSpecTitleValues(currentInput) {
+    const used = new Set();
+    const rows = document.querySelectorAll('#custom-specs-tbody .input-spec-title, .input-spec-title');
+    rows.forEach(inp => {
+      if (inp && inp !== currentInput) {
+        const val = (inp.value || '').trim();
+        if (val) {
+          used.add(val.toLowerCase());
+        }
+      }
+    });
+    return used;
+  }
+
+  function isCustomLabelInput(el) {
+    if (!el) return false;
+    return el.id === 'input-custom-label-1' || el.id === 'input-custom-label-2';
+  }
+
+  function getUsedCustomLabelValues(currentInput) {
+    const used = new Set();
+    const inp1 = document.getElementById('input-custom-label-1');
+    const inp2 = document.getElementById('input-custom-label-2');
+    [inp1, inp2].forEach(inp => {
+      if (inp && inp !== currentInput) {
+        const val = (inp.value || '').trim();
+        if (val) used.add(val.toLowerCase());
+      }
+    });
+    return used;
   }
 
   function closeAllCleanDatalistPopovers(exceptPopover = null) {
@@ -587,7 +655,7 @@ const ProductForm = (() => {
       let arrow = wrapper.querySelector(':scope > .clean-datalist-arrow');
       if (!arrow) {
         arrow = document.createElement('span');
-        arrow.className = 'clean-datalist-arrow absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[8px] select-none cursor-pointer p-1 transition flex items-center justify-center leading-none z-10';
+        arrow.className = 'clean-datalist-arrow select-none cursor-pointer p-1 transition flex items-center justify-center leading-none z-10';
         arrow.innerHTML = '▼';
         arrow.title = 'Buka daftar pilihan';
         wrapper.appendChild(arrow);
@@ -598,7 +666,7 @@ const ProductForm = (() => {
       if (!clearBtn) {
         clearBtn = document.createElement('button');
         clearBtn.type = 'button';
-        clearBtn.className = 'btn-clear-datalist absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 cursor-pointer p-1 items-center justify-center select-none hidden leading-none z-10';
+        clearBtn.className = 'btn-clear-datalist hover:text-red-500 cursor-pointer p-1 items-center justify-center select-none hidden leading-none z-10';
         clearBtn.title = 'Hapus nilai';
         clearBtn.innerHTML = '<i class="bi bi-x-lg text-[10px] font-bold"></i>';
         wrapper.appendChild(clearBtn);
@@ -640,6 +708,16 @@ const ProductForm = (() => {
         const currentVal = (input.value || '').trim();
         const currentValLower = currentVal.toLowerCase();
 
+        // Hitung opsi yang sudah digunakan oleh input sejenis lainnya
+        let usedValues = new Set();
+        if (isProductSessionTitleInput(input)) {
+          usedValues = getUsedSessionTitleValues(input);
+        } else if (isSpecTitleInput(input)) {
+          usedValues = getUsedSpecTitleValues(input);
+        } else if (isCustomLabelInput(input)) {
+          usedValues = getUsedCustomLabelValues(input);
+        }
+
         let filtered = options;
         if (!isExplicitOpen && filterText.trim()) {
           const q = filterText.toLowerCase().trim();
@@ -658,7 +736,19 @@ const ProductForm = (() => {
         }
 
         popover.innerHTML = filtered.map(opt => {
-          const isSelected = currentValLower === opt.toLowerCase();
+          const optLower = opt.toLowerCase();
+          const isSelected = currentValLower === optLower;
+          const isUsedElsewhere = !isSelected && usedValues.has(optLower);
+
+          if (isUsedElsewhere) {
+            return `
+              <div class="clean-datalist-item is-disabled-used px-2.5 py-1.5 text-xs text-slate-400 opacity-45 cursor-not-allowed select-none flex items-center justify-between" style="pointer-events: none;" data-value="${escapeSafeHtml(opt)}">
+                <span class="line-through decoration-slate-300">${escapeSafeHtml(opt)}</span>
+                <span class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded ml-2">Terpakai</span>
+              </div>
+            `;
+          }
+
           return `
             <div class="clean-datalist-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(opt)}">
               <span>${escapeSafeHtml(opt)}</span>
@@ -667,7 +757,7 @@ const ProductForm = (() => {
           `;
         }).join('');
 
-        popover.querySelectorAll('.clean-datalist-item').forEach(item => {
+        popover.querySelectorAll('.clean-datalist-item:not(.is-disabled-used)').forEach(item => {
           item.addEventListener('mousedown', (e) => {
             e.preventDefault();
             const val = item.getAttribute('data-value') || '';
@@ -1977,19 +2067,17 @@ const ProductForm = (() => {
                               </label>
                               <span id="char-count-label-1" class="text-[10px] font-mono text-slate-400">0/15</span>
                             </div>
-                            <div class="relative flex items-center">
+                            <div class="relative flex items-center clean-datalist-wrapper w-full">
                               <input 
                                 type="text" 
                                 id="input-custom-label-1" 
                                 list="custom-labels-history-list"
+                                data-datalist-id="custom-labels-history-list"
                                 autocomplete="off"
                                 value="${escapeHtml(primaryState.custom_labels?.[0] || '')}" 
                                 placeholder="Slot 1 (misal: Free Ongkir)" 
-                                class="input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
+                                class="input-custom-label-slot clean-datalist-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
                               />
-                              <button type="button" class="btn-clear-custom-label absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.custom_labels?.[0] || '').trim() ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-custom-label-1" title="Hapus label">
-                                <i class="bi bi-x-lg text-[10px] font-bold"></i>
-                              </button>
                             </div>
                             <div id="error-custom-label-1" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                           </div>
@@ -2004,19 +2092,17 @@ const ProductForm = (() => {
                                   </label>
                                   <div id="warn-label-2" class="hidden"></div>
                                 </div>
-                                <div class="relative flex items-center">
+                                <div class="relative flex items-center clean-datalist-wrapper w-full">
                                   <input 
                                     type="text" 
                                     id="input-custom-label-2" 
                                     list="custom-labels-history-list"
+                                    data-datalist-id="custom-labels-history-list"
                                     autocomplete="off"
                                     value="${escapeHtml(primaryState.custom_labels?.[1] || '')}" 
                                     placeholder="Slot 2 (misal: Best Seller)" 
-                                    class="input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
+                                    class="input-custom-label-slot clean-datalist-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
                                   />
-                                  <button type="button" class="btn-clear-custom-label absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer ${(primaryState.custom_labels?.[1] || '').trim() ? 'flex' : 'hidden'} p-1 items-center justify-center select-none" data-target="input-custom-label-2" title="Hapus label">
-                                    <i class="bi bi-x-lg text-[10px] font-bold"></i>
-                                  </button>
                                 </div>
                                 <div id="error-custom-label-2" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                               </div>
@@ -2239,11 +2325,13 @@ const ProductForm = (() => {
                   <!-- Strip 1 -->
                   <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                     <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="panel-bottom" class="w-3 h-3 text-emerald-600"></i> Strip 1 (Atas)
+                      <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
-                      <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <div class="relative w-full clean-datalist-wrapper">
+                        <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                      </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -2265,11 +2353,13 @@ const ProductForm = (() => {
                   <!-- Strip 2 -->
                   <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                     <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="minus" class="w-3 h-3 text-emerald-600"></i> Strip 2 (Bawah)
+                      <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
-                      <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <div class="relative w-full clean-datalist-wrapper">
+                        <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                      </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -2482,11 +2572,13 @@ const ProductForm = (() => {
                   <!-- Strip 1 -->
                   <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
                     <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="panel-bottom" class="w-3 h-3 text-emerald-600"></i> Strip 1 (Atas)
+                      <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
-                      <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <div class="relative w-full clean-datalist-wrapper">
+                        <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                      </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -2508,11 +2600,13 @@ const ProductForm = (() => {
                   <!-- Strip 2 -->
                   <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
                     <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="minus" class="w-3 h-3 text-emerald-600"></i> Strip 2 (Bawah)
+                      <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
                     </div>
                     <div>
                       <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
-                      <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="w-full px-2 py-1 text-xs rounded border border-slate-200 focus:border-emerald-500 outline-none bg-white font-medium" />
+                      <div class="relative w-full clean-datalist-wrapper">
+                        <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                      </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
@@ -2636,6 +2730,9 @@ const ProductForm = (() => {
 
     if (window.lucide) window.lucide.createIcons();
     bindFormEvents();
+    if (typeof bindCleanDatalistPopovers === 'function') {
+      bindCleanDatalistPopovers(document.getElementById('step-pane-1') || document);
+    }
     updateProductCardLivePreview();
   }
 
@@ -8394,7 +8491,7 @@ const ProductForm = (() => {
           <div class="relative w-full clean-datalist-wrapper">
             <input 
               type="text" 
-              class="input-spec-title clean-datalist-input clean-datalist-popover w-full h-9 px-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
+              class="input-spec-title clean-datalist-input w-full h-9 px-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
               placeholder="Ketik atau pilih judul..." 
               value="${escapeHtml(title)}"
               data-datalist-id="datalist-spec-titles"
@@ -9424,7 +9521,9 @@ const ProductForm = (() => {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="space-y-1.5">
                   <span class="text-xs font-bold text-slate-800 block">Footer 1 (Strip Atas):</span>
-                  <input type="text" id="input-card-footer-text" list="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
+                  <div class="relative w-full clean-datalist-wrapper">
+                    <input type="text" id="input-card-footer-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
+                  </div>
                   <select id="select-card-footer-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
                     <option value="truck" ${primaryState.footer_badge_icon === 'truck' ? 'selected' : ''}>Kirim Cepat (truck)</option>
                     <option value="clock" ${primaryState.footer_badge_icon === 'clock' ? 'selected' : ''}>Jam / Waktu (clock)</option>
@@ -9434,7 +9533,9 @@ const ProductForm = (() => {
                 </div>
                 <div class="space-y-1.5">
                   <span class="text-xs font-bold text-slate-800 block">Footer 2 (Strip Bawah):</span>
-                  <input type="text" id="input-card-footer-2-text" list="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
+                  <div class="relative w-full clean-datalist-wrapper">
+                    <input type="text" id="input-card-footer-2-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
+                  </div>
                   <select id="select-card-footer-2-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
                     <option value="minus" ${primaryState.footer_2_badge_icon === 'minus' ? 'selected' : ''}>Strip / Variasi (minus)</option>
                     <option value="layers" ${primaryState.footer_2_badge_icon === 'layers' ? 'selected' : ''}>Pilihan Paket (layers)</option>
@@ -9500,6 +9601,13 @@ const ProductForm = (() => {
           <option value="Ketebalan"></option>
           <option value="Model"></option>
           <option value="Kemasan"></option>
+        </datalist>
+
+        <!-- Khusus Kustomisasi Ukuran PxL (Hanya 3 nilai saran) -->
+        <datalist id="datalist-dimension-labels">
+          <option value="Masukkan Ukuran"></option>
+          <option value="Ukuran Spanduk"></option>
+          <option value="Ukuran Kain"></option>
         </datalist>
 
         <datalist id="datalist-extra-service-labels">
@@ -9571,7 +9679,7 @@ const ProductForm = (() => {
       return ['Extra Service', 'Layanan Prioritas', 'Konsep Tambahan'];
     }
     if (tier === 'custom_dimension' || tier === 'dimension') {
-      return ['Masukkan Ukuran', 'Ukuran Spanduk', 'Ukuran Banner'];
+      return ['Masukkan Ukuran', 'Ukuran Spanduk', 'Ukuran Kain'];
     }
     return ['Toping', 'Warna', 'Ukuran', 'Finishing', 'Jenis'];
   }
@@ -9630,7 +9738,7 @@ const ProductForm = (() => {
         input.classList.remove('border-red-500');
         input.classList.add('border-slate-400');
         if (errEl) {
-          errEl.textContent = '';
+          errEl.innerHTML = '';
           errEl.classList.add('hidden');
         }
         return;
@@ -9642,7 +9750,7 @@ const ProductForm = (() => {
         input.classList.remove('border-red-500');
         input.classList.add('border-slate-400');
         if (errEl) {
-          errEl.textContent = '';
+          errEl.innerHTML = '';
           errEl.classList.add('hidden');
         }
       } else {
@@ -9654,7 +9762,7 @@ const ProductForm = (() => {
         input.classList.remove('border-slate-400');
         input.classList.add('border-red-500');
         if (errEl) {
-          errEl.textContent = 'Judul variasi sudah digunakan';
+          errEl.innerHTML = '<i class="bi bi-exclamation-circle text-xs shrink-0"></i> <span>Judul variasi sudah digunakan</span>';
           errEl.classList.remove('hidden');
         }
       }
@@ -11449,7 +11557,7 @@ const ProductForm = (() => {
           <!-- Toggle Checkbox (Default OFF) -->
           <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
             <input type="checkbox" id="toggle-custom-dimension" class="sr-only peer" ${isChecked ? 'checked' : ''}>
-            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
           </label>
         </div>
 
@@ -11466,13 +11574,17 @@ const ProductForm = (() => {
                 id="input-custom-dimension-label" 
                 data-tier="custom_dimension" 
                 value="${escapeHtml(labelVal)}" 
-                placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, dll" 
-                list="datalist-variation-labels"
+                placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, Ukuran Kain" 
+                list="datalist-dimension-labels"
+                data-datalist-id="datalist-dimension-labels"
                 autocomplete="off" 
                 class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
               />
               <div class="label-dup-error-msg hidden mt-1"></div>
-              <div id="custom-dimension-label-error" class="hidden text-[11px] text-red-500 font-semibold mt-1">Nama Label Ukuran (P x L) wajib diisi.</div>
+              <div id="custom-dimension-label-error" class="hidden mt-1 flex items-center gap-1 text-[11px] text-red-600 font-medium leading-tight">
+                <i class="bi bi-exclamation-circle text-xs shrink-0"></i>
+                <span>Nama Label Ukuran (P x L) wajib diisi.</span>
+              </div>
             </div>
           </div>
 
@@ -11483,7 +11595,7 @@ const ProductForm = (() => {
               <label for="select-dimension-main-component" class="block text-xs font-bold text-slate-800">
                 Komponen Utama Ukuran
               </label>
-              <select id="select-dimension-main-component" class="w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-emerald-500 shadow-2xs">
+              <select id="select-dimension-main-component" class="w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs">
                 ${getDimensionMainComponentOptionsHtml()}
               </select>
               <p class="text-[11px] text-slate-500 leading-tight">Pilihan variasi atau produk yang harganya dihitung berdasarkan luas ukuran.</p>
@@ -18796,14 +18908,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (wrapper2) wrapper2.classList.remove('hidden');
         if (input2) {
           input2.disabled = false;
-          input2.className = 'input-custom-label-slot w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-emerald-500 outline-none bg-white font-medium';
+          input2.className = 'input-custom-label-slot clean-datalist-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium';
         }
         if (warn2) warn2.classList.add('hidden');
       }
 
       // Toggle tombol silang (clear X) di masing-masing input slot
-      const clearBtn1 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-1"]');
-      const clearBtn2 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-2"]');
+      const clearBtn1 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-1"]') || input1?.parentElement?.querySelector('.btn-clear-datalist');
+      const clearBtn2 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-2"]') || input2?.parentElement?.querySelector('.btn-clear-datalist');
 
       if (clearBtn1) {
         if ((input1?.value || '').trim().length > 0) {
@@ -18909,6 +19021,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const inp = document.getElementById(targetId);
         if (inp) {
           inp.value = '';
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
           inp.focus();
           updateCustomLabelsLockState();
           updateQuickLabelChipsLockState();
