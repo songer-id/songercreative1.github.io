@@ -385,6 +385,7 @@
 
   function renderConfigurator() {
     const prod = currentProduct;
+    let updateFinishingAllowedState = () => {};
 
     // 1. Pilihan Bahan (Materials Radio Pills)
     const matsList = document.getElementById('pdp-materials-list');
@@ -411,6 +412,7 @@
             configState.selectedMaterialId = e.target.value;
             matsList.querySelectorAll('.pdp-material-option').forEach(el => el.classList.remove('configurator-pill-active'));
             radio.closest('.pdp-material-option').classList.add('configurator-pill-active');
+            updateFinishingAllowedState(e.target.value);
             recalculatePrice();
           });
         });
@@ -469,6 +471,51 @@
     const mainFinList = document.getElementById('pdp-main-finishing-list');
     const finishings = Array.isArray(prod.finishings) ? prod.finishings : [];
 
+    updateFinishingAllowedState = (selectedMatId) => {
+      if (!prod || !prod.specific_options_map || !selectedMatId || !mainFinList) return;
+      const isMainSpecific = Boolean(
+        prod.variation_scopes?.main === 'spesifik' ||
+        prod.variation_scopes?.[selectedMatId]?.main === 'spesifik'
+      );
+      if (!isMainSpecific) {
+        mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(radio => {
+          radio.disabled = false;
+          radio.closest('.pdp-finishing-option')?.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+        });
+        return;
+      }
+
+      const allowedIds = prod.specific_options_map[selectedMatId]?.main || [];
+      let curFinValid = false;
+      mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(radio => {
+        const isAllowed = allowedIds.includes(radio.value);
+        radio.disabled = !isAllowed;
+        const optEl = radio.closest('.pdp-finishing-option');
+        if (optEl) {
+          if (!isAllowed) {
+            optEl.classList.add('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+          } else {
+            optEl.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+          }
+        }
+        if (radio.value === configState.selectedFinishingId && isAllowed) {
+          curFinValid = true;
+        }
+      });
+
+      if (!curFinValid && allowedIds.length > 0) {
+        const firstValidRadio = mainFinList.querySelector(`input[name="pdp_main_finishing"][value="${allowedIds[0]}"]`);
+        if (firstValidRadio) {
+          firstValidRadio.checked = true;
+          configState.selectedFinishingId = allowedIds[0];
+          mainFinList.querySelectorAll('.pdp-finishing-option').forEach(el => {
+            el.className = 'pdp-finishing-option p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer flex items-center justify-between text-xs transition';
+          });
+          firstValidRadio.closest('.pdp-finishing-option').className = 'pdp-finishing-option p-2.5 rounded-xl border border-emerald-500 bg-emerald-50/40 font-bold text-emerald-900 cursor-pointer flex items-center justify-between text-xs transition';
+        }
+      }
+    };
+
     const mainOptions = finishings.filter(f => !f.tier || f.tier === 'main');
     if (mainOptions.length > 0) {
       if (mainFinSec) mainFinSec.classList.remove('hidden');
@@ -495,6 +542,9 @@
             recalculatePrice();
           });
         });
+
+        // Terapkan filter aturan spesifik untuk finishing terhadap material yang aktif
+        updateFinishingAllowedState(configState.selectedMaterialId);
       }
     } else {
       if (mainFinSec) mainFinSec.classList.add('hidden');
@@ -723,70 +773,73 @@
       // 5. Produk Custom
       const isCustomProd = Boolean(prod.has_custom_dimension || prod.has_extra_service);
 
-      // KELOMPOK A — Baris Wajib yang Selalu Ditampilkan
-      const specsRows = [
+      // KELOMPOK A & B — Kumpulkan Seluruh Baris Spesifikasi selain "Dikirim Dari" (Maks 9 Baris Sebelum Dikirim Dari):
+      const otherRows = [
         { label: 'Stok', val: stockVal },
         { label: 'Merek', val: brandVal },
         { label: 'Jenis Garansi', val: escapeHtml(hasWarranty ? warrantyType : 'Tidak Ada Garansi') },
         ...(hasWarranty ? [{ label: 'Masa Garansi', val: escapeHtml(warrantyPeriod) }] : []),
-        { label: 'Produk Custom', val: isCustomProd ? 'Ya' : 'Tidak' },
-        { label: 'Dikirim Dari', val: escapeHtml(sellerLocation) }
+        { label: 'Produk Custom', val: isCustomProd ? 'Ya' : 'Tidak' }
       ];
 
-      // KELOMPOK B — Baris Kondisional & Tabel Manual (Dibatasi min 5 & max 10):
-      // 7. Kondisi Produk (Baru / Bekas)
+      // KELOMPOK B — Baris Kondisional & Tabel Manual:
+      // 6. Kondisi Produk (Baru / Bekas)
       const conditionVal = (prod.condition === 'used' || prod.condition === 'bekas') ? 'Bekas' : 'Baru';
-      specsRows.push({ label: 'Kondisi Produk', val: conditionVal });
+      otherRows.push({ label: 'Kondisi Produk', val: conditionVal });
 
-      // 8. Pre-Order: durasi harinya saja, tanpa kata Ya/Tidak
+      // 7. Pre-Order: durasi harinya saja, tanpa kata Ya/Tidak
       if (Boolean(prod.is_preorder)) {
-        specsRows.push({ label: 'Pre-Order', val: `${prod.preorder_days || 7} Hari` });
+        otherRows.push({ label: 'Pre-Order', val: `${prod.preorder_days || 7} Hari` });
       }
 
-      // 9. Min. Pembelian
+      // 8. Min. Pembelian
       if (parseInt(prod.min_order) > 1) {
-        specsRows.push({ label: 'Min. Pembelian', val: `${prod.min_order} pcs` });
+        otherRows.push({ label: 'Min. Pembelian', val: `${prod.min_order} pcs` });
       }
 
-      // 10. Harga Grosir
+      // 9. Harga Grosir
       if (prod.has_wholesale) {
-        specsRows.push({ label: 'Harga Grosir', val: 'Tersedia' });
+        otherRows.push({ label: 'Harga Grosir', val: 'Tersedia' });
       }
 
-      // 11. Kelipatan Pembelian
+      // 10. Kelipatan Pembelian
       if (prod.has_order_multiple && parseInt(prod.order_multiple_value) > 1) {
-        specsRows.push({ label: 'Kelipatan Pembelian', val: `Kelipatan ${prod.order_multiple_value} pcs` });
+        otherRows.push({ label: 'Kelipatan Pembelian', val: `Kelipatan ${prod.order_multiple_value} pcs` });
       }
 
-      // 12. Asal Produk
+      // 11. Asal Produk
       if (prod.product_origin && prod.product_origin.trim()) {
-        specsRows.push({ label: 'Asal Produk', val: escapeHtml(prod.product_origin.trim()) });
+        otherRows.push({ label: 'Asal Produk', val: escapeHtml(prod.product_origin.trim()) });
       }
 
-      // 13. SKU Induk
+      // 12. SKU Induk
       const skuVal = (prod.sku || prod.parent_sku || '').trim();
       if (skuVal) {
-        specsRows.push({ label: 'SKU Induk', val: escapeHtml(skuVal) });
+        otherRows.push({ label: 'SKU Induk', val: escapeHtml(skuVal) });
       }
 
-      // 14. Tabel Spesifikasi Manual Seller
+      // 13. Tabel Spesifikasi Manual Seller
       if (Array.isArray(prod.custom_specs) && prod.custom_specs.length > 0) {
         prod.custom_specs.forEach(cs => {
           if (cs && cs.title && cs.title.trim() && cs.value && cs.value.trim()) {
-            const existing = specsRows.find(r => r.label.toLowerCase() === cs.title.trim().toLowerCase());
+            const existing = otherRows.find(r => r.label.toLowerCase() === cs.title.trim().toLowerCase());
             if (!existing) {
-              specsRows.push({ label: escapeHtml(cs.title.trim()), val: escapeHtml(cs.value.trim()) });
+              otherRows.push({ label: escapeHtml(cs.title.trim()), val: escapeHtml(cs.value.trim()) });
             }
           }
         });
       }
+
+      // Kunci Batas Jumlah Baris: Potong maksimal 9 baris pertama, lalu tambahkan "Dikirim Dari" di posisi paling bawah
+      const finalSpecsRows = otherRows.slice(0, 9);
+      finalSpecsRows.push({ label: 'Dikirim Dari', val: escapeHtml(sellerLocation) });
 
       specsEl.innerHTML = `
         <div class="space-y-4">
           <div>
             <h4 class="font-bold text-slate-900 text-sm mb-3">Spesifikasi Produk:</h4>
             <div class="bg-slate-50/70 rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-              ${specsRows.slice(0, 10).map(r => `
+              ${finalSpecsRows.map(r => `
                 <div class="flex items-center py-2.5 px-4 text-xs">
                   <span class="text-slate-500 w-1/3 shrink-0">${r.label}</span>
                   <span class="text-slate-800 font-semibold w-2/3">${r.val}</span>

@@ -3385,9 +3385,11 @@ const ProductForm = (() => {
     return true;
   }
 
-  function getPreviewWholesaleDiscount(qty, unitPrice) {
+  function getPreviewWholesaleDiscount(qty, unitPrice, customTiers = null) {
     if (!primaryState.has_wholesale) return { hasDiscount: false, discountPerPcs: 0, bannerText: '' };
-    const rawTiers = Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : [];
+    const rawTiers = (Array.isArray(customTiers) && customTiers.length > 0)
+      ? customTiers
+      : (Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : []);
     const validTiers = rawTiers
       .map(t => ({
         min_qty: parseInt(t.min_qty) || 0,
@@ -4085,10 +4087,297 @@ const ProductForm = (() => {
     return `Ukuran dibawah ${thStr}${unitShort} tetap dihitung ${chStr}${unitShort}`;
   }
 
+  // Helper Resolusi Cakupan & Opsi Spesifik Variasi 2 s/d Variasi 4
+  function getAllowedVariationOptions(matId, tierKey) {
+    const normalizedTier = (tierKey === 'tier2' || tierKey === 'main') ? 'main'
+      : ((tierKey === 'tier3' || tierKey === 'extra_1') ? 'extra_1'
+      : ((tierKey === 'tier4' || tierKey === 'extra_2') ? 'extra_2' : tierKey));
+
+    const isSpecific = Boolean(
+      primaryState.variation_scopes?.[normalizedTier] === 'spesifik' ||
+      primaryState.variation_scopes?.[tierKey] === 'spesifik' ||
+      (matId && primaryState.variation_scopes?.[matId]?.[normalizedTier] === 'spesifik') ||
+      (matId && primaryState.variation_scopes?.[matId]?.[tierKey] === 'spesifik') ||
+      primaryState['scope_' + normalizedTier] === 'spesifik'
+    );
+
+    if (!isSpecific) {
+      return { isSpecific: false, allowedIds: null };
+    }
+
+    if (!matId) {
+      return { isSpecific: true, allowedIds: [] };
+    }
+
+    const mapForMat = (primaryState.specific_options_map && primaryState.specific_options_map[matId]) || {};
+    const allowedList = mapForMat[normalizedTier] || mapForMat[tierKey] || [];
+    return {
+      isSpecific: true,
+      allowedIds: Array.isArray(allowedList) ? allowedList : []
+    };
+  }
+
+  // Helper Auto-Validasi & Reset Pilihan Opsi Variasi yang Tidak Diizinkan
+  function validateAndAdjustSpecificVariations() {
+    const t1Id = previewTestState.selectedTier1Id;
+    if (!t1Id) return;
+
+    // 1. Variasi 2
+    if (primaryState.has_variation_2) {
+      const v2Check = getAllowedVariationOptions(t1Id, 'main');
+      if (v2Check.isSpecific) {
+        const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+        const allowedV2 = validV2.filter((f, idx) => v2Check.allowedIds.includes(f.id || `v2_${idx}`));
+        const currentId = previewTestState.selectedTier2Id;
+        const isStillValid = currentId && allowedV2.some(f => (f.id || '') === currentId);
+        if (!isStillValid) {
+          previewTestState.selectedTier2Id = allowedV2.length > 0 ? (allowedV2[0].id || 'v2_0') : null;
+        }
+      }
+    }
+
+    // 2. Variasi 3
+    if (primaryState.has_variation_3) {
+      const v3Check = getAllowedVariationOptions(t1Id, 'extra_1');
+      if (v3Check.isSpecific) {
+        const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+        const allowedV3 = validV3.filter((f, idx) => v3Check.allowedIds.includes(f.id || `v3_${idx}`));
+        const currentId = previewTestState.selectedTier3Id;
+        const isStillValid = currentId && allowedV3.some(f => (f.id || '') === currentId);
+        if (!isStillValid) {
+          previewTestState.selectedTier3Id = allowedV3.length > 0 ? (allowedV3[0].id || 'v3_0') : null;
+        }
+      }
+    }
+
+    // 3. Variasi 4
+    if (primaryState.has_variation_4) {
+      const v4Check = getAllowedVariationOptions(t1Id, 'extra_2');
+      if (v4Check.isSpecific) {
+        const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+        const allowedV4 = validV4.filter((f, idx) => v4Check.allowedIds.includes(f.id || `v4_${idx}`));
+        const currentId = previewTestState.selectedTier4Id;
+        const isStillValid = currentId && allowedV4.some(f => (f.id || '') === currentId);
+        if (!isStillValid) {
+          previewTestState.selectedTier4Id = allowedV4.length > 0 ? (allowedV4[0].id || 'v4_0') : null;
+        }
+      }
+    }
+  }
+
+  // Helper Pencari Aturan Kombinasi Presisi (Min/Max Order, Wholesale, Multiple)
+  function resolveActiveCombinationRule(tier1Arg, tier2Arg, tier3Arg, tier4Arg) {
+    const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+    const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+
+    let t1Id = previewTestState.selectedTier1Id;
+    if (typeof tier1Arg === 'string') t1Id = tier1Arg;
+    else if (typeof tier1Arg === 'number' && validMaterials[tier1Arg]) t1Id = validMaterials[tier1Arg].id;
+    if (!t1Id && validMaterials.length > 0) t1Id = validMaterials[0].id;
+
+    let t2Id = previewTestState.selectedTier2Id;
+    if (typeof tier2Arg === 'string') t2Id = tier2Arg;
+    else if (typeof tier2Arg === 'number' && validV2[tier2Arg]) t2Id = validV2[tier2Arg].id || `v2_${tier2Arg}`;
+
+    let t3Id = previewTestState.selectedTier3Id;
+    if (typeof tier3Arg === 'string') t3Id = tier3Arg;
+    else if (typeof tier3Arg === 'number' && validV3[tier3Arg]) t3Id = validV3[tier3Arg].id || `v3_${tier3Arg}`;
+
+    let t4Id = previewTestState.selectedTier4Id;
+    if (typeof tier4Arg === 'string') t4Id = tier4Arg;
+    else if (typeof tier4Arg === 'number' && validV4[tier4Arg]) t4Id = validV4[tier4Arg].id || `v4_${tier4Arg}`;
+
+    const selectedMat = validMaterials.find(m => m.id === t1Id) || (validMaterials.length > 0 ? validMaterials[0] : null);
+
+    // 1. Dukungan eksplisit combination_rules (Prioritas Aturan Spesifik > Global)
+    if (Array.isArray(primaryState.combination_rules) && primaryState.combination_rules.length > 0) {
+      const matches = primaryState.combination_rules.filter(r => {
+        const m1 = !r.tier1_id || r.tier1_id === '*' || r.tier1_id === t1Id;
+        const m2 = !r.tier2_id || r.tier2_id === '*' || r.tier2_id === t2Id;
+        const m3 = !r.tier3_id || r.tier3_id === '*' || r.tier3_id === t3Id;
+        const m4 = !r.tier4_id || r.tier4_id === '*' || r.tier4_id === t4Id;
+        return m1 && m2 && m3 && m4;
+      });
+
+      if (matches.length > 0) {
+        matches.sort((a, b) => {
+          const specA = (a.tier1_id && a.tier1_id !== '*' ? 1 : 0) + (a.tier2_id && a.tier2_id !== '*' ? 1 : 0) + (a.tier3_id && a.tier3_id !== '*' ? 1 : 0) + (a.tier4_id && a.tier4_id !== '*' ? 1 : 0);
+          const specB = (b.tier1_id && b.tier1_id !== '*' ? 1 : 0) + (b.tier2_id && b.tier2_id !== '*' ? 1 : 0) + (b.tier3_id && b.tier3_id !== '*' ? 1 : 0) + (b.tier4_id && b.tier4_id !== '*' ? 1 : 0);
+          return specB - specA;
+        });
+        const best = matches[0];
+        return {
+          mat: selectedMat,
+          min_order: Math.max(1, parseInt(best.min_order) || parseInt(selectedMat?.min_order) || parseInt(primaryState.min_order) || 1),
+          max_order: best.max_order !== undefined ? (best.max_order === 'Tanpa Batas' || best.max_order === 'Unlimited' ? Infinity : parseInt(best.max_order) || Infinity) : (selectedMat?.max_order ? parseInt(selectedMat.max_order) : Infinity),
+          order_multiple: Math.max(1, parseInt(best.order_multiple) || (primaryState.has_order_multiple ? (primaryState.order_multiples_by_variant?.[t1Id] || parseInt(primaryState.order_multiple_value) || 1) : 1)),
+          wholesale_tiers: (Array.isArray(best.wholesale_tiers) && best.wholesale_tiers.length > 0) ? best.wholesale_tiers : (primaryState.wholesale_by_variant?.[t1Id] || primaryState.wholesale_tiers || []),
+          has_wholesale: best.has_wholesale !== undefined ? Boolean(best.has_wholesale) : Boolean(primaryState.has_wholesale),
+          isAllowed: best.is_active !== false
+        };
+      }
+    }
+
+    // 2. Resolusi Standar Matriks Kombinasi (Min. Order, Max. Order, Kelipatan, Grosir)
+    let minOrder = Math.max(1, parseInt(primaryState.min_order) || 1);
+    if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
+      minOrder = Math.max(minOrder, parseInt(selectedMat.min_order));
+    }
+
+    let maxOrder = Infinity;
+    if (selectedMat && selectedMat.max_order !== undefined && selectedMat.max_order !== null && selectedMat.max_order !== '') {
+      if (selectedMat.max_order === 'Tanpa Batas' || selectedMat.max_order === 'Unlimited') {
+        maxOrder = Infinity;
+      } else if (parseInt(selectedMat.max_order) > 0) {
+        maxOrder = parseInt(selectedMat.max_order);
+      }
+    } else if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
+      maxOrder = parseInt(primaryState.max_order_qty);
+    } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
+      maxOrder = parseInt(primaryState.max_order_period.max_qty);
+    }
+    if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
+      maxOrder = Math.min(maxOrder, parseInt(primaryState.stock));
+    }
+
+    let orderMultiple = 1;
+    if (primaryState.has_order_multiple) {
+      if (primaryState.order_multiple_type === 'per_variant') {
+        if (t1Id && primaryState.order_multiples_by_variant?.[t1Id]) {
+          orderMultiple = parseInt(primaryState.order_multiples_by_variant[t1Id]) || 1;
+        } else if (t2Id && primaryState.order_multiples_by_variant?.[t2Id]) {
+          orderMultiple = parseInt(primaryState.order_multiples_by_variant[t2Id]) || 1;
+        } else {
+          orderMultiple = parseInt(primaryState.order_multiple_value) || 1;
+        }
+      } else {
+        orderMultiple = parseInt(primaryState.order_multiple_value) || 1;
+      }
+    } else if (selectedMat && selectedMat.step_multiplier) {
+      orderMultiple = parseInt(selectedMat.step_multiplier) || 1;
+    }
+    if (orderMultiple < 1) orderMultiple = 1;
+
+    const wholesaleTiers = (primaryState.wholesale_by_variant && t1Id && primaryState.wholesale_by_variant[t1Id])
+      ? primaryState.wholesale_by_variant[t1Id]
+      : (primaryState.wholesale_tiers || []);
+
+    return {
+      mat: selectedMat,
+      min_order: minOrder,
+      max_order: maxOrder,
+      order_multiple: orderMultiple,
+      has_wholesale: Boolean(primaryState.has_wholesale),
+      wholesale_tiers: wholesaleTiers,
+      isAllowed: true
+    };
+  }
+
+  // Helper Sinkronisasi Ketersediaan Opsi Variasi (Disabled/Enabled) di Drawer DOM
+  function updateShopeeDrawerVariationOptionsAvailability(container) {
+    if (!container) return;
+    const t1Id = previewTestState.selectedTier1Id;
+
+    ['tier2', 'tier3', 'tier4'].forEach(tierKey => {
+      const check = getAllowedVariationOptions(t1Id, tierKey);
+      const isSpecific = check.isSpecific;
+      const allowedIds = check.allowedIds || [];
+
+      // 1. Update Chip Buttons
+      container.querySelectorAll(`.btn-shopee-${tierKey}`).forEach(btn => {
+        const optId = btn.getAttribute('data-id');
+        const isOptDisabled = isSpecific && !allowedIds.includes(optId);
+        if (isOptDisabled) {
+          btn.classList.add('disabled', 'opacity-40', 'cursor-not-allowed', 'line-through', 'pointer-events-none');
+          btn.classList.remove('is-active');
+          btn.disabled = true;
+        } else {
+          btn.classList.remove('disabled', 'opacity-40', 'cursor-not-allowed', 'line-through', 'pointer-events-none');
+          btn.disabled = false;
+          const currentSelId = (tierKey === 'tier2') ? previewTestState.selectedTier2Id
+            : ((tierKey === 'tier3') ? previewTestState.selectedTier3Id : previewTestState.selectedTier4Id);
+          if (optId === currentSelId) {
+            btn.classList.add('is-active');
+          } else {
+            btn.classList.remove('is-active');
+          }
+        }
+      });
+
+      // 2. Update Shadcn UI Select Items & Trigger
+      container.querySelectorAll(`.shadcn-select-wrapper[data-tier="${tierKey}"]`).forEach(wrapper => {
+        const currentSelId = (tierKey === 'tier2') ? previewTestState.selectedTier2Id
+          : ((tierKey === 'tier3') ? previewTestState.selectedTier3Id : previewTestState.selectedTier4Id);
+        let selectedOptName = '';
+
+        wrapper.querySelectorAll('.btn-shadcn-select-item').forEach(item => {
+          const optId = item.getAttribute('data-id');
+          const isOptDisabled = isSpecific && !allowedIds.includes(optId);
+          item.setAttribute('data-disabled', isOptDisabled ? 'true' : 'false');
+
+          const isSel = (optId === currentSelId && !isOptDisabled);
+          if (isSel) {
+            selectedOptName = item.querySelector('span')?.textContent?.trim() || '';
+          }
+
+          if (isOptDisabled) {
+            item.className = 'btn-shadcn-select-item flex items-center justify-between px-2.5 py-1.5 rounded text-xs opacity-40 cursor-not-allowed line-through pointer-events-none';
+            item.style.color = '';
+            const check = item.querySelector('.bi-check2');
+            if (check) check.remove();
+          } else {
+            item.className = `btn-shadcn-select-item flex items-center justify-between px-2.5 py-1.5 rounded text-xs cursor-pointer transition ${isSel ? 'font-bold bg-slate-50' : 'text-slate-700 hover:bg-slate-100/70'}`;
+            item.style.color = isSel ? 'var(--color-primary)' : '';
+            const check = item.querySelector('.bi-check2');
+            if (isSel && !check) {
+              const checkIcon = document.createElement('i');
+              checkIcon.className = 'bi bi-check2 text-sm font-bold shrink-0 ml-1.5';
+              checkIcon.style.color = 'var(--color-primary)';
+              item.appendChild(checkIcon);
+            } else if (!isSel && check) {
+              check.remove();
+            }
+          }
+        });
+
+        const valEl = wrapper.querySelector('.shadcn-select-value');
+        if (valEl) {
+          const groupLabel = getVariationLabel(tierKey, tierKey === 'tier2' ? 'Variasi 2' : tierKey === 'tier3' ? 'Variasi 3' : 'Variasi 4');
+          if (selectedOptName) {
+            valEl.textContent = selectedOptName;
+            valEl.className = 'shadcn-select-value truncate font-semibold text-slate-900';
+          } else {
+            valEl.textContent = `Pilih ${groupLabel}...`;
+            valEl.className = 'shadcn-select-value truncate text-slate-400';
+          }
+        }
+      });
+
+      // 3. Update Akordeon Selected Text
+      container.querySelectorAll(`.var-accordion-card[data-tier="${tierKey}"]`).forEach(card => {
+        const textEl = card.querySelector('.var-accordion-selected-text');
+        if (textEl) {
+          const currentSelId = (tierKey === 'tier2') ? previewTestState.selectedTier2Id
+            : ((tierKey === 'tier3') ? previewTestState.selectedTier3Id : previewTestState.selectedTier4Id);
+          const activeBtn = card.querySelector(`.btn-shopee-${tierKey}.is-active`);
+          const optName = activeBtn ? (activeBtn.querySelector('span')?.textContent?.trim() || '') : '';
+          textEl.innerHTML = (currentSelId && optName) ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
+        }
+      });
+    });
+  }
+
   function renderDrawerVariationGroup(group, mode, groupIndex) {
     const selectedOpt = group.options.find(opt => opt.id === group.selectedId);
     const selectedName = selectedOpt ? selectedOpt.name : '';
     const tierKey = group.tierKey;
+
+    const activeTier1Id = previewTestState.selectedTier1Id;
+    const tierCheck = (tierKey === 'tier2' || tierKey === 'tier3' || tierKey === 'tier4')
+      ? getAllowedVariationOptions(activeTier1Id, tierKey)
+      : { isSpecific: false, allowedIds: null };
 
     // 1. MODE SELECT (Shadcn UI Custom Select Popover)
     if (mode === 'select') {
@@ -4105,10 +4394,11 @@ const ProductForm = (() => {
             <div class="shadcn-select-popover hidden absolute left-0 right-0 top-full mt-1 rounded-md border border-slate-200 bg-white shadow-lg max-h-48 overflow-y-auto p-1 z-50">
               ${group.options.map(opt => {
                 const isSelected = group.selectedId === opt.id;
+                const isOptDisabled = tierCheck.isSpecific && (!tierCheck.allowedIds || !tierCheck.allowedIds.includes(opt.id));
                 return `
-                  <div class="btn-shadcn-select-item flex items-center justify-between px-2.5 py-1.5 rounded text-xs cursor-pointer transition ${isSelected ? 'font-bold bg-slate-50' : 'text-slate-700 hover:bg-slate-100/70'}" data-tier="${tierKey}" data-id="${opt.id}" style="${isSelected ? 'color: var(--color-primary);' : ''}">
+                  <div class="btn-shadcn-select-item flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition ${isOptDisabled ? 'opacity-40 cursor-not-allowed line-through pointer-events-none' : (isSelected ? 'font-bold bg-slate-50 cursor-pointer' : 'text-slate-700 hover:bg-slate-100/70 cursor-pointer')}" data-tier="${tierKey}" data-id="${opt.id}" data-disabled="${isOptDisabled ? 'true' : 'false'}" style="${isSelected && !isOptDisabled ? 'color: var(--color-primary);' : ''}">
                     <span class="truncate">${escapeHtml(opt.name)}</span>
-                    ${isSelected ? '<i class="bi bi-check2 text-sm font-bold shrink-0 ml-1.5" style="color: var(--color-primary);"></i>' : ''}
+                    ${isSelected && !isOptDisabled ? '<i class="bi bi-check2 text-sm font-bold shrink-0 ml-1.5" style="color: var(--color-primary);"></i>' : ''}
                   </div>
                 `;
               }).join('')}
@@ -4123,16 +4413,19 @@ const ProductForm = (() => {
       <div class="flex flex-wrap gap-1.5">
         ${group.options.length > 0 ? group.options.map((opt) => {
           const isSelected = group.selectedId === opt.id;
+          const isOptDisabled = tierCheck.isSpecific && (!tierCheck.allowedIds || !tierCheck.allowedIds.includes(opt.id));
+          const disabledClasses = isOptDisabled ? 'disabled opacity-40 cursor-not-allowed line-through pointer-events-none' : '';
+          const disabledAttr = isOptDisabled ? 'disabled="disabled"' : '';
           if (opt.image) {
             return `
-              <button type="button" class="${group.btnClass} mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded text-[11px] font-medium transition cursor-pointer ${isSelected ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
+              <button type="button" ${disabledAttr} class="${group.btnClass} mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded text-[11px] font-medium transition cursor-pointer ${disabledClasses} ${isSelected && !isOptDisabled ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
                 <img src="${opt.image}" class="w-5 h-5 rounded-xs object-cover shrink-0 bg-slate-100" alt="${escapeHtml(opt.name)}" />
                 <span class="truncate max-w-[120px]">${escapeHtml(opt.name)}</span>
               </button>
             `;
           }
           return `
-            <button type="button" class="${group.btnClass} mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${isSelected ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
+            <button type="button" ${disabledAttr} class="${group.btnClass} mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${disabledClasses} ${isSelected && !isOptDisabled ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
               <span>${escapeHtml(opt.name)}</span>
             </button>
           `;
@@ -4379,20 +4672,9 @@ const ProductForm = (() => {
     }
 
     // Aturan Min / Max / Kelipatan
-    let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
-    if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
-      minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
-    }
-
-    let maxOrderQty = Infinity;
-    if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
-      maxOrderQty = parseInt(primaryState.max_order_qty);
-    } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
-      maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
-    }
-    if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
-      maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
-    }
+    const rule = resolveActiveCombinationRule();
+    let minOrderQty = rule.min_order;
+    let maxOrderQty = rule.max_order;
 
     if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
       previewTestState.qty = minOrderQty;
@@ -4419,7 +4701,7 @@ const ProductForm = (() => {
           step2StrikePrice = effUnitPrice * 2;
         }
       }
-      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
@@ -4437,7 +4719,7 @@ const ProductForm = (() => {
           step2StrikePrice = displayBasePrice * 2;
         }
       }
-      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
@@ -4578,11 +4860,13 @@ const ProductForm = (() => {
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
-              ${wholesaleInfo.bannerText ? `
-                <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
-                  <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
-                </div>
-              ` : ''}
+              <div class="drawer-wholesale-banner-container ${wholesaleInfo.bannerText ? '' : 'hidden'}">
+                ${wholesaleInfo.bannerText ? `
+                  <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
+                    <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
+                  </div>
+                ` : ''}
+              </div>
             </div>
             <button type="button" class="btn-close-shopee-drawer absolute top-2 right-2 text-slate-400 hover:text-slate-700 text-sm p-1 cursor-pointer" title="Tutup">
               <i class="bi bi-x-lg"></i>
@@ -4710,11 +4994,13 @@ const ProductForm = (() => {
                 <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
-              ${wholesaleInfo.bannerText ? `
-                <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
-                  <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
-                </div>
-              ` : ''}
+              <div class="drawer-wholesale-banner-container ${wholesaleInfo.bannerText ? '' : 'hidden'}">
+                ${wholesaleInfo.bannerText ? `
+                  <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
+                    <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
+                  </div>
+                ` : ''}
+              </div>
             </div>
             <button type="button" class="btn-close-shopee-drawer absolute top-2 right-2 text-slate-400 hover:text-slate-700 text-sm p-1 cursor-pointer" title="Tutup">
               <i class="bi bi-x-lg"></i>
@@ -4796,15 +5082,15 @@ const ProductForm = (() => {
       ? '<span class="text-slate-800 font-medium">Tersedia</span>'
       : '<span class="text-red-600 font-semibold">Habis</span>';
 
-    // KELOMPOK A — Baris Wajib yang Selalu Ditampilkan:
+    // KELOMPOK A & B — Kumpulkan Seluruh Baris Spesifikasi selain "Dikirim Dari" (Maks 9 Baris Sebelum Dikirim Dari):
     // 1. Stok
-    const rows = [
+    const otherRows = [
       { label: 'Stok', valueHtml: stockHtml }
     ];
 
     // 2. Merek (isian seller atau "-")
     const brandVal = (primaryState.brand && primaryState.brand.trim()) ? escapeHtml(primaryState.brand.trim()) : '-';
-    rows.push({
+    otherRows.push({
       label: 'Merek',
       valueHtml: `<span class="text-slate-800 font-medium">${brandVal}</span>`
     });
@@ -4815,14 +5101,14 @@ const ProductForm = (() => {
     const hasWarranty = rawPeriod !== 'Tidak Ada Garansi' && rawPeriod !== 'Tidak Garansi' && rawPeriod !== '' && rawPeriod !== '-' && rawUnit !== 'Tidak Ada Garansi';
     const warrantyType = (primaryState.warranty_type && primaryState.warranty_type.trim()) ? primaryState.warranty_type.trim() : (hasWarranty ? 'Garansi Toko' : 'Tidak Ada Garansi');
 
-    rows.push({
+    otherRows.push({
       label: 'Jenis Garansi',
       valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(hasWarranty ? warrantyType : 'Tidak Ada Garansi')}</span>`
     });
 
     // 4. Masa Garansi HANYA tampilkan jika nilai garansi selain "Tidak Ada Garansi"
     if (hasWarranty) {
-      rows.push({
+      otherRows.push({
         label: 'Masa Garansi',
         valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(rawPeriod)}</span>`
       });
@@ -4830,93 +5116,82 @@ const ProductForm = (() => {
 
     // 5. Produk Custom (Ya jika has_custom_dimension === true / produk custom PxL atau layanan extra, jika tidak: Tidak)
     const isCustomProd = Boolean(primaryState.has_custom_dimension || primaryState.has_extra_service);
-    rows.push({
+    otherRows.push({
       label: 'Produk Custom',
       valueHtml: `<span class="text-slate-800 font-medium">${isCustomProd ? 'Ya' : 'Tidak'}</span>`
     });
 
-    // 6. Dikirim Dari (Otomatis dari fungsi hirarki lokasi seller)
-    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
-    const sellerCity = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation)
-      ? Utils.formatDynamicSellerLocation(settings, null)
-      : (settings.city || settings.store_city || settings.address_city || 'Lokasi Belum Diatur');
-    rows.push({
-      label: 'Dikirim Dari',
-      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(sellerCity)}</span>`
-    });
-
-    // KELOMPOK B — Baris Kondisional & Tabel Manual (Total baris dibatasi min 5 & max 10):
-    // 7. Kondisi Produk (Tautkan langsung dari #select-prod-condition / primaryState.condition)
+    // 6. Kondisi Produk (Tautkan langsung dari #select-prod-condition / primaryState.condition)
     const condEl = document.getElementById('select-prod-condition');
     const curCond = condEl ? condEl.value : (primaryState.condition || 'new');
     const conditionVal = (curCond === 'used' || curCond === 'bekas') ? 'Bekas' : 'Baru';
-    rows.push({
+    otherRows.push({
       label: 'Kondisi Produk',
       valueHtml: `<span class="text-slate-800 font-medium">${conditionVal}</span>`
     });
 
-    // 8. Pre-Order (Jika is_preorder === true, tampilkan langsung durasi harinya saja tanpa "Ya/Tidak")
+    // 7. Pre-Order (Jika is_preorder === true, tampilkan langsung durasi harinya saja tanpa "Ya/Tidak")
     if (Boolean(primaryState.is_preorder)) {
       const poDays = parseInt(primaryState.preorder_days) || 7;
-      rows.push({
+      otherRows.push({
         label: 'Pre-Order',
         valueHtml: `<span class="text-slate-800 font-medium">${poDays} Hari</span>`
       });
     }
 
-    // 9. Min. Pembelian (Jika min_order > 1)
+    // 8. Min. Pembelian (Jika min_order > 1)
     const minQty = parseInt(primaryState.min_order) || 1;
     if (minQty > 1) {
-      rows.push({
+      otherRows.push({
         label: 'Min. Pembelian',
         valueHtml: `<span class="text-slate-800 font-medium">${minQty} pcs</span>`
       });
     }
 
-    // 10. Harga Grosir (Jika grosir aktif)
+    // 9. Harga Grosir (Jika grosir aktif)
     if (primaryState.has_wholesale) {
-      rows.push({
+      otherRows.push({
         label: 'Harga Grosir',
         valueHtml: `<span class="text-slate-800 font-medium">Tersedia</span>`
       });
     }
 
-    // 11. Kelipatan Pembelian (Jika kelipatan aktif)
+    // 10. Kelipatan Pembelian (Jika kelipatan aktif)
     if (primaryState.has_order_multiple) {
       const multVal = parseInt(primaryState.order_multiple_value) || 1;
       if (multVal > 1) {
-        rows.push({
+        otherRows.push({
           label: 'Kelipatan Pembelian',
           valueHtml: `<span class="text-slate-800 font-medium">Kelipatan ${multVal} pcs</span>`
         });
       }
     }
 
-    // 12. Asal Produk (jika diisi seller)
+    // 11. Asal Produk (jika diisi seller)
     const originVal = (primaryState.product_origin || '').trim();
     if (originVal) {
-      rows.push({
+      otherRows.push({
         label: 'Asal Produk',
         valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(originVal)}</span>`
       });
     }
 
-    // 13. SKU Induk (jika diisi seller)
+    // 12. SKU Induk (jika diisi seller)
     const skuVal = (primaryState.sku || primaryState.parent_sku || '').trim();
     if (skuVal) {
-      rows.push({
+      otherRows.push({
         label: 'SKU Induk',
         valueHtml: `<span class="text-slate-800 font-medium font-mono">${escapeHtml(skuVal)}</span>`
       });
     }
 
-    // 14. Baris-baris dari Tabel Spesifikasi Manual (custom_specs) yang diisi seller
+    // 13. Baris-baris dari Tabel Spesifikasi Manual (custom_specs) yang diisi seller
     if (Array.isArray(primaryState.custom_specs) && primaryState.custom_specs.length > 0) {
       primaryState.custom_specs.forEach(cs => {
         if (cs && cs.title && cs.title.trim() && cs.value && cs.value.trim()) {
-          const existing = rows.find(r => r.label.toLowerCase() === cs.title.trim().toLowerCase());
+          const existing = otherRows.find(r => r.label.toLowerCase() === cs.title.trim().toLowerCase());
           if (!existing) {
-            rows.push({
+            otherRows.push({
               label: escapeHtml(cs.title.trim()),
               valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(cs.value.trim())}</span>`
             });
@@ -4925,8 +5200,18 @@ const ProductForm = (() => {
       });
     }
 
-    // Kunci Batas Jumlah Baris: Selalu minimal 5 baris & dipotong maksimal 10 baris
-    const finalRows = rows.slice(0, 10);
+    // Kunci Batas Jumlah Baris: Potong maksimal 9 baris pertama dari baris-baris lainnya
+    const finalRows = otherRows.slice(0, 9);
+
+    // Dikirim Dari (Otomatis dari fungsi hirarki lokasi seller) — DIJAMIN 100% SELALU PALING BAWAH
+    const settings = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings() || {}) : {};
+    const sellerCity = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation)
+      ? Utils.formatDynamicSellerLocation(settings, null)
+      : (settings.city || settings.store_city || settings.address_city || 'Lokasi Belum Diatur');
+    finalRows.push({
+      label: 'Dikirim Dari',
+      valueHtml: `<span class="text-slate-800 font-medium">${escapeHtml(sellerCity)}</span>`
+    });
 
     const rowsHtml = finalRows.map(r => `
       <div class="flex items-center py-2.5">
@@ -5039,6 +5324,7 @@ const ProductForm = (() => {
   }
 
   function openShopeeCheckoutDrawer(actionType) {
+    validateAndAdjustSpecificVariations();
     const isAlreadyOpen = previewTestState.isDrawerOpen;
     previewTestState.isDrawerOpen = true;
     previewTestState.drawerActionType = actionType || 'buy';
@@ -5066,24 +5352,10 @@ const ProductForm = (() => {
   }
 
   function updateDrawerQtyButtonsState() {
-    const curQ = previewTestState.qty || 1;
-    let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
-    const selectedMat = (primaryState.has_variants && previewTestState.selectedTier1Id)
-      ? ((materialsState || []).find(m => m.id === previewTestState.selectedTier1Id) || null)
-      : null;
-    if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
-      minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
-    }
-
-    let maxOrderQty = Infinity;
-    if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
-      maxOrderQty = parseInt(primaryState.max_order_qty);
-    } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
-      maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
-    }
-    if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
-      maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
-    }
+    const rule = resolveActiveCombinationRule();
+    const minOrderQty = rule.min_order;
+    const maxOrderQty = rule.max_order;
+    const curQ = previewTestState.qty || minOrderQty;
 
     document.querySelectorAll('.btn-shopee-qty-minus, .btn-preview-qty-minus').forEach(btn => {
       if (curQ <= minOrderQty) {
@@ -5255,19 +5527,10 @@ const ProductForm = (() => {
       ? `Rp${Math.round(effMinPrice).toLocaleString('id-ID')} - Rp${Math.round(effMaxPrice).toLocaleString('id-ID')}`
       : `Rp${Math.round(effMinPrice).toLocaleString('id-ID')}`;
 
-    let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
-    if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
-      minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
-    }
-    let maxOrderQty = Infinity;
-    if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
-      maxOrderQty = parseInt(primaryState.max_order_qty);
-    } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
-      maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
-    }
-    if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
-      maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
-    }
+    const rule = resolveActiveCombinationRule();
+    let minOrderQty = rule.min_order;
+    let maxOrderQty = rule.max_order;
+
     if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
       previewTestState.qty = minOrderQty;
     }
@@ -5276,8 +5539,17 @@ const ProductForm = (() => {
     }
     const curQty = previewTestState.qty;
 
+    // Sinkronisasi input field Qty di drawer
+    document.querySelectorAll('.input-preview-test-qty, #input-preview-test-qty').forEach(inp => {
+      if (parseInt(inp.value) !== curQty) inp.value = curQty;
+      inp.min = minOrderQty;
+      if (maxOrderQty !== Infinity) inp.max = maxOrderQty;
+      else inp.removeAttribute('max');
+    });
+
     let grandTotalPrice = 0;
     let grandStrikePrice = 0;
+    let wholesaleInfo = { hasDiscount: false, discountPerPcs: 0, bannerText: '' };
 
     if (primaryState.has_custom_dimension && dimPricing.isValid) {
       const effUnitPrice = dimPricing.unitPrice;
@@ -5291,7 +5563,7 @@ const ProductForm = (() => {
           step2StrikePrice = effUnitPrice * 2;
         }
       }
-      const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
@@ -5309,7 +5581,7 @@ const ProductForm = (() => {
           step2StrikePrice = displayBasePrice * 2;
         }
       }
-      const wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount);
+      wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
       let finalUnitPrice = unitPriceAfterDiscount;
       if (wholesaleInfo.hasDiscount) {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
@@ -5319,6 +5591,21 @@ const ProductForm = (() => {
       const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
       grandStrikePrice = strikeSubtotal + extrasActivePrice;
     }
+
+    // Update banner harga grosir dinamis di drawer
+    document.querySelectorAll('.drawer-wholesale-banner-container').forEach(cnt => {
+      if (wholesaleInfo.bannerText) {
+        cnt.innerHTML = `
+          <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
+            <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
+          </div>
+        `;
+        cnt.classList.remove('hidden');
+      } else {
+        cnt.innerHTML = '';
+        cnt.classList.add('hidden');
+      }
+    });
 
     document.querySelectorAll('.drawer-header-price').forEach(el => {
       if (hasVariations && !isAllVariationsSelected) {
@@ -5383,6 +5670,7 @@ const ProductForm = (() => {
           e.preventDefault();
           const id = btn.getAttribute('data-id');
           previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
+          validateAndAdjustSpecificVariations();
           updateProductCardLivePreview();
         };
       });
@@ -5621,31 +5909,10 @@ const ProductForm = (() => {
           ? (validMaterials.find(m => m.id === previewTestState.selectedTier1Id) || null)
           : null;
 
-        let minOrderQty = Math.max(1, parseInt(primaryState.min_order) || 1);
-        if (selectedMat && selectedMat.min_order && parseInt(selectedMat.min_order) > 0) {
-          minOrderQty = Math.max(minOrderQty, parseInt(selectedMat.min_order));
-        }
-        let maxOrderQty = Infinity;
-        if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && parseInt(primaryState.max_order_qty) > 0) {
-          maxOrderQty = parseInt(primaryState.max_order_qty);
-        } else if (primaryState.max_order_type === 'per_period' && primaryState.max_order_period?.max_qty && parseInt(primaryState.max_order_period.max_qty) > 0) {
-          maxOrderQty = parseInt(primaryState.max_order_period.max_qty);
-        }
-        if (!primaryState.is_unlimited_stock && primaryState.stock !== null && parseInt(primaryState.stock) > 0) {
-          maxOrderQty = Math.min(maxOrderQty, parseInt(primaryState.stock));
-        }
-
-        let stepMultiplier = 1;
-        if (primaryState.has_order_multiple) {
-          if (primaryState.order_multiple_type === 'per_variant' && selectedMat && primaryState.order_multiples_by_variant?.[selectedMat.id]) {
-            stepMultiplier = parseInt(primaryState.order_multiples_by_variant[selectedMat.id]) || 1;
-          } else {
-            stepMultiplier = parseInt(primaryState.order_multiple_value) || 1;
-          }
-        } else if (selectedMat && selectedMat.step_multiplier) {
-          stepMultiplier = parseInt(selectedMat.step_multiplier) || 1;
-        }
-        if (stepMultiplier < 1) stepMultiplier = 1;
+        const rule = resolveActiveCombinationRule();
+        let minOrderQty = rule.min_order;
+        let maxOrderQty = rule.max_order;
+        let stepMultiplier = rule.order_multiple || 1;
 
         // Tutup Drawer (✕ dan Backdrop)
         container.querySelectorAll('.btn-close-shopee-drawer').forEach(btn => {
@@ -5815,15 +6082,9 @@ const ProductForm = (() => {
 
             if (tier === 'tier1') {
               previewTestState.selectedTier1Id = (previewTestState.selectedTier1Id === id) ? null : id;
-              const selMat = (materialsState || []).find(m => m.id === previewTestState.selectedTier1Id);
-              const vImg = (selMat && (selMat.image_url || selMat.image)) ? (selMat.image_url || selMat.image) : (primaryState.images?.[0] || primaryState.image_url || null);
-              container.querySelectorAll('.drawer-header-img').forEach(img => {
-                if (vImg) img.src = vImg;
-              });
-              const stockText = getPreviewStockDisplay(selMat, materialsState);
-              container.querySelectorAll('.drawer-stock-display').forEach(st => {
-                st.textContent = stockText;
-              });
+              validateAndAdjustSpecificVariations();
+              updateProductCardLivePreview();
+              return;
             } else if (tier === 'tier2') {
               previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
             } else if (tier === 'tier3') {
@@ -5875,36 +6136,8 @@ const ProductForm = (() => {
             const id = btn.getAttribute('data-id');
             const wasSelected = previewTestState.selectedTier1Id === id;
             previewTestState.selectedTier1Id = wasSelected ? null : id;
-            container.querySelectorAll('.btn-shopee-tier1').forEach(b => {
-              if (b.getAttribute('data-id') === previewTestState.selectedTier1Id) {
-                b.classList.add('is-active');
-              } else {
-                b.classList.remove('is-active');
-              }
-            });
-            const selMat = (materialsState || []).find(m => m.id === previewTestState.selectedTier1Id);
-            const vImg = (selMat && (selMat.image_url || selMat.image)) ? (selMat.image_url || selMat.image) : (primaryState.images?.[0] || primaryState.image_url || null);
-            container.querySelectorAll('.drawer-header-img').forEach(img => {
-              if (vImg) img.src = vImg;
-            });
-            const stockText = getPreviewStockDisplay(selMat, materialsState);
-            container.querySelectorAll('.drawer-stock-display').forEach(st => {
-              st.textContent = stockText;
-            });
-            const card = btn.closest('.var-accordion-card');
-            if (card) {
-              const textEl = card.querySelector('.var-accordion-selected-text');
-              if (textEl) {
-                const optName = btn.querySelector('span')?.textContent?.trim() || '';
-                textEl.innerHTML = !wasSelected ? `(${escapeHtml(optName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>';
-              }
-              // UX Pintar: Otomatis tutup Variasi 1 dan buka Variasi 2 jika Variasi 2 belum dipilih
-              if (!wasSelected && primaryState.has_variation_2 && !previewTestState.selectedTier2Id) {
-                autoAdvanceAccordion('tier2');
-              }
-            }
-            updateShopeeDrawerLivePricing();
-            updateDrawerQtyButtonsState();
+            validateAndAdjustSpecificVariations();
+            updateProductCardLivePreview();
           };
         });
 

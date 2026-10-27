@@ -494,6 +494,20 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menghilangkan anomali duplikasi padding pada `#step2-content-wrapper` di `css/admin.css` (`padding: 0 !important; margin: 0 !important;`) sehingga seluruh kartu seksi utama memiliki lebar (`width: 100%`), margin, padding, dan sudut `rounded-lg` yang 100% identik dan sejajar presisi dari kartu pertama hingga kartu terakhir.
     - **Otomatisasi Warna Dinamis (Zero Static Emerald)**: Menghapus seluruh class statis `emerald` pada tabel harga grosir dan panel kelipatan pesanan, beralih penuh ke variabel CSS tema `var(--color-primary)` dan `var(--color-primary-subtle)`.
     - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=8.0`.
+  - [x] **Penyempurnaan Form Produk Bagian 11: Otomatisasi Aturan Spesifik Variasi 2–4 di Pratinjau Uji Coba Mini PDP & Drawer, serta Kunci Posisi 'Dikirim Dari' Selalu Paling Bawah di Drawer Spesifikasi & PDP (`js/product-form.js`, `js/pdp.js`, `admin.html`, `docs/PRD_MASTER.md`)**:
+    - **Otomatisasi Aturan Spesifik Variasi 2–4 di Pratinjau Uji Coba & Drawer (`js/product-form.js`)**:
+      - Menyediakan fungsi pemetaan filter cakupan variasi `getAllowedVariationOptions(matId, tierKey)` dan sinkronisasi `validateAndAdjustSpecificVariations()`.
+      - Saat Variasi 1 (`Tier 1`) dipilih di kartu Mini PDP maupun di dalam Drawer Checkout (baik mode Chip tombol, Accordion, maupun Shadcn Popover Dropdown), opsi pada Variasi 2, 3, dan 4 yang tidak diizinkan oleh aturan spesifik Variasi 1 otomatis dinonaktifkan (`disabled`, `opacity-40 line-through cursor-not-allowed pointer-events-none`).
+      - Jika opsi yang sebelumnya sedang terpilih pada Variasi 2, 3, atau 4 tidak lagi valid setelah pengguna mengganti pilihan Variasi 1, sistem secara pintar dan reaktif mereset/menggeser pilihan ke opsi pertama yang diizinkan (atau `null` jika tidak ada opsi yang valid).
+      - Mengimplementasikan `resolveActiveCombinationRule()` untuk memecahkan aturan minimal pesanan (`min_order`), batas maksimal pesanan (`max_order`), kelipatan pesanan (`order_multiple`), dan tingkatan harga grosir (`wholesale_tiers`) berdasarkan kombinasi varian yang sedang aktif terpilih.
+      - Menghubungkan perhitungan harga grosir dinamis di `updateShopeeDrawerLivePricing()` dengan indikator banner diskon grosir di drawer dan memperbarui status enabled/disabled tombol kuantitas `[-]` dan `[+]` via `updateDrawerQtyButtonsState()`.
+    - **Penerapan Otomatisasi Variasi Spesifik pada Halaman Detail Produk Pembeli (`js/pdp.js`)**:
+      - Menambahkan `updateFinishingAllowedState(selectedMatId)` pada konfigurator PDP: opsi finishing utama (`mainOptions`) otomatis difilter dan dinonaktifkan jika berada di luar cakupan spesifik bahan yang dipilih pembeli, serta otomatis mengarahkan pilihan ke opsi valid pertama.
+    - **Kunci Posisi 'Dikirim Dari' Selalu Paling Bawah di Drawer Spesifikasi & Tab PDP (`js/product-form.js` & `js/pdp.js`)**:
+      - Pada `buildProductSpecDrawerHtml()` (`js/product-form.js`) dan tab Spesifikasi produk (`js/pdp.js`), seluruh baris wajib, kondisional, dan baris manual seller dikumpulkan terlebih dahulu ke dalam `otherRows` (tanpa "Dikirim Dari").
+      - `otherRows` dipotong maksimal 9 baris teratas (`otherRows.slice(0, 9)`), kemudian baris `Dikirim Dari` ditambahkan sebagai elemen penutup paling akhir (`finalRows.push({ label: 'Dikirim Dari', ... })`).
+      - Menjamin 100% posisi `Dikirim Dari` selalu berada di urutan paling bawah (tepat di atas tombol CTA "Oke") dengan total baris tetap terkunci antara 5 hingga 10 baris.
+    - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=8.1`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
