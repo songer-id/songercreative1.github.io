@@ -624,6 +624,8 @@ const ProductForm = (() => {
       const datalistId = input.getAttribute('data-datalist-id') || input.getAttribute('data-datalist') || input.getAttribute('list');
       if (!datalistId) return;
 
+      const isSingleOption = datalistId === 'datalist-stock-unlimited' || datalistId === 'datalist-max-order-unlimited';
+
       // Pindahkan nilai atribut 'list' ke data-datalist-id & data-datalist, lalu hapus atribut 'list'
       // agar browser Chromium TIDAK PERNAH membuka popup OS native yang melayang saat scroll
       input.setAttribute('data-datalist-id', datalistId);
@@ -631,18 +633,36 @@ const ProductForm = (() => {
       input.removeAttribute('list');
       input.setAttribute('autocomplete', 'off');
       input.classList.add('clean-datalist-input');
-      if (!input.classList.contains('pr-8')) {
-        input.classList.add('pr-8');
+      
+      if (isSingleOption) {
+        input.classList.remove('pr-8');
+        if (!input.classList.contains('pr-2.5') && !input.classList.contains('px-3')) {
+          input.classList.add('pr-2.5');
+        }
+      } else {
+        if (!input.classList.contains('pr-8')) {
+          input.classList.add('pr-8');
+        }
+      }
+
+      // Pastikan ada sub-wrapper clean-datalist-input-box yang HANYA membungkus input & icon kontrol
+      let inputBox = input.parentElement;
+      if (!inputBox || !inputBox.classList.contains('clean-datalist-input-box')) {
+        const box = document.createElement('div');
+        box.className = 'clean-datalist-input-box relative flex items-center w-full';
+        input.parentElement.insertBefore(box, input);
+        box.appendChild(input);
+        inputBox = box;
       }
 
       // Pastikan wrapper parent memiliki class relative dan clean-datalist-wrapper
-      let wrapper = input.parentElement;
+      let wrapper = inputBox.parentElement;
       if (!wrapper) return;
       if (wrapper.tagName === 'TD') {
         const cellWrapper = document.createElement('div');
-        cellWrapper.className = 'relative inline-flex items-center clean-datalist-wrapper';
-        wrapper.insertBefore(cellWrapper, input);
-        cellWrapper.appendChild(input);
+        cellWrapper.className = 'relative inline-flex items-center clean-datalist-wrapper w-full';
+        wrapper.insertBefore(cellWrapper, inputBox);
+        cellWrapper.appendChild(inputBox);
         wrapper = cellWrapper;
       } else {
         if (!wrapper.classList.contains('relative')) {
@@ -651,28 +671,42 @@ const ProductForm = (() => {
         wrapper.classList.add('clean-datalist-wrapper');
       }
 
-      // Tambahkan anak panah (▼) di kanan jika belum ada
-      let arrow = wrapper.querySelector(':scope > .clean-datalist-arrow');
-      if (!arrow) {
-        arrow = document.createElement('span');
-        arrow.className = 'clean-datalist-arrow select-none cursor-pointer p-1 transition flex items-center justify-center leading-none z-10';
-        arrow.innerHTML = '▼';
-        arrow.title = 'Buka daftar pilihan';
-        wrapper.appendChild(arrow);
-      }
+      let arrow = null;
+      let clearBtn = null;
 
-      // Tambahkan tombol silang (×) jika belum ada
-      let clearBtn = wrapper.querySelector(':scope > .btn-clear-datalist') || wrapper.querySelector(':scope > .btn-clear-custom-label');
-      if (!clearBtn) {
-        clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'btn-clear-datalist hover:text-red-500 cursor-pointer p-1 items-center justify-center select-none hidden leading-none z-10';
-        clearBtn.title = 'Hapus nilai';
-        clearBtn.innerHTML = '<i class="bi bi-x-lg text-[10px] font-bold"></i>';
-        wrapper.appendChild(clearBtn);
+      if (isSingleOption) {
+        // Hapus arrow dan clearBtn khusus pada input Stok & Max. Order 1-opsi
+        const oldArrow = inputBox.querySelector(':scope > .clean-datalist-arrow') || wrapper.querySelector('.clean-datalist-arrow');
+        if (oldArrow) oldArrow.remove();
+        const oldClear = inputBox.querySelector(':scope > .btn-clear-datalist, :scope > .btn-clear-custom-label') || wrapper.querySelector('.btn-clear-datalist, .btn-clear-custom-label');
+        if (oldClear) oldClear.remove();
+      } else {
+        // Tambahkan anak panah (▼) di dalam inputBox jika belum ada
+        arrow = inputBox.querySelector(':scope > .clean-datalist-arrow');
+        if (!arrow) {
+          arrow = document.createElement('span');
+          arrow.className = 'clean-datalist-arrow select-none cursor-pointer p-1 transition flex items-center justify-center leading-none z-10';
+          arrow.innerHTML = '▼';
+          arrow.title = 'Buka daftar pilihan';
+          inputBox.appendChild(arrow);
+        }
+
+        // Tambahkan tombol silang (×) di dalam inputBox jika belum ada
+        clearBtn = inputBox.querySelector(':scope > .btn-clear-datalist') || inputBox.querySelector(':scope > .btn-clear-custom-label');
+        if (!clearBtn) {
+          clearBtn = document.createElement('button');
+          clearBtn.type = 'button';
+          clearBtn.className = 'btn-clear-datalist hover:text-red-500 cursor-pointer p-1 items-center justify-center select-none hidden leading-none z-10';
+          clearBtn.title = 'Hapus nilai';
+          clearBtn.innerHTML = '<i class="bi bi-x text-sm leading-none flex items-center justify-center"></i>';
+          inputBox.appendChild(clearBtn);
+        } else {
+          clearBtn.innerHTML = '<i class="bi bi-x text-sm leading-none flex items-center justify-center"></i>';
+        }
       }
 
       function syncControlButtons() {
+        if (isSingleOption) return;
         const hasVal = (input.value || '').trim().length > 0;
         if (hasVal) {
           if (arrow) {
@@ -695,12 +729,14 @@ const ProductForm = (() => {
         }
       }
 
-      // Pastikan elemen popover bersih ada tepat di bawah input
-      let popover = wrapper.querySelector(':scope > .clean-datalist-popover');
+      // Pastikan elemen popover bersih ada tepat di bawah input (di dalam inputBox)
+      let popover = inputBox.querySelector(':scope > .clean-datalist-popover') || wrapper.querySelector(':scope > .clean-datalist-popover');
       if (!popover) {
         popover = document.createElement('div');
         popover.className = 'clean-datalist-popover absolute left-0 top-full mt-1.5 min-w-[160px] max-w-[240px] w-max bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 hidden select-none';
-        wrapper.appendChild(popover);
+        inputBox.appendChild(popover);
+      } else if (popover.parentElement !== inputBox) {
+        inputBox.appendChild(popover);
       }
 
       function renderItems(filterText = '', isExplicitOpen = false) {
@@ -719,7 +755,8 @@ const ProductForm = (() => {
         }
 
         let filtered = options;
-        if (!isExplicitOpen && filterText.trim()) {
+        // Khusus input single-option (Max. Order 'Tanpa Batas' / Stok 'Unlimited'), jangan pernah filter saran saat user mengetik angka!
+        if (!isSingleOption && !isExplicitOpen && filterText.trim()) {
           const q = filterText.toLowerCase().trim();
           const exactMatch = options.some(opt => opt.toLowerCase() === q);
           if (exactMatch) {
@@ -742,9 +779,8 @@ const ProductForm = (() => {
 
           if (isUsedElsewhere) {
             return `
-              <div class="clean-datalist-item is-disabled-used px-2.5 py-1.5 text-xs text-slate-400 opacity-45 cursor-not-allowed select-none flex items-center justify-between" style="pointer-events: none;" data-value="${escapeSafeHtml(opt)}">
-                <span class="line-through decoration-slate-300">${escapeSafeHtml(opt)}</span>
-                <span class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded ml-2">Terpakai</span>
+              <div class="clean-datalist-item is-disabled-used w-full text-left px-3 py-1.5 text-xs text-slate-300 select-none" data-value="${escapeSafeHtml(opt)}">
+                <span>${escapeSafeHtml(opt)}</span>
               </div>
             `;
           }
@@ -781,10 +817,13 @@ const ProductForm = (() => {
                 primaryState.max_order_type = 'unlimited';
                 primaryState.max_order_qty = null;
               } else {
-                primaryState.is_unlimited_max_order = false;
-                primaryState.max_order = parseInt(val, 10) || null;
-                primaryState.max_order_type = 'per_order';
-                primaryState.max_order_qty = primaryState.max_order;
+                const digits = val.replace(/\D/g, '');
+                const num = digits ? parseInt(digits, 10) : null;
+                input.value = num !== null ? String(num) : '';
+                primaryState.is_unlimited_max_order = !num;
+                primaryState.max_order = num;
+                primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+                primaryState.max_order_qty = num;
               }
             } else if (input.classList.contains('combo-max-order-input')) {
               const matId = input.getAttribute('data-mat-id');
@@ -793,16 +832,17 @@ const ProductForm = (() => {
               if (isNoLimit) {
                 input.value = 'Tanpa Batas';
               }
+              const numVal = isNoLimit ? null : (parseInt(val.replace(/\D/g, ''), 10) || null);
               if (matId && materialsState) {
                 const mat = materialsState.find(m => String(m.id) === String(matId));
                 if (mat) {
-                  mat.max_order = isNoLimit ? 'Tanpa Batas' : (parseInt(val, 10) || val);
+                  mat.max_order = numVal;
                 }
               }
               if (matId && primaryState.materials) {
                 const matP = primaryState.materials.find(m => String(m.id) === String(matId));
                 if (matP) {
-                  matP.max_order = isNoLimit ? 'Tanpa Batas' : (parseInt(val, 10) || val);
+                  matP.max_order = numVal;
                 }
               }
             }
@@ -853,6 +893,41 @@ const ProductForm = (() => {
       });
 
       input.addEventListener('input', () => {
+        if (isSingleOption) {
+          const cur = input.value;
+          const curLow = cur.trim().toLowerCase();
+          if (curLow !== 'tanpa batas' && curLow !== 'unlimited') {
+            const digits = cur.replace(/\D/g, '');
+            if (cur !== digits) {
+              input.value = digits;
+            }
+            if (input.id === 'input-normal-max-order') {
+              if (digits) {
+                const num = parseInt(digits, 10);
+                primaryState.max_order = num;
+                primaryState.max_order_qty = num;
+                primaryState.max_order_type = 'per_order';
+                primaryState.is_unlimited_max_order = false;
+              } else {
+                primaryState.max_order = null;
+                primaryState.max_order_qty = null;
+                primaryState.max_order_type = 'unlimited';
+                primaryState.is_unlimited_max_order = true;
+              }
+            } else if (input.classList.contains('combo-max-order-input')) {
+              const matId = input.getAttribute('data-mat-id');
+              const num = digits ? parseInt(digits, 10) : null;
+              if (matId && materialsState) {
+                const item = materialsState.find(m => String(m.id) === String(matId));
+                if (item) item.max_order = num;
+              }
+              if (matId && primaryState.materials) {
+                const itemP = primaryState.materials.find(m => String(m.id) === String(matId));
+                if (itemP) itemP.max_order = num;
+              }
+            }
+          }
+        }
         syncControlButtons();
         renderItems(input.value, false);
       });
@@ -861,23 +936,27 @@ const ProductForm = (() => {
         syncControlButtons();
       });
 
-      arrow.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        input.focus();
-        openMenu();
-      });
+      if (arrow) {
+        arrow.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          input.focus();
+          openMenu();
+        });
+      }
 
-      clearBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        input.value = '';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        input.focus();
-        syncControlButtons();
-        openMenu();
-      });
+      if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          input.value = '';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.focus();
+          syncControlButtons();
+          openMenu();
+        });
+      }
 
       input.addEventListener('keydown', (e) => {
         if (popover.classList.contains('hidden')) {
@@ -8797,8 +8876,8 @@ const ProductForm = (() => {
                     id="input-normal-max-order" 
                     list="datalist-max-order-unlimited"
                     class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800" 
-                    placeholder="Tanpa Batas / Angka" 
-                    value="${(primaryState.max_order === null || primaryState.max_order === 0 || primaryState.max_order === undefined || primaryState.max_order === '' || primaryState.max_order_type === 'unlimited' || primaryState.max_order === 'Tanpa Max Order' || primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Tanpa Batas' : primaryState.max_order}" 
+                    placeholder="Input/Pilih" 
+                    value="${(primaryState.max_order === null || primaryState.max_order === undefined || primaryState.max_order === '') ? '' : (primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : primaryState.max_order)}" 
                     autocomplete="off" 
                   />
                 </div>
@@ -12463,7 +12542,7 @@ const ProductForm = (() => {
     const rows = displayMaterials.map((mat, idx) => {
       const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
       const minOrderVal = mat.min_order !== undefined && mat.min_order !== null ? mat.min_order : (primaryState.min_order || 1);
-      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : mat.max_order) : 'Tanpa Batas';
+      const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : mat.max_order) : '';
 
       function renderScopeCell(tier) {
         const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
@@ -12528,7 +12607,7 @@ const ProductForm = (() => {
               class="combo-max-order-input w-28 sm:w-32 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
               data-mat-id="${mat.id}" 
               value="${maxOrderVal}" 
-              placeholder="Tanpa Batas / Angka" 
+              placeholder="Input/Pilih" 
               list="datalist-max-order-unlimited"
               autocomplete="off" 
             />
@@ -13284,8 +13363,8 @@ const ProductForm = (() => {
     return materialsState.map((mat, idx) => {
       const placeholderName = `Opsi ${idx + 1}`;
       const hasName = Boolean(mat.name && mat.name.trim() !== '');
-      const priceVal = (isSamePrice && idx > 0 && hasName) ? firstPrice : (mat.price !== undefined && mat.price !== null && mat.price !== '' ? mat.price : '');
-      const costVal = (isSameCost && idx > 0 && hasName) ? firstCost : (mat.cost_price !== undefined && mat.cost_price !== null && mat.cost_price !== '' ? mat.cost_price : '');
+      const priceVal = (isSamePrice && idx > 0 && hasName) ? firstPrice : ((mat.price !== undefined && mat.price !== null && mat.price !== '' && mat.price !== 0) ? mat.price : (mat.price === 0 && hasName ? 0 : ''));
+      const costVal = (isSameCost && idx > 0 && hasName) ? firstCost : ((mat.cost_price !== undefined && mat.cost_price !== null && mat.cost_price !== '' && mat.cost_price !== 0) ? mat.cost_price : (mat.cost_price === 0 && hasName ? 0 : ''));
       const stockVal = (stockMode === 'unlimited' && hasName) ? 'Unlimited' : ((stockMode === 'same' && idx > 0 && hasName) ? firstStock : (mat.stock !== undefined && mat.stock !== null && mat.stock !== '' ? (mat.stock === null ? 'Unlimited' : mat.stock) : ''));
 
       return `
@@ -13299,7 +13378,7 @@ const ProductForm = (() => {
                 value="${escapeHtml(mat.name || '')}" 
                 placeholder="${placeholderName}" 
                 style="border-radius: 0px !important;" 
-                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
+                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-slate-50 rounded-none" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -13311,7 +13390,7 @@ const ProductForm = (() => {
                 value="${escapeHtml(mat.description || '')}" 
                 placeholder="Keterangan" 
                 style="border-radius: 0px !important;" 
-                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
+                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-slate-50 rounded-none" 
               />
             </div>
             <!-- Kolom 3: Harga Jual -->
@@ -13324,7 +13403,7 @@ const ProductForm = (() => {
                 placeholder="Harga Jual" 
                 ${isSamePrice && idx > 0 && hasName ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-slate-50 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -13338,7 +13417,7 @@ const ProductForm = (() => {
                 placeholder="Biaya Modal" 
                 ${isSameCost && idx > 0 && hasName ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="mat-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-slate-50 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -13352,7 +13431,7 @@ const ProductForm = (() => {
                 placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}" 
                 ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-slate-50 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -13375,7 +13454,7 @@ const ProductForm = (() => {
               </button>
               <button 
                 type="button" 
-                class="btn-move-row btn-move-mat p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
+                class="btn-move-row btn-move-mat p-1.5 text-slate-400 hover:text-[var(--color-primary)] transition cursor-grab active:cursor-grabbing text-xs leading-none" 
                 data-tier="tier1" 
                 data-id="${mat.id}" 
                 data-idx="${idx}" 
@@ -13451,14 +13530,14 @@ const ProductForm = (() => {
                   placeholder="${placeholderName}" 
                   ${isLastRow ? 'readonly' : ''} 
                   style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-3 py-2 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-emerald-50/30'}" 
+                  class="fin-input w-full px-3 py-2 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-slate-50'}" 
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
 
               <!-- Bagian 3: Dropdown Tipe Input (Pilihan Ganda vs Input Qty) -->
               <div class="col-span-2 sm:col-span-2 flex flex-col justify-center">
-                <select data-field="extra_type" ${isLastRow ? 'disabled' : ''} style="border-radius: 0px !important;" class="fin-input w-full px-2 py-1.5 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50 text-slate-700'}">
+                <select data-field="extra_type" ${isLastRow ? 'disabled' : ''} style="border-radius: 0px !important;" class="fin-input w-full px-2 py-1.5 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-slate-50 text-slate-700'}">
                   <option value="" disabled ${!extraType ? 'selected' : ''}>Jenis Input</option>
                   <option value="pilihan_ganda" ${extraType === 'pilihan_ganda' || extraType === 'checklist' || isLastRow ? 'selected' : ''}>Pilihan Ganda</option>
                   <option value="qty" ${extraType === 'qty' && !isLastRow ? 'selected' : ''}>Input Qty</option>
@@ -13476,7 +13555,7 @@ const ProductForm = (() => {
                   placeholder="Harga Satuan" 
                   ${(isLastRow || (isSamePrice && idx > 0 && hasName)) ? 'readonly' : ''} 
                   style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isLastRow || (isSamePrice && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-emerald-50/30'}" 
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isLastRow || (isSamePrice && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-slate-50'}" 
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
@@ -13491,7 +13570,7 @@ const ProductForm = (() => {
                   placeholder="Biaya Modal" 
                   ${(isLastRow || (isSameCost && idx > 0 && hasName)) ? 'readonly' : ''} 
                   style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-emerald-50/30'}" 
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-slate-50'}" 
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
@@ -13506,7 +13585,7 @@ const ProductForm = (() => {
                   placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}" 
                   ${isLastRow || (stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''} 
                   style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || (stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-emerald-50/30'}" 
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || (stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-slate-50'}" 
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
@@ -13529,7 +13608,7 @@ const ProductForm = (() => {
                 </button>
                 <button 
                   type="button" 
-                  class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition text-xs leading-none ${isLastRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
+                  class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-[var(--color-primary)] transition text-xs leading-none ${isLastRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
                   data-tier="${tier}" 
                   data-id="${fin.id}" 
                   data-idx="${idx}" 
@@ -13563,7 +13642,7 @@ const ProductForm = (() => {
                 value="${escapeHtml(fin.name || '')}" 
                 placeholder="${placeholderName}" 
                 style="border-radius: 0px !important;" 
-                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-emerald-50/30 rounded-none" 
+                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-slate-50 rounded-none" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -13575,7 +13654,7 @@ const ProductForm = (() => {
                 value="${escapeHtml(fin.description || '')}" 
                 placeholder="Keterangan" 
                 style="border-radius: 0px !important;" 
-                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-emerald-50/30 rounded-none" 
+                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-slate-50 rounded-none" 
               />
             </div>
             <!-- Kolom 3: Harga Jual -->
@@ -13588,7 +13667,7 @@ const ProductForm = (() => {
                 placeholder="Harga Jual" 
                 ${isSamePrice && idx > 0 && hasName ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-emerald-50/30 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-slate-50 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -13602,7 +13681,7 @@ const ProductForm = (() => {
                 placeholder="Biaya Modal" 
                 ${isSameCost && idx > 0 && hasName ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-emerald-50/30 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-slate-50 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -13616,7 +13695,7 @@ const ProductForm = (() => {
                 placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}" 
                 ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''} 
                 style="border-radius: 0px !important;" 
-                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-emerald-50/30 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-slate-50 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -15252,15 +15331,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         hideWizardErrorBanner();
 
         primaryState.has_variants = true;
-        if (materialsState.length < 2) {
-          const p = materialsState[0]?.price || '';
-          const c = materialsState[0]?.cost_price || '';
-          const n = (materialsState[0]?.name && materialsState[0].name !== 'Produk Standar') ? materialsState[0].name : '';
-          materialsState = [
-            { id: DB.generateUUID(), name: n, description: '', price: p, cost_price: c, stock: '', image_url: '', step_multiplier: 1 },
-            { id: DB.generateUUID(), name: '', description: '', price: '', cost_price: '', stock: '', image_url: '', step_multiplier: 1 }
-          ];
-        }
+        materialsState = [
+          { id: DB.generateUUID(), name: '', description: '', price: '', cost_price: '', stock: '', image_url: '', step_multiplier: 1 },
+          { id: DB.generateUUID(), name: '', description: '', price: '', cost_price: '', stock: '', image_url: '', step_multiplier: 1 }
+        ];
         const singleSettings = document.getElementById('single-product-purchase-settings');
         if (singleSettings) singleSettings.classList.add('hidden');
         const container = document.getElementById('pricing-model-interactive-container');
@@ -17146,12 +17220,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const item = materialsState.find(m => m.id === matId);
           if (item) {
             const raw = e.target.value.trim();
-            if (!raw) {
+            const rLow = raw.toLowerCase();
+            if (!raw || rLow === 'tanpa batas' || rLow === 'tanpa max order' || raw === '0' || rLow === 'unlimited') {
               item.max_order = null;
-            } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
-              item.max_order = 'Tanpa Batas';
             } else {
-              item.max_order = parseInt(raw) || null;
+              const digits = raw.replace(/\D/g, '');
+              item.max_order = digits ? parseInt(digits, 10) : null;
             }
           }
         };
@@ -17162,9 +17236,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const item = materialsState.find(m => m.id === matId);
           if (item) {
             const raw = (inp.value || '').trim();
-            if (!raw || raw === '0' || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw.toLowerCase() === 'unlimited') {
+            const rLow = raw.toLowerCase();
+            if (rLow === 'tanpa batas' || rLow === 'unlimited') {
               inp.value = 'Tanpa Batas';
-              item.max_order = 'Tanpa Batas';
+              item.max_order = null;
+            } else if (raw) {
+              const digits = raw.replace(/\D/g, '');
+              const num = digits ? parseInt(digits, 10) : null;
+              inp.value = num !== null ? String(num) : '';
+              item.max_order = num;
+            } else {
+              inp.value = '';
+              item.max_order = null;
             }
           }
         };
@@ -17570,22 +17653,46 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (normalMaxInp) {
       const handleNormalMaxInput = (e) => {
         const raw = e.target.value.trim();
-        if (!raw || raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
+        const rLow = raw.toLowerCase();
+        if (!raw || rLow === 'tanpa batas' || rLow === 'tanpa max order' || raw === '0' || rLow === 'unlimited') {
           primaryState.max_order = null;
           primaryState.max_order_qty = null;
           primaryState.max_order_type = 'unlimited';
+          primaryState.is_unlimited_max_order = true;
         } else {
-          const num = parseInt(raw) || null;
+          const digits = raw.replace(/\D/g, '');
+          const num = digits ? parseInt(digits, 10) : null;
           primaryState.max_order = num;
           primaryState.max_order_qty = num;
           primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+          primaryState.is_unlimited_max_order = !num;
         }
       };
       normalMaxInp.oninput = handleNormalMaxInput;
       normalMaxInp.onchange = handleNormalMaxInput;
       normalMaxInp.onblur = (e) => {
-        if (!primaryState.max_order || primaryState.max_order === 0 || String(primaryState.max_order).toLowerCase() === 'unlimited' || String(primaryState.max_order).toLowerCase() === 'tanpa batas' || String(primaryState.max_order).toLowerCase() === 'tanpa max order') {
+        const raw = (normalMaxInp.value || '').trim();
+        const rLow = raw.toLowerCase();
+        if (rLow === 'tanpa batas' || rLow === 'unlimited') {
           normalMaxInp.value = 'Tanpa Batas';
+          primaryState.max_order = null;
+          primaryState.max_order_qty = null;
+          primaryState.max_order_type = 'unlimited';
+          primaryState.is_unlimited_max_order = true;
+        } else if (raw) {
+          const digits = raw.replace(/\D/g, '');
+          const num = digits ? parseInt(digits, 10) : null;
+          normalMaxInp.value = num !== null ? String(num) : '';
+          primaryState.max_order = num;
+          primaryState.max_order_qty = num;
+          primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+          primaryState.is_unlimited_max_order = !num;
+        } else {
+          normalMaxInp.value = '';
+          primaryState.max_order = null;
+          primaryState.max_order_qty = null;
+          primaryState.max_order_type = 'unlimited';
+          primaryState.is_unlimited_max_order = true;
         }
       };
     }
@@ -20798,15 +20905,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const normalMaxInp = document.getElementById('input-normal-max-order');
     if (normalMaxInp) {
       const raw = normalMaxInp.value.trim();
-      if (!raw || raw.toLowerCase() === 'tanpa max order' || raw === '0') {
+      const rLow = raw.toLowerCase();
+      if (!raw || rLow === 'tanpa max order' || rLow === 'tanpa batas' || rLow === 'unlimited' || raw === '0') {
         primaryState.max_order = null;
         primaryState.max_order_qty = null;
         primaryState.max_order_type = 'unlimited';
+        primaryState.is_unlimited_max_order = true;
       } else {
-        const num = parseInt(raw) || null;
+        const digits = raw.replace(/\D/g, '');
+        const num = digits ? parseInt(digits, 10) : null;
         primaryState.max_order = num;
         primaryState.max_order_qty = num;
         primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+        primaryState.is_unlimited_max_order = !num;
       }
     } else {
       const maxOrderTypeSel = document.getElementById('select-max-order-type');
@@ -20936,12 +21047,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (minInp) mat.min_order = Math.max(1, parseInt(minInp.value) || 1);
         if (maxInp) {
           const raw = maxInp.value.trim();
-          if (!raw) {
+          const rLow = raw.toLowerCase();
+          if (!raw || rLow === 'tanpa batas' || rLow === 'tanpa max order' || raw === '0' || rLow === 'unlimited') {
             mat.max_order = null;
-          } else if (raw.toLowerCase() === 'tanpa batas' || raw.toLowerCase() === 'tanpa max order' || raw === '0' || raw.toLowerCase() === 'unlimited') {
-            mat.max_order = 'Tanpa Batas';
           } else {
-            mat.max_order = parseInt(raw) || null;
+            const digits = raw.replace(/\D/g, '');
+            mat.max_order = digits ? parseInt(digits, 10) : null;
           }
         }
       }
