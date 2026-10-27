@@ -81,6 +81,7 @@ D:\pos-songer-creative\
 │   ├── schema.prisma            # 16 Model tabel PostgreSQL Multi-Tenant
 │   └── seed.js                  # Data seeder awal tenant Songer Creative
 ├── schema.sql                   # Skrip DDL PostgreSQL awal
+├── bump-version.js              # Script otomatisasi global cache busting aset HTML (timestamp WIB)
 ├── Buka-Aplikasi.bat            # Launcher instan Windows (index.html / admin.html)
 ├── Buka-Preview-HP.bat          # Launcher preview lokal jaringan Wi-Fi
 └── serve.ps1                    # Server HTTP PowerShell ringan untuk pengujian mobile
@@ -508,6 +509,14 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - `otherRows` dipotong maksimal 9 baris teratas (`otherRows.slice(0, 9)`), kemudian baris `Dikirim Dari` ditambahkan sebagai elemen penutup paling akhir (`finalRows.push({ label: 'Dikirim Dari', ... })`).
       - Menjamin 100% posisi `Dikirim Dari` selalu berada di urutan paling bawah (tepat di atas tombol CTA "Oke") dengan total baris tetap terkunci antara 5 hingga 10 baris.
     - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=8.1`.
+  - [x] **Otomatisasi Global Cache Busting & Meta Tag No-Cache di Seluruh File HTML (`bump-version.js`, `admin.html`, `index.html`, `product.html`, `settings.html`, `theme-editor.html`, `superadmin/superadmin.html`, `docs/PRD_MASTER.md`)**:
+    - **Script Automator `bump-version.js` di Root Proyek**:
+      - Mengambil waktu lokal WIB (UTC+7) dengan format timestamp ringkas `YYYYMMDDHHmm` (atau argumen versi custom).
+      - Menelusuri seluruh file HTML (`admin.html`, `index.html`, `product.html`, `settings.html`, `theme-editor.html`, `superadmin/superadmin.html`).
+      - Mengganti seluruh referensi query string `.css?v=...` dan `.js?v=...` (termasuk folder `css/`, `js/`, dan `src/lib/...`) secara serentak menggunakan regex `/(\.(?:css|js)\?v=)[0-9a-zA-Z._-]+/g` menjadi `$1${version}` sehingga tidak ada lagi versi tertinggal atau belang-belang.
+      - Menghasilkan log terminal yang jelas dan informatif yang merinci jumlah aset yang diperbarui per berkas.
+    - **Pemasangan Meta Tag `No-Cache` di `<head>` Seluruh File HTML**:
+      - Memasang 3 baris meta header anti-stale cache: `<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">`, `<meta http-equiv="Pragma" content="no-cache">`, `<meta http-equiv="Expires" content="0">` di seluruh 6 file HTML utama (`admin.html`, `index.html`, `product.html`, `settings.html`, `theme-editor.html`, `superadmin/superadmin.html`) untuk menjamin browser selalu memuat file HTML terbaru tanpa tertahan di cache lokal.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
