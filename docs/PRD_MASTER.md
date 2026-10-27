@@ -537,6 +537,17 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Mode Tanpa Variasi: Memeriksa dan merinci secara spesifik jika *Nama Produk*, *Kategori*, *Harga Jual*, *Stok Produk*, atau *Maksimal Jumlah Pembelian* yang belum valid.
       - Mode Varian & Matriks List Variasi: Memeriksa dan merinci nama baris opsi variasi yang belum valid (contoh: *Harga Jual (Merah)*, *Max. Order (Biru)*).
       - Mode Layanan Ekstra (Extras): Memeriksa opsi layanan extras aktif (`primaryState.has_extra_service` / `finishingsState.extra_3`) dan merinci kekurangan pada *Jenis Input*, *Harga Satuan*, maupun *Stok* per opsi (contoh: *Jenis Input Extras (Packaging Kayu)*, *Harga Satuan Extras (Packaging Kayu)*).
+  - [x] **Penyempurnaan Form Produk Bagian 14: Perluasan Validasi Uji Coba Mencakup Seluruh Variasi 1 s.d. 4 & Matriks Kombinasi (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Validasi Menyeluruh Opsi Varian Tier 1 s.d. Tier 4**:
+      - Memvalidasi seluruh grup variasi aktif (`Tier 1` / `materialsState`, `Tier 2` / `finishingsState.main`, `Tier 3` / `finishingsState.extra_1`, dan `Tier 4` / `finishingsState.extra_2`).
+      - Memastikan setiap grup variasi memiliki minimal 1 opsi dengan nama yang valid.
+      - Memeriksa setiap baris opsi yang terisi namanya agar memiliki *Harga Jual* (`price > 0`) dan *Stok* (`stock >= 0` atau berstatus *Unlimited*) yang valid.
+      - Mendukung aturan *Sama untuk Semua* (`same_price_tiers`, `same_cost_tiers`, dan `stock_mode_tiers`) per tier.
+      - Merinci kekurangan parameter secara spesifik pada modal popup interaktif (contoh: *"Harga Jual (Variasi 2 - XL)"*, *"Stok Produk (Variasi 3 - Panjang)"*).
+    - **Validasi Ketat Matriks Kombinasi Varian (`#combination-matrix-section`)**:
+      - Memeriksa seluruh baris kombinasi pada tabel *List Variasi Produk*.
+      - Memastikan kolom *Max. Order* pada setiap baris kombinasi aktif terisi nilai valid (angka > 0 atau status *"Tanpa Batas"*, tidak boleh kosong `""` / `null`).
+      - Menampilkan pesan dinamis spesifik per baris kombinasi yang belum ditentukan nilai Max. Order-nya (contoh: *"Max. Order (Baris Kombinasi Merah)"*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

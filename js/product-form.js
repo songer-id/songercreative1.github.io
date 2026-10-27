@@ -3446,69 +3446,123 @@ const ProductForm = (() => {
       // ==========================================================================
       // KASUS B: PRODUK MEMILIKI VARIASI (has_variants === true)
       // ==========================================================================
-      const validMats = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
-      if (validMats.length === 0) {
-        missingItems.push('Minimal 1 Opsi Variasi 1');
-        const firstMatNameInp = document.querySelector('.mat-input[data-field="name"]');
-        if (!firstInvalidEl) firstInvalidEl = firstMatNameInp || document.getElementById('card-variasi-1');
-      } else {
-        // Cek nama opsi Variasi 2, 3, 4 jika aktif
-        if (primaryState.has_variation_2) {
-          const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
-          if (validV2.length === 0) {
-            missingItems.push('Nama Opsi Variasi 2');
-            const v2Inp = document.querySelector('#card-variasi-2 .fin-input[data-field="name"]');
-            if (!firstInvalidEl) firstInvalidEl = v2Inp || document.getElementById('card-variasi-2');
-          }
-        }
-        if (primaryState.has_variation_3) {
-          const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
-          if (validV3.length === 0) {
-            missingItems.push('Nama Opsi Variasi 3');
-            const v3Inp = document.querySelector('#card-variasi-3 .fin-input[data-field="name"]');
-            if (!firstInvalidEl) firstInvalidEl = v3Inp || document.getElementById('card-variasi-3');
-          }
-        }
-        if (primaryState.has_variation_4) {
-          const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
-          if (validV4.length === 0) {
-            missingItems.push('Nama Opsi Variasi 4');
-            const v4Inp = document.querySelector('#card-variasi-4 .fin-input[data-field="name"]');
-            if (!firstInvalidEl) firstInvalidEl = v4Inp || document.getElementById('card-variasi-4');
-          }
+      const activeVarTiers = [];
+
+      // Tier 1 (Variasi 1)
+      activeVarTiers.push({
+        tier: 'tier1',
+        label: primaryState.variation_labels?.label_tier_1 || 'Variasi 1',
+        list: materialsState || [],
+        cardId: 'card-variasi-1',
+        stockMode: (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '',
+        samePrice: false,
+        sameCost: false
+      });
+
+      // Tier 2 (Variasi 2)
+      if (primaryState.has_variation_2) {
+        activeVarTiers.push({
+          tier: 'main',
+          label: primaryState.variation_labels?.label_tier_2 || 'Variasi 2',
+          list: finishingsState.main || [],
+          cardId: 'card-variasi-2',
+          stockMode: (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.main) || '',
+          samePrice: Boolean(primaryState.same_price_tiers && primaryState.same_price_tiers.main),
+          sameCost: Boolean(primaryState.same_cost_tiers && primaryState.same_cost_tiers.main)
+        });
+      }
+
+      // Tier 3 (Variasi 3)
+      if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+        activeVarTiers.push({
+          tier: 'extra_1',
+          label: primaryState.variation_labels?.label_extra_1 || 'Variasi 3',
+          list: finishingsState.extra_1 || [],
+          cardId: 'card-variasi-3',
+          stockMode: (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.extra_1) || '',
+          samePrice: Boolean(primaryState.same_price_tiers && primaryState.same_price_tiers.extra_1),
+          sameCost: Boolean(primaryState.same_cost_tiers && primaryState.same_cost_tiers.extra_1)
+        });
+      }
+
+      // Tier 4 (Variasi 4)
+      if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+        activeVarTiers.push({
+          tier: 'extra_2',
+          label: primaryState.variation_labels?.label_extra_2 || 'Variasi 4',
+          list: finishingsState.extra_2 || [],
+          cardId: 'card-variasi-4',
+          stockMode: (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.extra_2) || '',
+          samePrice: Boolean(primaryState.same_price_tiers && primaryState.same_price_tiers.extra_2),
+          sameCost: Boolean(primaryState.same_cost_tiers && primaryState.same_cost_tiers.extra_2)
+        });
+      }
+
+      // B.1. Validasi Menyeluruh Opsi Varian Tier 1 s.d. Tier 4
+      for (const group of activeVarTiers) {
+        const validOpts = (group.list || []).filter(opt => opt && !opt.is_default_none && opt.name && opt.name.trim() !== '');
+
+        if (validOpts.length === 0) {
+          missingItems.push(`Minimal 1 Opsi ${group.label}`);
+          const firstInp = document.querySelector(`#${group.cardId} input[data-field="name"]`);
+          if (!firstInvalidEl) firstInvalidEl = firstInp || document.getElementById(group.cardId);
+          continue;
         }
 
-        // Cek Harga Jual dan Stok per baris variasi 1 aktif
-        const stockModeTier1 = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.tier1) || '';
-        for (let i = 0; i < validMats.length; i++) {
-          const mat = validMats[i];
-          const matLabel = mat.name.trim();
-          const rowEl = document.querySelector(`.variation-option-row[data-id="${mat.id}"]`);
+        const firstPriceVal = group.list[0]?.price;
+        const firstStockVal = group.list[0]?.stock;
 
+        for (let i = 0; i < validOpts.length; i++) {
+          const opt = validOpts[i];
+          const optLabel = opt.name.trim();
+
+          const rowEl = (group.tier === 'tier1')
+            ? (document.querySelector(`.variation-option-row[data-tier="tier1"][data-id="${opt.id}"]`) || document.querySelector(`.variation-option-row[data-id="${opt.id}"]`))
+            : (document.querySelector(`.variation-option-row[data-tier="${group.tier}"][data-id="${opt.id}"]`) || document.querySelector(`.variation-option-row[data-id="${opt.id}"]`));
+
+          // 1. Validasi Harga Jual (> 0)
           const priceInp = rowEl?.querySelector('input[data-field="price"]');
-          const rawPrice = priceInp && priceInp.value.trim() !== '' ? parseFloat(priceInp.value) : parseFloat(mat.price);
+          let rawPrice = (priceInp && priceInp.value.trim() !== '') ? parseFloat(priceInp.value) : parseFloat(opt.price);
+          if (group.samePrice && (isNaN(rawPrice) || rawPrice <= 0) && firstPriceVal !== undefined && firstPriceVal !== null && firstPriceVal !== '') {
+            rawPrice = parseFloat(firstPriceVal);
+          }
           const isPriceValid = (!isNaN(rawPrice) && rawPrice > 0);
           if (!isPriceValid) {
-            missingItems.push(`Harga Jual (${matLabel})`);
-            if (!firstInvalidEl) firstInvalidEl = priceInp || rowEl;
+            missingItems.push(`Harga Jual (${group.label} - ${optLabel})`);
+            if (!firstInvalidEl) firstInvalidEl = priceInp || rowEl || document.getElementById(group.cardId);
           }
 
-          const stockInp = rowEl?.querySelector('input[data-field="stock"]');
-          const rawStock = stockInp ? stockInp.value.trim() : (mat.stock !== null && mat.stock !== undefined ? String(mat.stock).trim() : '');
-          const isStockUnlimited = stockModeTier1 === 'unlimited' || mat.stock === null || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
-          let isStockValid = false;
-          if (isStockUnlimited) {
-            isStockValid = true;
-          } else if (rawStock !== '') {
-            const parsedStock = parseInt(rawStock, 10);
-            isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
+          // 2. Validasi Stok (>= 0 jika bukan unlimited)
+          const isStockUnlimited = (group.stockMode === 'unlimited') || (opt.stock === null) || (String(opt.stock).toLowerCase() === 'unlimited') || (String(opt.stock).toLowerCase() === 'tanpa batas');
+          if (!isStockUnlimited) {
+            const stockInp = rowEl?.querySelector('input[data-field="stock"]');
+            let rawStock = (stockInp && stockInp.value.trim() !== '') ? stockInp.value.trim() : (opt.stock !== null && opt.stock !== undefined ? String(opt.stock).trim() : '');
+            if (group.stockMode === 'same' && rawStock === '' && firstStockVal !== undefined && firstStockVal !== null) {
+              rawStock = String(firstStockVal).trim();
+            }
+            const isStockValUnlimited = rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
+            let isStockValid = false;
+            if (isStockValUnlimited) {
+              isStockValid = true;
+            } else if (rawStock !== '') {
+              const parsedStock = parseInt(rawStock, 10);
+              isStockValid = (!isNaN(parsedStock) && parsedStock >= 0);
+            }
+            if (!isStockValid) {
+              missingItems.push(`Stok Produk (${group.label} - ${optLabel})`);
+              if (!firstInvalidEl) firstInvalidEl = stockInp || rowEl || document.getElementById(group.cardId);
+            }
           }
-          if (!isStockValid) {
-            missingItems.push(`Stok (${matLabel})`);
-            if (!firstInvalidEl) firstInvalidEl = stockInp || rowEl;
-          }
+        }
+      }
 
-          // Cek Max. Order di tabel List Variasi Produk (#combination-matrix-section)
+      // B.2. Validasi Ketat Matriks Kombinasi Varian (#combination-matrix-section)
+      const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
+      if (validMaterials.length > 0) {
+        for (let idx = 0; idx < validMaterials.length; idx++) {
+          const mat = validMaterials[idx];
+          const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
+
           const maxOrderInp = document.querySelector(`.combo-max-order-input[data-mat-id="${mat.id}"]`);
           const rawMaxVal = maxOrderInp ? maxOrderInp.value.trim() : (mat.max_order !== null && mat.max_order !== undefined ? String(mat.max_order).trim() : '');
           const isMaxOrderUnlimited = rawMaxVal.toLowerCase() === 'tanpa batas' || rawMaxVal.toLowerCase() === 'unlimited';
@@ -3519,8 +3573,9 @@ const ProductForm = (() => {
             const parsedMax = parseInt(rawMaxVal, 10);
             isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
           }
+
           if (!isMaxOrderValid) {
-            missingItems.push(`Max. Order (${matLabel})`);
+            missingItems.push(`Max. Order (Baris Kombinasi ${var1Name})`);
             if (!firstInvalidEl) firstInvalidEl = maxOrderInp || document.getElementById('combination-matrix-section');
           }
         }
