@@ -565,6 +565,17 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
         - Jika sudah ada opsi yang dipilih: Wajib menampilkan format **`[Judul Variasi] <span class="font-normal text-slate-400 ml-1.5">[Nilai Opsi]</span>`** (contoh: *Bahan Utama <span class="font-normal text-slate-400 ml-1.5">FC</span>*).
         - Jika judul grup belum diisi merchant, otomatis menggunakan default tier (`"Variasi 1"`, `"Variasi 2"`, dst).
       - **Pertahankan Judul Murni di Dalam Drawer (Shopee-Style Drawer)**: Di dalam drawer modal, judul variasi tetap dirender murni apa adanya (`[Judul Variasi]`) tanpa tambahan teks opsi terpilih.
+  - [x] **Penyempurnaan Form Produk Bagian 16: Otomatisasi Aturan Spesifik Variasi 2–4 di Pratinjau Uji Coba & Kunci Posisi Baris Dikirim Dari Selalu Paling Bawah di Drawer Spesifikasi (`js/product-form.js`, `js/pdp.js`, `admin.html`, `docs/PRD_MASTER.md`)**:
+    - **Otomatisasi Aturan Spesifik Variasi 2 s.d. 4 pada Pratinjau Uji Coba**:
+      - Menyaring dan menonaktifkan (`disabled`, `opacity-40 line-through cursor-not-allowed pointer-events-none`) opsi Variasi 2, Variasi 3, dan Variasi 4 yang tidak diizinkan berdasarkan `primaryState.specific_options_map` dan `primaryState.variation_scopes` saat Variasi 1 dipilih.
+      - Mendukung seluruh kontrol interaktif (Chip Opsi, Accordion Opsi, dan Shadcn Popover Select) serta kartu etalase Mini PDP.
+      - Menerapkan auto-reset cerdas ke opsi pertama yang valid jika opsi yang sebelumnya dipilih menjadi tidak valid akibat perubahan pilihan Variasi 1.
+      - Mengintegrasikan resolusi kombinasi variasi (`resolveActiveCombinationRule`) untuk batas minimum pembelian (`min_order`), batas maksimum pembelian (`max_order`), kelipatan pembelian (`order_multiple`), dan tingkatan harga grosir (`wholesale_tiers`) secara reaktif pada live pricing dan tombol kuantitas.
+      - Menerapkan penegakan aturan spesifik yang sama pada halaman detail produk pembeli (`js/pdp.js`) untuk Variasi 2 dan Variasi Ekstra 3 & 4.
+    - **Kunci Posisi Baris Dikirim Dari Selalu di Paling Bawah pada Drawer & Tab Spesifikasi**:
+      - Memastikan baris "Dikirim Dari" selalu berada di urutan paling akhir (posisi terbawah sebelum tombol aksi) pada Drawer Spesifikasi Produk Shopee-Style (`buildProductSpecDrawerHtml`) dan Tab Spesifikasi PDP (`renderTabs`).
+      - Mengumpulkan baris wajib dan kondisional (*Stok, Merek, Jenis Garansi, Masa Garansi, Produk Custom, Kondisi Produk, Pre-Order, Min. Pembelian, Harga Grosir, Kelipatan Pembelian, Asal Produk, SKU Induk, dan Custom Specs*), memotong maksimal 9 baris pertama, lalu menyematkan "Dikirim Dari" sebagai baris penutup dengan total 5 hingga 10 baris terstruktur rapi.
+    - **Pembaruan Cache Version `admin.html`**: Menaikkan cache buster script dan stylesheet admin menjadi `?v=8.1`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

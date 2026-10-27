@@ -472,47 +472,87 @@
     const finishings = Array.isArray(prod.finishings) ? prod.finishings : [];
 
     updateFinishingAllowedState = (selectedMatId) => {
-      if (!prod || !prod.specific_options_map || !selectedMatId || !mainFinList) return;
-      const isMainSpecific = Boolean(
-        prod.variation_scopes?.main === 'spesifik' ||
-        prod.variation_scopes?.[selectedMatId]?.main === 'spesifik'
-      );
-      if (!isMainSpecific) {
-        mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(radio => {
-          radio.disabled = false;
-          radio.closest('.pdp-finishing-option')?.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
-        });
-        return;
-      }
+      if (!prod || !prod.specific_options_map || !selectedMatId) return;
 
-      const allowedIds = prod.specific_options_map[selectedMatId]?.main || [];
-      let curFinValid = false;
-      mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(radio => {
-        const isAllowed = allowedIds.includes(radio.value);
-        radio.disabled = !isAllowed;
-        const optEl = radio.closest('.pdp-finishing-option');
-        if (optEl) {
-          if (!isAllowed) {
-            optEl.classList.add('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
-          } else {
-            optEl.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+      // 1. Variasi 2 (main)
+      if (mainFinList) {
+        const isMainSpecific = Boolean(
+          prod.variation_scopes?.main === 'spesifik' ||
+          prod.variation_scopes?.[selectedMatId]?.main === 'spesifik'
+        );
+        if (!isMainSpecific) {
+          mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(radio => {
+            radio.disabled = false;
+            radio.closest('.pdp-finishing-option')?.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+          });
+        } else {
+          const allowedIds = prod.specific_options_map[selectedMatId]?.main || [];
+          let curFinValid = false;
+          mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(radio => {
+            const isAllowed = allowedIds.includes(radio.value);
+            radio.disabled = !isAllowed;
+            const optEl = radio.closest('.pdp-finishing-option');
+            if (optEl) {
+              if (!isAllowed) {
+                optEl.classList.add('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+              } else {
+                optEl.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+              }
+            }
+            if (radio.value === configState.selectedFinishingId && isAllowed) {
+              curFinValid = true;
+            }
+          });
+
+          if (!curFinValid && allowedIds.length > 0) {
+            const firstValidRadio = mainFinList.querySelector(`input[name="pdp_main_finishing"][value="${allowedIds[0]}"]`);
+            if (firstValidRadio) {
+              firstValidRadio.checked = true;
+              configState.selectedFinishingId = allowedIds[0];
+              mainFinList.querySelectorAll('.pdp-finishing-option').forEach(el => {
+                el.className = 'pdp-finishing-option p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer flex items-center justify-between text-xs transition';
+              });
+              firstValidRadio.closest('.pdp-finishing-option').className = 'pdp-finishing-option p-2.5 rounded-xl border border-emerald-500 bg-emerald-50/40 font-bold text-emerald-900 cursor-pointer flex items-center justify-between text-xs transition';
+            }
           }
         }
-        if (radio.value === configState.selectedFinishingId && isAllowed) {
-          curFinValid = true;
-        }
-      });
+      }
 
-      if (!curFinValid && allowedIds.length > 0) {
-        const firstValidRadio = mainFinList.querySelector(`input[name="pdp_main_finishing"][value="${allowedIds[0]}"]`);
-        if (firstValidRadio) {
-          firstValidRadio.checked = true;
-          configState.selectedFinishingId = allowedIds[0];
-          mainFinList.querySelectorAll('.pdp-finishing-option').forEach(el => {
-            el.className = 'pdp-finishing-option p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer flex items-center justify-between text-xs transition';
-          });
-          firstValidRadio.closest('.pdp-finishing-option').className = 'pdp-finishing-option p-2.5 rounded-xl border border-emerald-500 bg-emerald-50/40 font-bold text-emerald-900 cursor-pointer flex items-center justify-between text-xs transition';
-        }
+      // 2. Variasi 3 & 4 (extra_1, extra_2)
+      if (extraFinList && Array.isArray(extraOptions) && extraOptions.length > 0) {
+        extraFinList.querySelectorAll('input[name="pdp_extra_finishing"]').forEach(cb => {
+          const fId = cb.value;
+          const fItem = extraOptions.find(f => f.id === fId);
+          if (!fItem) return;
+          const tierKey = fItem.tier; // 'extra_1' | 'extra_2'
+          const isTierSpecific = Boolean(
+            prod.variation_scopes?.[tierKey] === 'spesifik' ||
+            prod.variation_scopes?.[selectedMatId]?.[tierKey] === 'spesifik'
+          );
+          if (isTierSpecific) {
+            const allowedExtraIds = prod.specific_options_map[selectedMatId]?.[tierKey] || [];
+            const isAllowed = allowedExtraIds.includes(fId);
+            cb.disabled = !isAllowed;
+            const optEl = cb.closest('label');
+            if (optEl) {
+              if (!isAllowed) {
+                optEl.classList.add('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+                if (cb.checked) {
+                  cb.checked = false;
+                  configState.extraFinishingIds = (configState.extraFinishingIds || []).filter(id => id !== fId);
+                }
+              } else {
+                optEl.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+              }
+            }
+          } else {
+            cb.disabled = false;
+            const optEl = cb.closest('label');
+            if (optEl) {
+              optEl.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+            }
+          }
+        });
       }
     };
 

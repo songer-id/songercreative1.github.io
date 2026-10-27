@@ -3215,40 +3215,43 @@ const ProductForm = (() => {
     if (!val || typeof val !== 'string') return true;
     const clean = val.trim().toLowerCase();
     if (clean === '') return true;
-    if (defaultLabel && clean === defaultLabel.toLowerCase()) return true;
-    if (clean.startsWith('cth.') || clean.startsWith('contoh:')) return true;
-    const prodName = (primaryState.name || '').trim().toLowerCase();
-    if (prodName && clean === prodName) return true;
+    if (clean.startsWith('cth.')) return true;
     return false;
   }
 
   function getVariationGroupTitleInfo(tierKey) {
     let defaultLabel = 'Variasi 1';
     let key = 'label_tier_1';
-    let selector = '#input-var-label-tier1, [data-label-key="label_tier_1"]';
+    let selector = '#input-var-label-tier1, #input-variation-1-label, [data-label-key="label_tier_1"]';
 
     if (tierKey === 'tier2' || tierKey === 'main') {
       defaultLabel = 'Variasi 2';
       key = 'label_tier_2';
-      selector = '#input-var-label-main, #input-var-label-tier2, [data-label-key="label_tier_2"]';
+      selector = '#input-var-label-main, #input-var-label-tier2, #input-variation-2-label, [data-label-key="label_tier_2"]';
     } else if (tierKey === 'tier3' || tierKey === 'extra_1') {
       defaultLabel = 'Variasi 3';
       key = 'label_extra_1';
-      selector = '#input-var-label-extra_1, #input-var-label-extra1, [data-label-key="label_extra_1"]';
+      selector = '#input-var-label-extra_1, #input-var-label-extra1, #input-var-label-tier3, #input-variation-3-label, [data-label-key="label_extra_1"]';
     } else if (tierKey === 'tier4' || tierKey === 'extra_2') {
       defaultLabel = 'Variasi 4';
       key = 'label_extra_2';
-      selector = '#input-var-label-extra_2, #input-var-label-extra2, [data-label-key="label_extra_2"]';
+      selector = '#input-var-label-extra_2, #input-var-label-extra2, #input-var-label-tier4, #input-variation-4-label, [data-label-key="label_extra_2"]';
     } else if (tierKey === 'extras' || tierKey === 'extra_3') {
       defaultLabel = 'Layanan Extras';
       key = 'label_extra_3';
-      selector = '#input-var-label-extra3, #input-var-label-extra_3, #input-var-label-extra-services, [data-label-key="label_extra_3"]';
+      selector = '#input-var-label-extra3, #input-var-label-extra_3, #input-var-label-extra-services, #input-extra-service-label, [data-label-key="label_extra_3"]';
     }
 
-    const domInp = selector ? document.querySelector(selector) : null;
-    const rawVal = domInp ? (domInp.value ? domInp.value.trim() : '') : ((key && primaryState.variation_labels?.[key]) ? String(primaryState.variation_labels[key]).trim() : '');
+    const domInp = selector && typeof document !== 'undefined' ? document.querySelector(selector) : null;
+    let rawVal = domInp && domInp.value ? domInp.value.trim() : '';
+    if (!rawVal) {
+      if (tierKey === 'tier1' && primaryState.variation_1_label) {
+        rawVal = String(primaryState.variation_1_label).trim();
+      } else if (key && primaryState.variation_labels && primaryState.variation_labels[key]) {
+        rawVal = String(primaryState.variation_labels[key]).trim();
+      }
+    }
     
-    // Pastikan bebas dari placeholder bawaan dan nama produk
     const isCleanCustom = !isPlaceholderOrEmptyVariationTitle(rawVal, defaultLabel);
     const hasCustomTitle = isCleanCustom;
     const effectiveTitle = isCleanCustom ? rawVal : defaultLabel;
@@ -3261,50 +3264,19 @@ const ProductForm = (() => {
     return info.hasCustomTitle ? info.effectiveTitle : (fallback || info.defaultLabel);
   }
 
-  function formatVariationReactiveHeader(tierKeyOrGroupLabel, optCountOrSelected, maybeSelected) {
-    let tierKey = 'tier1';
-    let optionCount = 0;
-    let selectedOptionName = '';
+  function formatVariationReactiveHeader(groupLabel, optionCount, selectedOptionName) {
+    const count = typeof optionCount === 'number' ? optionCount : (parseInt(optionCount) || 0);
+    const label = String(groupLabel || 'Variasi 1').trim();
 
-    if (maybeSelected !== undefined) {
-      // Signature 3 argumen: (tierKeyOrGroupLabel, optionCount, selectedOptionName)
-      const lbl = String(tierKeyOrGroupLabel || '').toLowerCase();
-      if (lbl.includes('variasi 2') || lbl.includes('tier2') || lbl.includes('main')) tierKey = 'tier2';
-      else if (lbl.includes('variasi 3') || lbl.includes('tier3') || lbl.includes('extra_1')) tierKey = 'tier3';
-      else if (lbl.includes('variasi 4') || lbl.includes('tier4') || lbl.includes('extra_2')) tierKey = 'tier4';
-      else if (lbl.includes('extras') || lbl.includes('layanan')) tierKey = 'extras';
-      else tierKey = 'tier1';
-
-      optionCount = typeof optCountOrSelected === 'number' ? optCountOrSelected : (parseInt(optCountOrSelected) || 0);
-      selectedOptionName = maybeSelected || '';
-    } else {
-      // Signature 2 argumen
-      tierKey = tierKeyOrGroupLabel || 'tier1';
-      if (typeof optCountOrSelected === 'number') {
-        optionCount = optCountOrSelected;
-        selectedOptionName = '';
-      } else {
-        selectedOptionName = optCountOrSelected || '';
-      }
+    // 1. Jika SUDAH ada opsi yang dipilih (selectedOptionName terisi):
+    // Tampilkan: [Judul Variasi]: <span class="font-normal text-slate-400 ml-1">[Nilai Opsi]</span>
+    if (selectedOptionName && String(selectedOptionName).trim() !== '' && String(selectedOptionName).trim().toLowerCase() !== 'produk standar') {
+      return `${escapeHtml(label)}: <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(selectedOptionName).trim())}</span>`;
     }
 
-    const titleInfo = getVariationGroupTitleInfo(tierKey);
-    const groupLabel = titleInfo.effectiveTitle;
-
-    // 1. Jika sudah ada opsi yang dipilih:
-    // Wajib menampilkan format: [Judul Variasi] <span class="font-normal text-slate-400 ml-1.5">[Nilai Opsi]</span>
-    if (selectedOptionName && String(selectedOptionName).trim() !== '') {
-      const cleanVal = String(selectedOptionName).trim();
-      const prodName = (primaryState.name || '').trim();
-      // Pastikan bukan fallback nama produk atau "Produk Standar"
-      if (cleanVal.toLowerCase() !== 'produk standar' && (!prodName || cleanVal.toLowerCase() !== prodName.toLowerCase())) {
-        return `${escapeHtml(groupLabel)} <span class="font-normal text-slate-400 ml-1.5">${escapeHtml(cleanVal)}</span>`;
-      }
-    }
-
-    // 2. Jika belum ada opsi yang dipilih (atau opsi masih kosong):
-    // Wajib menampilkan format: Tersedia [(Jumlah Opsi)] [Judul Variasi]
-    return `Tersedia (${optionCount || 0}) ${escapeHtml(groupLabel)}`;
+    // 2. Jika BELUM ada opsi yang dipilih (atau opsi masih kosong):
+    // Tampilkan: Tersedia ([Jumlah Opsi]) [Judul Variasi]
+    return `Tersedia (${count}) ${escapeHtml(label)}`;
   }
 
   function getCustomDimensionLabel() {
@@ -7587,45 +7559,12 @@ const ProductForm = (() => {
         accentColor = cfg.btn_color;
       }
 
-      // Daftar bahan / opsi variasi yang valid (bebas dari penarikan nama produk & placeholder Produk Standar)
-      const prodNameClean = (primaryState.name || '').trim().toLowerCase();
-      const validMaterials = (materialsState || []).filter(m => {
-        if (!m || !m.name || m.name.trim() === '') return false;
-        if (primaryState.has_variants) {
-          const nm = m.name.trim().toLowerCase();
-          if (nm === 'produk standar') return false;
-          if (prodNameClean && nm === prodNameClean) return false;
-        }
-        return true;
-      });
-      const validV2 = (finishingsState.main || []).filter(f => {
-        if (!f || !f.name || f.name.trim() === '') return false;
-        const nm = f.name.trim().toLowerCase();
-        if (nm === 'produk standar') return false;
-        if (prodNameClean && nm === prodNameClean) return false;
-        return true;
-      });
-      const validV3 = (finishingsState.extra_1 || []).filter(f => {
-        if (!f || !f.name || f.name.trim() === '') return false;
-        const nm = f.name.trim().toLowerCase();
-        if (nm === 'produk standar') return false;
-        if (prodNameClean && nm === prodNameClean) return false;
-        return true;
-      });
-      const validV4 = (finishingsState.extra_2 || []).filter(f => {
-        if (!f || !f.name || f.name.trim() === '') return false;
-        const nm = f.name.trim().toLowerCase();
-        if (nm === 'produk standar') return false;
-        if (prodNameClean && nm === prodNameClean) return false;
-        return true;
-      });
-      const validExtras = (finishingsState.extra_3 || []).filter(ex => {
-        if (!ex || !ex.name || ex.name.trim() === '') return false;
-        const nm = ex.name.trim().toLowerCase();
-        if (nm === 'produk standar') return false;
-        if (prodNameClean && nm === prodNameClean) return false;
-        return true;
-      });
+      // Daftar bahan / opsi variasi yang valid (bebas dari placeholder Produk Standar)
+      const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '' && m.name.trim().toLowerCase() !== 'produk standar');
+      const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '' && f.name.trim().toLowerCase() !== 'produk standar');
+      const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '' && f.name.trim().toLowerCase() !== 'produk standar');
+      const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '' && f.name.trim().toLowerCase() !== 'produk standar');
+      const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '' && ex.name.trim().toLowerCase() !== 'produk standar');
 
       // 1. Ambil opsi terpilih untuk Variasi 1 s/d 4
       const selectedMat = primaryState.has_variants
@@ -7944,7 +7883,7 @@ const ProductForm = (() => {
                 <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
                 ${primaryState.has_variants ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier1', validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
+                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier1', 'Variasi 1'), validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
                     ${validMaterials.length > 0 ? (
                       hasAnyTier1Image ? `
                         <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
@@ -7979,7 +7918,7 @@ const ProductForm = (() => {
                           }).join('')}
                         </div>
                       `
-                    ) : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationGroupTitleInfo('tier1').effectiveTitle)} belum diisi</span>`}
+                    ) : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))} belum diisi</span>`}
                   </div>
                 ` : ''}
 
@@ -7989,13 +7928,13 @@ const ProductForm = (() => {
                     ${hasExtraTiers ? `
                       <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                         <div class="truncate">
-                          ${formatVariationReactiveHeader('tier2', validV2.length, selectedV2 ? selectedV2.name : '')}
+                          ${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}
                           <span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>
                         </div>
                         <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                       </div>
                     ` : `
-                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier2', validV2.length, selectedV2 ? selectedV2.name : '')}</div>
+                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}</div>
                     `}
                     <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap">
                       ${validV2.length > 0 ? validV2.map((f, idx) => {
@@ -8006,7 +7945,7 @@ const ProductForm = (() => {
                             <span>${escapeHtml(f.name.trim())}</span>
                           </button>
                         `;
-                      }).join('') : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationGroupTitleInfo('tier2').effectiveTitle)} belum diisi</span>`}
+                      }).join('') : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))} belum diisi</span>`}
                     </div>
                   </div>
                 ` : (hasExtraTiers ? `
@@ -8014,7 +7953,7 @@ const ProductForm = (() => {
                     <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                       <div class="truncate">
                         ${(!primaryState.has_variants && !primaryState.has_variation_2 && hasExtras && !hasTier3 && !hasTier4 && !hasCustomDim)
-                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader('extras', validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)}</span>`
+                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader(getVariationLabel('extras', 'Layanan Extras'), validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)}</span>`
                           : `<span class="font-bold text-slate-800">Pilihan Variasi</span><span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>`
                         }
                       </div>
@@ -12860,7 +12799,7 @@ const ProductForm = (() => {
     // Helper render kartu Variasi 1 s/d 4 (Persis Gambar 1, 2, 3, 4)
     function renderVariationCard(tier, tierNum, title, placeholderLabel, labelKey, tooltipText) {
       const isTier1 = tier === 'tier1';
-      const labelVal = isTier1 ? (primaryState.variation_labels?.label_tier_1 || '') : (primaryState.variation_labels?.[labelKey] || '');
+      const labelVal = isTier1 ? (primaryState.variation_1_label || primaryState.variation_labels?.label_tier_1 || '') : (primaryState.variation_labels?.[labelKey] || '');
       const isSamePrice = Boolean(primaryState.same_price_tiers && primaryState.same_price_tiers[tier]);
       const isSameCost = Boolean(primaryState.same_cost_tiers && primaryState.same_cost_tiers[tier]);
       const stockMode = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers[tier]) || '';
@@ -16491,16 +16430,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Kustomisasi Label Input pada Setiap Variasi Real-Time Sync
     function handleVariationLabelInput(inp, val) {
-      const labelKey = inp.getAttribute('data-label-key');
-      const tier = inp.getAttribute('data-tier');
+      const labelKey = inp.getAttribute('data-label-key') || ((inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') ? 'label_tier_1' : '');
+      const tier = inp.getAttribute('data-tier') || ((inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') ? 'tier1' : '');
       if (!primaryState.variation_labels) primaryState.variation_labels = {};
       if (labelKey) primaryState.variation_labels[labelKey] = val;
+      if (labelKey === 'label_tier_1' || tier === 'tier1' || inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') {
+        primaryState.variation_1_label = val;
+      }
 
       // Update header pada tabel kombinasi bawah jika label berubah
       const comboSection = document.getElementById('combination-matrix-section');
       if (comboSection) {
         const comboVar1Th = comboSection.querySelector('th:first-child');
-        if (comboVar1Th && labelKey === 'label_tier_1') comboVar1Th.textContent = val || 'Variasi 1';
+        if (comboVar1Th && (labelKey === 'label_tier_1' || tier === 'tier1')) comboVar1Th.textContent = val || 'Variasi 1';
       }
 
       // Jika mengubah label Layanan Extras, update nama opsi default 'Tanpa [Judul Extras]' pada baris terakhir
@@ -16519,7 +16461,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       updateProductCardLivePreview();
     }
 
-    document.querySelectorAll('.input-variation-label').forEach(inp => {
+    document.querySelectorAll('.input-variation-label, #input-var-label-tier1, #input-variation-1-label').forEach(inp => {
       inp.oninput = (e) => {
         handleVariationLabelInput(inp, e.target.value.trim());
       };
@@ -16531,12 +16473,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (!window._variationLabelInputListenerBound) {
       window._variationLabelInputListenerBound = true;
       document.addEventListener('input', (e) => {
-        const inp = e.target.closest('.input-variation-label');
+        const inp = e.target.closest('.input-variation-label, #input-var-label-tier1, #input-variation-1-label');
         if (!inp) return;
         handleVariationLabelInput(inp, inp.value.trim());
       });
       document.addEventListener('blur', (e) => {
-        const inp = e.target.closest('.input-variation-label');
+        const inp = e.target.closest('.input-variation-label, #input-var-label-tier1, #input-variation-1-label');
         if (!inp) return;
         refreshVariationTitleDuplicateErrors();
       }, true);
@@ -17493,8 +17435,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
             const comboLabel = document.querySelector(`.combo-var1-label[data-id="${id}"]`);
             if (comboLabel) {
-              comboLabel.textContent = e.target.value || `Opsi ${idx + 1}`;
+              comboLabel.textContent = e.target.value.trim() || `Opsi ${idx + 1}`;
             }
+            refreshCombinationMatrixTable();
             validateOptionField(e.target, false);
             refreshOptionDuplicateErrors('tier1');
             // Update status tombol Tambah Variasi 2 jika nama mulai terisi
