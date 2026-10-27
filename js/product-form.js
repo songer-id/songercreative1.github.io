@@ -582,6 +582,10 @@ const ProductForm = (() => {
 
   function closeAllCleanDatalistPopovers(exceptPopover = null) {
     document.querySelectorAll('.clean-datalist-popover').forEach(p => {
+      if (p._boundInput && !document.body.contains(p._boundInput)) {
+        p.remove();
+        return;
+      }
       if (p !== exceptPopover && !p.classList.contains('hidden')) {
         p.classList.add('hidden');
       }
@@ -593,13 +597,14 @@ const ProductForm = (() => {
     window._cleanDatalistScrollBound = true;
     const handleScrollOutside = (e) => {
       if (e.target && e.target.closest && e.target.closest('.clean-datalist-popover')) {
-        return; // biarkan di dalam popover scroll mulus
+        return; // biarkan di dalam popover scroll mulus jika list panjang
       }
       closeAllCleanDatalistPopovers();
     };
 
     window.addEventListener('scroll', handleScrollOutside, { passive: true, capture: true });
     document.addEventListener('scroll', handleScrollOutside, { passive: true, capture: true });
+    window.addEventListener('resize', () => closeAllCleanDatalistPopovers(), { passive: true });
     const mainViewport = document.getElementById('admin-main-viewport');
     if (mainViewport) {
       mainViewport.addEventListener('scroll', handleScrollOutside, { passive: true, capture: true });
@@ -610,7 +615,7 @@ const ProductForm = (() => {
   if (!window._cleanDatalistClickOutsideBound) {
     window._cleanDatalistClickOutsideBound = true;
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.clean-datalist-wrapper') && !e.target.closest('.clean-datalist-popover')) {
+      if (!e.target.closest('.clean-datalist-wrapper') && !e.target.closest('.clean-datalist-input-box') && !e.target.closest('.clean-datalist-popover')) {
         closeAllCleanDatalistPopovers();
       }
     });
@@ -681,18 +686,15 @@ const ProductForm = (() => {
         const oldClear = inputBox.querySelector(':scope > .btn-clear-datalist, :scope > .btn-clear-custom-label') || wrapper.querySelector('.btn-clear-datalist, .btn-clear-custom-label');
         if (oldClear) oldClear.remove();
       } else {
-        // Tambahkan anak panah (▼) di dalam inputBox jika belum ada
-        arrow = inputBox.querySelector(':scope > .clean-datalist-arrow');
-        if (!arrow) {
-          arrow = document.createElement('span');
-          arrow.className = 'clean-datalist-arrow select-none cursor-pointer p-1 transition flex items-center justify-center leading-none z-10';
-          arrow.innerHTML = '▼';
-          arrow.title = 'Buka daftar pilihan';
-          inputBox.appendChild(arrow);
+        // 1. Periksa tombol silang (clearBtn) yang sudah ada di inputBox atau wrapper
+        const allClears = (inputBox || wrapper).querySelectorAll('.btn-clear-datalist, .btn-clear-custom-label');
+        if (allClears.length > 1) {
+          for (let i = 1; i < allClears.length; i++) {
+            allClears[i].remove();
+          }
         }
+        clearBtn = allClears.length > 0 ? allClears[0] : null;
 
-        // Tambahkan tombol silang (×) di dalam inputBox jika belum ada
-        clearBtn = inputBox.querySelector(':scope > .btn-clear-datalist') || inputBox.querySelector(':scope > .btn-clear-custom-label');
         if (!clearBtn) {
           clearBtn = document.createElement('button');
           clearBtn.type = 'button';
@@ -701,17 +703,53 @@ const ProductForm = (() => {
           clearBtn.innerHTML = '<i class="bi bi-x text-sm leading-none flex items-center justify-center"></i>';
           inputBox.appendChild(clearBtn);
         } else {
-          clearBtn.innerHTML = '<i class="bi bi-x text-sm leading-none flex items-center justify-center"></i>';
+          if (!clearBtn.innerHTML || !clearBtn.innerHTML.trim()) {
+            clearBtn.innerHTML = '<i class="bi bi-x text-sm leading-none flex items-center justify-center"></i>';
+          }
+          if (clearBtn.parentElement !== inputBox) {
+            inputBox.appendChild(clearBtn);
+          }
+        }
+
+        // 2. Periksa panah (arrow) yang sudah ada di inputBox atau wrapper
+        const allArrows = (inputBox || wrapper).querySelectorAll('.clean-datalist-arrow');
+        if (allArrows.length > 1) {
+          for (let i = 1; i < allArrows.length; i++) {
+            allArrows[i].remove();
+          }
+        }
+        arrow = allArrows.length > 0 ? allArrows[0] : null;
+
+        if (!arrow) {
+          arrow = document.createElement('span');
+          arrow.className = 'clean-datalist-arrow select-none cursor-pointer p-1 transition flex items-center justify-center leading-none z-10';
+          arrow.innerHTML = '▼';
+          arrow.title = 'Buka daftar pilihan';
+          inputBox.appendChild(arrow);
+        } else {
+          if (arrow.parentElement !== inputBox) {
+            inputBox.appendChild(arrow);
+          }
         }
       }
 
-      function syncControlButtons() {
-        if (isSingleOption) return;
+      function syncClearAndArrowVisibility() {
+        if (isSingleOption) {
+          if (arrow) {
+            arrow.classList.add('hidden');
+            arrow.classList.remove('flex', 'inline-flex');
+          }
+          if (clearBtn) {
+            clearBtn.classList.add('hidden');
+            clearBtn.classList.remove('flex', 'inline-flex');
+          }
+          return;
+        }
         const hasVal = (input.value || '').trim().length > 0;
         if (hasVal) {
           if (arrow) {
             arrow.classList.add('hidden');
-            arrow.classList.remove('flex');
+            arrow.classList.remove('flex', 'inline-flex');
           }
           if (clearBtn) {
             clearBtn.classList.remove('hidden');
@@ -724,19 +762,82 @@ const ProductForm = (() => {
           }
           if (clearBtn) {
             clearBtn.classList.add('hidden');
-            clearBtn.classList.remove('flex');
+            clearBtn.classList.remove('flex', 'inline-flex');
           }
         }
       }
+      const syncControlButtons = syncClearAndArrowVisibility;
 
-      // Pastikan elemen popover bersih ada tepat di bawah input (di dalam inputBox)
-      let popover = inputBox.querySelector(':scope > .clean-datalist-popover') || wrapper.querySelector(':scope > .clean-datalist-popover');
+      // Elemen popover ditempel ke document.body agar tidak terpotong oleh overflow container tabel/kartu
+      let popover = inputBox.querySelector(':scope > .clean-datalist-popover') || 
+                    wrapper.querySelector(':scope > .clean-datalist-popover') ||
+                    (input._datalistPopover && document.body.contains(input._datalistPopover) ? input._datalistPopover : null);
       if (!popover) {
         popover = document.createElement('div');
-        popover.className = 'clean-datalist-popover absolute left-0 top-full mt-1.5 min-w-[160px] max-w-[240px] w-max bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 hidden select-none';
-        inputBox.appendChild(popover);
-      } else if (popover.parentElement !== inputBox) {
-        inputBox.appendChild(popover);
+        popover.className = 'clean-datalist-popover fixed bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-[99999] hidden select-none';
+        document.body.appendChild(popover);
+      } else {
+        if (popover.parentElement !== document.body) {
+          document.body.appendChild(popover);
+        }
+      }
+      popover._boundInput = input;
+      input._datalistPopover = popover;
+
+      function closePopover() {
+        if (!popover.classList.contains('hidden')) {
+          popover.classList.add('hidden');
+        }
+      }
+
+      function positionPopover() {
+        const rect = input.getBoundingClientRect();
+        popover.style.position = 'fixed';
+        popover.style.top = (rect.bottom + 6) + 'px';
+        popover.style.zIndex = '99999';
+
+        if (isSingleOption) {
+          popover.style.left = rect.left + 'px';
+          popover.style.right = 'auto';
+          const calcW = Math.max(rect.width, 110);
+          popover.style.width = calcW + 'px';
+          popover.style.minWidth = calcW + 'px';
+          popover.style.maxWidth = '240px';
+          popover.classList.remove('callout-right');
+        } else {
+          const screenW = window.innerWidth;
+          const popoverW = 220;
+          if (rect.left + popoverW > screenW - 12) {
+            popover.style.left = 'auto';
+            popover.style.right = (screenW - rect.right) + 'px';
+            popover.classList.add('callout-right');
+          } else {
+            popover.style.left = rect.left + 'px';
+            popover.style.right = 'auto';
+            popover.classList.remove('callout-right');
+          }
+          popover.style.width = 'max-content';
+          popover.style.minWidth = '160px';
+          popover.style.maxWidth = '260px';
+        }
+      }
+
+      function openMenu() {
+        closeAllCleanDatalistPopovers(popover);
+        const val = (input.value || '').trim();
+        // Khusus 1-opsi (Max. Order 'Tanpa Batas' / Stok 'Unlimited'):
+        // HANYA tampilkan popover saran jika input masih kosong!
+        if (isSingleOption && val !== '') {
+          closePopover();
+          return;
+        }
+
+        renderItems('', true); // isExplicitOpen = true: Tampilkan seluruh daftar saran tanpa filter
+        if (popover.parentElement !== document.body) {
+          document.body.appendChild(popover);
+        }
+        popover.classList.remove('hidden');
+        positionPopover();
       }
 
       function renderItems(filterText = '', isExplicitOpen = false) {
@@ -780,6 +881,14 @@ const ProductForm = (() => {
           if (isUsedElsewhere) {
             return `
               <div class="clean-datalist-item is-disabled-used w-full text-left px-3 py-1.5 text-xs text-slate-300 select-none" data-value="${escapeSafeHtml(opt)}">
+                <span>${escapeSafeHtml(opt)}</span>
+              </div>
+            `;
+          }
+
+          if (isSingleOption) {
+            return `
+              <div class="clean-datalist-item px-2.5 py-1.5 text-xs text-center text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-center font-medium ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(opt)}">
                 <span>${escapeSafeHtml(opt)}</span>
               </div>
             `;
@@ -849,46 +958,46 @@ const ProductForm = (() => {
 
             input.dispatchEvent(new Event('input', { bubbles: true }));
             input.dispatchEvent(new Event('change', { bubbles: true }));
-            syncControlButtons();
-            popover.classList.add('hidden');
+            syncClearAndArrowVisibility();
+            closePopover();
           });
         });
 
         popover.classList.remove('hidden');
       }
 
-      function openMenu() {
-        closeAllCleanDatalistPopovers(popover);
-        renderItems('', true); // isExplicitOpen = true: Tampilkan seluruh daftar saran tanpa filter
-        try {
-          const rect = input.getBoundingClientRect();
-          const screenW = window.innerWidth;
-          if (rect.left + 240 > screenW - 12) {
-            popover.style.left = 'auto';
-            popover.style.right = '0';
-            popover.classList.add('callout-right');
-          } else {
-            popover.style.left = '0';
-            popover.style.right = 'auto';
-            popover.classList.remove('callout-right');
-          }
-        } catch (_) {}
-      }
-
       // Cegah pendaftaran listener berulang
       if (input.dataset.cleanDatalistBound === 'true') {
-        syncControlButtons();
+        syncClearAndArrowVisibility();
         return;
       }
       input.dataset.cleanDatalistBound = 'true';
 
       input.addEventListener('focus', () => {
-        openMenu();
+        if (isSingleOption) {
+          if ((input.value || '').trim() === '') {
+            openMenu();
+          } else {
+            closePopover();
+          }
+        } else {
+          openMenu();
+        }
       });
 
       input.addEventListener('click', () => {
-        if (popover.classList.contains('hidden')) {
-          openMenu();
+        if (isSingleOption) {
+          if ((input.value || '').trim() === '') {
+            if (popover.classList.contains('hidden')) {
+              openMenu();
+            }
+          } else {
+            closePopover();
+          }
+        } else {
+          if (popover.classList.contains('hidden')) {
+            openMenu();
+          }
         }
       });
 
@@ -927,13 +1036,21 @@ const ProductForm = (() => {
               }
             }
           }
+
+          const curTrimmed = (input.value || '').trim();
+          if (curTrimmed !== '') {
+            closePopover();
+          } else {
+            openMenu();
+          }
+        } else {
+          syncClearAndArrowVisibility();
+          renderItems(input.value, false);
         }
-        syncControlButtons();
-        renderItems(input.value, false);
       });
 
       input.addEventListener('change', () => {
-        syncControlButtons();
+        syncClearAndArrowVisibility();
       });
 
       if (arrow) {
@@ -953,7 +1070,7 @@ const ProductForm = (() => {
           input.dispatchEvent(new Event('input', { bubbles: true }));
           input.dispatchEvent(new Event('change', { bubbles: true }));
           input.focus();
-          syncControlButtons();
+          syncClearAndArrowVisibility();
           openMenu();
         });
       }
@@ -971,7 +1088,7 @@ const ProductForm = (() => {
 
         if (e.key === 'Escape') {
           e.preventDefault();
-          popover.classList.add('hidden');
+          closePopover();
         } else if (e.key === 'ArrowDown') {
           e.preventDefault();
           const nextIdx = activeIdx < items.length - 1 ? activeIdx + 1 : 0;
@@ -992,11 +1109,11 @@ const ProductForm = (() => {
 
       input.addEventListener('blur', () => {
         setTimeout(() => {
-          popover.classList.add('hidden');
+          closePopover();
         }, 150);
       });
 
-      syncControlButtons();
+      syncClearAndArrowVisibility();
     });
   }
 
@@ -19020,9 +19137,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (warn2) warn2.classList.add('hidden');
       }
 
-      // Toggle tombol silang (clear X) di masing-masing input slot
+      // Toggle tombol silang (clear X) & panah (▼) di masing-masing input slot
       const clearBtn1 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-1"]') || input1?.parentElement?.querySelector('.btn-clear-datalist');
       const clearBtn2 = document.querySelector('.btn-clear-custom-label[data-target="input-custom-label-2"]') || input2?.parentElement?.querySelector('.btn-clear-datalist');
+      const arrow1 = input1?.parentElement?.querySelector('.clean-datalist-arrow');
+      const arrow2 = input2?.parentElement?.querySelector('.clean-datalist-arrow');
 
       if (clearBtn1) {
         if ((input1?.value || '').trim().length > 0) {
@@ -19030,16 +19149,35 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           clearBtn1.classList.add('flex');
         } else {
           clearBtn1.classList.add('hidden');
-          clearBtn1.classList.remove('flex');
+          clearBtn1.classList.remove('flex', 'inline-flex');
         }
       }
+      if (arrow1) {
+        if ((input1?.value || '').trim().length > 0) {
+          arrow1.classList.add('hidden');
+          arrow1.classList.remove('flex', 'inline-flex');
+        } else {
+          arrow1.classList.remove('hidden');
+          arrow1.classList.add('flex');
+        }
+      }
+
       if (clearBtn2) {
         if ((input2?.value || '').trim().length > 0 && wrapper2 && !wrapper2.classList.contains('hidden')) {
           clearBtn2.classList.remove('hidden');
           clearBtn2.classList.add('flex');
         } else {
           clearBtn2.classList.add('hidden');
-          clearBtn2.classList.remove('flex');
+          clearBtn2.classList.remove('flex', 'inline-flex');
+        }
+      }
+      if (arrow2) {
+        if ((input2?.value || '').trim().length > 0) {
+          arrow2.classList.add('hidden');
+          arrow2.classList.remove('flex', 'inline-flex');
+        } else {
+          arrow2.classList.remove('hidden');
+          arrow2.classList.add('flex');
         }
       }
 
