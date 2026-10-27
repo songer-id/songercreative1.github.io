@@ -3265,18 +3265,29 @@ const ProductForm = (() => {
   }
 
   function formatVariationReactiveHeader(groupLabel, optionCount, selectedOptionName) {
+    let resolvedLabel = groupLabel;
+    if (resolvedLabel === 'tier1') resolvedLabel = getVariationLabel('tier1', 'Variasi 1');
+    else if (resolvedLabel === 'tier2' || resolvedLabel === 'main') resolvedLabel = getVariationLabel('tier2', 'Variasi 2');
+    else if (resolvedLabel === 'tier3' || resolvedLabel === 'extra_1') resolvedLabel = getVariationLabel('tier3', 'Variasi 3');
+    else if (resolvedLabel === 'tier4' || resolvedLabel === 'extra_2') resolvedLabel = getVariationLabel('tier4', 'Variasi 4');
+    else if (resolvedLabel === 'extras' || resolvedLabel === 'extra_3') resolvedLabel = getVariationLabel('extras', 'Layanan Extras');
+
     const count = typeof optionCount === 'number' ? optionCount : (parseInt(optionCount) || 0);
-    const label = String(groupLabel || 'Variasi 1').trim();
+    const label = String(resolvedLabel || 'Variasi 1').trim();
 
     // 1. Jika SUDAH ada opsi yang dipilih (selectedOptionName terisi):
-    // Tampilkan: [Judul Variasi]: <span class="font-normal text-slate-400 ml-1">[Nilai Opsi]</span>
+    // Tampilkan: [Judul Variasi]: [Opsi Terpilih]
+    // Ukuran teks WAJIB SAMA PERSIS (text-[11px] leading-tight) dengan saat sebelum dipilih!
+    // [Judul Variasi]: text-[11px] font-medium text-slate-700
+    // [Opsi Terpilih]: text-[11px] font-normal text-slate-400 ml-1
     if (selectedOptionName && String(selectedOptionName).trim() !== '' && String(selectedOptionName).trim().toLowerCase() !== 'produk standar') {
-      return `${escapeHtml(label)}: <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(selectedOptionName).trim())}</span>`;
+      return `<span class="text-[11px] font-medium text-slate-700">${escapeHtml(label)}:</span><span class="text-[11px] font-normal text-slate-400 ml-1">${escapeHtml(String(selectedOptionName).trim())}</span>`;
     }
 
     // 2. Jika BELUM ada opsi yang dipilih (atau opsi masih kosong):
-    // Tampilkan: Tersedia ([Jumlah Opsi]) [Judul Variasi]
-    return `Tersedia (${count}) ${escapeHtml(label)}`;
+    // Tampilkan: Tersedia [(Jumlah Opsi)] [Judul Variasi]
+    // Ukuran teks kecil (text-[11px] leading-tight) dan warna abu-abu (text-slate-400 font-normal)
+    return `<span class="text-[11px] font-normal text-slate-400">Tersedia (${count}) ${escapeHtml(label)}</span>`;
   }
 
   function getCustomDimensionLabel() {
@@ -4822,11 +4833,90 @@ const ProductForm = (() => {
     `;
   }
 
+  // Helper Ringkasan Keterangan Opsi Terpilih di Drawer Shopee-Style
+  function buildDrawerSelectedOptionsDescriptionsHtml() {
+    const lines = [];
+
+    // Variasi 1
+    if (primaryState.has_variants && previewTestState.selectedTier1Id) {
+      const mat = (materialsState || []).find(m => m.id === previewTestState.selectedTier1Id);
+      if (mat && mat.description && String(mat.description).trim() !== '') {
+        const title = getVariationLabel('tier1', 'Variasi 1');
+        lines.push(`
+          <div class="text-[11px] leading-snug text-slate-500">
+            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
+            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(mat.description).trim())}</span>
+          </div>
+        `);
+      }
+    }
+
+    // Variasi 2
+    if (primaryState.has_variation_2 && previewTestState.selectedTier2Id) {
+      const v2 = (finishingsState.main || []).find((f, idx) => (f.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
+      if (v2 && v2.description && String(v2.description).trim() !== '') {
+        const title = getVariationLabel('tier2', 'Variasi 2');
+        lines.push(`
+          <div class="text-[11px] leading-snug text-slate-500">
+            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
+            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(v2.description).trim())}</span>
+          </div>
+        `);
+      }
+    }
+
+    // Variasi 3
+    if (primaryState.has_variation_3 && previewTestState.selectedTier3Id) {
+      const v3 = (finishingsState.extra_1 || []).find((f, idx) => (f.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
+      if (v3 && v3.description && String(v3.description).trim() !== '') {
+        const title = getVariationLabel('tier3', 'Variasi 3');
+        lines.push(`
+          <div class="text-[11px] leading-snug text-slate-500">
+            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
+            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(v3.description).trim())}</span>
+          </div>
+        `);
+      }
+    }
+
+    // Variasi 4
+    if (primaryState.has_variation_4 && previewTestState.selectedTier4Id) {
+      const v4 = (finishingsState.extra_2 || []).find((f, idx) => (f.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
+      if (v4 && v4.description && String(v4.description).trim() !== '') {
+        const title = getVariationLabel('tier4', 'Variasi 4');
+        lines.push(`
+          <div class="text-[11px] leading-snug text-slate-500">
+            <span class="font-medium text-slate-600">${escapeHtml(title)}:</span>
+            <span class="font-normal text-slate-400 ml-1">${escapeHtml(String(v4.description).trim())}</span>
+          </div>
+        `);
+      }
+    }
+
+    return lines.join('');
+  }
+
+  function updateDrawerSelectedOptionsDescriptions() {
+    const descContainers = document.querySelectorAll('#drawer-selected-options-descriptions');
+    if (!descContainers.length) return;
+    const innerHtml = buildDrawerSelectedOptionsDescriptionsHtml();
+    descContainers.forEach(container => {
+      if (innerHtml && innerHtml.trim() !== '') {
+        container.innerHTML = innerHtml;
+        container.classList.remove('hidden');
+      } else {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+      }
+    });
+  }
+
   function buildShopeeDrawerHtml(actionType) {
     const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
     const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
     const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
+    const drawerDescriptionsHtml = buildDrawerSelectedOptionsDescriptionsHtml();
 
     const extraLabel = getVariationLabel('extras', 'Layanan Extras');
     const defaultNoneName = `Tanpa ${extraLabel}`;
@@ -5244,8 +5334,13 @@ const ProductForm = (() => {
             <div class="p-3 border-b border-slate-100 space-y-3">
               ${customDimensionDrawerHtml}
               ${primaryState.has_extra_service ? extrasAccordionHtml : ''}
+              <div id="drawer-selected-options-descriptions" class="space-y-1 pt-1.5 border-t border-slate-100 ${drawerDescriptionsHtml ? '' : 'hidden'}">
+                ${drawerDescriptionsHtml}
+              </div>
             </div>
-          ` : ''}
+          ` : `
+            <div id="drawer-selected-options-descriptions" class="hidden"></div>
+          `}
 
           <div class="p-3 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
@@ -5385,6 +5480,11 @@ const ProductForm = (() => {
             ${primaryState.has_extra_service ? `
               ${extrasAccordionHtml}
             ` : ''}
+
+            <!-- Ringkasan Keterangan Opsi Terpilih di Dalam Drawer (Tepat di Atas Garis Jumlah Pesanan / Footer) -->
+            <div id="drawer-selected-options-descriptions" class="space-y-1 pt-1.5 border-t border-slate-100 ${drawerDescriptionsHtml ? '' : 'hidden'}">
+              ${drawerDescriptionsHtml}
+            </div>
           </div>
 
           <div class="p-3 pt-2 border-t border-slate-100 flex items-center justify-between shrink-0 bg-white">
@@ -6012,6 +6112,8 @@ const ProductForm = (() => {
         el.textContent = `Rp${Math.round(grandTotalPrice).toLocaleString('id-ID')}`;
       }
     });
+
+    updateDrawerSelectedOptionsDescriptions();
   }
 
   function bindMiniPdpInteractiveEvents() {
@@ -7883,7 +7985,7 @@ const ProductForm = (() => {
                 <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
                 ${primaryState.has_variants ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier1', 'Variasi 1'), validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
+                    <div class="mb-1.5 flex items-center leading-tight">${formatVariationReactiveHeader(getVariationLabel('tier1', 'Variasi 1'), validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
                     ${validMaterials.length > 0 ? (
                       hasAnyTier1Image ? `
                         <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
@@ -7919,6 +8021,11 @@ const ProductForm = (() => {
                         </div>
                       `
                     ) : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))} belum diisi</span>`}
+                    ${(selectedMat && selectedMat.description && String(selectedMat.description).trim() !== '') ? `
+                      <p class="text-[10px] text-slate-400 font-normal leading-relaxed mt-1.5 preview-tier1-desc">
+                        ${escapeHtml(String(selectedMat.description).trim())}
+                      </p>
+                    ` : ''}
                   </div>
                 ` : ''}
 
@@ -7926,15 +8033,15 @@ const ProductForm = (() => {
                 ${primaryState.has_variation_2 ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
                     ${hasExtraTiers ? `
-                      <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
-                        <div class="truncate">
+                      <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-[11px] text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
+                        <div class="truncate flex items-center leading-tight">
                           ${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}
-                          <span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>
+                          <span class="font-normal text-slate-400 text-[11px] ml-1"> (${summaryParts.join(', ')})</span>
                         </div>
                         <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                       </div>
                     ` : `
-                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}</div>
+                      <div class="mb-1.5 flex items-center leading-tight">${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}</div>
                     `}
                     <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap">
                       ${validV2.length > 0 ? validV2.map((f, idx) => {
@@ -7947,14 +8054,19 @@ const ProductForm = (() => {
                         `;
                       }).join('') : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))} belum diisi</span>`}
                     </div>
+                    ${(selectedV2 && selectedV2.description && String(selectedV2.description).trim() !== '') ? `
+                      <p class="text-[10px] text-slate-400 font-normal leading-relaxed mt-1.5 preview-tier2-desc">
+                        ${escapeHtml(String(selectedV2.description).trim())}
+                      </p>
+                    ` : ''}
                   </div>
                 ` : (hasExtraTiers ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
-                      <div class="truncate">
+                    <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-[11px] text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
+                      <div class="truncate flex items-center leading-tight">
                         ${(!primaryState.has_variants && !primaryState.has_variation_2 && hasExtras && !hasTier3 && !hasTier4 && !hasCustomDim)
-                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader(getVariationLabel('extras', 'Layanan Extras'), validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)}</span>`
-                          : `<span class="font-bold text-slate-800">Pilihan Variasi</span><span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>`
+                          ? formatVariationReactiveHeader(getVariationLabel('extras', 'Layanan Extras'), validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)
+                          : `<span class="text-[11px] font-medium text-slate-700">Pilihan Variasi:</span><span class="font-normal text-slate-400 text-[11px] ml-1"> (${summaryParts.join(', ')})</span>`
                         }
                       </div>
                       <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>

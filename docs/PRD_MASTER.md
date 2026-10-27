@@ -576,6 +576,19 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Memastikan baris "Dikirim Dari" selalu berada di urutan paling akhir (posisi terbawah sebelum tombol aksi) pada Drawer Spesifikasi Produk Shopee-Style (`buildProductSpecDrawerHtml`) dan Tab Spesifikasi PDP (`renderTabs`).
       - Mengumpulkan baris wajib dan kondisional (*Stok, Merek, Jenis Garansi, Masa Garansi, Produk Custom, Kondisi Produk, Pre-Order, Min. Pembelian, Harga Grosir, Kelipatan Pembelian, Asal Produk, SKU Induk, dan Custom Specs*), memotong maksimal 9 baris pertama, lalu menyematkan "Dikirim Dari" sebagai baris penutup dengan total 5 hingga 10 baris terstruktur rapi.
     - **Pembaruan Cache Version `admin.html`**: Menaikkan cache buster script dan stylesheet admin menjadi `?v=8.1`.
+  - [x] **Penyempurnaan Form Produk Bagian 17: Penyeragaman Ukuran & Warna Teks Header Variasi serta Keterangan Opsi Terpilih di Luar & Dalam Drawer (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Penyeragaman Ukuran & Warna Header Variasi Luar Drawer (`formatVariationReactiveHeader` & Mini PDP)**:
+      - Menyeragamkan ukuran font header variasi saat belum ada opsi yang dipilih (`Tersedia (N) [Judul Variasi]`) maupun saat sudah ada opsi yang dipilih (`[Judul Variasi]: [Opsi Terpilih]`) menjadi 100% identik kecil dan rapi (`text-[11px] leading-tight`).
+      - Membedakan status seleksi murni lewat warna & ketebalan teks: sebelum dipilih berwarna abu-abu tipis (`text-slate-400 font-normal`), dan setelah dipilih judul variasi menggunakan `font-medium text-slate-700` didampingi nama opsi `font-normal text-slate-400 ml-1`.
+      - Membersihkan seluruh wrapper kontainer Mini PDP agar bebas dari kelas pemaksa font-size besar (`text-xs` / `font-bold`).
+    - **Tampilan Teks Kecil Keterangan Opsi di Luar Drawer (Mini PDP)**:
+      - Menampilkan teks keterangan opsi (`text-[10px] text-slate-400 font-normal leading-relaxed mt-1.5`) tepat di bawah deretan chip Variasi 1 dan Variasi 2 ketika opsi yang sedang aktif memiliki keterangan (`description`).
+      - Menyembunyikan elemen keterangan secara otomatis jika belum ada opsi yang dipilih atau opsi terpilih tidak memiliki keterangan.
+      - Ter-update secara reaktif dan instan baik saat seller mengklik opsi di luar drawer maupun saat mengetik perubahan di input form admin.
+    - **Ringkasan Keterangan Opsi Terpilih di Dalam Drawer Shopee-Style**:
+      - Menyematkan wadah khusus `#drawer-selected-options-descriptions` di bagian paling bawah area variasi drawer persis di atas garis pemisah Jumlah Pesanan / Footer.
+      - Merangkum keterangan opsi aktif dari Variasi 1 s.d. Variasi 4 dengan format `[Judul Variasi]: [Keterangan Opsi]` (`text-[11px] leading-snug text-slate-500`).
+      - Menyembunyikan kontainer secara otomatis (`hidden`) jika tidak ada variasi aktif yang memiliki keterangan, dan memperbarui isinya secara real-time pada setiap perubahan pilihan variasi (Chip, Accordion, maupun Shadcn Popover Select).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
