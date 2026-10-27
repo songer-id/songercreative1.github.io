@@ -23,23 +23,44 @@ D:\pos-songer-creative\
 ├── .env.example                      # Template konfigurasi environment (PostgreSQL, Port, WA, JWT)
 ├── package.json                      # Konfigurasi dependensi dan skrip Prisma ORM
 ├── README.md                         # Dokumentasi arsitektur dan panduan proyek
+├── bump-version.js                   # Script otomatisasi global cache busting aset HTML (timestamp WIB)
 ├── Buka-Aplikasi.bat                 # Peluncur 1-klik aplikasi langsung ke browser
-├── index.html                        # Single Page Application terpadu (Buyer Storefront + Shopee Seller Center)
+├── Buka-Preview-HP.bat               # Launcher preview lokal jaringan Wi-Fi
+├── serve.ps1                         # Server HTTP PowerShell ringan untuk pengujian mobile
+├── index.html                        # Storefront utama pembeli (Katalog, Header, Banner, Floating Kupon)
+├── admin.html                        # Shell SPA Seller Center & POS Kasir (Router Hash, Kategori, Stok, Produk)
+├── product.html                      # Dedicated Product Detail Page (PDP), kalkulator harga PxL, galeri foto, ulasan
+├── settings.html                     # Pengaturan Toko & Identitas Brand (Dual-Color Theme, Logo, Printer Thermal)
+├── theme-editor.html                 # Theme Studio Customizer (Shopify-Style Visual Theme Editor)
 ├── schema.sql                        # DDL Relasional PostgreSQL / Supabase langsung
+├── superadmin/
+│   ├── superadmin.html               # Panel Superadmin Multi-Tenant SaaS independen
+│   ├── superadmin.js                 # Logika CRUD Tenant, paket langganan, feature matrix
+│   └── superadmin.css                # Styling tema cockpit superadmin
 ├── assets/
 │   └── images/
 │       ├── songer-logo.png           # Logo bulat resmi (Favicon tab browser)
 │       └── logo-songer-creative.png  # Logo horizontal resmi (Header navbar)
 ├── css/
-│   └── style.css                     # Design tokens (#33b589) & styling
+│   ├── admin.css                     # CSS utama Admin, sticky subnav, radius tegas, mobile layout
+│   ├── storefront.css                # Styling pendukung katalog etalase toko
+│   ├── style.css                     # Bridge variabel warna dual-color branding
+│   └── theme-editor.css              # Styling antarmuka kustomizer tema
 ├── js/
-│   ├── app.js                        # Router navigasi, branding sync & toast notification
+│   ├── utils.js                      # Pustaka utilitas terpusat (formatIDR, escapeHtml, hexToRgba, generateSlug)
+│   ├── db.js                         # Database engine lokal client-side (100% localStorage terenkapsulasi)
+│   ├── admin-app.js                  # Controller utama Admin SPA, POS kasir, pesanan, dashboard, CRM
 │   ├── buyer-store.js                # Etalase pembeli: 3 card variants, kalkulator PxL, review & keranjang
 │   ├── category-manager.js           # Seller Center: Kategori & Sub-Kategori CRUD + konfigurasi invoice
-│   ├── db.js                         # Database engine lokal, ORM, label faktur & cascade delete logic
-│   ├── product-form.js               # Seller Center: Formulir produk dinamis (Poin A-N)
+│   ├── product-form.js               # Engine form produk 2-step, live preview, kompresi foto WebP
 │   ├── product-list.js               # Seller Center: Tabel manajemen produk Shopee style
-│   └── review-manager.js             # Seller Center: Manajemen & moderasi ulasan pembeli
+│   ├── promo-manager.js              # Pengelolaan banner promo, kupon diskon, voucher
+│   ├── review-manager.js             # Seller Center: Manajemen & moderasi ulasan pembeli
+│   ├── customer-manager.js           # CRM pelanggan, riwayat transaksi kasir/web
+│   ├── pricing-calculator.js         # Engine kalkulasi harga (PxL M², Kg, Lt, KombStep, KombF)
+│   ├── pdp.js                        # Interaksi PDP, kalkulasi live, integrasi cart & checkout
+│   ├── settings.js                   # Sinkronisasi form pengaturan toko & printer
+│   └── theme-editor.js               # Live theme preview & generator variabel CSS
 ├── prisma/
 │   ├── schema.prisma                 # Skema Multi-Tenant Prisma ORM (PostgreSQL & Supabase ready)
 │   └── seed.js                       # Skrip inisialisasi awal Tenant Songer Creative & data default
@@ -57,6 +78,7 @@ D:\pos-songer-creative\
 │   ├── models/                       # Data Validation
 │   └── database/                     # Migrations & Database Pool
 └── docs/                             # Spesifikasi sistem & API contract
+    ├── PRD_MASTER.md                 # Single Source of Truth (SSOT) & Technical Compass Proyek
     ├── PRODUCT_FORM_ARCHITECTURE.md  # Arsitektur teknis formulir produk Shopee-style
     └── ROADMAP.md                    # Roadmap pengembangan Laravel 12 & React 18 / Inertia v2
 ```
@@ -236,3 +258,98 @@ Cakupan utama Roadmap:
 - **Skenario Edit Produk (`isEditMode === true`):**
   - Jika tidak ada perubahan nilai dari data awal: Langsung kembali ke menu Daftar Produk tanpa modal.
   - Jika terdapat perubahan nilai: Memunculkan modal popup konfirmasi *"Batalkan Perubahan Produk?"* dengan deskripsi *"Perubahan pada produk ini tidak akan disimpan."*
+
+---
+
+## ⚡ 8. Sistem Otomatisasi Cache Busting Global (`bump-version.js`) & Anti-Stale HTML Cache
+
+### A. Masalah Cara Lama (Versi Manual & Versi Aset Belang-Belang)
+Sebelum adanya sistem otomatisasi ini, setiap kali developer melakukan perubahan pada berkas JavaScript atau CSS, versi cache query string (`?v=...`) harus diedit satu per satu secara manual di dalam berkas HTML:
+1. **Rawan Human Error & Versi Belang-Belang:** Sering kali file `admin.html` sudah dinaikkan ke `?v=8.1`, namun file skrip pendukung di baris bawahnya tertinggal di `?v=3.9`, atau file etalase pembeli (`index.html` dan `product.html`) lupa diperbarui sehingga pembeli tetap memuat kode usang dari cache browser.
+2. **Tidak Efisien & Membuang Waktu:** Memeriksa dan mengedit belasan hingga puluhan baris tag `<link>` dan `<script>` di berbagai file HTML sangat memakan waktu dan mengaburkan riwayat `git diff`.
+3. **Cache Stale pada Client/Kasir:** Jika browser pengguna atau perangkat kasir menyimpan berkas HTML lama di memori cache lokal, browser tidak akan pernah meminta aset CSS/JS versi terbaru ke server GitHub Pages.
+
+---
+
+### B. Solusi & Cara Kerja Engine `bump-version.js`
+Skrip [bump-version.js](bump-version.js) adalah automator berbasis Node.js yang menyeragamkan seluruh referensi aset statis lokal di seluruh file HTML proyek secara instan hanya dalam satu perintah:
+
+1. **Perhitungan Waktu Lokal Indonesia (WIB - UTC+7):**
+   - Secara otomatis menghitung timestamp aktual zona waktu WIB dalam format ringkas `YYYYMMDDHHmm` (contoh: `202610280024`).
+   - Fleksibel: Juga mendukung penentuan versi manual jika diberikan argumen CLI (contoh: `node bump-version.js 8.2`).
+2. **Penelusuran Seluruh File HTML Aktif:**
+   - Secara otomatis mendeteksi seluruh file HTML di root proyek (`admin.html`, `index.html`, `product.html`, `settings.html`, `theme-editor.html`) serta subdirektori aktif (`superadmin/superadmin.html`).
+3. **Penggantian Serempak via Regular Expression Handal:**
+   - Menggunakan regex global:
+     ```javascript
+     const versionRegex = /(\.(?:css|js)\?v=)[0-9a-zA-Z._-]+/g;
+     content.replace(versionRegex, `$1${version}`);
+     ```
+   - Menjamin seluruh aset lokal baik di folder `css/`, `js/`, maupun `src/lib/...` (seperti `src/lib/invoice/invoice-generator.js?v=...`) diperbarui ke versi yang sama persis tanpa ada satu pun yang tertinggal.
+4. **Log Terminal Informatif:**
+   - Menampilkan ringkasan visual per berkas HTML beserta jumlah aset yang diperbarui dan total keseluruhan aset yang tersinkronisasi.
+
+---
+
+### C. Cara Menjalankan Perintah Terminal
+Cukup jalankan satu perintah berikut di terminal sebelum melakukan `git add .`:
+```bash
+# Otomatis menggunakan timestamp WIB (YYYYMMDDHHmm):
+node bump-version.js
+
+# Atau menggunakan versi kustom jika diperlukan:
+node bump-version.js 8.2
+```
+
+Contoh output eksekusi:
+```text
+==================================================================
+ 🚀 BUMP-VERSION: Global Cache Busting Automator (Songer Creative)
+ 🏷️  Target Versi : ?v=202610280024
+==================================================================
+ [✓] admin.html                   : 13 aset diseragamkan -> ?v=202610280024
+ [✓] index.html                   :  6 aset diseragamkan -> ?v=202610280024
+ [✓] product.html                 :  5 aset diseragamkan -> ?v=202610280024
+ [✓] settings.html                :  3 aset diseragamkan -> ?v=202610280024
+ [✓] theme-editor.html            :  5 aset diseragamkan -> ?v=202610280024
+ [✓] superadmin\superadmin.html   :  3 aset diseragamkan -> ?v=202610280024
+==================================================================
+ ✨ Selesai! 6 file HTML diperbarui (35 aset seragam ke v=202610280024).
+==================================================================
+```
+
+---
+
+### D. Cakupan 6 File HTML & 35 Aset yang Otomatis Tersinkronisasi
+
+| File HTML Induk | Jumlah Aset | Daftar Aset yang Disinkronkan |
+| :--- | :---: | :--- |
+| `admin.html` | 13 Aset | `admin.css`, `theme-editor.css`, `utils.js`, `invoice-generator.js`, `db.js`, `pricing-calculator.js`, `category-manager.js`, `promo-manager.js`, `review-manager.js`, `product-form.js`, `product-list.js`, `customer-manager.js`, `admin-app.js` |
+| `index.html` | 6 Aset | `storefront.css`, `style.css`, `utils.js`, `db.js`, `pricing-calculator.js`, `buyer-store.js` |
+| `product.html` | 5 Aset | `style.css`, `utils.js`, `db.js`, `pricing-calculator.js`, `pdp.js` |
+| `settings.html` | 3 Aset | `utils.js`, `db.js`, `settings.js` |
+| `theme-editor.html` | 5 Aset | `style.css`, `theme-editor.css`, `utils.js`, `db.js`, `theme-editor.js` |
+| `superadmin/superadmin.html` | 3 Aset | `superadmin.css`, `../js/db.js`, `superadmin.js` |
+| **TOTAL** | **35 Aset** | **100% Seragam & Terkunci ke Versi Terbaru** |
+
+---
+
+### E. Fungsi 3 Baris Meta Tag `No-Cache` di `<head>`
+Untuk melengkapi mekanisme cache busting query string pada aset CSS/JS, seluruh berkas HTML induk telah dilengkapi dengan 3 baris meta header anti-stale cache:
+```html
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+```
+
+**Alasan Teknis Mengapa Ini Krusial:**
+1. **`Cache-Control: no-cache, no-store, must-revalidate` (HTTP 1.1):**
+   - Memaksa browser dan server perantara (proxy/CDN) untuk tidak menyimpan salinan HTML secara permanen di disk/memori cache.
+   - Setiap kali halaman dibuka, browser **wajib mengirim validasi** ke GitHub Pages untuk memastikan berkas HTML yang ditampilkan adalah versi paling mutakhir.
+2. **`Pragma: no-cache` (HTTP 1.0 Backward Compatibility):**
+   - Menjamin perangkat kasir lawas, browser tablet lama, atau browser WebView embedded Android/iOS yang masih mengandalkan spesifikasi protokol HTTP 1.0 tetap memperlakukan berkas HTML sebagai non-cacheable.
+3. **`Expires: 0`:**
+   - Menyatakan bahwa masa berlaku berkas HTML langsung kedaluwarsa pada detik pertama berkas tersebut diterima, mencegah browser memuat halaman dari memori cache saat tombol *Back / Forward* ditekan.
+4. **Sinergi Sempurna:**
+   - HTML induk **selalu segar (fresh)** dari server $\rightarrow$ HTML memuat URL aset dengan parameter versi baru `?v=YYYYMMDDHHmm` $\rightarrow$ Browser langsung mengunduh CSS dan JS terbaru tanpa tertahan cache lama sama sekali.
+

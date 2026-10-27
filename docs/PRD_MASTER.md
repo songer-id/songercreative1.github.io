@@ -3,7 +3,7 @@
 **Single Source of Truth (SSOT) & Technical Compass**  
 **Dokumen Acuan**: `docs/PRD_MASTER.md`  
 **Status Proyek**: Aktif - Tahap Pengembangan Menyeluruh  
-**Terakhir Diperbarui**: 27 Oktober 2026  
+**Terakhir Diperbarui**: 28 Oktober 2026  
 
 ---
 
@@ -16,6 +16,7 @@
 > 5. **OTOMATISASI WARNA DINAMIS**: Semua komponen interaktif (tombol CTA, badge aktif, focus ring, radio/checkbox tercentang, subnavbar aktif) **WAJIB** terikat pada CSS Variables (`--color-primary`, `--color-primary-hover`, `--color-primary-subtle`, `--color-secondary`). Dilarang memakai class Tailwind warna statis seperti `emerald-*` mentah pada elemen interaktif brand.
 > 6. **ANTI-DUPLIKASI**: Dilarang membuat fungsi, state, atau event listener ganda; satukan dan manfaatkan modul inti yang telah terpasang.
 > 7. **STANDAR BAHASA INDONESIA BAKU & RAMAH PENGGUNA AWAM (SAAS UX WRITING)**: Seluruh teks antarmuka (label input, judul menu, tombol, placeholder, tooltip, pesan error, hingga notifikasi toast) **WAJIB** menggunakan Bahasa Indonesia yang baku, jelas, sopan, dan langsung mudah dipahami oleh pengguna awam (pemilik toko UMKM, kasir, maupun pembeli baru). Dilarang keras menampilkan jargon koding/teknis asing yang membingungkan (*payload, callback, slug, threshold, tier, mutasi state*) pada antarmuka pengguna; gunakan padanan praktis (contoh: *"Batas Minimal Pesanan"*, *"Tautan Singkat Toko"*, *"Uang Muka (DP)"*, *"Simpan Pengaturan"*).
+> 8. **OTOMATISASI CACHE BUSTING GLOBAL (`node bump-version.js`)**: DILARANG mengedit angka query string `?v=...` secara manual satu per satu di dalam file `.html`. Setiap kali selesai memodifikasi file `.js` atau `.css`, developer/agent **WAJIB** menjalankan perintah `node bump-version.js` sebelum `git add .` agar seluruh 35+ aset di 6 file HTML (`admin.html`, `index.html`, `product.html`, `settings.html`, `theme-editor.html`, `superadmin/superadmin.html`) otomatis diperbarui serentak ke versi timestamp WIB terbaru.
 
 ---
 
