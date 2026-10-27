@@ -886,8 +886,7 @@ input[type="radio"]:active {
   }
 
   #step-pane-1,
-  #step2-cards-container,
-  #step2-content-wrapper {
+  #step2-cards-container {
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     width: 100% !important;
@@ -908,8 +907,7 @@ input[type="radio"]:active {
   }
 
   #step-pane-1,
-  #step2-cards-container,
-  #step2-content-wrapper {
+  #step2-cards-container {
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     width: 100% !important;
@@ -2098,8 +2096,7 @@ input::-webkit-calendar-picker-indicator {
   }
 
   #step-pane-1,
-  #step2-cards-container,
-  #step2-content-wrapper {
+  #step2-cards-container {
     padding-left: 0.375rem !important; /* px-1.5 tipis */
     padding-right: 0.375rem !important; /* px-1.5 tipis */
     padding-top: 0 !important;
@@ -3126,9 +3123,16 @@ button:focus-visible {
    PENYELARASAN LEBAR KARTU STEP 1 & STEP 2 (IDENTIK 100%)
    SERTA JARAK SERAGAM SUBNAV KE SECTION (12px) & ANTAR-SECTION (12px)
    ========================================================================== */
-#step-pane-1,
-#step2-cards-container,
 #step2-content-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#step-pane-1,
+#step2-cards-container {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
@@ -3140,8 +3144,7 @@ button:focus-visible {
 
 @media (max-width: 639px) {
   #step-pane-1,
-  #step2-cards-container,
-  #step2-content-wrapper {
+  #step2-cards-container {
     padding-left: 0.375rem !important; /* px-1.5 tipis */
     padding-right: 0.375rem !important; /* px-1.5 tipis */
     padding-top: 0 !important;

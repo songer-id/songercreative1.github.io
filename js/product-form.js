@@ -8813,7 +8813,7 @@ const ProductForm = (() => {
         ${renderFormErrorBannerHtml()}
 
         <!-- CARD 1: INFORMASI PRODUK (SELALU TERBUKA) -->
-        <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step2-section-card w-full" id="card-step2-info">
+        <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-5 sm:space-y-6 step2-section-card w-full" id="card-step2-info">
           <div class="flex items-center justify-between pb-1">
             <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Informasi Produk</h2>
           </div>
@@ -9016,25 +9016,39 @@ const ProductForm = (() => {
                 </div>
                 
               </div>
-                
-              </div>
 
-              
+              <!-- Pembatas 1: Antara Minimal / Maksimal Jumlah Pembelian dan Bagian Harga Grosir -->
+              <hr class="border-t border-slate-100 my-4" />
 
               <!-- Harga Grosir -->
-              <div class="space-y-3">
-                <div class="flex items-center justify-between pb-1  flex-wrap gap-2">
+              <div class="space-y-3" id="section-wholesale">
+                <!-- Tombol Aksi [+ Harga Grosir] & Keterangan di Bawahnya (Tampil saat Belum Aktif) -->
+                <div id="wholesale-action-container" class="${primaryState.has_wholesale ? 'hidden' : 'flex'} flex-col items-start gap-1">
+                  <button 
+                    type="button" 
+                    id="btn-toggle-wholesale" 
+                    class="px-3.5 py-1.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer hover:opacity-90"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Harga Grosir</span>
+                  </button>
+                  <span class="text-xs text-slate-400">Atur harga satuan lebih murah untuk pesanan bertingkat</span>
+                </div>
+
+                <!-- Header Aktif Harga Grosir dengan Tombol Silang (✕) di Sisi Kanan (Tampil saat Aktif) -->
+                <div id="wholesale-active-header" class="${primaryState.has_wholesale ? 'flex' : 'hidden'} items-center justify-between gap-2 pb-1">
                   <div class="flex items-center gap-2">
-                    <button 
-                      type="button" 
-                      id="btn-toggle-wholesale" 
-                      class="px-3.5 py-1.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-                    >
-                      <i class="bi ${primaryState.has_wholesale ? 'bi-check2' : 'bi-plus-lg'}"></i>
-                      <span>${primaryState.has_wholesale ? 'Harga Grosir Aktif' : 'Harga Grosir'}</span>
-                    </button>
+                    <span class="text-xs font-bold text-slate-800">Harga Grosir</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold text-[var(--color-primary)] bg-[var(--color-primary-subtle)]">Aktif</span>
                   </div>
-                  <span class="text-[11px] text-slate-400">Atur harga satuan lebih murah untuk pesanan bertingkat</span>
+                  <button 
+                    type="button" 
+                    id="btn-close-wholesale" 
+                    class="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer ml-auto flex items-center justify-center text-xs font-bold" 
+                    title="Nonaktifkan Harga Grosir"
+                  >
+                    <i class="bi bi-x-lg text-sm"></i>
+                  </button>
                 </div>
 
                 <div id="wholesale-table-wrapper" class="${primaryState.has_wholesale ? 'block' : 'hidden'} pt-1 space-y-3">
@@ -9055,22 +9069,38 @@ const ProductForm = (() => {
                 </div>
               </div>
 
-              
+              <!-- Pembatas 2: Antara Bagian Harga Grosir dan Bagian Kelipatan Pesanan -->
+              <hr class="border-t border-slate-100 my-4" />
 
               <!-- Kelipatan Pesanan -->
-              <div class="space-y-3">
-                <div class="flex items-center justify-between flex-wrap gap-2 pb-1 ">
+              <div class="space-y-3" id="section-order-multiple">
+                <!-- Tombol Aksi [+ Kelipatan Pesanan] & Keterangan di Bawahnya (Tampil saat Belum Aktif) -->
+                <div id="order-multiple-action-container" class="${primaryState.has_order_multiple ? 'hidden' : 'flex'} flex-col items-start gap-1">
+                  <button 
+                    type="button" 
+                    id="btn-toggle-order-multiple" 
+                    class="px-3.5 py-1.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer hover:opacity-90"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Kelipatan Pesanan</span>
+                  </button>
+                  <span class="text-xs text-slate-400">Wajib kelipatan kuantitas (misal kelipatan 50 pcs)</span>
+                </div>
+
+                <!-- Header Aktif Kelipatan Pesanan dengan Tombol Silang (✕) di Sisi Kanan (Tampil saat Aktif) -->
+                <div id="order-multiple-active-header" class="${primaryState.has_order_multiple ? 'flex' : 'hidden'} items-center justify-between gap-2 pb-1">
                   <div class="flex items-center gap-2">
-                    <button 
-                      type="button" 
-                      id="btn-toggle-order-multiple" 
-                      class="px-3.5 py-1.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-                    >
-                      <i class="bi ${primaryState.has_order_multiple ? 'bi-check2' : 'bi-plus-lg'}"></i>
-                      <span>${primaryState.has_order_multiple ? 'Kelipatan Pesanan Aktif' : 'Kelipatan Pesanan'}</span>
-                    </button>
+                    <span class="text-xs font-bold text-slate-800">Kelipatan Pesanan</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold text-[var(--color-primary)] bg-[var(--color-primary-subtle)]">Aktif</span>
                   </div>
-                  <span class="text-[11px] text-slate-400">Wajib kelipatan kuantitas (misal kelipatan 50 pcs)</span>
+                  <button 
+                    type="button" 
+                    id="btn-close-order-multiple" 
+                    class="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer ml-auto flex items-center justify-center text-xs font-bold" 
+                    title="Nonaktifkan Kelipatan Pesanan"
+                  >
+                    <i class="bi bi-x-lg text-sm"></i>
+                  </button>
                 </div>
 
                 <div id="order-multiple-wrapper" class="${primaryState.has_order_multiple ? 'block' : 'hidden'} pt-1 space-y-3">
@@ -12941,14 +12971,14 @@ const ProductForm = (() => {
                 id="modal-wholesale-normal-min" 
                 min="${primaryState.min_order || 1}" 
                 value="${minQty}" 
-                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-emerald-500" 
+                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)]" 
               />
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="block text-[11px] font-bold text-slate-700">Max. Order</label>
                 <label class="inline-flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer">
-                  <input type="checkbox" id="chk-wholesale-no-max" ${hasNoMax ? 'checked' : ''} class="accent-emerald-600" />
+                  <input type="checkbox" id="chk-wholesale-no-max" ${hasNoMax ? 'checked' : ''} class="accent-[var(--color-primary)]" />
                   <span>Tanpa Max</span>
                 </label>
               </div>
@@ -12959,7 +12989,7 @@ const ProductForm = (() => {
                 value="${maxQty}" 
                 placeholder="Tanpa Max" 
                 ${hasNoMax ? 'disabled' : ''} 
-                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-emerald-500 ${hasNoMax ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" 
+                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)] ${hasNoMax ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" 
               />
             </div>
             <div>
@@ -12970,13 +13000,13 @@ const ProductForm = (() => {
                 min="0" 
                 value="${discount}" 
                 placeholder="Cth: 500" 
-                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-emerald-700 bg-white outline-none focus:border-emerald-500" 
+                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]" 
               />
             </div>
           </div>
 
           <!-- Teks Keterangan Otomatis di Bawah Tabel -->
-          <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 leading-relaxed font-normal" id="wholesale-normal-note">
+          <div class="p-2.5 rounded-lg bg-[var(--color-primary-subtle)] border border-[var(--color-primary)]/20 text-xs text-slate-800 leading-relaxed font-normal" id="wholesale-normal-note">
             Setiap pembelian <b>${minQty}</b> hingga <b>${hasNoMax ? 'seterusnya (tanpa batas)' : (maxQty || minQty)}</b> maka mendapatkan potongan <b>Rp${(discount || 0).toLocaleString('id-ID')}</b> per pcs.
           </div>
         </div>
@@ -13016,7 +13046,7 @@ const ProductForm = (() => {
                       type="number" 
                       data-field="min_qty" 
                       value="${t.min_qty}" 
-                      ${tIdx > 0 ? 'readonly class="w-full px-2 py-1 rounded border border-slate-200 text-xs font-bold bg-slate-100 text-slate-500 cursor-not-allowed"' : 'class="w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-emerald-500"'} 
+                      ${tIdx > 0 ? 'readonly class="w-full px-2 py-1 rounded border border-slate-200 text-xs font-bold bg-slate-100 text-slate-500 cursor-not-allowed"' : 'class="w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-[var(--color-primary)]"'} 
                     />
                   </td>
                   <td class="p-2.5">
@@ -13025,7 +13055,7 @@ const ProductForm = (() => {
                       data-field="max_qty" 
                       value="${t.max_qty || ''}" 
                       placeholder="Cth: 100" 
-                      class="tiered-max-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-emerald-500" 
+                      class="tiered-max-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-[var(--color-primary)]" 
                     />
                   </td>
                   <td class="p-2.5">
@@ -13034,7 +13064,7 @@ const ProductForm = (() => {
                       data-field="price" 
                       value="${t.price || 0}" 
                       placeholder="Potongan Rp" 
-                      class="tiered-price-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold text-emerald-700 bg-white focus:border-emerald-500" 
+                      class="tiered-price-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white focus:border-[var(--color-primary)]" 
                     />
                   </td>
                   <td class="p-2.5 text-center">
@@ -13048,13 +13078,13 @@ const ProductForm = (() => {
           </table>
         </div>
 
-        <button type="button" id="btn-add-wholesale-tier" class="px-3 py-1.5 rounded-md border border-dashed border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+        <button type="button" id="btn-add-wholesale-tier" class="px-3 py-1.5 rounded-md border border-dashed border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
           <i class="bi bi-plus-lg"></i>
           <span>Tambah Tingkat Grosir</span>
         </button>
 
         <!-- Teks Keterangan Otomatis di Bawah Tabel -->
-        <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 leading-relaxed font-normal" id="wholesale-tiered-note">
+        <div class="p-2.5 rounded-lg bg-[var(--color-primary-subtle)] border border-[var(--color-primary)]/20 text-xs text-slate-800 leading-relaxed font-normal" id="wholesale-tiered-note">
           Pembelian diatas <b>${Math.max(0, firstMin - 1)}</b> hingga <b>${firstMax}</b> mendapatkan potongan <b>Rp${(firstDisc || 0).toLocaleString('id-ID')}</b>. (Berlaku kelipatan tingkat berikutnya untuk kuantitas di atasnya).
         </div>
       </div>
@@ -13080,12 +13110,12 @@ const ProductForm = (() => {
       <div class="space-y-4">
         <!-- Pilihan Mode: Global vs Spesifik per Varian -->
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${mode === 'all' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
-            <input type="radio" name="order_multiple_type_radio" value="all" ${mode === 'all' ? 'checked' : ''} class="accent-emerald-600" />
+          <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${mode === 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
+            <input type="radio" name="order_multiple_type_radio" value="all" ${mode === 'all' ? 'checked' : ''} class="accent-[var(--color-primary)]" />
             <span>Mode Global (Semua Varian)</span>
           </label>
-          <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${mode === 'per_variant' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
-            <input type="radio" name="order_multiple_type_radio" value="per_variant" ${mode === 'per_variant' ? 'checked' : ''} class="accent-emerald-600" />
+          <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${mode === 'per_variant' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
+            <input type="radio" name="order_multiple_type_radio" value="per_variant" ${mode === 'per_variant' ? 'checked' : ''} class="accent-[var(--color-primary)]" />
             <span>Mode Spesifik per Varian</span>
           </label>
         </div>
@@ -13102,7 +13132,7 @@ const ProductForm = (() => {
                 id="input-order-multiple-single" 
                 min="1" 
                 value="${globalVal}" 
-                class="w-32 px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-center bg-white outline-none focus:border-emerald-500" 
+                class="w-32 px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]" 
               />
               <span class="text-xs text-slate-500 font-medium">pcs per transaksi</span>
             </div>
@@ -13131,7 +13161,7 @@ const ProductForm = (() => {
                     return `
                       <tr data-variant-id="${vId}">
                         <td class="p-2.5">
-                          <select class="select-variant-multiple-id w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-medium bg-white focus:border-emerald-500 outline-none">
+                          <select class="select-variant-multiple-id w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-medium bg-white focus:border-[var(--color-primary)] outline-none">
                             ${selectableOptions.map(opt => `
                               <option value="${opt.id}" ${opt.id === vId ? 'selected' : ''}>${escapeHtml(opt.name)}</option>
                             `).join('')}
@@ -13142,7 +13172,7 @@ const ProductForm = (() => {
                             type="number" 
                             min="1" 
                             value="${val}" 
-                            class="input-variant-multiple w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white focus:border-emerald-500 outline-none" 
+                            class="input-variant-multiple w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white focus:border-[var(--color-primary)] outline-none" 
                           />
                         </td>
                         <td class="p-2.5 text-center">
@@ -13158,7 +13188,7 @@ const ProductForm = (() => {
             </div>
 
             ${configuredRows.length < availableVariants.length ? `
-              <button type="button" id="btn-add-variant-multiple-row" class="px-3 py-1.5 rounded-md border border-dashed border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+              <button type="button" id="btn-add-variant-multiple-row" class="px-3 py-1.5 rounded-md border border-dashed border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
                 <i class="bi bi-plus-lg"></i>
                 <span>Tambah Pengaturan Varian</span>
               </button>
@@ -18074,66 +18104,120 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-    // Tombol Toggle Harga Grosir (Produk Tunggal / Mode Normal)
+    // Tombol Toggle & Tutup Harga Grosir (Produk Tunggal / Mode Normal)
     const btnToggleWholesale = document.getElementById('btn-toggle-wholesale');
+    const btnCloseWholesale = document.getElementById('btn-close-wholesale');
+    const wholesaleActionContainer = document.getElementById('wholesale-action-container');
+    const wholesaleActiveHeader = document.getElementById('wholesale-active-header');
     const wholesaleWrap = document.getElementById('wholesale-table-wrapper');
-    if (btnToggleWholesale) {
-      btnToggleWholesale.onclick = () => {
-        primaryState.has_wholesale = !primaryState.has_wholesale;
-        if (primaryState.has_wholesale && (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0)) {
-          primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
-        }
-        if (wholesaleWrap) {
-          wholesaleWrap.classList.toggle('hidden', !primaryState.has_wholesale);
-          wholesaleWrap.classList.toggle('block', primaryState.has_wholesale);
-          if (primaryState.has_wholesale) {
-            wholesaleWrap.innerHTML = `
-              <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-                <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
-                  <input type="radio" name="inline_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
-                  <span>Mode Normal</span>
-                </label>
-                <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode === 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
-                  <input type="radio" name="inline_wholesale_mode" value="tiered" ${primaryState.wholesale_mode === 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
-                  <span>Mode Bertingkat</span>
-                </label>
-              </div>
-              <div id="inline-wholesale-body" class="space-y-3">
-                ${renderWholesaleTable()}
-              </div>
-            `;
-            bindInlineWholesaleEvents();
-          }
-        }
-        btnToggleWholesale.innerHTML = `
-          <i class="bi ${primaryState.has_wholesale ? 'bi-check2' : 'bi-plus-lg'}"></i>
-          <span>${primaryState.has_wholesale ? 'Harga Grosir Aktif' : 'Harga Grosir'}</span>
+
+    const activateWholesale = () => {
+      primaryState.has_wholesale = true;
+      if (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0) {
+        primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
+      }
+      if (wholesaleActionContainer) {
+        wholesaleActionContainer.classList.add('hidden');
+        wholesaleActionContainer.classList.remove('flex');
+      }
+      if (wholesaleActiveHeader) {
+        wholesaleActiveHeader.classList.remove('hidden');
+        wholesaleActiveHeader.classList.add('flex');
+      }
+      if (wholesaleWrap) {
+        wholesaleWrap.classList.remove('hidden');
+        wholesaleWrap.classList.add('block');
+        wholesaleWrap.innerHTML = `
+          <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+            <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
+              <input type="radio" name="inline_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Mode Normal</span>
+            </label>
+            <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode === 'tiered' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
+              <input type="radio" name="inline_wholesale_mode" value="tiered" ${primaryState.wholesale_mode === 'tiered' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Mode Bertingkat</span>
+            </label>
+          </div>
+          <div id="inline-wholesale-body" class="space-y-3">
+            ${renderWholesaleTable()}
+          </div>
         `;
-      };
+        bindInlineWholesaleEvents();
+      }
+    };
+
+    const deactivateWholesale = () => {
+      primaryState.has_wholesale = false;
+      if (wholesaleActiveHeader) {
+        wholesaleActiveHeader.classList.add('hidden');
+        wholesaleActiveHeader.classList.remove('flex');
+      }
+      if (wholesaleWrap) {
+        wholesaleWrap.classList.add('hidden');
+        wholesaleWrap.classList.remove('block');
+      }
+      if (wholesaleActionContainer) {
+        wholesaleActionContainer.classList.remove('hidden');
+        wholesaleActionContainer.classList.add('flex');
+      }
+    };
+
+    if (btnToggleWholesale) {
+      btnToggleWholesale.onclick = activateWholesale;
+    }
+    if (btnCloseWholesale) {
+      btnCloseWholesale.onclick = deactivateWholesale;
     }
     if (primaryState.has_wholesale && wholesaleWrap && !wholesaleWrap.classList.contains('hidden')) {
       bindInlineWholesaleEvents();
     }
 
-    // Tombol Toggle Kelipatan Pesanan (Produk Tunggal / Mode Normal)
+    // Tombol Toggle & Tutup Kelipatan Pesanan (Produk Tunggal / Mode Normal)
     const btnToggleMultiple = document.getElementById('btn-toggle-order-multiple');
+    const btnCloseMultiple = document.getElementById('btn-close-order-multiple');
+    const orderMultipleActionContainer = document.getElementById('order-multiple-action-container');
+    const orderMultipleActiveHeader = document.getElementById('order-multiple-active-header');
     const multipleWrap = document.getElementById('order-multiple-wrapper');
+
+    const activateOrderMultiple = () => {
+      primaryState.has_order_multiple = true;
+      if (orderMultipleActionContainer) {
+        orderMultipleActionContainer.classList.add('hidden');
+        orderMultipleActionContainer.classList.remove('flex');
+      }
+      if (orderMultipleActiveHeader) {
+        orderMultipleActiveHeader.classList.remove('hidden');
+        orderMultipleActiveHeader.classList.add('flex');
+      }
+      if (multipleWrap) {
+        multipleWrap.classList.remove('hidden');
+        multipleWrap.classList.add('block');
+        multipleWrap.innerHTML = renderOrderMultipleSection();
+        bindInlineMultipleEvents();
+      }
+    };
+
+    const deactivateOrderMultiple = () => {
+      primaryState.has_order_multiple = false;
+      if (orderMultipleActiveHeader) {
+        orderMultipleActiveHeader.classList.add('hidden');
+        orderMultipleActiveHeader.classList.remove('flex');
+      }
+      if (multipleWrap) {
+        multipleWrap.classList.add('hidden');
+        multipleWrap.classList.remove('block');
+      }
+      if (orderMultipleActionContainer) {
+        orderMultipleActionContainer.classList.remove('hidden');
+        orderMultipleActionContainer.classList.add('flex');
+      }
+    };
+
     if (btnToggleMultiple) {
-      btnToggleMultiple.onclick = () => {
-        primaryState.has_order_multiple = !primaryState.has_order_multiple;
-        if (multipleWrap) {
-          multipleWrap.classList.toggle('hidden', !primaryState.has_order_multiple);
-          multipleWrap.classList.toggle('block', primaryState.has_order_multiple);
-          if (primaryState.has_order_multiple) {
-            multipleWrap.innerHTML = renderOrderMultipleSection();
-            bindInlineMultipleEvents();
-          }
-        }
-        btnToggleMultiple.innerHTML = `
-          <i class="bi ${primaryState.has_order_multiple ? 'bi-check2' : 'bi-plus-lg'}"></i>
-          <span>${primaryState.has_order_multiple ? 'Kelipatan Pesanan Aktif' : 'Kelipatan Pesanan'}</span>
-        `;
-      };
+      btnToggleMultiple.onclick = activateOrderMultiple;
+    }
+    if (btnCloseMultiple) {
+      btnCloseMultiple.onclick = deactivateOrderMultiple;
     }
     if (primaryState.has_order_multiple && multipleWrap && !multipleWrap.classList.contains('hidden')) {
       bindInlineMultipleEvents();
