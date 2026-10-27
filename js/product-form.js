@@ -3211,35 +3211,15 @@ const ProductForm = (() => {
   // HELPER MODE UJI COBA INTERAKTIF LIVE PREVIEW STEP 2
   // -------------------------------------------------------------
 
-  function getVariationLabel(tierKey, fallback) {
-    let key = '';
-    let selector = '';
-    if (tierKey === 'tier1') {
-      key = 'label_tier_1';
-      selector = '#input-var-label-tier1, [data-label-key="label_tier_1"]';
-    } else if (tierKey === 'tier2' || tierKey === 'main') {
-      key = 'label_tier_2';
-      selector = '#input-var-label-main, #input-var-label-tier2, [data-label-key="label_tier_2"]';
-    } else if (tierKey === 'tier3' || tierKey === 'extra_1') {
-      key = 'label_extra_1';
-      selector = '#input-var-label-extra_1, #input-var-label-extra1, [data-label-key="label_extra_1"]';
-    } else if (tierKey === 'tier4' || tierKey === 'extra_2') {
-      key = 'label_extra_2';
-      selector = '#input-var-label-extra_2, #input-var-label-extra2, [data-label-key="label_extra_2"]';
-    } else if (tierKey === 'extras' || tierKey === 'extra_3') {
-      key = 'label_extra_3';
-      selector = '#input-var-label-extra3, #input-var-label-extra_3, #input-var-label-extra-services, [data-label-key="label_extra_3"]';
-    }
-
-    const domInp = selector ? document.querySelector(selector) : null;
-    if (domInp) {
-      const domVal = domInp.value ? domInp.value.trim() : '';
-      return domVal || fallback;
-    }
-
-    const lbls = primaryState.variation_labels || {};
-    const stateVal = (key && lbls[key]) ? String(lbls[key]).trim() : '';
-    return stateVal || fallback;
+  function isPlaceholderOrEmptyVariationTitle(val, defaultLabel) {
+    if (!val || typeof val !== 'string') return true;
+    const clean = val.trim().toLowerCase();
+    if (clean === '') return true;
+    if (defaultLabel && clean === defaultLabel.toLowerCase()) return true;
+    if (clean.startsWith('cth.') || clean.startsWith('contoh:')) return true;
+    const prodName = (primaryState.name || '').trim().toLowerCase();
+    if (prodName && clean === prodName) return true;
+    return false;
   }
 
   function getVariationGroupTitleInfo(tierKey) {
@@ -3267,17 +3247,59 @@ const ProductForm = (() => {
 
     const domInp = selector ? document.querySelector(selector) : null;
     const rawVal = domInp ? (domInp.value ? domInp.value.trim() : '') : ((key && primaryState.variation_labels?.[key]) ? String(primaryState.variation_labels[key]).trim() : '');
-    const hasCustomTitle = Boolean(rawVal && rawVal.toLowerCase() !== defaultLabel.toLowerCase());
-    const effectiveTitle = rawVal || defaultLabel;
+    
+    // Pastikan bebas dari placeholder bawaan dan nama produk
+    const isCleanCustom = !isPlaceholderOrEmptyVariationTitle(rawVal, defaultLabel);
+    const hasCustomTitle = isCleanCustom;
+    const effectiveTitle = isCleanCustom ? rawVal : defaultLabel;
 
     return { defaultLabel, hasCustomTitle, effectiveTitle };
   }
 
-  function formatVariationReactiveHeader(groupLabel, optionCount, selectedOptionName) {
-    if (selectedOptionName && String(selectedOptionName).trim() !== '') {
-      return `${escapeHtml(groupLabel)} <span class="font-normal text-slate-400 ml-1.5">${escapeHtml(String(selectedOptionName).trim())}</span>`;
+  function getVariationLabel(tierKey, fallback) {
+    const info = getVariationGroupTitleInfo(tierKey);
+    return info.hasCustomTitle ? info.effectiveTitle : (fallback || info.defaultLabel);
+  }
+
+  function formatVariationReactiveHeader(tierKeyOrGroupLabel, optCountOrSelected, maybeSelected) {
+    let tierKey = 'tier1';
+    let selectedOptionName = '';
+
+    if (maybeSelected !== undefined) {
+      // Signature kompatibilitas: (groupLabel, optionCount, selectedOptionName)
+      const lbl = String(tierKeyOrGroupLabel || '').toLowerCase();
+      if (lbl.includes('variasi 2') || lbl.includes('tier2') || lbl.includes('main')) tierKey = 'tier2';
+      else if (lbl.includes('variasi 3') || lbl.includes('tier3') || lbl.includes('extra_1')) tierKey = 'tier3';
+      else if (lbl.includes('variasi 4') || lbl.includes('tier4') || lbl.includes('extra_2')) tierKey = 'tier4';
+      else if (lbl.includes('extras') || lbl.includes('layanan')) tierKey = 'extras';
+      else tierKey = 'tier1';
+      selectedOptionName = maybeSelected || '';
+    } else {
+      // Signature langsung: (tierKey, selectedOptionName)
+      tierKey = tierKeyOrGroupLabel || 'tier1';
+      selectedOptionName = optCountOrSelected || '';
     }
-    return `Tersedia (${optionCount || 0}) ${escapeHtml(groupLabel)}`;
+
+    const titleInfo = getVariationGroupTitleInfo(tierKey);
+    const groupLabel = titleInfo.effectiveTitle;
+
+    // 1. Jika sudah ada opsi yang dipilih di luar drawer:
+    if (selectedOptionName && String(selectedOptionName).trim() !== '') {
+      const cleanVal = String(selectedOptionName).trim();
+      const prodName = (primaryState.name || '').trim();
+      // Pastikan bukan fallback nama produk atau "Produk Standar"
+      if (cleanVal.toLowerCase() !== 'produk standar' && (!prodName || cleanVal.toLowerCase() !== prodName.toLowerCase())) {
+        return `${escapeHtml(groupLabel)} <span class="font-normal text-slate-400 ml-1.5">${escapeHtml(cleanVal)}</span>`;
+      }
+    }
+
+    // 2. Jika judul grup variasi sudah diisi kustom oleh merchant namun opsi-opsinya masih kosong / belum ada yang dipilih:
+    if (titleInfo.hasCustomTitle) {
+      return `${escapeHtml(titleInfo.effectiveTitle)} Opsi 1`;
+    }
+
+    // 3. Jika variasi aktif namun judul grup variasi belum ditentukan / kosong / masih berupa placeholder bawaan:
+    return escapeHtml(titleInfo.defaultLabel);
   }
 
   function getCustomDimensionLabel() {
@@ -7564,17 +7586,50 @@ const ProductForm = (() => {
         accentColor = cfg.btn_color;
       }
 
-      // Daftar bahan / opsi variasi yang valid
-      const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
-      const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
-      const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
-      const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
-      const validExtras = (finishingsState.extra_3 || []).filter(ex => ex && ex.name && ex.name.trim() !== '');
+      // Daftar bahan / opsi variasi yang valid (bebas dari penarikan nama produk & placeholder Produk Standar)
+      const prodNameClean = (primaryState.name || '').trim().toLowerCase();
+      const validMaterials = (materialsState || []).filter(m => {
+        if (!m || !m.name || m.name.trim() === '') return false;
+        if (primaryState.has_variants) {
+          const nm = m.name.trim().toLowerCase();
+          if (nm === 'produk standar') return false;
+          if (prodNameClean && nm === prodNameClean) return false;
+        }
+        return true;
+      });
+      const validV2 = (finishingsState.main || []).filter(f => {
+        if (!f || !f.name || f.name.trim() === '') return false;
+        const nm = f.name.trim().toLowerCase();
+        if (nm === 'produk standar') return false;
+        if (prodNameClean && nm === prodNameClean) return false;
+        return true;
+      });
+      const validV3 = (finishingsState.extra_1 || []).filter(f => {
+        if (!f || !f.name || f.name.trim() === '') return false;
+        const nm = f.name.trim().toLowerCase();
+        if (nm === 'produk standar') return false;
+        if (prodNameClean && nm === prodNameClean) return false;
+        return true;
+      });
+      const validV4 = (finishingsState.extra_2 || []).filter(f => {
+        if (!f || !f.name || f.name.trim() === '') return false;
+        const nm = f.name.trim().toLowerCase();
+        if (nm === 'produk standar') return false;
+        if (prodNameClean && nm === prodNameClean) return false;
+        return true;
+      });
+      const validExtras = (finishingsState.extra_3 || []).filter(ex => {
+        if (!ex || !ex.name || ex.name.trim() === '') return false;
+        const nm = ex.name.trim().toLowerCase();
+        if (nm === 'produk standar') return false;
+        if (prodNameClean && nm === prodNameClean) return false;
+        return true;
+      });
 
       // 1. Ambil opsi terpilih untuk Variasi 1 s/d 4
       const selectedMat = primaryState.has_variants
         ? validMaterials.find(m => m.id === previewTestState.selectedTier1Id)
-        : (validMaterials[0] || null);
+        : null;
 
       let v1Price = 0;
       if (primaryState.has_variants) {
@@ -7888,7 +7943,7 @@ const ProductForm = (() => {
                 <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
                 ${primaryState.has_variants ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier1', 'Variasi 1'), validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
+                    <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier1', selectedMat ? selectedMat.name : '')}</div>
                     ${validMaterials.length > 0 ? (
                       hasAnyTier1Image ? `
                         <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
@@ -7933,13 +7988,13 @@ const ProductForm = (() => {
                     ${hasExtraTiers ? `
                       <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                         <div class="truncate">
-                          ${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}
+                          ${formatVariationReactiveHeader('tier2', selectedV2 ? selectedV2.name : '')}
                           <span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>
                         </div>
                         <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                       </div>
                     ` : `
-                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}</div>
+                      <div class="text-xs font-medium text-slate-600 mb-1.5">${formatVariationReactiveHeader('tier2', selectedV2 ? selectedV2.name : '')}</div>
                     `}
                     <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap">
                       ${validV2.length > 0 ? validV2.map((f, idx) => {
@@ -7958,7 +8013,7 @@ const ProductForm = (() => {
                     <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                       <div class="truncate">
                         ${(!primaryState.has_variants && !primaryState.has_variation_2 && hasExtras && !hasTier3 && !hasTier4 && !hasCustomDim)
-                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader(getVariationLabel('extras', 'Layanan Extras'), validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)}</span>`
+                          ? `<span class="font-medium text-slate-600">${formatVariationReactiveHeader('extras', extrasSelectedName)}</span>`
                           : `<span class="font-bold text-slate-800">Pilihan Variasi</span><span class="font-normal text-slate-400 text-[11px]"> (${summaryParts.join(', ')})</span>`
                         }
                       </div>
@@ -16314,7 +16369,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (materialsState.length > 0) {
         materialsState[0].price = p;
         materialsState[0].cost_price = c;
-        materialsState[0].name = primaryState.name || 'Produk Standar';
+        if (!primaryState.has_variants) {
+          materialsState[0].name = 'Produk Standar';
+        }
       }
       if (!primaryState.has_variants) {
         primaryState._savedNonVariantPrice = rawP;
@@ -21867,8 +21924,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (singlePriceInp && materialsState.length > 0) {
       const spVal = singlePriceInp.value.trim();
       materialsState[0].price = spVal === '' ? '' : (parseFloat(spVal) || 0);
-      materialsState[0].name = primaryState.name || 'Produk Standar';
       if (!primaryState.has_variants) {
+        materialsState[0].name = 'Produk Standar';
         primaryState._savedNonVariantPrice = spVal;
         primaryState.price = spVal === '' ? null : (parseFloat(spVal) || 0);
         primaryState.normal_price = primaryState.price;
