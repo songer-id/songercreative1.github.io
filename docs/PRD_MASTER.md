@@ -468,6 +468,15 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Begitu pengguna mengetik angka (`value.trim() !== ''`) atau memilih saran, popover langsung ditutup seketika (`closePopover()`).
       - Apabila pengguna menghapus isian hingga kembali kosong (`value.trim() === ''`), popover saran otomatis muncul kembali saat input berfokus/diklik.
     - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=7.8`.
+  - [x] **Penyempurnaan Form Produk Bagian 10 (Tahap 1): Eliminasi Keterangan Bawaan Min Order, Otomatisasi OFF Kustomisasi Ukuran (PxL) Saat Variasi Dihapus, dan Isolasi Memori Nilai Harga Jual & Biaya Modal Non-Variasi (`js/product-form.js`, `admin.html`, `docs/PRD_MASTER.md`)**:
+    - **Penghapusan Keterangan Bawaan Minimal Order (`js/product-form.js`)**: Menghilangkan teks `"Bawaan standar: 1"` di bawah input Minimal Jumlah Pembelian (`#input-min-order`) sehingga tampilan input sejajar rapi dan simetris dengan Maksimal Jumlah Pembelian.
+    - **Otomatisasi Input Ukuran (PxL) Menjadi OFF Saat Variasi Dihapus (`js/product-form.js`)**: Mengingat fitur Kustomisasi Ukuran (PxL) hanya valid bila memiliki minimal 1 variasi aktif, di seluruh alur penghapusan variasi (`closeAndShiftVariationTier`, penutupan Variasi 1, tombol disable variasi, maupun sinkronisasi DOM), status PxL otomatis disetel ke `OFF` (`primaryState.has_custom_dimension = false`, `is_custom_dimension = false`, `enable_custom_dimension = false`), toggle `#toggle-custom-dimension` di-uncheck, panel konfigurasi PxL disembunyikan, state preview PxL direset, dan pratinjau live drawer diperbarui secara reaktif.
+    - **Isolasi & Memori Nilai Harga Jual & Biaya Modal Antara Mode Non-Variasi vs Variasi (`js/product-form.js`)**:
+      - Memisahkan dan mengisolasi memori nilai input Harga Jual dan Biaya Modal mode Tanpa Variasi (`_savedNonVariantPrice` dan `_savedNonVariantCostPrice`).
+      - Nilai harga yang diketik di dalam variasi tidak akan pernah bocor atau meracuni mode Tanpa Variasi saat variasi dihapus.
+      - **Skenario A**: Jika pengguna belum pernah mengisi harga di mode Tanpa Variasi -> menambah variasi & mengisi harga di variasi -> menghapus variasi, input Harga Jual dan Modal saat kembali ke mode Tanpa Variasi dipastikan tetap kosong murni (`""` / `null`) dan hanya menampilkan placeholder asli tanpa default angka `0` atau angka variasi.
+      - **Skenario B**: Jika pengguna sudah pernah mengetik Harga Jual/Modal di mode Tanpa Variasi -> menambah variasi -> menghapus variasi lagi, nilai asli yang pernah diketik di mode Tanpa Variasi dipulihkan secara presisi dari memori terisolasi `_savedNonVariantPrice` dan `_savedNonVariantCostPrice`.
+    - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=7.9`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

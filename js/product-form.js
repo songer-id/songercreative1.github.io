@@ -302,6 +302,8 @@ const ProductForm = (() => {
     // Step 2: Informasi Penjualan
     pricing_model: 'normal', // 'normal' | 'size' | 'weight' | 'volume'
     has_variants: false,     // Variasi Produk pada jenis Normal (false = produk tunggal)
+    _savedNonVariantPrice: '',     // Memori terisolasi Harga Jual mode Tanpa Variasi
+    _savedNonVariantCostPrice: '', // Memori terisolasi Biaya Modal mode Tanpa Variasi
     size_pricing_type: 'custom', // 'custom' | 'fixed'
     size_unit: 'Cm',         // 'M' | 'Dm' | 'Cm' | 'Mm'
     fixed_size_value: 'S',
@@ -1348,6 +1350,8 @@ const ProductForm = (() => {
       description: '',
       is_active: true,
       has_variants: false,
+      _savedNonVariantPrice: '',
+      _savedNonVariantCostPrice: '',
       has_variation_2: false,
       has_layer_2: false,
       has_variation_3: false,
@@ -1823,6 +1827,17 @@ const ProductForm = (() => {
     };
 
     primaryState.has_variants = Boolean(prod.has_variants || (prod.materials && prod.materials.length > 1));
+    if (!primaryState.has_variants) {
+      primaryState._savedNonVariantPrice = (prod.materials && prod.materials[0]?.price !== undefined && prod.materials[0]?.price !== null && prod.materials[0]?.price !== '') 
+        ? prod.materials[0].price 
+        : (prod.price !== undefined && prod.price !== null && prod.price !== '' ? prod.price : '');
+      primaryState._savedNonVariantCostPrice = (prod.materials && prod.materials[0]?.cost_price !== undefined && prod.materials[0]?.cost_price !== null && prod.materials[0]?.cost_price !== '') 
+        ? prod.materials[0].cost_price 
+        : (prod.cost_price !== undefined && prod.cost_price !== null && prod.cost_price !== '' ? prod.cost_price : '');
+    } else {
+      primaryState._savedNonVariantPrice = prod._savedNonVariantPrice !== undefined ? prod._savedNonVariantPrice : '';
+      primaryState._savedNonVariantCostPrice = prod._savedNonVariantCostPrice !== undefined ? prod._savedNonVariantCostPrice : '';
+    }
     primaryState.has_variation_2 = Boolean(prod.has_variation_2 || prod.has_layer_2 || finishingsState.main.length > 0);
     primaryState.has_layer_2 = primaryState.has_variation_2;
     primaryState.has_variation_3 = Boolean(prod.has_variation_3 || prod.has_layer_3 || finishingsState.extra_1.length > 0);
@@ -1840,7 +1855,9 @@ const ProductForm = (() => {
       prod.dimension_main_component || 
       (prod.dimension_rules && prod.dimension_rules.length > 0)
     );
-    primaryState.has_custom_dimension = isLegacyDimension;
+    primaryState.has_custom_dimension = primaryState.has_variants ? isLegacyDimension : false;
+    primaryState.is_custom_dimension = primaryState.has_custom_dimension;
+    primaryState.enable_custom_dimension = primaryState.has_custom_dimension;
     primaryState.pricing_model = 'normal';
     primaryState.custom_dimension_label = prod.custom_dimension_label || '';
     primaryState.dimension_main_component = prod.dimension_main_component || '';
@@ -8967,7 +8984,6 @@ const ProductForm = (() => {
                     value="${primaryState.min_order || 1}" 
                     class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white"
                   />
-                  <span class="text-[10px] text-slate-400 mt-1 block">Bawaan standar: 1</span>
                 </div>
               </div>
 
@@ -12427,7 +12443,7 @@ const ProductForm = (() => {
                     id="input-single-price" 
                     min="0"
                     value="${firstMat.price !== undefined && firstMat.price !== null && firstMat.price !== '' ? firstMat.price : ''}" 
-                    class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-emerald-500 outline-none bg-white"
+                    class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none bg-white"
                     placeholder="Masukkan harga..."
                   />
                   <div id="single-price-error-msg" class="field-error-msg hidden mt-1 rounded"></div>
@@ -12441,7 +12457,7 @@ const ProductForm = (() => {
                     id="input-single-cost" 
                     min="0"
                     value="${firstMat.cost_price !== undefined && firstMat.cost_price !== null && firstMat.cost_price !== '' ? firstMat.cost_price : ''}" 
-                    class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-emerald-500 outline-none bg-white"
+                    class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none bg-white"
                     placeholder="Masukkan harga..."
                     title="Biaya Modal"
                   />
@@ -12451,7 +12467,7 @@ const ProductForm = (() => {
               <div class="flex items-center justify-between pt-1 text-xs">
                 <span class="text-slate-500 font-medium">Margin Keuntungan Bersih:</span>
                 <div id="single-margin-badge">
-                  ${calculateMarginBadge(firstMat.price || 0, firstMat.cost_price || 0)}
+                  ${calculateMarginBadge(firstMat.price, firstMat.cost_price)}
                 </div>
               </div>
             </div>
@@ -14781,6 +14797,53 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // SUB-NAVBAR ANCHOR SCROLL SPY & TAB NAVIGATION TERPUSAT DI MODUL SCOPE (initStep2SubnavObserver)
 
   // =====================================================================
+  // HELPER RESET KUSTOMISASI UKURAN (P x L) SAAT VARIASI NONAKTIF
+  // =====================================================================
+  function resetCustomDimensionToOff() {
+    primaryState.has_custom_dimension = false;
+    primaryState.is_custom_dimension = false;
+    primaryState.enable_custom_dimension = false;
+    const toggleCustomDim = document.getElementById('toggle-custom-dimension');
+    if (toggleCustomDim) {
+      toggleCustomDim.checked = false;
+    }
+    const configBody = document.getElementById('custom-dimension-config-body');
+    if (configBody) {
+      configBody.classList.remove('block');
+      configBody.classList.add('hidden');
+    }
+    const warnEl = document.getElementById('custom-dim-no-variant-warning');
+    if (warnEl) {
+      warnEl.classList.add('hidden');
+    }
+    if (typeof previewTestState !== 'undefined') {
+      previewTestState.dimLength = '';
+      previewTestState.dimWidth = '';
+      previewTestState.dimError = false;
+    }
+    const errEl = document.getElementById('custom-dimension-label-error');
+    if (errEl) errEl.classList.add('hidden');
+    const unitErrEl = document.getElementById('custom-dimension-unit-error');
+    if (unitErrEl) unitErrEl.classList.add('hidden');
+    const selectDimUnit = document.getElementById('select-dimension-unit');
+    if (selectDimUnit) {
+      selectDimUnit.classList.remove('border-red-500');
+      selectDimUnit.classList.add('border-slate-300');
+    }
+    const dimLabelInp = document.getElementById('input-custom-dimension-label');
+    if (dimLabelInp) {
+      dimLabelInp.classList.remove('border-red-500');
+      dimLabelInp.classList.add('border-slate-400');
+    }
+    if (typeof hideWizardErrorBanner === 'function') {
+      hideWizardErrorBanner();
+    }
+    if (typeof updateProductCardLivePreview === 'function') {
+      updateProductCardLivePreview();
+    }
+  }
+
+  // =====================================================================
   // LOGIKA PERGESERAN OTOMATIS (SHIFT-UP) VARIASI 1–4 SAAT DI-CLOSE (✕)
   // =====================================================================
   rebuildCombinationMatrix = () => {
@@ -14943,11 +15006,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.stock_mode_tiers.extra_1 = '';
       primaryState.stock_mode_tiers.extra_2 = '';
 
+      // TAHAP 1 - POIN 2: Otomatis matikan (set ke OFF / false) status Kustomisasi Ukuran PxL
+      resetCustomDimensionToOff();
+
+      // TAHAP 1 - POIN 3: Isolasi memori Harga Jual dan Biaya Modal Non-Variasi
+      // JANGAN PERNAH mengambil nilai Harga Jual atau Biaya Modal dari opsi variasi!
+      const rawRestoredPrice = (primaryState._savedNonVariantPrice !== undefined && primaryState._savedNonVariantPrice !== null)
+        ? String(primaryState._savedNonVariantPrice).trim()
+        : '';
+      const rawRestoredCost = (primaryState._savedNonVariantCostPrice !== undefined && primaryState._savedNonVariantCostPrice !== null)
+        ? String(primaryState._savedNonVariantCostPrice).trim()
+        : '';
+
+      const restoredPrice = (rawRestoredPrice !== '' && !isNaN(parseFloat(rawRestoredPrice))) ? rawRestoredPrice : '';
+      const restoredCost = (rawRestoredCost !== '' && !isNaN(parseFloat(rawRestoredCost))) ? rawRestoredCost : '';
+
+      primaryState.price = (restoredPrice !== '') ? parseFloat(restoredPrice) : null;
+      primaryState.cost_price = (restoredCost !== '') ? parseFloat(restoredCost) : null;
+      primaryState.normal_price = primaryState.price;
+      primaryState.normal_cost_price = primaryState.cost_price;
+
       materialsState = [{
         id: DB.generateUUID(),
         name: primaryState.name || 'Produk Standar',
-        price: materialsState[0]?.price || 0,
-        cost_price: materialsState[0]?.cost_price || 0,
+        price: restoredPrice,
+        cost_price: restoredCost,
         step_multiplier: 1
       }];
 
@@ -15442,6 +15525,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const btnToggleVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
     if (btnToggleVariants) {
       btnToggleVariants.onclick = () => {
+        // Simpan memori harga jual & biaya modal non-variasi saat ini sebelum beralih ke variasi
+        const singleP = document.getElementById('input-single-price');
+        const singleC = document.getElementById('input-single-cost');
+        if (singleP) {
+          primaryState._savedNonVariantPrice = singleP.value.trim();
+        } else if (materialsState.length > 0 && materialsState[0].price !== undefined && materialsState[0].price !== null) {
+          primaryState._savedNonVariantPrice = String(materialsState[0].price).trim();
+        }
+        if (singleC) {
+          primaryState._savedNonVariantCostPrice = singleC.value.trim();
+        } else if (materialsState.length > 0 && materialsState[0].cost_price !== undefined && materialsState[0].cost_price !== null) {
+          primaryState._savedNonVariantCostPrice = String(materialsState[0].cost_price).trim();
+        }
+
         // Otomatis sembunyikan pesan peringatan jika sebelumnya muncul
         const warnEl = document.getElementById('custom-dim-no-variant-warning');
         if (warnEl) warnEl.classList.add('hidden');
@@ -15467,6 +15564,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (btnCloseVar1) {
       btnCloseVar1.onclick = () => closeAndShiftVariationTier(1);
     }
+    const btnDisableVariants = document.getElementById('btn-disable-variants');
+    if (btnDisableVariants) {
+      btnDisableVariants.onclick = () => closeAndShiftVariationTier(1);
+    }
+    document.querySelectorAll('.btn-remove-variation-group').forEach(btn => {
+      btn.onclick = () => closeAndShiftVariationTier(1);
+    });
 
     // Single Price & Cost Inputs (Produk Tunggal)
     const singlePrice = document.getElementById('input-single-price');
@@ -15535,6 +15639,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         materialsState[0].price = p;
         materialsState[0].cost_price = c;
         materialsState[0].name = primaryState.name || 'Produk Standar';
+      }
+      if (!primaryState.has_variants) {
+        primaryState._savedNonVariantPrice = rawP;
+        primaryState._savedNonVariantCostPrice = rawC;
+        primaryState.price = (p !== '') ? p : null;
+        primaryState.cost_price = (c !== '') ? c : null;
+        primaryState.normal_price = primaryState.price;
+        primaryState.normal_cost_price = primaryState.cost_price;
       }
       if (singleBadge) singleBadge.innerHTML = calculateMarginBadge(p, c);
       validateSinglePrice(false);
@@ -20972,7 +21084,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Custom Dimension (P x L) DOM sync
     const customDimToggle = document.getElementById('toggle-custom-dimension');
     if (customDimToggle) {
-      primaryState.has_custom_dimension = customDimToggle.checked;
+      if (!primaryState.has_variants) {
+        customDimToggle.checked = false;
+        primaryState.has_custom_dimension = false;
+        primaryState.is_custom_dimension = false;
+        primaryState.enable_custom_dimension = false;
+      } else {
+        primaryState.has_custom_dimension = customDimToggle.checked;
+        primaryState.is_custom_dimension = customDimToggle.checked;
+        primaryState.enable_custom_dimension = customDimToggle.checked;
+      }
     }
     const customDimLabelInp = document.getElementById('input-custom-dimension-label');
     if (customDimLabelInp) {
@@ -21017,10 +21138,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const spVal = singlePriceInp.value.trim();
       materialsState[0].price = spVal === '' ? '' : (parseFloat(spVal) || 0);
       materialsState[0].name = primaryState.name || 'Produk Standar';
+      if (!primaryState.has_variants) {
+        primaryState._savedNonVariantPrice = spVal;
+        primaryState.price = spVal === '' ? null : (parseFloat(spVal) || 0);
+        primaryState.normal_price = primaryState.price;
+      }
     }
     if (singleCostInp && materialsState.length > 0) {
       const scVal = singleCostInp.value.trim();
       materialsState[0].cost_price = scVal === '' ? '' : (parseFloat(scVal) || 0);
+      if (!primaryState.has_variants) {
+        primaryState._savedNonVariantCostPrice = scVal;
+        primaryState.cost_price = scVal === '' ? null : (parseFloat(scVal) || 0);
+        primaryState.normal_cost_price = primaryState.cost_price;
+      }
     }
 
     // Stok
@@ -22003,6 +22134,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         cost_price: parseFloat(document.getElementById('input-single-cost')?.value ?? (materialsState[0]?.cost_price || 0)) || 0,
         step_multiplier: 1
       }];
+      primaryState.price = validMaterials[0].price;
+      primaryState.cost_price = validMaterials[0].cost_price;
+      primaryState.normal_price = primaryState.price;
+      primaryState.normal_cost_price = primaryState.cost_price;
     }
 
     // Ensure image_url is synchronized with images[0]
