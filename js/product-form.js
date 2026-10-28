@@ -9922,11 +9922,11 @@ const ProductForm = (() => {
                   <div class="grid grid-cols-2 gap-2 text-xs">
                     <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
                       <input type="radio" name="inline_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
-                      <span>Mode Normal</span>
+                      <span>Normal</span>
                     </label>
                     <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode === 'tiered' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
                       <input type="radio" name="inline_wholesale_mode" value="tiered" ${primaryState.wholesale_mode === 'tiered' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
-                      <span>Mode Bertingkat</span>
+                      <span>Bertingkat</span>
                     </label>
                   </div>
                   <div id="inline-wholesale-body" class="space-y-3">
@@ -13574,22 +13574,100 @@ const ProductForm = (() => {
       const maxOrderVal = (mat.max_order !== undefined && mat.max_order !== null && mat.max_order !== '') ? (mat.max_order === 'Unlimited' || mat.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : mat.max_order) : '';
 
       function renderScopeCell(tier) {
-        const scope = (primaryState.variation_scopes && primaryState.variation_scopes[tier]) || 'umum';
+        const matScopes = (mat && mat.variation_scopes) || (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[mat.id]) || {};
+        const scope = matScopes[tier];
         const specificList = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id][tier]) || [];
-        const count = specificList.length;
+
+        let isValid = false;
+        let displayLabel = 'Pilih';
+        let iconClass = 'bi bi-gear-fill';
+
+        if (scope === 'umum') {
+          isValid = true;
+          displayLabel = 'Umum';
+          iconClass = 'bi bi-pencil-square';
+        } else if (scope === 'spesifik' && specificList.length > 0) {
+          isValid = true;
+          displayLabel = 'Spesifik';
+          iconClass = 'bi bi-pencil-square';
+        }
 
         return `
-          <div class="flex flex-col items-center gap-1">
-            <select class="combo-scope-select px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold bg-white text-slate-700 outline-none cursor-pointer focus:border-[var(--color-primary)] shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}">
-              <option value="umum" ${scope === 'umum' ? 'selected' : ''}>Umum</option>
-              <option value="spesifik" ${scope === 'spesifik' ? 'selected' : ''}>Spesifik</option>
-            </select>
-            ${scope === 'spesifik' ? `
-              <button type="button" class="btn-open-specific-modal px-2.5 py-1 rounded-md bg-[var(--color-primary-subtle)] hover:bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-[10px] font-bold cursor-pointer transition flex items-center gap-1 shadow-2xs" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
-                <span>${count > 0 ? `${count} Dipilih` : 'Pilih Opsi'}</span>
-                <i class="bi bi-gear-fill text-[9px]"></i>
-              </button>
-            ` : ''}
+          <div class="inline-flex items-center justify-center gap-2">
+            <button type="button" class="btn-open-scope-modal bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-[var(--color-primary)] transition cursor-pointer" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+              ${displayLabel}
+            </button>
+            <button type="button" class="btn-open-scope-modal text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer p-0.5 leading-none shrink-0" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
+              <i class="${iconClass} text-sm"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      function renderWholesaleCell() {
+        if (!primaryState.has_wholesale) {
+          return `<div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-normal text-center select-none pointer-events-none">Nonaktif</div>`;
+        }
+
+        const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]) || null;
+        const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
+
+        let isValid = false;
+        let displayLabel = 'Pilih';
+        let iconClass = 'bi bi-gear-fill';
+
+        if (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) {
+          isValid = true;
+          displayLabel = 'Normal';
+          iconClass = 'bi bi-pencil-square';
+        } else if (wMode === 'tiered' && wTiers.length > 0) {
+          isValid = true;
+          displayLabel = 'Bertingkat';
+          iconClass = 'bi bi-pencil-square';
+        }
+
+        return `
+          <div class="inline-flex items-center justify-center gap-2">
+            <button type="button" class="btn-open-wholesale-modal bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-[var(--color-primary)] transition cursor-pointer" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+              ${displayLabel}
+            </button>
+            <button type="button" class="btn-open-wholesale-modal text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer p-0.5 leading-none shrink-0" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
+              <i class="${iconClass} text-sm"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      function renderMultipleCell() {
+        if (!primaryState.has_order_multiple) {
+          return `<div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-normal text-center select-none pointer-events-none">Nonaktif</div>`;
+        }
+
+        const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
+        const mVal = mat.order_multiple_value || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]) || 1;
+
+        let isValid = false;
+        let displayLabel = 'Pilih';
+        let iconClass = 'bi bi-gear-fill';
+
+        if (mType === 'umum') {
+          isValid = true;
+          displayLabel = 'Umum';
+          iconClass = 'bi bi-pencil-square';
+        } else if (mType === 'spesifik' && parseInt(mVal) > 1) {
+          isValid = true;
+          displayLabel = 'Spesifik';
+          iconClass = 'bi bi-pencil-square';
+        }
+
+        return `
+          <div class="inline-flex items-center justify-center gap-2">
+            <button type="button" class="btn-open-multiple-modal bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-[var(--color-primary)] transition cursor-pointer" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+              ${displayLabel}
+            </button>
+            <button type="button" class="btn-open-multiple-modal text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer p-0.5 leading-none shrink-0" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
+              <i class="${iconClass} text-sm"></i>
+            </button>
           </div>
         `;
       }
@@ -13623,7 +13701,7 @@ const ProductForm = (() => {
             <input 
               type="number" 
               min="1" 
-              class="combo-min-order-input w-20 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+              class="combo-min-order-input w-20 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
               data-mat-id="${mat.id}" 
               value="${minOrderVal}" 
             />
@@ -13633,7 +13711,7 @@ const ProductForm = (() => {
           <td class="p-3 align-middle text-center min-w-[125px]">
             <input 
               type="text" 
-              class="combo-max-order-input w-28 sm:w-32 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+              class="combo-max-order-input w-24 sm:w-28 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
               data-mat-id="${mat.id}" 
               value="${maxOrderVal}" 
               placeholder="Input/Pilih" 
@@ -13644,24 +13722,12 @@ const ProductForm = (() => {
 
           <!-- Kolom Harga Grosir -->
           <td class="p-3 align-middle text-center min-w-[140px]">
-            ${!primaryState.has_wholesale ? `
-              <div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
-            ` : `
-              <button type="button" class="btn-open-wholesale-modal px-3 py-1.5 rounded-md bg-white border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold cursor-pointer inline-flex items-center justify-center shadow-2xs transition" data-mat-id="${mat.id}">
-                <span>${primaryState.wholesale_mode === 'tiered' ? 'Mode Bertingkat' : 'Mode Normal'}</span>
-              </button>
-            `}
+            ${renderWholesaleCell()}
           </td>
 
           <!-- Kolom Kelipatan Order -->
           <td class="p-3 align-middle text-center min-w-[140px]">
-            ${!primaryState.has_order_multiple ? `
-              <div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-semibold text-center select-none pointer-events-none">Nonaktif</div>
-            ` : `
-              <button type="button" class="btn-open-multiple-modal px-3 py-1.5 rounded-md bg-white border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold cursor-pointer inline-flex items-center justify-center shadow-2xs transition" data-mat-id="${mat.id}">
-                <span>${primaryState.order_multiple_type === 'per_variant' ? 'Mode Spesifik' : 'Mode Global'}</span>
-              </button>
-            `}
+            ${renderMultipleCell()}
           </td>
         </tr>
       `;
@@ -13669,8 +13735,8 @@ const ProductForm = (() => {
 
     return `
       <!-- Tabel Matriks Kombinasi Utama -->
-      <div class="mt-6 space-y-3 step2-section-card variation-card-block relative mb-5 pb-1" id="combination-matrix-section">
-        <div class="flex items-center justify-between flex-wrap gap-2">
+      <div class="mt-7 space-y-3 step2-section-card variation-card-block relative mb-5 pb-1" id="combination-matrix-section">
+        <div class="flex items-center justify-between flex-wrap gap-2 mt-5 sm:mt-6 mb-3">
           <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <span>List Variasi Produk</span>
           </h4>
@@ -13725,32 +13791,32 @@ const ProductForm = (() => {
       <div id="modal-wholesale-config" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between pb-2 border-b border-slate-200">
-            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <i class="bi bi-tag-fill text-emerald-600"></i>
-              <span>Pengaturan Harga Grosir</span>
-            </h3>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900" id="wholesale-modal-title">Pengaturan Harga Grosir</h3>
+              <p class="text-[11px] text-slate-500" id="wholesale-modal-subtitle">Atur tingkatan harga grosir untuk opsi ini</p>
+            </div>
             <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-wholesale-config"><i class="bi bi-x-lg"></i></button>
           </div>
 
-          <!-- Mode Grosir: Normal vs Bertingkat -->
+          <!-- Normal vs Bertingkat (Tanpa Kata 'Mode') -->
           <div class="grid grid-cols-2 gap-2 text-xs">
-            <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
-              <input type="radio" name="modal_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
-              <span>Mode Normal</span>
+            <label id="lbl-wholesale-normal" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+              <input type="radio" name="modal_wholesale_mode" value="normal" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Normal</span>
             </label>
-            <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode === 'tiered' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-300 text-slate-700'}">
-              <input type="radio" name="modal_wholesale_mode" value="tiered" ${primaryState.wholesale_mode === 'tiered' ? 'checked' : ''} class="accent-emerald-600 cursor-pointer" />
-              <span>Mode Bertingkat</span>
+            <label id="lbl-wholesale-tiered" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+              <input type="radio" name="modal_wholesale_mode" value="tiered" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Bertingkat</span>
             </label>
           </div>
 
           <div id="modal-wholesale-body" class="space-y-3">
-            ${renderWholesaleTable()}
+            <!-- Dynamic Wholesale Body -->
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
             <button type="button" class="btn-close-modal px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-wholesale-config">Tutup</button>
-            <button type="button" id="btn-save-wholesale-modal" class="btn-primary-brand px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Simpan Pengaturan</button>
+            <button type="button" id="btn-save-wholesale-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-xs" style="background-color: var(--color-primary);">Simpan Pengaturan</button>
           </div>
         </div>
       </div>
@@ -13760,22 +13826,34 @@ const ProductForm = (() => {
   function renderOrderMultipleModalMarkup() {
     return `
       <div id="modal-order-multiple-config" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between pb-2 border-b border-slate-200">
-            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <i class="bi bi-layers-fill text-emerald-600"></i>
-              <span>Pengaturan Kelipatan Order</span>
-            </h3>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900" id="multiple-modal-title">Pengaturan Kelipatan Order</h3>
+              <p class="text-[11px] text-slate-500" id="multiple-modal-subtitle">Atur kelipatan pesanan untuk opsi ini</p>
+            </div>
             <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-order-multiple-config"><i class="bi bi-x-lg"></i></button>
           </div>
 
+          <!-- Umum vs Spesifik (Tanpa Kata 'Mode') -->
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label id="lbl-multiple-umum" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+              <input type="radio" name="modal_order_multiple_radio" value="umum" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Umum</span>
+            </label>
+            <label id="lbl-multiple-spesifik" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+              <input type="radio" name="modal_order_multiple_radio" value="spesifik" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Spesifik</span>
+            </label>
+          </div>
+
           <div id="modal-order-multiple-body" class="space-y-3">
-            ${renderOrderMultipleSection()}
+            <!-- Dynamic Multiple Body -->
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
             <button type="button" class="btn-close-modal px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-order-multiple-config">Tutup</button>
-            <button type="button" id="btn-save-multiple-modal" class="btn-primary-brand px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Simpan Pengaturan</button>
+            <button type="button" id="btn-save-multiple-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-xs" style="background-color: var(--color-primary);">Simpan Pengaturan</button>
           </div>
         </div>
       </div>
@@ -13788,27 +13866,45 @@ const ProductForm = (() => {
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-5 space-y-4">
           <div class="flex items-center justify-between pb-2 border-b border-slate-200">
             <div>
-              <h3 class="text-sm font-bold text-slate-900" id="specific-modal-title">Pilih Opsi Spesifik</h3>
-              <p class="text-[11px] text-slate-500" id="specific-modal-subtitle">Pilih opsi yang berlaku untuk baris ini</p>
+              <h3 class="text-sm font-bold text-slate-900" id="specific-modal-title">Pengaturan Variasi</h3>
+              <p class="text-[11px] text-slate-500" id="specific-modal-subtitle">Atur keterkaitan opsi untuk varian ini</p>
             </div>
             <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-specific-options"><i class="bi bi-x-lg"></i></button>
           </div>
 
-          <div class="flex items-center justify-between py-1 text-xs font-semibold text-slate-700">
-            <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" id="chk-specific-select-all" class="accent-emerald-600 rounded cursor-pointer" />
-              <span>Pilih Semua Opsi</span>
+          <!-- Pilihan: Umum vs Spesifik (Tanpa Kata 'Mode') -->
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label id="lbl-scope-umum" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+              <input type="radio" name="modal_scope_type" value="umum" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Umum</span>
             </label>
-            <span id="specific-selected-count" class="text-emerald-700 font-bold">0 dipilih</span>
+            <label id="lbl-scope-spesifik" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+              <input type="radio" name="modal_scope_type" value="spesifik" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Spesifik</span>
+            </label>
           </div>
 
-          <div id="specific-options-checklist-container" class="space-y-1.5 max-h-60 overflow-y-auto border border-slate-200 rounded-lg p-2.5 bg-slate-50">
-            <!-- Checklist items rendered dynamically -->
+          <div id="specific-umum-info-wrapper" class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 leading-relaxed hidden">
+            Seluruh opsi pada variasi ini berlaku secara umum dan dapat dipilih oleh pelanggan.
+          </div>
+
+          <div id="specific-checklist-wrapper" class="space-y-2 hidden">
+            <div class="flex items-center justify-between py-1 text-xs font-semibold text-slate-700">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="chk-specific-select-all" class="accent-[var(--color-primary)] rounded cursor-pointer" />
+                <span>Pilih Semua Opsi</span>
+              </label>
+              <span id="specific-selected-count" class="text-[var(--color-primary)] font-bold">0 dipilih</span>
+            </div>
+
+            <div id="specific-options-checklist-container" class="space-y-1.5 max-h-60 overflow-y-auto border border-slate-200 rounded-lg p-2.5 bg-slate-50">
+              <!-- Checklist items rendered dynamically -->
+            </div>
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
             <button type="button" class="btn-close-modal px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-specific-options">Batal</button>
-            <button type="button" id="btn-apply-specific-modal" class="btn-primary-brand px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white cursor-pointer shadow-xs">Terapkan Opsi</button>
+            <button type="button" id="btn-apply-specific-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-xs" style="background-color: var(--color-primary);">Simpan Pengaturan</button>
           </div>
         </div>
       </div>
@@ -13974,15 +14070,15 @@ const ProductForm = (() => {
 
     return `
       <div class="space-y-4">
-        <!-- Pilihan Mode: Global vs Spesifik per Varian -->
+        <!-- Pilihan Tipe: Umum vs Spesifik per Varian -->
         <div class="grid grid-cols-2 gap-2 text-xs">
           <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${mode === 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
             <input type="radio" name="order_multiple_type_radio" value="all" ${mode === 'all' ? 'checked' : ''} class="accent-[var(--color-primary)]" />
-            <span>Mode Global (Semua Varian)</span>
+            <span>Umum (Semua Varian)</span>
           </label>
           <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${mode === 'per_variant' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
             <input type="radio" name="order_multiple_type_radio" value="per_variant" ${mode === 'per_variant' ? 'checked' : ''} class="accent-[var(--color-primary)]" />
-            <span>Mode Spesifik per Varian</span>
+            <span>Spesifik per Varian</span>
           </label>
         </div>
 
@@ -18404,65 +18500,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // 4. Dropdown Scope (Umum vs Spesifik)
-      document.querySelectorAll('.combo-scope-select').forEach(sel => {
-        sel.onchange = (e) => {
-          const tier = sel.getAttribute('data-tier');
-          const matId = sel.getAttribute('data-mat-id');
-          if (!primaryState.variation_scopes) primaryState.variation_scopes = {};
-          primaryState.variation_scopes[tier] = e.target.value;
-          refreshCombinationMatrixTable();
-        };
-      });
-
-      // 5. Header Checkbox: Harga Grosir
+      // 4. Header Checkbox: Harga Grosir
       const chkWholesale = document.getElementById('chk-combo-header-wholesale');
       if (chkWholesale) {
         chkWholesale.onchange = (e) => {
           primaryState.has_wholesale = e.target.checked;
-          if (primaryState.has_wholesale && (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0)) {
-            primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
-          }
           refreshCombinationMatrixTable();
+          updateProductCardLivePreview();
         };
       }
 
-      // 6. Header Checkbox: Kelipatan Order
+      // 5. Header Checkbox: Kelipatan Order
       const chkMultiple = document.getElementById('chk-combo-header-order-multiple');
       if (chkMultiple) {
         chkMultiple.onchange = (e) => {
           primaryState.has_order_multiple = e.target.checked;
-          if (primaryState.has_order_multiple && !primaryState.order_multiple_value) {
-            primaryState.order_multiple_value = 1;
-          }
           refreshCombinationMatrixTable();
+          updateProductCardLivePreview();
         };
       }
 
-      // 7. Tombol Buka Modal Harga Grosir
-      document.querySelectorAll('.btn-open-wholesale-modal').forEach(btn => {
-        btn.onclick = () => {
-          const modal = document.getElementById('modal-wholesale-config');
-          if (modal) {
-            modal.classList.remove('hidden');
-            bindWholesaleModalEvents();
-          }
-        };
-      });
-
-      // 8. Tombol Buka Modal Kelipatan Order
-      document.querySelectorAll('.btn-open-multiple-modal').forEach(btn => {
-        btn.onclick = () => {
-          const modal = document.getElementById('modal-order-multiple-config');
-          if (modal) {
-            modal.classList.remove('hidden');
-            bindMultipleModalEvents();
-          }
-        };
-      });
-
-      // 9. Tombol Buka Modal Spesifik Options
-      document.querySelectorAll('.btn-open-specific-modal').forEach(btn => {
+      // 6. Tombol Buka Modal Scope Variasi 2 s.d. 4
+      document.querySelectorAll('.btn-open-scope-modal').forEach(btn => {
         btn.onclick = () => {
           const tier = btn.getAttribute('data-tier');
           const matId = btn.getAttribute('data-mat-id');
@@ -18470,41 +18529,224 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           openSpecificOptionsModal(tier, matId, matName);
         };
       });
+
+      // 7. Tombol Buka Modal Harga Grosir
+      document.querySelectorAll('.btn-open-wholesale-modal').forEach(btn => {
+        btn.onclick = () => {
+          const matId = btn.getAttribute('data-mat-id');
+          const matName = btn.getAttribute('data-mat-name');
+          openWholesaleModal(matId, matName);
+        };
+      });
+
+      // 8. Tombol Buka Modal Kelipatan Order
+      document.querySelectorAll('.btn-open-multiple-modal').forEach(btn => {
+        btn.onclick = () => {
+          const matId = btn.getAttribute('data-mat-id');
+          const matName = btn.getAttribute('data-mat-name');
+          openOrderMultipleModal(matId, matName);
+        };
+      });
     }
     bindCombinationMatrixEvents();
 
     // =====================================================================
-    // LOGIKA MODAL HARGA GROSIR (MODE NORMAL VS BERTINGKAT)
+    // LOGIKA MODAL HARGA GROSIR (PER-BARIS INDEPENDEN)
     // =====================================================================
-    function bindWholesaleModalEvents() {
+    let currentWholesaleContext = { matId: null, matName: '' };
+
+    function openWholesaleModal(matId, matName) {
+      currentWholesaleContext = { matId, matName };
       const modal = document.getElementById('modal-wholesale-config');
       if (!modal) return;
 
-      // Radio Mode Grosir (Normal vs Bertingkat)
-      modal.querySelectorAll('input[name="modal_wholesale_mode"]').forEach(rad => {
-        rad.onchange = (e) => {
-          primaryState.wholesale_mode = e.target.value;
-          const body = document.getElementById('modal-wholesale-body');
-          if (body) {
-            body.innerHTML = renderWholesaleTable();
-            bindWholesaleModalEvents();
-          }
-        };
-      });
+      const title = document.getElementById('wholesale-modal-title');
+      const subtitle = document.getElementById('wholesale-modal-subtitle');
+      if (title) title.textContent = 'Pengaturan Harga Grosir';
+      if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
 
-      // Mode Normal: Input & Checkbox Tanpa Max
-      const inpMin = document.getElementById('modal-wholesale-normal-min');
-      const inpMax = document.getElementById('modal-wholesale-normal-max');
-      const inpDisc = document.getElementById('modal-wholesale-normal-discount');
-      const chkNoMax = document.getElementById('chk-wholesale-no-max');
-      const noteNormal = document.getElementById('wholesale-normal-note');
+      const mat = materialsState.find(m => m.id === matId);
+      const mode = mat?.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]) || 'normal';
+
+      const radNormal = modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]');
+      const radTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]');
+      if (mode === 'tiered') {
+        if (radTiered) radTiered.checked = true;
+      } else {
+        if (radNormal) radNormal.checked = true;
+      }
+      syncWholesaleModeRadioStyles(modal);
+
+      const body = document.getElementById('modal-wholesale-body');
+      if (body) {
+        body.innerHTML = renderWholesaleTableForMat(mat);
+        bindWholesaleModalInputs(modal, mat);
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function syncWholesaleModeRadioStyles(modal) {
+      const isTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked;
+      const lblNormal = modal.querySelector('#lbl-wholesale-normal');
+      const lblTiered = modal.querySelector('#lbl-wholesale-tiered');
+      if (lblNormal) {
+        lblNormal.className = !isTiered
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+      }
+      if (lblTiered) {
+        lblTiered.className = isTiered
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+      }
+    }
+
+    function renderWholesaleTableForMat(mat) {
+      const modal = document.getElementById('modal-wholesale-config');
+      const isTiered = modal?.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked;
+      const mode = isTiered ? 'tiered' : (mat?.wholesale_mode || 'normal');
+      const tiers = mat?.wholesale_tiers || (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id]) || [];
+
+      if (mode === 'normal') {
+        const tier1 = tiers[0] || { min_qty: 10, max_qty: 50, price: 0 };
+        const hasNoMax = tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0;
+        const minQty = tier1.min_qty || mat?.min_order || primaryState.min_order || 1;
+        const maxQty = hasNoMax ? '' : tier1.max_qty;
+        const discount = tier1.price || 0;
+
+        return `
+          <div class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Min. Order</label>
+                <input 
+                  type="number" 
+                  id="modal-wholesale-normal-min" 
+                  min="${mat?.min_order || primaryState.min_order || 1}" 
+                  value="${minQty}" 
+                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)]" 
+                />
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-[11px] font-bold text-slate-700">Max. Order</label>
+                  <label class="inline-flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer">
+                    <input type="checkbox" id="chk-wholesale-no-max" ${hasNoMax ? 'checked' : ''} class="accent-[var(--color-primary)]" />
+                    <span>Tanpa Max</span>
+                  </label>
+                </div>
+                <input 
+                  type="number" 
+                  id="modal-wholesale-normal-max" 
+                  min="${minQty}" 
+                  value="${maxQty}" 
+                  placeholder="Tanpa Max" 
+                  ${hasNoMax ? 'disabled' : ''} 
+                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)] ${hasNoMax ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" 
+                />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Potongan Harga (-Rp)</label>
+                <input 
+                  type="number" 
+                  id="modal-wholesale-normal-discount" 
+                  min="0" 
+                  value="${discount}" 
+                  placeholder="Cth: 500" 
+                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]" 
+                />
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-[var(--color-primary-subtle)] border border-[var(--color-primary)]/20 text-xs text-slate-800 leading-relaxed font-normal" id="wholesale-normal-note">
+              Setiap pembelian <b>${minQty}</b> hingga <b>${hasNoMax ? 'seterusnya (tanpa batas)' : (maxQty || minQty)}</b> maka mendapatkan potongan <b>Rp${(discount || 0).toLocaleString('id-ID')}</b> per pcs.
+            </div>
+          </div>
+        `;
+      }
+
+      // Bertingkat
+      const currentTiers = tiers.length > 0 ? tiers : [
+        { id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 },
+        { id: DB.generateUUID(), min_qty: 51, max_qty: 100, price: 1000 }
+      ];
+
+      return `
+        <div class="space-y-3">
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
+                <tr>
+                  <th class="p-2.5 w-12 text-center">Tingkat</th>
+                  <th class="p-2.5">Min. Order</th>
+                  <th class="p-2.5">Max. Order</th>
+                  <th class="p-2.5">Potongan (-Rp)</th>
+                  <th class="p-2.5 w-10 text-center">Hapus</th>
+                </tr>
+              </thead>
+              <tbody id="wholesale-tiers-table-body" class="divide-y divide-slate-200">
+                ${currentTiers.map((t, idx) => `
+                  <tr data-tier-id="${t.id}" data-idx="${idx}">
+                    <td class="p-2.5 text-center font-bold text-slate-600">Tier ${idx + 1}</td>
+                    <td class="p-2.5">
+                      <input 
+                        type="number" 
+                        data-field="min_qty" 
+                        value="${t.min_qty}" 
+                        ${idx > 0 ? 'readonly' : ''} 
+                        class="w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center ${idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-800'}" 
+                      />
+                    </td>
+                    <td class="p-2.5">
+                      <input 
+                        type="number" 
+                        data-field="max_qty" 
+                        value="${t.max_qty || ''}" 
+                        placeholder="Tanpa Max" 
+                        class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800" 
+                      />
+                    </td>
+                    <td class="p-2.5">
+                      <input 
+                        type="number" 
+                        data-field="price" 
+                        value="${t.price || 0}" 
+                        placeholder="Potongan" 
+                        class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white" 
+                      />
+                    </td>
+                    <td class="p-2.5 text-center">
+                      <button type="button" class="btn-delete-wholesale-tier text-slate-400 hover:text-red-500 p-1 cursor-pointer transition" data-tier-id="${t.id}" ${currentTiers.length <= 1 ? 'disabled' : ''}>
+                        <i class="bi bi-trash3-fill"></i>
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between">
+            <button type="button" id="btn-add-wholesale-tier" class="px-3 py-1.5 rounded-md border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold cursor-pointer transition">
+              + Tambah Tingkatan
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindWholesaleModalInputs(modal, mat) {
+      const inpMin = modal.querySelector('#modal-wholesale-normal-min');
+      const inpMax = modal.querySelector('#modal-wholesale-normal-max');
+      const inpDisc = modal.querySelector('#modal-wholesale-normal-discount');
+      const chkNoMax = modal.querySelector('#chk-wholesale-no-max');
+      const noteNormal = modal.querySelector('#wholesale-normal-note');
 
       function updateNormalFormulaNote() {
         const minVal = parseInt(inpMin?.value) || 1;
         const noMax = chkNoMax?.checked;
         const maxVal = noMax ? '' : (parseInt(inpMax?.value) || minVal);
         const discVal = parseFloat(inpDisc?.value) || 0;
-
         if (noteNormal) {
           noteNormal.innerHTML = `Setiap pembelian <b>${minVal}</b> hingga <b>${noMax ? 'seterusnya (tanpa batas)' : maxVal}</b> maka mendapatkan potongan <b>Rp${discVal.toLocaleString('id-ID')}</b> per pcs.`;
         }
@@ -18527,180 +18769,304 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (inpMax) inpMax.oninput = updateNormalFormulaNote;
       if (inpDisc) inpDisc.oninput = updateNormalFormulaNote;
 
-      // Mode Bertingkat: Tambah Tier Baru (Min Order 2 Terkunci = Max Order 1 + 1)
-      const btnAddTier = document.getElementById('btn-add-wholesale-tier');
+      const btnAddTier = modal.querySelector('#btn-add-wholesale-tier');
       if (btnAddTier) {
         btnAddTier.onclick = () => {
-          if (!primaryState.wholesale_tiers) primaryState.wholesale_tiers = [];
-          const lastTier = primaryState.wholesale_tiers[primaryState.wholesale_tiers.length - 1];
-          const lastMax = (lastTier && lastTier.max_qty) ? parseInt(lastTier.max_qty) : 50;
-          const newMin = lastMax + 1;
+          const tbody = modal.querySelector('#wholesale-tiers-table-body');
+          if (!tbody) return;
+          const rows = tbody.querySelectorAll('tr');
+          const lastRow = rows[rows.length - 1];
+          const lastMaxInp = lastRow?.querySelector('.tiered-max-input');
+          const lastMaxVal = parseInt(lastMaxInp?.value) || 50;
+          const newMin = lastMaxVal + 1;
           const newMax = newMin + 50;
-          const newPrice = (lastTier && lastTier.price) ? lastTier.price + 500 : 1000;
 
-          primaryState.wholesale_tiers.push({
-            id: DB.generateUUID(),
-            min_qty: newMin,
-            max_qty: newMax,
-            price: newPrice
-          });
-
-          const body = document.getElementById('modal-wholesale-body');
-          if (body) {
-            body.innerHTML = renderWholesaleTable();
-            bindWholesaleModalEvents();
-          }
+          const newTr = document.createElement('tr');
+          newTr.setAttribute('data-tier-id', DB.generateUUID());
+          newTr.setAttribute('data-idx', rows.length);
+          newTr.className = 'divide-y divide-slate-200';
+          newTr.innerHTML = `
+            <td class="p-2.5 text-center font-bold text-slate-600">Tier ${rows.length + 1}</td>
+            <td class="p-2.5">
+              <input type="number" data-field="min_qty" value="${newMin}" readonly class="w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-slate-100 text-slate-500 cursor-not-allowed" />
+            </td>
+            <td class="p-2.5">
+              <input type="number" data-field="max_qty" value="${newMax}" placeholder="Tanpa Max" class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800" />
+            </td>
+            <td class="p-2.5">
+              <input type="number" data-field="price" value="500" placeholder="Potongan" class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white" />
+            </td>
+            <td class="p-2.5 text-center">
+              <button type="button" class="btn-delete-wholesale-tier text-slate-400 hover:text-red-500 p-1 cursor-pointer transition">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+            </td>
+          `;
+          tbody.appendChild(newTr);
+          bindTierDeleteAndAutoMin(modal);
         };
       }
+      bindTierDeleteAndAutoMin(modal);
+    }
 
-      // Mode Bertingkat: Hapus Tier
+    function bindTierDeleteAndAutoMin(modal) {
       modal.querySelectorAll('.btn-delete-wholesale-tier').forEach(btn => {
-        btn.onclick = () => {
-          if ((primaryState.wholesale_tiers || []).length <= 1) return;
-          const tierId = btn.getAttribute('data-tier-id');
-          primaryState.wholesale_tiers = primaryState.wholesale_tiers.filter(t => t.id !== tierId);
-          const body = document.getElementById('modal-wholesale-body');
-          if (body) {
-            body.innerHTML = renderWholesaleTable();
-            bindWholesaleModalEvents();
+        btn.onclick = (e) => {
+          const row = e.target.closest('tr');
+          const tbody = row?.parentElement;
+          if (tbody && tbody.querySelectorAll('tr').length > 1) {
+            row.remove();
+            tbody.querySelectorAll('tr').forEach((r, idx) => {
+              r.setAttribute('data-idx', idx);
+              const tdTitle = r.querySelector('td:first-child');
+              if (tdTitle) tdTitle.textContent = `Tier ${idx + 1}`;
+            });
           }
         };
       });
 
-      // Mode Bertingkat: Input Max Order auto update baris berikutnya
       modal.querySelectorAll('.tiered-max-input').forEach(inp => {
         inp.oninput = (e) => {
           const row = e.target.closest('tr');
-          const idx = parseInt(row?.getAttribute('data-idx'));
+          const tbody = row?.parentElement;
+          if (!tbody) return;
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+          const idx = rows.indexOf(row);
           const maxVal = parseInt(e.target.value) || 0;
-          if (primaryState.wholesale_tiers && primaryState.wholesale_tiers[idx]) {
-            primaryState.wholesale_tiers[idx].max_qty = maxVal;
-            // Kunci baris berikutnya: min_qty = maxVal + 1
-            if (primaryState.wholesale_tiers[idx + 1]) {
-              primaryState.wholesale_tiers[idx + 1].min_qty = maxVal + 1;
-              const nextRow = modal.querySelector(`tr[data-idx="${idx + 1}"] input[data-field="min_qty"]`);
-              if (nextRow) nextRow.value = maxVal + 1;
-            }
+          if (idx >= 0 && idx < rows.length - 1) {
+            const nextRow = rows[idx + 1];
+            const nextMinInp = nextRow.querySelector('input[data-field="min_qty"]');
+            if (nextMinInp) nextMinInp.value = maxVal + 1;
           }
         };
       });
+    }
 
-      // Tombol Simpan Pengaturan Grosir
-      const btnSaveWholesale = document.getElementById('btn-save-wholesale-modal');
-      if (btnSaveWholesale) {
-        btnSaveWholesale.onclick = () => {
-          if (primaryState.wholesale_mode === 'normal') {
-            const minV = parseInt(inpMin?.value) || 1;
-            const maxV = chkNoMax?.checked ? null : (parseInt(inpMax?.value) || null);
-            const discV = parseFloat(inpDisc?.value) || 0;
-            primaryState.wholesale_tiers = [{
-              id: DB.generateUUID(),
-              min_qty: minV,
-              max_qty: maxV,
-              price: discV
-            }];
+    const modalWholesale = document.getElementById('modal-wholesale-config');
+    if (modalWholesale) {
+      modalWholesale.querySelectorAll('input[name="modal_wholesale_mode"]').forEach(rad => {
+        rad.onchange = () => {
+          syncWholesaleModeRadioStyles(modalWholesale);
+          const mat = materialsState.find(m => m.id === currentWholesaleContext.matId);
+          const body = document.getElementById('modal-wholesale-body');
+          if (body) {
+            body.innerHTML = renderWholesaleTableForMat(mat);
+            bindWholesaleModalInputs(modalWholesale, mat);
           }
-          modal.classList.add('hidden');
-          refreshCombinationMatrixTable();
         };
-      }
+      });
+    }
+
+    const btnSaveWholesale = document.getElementById('btn-save-wholesale-modal');
+    if (btnSaveWholesale) {
+      btnSaveWholesale.onclick = () => {
+        const modal = document.getElementById('modal-wholesale-config');
+        if (!modal) return;
+        const matId = currentWholesaleContext.matId;
+        const mat = materialsState.find(m => m.id === matId);
+        const isTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked;
+
+        if (!isTiered) {
+          const inpMin = document.getElementById('modal-wholesale-normal-min');
+          const inpMax = document.getElementById('modal-wholesale-normal-max');
+          const inpDisc = document.getElementById('modal-wholesale-normal-discount');
+          const chkNoMax = document.getElementById('chk-wholesale-no-max');
+
+          const minV = parseInt(inpMin?.value) || 1;
+          const maxV = chkNoMax?.checked ? null : (parseInt(inpMax?.value) || null);
+          const discV = parseFloat(inpDisc?.value) || 0;
+
+          if (discV <= 0) {
+            alert('Potongan harga grosir harus lebih besar dari 0.');
+            return;
+          }
+
+          const tierData = [{
+            id: DB.generateUUID(),
+            min_qty: minV,
+            max_qty: maxV,
+            price: discV
+          }];
+
+          if (mat) {
+            mat.wholesale_mode = 'normal';
+            mat.wholesale_tiers = tierData;
+          }
+          primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
+          primaryState.wholesale_mode_by_variant[matId] = 'normal';
+          primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
+          primaryState.wholesale_by_variant[matId] = tierData;
+        } else {
+          const gatheredTiers = [];
+          modal.querySelectorAll('#wholesale-tiers-table-body tr').forEach(tr => {
+            const minInp = tr.querySelector('input[data-field="min_qty"]');
+            const maxInp = tr.querySelector('input[data-field="max_qty"]');
+            const priceInp = tr.querySelector('input[data-field="price"]');
+            const tId = tr.getAttribute('data-tier-id') || DB.generateUUID();
+
+            gatheredTiers.push({
+              id: tId,
+              min_qty: parseInt(minInp?.value) || 1,
+              max_qty: maxInp?.value ? parseInt(maxInp.value) : null,
+              price: parseFloat(priceInp?.value) || 0
+            });
+          });
+
+          if (gatheredTiers.length === 0) {
+            alert('Minimal harus ada 1 tingkatan harga grosir.');
+            return;
+          }
+
+          if (mat) {
+            mat.wholesale_mode = 'tiered';
+            mat.wholesale_tiers = gatheredTiers;
+          }
+          primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
+          primaryState.wholesale_mode_by_variant[matId] = 'tiered';
+          primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
+          primaryState.wholesale_by_variant[matId] = gatheredTiers;
+        }
+
+        modal.classList.add('hidden');
+        refreshCombinationMatrixTable();
+        updateProductCardLivePreview();
+      };
     }
 
     // =====================================================================
-    // LOGIKA MODAL KELIPATAN ORDER (MODE GLOBAL VS SPESIFIK PER VARIAN)
+    // LOGIKA MODAL KELIPATAN ORDER (PER-BARIS INDEPENDEN)
     // =====================================================================
-    function bindMultipleModalEvents() {
+    let currentMultipleContext = { matId: null, matName: '' };
+
+    function openOrderMultipleModal(matId, matName) {
+      currentMultipleContext = { matId, matName };
       const modal = document.getElementById('modal-order-multiple-config');
       if (!modal) return;
 
-      modal.querySelectorAll('input[name="order_multiple_type_radio"]').forEach(rad => {
-        rad.onchange = (e) => {
-          primaryState.order_multiple_type = e.target.value;
-          const body = document.getElementById('modal-order-multiple-body');
-          if (body) {
-            body.innerHTML = renderOrderMultipleSection();
-            bindMultipleModalEvents();
-          }
-        };
-      });
+      const title = document.getElementById('multiple-modal-title');
+      const subtitle = document.getElementById('multiple-modal-subtitle');
+      if (title) title.textContent = 'Pengaturan Kelipatan Order';
+      if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
 
-      // Tambah Baris Varian
-      const btnAddRow = document.getElementById('btn-add-variant-multiple-row');
-      if (btnAddRow) {
-        btnAddRow.onclick = () => {
-          if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
-          const currentChosen = Object.keys(primaryState.order_multiples_by_variant);
-          const nextAvail = materialsState.find(m => !currentChosen.includes(m.id));
-          if (nextAvail) {
-            primaryState.order_multiples_by_variant[nextAvail.id] = 1;
-          }
-          const body = document.getElementById('modal-order-multiple-body');
-          if (body) {
-            body.innerHTML = renderOrderMultipleSection();
-            bindMultipleModalEvents();
-          }
-        };
+      const mat = materialsState.find(m => m.id === matId);
+      const type = mat?.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId] ? (primaryState.order_multiples_by_variant[matId] > 1 ? 'spesifik' : 'umum') : 'umum');
+      const currentVal = mat?.order_multiple_value || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId]) || 2;
+
+      const radUmum = modal.querySelector('input[name="modal_order_multiple_radio"][value="umum"]');
+      const radSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]');
+      if (type === 'spesifik') {
+        if (radSpesifik) radSpesifik.checked = true;
+      } else {
+        if (radUmum) radUmum.checked = true;
+      }
+      syncMultipleRadioStyles(modal);
+
+      const body = document.getElementById('modal-order-multiple-body');
+      if (body) {
+        body.innerHTML = renderMultipleBody(type, currentVal);
       }
 
-      // Hapus Baris Varian
-      modal.querySelectorAll('.btn-delete-variant-multiple').forEach(btn => {
-        btn.onclick = (e) => {
-          const tr = e.target.closest('tr');
-          const vId = tr?.getAttribute('data-variant-id');
-          if (vId && primaryState.order_multiples_by_variant) {
-            delete primaryState.order_multiples_by_variant[vId];
-          }
-          const body = document.getElementById('modal-order-multiple-body');
-          if (body) {
-            body.innerHTML = renderOrderMultipleSection();
-            bindMultipleModalEvents();
-          }
-        };
-      });
+      modal.classList.remove('hidden');
+    }
 
-      // Ganti Pilihan Varian (Deduplikasi)
-      modal.querySelectorAll('.select-variant-multiple-id').forEach(sel => {
-        sel.onchange = (e) => {
-          const tr = e.target.closest('tr');
-          const oldId = tr?.getAttribute('data-variant-id');
-          const newId = e.target.value;
-          const currentVal = parseInt(tr?.querySelector('.input-variant-multiple')?.value) || 1;
-          if (primaryState.order_multiples_by_variant) {
-            if (oldId) delete primaryState.order_multiples_by_variant[oldId];
-            primaryState.order_multiples_by_variant[newId] = currentVal;
-          }
-          const body = document.getElementById('modal-order-multiple-body');
-          if (body) {
-            body.innerHTML = renderOrderMultipleSection();
-            bindMultipleModalEvents();
-          }
-        };
-      });
-
-      // Tombol Simpan Kelipatan
-      const btnSaveMult = document.getElementById('btn-save-multiple-modal');
-      if (btnSaveMult) {
-        btnSaveMult.onclick = () => {
-          if (primaryState.order_multiple_type === 'all') {
-            const singleInp = document.getElementById('input-order-multiple-single');
-            primaryState.order_multiple_value = parseInt(singleInp?.value) || 1;
-          } else {
-            const multiplesMap = {};
-            modal.querySelectorAll('#variant-multiples-table-body tr').forEach(tr => {
-              const vId = tr.querySelector('.select-variant-multiple-id')?.value;
-              const val = parseInt(tr.querySelector('.input-variant-multiple')?.value) || 1;
-              if (vId) multiplesMap[vId] = val;
-            });
-            primaryState.order_multiples_by_variant = multiplesMap;
-          }
-          modal.classList.add('hidden');
-          refreshCombinationMatrixTable();
-        };
+    function syncMultipleRadioStyles(modal) {
+      const isSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]')?.checked;
+      const lblUmum = modal.querySelector('#lbl-multiple-umum');
+      const lblSpesifik = modal.querySelector('#lbl-multiple-spesifik');
+      if (lblUmum) {
+        lblUmum.className = !isSpesifik
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+      }
+      if (lblSpesifik) {
+        lblSpesifik.className = isSpesifik
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
       }
     }
 
+    function renderMultipleBody(type, currentVal) {
+      if (type === 'spesifik') {
+        return `
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+            <label class="block text-xs font-bold text-slate-800">
+              Kelipatan Pembelian untuk Opsi Ini:
+            </label>
+            <div class="flex items-center gap-2">
+              <input 
+                type="number" 
+                id="input-variant-multiple-val" 
+                min="2" 
+                value="${currentVal || 2}" 
+                class="w-28 px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]" 
+              />
+              <span class="text-xs text-slate-500 font-medium">pcs</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Contoh: Diatur 10, maka pelanggan hanya dapat memesan opsi ini dalam kelipatan 10 pcs (10, 20, 30, dst).</p>
+          </div>
+        `;
+      }
+      return `
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 leading-relaxed">
+          Opsi ini mengikuti kelipatan pesanan umum (1 pcs atau ketentuan standar produk).
+        </div>
+      `;
+    }
+
+    const modalMultiple = document.getElementById('modal-order-multiple-config');
+    if (modalMultiple) {
+      modalMultiple.querySelectorAll('input[name="modal_order_multiple_radio"]').forEach(rad => {
+        rad.onchange = () => {
+          syncMultipleRadioStyles(modalMultiple);
+          const mat = materialsState.find(m => m.id === currentMultipleContext.matId);
+          const isSpesifik = rad.value === 'spesifik';
+          const body = document.getElementById('modal-order-multiple-body');
+          if (body) {
+            body.innerHTML = renderMultipleBody(isSpesifik ? 'spesifik' : 'umum', mat?.order_multiple_value || 2);
+          }
+        };
+      });
+    }
+
+    const btnSaveMultiple = document.getElementById('btn-save-multiple-modal');
+    if (btnSaveMultiple) {
+      btnSaveMultiple.onclick = () => {
+        const modal = document.getElementById('modal-order-multiple-config');
+        if (!modal) return;
+        const matId = currentMultipleContext.matId;
+        const mat = materialsState.find(m => m.id === matId);
+        const isSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]')?.checked;
+
+        if (isSpesifik) {
+          const inpVal = document.getElementById('input-variant-multiple-val');
+          const val = parseInt(inpVal?.value) || 2;
+          if (val < 2) {
+            alert('Kelipatan pesanan spesifik minimal bernilai 2.');
+            return;
+          }
+          if (mat) {
+            mat.order_multiple_type = 'spesifik';
+            mat.order_multiple_value = val;
+          }
+          primaryState.order_multiples_by_variant = primaryState.order_multiples_by_variant || {};
+          primaryState.order_multiples_by_variant[matId] = val;
+        } else {
+          if (mat) {
+            mat.order_multiple_type = 'umum';
+            mat.order_multiple_value = 1;
+          }
+          primaryState.order_multiples_by_variant = primaryState.order_multiples_by_variant || {};
+          primaryState.order_multiples_by_variant[matId] = 1;
+        }
+
+        modal.classList.add('hidden');
+        refreshCombinationMatrixTable();
+        updateProductCardLivePreview();
+      };
+    }
+
     // =====================================================================
-    // LOGIKA MODAL SPESIFIK OPTIONS (CHECKLIST POPOVER)
+    // LOGIKA MODAL SPESIFIK OPTIONS (PER-BARIS INDEPENDEN)
     // =====================================================================
     let currentSpecificContext = { tier: 'main', matId: null, matName: '' };
 
@@ -18721,8 +19087,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         extra_2: primaryState.variation_labels?.label_extra_2 || 'Variasi 4'
       };
 
-      if (title) title.textContent = `Pilih ${tierLabels[tier] || 'Opsi Spesifik'}`;
-      if (subtitle) subtitle.textContent = `Pilihan yang berlaku khusus untuk: ${matName}`;
+      if (title) title.textContent = `Pengaturan ${tierLabels[tier] || 'Variasi'}`;
+      if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
+
+      const mat = materialsState.find(m => m.id === matId);
+      const currentScope = (mat && mat.variation_scopes && mat.variation_scopes[tier]) ||
+                           (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[matId] && primaryState.variation_scopes_by_variant[matId][tier]) ||
+                           'umum';
+
+      const radUmum = modal.querySelector('input[name="modal_scope_type"][value="umum"]');
+      const radSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]');
+      if (currentScope === 'spesifik') {
+        if (radSpesifik) radSpesifik.checked = true;
+      } else {
+        if (radUmum) radUmum.checked = true;
+      }
+      syncSpecificScopeRadioStyles(modal);
 
       const optionsList = (finishingsState[tier] || []).filter(f => f && f.name && f.name.trim() !== '');
       const validOptIds = optionsList.map(o => o.id);
@@ -18737,14 +19117,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       ` : optionsList.map((opt, oIdx) => {
         const isChecked = currentSelected.includes(opt.id);
         return `
-          <label class="flex items-center justify-between p-2 rounded-md bg-white border border-slate-200 hover:border-emerald-500 cursor-pointer transition select-none text-xs">
+          <label class="flex items-center justify-between p-2 rounded-md bg-white border border-slate-200 hover:border-[var(--color-primary)] cursor-pointer transition select-none text-xs">
             <span class="font-medium text-slate-800">${escapeHtml(opt.name.trim())}</span>
-            <input type="checkbox" class="specific-opt-checkbox accent-emerald-600 rounded w-4 h-4 cursor-pointer" data-opt-id="${opt.id}" ${isChecked ? 'checked' : ''} />
+            <input type="checkbox" class="specific-opt-checkbox rounded w-4 h-4 cursor-pointer focus:ring-0 outline-none shadow-none" style="accent-color: var(--color-primary);" data-opt-id="${opt.id}" ${isChecked ? 'checked' : ''} />
           </label>
         `;
       }).join('');
 
-      // Checkbox checklist listener
       container.querySelectorAll('.specific-opt-checkbox').forEach(chk => {
         chk.onchange = () => {
           const checkedCount = container.querySelectorAll('.specific-opt-checkbox:checked').length;
@@ -18753,7 +19132,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // Pilih Semua Checkbox
       if (chkSelectAll) {
         chkSelectAll.onchange = (e) => {
           container.querySelectorAll('.specific-opt-checkbox').forEach(chk => {
@@ -18767,6 +19145,43 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       modal.classList.remove('hidden');
     }
 
+    function syncSpecificScopeRadioStyles(modal) {
+      const isSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]')?.checked;
+      const lblUmum = modal.querySelector('#lbl-scope-umum');
+      const lblSpesifik = modal.querySelector('#lbl-scope-spesifik');
+      const chkWrapper = modal.querySelector('#specific-checklist-wrapper');
+      const infoWrapper = modal.querySelector('#specific-umum-info-wrapper');
+
+      if (lblUmum) {
+        lblUmum.className = !isSpesifik
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+      }
+      if (lblSpesifik) {
+        lblSpesifik.className = isSpesifik
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+      }
+      if (chkWrapper && infoWrapper) {
+        if (isSpesifik) {
+          chkWrapper.classList.remove('hidden');
+          infoWrapper.classList.add('hidden');
+        } else {
+          chkWrapper.classList.add('hidden');
+          infoWrapper.classList.remove('hidden');
+        }
+      }
+    }
+
+    const modalSpecific = document.getElementById('modal-specific-options');
+    if (modalSpecific) {
+      modalSpecific.querySelectorAll('input[name="modal_scope_type"]').forEach(rad => {
+        rad.onchange = () => {
+          syncSpecificScopeRadioStyles(modalSpecific);
+        };
+      });
+    }
+
     const btnApplySpecific = document.getElementById('btn-apply-specific-modal');
     if (btnApplySpecific) {
       btnApplySpecific.onclick = () => {
@@ -18774,15 +19189,46 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const container = document.getElementById('specific-options-checklist-container');
         if (!container || !modal) return;
 
-        const checkedIds = Array.from(container.querySelectorAll('.specific-opt-checkbox:checked')).map(c => c.getAttribute('data-opt-id'));
         const { tier, matId } = currentSpecificContext;
+        const mat = materialsState.find(m => m.id === matId);
+        const isSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]')?.checked;
 
-        if (!primaryState.specific_options_map) primaryState.specific_options_map = {};
-        if (!primaryState.specific_options_map[matId]) primaryState.specific_options_map[matId] = {};
-        primaryState.specific_options_map[matId][tier] = checkedIds;
+        if (isSpesifik) {
+          const checkedIds = Array.from(container.querySelectorAll('.specific-opt-checkbox:checked')).map(c => c.getAttribute('data-opt-id'));
+          if (checkedIds.length === 0) {
+            alert('Silakan pilih minimal 1 opsi spesifik untuk varian ini.');
+            return;
+          }
+          if (mat) {
+            mat.variation_scopes = mat.variation_scopes || {};
+            mat.variation_scopes[tier] = 'spesifik';
+          }
+          primaryState.variation_scopes_by_variant = primaryState.variation_scopes_by_variant || {};
+          primaryState.variation_scopes_by_variant[matId] = primaryState.variation_scopes_by_variant[matId] || {};
+          primaryState.variation_scopes_by_variant[matId][tier] = 'spesifik';
+
+          primaryState.variation_scopes = primaryState.variation_scopes || {};
+          primaryState.variation_scopes[matId] = primaryState.variation_scopes_by_variant[matId];
+
+          primaryState.specific_options_map = primaryState.specific_options_map || {};
+          primaryState.specific_options_map[matId] = primaryState.specific_options_map[matId] || {};
+          primaryState.specific_options_map[matId][tier] = checkedIds;
+        } else {
+          if (mat) {
+            mat.variation_scopes = mat.variation_scopes || {};
+            mat.variation_scopes[tier] = 'umum';
+          }
+          primaryState.variation_scopes_by_variant = primaryState.variation_scopes_by_variant || {};
+          primaryState.variation_scopes_by_variant[matId] = primaryState.variation_scopes_by_variant[matId] || {};
+          primaryState.variation_scopes_by_variant[matId][tier] = 'umum';
+
+          primaryState.variation_scopes = primaryState.variation_scopes || {};
+          primaryState.variation_scopes[matId] = primaryState.variation_scopes_by_variant[matId];
+        }
 
         modal.classList.add('hidden');
         refreshCombinationMatrixTable();
+        updateProductCardLivePreview();
       };
     }
 
@@ -19023,11 +19469,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           <div class="grid grid-cols-2 gap-2 text-xs mb-3">
             <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
               <input type="radio" name="inline_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
-              <span>Mode Normal</span>
+              <span>Normal</span>
             </label>
             <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode === 'tiered' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
               <input type="radio" name="inline_wholesale_mode" value="tiered" ${primaryState.wholesale_mode === 'tiered' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
-              <span>Mode Bertingkat</span>
+              <span>Bertingkat</span>
             </label>
           </div>
           <div id="inline-wholesale-body" class="space-y-3">

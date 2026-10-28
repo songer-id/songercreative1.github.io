@@ -657,6 +657,29 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menghapus seluruh pesan yang memuat kata `Minimal "0"`, `Minimal 0`, atau `Min. 0`.
       - Mengganti teks peringatan ketika input kosong atau tidak valid menjadi `"Wajib diisi"` pada inline warning, `validateOptionField()`, `validateSingleCost()`, dan `validateForm()`.
       - Modal/HPP tetap mendukung angka `0` sebagai nilai yang sah.
+  - [x] **Penyempurnaan Form Produk Bagian 21 (Tahap 1): Perbaikan Layout, Independensi State per Baris, dan Standardisasi UI Tabel List Variasi Produk (`js/product-form.js`, `admin.html`, `docs/PRD_MASTER.md`)**:
+    - **Perbaikan Jarak (Spacing) Judul "List Variasi Produk"**:
+      - Memberikan jarak vertikal proporsional (`mt-7` pada `#combination-matrix-section`, serta `mt-5 sm:mt-6 mb-3` pada kontainer judul `List Variasi Produk`) sehingga terpisah rapi dari tombol aksi `+ Tambah Variasi ...`.
+    - **Independensi State per Baris Opsi Variasi 1 & Tanpa Nilai Default ("Pilih")**:
+      - Pengaturan untuk: (1) Keterkaitan Variasi 2 s.d. 4 (`Umum` / `Spesifik`), (2) Harga Grosir (`Normal` / `Bertingkat`), dan (3) Kelipatan Order (`Umum` / `Spesifik`) tersimpan 100% independen per baris opsi Variasi 1 (`mat.variation_scopes`, `mat.wholesale_mode`, `mat.wholesale_tiers`, `mat.order_multiple_type`, `mat.order_multiple_value`).
+      - Mengubah konfigurasi pada salah satu baris (misal Opsi 1) TIDAK mengubah atau menyamakan pengaturan pada baris Opsi 2, Opsi 3, dst.
+      - Baris baru atau baris yang belum diatur/belum valid secara tegas menampilkan placeholder **`Pilih`** dan ikon pemicu `bi bi-gear-fill`, user wajib mengatur secara mandiri tanpa default otomatis.
+    - **Penghapusan Kata "Mode" & Standardisasi Label Bersih**:
+      - Menghilangkan kata `"Mode"` dari seluruh tabel variasi, modal pengaturan, dan pengaturan produk tunggal (misal `Mode Normal` -> `Normal`, `Mode Bertingkat` -> `Bertingkat`, `Mode Umum` -> `Umum`, `Mode Spesifik` -> `Spesifik`).
+      - Menampilkan label ringkas dan baku saat valid (`Umum`, `Spesifik`, `Normal`, `Bertingkat`) atau `Pilih` jika belum valid.
+    - **Standardisasi Desain Sel Tabel (Kotak Teks + Ikon Pemicu di Luar Border)**:
+      - Menghapus `<select>` dropdown, badge lama, dan tombol kapsul hijau pada kolom Variasi 2–4, Harga Grosir, dan Kelipatan Order.
+      - Mengganti seluruhnya dengan format seragam horizontal flex:
+        - Sisi kiri: Kotak teks putih border tipis (`bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none cursor-pointer`).
+        - Sisi kanan: Tombol aksi ikon di luar border dengan warna dinamis `text-[var(--color-primary)]` (`bi bi-gear-fill` untuk status `Pilih` / belum diatur; `bi bi-pencil-square` untuk pengaturan valid).
+        - Klik pada kotak teks maupun tombol ikon membuka modal konfigurasi yang bersangkutan untuk baris tersebut.
+      - Menghilangkan checkbox di header kolom Variasi 2–4, sedangkan checkbox aktivasi di header kolom Harga Grosir dan Kelipatan Order tetap dipertahankan. Jika header checkbox tidak dicentang, sel menampilkan teks `Nonaktif` abu-abu disabled.
+    - **Penyelarasan Input Max. Order & Popover "Tanpa Batas"**:
+      - Input Max. Order diseragamkan dengan Min. Order (`font-normal`, border tipis, text-center, hanya menerima digit angka positif).
+      - Popover saran `"Tanpa Batas"` aktif saat input fokus/klik, dan menetapkan nilai `0` secara bersih.
+    - **Pembersihan Ikon Dekoratif Modal**:
+      - Menghapus ikon dekoratif non-fungsional pada pilihan radio modal opsi spesifik, modal harga grosir, dan modal kelipatan pesanan.
+      - Menggunakan radio input bersih dengan pewarnaan dinamis `accent-[var(--color-primary)]` dan outline fokus tanpa kotak bayangan luar.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
