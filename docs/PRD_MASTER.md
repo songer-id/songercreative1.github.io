@@ -708,6 +708,15 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menambahkan pengecekan protektif `typeof ... === 'function'` pada pemanggilan `vp.scrollTo`, `navContainer.scrollTo`, dan `window.scrollTo` dengan fallback langsung ke `.scrollTop = ...` / `.scrollLeft = ...`, mencegah crash runtime `TypeError: scrollTo is not a function` pada browser/webview atau lingkungan virtual tanpa polyfill smooth scroll.
     - **Verifikasi Runtime Menyeluruh via Node.js**:
       - Simulasi siklus hidup form lengkap dari pembacaan 11 skrip inti, ekstraksi 126 ID elemen DOM `admin.html`, hingga eksekusi `ProductForm.initCreate()` yang merender 71,126 karakter HTML secara sempurna dengan 0 error runtime.
+  - [x] **Penyempurnaan Form Produk Bagian 24: Penyeragaman Visual Presisi Kotak Teks & Tombol Ikon List Variasi Produk (Variasi 2–4, Harga Grosir, Kelipatan Order) serta Pembersihan CSS Override (`css/admin.css`, `js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Penyeragaman Kotak Teks (`.combo-text-btn`)**:
+      - Seluruh kotak teks pada kolom Variasi 2–4, Harga Grosir, dan Kelipatan Order diseragamkan dengan input `Min. Order` / `Max. Order`: background putih bersih (`#ffffff`), teks gelap (`#1e293b`), border tipis abu-abu (`1px solid #cbd5e1`), sudut `rounded-md` (`6px`), padding `px-3 py-1.5`, dan tinggi proporsional (`min-height: 32px`).
+    - **Pembersihan Tombol Ikon di Luar Border (`.combo-icon-btn`)**:
+      - Tombol aksi ikon (`bi-gear-fill` & `bi-pencil-square`) kini berdiri bersih di sebelah kanan luar kotak teks tanpa background dan tanpa border (`background: transparent !important; border: none !important;`), dengan warna dinamis brand (`var(--color-primary)`).
+    - **Pembersihan Rule Override CSS (`css/admin.css`)**:
+      - Menghapus selektor `.btn-open-wholesale-modal` dan `.btn-open-multiple-modal` dari rule background hijau muda (`var(--color-primary-subtle)`) di baris 2488 `css/admin.css`.
+      - Menghapus selektor umum `button` dari rule border-radius di baris 1498 `css/admin.css`.
+      - Menambahkan rule CSS scoped berpresisi tinggi untuk `.combo-text-btn` dan `.combo-icon-btn` di `#combination-matrix-section`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

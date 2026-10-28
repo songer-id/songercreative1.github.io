@@ -13655,10 +13655,10 @@ const ProductForm = (() => {
 
         return `
           <div class="inline-flex items-center justify-center gap-2">
-            <button type="button" class="btn-open-scope-modal bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-[var(--color-primary)] transition cursor-pointer" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+            <button type="button" class="btn-open-scope-modal combo-text-btn bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-slate-400 focus:border-[var(--color-primary)] transition cursor-pointer" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
               ${displayLabel}
             </button>
-            <button type="button" class="btn-open-scope-modal text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer p-0.5 leading-none shrink-0" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
+            <button type="button" class="btn-open-scope-modal combo-icon-btn bg-transparent border-none p-1 text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer leading-none shrink-0" data-tier="${tier}" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
               <i class="${iconClass} text-sm"></i>
             </button>
           </div>
@@ -13689,10 +13689,10 @@ const ProductForm = (() => {
 
         return `
           <div class="inline-flex items-center justify-center gap-2">
-            <button type="button" class="btn-open-wholesale-modal bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-[var(--color-primary)] transition cursor-pointer" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+            <button type="button" class="btn-open-wholesale-modal combo-text-btn bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-slate-400 focus:border-[var(--color-primary)] transition cursor-pointer" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
               ${displayLabel}
             </button>
-            <button type="button" class="btn-open-wholesale-modal text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer p-0.5 leading-none shrink-0" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
+            <button type="button" class="btn-open-wholesale-modal combo-icon-btn bg-transparent border-none p-1 text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer leading-none shrink-0" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
               <i class="${iconClass} text-sm"></i>
             </button>
           </div>
@@ -13723,10 +13723,10 @@ const ProductForm = (() => {
 
         return `
           <div class="inline-flex items-center justify-center gap-2">
-            <button type="button" class="btn-open-multiple-modal bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-[var(--color-primary)] transition cursor-pointer" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
+            <button type="button" class="btn-open-multiple-modal combo-text-btn bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-slate-400 focus:border-[var(--color-primary)] transition cursor-pointer" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
               ${displayLabel}
             </button>
-            <button type="button" class="btn-open-multiple-modal text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer p-0.5 leading-none shrink-0" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
+            <button type="button" class="btn-open-multiple-modal combo-icon-btn bg-transparent border-none p-1 text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer leading-none shrink-0" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
               <i class="${iconClass} text-sm"></i>
             </button>
           </div>

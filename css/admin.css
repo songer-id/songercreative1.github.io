@@ -1169,9 +1169,8 @@ input[type="radio"]:active {
 .capsule-scope-select,
 .combo-min-order,
 .combo-max-order,
-.btn-open-wholesale-modal,
-.btn-open-multiple-modal {
-  min-height: 36px;
+.combo-text-btn {
+  min-height: 32px;
   touch-action: manipulation;
 }
 
@@ -1495,14 +1494,64 @@ input::-webkit-calendar-picker-indicator {
 /* Penyeragaman Sudut rounded-md pada Seluruh Kontrol di List Variasi Produk */
 #combination-matrix-section input,
 #combination-matrix-section select,
-#combination-matrix-section button,
 #combination-matrix-section .combo-min-order-input,
 #combination-matrix-section .combo-max-order-input,
 #combination-matrix-section .combo-scope-select,
-#combination-matrix-section .btn-open-wholesale-modal,
-#combination-matrix-section .btn-open-multiple-modal,
-#combination-matrix-section .btn-open-specific-modal {
+#combination-matrix-section .combo-text-btn {
   border-radius: 0.375rem !important; /* 6px rounded-md */
+}
+
+/* Penyeragaman Kotak Teks & Tombol Ikon List Variasi Produk (Variasi 2-4, Grosir, Kelipatan Order) */
+#combination-matrix-section .combo-text-btn {
+  background-color: #ffffff !important;
+  color: #1e293b !important; /* text-slate-800 */
+  border: 1px solid #cbd5e1 !important; /* border border-slate-300 */
+  border-radius: 0.375rem !important; /* rounded-md */
+  min-height: 32px !important;
+  line-height: 1.25rem !important;
+  padding: 0.375rem 0.75rem !important; /* px-3 py-1.5 */
+  font-size: 0.75rem !important; /* text-xs */
+  font-weight: 400 !important; /* font-normal */
+  min-width: 85px !important;
+  text-align: center !important;
+  user-select: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease !important;
+}
+
+#combination-matrix-section .combo-text-btn:hover {
+  border-color: #94a3b8 !important; /* hover:border-slate-400 */
+  background-color: #f8fafc !important;
+}
+
+#combination-matrix-section .combo-text-btn:focus,
+#combination-matrix-section .combo-text-btn:focus-visible {
+  outline: none !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 1px var(--color-primary) !important;
+}
+
+#combination-matrix-section .combo-icon-btn {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  padding: 0.25rem !important; /* p-1 */
+  color: var(--color-primary) !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: opacity 0.15s ease !important;
+}
+
+#combination-matrix-section .combo-icon-btn:hover {
+  opacity: 0.75 !important;
+  background-color: transparent !important;
+  background: transparent !important;
 }
 
 /* ==========================================================================
@@ -2484,9 +2533,7 @@ input::-webkit-calendar-picker-indicator {
 #btn-toggle-order-multiple,
 #btn-toggle-sandbox-calc,
 #gallery-ratio-badge,
-#step2-gallery-ratio-badge,
-.btn-open-wholesale-modal,
-.btn-open-multiple-modal {
+#step2-gallery-ratio-badge {
   background-color: var(--color-primary-subtle) !important;
   border-color: var(--color-primary) !important;
   color: var(--color-primary-hover) !important;
