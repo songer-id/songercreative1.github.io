@@ -635,6 +635,28 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Bereaksi secara real-time saat seller mengetik nama produk di Step 1 (`#input-prod-name`) maupun Step 2 (`#step2-input-name`).
     - **Perbesar Thumbnail Header Drawer & Kurangi Radius Sudutnya**:
       - Mengubah kontainer thumbnail gambar di pojok kiri atas Drawer Shopee-Style (`buildShopeeDrawerHtml`) dari `w-14 h-14 rounded-xl` (`56px`, radius 12px) menjadi `w-16 h-16 rounded-md` (`64px`, radius 6px) untuk Kasus A (Produk Tunggal) maupun Kasus B (Produk Memiliki Variasi).
+  - [x] **Penyempurnaan Form Produk Bagian 21: Tipografi Nama Produk font-normal, Perbesar Thumbnail Header Drawer Menjadi w-20 h-20 rounded-[2px], Validasi Harga Jual Tanpa Variasi Minimal 99, Dukungan Penuh Harga "0" pada Variasi & Layanan Extras, serta Standardisasi Peringatan Modal/HPP "Wajib diisi" (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Tipografi Nama Produk Normal (font-normal)**:
+      - Menghapus ketebalan font (`font-semibold`, `font-bold`, `font-extrabold`, `font-medium`) pada elemen Nama Produk.
+      - Menjadikan judul Nama Produk standar `font-normal` pada Kartu Pratinjau (Model A, B, C Step 1) dan Pratinjau Detail Produk / Mini PDP (Step 2).
+      - Tetap mempertahankan otomatisasi ukuran font adaptif (`text-[11px] sm:text-[12.5px]` untuk nama `>= 65` karakter vs `text-xs sm:text-sm` untuk `< 65` karakter).
+    - **Perbesar Thumbnail Header Drawer Menjadi Hampir Kotak (`w-20 h-20 rounded-[2px]`)**:
+      - Memperbesar kontainer thumbnail gambar produk di pojok kiri atas Drawer Shopee-Style (`buildShopeeDrawerHtml`) dari `w-16 h-16 rounded-md` (`64px`) menjadi `w-20 h-20 rounded-[2px]` (`80px` x `80px` dengan sudut tegas hampir kotak, `style="border-radius: 2px !important;"`).
+      - Diterapkan presisi pada Kasus A (Produk Tunggal) dan Kasus B (Produk Memiliki Variasi).
+    - **Validasi Harga Jual Tunggal Minimal 99 vs Dukungan Harga "0" pada Variasi & Extras**:
+      - **Produk Tanpa Variasi (Single Product)**:
+        - Harga Jual wajib minimal 99 (`Rp99`).
+        - Jika kosong (`""`), munculkan peringatan inline merah `"Wajib diisi"`, digagalkan pada `canActivateTestMode()` dengan label `'Harga Jual'`, dan pada `validateForm()` dengan pesan `'Harga Jual produk wajib diisi.'`.
+        - Jika diisi angka kurang dari 99 (misal `0` s/d `98`), munculkan peringatan inline merah `Masukkan Minimal "99"`, digagalkan pada `canActivateTestMode()` dengan label `'Harga Jual (Minimal Rp99)'`, dan pada `validateForm()` dengan pesan `'Harga Jual produk minimal bernilai 99.'`.
+        - Hanya valid jika terisi angka `>= 99`.
+      - **Produk Bervariasi & Layanan Extras**:
+        - Mendukung penuh harga satuan `"0"` (`Rp0` / `>= 0`) untuk varian gratis, gift, bonus, atau opsi tanpa biaya tambahan di Variasi 1 s.d. 4 dan Layanan Extras.
+        - Memvalidasi agar tidak berupa string kosong (`""`) atau negatif (`< 0`).
+        - Mendukung pewarisan harga jika toggle `samePrice` aktif dan opsi baris pertama terisi `>= 0`.
+    - **Standardisasi Peringatan Modal/HPP (Biaya Modal) Menjadi "Wajib diisi"**:
+      - Menghapus seluruh pesan yang memuat kata `Minimal "0"`, `Minimal 0`, atau `Min. 0`.
+      - Mengganti teks peringatan ketika input kosong atau tidak valid menjadi `"Wajib diisi"` pada inline warning, `validateOptionField()`, `validateSingleCost()`, dan `validateForm()`.
+      - Modal/HPP tetap mendukung angka `0` sebagai nilai yang sah.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
