@@ -40,6 +40,12 @@
     if (typeof root.adjustColorBrightness === 'undefined') {
       root.adjustColorBrightness = utils.adjustColorBrightness;
     }
+    if (typeof root.formatPriceHtmlWithSmallRp === 'undefined') {
+      root.formatPriceHtmlWithSmallRp = utils.formatPriceHtmlWithSmallRp;
+    }
+    if (typeof root.formatPriceRangeHtmlWithSmallRp === 'undefined') {
+      root.formatPriceRangeHtmlWithSmallRp = utils.formatPriceRangeHtmlWithSmallRp;
+    }
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -59,6 +65,40 @@
   }
 
   const formatCurrency = formatIDR;
+
+  /**
+   * Format nominal harga dengan teks "Rp" berukuran lebih kecil dari angka nominalnya
+   * Menggunakan ketebalan font-semibold untuk angka nominal dan font-medium untuk teks "Rp".
+   * 
+   * @param {number|string} number - Nilai angka harga
+   * @returns {string} Contoh: '<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">25.000</span>'
+   */
+  function formatPriceHtmlWithSmallRp(number) {
+    if (number === null || number === undefined || number === '') {
+      return '<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">0</span>';
+    }
+    const num = Number(number);
+    const val = isNaN(num) ? 0 : Math.round(num);
+    return `<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${val.toLocaleString('id-ID')}</span>`;
+  }
+
+  /**
+   * Format rentang harga dengan teks "Rp" berukuran lebih kecil pada kedua sisi
+   * 
+   * @param {number|string} minNum - Nilai harga minimum
+   * @param {number|string} maxNum - Nilai harga maksimum
+   * @returns {string} Contoh: '<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">10.000</span><span class="font-normal mx-1">-</span><span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">25.000</span>'
+   */
+  function formatPriceRangeHtmlWithSmallRp(minNum, maxNum) {
+    const minN = Number(minNum || 0);
+    const maxN = Number(maxNum || 0);
+    const minVal = isNaN(minN) ? 0 : Math.round(minN);
+    const maxVal = isNaN(maxN) ? 0 : Math.round(maxN);
+    if (minVal === maxVal) {
+      return formatPriceHtmlWithSmallRp(minVal);
+    }
+    return `<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${minVal.toLocaleString('id-ID')}</span><span class="font-normal mx-1">-</span><span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${maxVal.toLocaleString('id-ID')}</span>`;
+  }
 
   /**
    * Sanitasi string HTML untuk mencegah serangan Cross-Site Scripting (XSS)
@@ -262,6 +302,8 @@
   return {
     formatIDR,
     formatCurrency,
+    formatPriceHtmlWithSmallRp,
+    formatPriceRangeHtmlWithSmallRp,
     escapeHtml,
     hexToRgba,
     generateSlug,

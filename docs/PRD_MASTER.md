@@ -3,7 +3,7 @@
 **Single Source of Truth (SSOT) & Technical Compass**  
 **Dokumen Acuan**: `docs/PRD_MASTER.md`  
 **Status Proyek**: Aktif - Tahap Pengembangan Menyeluruh  
-**Terakhir Diperbarui**: 28 Oktober 2026  
+**Terakhir Diperbarui**: 29 Oktober 2026  
 
 ---
 
@@ -620,6 +620,21 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menghapus bayangan kaku (`shadow-md`) pada tombol CTA Beli Sekarang / Keranjang dan tombol Oke Drawer Spesifikasi, beralih ke `shadow-none` dengan efek `hover:opacity-95` dan active scale untuk kesan flat SaaS profesional.
     - **Cache Version Bump**:
       - Memperbarui query string cache pada seluruh aset CSS dan script di `admin.html` ke `?v=8.1`.
+  - [x] **Penyempurnaan Form Produk Bagian 20: Tipografi Harga Rp Kecil & font-semibold, Penghapusan Default Harga 25.000, Otomatisasi Font Nama Produk >65 Karakter, serta Perbesar Thumbnail & Kurangi Radius Drawer (`js/product-form.js`, `js/utils.js`, `docs/PRD_MASTER.md`)**:
+    - **Tipografi Harga Rp Lebih Kecil & Ketebalan font-semibold (`formatPriceHtmlWithSmallRp` & `formatPriceRangeHtmlWithSmallRp`)**:
+      - Menyediakan fungsi helper terpusat `formatPriceHtmlWithSmallRp(num)` dan `formatPriceRangeHtmlWithSmallRp(minNum, maxNum)` di `js/product-form.js` dan `js/utils.js`.
+      - Teks `"Rp"` dirender lebih kecil dan proporsional (`<span class="text-[0.72em] font-medium mr-[1px]">Rp</span>`) didampingi angka nominal `font-semibold`.
+      - Menghapus ketebalan `font-extrabold` / `font-black` pada harga utama Kartu Produk (Model A/B/C Step 1), Mini PDP (Step 2), dan Header Drawer (`.drawer-header-price`), digantikan dengan `font-semibold` yang bersih dan elegan.
+      - Pada `updateShopeeDrawerLivePricing()`, pembaruan `.drawer-header-price` menggunakan `.innerHTML` untuk mempertahankan tag `"Rp"` kecil dan `font-semibold` secara reaktif saat opsi variasi berganti.
+    - **Penghapusan Default Harga 25.000 (Murni Rp0 Jika Belum Diisi)**:
+      - Menghapus inisialisasi default `let basePrice = 25000;` dan fallback semu `25000` / `50000` pada simulasi diskon.
+      - Menginisialisasi `let basePrice = 0;` dan menarik harga murni dari input harga jual tunggal (`#input-single-price` / `primaryState.price`) atau baris variasi (`materialsState`).
+      - Jika seller belum mengisi harga jual sama sekali, harga tampil murni `Rp0` dengan `"Rp"` kecil pada Kartu Produk, Mini PDP, maupun Drawer.
+    - **Otomatisasi Ukuran Font Nama Produk Berdasarkan Panjang Karakter (`< 65` vs `>= 65` Karakter)**:
+      - Logika reaktif otomatis: jika `name.trim().length >= 65`, ukuran font judul pada Kartu Produk dan Mini PDP otomatis disesuaikan dari `text-xs sm:text-sm` menjadi `text-[11px] sm:text-[12.5px] leading-snug`.
+      - Bereaksi secara real-time saat seller mengetik nama produk di Step 1 (`#input-prod-name`) maupun Step 2 (`#step2-input-name`).
+    - **Perbesar Thumbnail Header Drawer & Kurangi Radius Sudutnya**:
+      - Mengubah kontainer thumbnail gambar di pojok kiri atas Drawer Shopee-Style (`buildShopeeDrawerHtml`) dari `w-14 h-14 rounded-xl` (`56px`, radius 12px) menjadi `w-16 h-16 rounded-md` (`64px`, radius 6px) untuk Kasus A (Produk Tunggal) maupun Kasus B (Produk Memiliki Variasi).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

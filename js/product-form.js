@@ -2957,6 +2957,26 @@ const ProductForm = (() => {
     return 'Rp' + Math.round(num).toLocaleString('id-ID');
   }
 
+  function formatPriceHtmlWithSmallRp(num) {
+    if (typeof Utils !== 'undefined' && typeof Utils.formatPriceHtmlWithSmallRp === 'function') {
+      return Utils.formatPriceHtmlWithSmallRp(num);
+    }
+    const val = Math.round(Number(num) || 0);
+    return `<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${val.toLocaleString('id-ID')}</span>`;
+  }
+
+  function formatPriceRangeHtmlWithSmallRp(minNum, maxNum) {
+    if (typeof Utils !== 'undefined' && typeof Utils.formatPriceRangeHtmlWithSmallRp === 'function') {
+      return Utils.formatPriceRangeHtmlWithSmallRp(minNum, maxNum);
+    }
+    const minVal = Math.round(Number(minNum) || 0);
+    const maxVal = Math.round(Number(maxNum) || 0);
+    if (minVal === maxVal) {
+      return formatPriceHtmlWithSmallRp(minVal);
+    }
+    return `<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${minVal.toLocaleString('id-ID')}</span><span class="font-normal mx-1">-</span><span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${maxVal.toLocaleString('id-ID')}</span>`;
+  }
+
   function updateDesignChoiceButtonsState() {
     const btnUseDef = document.getElementById('btn-card-use-default');
     const btnCustom = document.getElementById('btn-card-custom-design');
@@ -5194,12 +5214,7 @@ const ProductForm = (() => {
       }
     }
 
-    let drawerPriceRangeString = '';
-    if (effMinPrice !== effMaxPrice) {
-      drawerPriceRangeString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID') + ' - Rp' + Math.round(effMaxPrice).toLocaleString('id-ID');
-    } else {
-      drawerPriceRangeString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID');
-    }
+    const drawerPriceRangeString = formatPriceRangeHtmlWithSmallRp(effMinPrice, effMaxPrice);
 
     // Aturan Min / Max / Kelipatan
     const rule = resolveActiveCombinationRule();
@@ -5402,15 +5417,15 @@ const ProductForm = (() => {
       return `
         <div class="flex flex-col w-full shrink-0 overflow-hidden bg-white">
           <div class="flex items-start gap-2.5 p-3 border-b border-slate-100 relative shrink-0">
-            <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+            <div class="w-16 h-16 rounded-md bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
               ${coverImg ? `<img src="${coverImg}" class="drawer-header-img w-full h-full object-cover" alt="Cover" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${effHasDiscount ? `
-                <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-price text-sm font-semibold text-red-600 leading-tight">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(headerStrikeUnitPrice).toLocaleString('id-ID')}</div>
               ` : `
-                <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
+                <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: ${accentColor};">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
@@ -5524,21 +5539,21 @@ const ProductForm = (() => {
       return `
         <div class="flex flex-col w-full overflow-hidden max-h-full bg-white">
           <div class="flex items-start gap-2.5 p-3 border-b border-slate-100 relative shrink-0">
-            <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+            <div class="w-16 h-16 rounded-md bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
               ${variantImg ? `<img src="${variantImg}" class="drawer-header-img w-full h-full object-cover" alt="Varian" />` : `<i class="bi bi-box-seam text-xl text-slate-300"></i>`}
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${isAllVariationsSelected ? `
                 ${effHasDiscount ? `
-                  <div class="drawer-header-price text-sm font-extrabold text-red-600 leading-tight">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-price text-sm font-semibold text-red-600 leading-tight">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                   <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(headerStrikeUnitPrice).toLocaleString('id-ID')}</div>
                 ` : `
-                  <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}</div>
+                  <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: ${accentColor};">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                   <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
                 `}
                 <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5 hidden">Pilih varian dahulu</div>
               ` : `
-                <div class="drawer-header-price text-sm font-extrabold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
+                <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
                 <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
               `}
@@ -6072,9 +6087,7 @@ const ProductForm = (() => {
         effMaxPrice = Math.round(effMaxPrice * 0.5);
       }
     }
-    const drawerPriceRangeString = (effMinPrice !== effMaxPrice)
-      ? `Rp${Math.round(effMinPrice).toLocaleString('id-ID')} - Rp${Math.round(effMaxPrice).toLocaleString('id-ID')}`
-      : `Rp${Math.round(effMinPrice).toLocaleString('id-ID')}`;
+    const drawerPriceRangeString = formatPriceRangeHtmlWithSmallRp(effMinPrice, effMaxPrice);
 
     const rule = resolveActiveCombinationRule();
     let minOrderQty = rule.min_order;
@@ -6152,9 +6165,9 @@ const ProductForm = (() => {
 
     document.querySelectorAll('.drawer-header-price').forEach(el => {
       if (hasVariations && !isAllVariationsSelected) {
-        el.textContent = drawerPriceRangeString;
+        el.innerHTML = drawerPriceRangeString;
       } else {
-        el.textContent = `Rp${Math.round(headerUnitPrice).toLocaleString('id-ID')}`;
+        el.innerHTML = formatPriceHtmlWithSmallRp(headerUnitPrice);
       }
     });
 
@@ -7267,8 +7280,14 @@ const ProductForm = (() => {
     if (customSectionMob) customSectionMob.classList.remove('hidden');
 
     // 1. Baca data langsung dari form DOM
-    const nameInput = document.getElementById('input-prod-name');
-    const name = (nameInput?.value || primaryState.name || '').trim() || 'Nama Produk Unggulan';
+    const nameInput = (currentStep === 2 ? document.getElementById('step2-input-name') : null) || document.getElementById('input-prod-name');
+    const rawTypedName = (nameInput?.value !== undefined && nameInput?.value !== null) ? nameInput.value : (primaryState.name || '');
+    const name = rawTypedName.trim() || 'Nama Produk Unggulan';
+
+    // Otomatisasi ukuran font nama produk berdasarkan panjang karakter (< 65 vs >= 65 karakter)
+    const isLongTitle = name.trim().length >= 65;
+    const cardTitleFontSizeClass = isLongTitle ? 'text-[11px] sm:text-[12.5px]' : 'text-xs sm:text-sm';
+    const miniPdpTitleFontSizeClass = isLongTitle ? 'text-[11px] sm:text-[12.5px]' : 'text-xs sm:text-sm';
 
     const catSelect = document.getElementById('select-prod-cat');
     const catId = catSelect?.value || primaryState.category_id;
@@ -7282,14 +7301,24 @@ const ProductForm = (() => {
       badgeLabel.textContent = variant === 'A' ? 'Kartu Klasik' : variant === 'B' ? 'Kartu Minimalis' : 'Kartu Detail';
     }
 
-    // 2. Hitung harga dasar dari input materials
-    let basePrice = 25000;
-    const priceInputs = document.querySelectorAll('#materials-table-body input[data-field="price"]');
-    if (priceInputs.length > 0) {
-      const prices = Array.from(priceInputs).map(inp => parseFloat(inp.value) || 0).filter(p => p > 0);
-      if (prices.length > 0) basePrice = Math.min(...prices);
-    } else if (materialsState && materialsState.length > 0 && materialsState[0].price > 0) {
-      basePrice = materialsState[0].price;
+    // 2. Hitung harga dasar murni dari input harga jual tunggal atau variasi (default 0, hapus default 25.000)
+    let basePrice = 0;
+    if (primaryState.has_variants) {
+      const priceInputs = document.querySelectorAll('#materials-table-body input[data-field="price"]');
+      if (priceInputs.length > 0) {
+        const prices = Array.from(priceInputs).map(inp => parseFloat(inp.value) || 0).filter(p => p > 0);
+        if (prices.length > 0) basePrice = Math.min(...prices);
+      } else if (materialsState && materialsState.length > 0) {
+        const prices = materialsState.map(m => parseFloat(m.price) || 0).filter(p => p > 0);
+        if (prices.length > 0) basePrice = Math.min(...prices);
+      }
+    } else {
+      const singlePriceInp = document.getElementById('input-single-price');
+      const rawSinglePrice = singlePriceInp ? singlePriceInp.value : primaryState.price;
+      basePrice = (rawSinglePrice !== '' && rawSinglePrice !== null && rawSinglePrice !== undefined) ? (parseFloat(rawSinglePrice) || 0) : 0;
+      if (basePrice <= 0 && materialsState && materialsState.length > 0 && materialsState[0].price > 0) {
+        basePrice = parseFloat(materialsState[0].price) || 0;
+      }
     }
 
     // 3. Hitung diskon promo harian / bulanan & simulasi
@@ -7298,7 +7327,7 @@ const ProductForm = (() => {
     let discountedPrice = basePrice;
     const toggleDaily = document.getElementById('toggle-promo-daily') || document.getElementById('toggle-monthly-discount');
     const isDiscChecked = toggleDaily ? toggleDaily.checked : (primaryState.has_daily_promo || primaryState.has_monthly_discount);
-    if (isDiscChecked) {
+    if (isDiscChecked && basePrice > 0) {
       const discTypeSelect = document.getElementById('select-promo-discount-type') || document.getElementById('select-monthly-discount-type');
       const discValInput = document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val');
       const dType = discTypeSelect?.value || primaryState.discount_type || 'percent';
@@ -7325,7 +7354,7 @@ const ProductForm = (() => {
     const effHasDiscount = hasDiscount || simulateCountdown;
     const effDiscPercent = (hasDiscount && discPercent > 0) ? discPercent : 50;
 
-    // Hitung harga normal, harga coret & harga final di live preview
+    // Hitung harga normal, harga coret & harga final di live preview (tanpa default semu 25.000 / 50.000)
     let origStrikePrice = basePrice;
     let effFinalPrice = basePrice;
     if (effHasDiscount) {
@@ -7333,13 +7362,13 @@ const ProductForm = (() => {
         origStrikePrice = basePrice;
         effFinalPrice = discountedPrice;
       } else {
-        // Mode simulasi diskon 50%: harga normal misal Rp 50.000 dicoret menjadi Rp 25.000
-        if (basePrice <= 25000) {
-          origStrikePrice = 50000;
-          effFinalPrice = basePrice > 0 ? basePrice : 25000;
+        // Mode simulasi diskon 50%
+        if (basePrice > 0) {
+          origStrikePrice = basePrice * 2;
+          effFinalPrice = basePrice;
         } else {
-          origStrikePrice = basePrice;
-          effFinalPrice = Math.round(basePrice * 0.5);
+          origStrikePrice = 0;
+          effFinalPrice = 0;
         }
       }
     }
@@ -7547,15 +7576,15 @@ const ProductForm = (() => {
           <!-- Body -->
           <div class="p-2.5 sm:p-3 flex-1 flex flex-col justify-between space-y-1.5">
             <!-- Judul Produk: 1 Baris Teks -->
-            <h4 class="truncate text-xs sm:text-sm font-semibold text-slate-800 leading-snug" style="${titleStyle}" title="${escapeHtml(name)}">
+            <h4 class="truncate ${cardTitleFontSizeClass} font-semibold text-slate-800 leading-snug" style="${titleStyle}" title="${escapeHtml(name)}">
               ${escapeHtml(name)}
             </h4>
 
             <!-- Baris Harga: Normal vs Diskon -->
             ${!effHasDiscount ? `
               <div class="flex items-center justify-between gap-1.5 pt-1 mt-auto">
-                <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="${priceStyle}">
-                  ${formatIDR(effFinalPrice)}
+                <span class="text-xs sm:text-sm font-semibold whitespace-nowrap" style="${priceStyle}">
+                  ${formatPriceHtmlWithSmallRp(effFinalPrice)}
                 </span>
                 ${selectedMetricHtml}
               </div>
@@ -7568,8 +7597,8 @@ const ProductForm = (() => {
                 ` : ''}
                 <div class="flex items-center justify-between gap-1.5 leading-none">
                   <div class="flex items-center gap-1 min-w-0">
-                    <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="${priceStyle}">
-                      ${formatIDR(effFinalPrice)}
+                    <span class="text-xs sm:text-sm font-semibold whitespace-nowrap" style="${priceStyle}">
+                      ${formatPriceHtmlWithSmallRp(effFinalPrice)}
                     </span>
                     ${cfg.show_ticket_icon ? `
                       <i data-lucide="ticket-check" class="w-3.5 h-3.5 inline shrink-0" style="color: ${cfg.price_color};"></i>
@@ -7592,7 +7621,7 @@ const ProductForm = (() => {
           <div class="p-2.5 sm:p-3 flex-1 flex flex-col justify-between space-y-2">
             <div class="space-y-1">
               <!-- Judul Maksimal 2 Baris -->
-              <h4 class="line-clamp-2 text-xs sm:text-sm font-semibold h-8 sm:h-9 leading-snug" style="${titleStyle}" title="${escapeHtml(name)}">
+              <h4 class="line-clamp-2 ${cardTitleFontSizeClass} font-semibold h-8 sm:h-9 leading-snug" style="${titleStyle}" title="${escapeHtml(name)}">
                 ${escapeHtml(name)}
               </h4>
 
@@ -7618,8 +7647,8 @@ const ProductForm = (() => {
                   </span>
                 ` : ''}
                 <div class="flex items-center gap-1 min-w-0 leading-none">
-                  <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="${priceStyle}">
-                    ${formatIDR(effFinalPrice)}
+                  <span class="text-xs sm:text-sm font-semibold whitespace-nowrap" style="${priceStyle}">
+                    ${formatPriceHtmlWithSmallRp(effFinalPrice)}
                   </span>
                 </div>
               </div>
@@ -7669,7 +7698,7 @@ const ProductForm = (() => {
           <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between space-y-2">
             <div class="space-y-1">
               <!-- Judul Maksimal 2 Baris Rapih -->
-              <h4 class="line-clamp-2 text-xs sm:text-sm font-semibold h-8 sm:h-9 leading-snug" style="${titleStyle}" title="${escapeHtml(name)}">
+              <h4 class="line-clamp-2 ${cardTitleFontSizeClass} font-semibold h-8 sm:h-9 leading-snug" style="${titleStyle}" title="${escapeHtml(name)}">
                 ${escapeHtml(name)}
               </h4>
 
@@ -7700,8 +7729,8 @@ const ProductForm = (() => {
                   </span>
                 ` : ''}
                 <div class="flex items-center gap-1 min-w-0 leading-none">
-                  <span class="text-xs sm:text-sm font-extrabold whitespace-nowrap" style="${priceStyle}">
-                    ${formatIDR(effFinalPrice)}
+                  <span class="text-xs sm:text-sm font-semibold whitespace-nowrap" style="${priceStyle}">
+                    ${formatPriceHtmlWithSmallRp(effFinalPrice)}
                   </span>
                   ${(effHasDiscount && cfg.show_ticket_icon) ? `
                     <i data-lucide="ticket-check" class="w-3.5 h-3.5 inline shrink-0" style="color: ${cfg.price_color};"></i>
@@ -7927,22 +7956,18 @@ const ProductForm = (() => {
       let displayStrikePriceString = '';
 
       if (primaryState.has_variants && !isAllVariationsSelected) {
-        if (effMinPrice !== effMaxPrice) {
-          displayPriceString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID') + ' - Rp' + Math.round(effMaxPrice).toLocaleString('id-ID');
-        } else {
-          displayPriceString = 'Rp' + Math.round(effMinPrice).toLocaleString('id-ID');
-        }
+        displayPriceString = formatPriceRangeHtmlWithSmallRp(effMinPrice, effMaxPrice);
         if (effMinStrike !== effMaxStrike) {
           displayStrikePriceString = 'Rp' + Math.round(effMinStrike).toLocaleString('id-ID') + ' - Rp' + Math.round(effMaxStrike).toLocaleString('id-ID');
         } else {
           displayStrikePriceString = 'Rp' + Math.round(effMinStrike).toLocaleString('id-ID');
         }
       } else {
+        const effMiniPdpPrice = (curQty === 1 && extrasActivePrice === 0) ? finalUnitPrice : grandTotalPrice;
+        displayPriceString = formatPriceHtmlWithSmallRp(effMiniPdpPrice);
         if (curQty === 1 && extrasActivePrice === 0) {
-          displayPriceString = 'Rp' + Math.round(finalUnitPrice).toLocaleString('id-ID');
           displayStrikePriceString = 'Rp' + Math.round(step2StrikePrice || displayBasePrice).toLocaleString('id-ID');
         } else {
-          displayPriceString = 'Rp' + Math.round(grandTotalPrice).toLocaleString('id-ID');
           displayStrikePriceString = 'Rp' + Math.round(grandStrikePrice).toLocaleString('id-ID');
         }
       }
@@ -8036,7 +8061,7 @@ const ProductForm = (() => {
                 <!-- URUTAN 1: Baris Harga (Rentang Harga) & Teks Terjual -->
                 <div class="flex items-baseline justify-between gap-2 pt-1">
                   <div class="flex items-baseline gap-2 flex-wrap min-w-0">
-                    <span class="text-sm sm:text-base font-extrabold truncate" style="color: ${accentColor};">
+                    <span class="text-sm sm:text-base font-semibold truncate" style="color: ${accentColor};">
                       ${displayPriceString}
                     </span>
                     ${effHasDiscount ? `
@@ -8049,7 +8074,7 @@ const ProductForm = (() => {
                 </div>
 
                 <!-- URUTAN 2: Judul / Nama Produk -->
-                <h3 class="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">
+                <h3 class="${miniPdpTitleFontSizeClass} font-semibold text-slate-800 line-clamp-2 leading-snug">
                   ${escapeHtml(name)}
                 </h3>
 
@@ -23219,11 +23244,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     syncThemeCSSVariables,
     openProductSpecDrawer,
     closeProductSpecDrawer,
-    buildProductSpecDrawerHtml
+    buildProductSpecDrawerHtml,
+    formatPriceHtmlWithSmallRp,
+    formatPriceRangeHtmlWithSmallRp
   };
 })();
 
 window.ProductForm = ProductForm;
+window.formatPriceHtmlWithSmallRp = ProductForm.formatPriceHtmlWithSmallRp;
+window.formatPriceRangeHtmlWithSmallRp = ProductForm.formatPriceRangeHtmlWithSmallRp;
 window.openProductSpecDrawer = ProductForm.openProductSpecDrawer;
 window.closeProductSpecDrawer = ProductForm.closeProductSpecDrawer;
 window.buildProductSpecDrawerHtml = ProductForm.buildProductSpecDrawerHtml;
