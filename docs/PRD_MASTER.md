@@ -680,6 +680,24 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
     - **Pembersihan Ikon Dekoratif Modal**:
       - Menghapus ikon dekoratif non-fungsional pada pilihan radio modal opsi spesifik, modal harga grosir, dan modal kelipatan pesanan.
       - Menggunakan radio input bersih dengan pewarnaan dinamis `accent-[var(--color-primary)]` dan outline fokus tanpa kotak bayangan luar.
+  - [x] **Penyempurnaan Form Produk Bagian 22 (Tahap 2): Penyempurnaan Modal Aturan Variasi 2–4, Pratinjau Opsi Umum, Indikator Radio Opsi Spesifik + Pilih Semua, serta Sinkronisasi Validasi State Tabel (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Perombakan Alur & Tampilan Modal Aturan Variasi 2–4 (`#modal-specific-options`)**:
+      - Modal tampil bersih tanpa ikon dekoratif, mempertahankan hanya tombol tutup `X` standar di header.
+      - Pilihan radio utama `Umum` vs `Spesifik` di bagian atas (`accent-[var(--color-primary)]`).
+      - Untuk baris opsi yang belum pernah dikonfigurasi (`Pilih`), kedua pilihan radio dibiarkan tidak tercentang secara otomatis, mewajibkan user menentukan pilihan sebelum dapat menyimpan aturan.
+    - **Pratinjau Opsi Umum (`#specific-umum-info-wrapper`)**:
+      - Jika radio `Umum` dipilih, sistem merender daftar nama opsi yang valid dari variasi tersebut secara rapi dan bersih dalam container `#specific-umum-list-container` sebagai konfirmasi visual bahwa seluruh opsi tersebut berlaku umum untuk varian terkait.
+    - **Indikator Bergaya Radio & Aksi Teks "Pilih Semua" pada Opsi Spesifik**:
+      - Jika radio `Spesifik` dipilih, setiap item opsi ditampilkan dengan indikator visual bulatan radio multi-select (`.specific-radio-bullet`) yang diwarnai dinamis dengan brand color (`var(--color-primary)`) saat terpilih, menggantikan kotak checkbox standar.
+      - Disediakan tombol aksi teks interaktif **`Pilih Semua`** (`#btn-specific-toggle-all`) dengan warna brand di atas daftar opsi yang mendukung pemilihan/pembatalan seluruh opsi secara instan.
+      - Wajib memilih minimal 1 opsi agar aturan `Spesifik` dapat disimpan.
+    - **Standardisasi Validasi Sel Tabel Matriks Kombinasi**:
+      - **Kolom Variasi 2 s.d. 4**: Tampil `[Pilih] + bi-gear-fill` jika belum dikonfigurasi atau spesifik dengan 0 opsi; tampil `[Umum]` / `[Spesifik] + bi-pencil-square` jika sudah dikonfigurasi valid.
+      - **Kolom Harga Grosir**: Tampil `[Pilih] + bi-gear-fill` jika belum dikonfigurasi atau tier belum valid (> 0); tampil `[Normal]` / `[Bertingkat] + bi-pencil-square` jika sudah dikonfigurasi valid.
+      - **Kolom Kelipatan Order**: Tampil `[Pilih] + bi-gear-fill` jika belum dikonfigurasi atau nilai < 2; tampil `[Umum]` / `[Spesifik] + bi-pencil-square` jika sudah dikonfigurasi valid (>= 2).
+    - **Sinkronisasi Validasi Mode Uji Coba (`canActivateTestMode`) & Validasi Simpan Produk (`validateForm`)**:
+      - Kedua fungsi validasi secara ketat memeriksa setiap baris pada List Variasi Produk. Jika masih terdapat baris dengan status `Pilih` (belum valid) pada Variasi 2–4, Harga Grosir, atau Kelipatan Order, proses uji coba maupun penyimpanan produk diblokir dengan pesan peringatan yang spesifik dan jelas.
+      - Resolusi aturan opsi pada Drawer dan Mini PDP (`getAllowedVariationOptions` & `validateAndAdjustSpecificVariations`) berjalan reaktif dan independen per baris opsi Variasi 1.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

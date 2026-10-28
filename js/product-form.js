@@ -3642,6 +3642,66 @@ const ProductForm = (() => {
           const mat = validMaterials[idx];
           const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
 
+          // 1. Validasi Keterkaitan Variasi 2 (Jika Aktif)
+          if (primaryState.has_variation_2) {
+            const scope2 = (mat.variation_scopes && mat.variation_scopes.main) || (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[mat.id] && primaryState.variation_scopes_by_variant[mat.id].main);
+            const specList2 = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id].main) || [];
+            const isV2Valid = (scope2 === 'umum') || (scope2 === 'spesifik' && specList2.length > 0);
+            if (!isV2Valid) {
+              const label2 = primaryState.variation_labels?.label_tier_2 || 'Variasi 2';
+              missingItems.push(`Aturan ${label2} (Baris ${var1Name})`);
+              if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-scope-modal[data-tier="main"][data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+            }
+          }
+
+          // 2. Validasi Keterkaitan Variasi 3 (Jika Aktif)
+          if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+            const scope3 = (mat.variation_scopes && mat.variation_scopes.extra_1) || (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[mat.id] && primaryState.variation_scopes_by_variant[mat.id].extra_1);
+            const specList3 = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id].extra_1) || [];
+            const isV3Valid = (scope3 === 'umum') || (scope3 === 'spesifik' && specList3.length > 0);
+            if (!isV3Valid) {
+              const label3 = primaryState.variation_labels?.label_extra_1 || 'Variasi 3';
+              missingItems.push(`Aturan ${label3} (Baris ${var1Name})`);
+              if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-scope-modal[data-tier="extra_1"][data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+            }
+          }
+
+          // 3. Validasi Keterkaitan Variasi 4 (Jika Aktif)
+          if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+            const scope4 = (mat.variation_scopes && mat.variation_scopes.extra_2) || (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[mat.id] && primaryState.variation_scopes_by_variant[mat.id].extra_2);
+            const specList4 = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id].extra_2) || [];
+            const isV4Valid = (scope4 === 'umum') || (scope4 === 'spesifik' && specList4.length > 0);
+            if (!isV4Valid) {
+              const label4 = primaryState.variation_labels?.label_extra_2 || 'Variasi 4';
+              missingItems.push(`Aturan ${label4} (Baris ${var1Name})`);
+              if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-scope-modal[data-tier="extra_2"][data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+            }
+          }
+
+          // 4. Validasi Harga Grosir (Jika Header Aktif)
+          if (primaryState.has_wholesale) {
+            const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]);
+            const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
+            const isWValid = (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) ||
+                            (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0)));
+            if (!isWValid) {
+              missingItems.push(`Harga Grosir (Baris ${var1Name})`);
+              if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-wholesale-modal[data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+            }
+          }
+
+          // 5. Validasi Kelipatan Order (Jika Header Aktif)
+          if (primaryState.has_order_multiple) {
+            const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] !== undefined ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
+            const mVal = mat.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]);
+            const isMValid = (mType === 'umum') || (mType === 'spesifik' && parseInt(mVal) >= 2);
+            if (!isMValid) {
+              missingItems.push(`Kelipatan Order (Baris ${var1Name})`);
+              if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-multiple-modal[data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+            }
+          }
+
+          // 6. Validasi Max. Order
           const maxOrderInp = document.querySelector(`.combo-max-order-input[data-mat-id="${mat.id}"]`);
           const rawMaxVal = maxOrderInp ? maxOrderInp.value.trim() : (mat.max_order !== null && mat.max_order !== undefined ? String(mat.max_order).trim() : '');
           const isMaxOrderUnlimited = rawMaxVal.toLowerCase() === 'tanpa batas' || rawMaxVal.toLowerCase() === 'unlimited';
@@ -4490,13 +4550,14 @@ const ProductForm = (() => {
       : ((tierKey === 'tier3' || tierKey === 'extra_1') ? 'extra_1'
       : ((tierKey === 'tier4' || tierKey === 'extra_2') ? 'extra_2' : tierKey));
 
-    const isSpecific = Boolean(
-      primaryState.variation_scopes?.[normalizedTier] === 'spesifik' ||
-      primaryState.variation_scopes?.[tierKey] === 'spesifik' ||
-      (matId && primaryState.variation_scopes?.[matId]?.[normalizedTier] === 'spesifik') ||
-      (matId && primaryState.variation_scopes?.[matId]?.[tierKey] === 'spesifik') ||
-      primaryState['scope_' + normalizedTier] === 'spesifik'
-    );
+    const mat = (materialsState || []).find(m => m.id === matId);
+    const scope = (mat && mat.variation_scopes && mat.variation_scopes[normalizedTier]) ||
+                  (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[matId] && primaryState.variation_scopes_by_variant[matId][normalizedTier]) ||
+                  (primaryState.variation_scopes && primaryState.variation_scopes[matId] && primaryState.variation_scopes[matId][normalizedTier]) ||
+                  (primaryState.variation_scopes && primaryState.variation_scopes[normalizedTier]) ||
+                  primaryState['scope_' + normalizedTier];
+
+    const isSpecific = (scope === 'spesifik');
 
     if (!isSpecific) {
       return { isSpecific: false, allowedIds: null };
@@ -13620,7 +13681,7 @@ const ProductForm = (() => {
           isValid = true;
           displayLabel = 'Normal';
           iconClass = 'bi bi-pencil-square';
-        } else if (wMode === 'tiered' && wTiers.length > 0) {
+        } else if (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0))) {
           isValid = true;
           displayLabel = 'Bertingkat';
           iconClass = 'bi bi-pencil-square';
@@ -13643,8 +13704,8 @@ const ProductForm = (() => {
           return `<div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-normal text-center select-none pointer-events-none">Nonaktif</div>`;
         }
 
-        const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
-        const mVal = mat.order_multiple_value || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]) || 1;
+        const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] !== undefined ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
+        const mVal = mat.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]);
 
         let isValid = false;
         let displayLabel = 'Pilih';
@@ -13654,7 +13715,7 @@ const ProductForm = (() => {
           isValid = true;
           displayLabel = 'Umum';
           iconClass = 'bi bi-pencil-square';
-        } else if (mType === 'spesifik' && parseInt(mVal) > 1) {
+        } else if (mType === 'spesifik' && parseInt(mVal) >= 2) {
           isValid = true;
           displayLabel = 'Spesifik';
           iconClass = 'bi bi-pencil-square';
@@ -13872,39 +13933,43 @@ const ProductForm = (() => {
             <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-specific-options"><i class="bi bi-x-lg"></i></button>
           </div>
 
-          <!-- Pilihan: Umum vs Spesifik (Tanpa Kata 'Mode') -->
+          <!-- Pilihan: Umum vs Spesifik -->
           <div class="grid grid-cols-2 gap-2 text-xs">
-            <label id="lbl-scope-umum" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+            <label id="lbl-scope-umum" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
               <input type="radio" name="modal_scope_type" value="umum" class="accent-[var(--color-primary)] cursor-pointer" />
               <span>Umum</span>
             </label>
-            <label id="lbl-scope-spesifik" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+            <label id="lbl-scope-spesifik" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
               <input type="radio" name="modal_scope_type" value="spesifik" class="accent-[var(--color-primary)] cursor-pointer" />
               <span>Spesifik</span>
             </label>
           </div>
 
-          <div id="specific-umum-info-wrapper" class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 leading-relaxed hidden">
-            Seluruh opsi pada variasi ini berlaku secara umum dan dapat dipilih oleh pelanggan.
+          <!-- Pratinjau Opsi Umum -->
+          <div id="specific-umum-info-wrapper" class="space-y-2 hidden">
+            <p class="text-[11px] text-slate-500 font-medium">Seluruh opsi berikut berlaku secara umum untuk opsi varian ini:</p>
+            <div id="specific-umum-list-container" class="space-y-1.5 max-h-56 overflow-y-auto border border-slate-200 rounded-lg p-2.5 bg-slate-50">
+              <!-- Rendered list of options -->
+            </div>
           </div>
 
+          <!-- Pilihan Opsi Spesifik -->
           <div id="specific-checklist-wrapper" class="space-y-2 hidden">
-            <div class="flex items-center justify-between py-1 text-xs font-semibold text-slate-700">
-              <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-                <input type="checkbox" id="chk-specific-select-all" class="accent-[var(--color-primary)] rounded cursor-pointer" />
-                <span>Pilih Semua Opsi</span>
-              </label>
-              <span id="specific-selected-count" class="text-[var(--color-primary)] font-bold">0 dipilih</span>
+            <div class="flex items-center justify-between py-1 text-xs">
+              <button type="button" id="btn-specific-toggle-all" class="text-[var(--color-primary)] cursor-pointer text-xs font-medium hover:underline p-0 bg-transparent border-none">
+                Pilih Semua
+              </button>
+              <span id="specific-selected-count" class="text-slate-500 font-normal">0 dipilih</span>
             </div>
 
-            <div id="specific-options-checklist-container" class="space-y-1.5 max-h-60 overflow-y-auto border border-slate-200 rounded-lg p-2.5 bg-slate-50">
-              <!-- Checklist items rendered dynamically -->
+            <div id="specific-options-checklist-container" class="space-y-1.5 max-h-56 overflow-y-auto border border-slate-200 rounded-lg p-2.5 bg-slate-50">
+              <!-- Checklist items rendered dynamically with radio bullets -->
             </div>
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
             <button type="button" class="btn-close-modal px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer" data-modal="modal-specific-options">Batal</button>
-            <button type="button" id="btn-apply-specific-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-xs" style="background-color: var(--color-primary);">Simpan Pengaturan</button>
+            <button type="button" id="btn-apply-specific-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-none" style="background-color: var(--color-primary);">Simpan Pengaturan</button>
           </div>
         </div>
       </div>
@@ -18566,39 +18631,53 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
 
       const mat = materialsState.find(m => m.id === matId);
-      const mode = mat?.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]) || 'normal';
+      const mode = mat?.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]) || null;
 
       const radNormal = modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]');
       const radTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]');
       if (mode === 'tiered') {
         if (radTiered) radTiered.checked = true;
-      } else {
+        if (radNormal) radNormal.checked = false;
+      } else if (mode === 'normal') {
         if (radNormal) radNormal.checked = true;
+        if (radTiered) radTiered.checked = false;
+      } else {
+        if (radNormal) radNormal.checked = false;
+        if (radTiered) radTiered.checked = false;
       }
       syncWholesaleModeRadioStyles(modal);
 
       const body = document.getElementById('modal-wholesale-body');
       if (body) {
-        body.innerHTML = renderWholesaleTableForMat(mat);
-        bindWholesaleModalInputs(modal, mat);
+        if (mode === 'normal' || mode === 'tiered') {
+          body.innerHTML = renderWholesaleTableForMat(mat);
+          bindWholesaleModalInputs(modal, mat);
+        } else {
+          body.innerHTML = `
+            <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg">
+              Pilih salah satu jenis harga grosir (Normal atau Bertingkat) di atas.
+            </div>
+          `;
+        }
       }
 
       modal.classList.remove('hidden');
     }
 
     function syncWholesaleModeRadioStyles(modal) {
-      const isTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked;
+      const isNormal = Boolean(modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]')?.checked);
+      const isTiered = Boolean(modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked);
       const lblNormal = modal.querySelector('#lbl-wholesale-normal');
       const lblTiered = modal.querySelector('#lbl-wholesale-tiered');
       if (lblNormal) {
-        lblNormal.className = !isTiered
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+        lblNormal.className = isNormal
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
       }
       if (lblTiered) {
         lblTiered.className = isTiered
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
       }
     }
 
@@ -18864,7 +18943,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!modal) return;
         const matId = currentWholesaleContext.matId;
         const mat = materialsState.find(m => m.id === matId);
-        const isTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked;
+        const radChecked = modal.querySelector('input[name="modal_wholesale_mode"]:checked');
+        if (!radChecked) {
+          alert('Silakan pilih salah satu jenis harga grosir (Normal atau Bertingkat).');
+          return;
+        }
+        const isTiered = (radChecked.value === 'tiered');
 
         if (!isTiered) {
           const inpMin = document.getElementById('modal-wholesale-normal-min');
@@ -18912,8 +18996,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             });
           });
 
-          if (gatheredTiers.length === 0) {
-            alert('Minimal harus ada 1 tingkatan harga grosir.');
+          if (gatheredTiers.length === 0 || !gatheredTiers.every(t => t.min_qty > 0 && t.price > 0)) {
+            alert('Setiap tingkatan harga grosir wajib memiliki Min. Order (> 0) dan Potongan Harga (> 0).');
             return;
           }
 
@@ -18949,39 +19033,53 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
 
       const mat = materialsState.find(m => m.id === matId);
-      const type = mat?.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId] ? (primaryState.order_multiples_by_variant[matId] > 1 ? 'spesifik' : 'umum') : 'umum');
-      const currentVal = mat?.order_multiple_value || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId]) || 2;
+      const type = mat?.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId] !== undefined ? (primaryState.order_multiples_by_variant[matId] > 1 ? 'spesifik' : 'umum') : null);
+      const currentVal = mat?.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId]);
 
       const radUmum = modal.querySelector('input[name="modal_order_multiple_radio"][value="umum"]');
       const radSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]');
       if (type === 'spesifik') {
         if (radSpesifik) radSpesifik.checked = true;
-      } else {
+        if (radUmum) radUmum.checked = false;
+      } else if (type === 'umum') {
         if (radUmum) radUmum.checked = true;
+        if (radSpesifik) radSpesifik.checked = false;
+      } else {
+        if (radUmum) radUmum.checked = false;
+        if (radSpesifik) radSpesifik.checked = false;
       }
       syncMultipleRadioStyles(modal);
 
       const body = document.getElementById('modal-order-multiple-body');
       if (body) {
-        body.innerHTML = renderMultipleBody(type, currentVal);
+        if (type === 'umum' || type === 'spesifik') {
+          body.innerHTML = renderMultipleBody(type, currentVal || 2);
+        } else {
+          body.innerHTML = `
+            <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg">
+              Pilih salah satu jenis kelipatan pesanan (Umum atau Spesifik) di atas.
+            </div>
+          `;
+        }
       }
 
       modal.classList.remove('hidden');
     }
 
     function syncMultipleRadioStyles(modal) {
-      const isSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]')?.checked;
+      const isUmum = Boolean(modal.querySelector('input[name="modal_order_multiple_radio"][value="umum"]')?.checked);
+      const isSpesifik = Boolean(modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]')?.checked);
       const lblUmum = modal.querySelector('#lbl-multiple-umum');
       const lblSpesifik = modal.querySelector('#lbl-multiple-spesifik');
       if (lblUmum) {
-        lblUmum.className = !isSpesifik
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+        lblUmum.className = isUmum
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
       }
       if (lblSpesifik) {
         lblSpesifik.className = isSpesifik
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
       }
     }
 
@@ -19035,7 +19133,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!modal) return;
         const matId = currentMultipleContext.matId;
         const mat = materialsState.find(m => m.id === matId);
-        const isSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]')?.checked;
+        const radChecked = modal.querySelector('input[name="modal_order_multiple_radio"]:checked');
+        if (!radChecked) {
+          alert('Silakan pilih salah satu jenis kelipatan (Umum atau Spesifik).');
+          return;
+        }
+        const isSpesifik = (radChecked.value === 'spesifik');
 
         if (isSpesifik) {
           const inpVal = document.getElementById('input-variant-multiple-val');
@@ -19076,10 +19179,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const title = document.getElementById('specific-modal-title');
       const subtitle = document.getElementById('specific-modal-subtitle');
       const container = document.getElementById('specific-options-checklist-container');
+      const umumContainer = document.getElementById('specific-umum-list-container');
       const countEl = document.getElementById('specific-selected-count');
-      const chkSelectAll = document.getElementById('chk-specific-select-all');
+      const btnToggleAll = document.getElementById('btn-specific-toggle-all');
 
-      if (!modal || !container) return;
+      if (!modal) return;
 
       const tierLabels = {
         main: primaryState.variation_labels?.label_tier_2 || 'Variasi 2',
@@ -19093,14 +19197,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const mat = materialsState.find(m => m.id === matId);
       const currentScope = (mat && mat.variation_scopes && mat.variation_scopes[tier]) ||
                            (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[matId] && primaryState.variation_scopes_by_variant[matId][tier]) ||
-                           'umum';
+                           null;
 
       const radUmum = modal.querySelector('input[name="modal_scope_type"][value="umum"]');
       const radSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]');
+
       if (currentScope === 'spesifik') {
         if (radSpesifik) radSpesifik.checked = true;
-      } else {
+        if (radUmum) radUmum.checked = false;
+      } else if (currentScope === 'umum') {
         if (radUmum) radUmum.checked = true;
+        if (radSpesifik) radSpesifik.checked = false;
+      } else {
+        if (radUmum) radUmum.checked = false;
+        if (radSpesifik) radSpesifik.checked = false;
       }
       syncSpecificScopeRadioStyles(modal);
 
@@ -19109,67 +19219,111 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const rawSelected = (primaryState.specific_options_map && primaryState.specific_options_map[matId] && primaryState.specific_options_map[matId][tier]) || [];
       const currentSelected = rawSelected.filter(id => validOptIds.includes(id));
 
-      if (countEl) countEl.textContent = `${currentSelected.length} dipilih`;
-      if (chkSelectAll) chkSelectAll.checked = optionsList.length > 0 && currentSelected.length === optionsList.length;
+      // 1. Render Daftar Opsi Umum
+      if (umumContainer) {
+        umumContainer.innerHTML = optionsList.length === 0 ? `
+          <div class="text-center py-4 text-slate-400 italic text-xs">Belum ada opsi pada variasi ini.</div>
+        ` : optionsList.map(opt => `
+          <div class="p-2 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-800">
+            ${escapeHtml(opt.name.trim())}
+          </div>
+        `).join('');
+      }
 
-      container.innerHTML = optionsList.length === 0 ? `
-        <div class="text-center py-4 text-slate-400 italic text-xs">Belum ada opsi pada variasi ini.</div>
-      ` : optionsList.map((opt, oIdx) => {
-        const isChecked = currentSelected.includes(opt.id);
-        return `
-          <label class="flex items-center justify-between p-2 rounded-md bg-white border border-slate-200 hover:border-[var(--color-primary)] cursor-pointer transition select-none text-xs">
-            <span class="font-medium text-slate-800">${escapeHtml(opt.name.trim())}</span>
-            <input type="checkbox" class="specific-opt-checkbox rounded w-4 h-4 cursor-pointer focus:ring-0 outline-none shadow-none" style="accent-color: var(--color-primary);" data-opt-id="${opt.id}" ${isChecked ? 'checked' : ''} />
-          </label>
-        `;
-      }).join('');
+      // 2. Render Daftar Opsi Spesifik dengan Radio Bullets
+      if (container) {
+        container.innerHTML = optionsList.length === 0 ? `
+          <div class="text-center py-4 text-slate-400 italic text-xs">Belum ada opsi pada variasi ini.</div>
+        ` : optionsList.map((opt) => {
+          const isChecked = currentSelected.includes(opt.id);
+          return `
+            <label class="specific-opt-item flex items-center justify-between p-2 rounded-md bg-white border border-slate-200 hover:border-[var(--color-primary)] cursor-pointer transition select-none text-xs" data-opt-id="${opt.id}">
+              <span class="font-medium text-slate-800">${escapeHtml(opt.name.trim())}</span>
+              <div class="specific-radio-bullet w-4 h-4 rounded-full border ${isChecked ? 'border-[var(--color-primary)] flex items-center justify-center' : 'border-slate-300 flex items-center justify-center'} transition shrink-0">
+                ${isChecked ? `<span class="w-2 h-2 rounded-full" style="background-color: var(--color-primary);"></span>` : ''}
+              </div>
+              <input type="checkbox" class="hidden specific-opt-checkbox" data-opt-id="${opt.id}" ${isChecked ? 'checked' : ''} />
+            </label>
+          `;
+        }).join('');
 
-      container.querySelectorAll('.specific-opt-checkbox').forEach(chk => {
-        chk.onchange = () => {
-          const checkedCount = container.querySelectorAll('.specific-opt-checkbox:checked').length;
-          if (countEl) countEl.textContent = `${checkedCount} dipilih`;
-          if (chkSelectAll) chkSelectAll.checked = checkedCount === optionsList.length;
-        };
-      });
-
-      if (chkSelectAll) {
-        chkSelectAll.onchange = (e) => {
-          container.querySelectorAll('.specific-opt-checkbox').forEach(chk => {
-            chk.checked = e.target.checked;
+        const updateBulletAndCount = () => {
+          const checkboxes = container.querySelectorAll('.specific-opt-checkbox');
+          let checkedCount = 0;
+          checkboxes.forEach(chk => {
+            const item = chk.closest('.specific-opt-item');
+            const bullet = item?.querySelector('.specific-radio-bullet');
+            if (chk.checked) {
+              checkedCount++;
+              if (bullet) {
+                bullet.className = 'specific-radio-bullet w-4 h-4 rounded-full border border-[var(--color-primary)] flex items-center justify-center transition shrink-0';
+                bullet.innerHTML = '<span class="w-2 h-2 rounded-full" style="background-color: var(--color-primary);"></span>';
+              }
+            } else {
+              if (bullet) {
+                bullet.className = 'specific-radio-bullet w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center transition shrink-0';
+                bullet.innerHTML = '';
+              }
+            }
           });
-          const checkedCount = e.target.checked ? optionsList.length : 0;
+
           if (countEl) countEl.textContent = `${checkedCount} dipilih`;
+          if (btnToggleAll) {
+            btnToggleAll.textContent = (optionsList.length > 0 && checkedCount === optionsList.length) ? 'Batal Pilih Semua' : 'Pilih Semua';
+          }
         };
+
+        container.querySelectorAll('.specific-opt-checkbox').forEach(chk => {
+          chk.onchange = updateBulletAndCount;
+        });
+
+        if (btnToggleAll) {
+          btnToggleAll.onclick = () => {
+            const checkboxes = container.querySelectorAll('.specific-opt-checkbox');
+            const allChecked = Array.from(checkboxes).length > 0 && Array.from(checkboxes).every(c => c.checked);
+            checkboxes.forEach(chk => {
+              chk.checked = !allChecked;
+            });
+            updateBulletAndCount();
+          };
+        }
+
+        updateBulletAndCount();
       }
 
       modal.classList.remove('hidden');
     }
 
     function syncSpecificScopeRadioStyles(modal) {
-      const isSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]')?.checked;
+      const radUmum = modal.querySelector('input[name="modal_scope_type"][value="umum"]');
+      const radSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]');
       const lblUmum = modal.querySelector('#lbl-scope-umum');
       const lblSpesifik = modal.querySelector('#lbl-scope-spesifik');
       const chkWrapper = modal.querySelector('#specific-checklist-wrapper');
       const infoWrapper = modal.querySelector('#specific-umum-info-wrapper');
 
+      const isUmum = Boolean(radUmum?.checked);
+      const isSpesifik = Boolean(radSpesifik?.checked);
+
       if (lblUmum) {
-        lblUmum.className = !isSpesifik
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+        lblUmum.className = isUmum
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
       }
       if (lblSpesifik) {
         lblSpesifik.className = isSpesifik
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700';
+          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
       }
-      if (chkWrapper && infoWrapper) {
-        if (isSpesifik) {
-          chkWrapper.classList.remove('hidden');
-          infoWrapper.classList.add('hidden');
-        } else {
-          chkWrapper.classList.add('hidden');
-          infoWrapper.classList.remove('hidden');
-        }
+
+      if (infoWrapper) {
+        if (isUmum) infoWrapper.classList.remove('hidden');
+        else infoWrapper.classList.add('hidden');
+      }
+
+      if (chkWrapper) {
+        if (isSpesifik) chkWrapper.classList.remove('hidden');
+        else chkWrapper.classList.add('hidden');
       }
     }
 
@@ -19189,9 +19343,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const container = document.getElementById('specific-options-checklist-container');
         if (!container || !modal) return;
 
+        const radChecked = modal.querySelector('input[name="modal_scope_type"]:checked');
+        if (!radChecked) {
+          alert('Silakan pilih salah satu aturan (Umum atau Spesifik).');
+          return;
+        }
+
         const { tier, matId } = currentSpecificContext;
         const mat = materialsState.find(m => m.id === matId);
-        const isSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]')?.checked;
+        const isSpesifik = (radChecked.value === 'spesifik');
 
         if (isSpesifik) {
           const checkedIds = Array.from(container.querySelectorAll('.specific-opt-checkbox:checked')).map(c => c.getAttribute('data-opt-id'));
@@ -23297,6 +23457,72 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const uploadedCount = displayMats.filter(m => m.image_url && m.image_url.trim() !== '').length;
       if (uploadedCount > 0 && uploadedCount < totalDisplayRows) {
         addError('Foto pada List Variasi Produk belum seragam. Seluruh baris opsi wajib memiliki foto, atau kosongkan semua foto.', document.getElementById('combination-matrix-section') || document.getElementById('table-combination-variations'));
+      }
+
+      // Validasi Lengkap Baris List Variasi Produk (Kombinasi Variasi 2-4, Grosir, Kelipatan Order)
+      if (validMats.length > 0) {
+        validMats.forEach((mat, idx) => {
+          const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
+
+          // Variasi 2
+          if (primaryState.has_variation_2) {
+            const scope2 = (mat.variation_scopes && mat.variation_scopes.main) || (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[mat.id] && primaryState.variation_scopes_by_variant[mat.id].main);
+            const specList2 = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id].main) || [];
+            const isV2Valid = (scope2 === 'umum') || (scope2 === 'spesifik' && specList2.length > 0);
+            if (!isV2Valid) {
+              const label2 = primaryState.variation_labels?.label_tier_2 || 'Variasi 2';
+              const btnEl = document.querySelector(`.btn-open-scope-modal[data-tier="main"][data-mat-id="${mat.id}"]`);
+              addError(`List Variasi Produk (Baris ${var1Name}): Aturan ${label2} belum diatur (Pilih Umum atau Spesifik minimal 1 opsi).`, btnEl || document.getElementById('combination-matrix-section'));
+            }
+          }
+
+          // Variasi 3
+          if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+            const scope3 = (mat.variation_scopes && mat.variation_scopes.extra_1) || (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[mat.id] && primaryState.variation_scopes_by_variant[mat.id].extra_1);
+            const specList3 = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id].extra_1) || [];
+            const isV3Valid = (scope3 === 'umum') || (scope3 === 'spesifik' && specList3.length > 0);
+            if (!isV3Valid) {
+              const label3 = primaryState.variation_labels?.label_extra_1 || 'Variasi 3';
+              const btnEl = document.querySelector(`.btn-open-scope-modal[data-tier="extra_1"][data-mat-id="${mat.id}"]`);
+              addError(`List Variasi Produk (Baris ${var1Name}): Aturan ${label3} belum diatur (Pilih Umum atau Spesifik minimal 1 opsi).`, btnEl || document.getElementById('combination-matrix-section'));
+            }
+          }
+
+          // Variasi 4
+          if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+            const scope4 = (mat.variation_scopes && mat.variation_scopes.extra_2) || (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[mat.id] && primaryState.variation_scopes_by_variant[mat.id].extra_2);
+            const specList4 = (primaryState.specific_options_map && primaryState.specific_options_map[mat.id] && primaryState.specific_options_map[mat.id].extra_2) || [];
+            const isV4Valid = (scope4 === 'umum') || (scope4 === 'spesifik' && specList4.length > 0);
+            if (!isV4Valid) {
+              const label4 = primaryState.variation_labels?.label_extra_2 || 'Variasi 4';
+              const btnEl = document.querySelector(`.btn-open-scope-modal[data-tier="extra_2"][data-mat-id="${mat.id}"]`);
+              addError(`List Variasi Produk (Baris ${var1Name}): Aturan ${label4} belum diatur (Pilih Umum atau Spesifik minimal 1 opsi).`, btnEl || document.getElementById('combination-matrix-section'));
+            }
+          }
+
+          // Harga Grosir
+          if (primaryState.has_wholesale) {
+            const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]);
+            const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
+            const isWValid = (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) ||
+                            (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0)));
+            if (!isWValid) {
+              const btnEl = document.querySelector(`.btn-open-wholesale-modal[data-mat-id="${mat.id}"]`);
+              addError(`List Variasi Produk (Baris ${var1Name}): Pengaturan Harga Grosir belum valid.`, btnEl || document.getElementById('combination-matrix-section'));
+            }
+          }
+
+          // Kelipatan Order
+          if (primaryState.has_order_multiple) {
+            const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] !== undefined ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
+            const mVal = mat.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]);
+            const isMValid = (mType === 'umum') || (mType === 'spesifik' && parseInt(mVal) >= 2);
+            if (!isMValid) {
+              const btnEl = document.querySelector(`.btn-open-multiple-modal[data-mat-id="${mat.id}"]`);
+              addError(`List Variasi Produk (Baris ${var1Name}): Pengaturan Kelipatan Order belum valid (minimal kelipatan 2).`, btnEl || document.getElementById('combination-matrix-section'));
+            }
+          }
+        });
       }
     }
 
