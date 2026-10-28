@@ -627,14 +627,14 @@
 
     // 5. Qty Selector & Step Note
     const stepQuantity = Math.max(1, parseInt(prod.step_quantity, 10) || 1);
-    configState.qty = prod.min_order || (prod.price_type === 7 ? stepQuantity : 1);
+    configState.qty = 1;
 
     const inputQty = document.getElementById('pdp-input-qty');
     const stepNote = document.getElementById('pdp-step-note');
 
     if (inputQty) {
-      inputQty.value = configState.qty;
-      inputQty.min = prod.min_order || 1;
+      inputQty.value = 1;
+      inputQty.min = 1;
     }
 
     if (stepNote) {
@@ -651,10 +651,8 @@
 
     if (btnMinus) {
       btnMinus.addEventListener('click', () => {
-        const step = (prod.price_type === 7) ? stepQuantity : 1;
-        const minOrder = prod.min_order || 1;
-        let newQty = configState.qty - step;
-        if (newQty < minOrder) newQty = minOrder;
+        let newQty = configState.qty - 1;
+        if (newQty < 1) newQty = 1;
         configState.qty = newQty;
         if (inputQty) inputQty.value = newQty;
         recalculatePrice();
@@ -663,8 +661,7 @@
 
     if (btnPlus) {
       btnPlus.addEventListener('click', () => {
-        const step = (prod.price_type === 7) ? stepQuantity : 1;
-        configState.qty += step;
+        configState.qty += 1;
         if (inputQty) inputQty.value = configState.qty;
         recalculatePrice();
       });
@@ -673,8 +670,7 @@
     if (inputQty) {
       inputQty.addEventListener('change', (e) => {
         let val = parseInt(e.target.value, 10) || 1;
-        const minOrder = prod.min_order || 1;
-        if (val < minOrder) val = minOrder;
+        if (val < 1) val = 1;
         configState.qty = val;
         inputQty.value = val;
         recalculatePrice();
@@ -768,6 +764,53 @@
 
     // Simpan hasil kalkulasi terakhir di state
     configState.lastCalculation = calcResult;
+
+    // Evaluasi Aturan Kelipatan & Min Order pada PDP
+    const curQ = configState.qty;
+    const minOrder = currentProduct.min_order || 1;
+    const stepMult = (currentProduct.has_order_multiple && parseInt(currentProduct.order_multiple_value) > 1) ? parseInt(currentProduct.order_multiple_value) : 1;
+    const stepNoteEl = document.getElementById('pdp-step-note');
+    const buyBtns = [
+      document.getElementById('btn-buy-now-pdp'),
+      document.getElementById('btn-mobile-buy-now'),
+      document.getElementById('btn-add-to-cart'),
+      document.getElementById('btn-add-to-cart-pdp')
+    ];
+
+    let isInvalid = false;
+    if (stepMult > 1 && (curQ % stepMult !== 0)) {
+      isInvalid = true;
+      if (stepNoteEl) {
+        const nextValid = Math.ceil(curQ / stepMult) * stepMult;
+        const examples = [nextValid, nextValid + stepMult, nextValid + (2 * stepMult), nextValid + (3 * stepMult)].join(',');
+        stepNoteEl.textContent = `Jumlah pesanan wajib kelipatan ${stepMult} Pcs Mohon sesuaikan jumlah pesanan Cth: ${examples},Dst.`;
+        stepNoteEl.className = 'text-[11px] text-[var(--color-primary)] font-normal block leading-tight';
+      }
+    } else if (minOrder > 1 && curQ < minOrder) {
+      isInvalid = true;
+      if (stepNoteEl) {
+        stepNoteEl.textContent = `Produk ini Memiliki Minimum Jumlah Pembelian Sebesar ${minOrder} Pcs.`;
+        stepNoteEl.className = 'text-[11px] text-[var(--color-primary)] font-normal block leading-tight';
+      }
+    } else {
+      if (stepNoteEl) {
+        stepNoteEl.textContent = `Minimal pemesanan: ${minOrder} pcs`;
+        stepNoteEl.className = 'text-[10px] text-slate-500 font-normal block';
+      }
+    }
+
+    buyBtns.forEach(btn => {
+      if (btn) {
+        btn.disabled = isInvalid;
+        if (isInvalid) {
+          btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+          btn.classList.remove('cursor-pointer');
+        } else {
+          btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+          btn.classList.add('cursor-pointer');
+        }
+      }
+    });
   }
 
   // ----------------------------------------------------------------------------
@@ -1206,6 +1249,18 @@
     const calc = configState.lastCalculation;
     if (!calc) return;
 
+    const curQ = configState.qty;
+    const minOrder = currentProduct.min_order || 1;
+    const stepMult = (currentProduct.has_order_multiple && parseInt(currentProduct.order_multiple_value) > 1) ? parseInt(currentProduct.order_multiple_value) : 1;
+    if (stepMult > 1 && (curQ % stepMult !== 0)) {
+      alert(`Jumlah pesanan wajib kelipatan ${stepMult} Pcs`);
+      return;
+    }
+    if (minOrder > 1 && curQ < minOrder) {
+      alert(`Produk ini memiliki minimum pembelian sebesar ${minOrder} Pcs.`);
+      return;
+    } 
+
     const cartItem = {
       id: DB.generateUUID(),
       productId: currentProduct.id,
@@ -1303,6 +1358,18 @@
   function directWhatsAppCheckout() {
     const calc = configState.lastCalculation;
     if (!calc) return;
+
+    const curQ = configState.qty;
+    const minOrder = currentProduct.min_order || 1;
+    const stepMult = (currentProduct.has_order_multiple && parseInt(currentProduct.order_multiple_value) > 1) ? parseInt(currentProduct.order_multiple_value) : 1;
+    if (stepMult > 1 && (curQ % stepMult !== 0)) {
+      alert(`Jumlah pesanan wajib kelipatan ${stepMult} Pcs`);
+      return;
+    }
+    if (minOrder > 1 && curQ < minOrder) {
+      alert(`Produk ini memiliki minimum pembelian sebesar ${minOrder} Pcs.`);
+      return;
+    } 
 
     let custName = prompt("Silakan masukkan nama Anda untuk pendataan pesanan:");
     if (!custName || custName.trim() === '') {

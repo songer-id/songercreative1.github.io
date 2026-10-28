@@ -510,6 +510,8 @@ const ProductForm = (() => {
       options = ['Unlimited'];
     } else if (listId === 'datalist-max-order-unlimited') {
       options = ['Tanpa Batas'];
+    } else if (listId === 'datalist-order-multiple-options') {
+      options = ['Tanpa Kelipatan'];
     } else if (listId === 'datalist-dimension-labels') {
       options = ['Masukkan Ukuran', 'Ukuran Spanduk', 'Ukuran Kain'];
     }
@@ -631,7 +633,7 @@ const ProductForm = (() => {
       const datalistId = input.getAttribute('data-datalist-id') || input.getAttribute('data-datalist') || input.getAttribute('list');
       if (!datalistId) return;
 
-      const isSingleOption = datalistId === 'datalist-stock-unlimited' || datalistId === 'datalist-max-order-unlimited';
+      const isSingleOption = datalistId === 'datalist-stock-unlimited' || datalistId === 'datalist-max-order-unlimited' || datalistId === 'datalist-order-multiple-options';
 
       // Pindahkan nilai atribut 'list' ke data-datalist-id & data-datalist, lalu hapus atribut 'list'
       // agar browser Chromium TIDAK PERNAH membuka popup OS native yang melayang saat scroll
@@ -956,6 +958,28 @@ const ProductForm = (() => {
                   matP.max_order = numVal;
                 }
               }
+            } else if (input.classList.contains('combo-order-multiple-input')) {
+              const matId = input.getAttribute('data-mat-id');
+              const vLow = val.trim().toLowerCase();
+              if (vLow === 'tanpa kelipatan') {
+                input.value = 'Tanpa Kelipatan';
+                if (matId && materialsState) {
+                  const mat = materialsState.find(m => String(m.id) === String(matId));
+                  if (mat) {
+                    mat.order_multiple = 'Tanpa Kelipatan';
+                    mat.order_multiple_type = 'none';
+                    mat.order_multiple_value = 1;
+                    mat.step_multiplier = 1;
+                  }
+                }
+                if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
+                primaryState.order_multiples_by_variant[matId] = 1;
+                const cell = input.closest('td') || input.parentElement;
+                const errEl = cell?.querySelector(`.combo-multiple-error[data-mat-id="${matId}"]`);
+                if (errEl) errEl.classList.add('hidden');
+                input.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+                input.classList.add('border-slate-300');
+              }
             }
 
             input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1007,7 +1031,7 @@ const ProductForm = (() => {
         if (isSingleOption) {
           const cur = input.value;
           const curLow = cur.trim().toLowerCase();
-          if (curLow !== 'tanpa batas' && curLow !== 'unlimited') {
+          if (curLow !== 'tanpa batas' && curLow !== 'unlimited' && curLow !== 'tanpa kelipatan') {
             const digits = cur.replace(/\D/g, '');
             if (cur !== digits) {
               input.value = digits;
@@ -1035,6 +1059,48 @@ const ProductForm = (() => {
               if (matId && primaryState.materials) {
                 const itemP = primaryState.materials.find(m => String(m.id) === String(matId));
                 if (itemP) itemP.max_order = num;
+              }
+            } else if (input.classList.contains('combo-order-multiple-input')) {
+              const matId = input.getAttribute('data-mat-id');
+              const cell = input.closest('td') || input.parentElement;
+              const errEl = cell?.querySelector(`.combo-multiple-error[data-mat-id="${matId}"]`);
+              if (digits) {
+                const num = parseInt(digits, 10);
+                if (num < 2) {
+                  if (errEl) errEl.classList.remove('hidden');
+                  input.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+                  input.classList.remove('border-slate-300');
+                } else {
+                  if (errEl) errEl.classList.add('hidden');
+                  input.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+                  input.classList.add('border-slate-300');
+                }
+                if (matId && materialsState) {
+                  const item = materialsState.find(m => String(m.id) === String(matId));
+                  if (item) {
+                    item.order_multiple = num;
+                    item.order_multiple_value = num;
+                    item.step_multiplier = num;
+                    item.order_multiple_type = num >= 2 ? 'spesifik' : null;
+                  }
+                }
+                if (num >= 2) {
+                  if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
+                  primaryState.order_multiples_by_variant[matId] = num;
+                }
+              } else {
+                if (errEl) errEl.classList.add('hidden');
+                input.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+                input.classList.add('border-slate-300');
+                if (matId && materialsState) {
+                  const item = materialsState.find(m => String(m.id) === String(matId));
+                  if (item) {
+                    item.order_multiple = null;
+                    item.order_multiple_value = null;
+                    item.step_multiplier = null;
+                    item.order_multiple_type = null;
+                  }
+                }
               }
             }
           }
@@ -1626,7 +1692,7 @@ const ProductForm = (() => {
     previewTestState.selectedTier4Id = null;
     previewTestState.selectedExtras = {};
     previewTestState.extraQty = {};
-    previewTestState.qty = prod.min_order || 1;
+    previewTestState.qty = 1;
 
     const imgs = Array.isArray(prod.images) && prod.images.length > 0 
       ? [...prod.images] 
@@ -2938,6 +3004,10 @@ const ProductForm = (() => {
           <option value="Siap Pakai & Praktis"></option>
         </datalist>
 
+        <datalist id="datalist-order-multiple-options">
+          <option value="Tanpa Kelipatan"></option>
+        </datalist>
+
         <!-- Modals Terintegrasi List Variasi Produk -->
         ${renderWholesaleModalMarkup()}
         ${renderOrderMultipleModalMarkup()}
@@ -3697,12 +3767,15 @@ const ProductForm = (() => {
 
           // 5. Validasi Kelipatan Order (Jika Header Aktif)
           if (primaryState.has_order_multiple) {
-            const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] !== undefined ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
-            const mVal = mat.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]);
-            const isMValid = (mType === 'umum') || (mType === 'spesifik' && parseInt(mVal) >= 2);
+            const multInp = document.querySelector(`.combo-order-multiple-input[data-mat-id="${mat.id}"]`);
+            const rawVal = multInp ? multInp.value.trim() : (mat.order_multiple !== undefined && mat.order_multiple !== null ? String(mat.order_multiple).trim() : '');
+            const isNoMult = rawVal.toLowerCase() === 'tanpa kelipatan';
+            const num = parseInt(rawVal.replace(/\D/g, ''), 10);
+            const isNumValid = !isNaN(num) && num >= 2;
+            const isMValid = isNoMult || isNumValid;
             if (!isMValid) {
               missingItems.push(`Kelipatan Order (Baris ${var1Name})`);
-              if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-multiple-modal[data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+              if (!firstInvalidEl) firstInvalidEl = multInp || document.getElementById('combination-matrix-section');
             }
           }
 
@@ -4707,11 +4780,17 @@ const ProductForm = (() => {
 
     let orderMultiple = 1;
     if (primaryState.has_order_multiple) {
-      if (primaryState.order_multiple_type === 'per_variant') {
-        if (t1Id && primaryState.order_multiples_by_variant?.[t1Id]) {
-          orderMultiple = parseInt(primaryState.order_multiples_by_variant[t1Id]) || 1;
-        } else if (t2Id && primaryState.order_multiples_by_variant?.[t2Id]) {
-          orderMultiple = parseInt(primaryState.order_multiples_by_variant[t2Id]) || 1;
+      if (selectedMat) {
+        const rawM = selectedMat.order_multiple;
+        if (rawM === 'Tanpa Kelipatan' || selectedMat.order_multiple_type === 'none') {
+          orderMultiple = 1;
+        } else if (rawM !== null && rawM !== undefined && parseInt(rawM) >= 2) {
+          orderMultiple = parseInt(rawM);
+        } else if (t1Id && primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[t1Id] !== undefined) {
+          const v = primaryState.order_multiples_by_variant[t1Id];
+          orderMultiple = (v === 'Tanpa Kelipatan' || v === 1) ? 1 : (parseInt(v) || 1);
+        } else if (selectedMat.order_multiple_value && parseInt(selectedMat.order_multiple_value) >= 2) {
+          orderMultiple = parseInt(selectedMat.order_multiple_value);
         } else {
           orderMultiple = parseInt(primaryState.order_multiple_value) || 1;
         }
@@ -10766,6 +10845,10 @@ const ProductForm = (() => {
           <option value="Tanpa Batas"></option>
         </datalist>
 
+        <datalist id="datalist-order-multiple-options-step2">
+          <option value="Tanpa Kelipatan"></option>
+        </datalist>
+
         <datalist id="datalist-variation-labels">
           <option value="Bahan Utama"></option>
           <option value="Ukuran"></option>
@@ -13704,31 +13787,35 @@ const ProductForm = (() => {
           return `<div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-normal text-center select-none pointer-events-none">Nonaktif</div>`;
         }
 
-        const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] !== undefined ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
-        const mVal = mat.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]);
+        let multipleVal = '';
+        let isInvalidNumber = false;
 
-        let isValid = false;
-        let displayLabel = 'Pilih';
-        let iconClass = 'bi bi-gear-fill';
+        const rawVal = mat.order_multiple !== undefined && mat.order_multiple !== null ? mat.order_multiple : (mat.order_multiple_value !== undefined && mat.order_multiple_value !== null ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]));
 
-        if (mType === 'umum') {
-          isValid = true;
-          displayLabel = 'Umum';
-          iconClass = 'bi bi-pencil-square';
-        } else if (mType === 'spesifik' && parseInt(mVal) >= 2) {
-          isValid = true;
-          displayLabel = 'Spesifik';
-          iconClass = 'bi bi-pencil-square';
+        if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== '') {
+          if (String(rawVal).toLowerCase() === 'tanpa kelipatan') {
+            multipleVal = 'Tanpa Kelipatan';
+          } else {
+            const num = parseInt(String(rawVal).replace(/\D/g, ''), 10);
+            if (!isNaN(num)) {
+              multipleVal = String(num);
+              if (num < 2) isInvalidNumber = true;
+            }
+          }
         }
 
         return `
-          <div class="inline-flex items-center justify-center gap-2">
-            <button type="button" class="btn-open-multiple-modal combo-text-btn bg-white text-slate-800 border border-slate-300 rounded-md px-3 py-1.5 text-xs font-normal min-w-[85px] text-center select-none hover:border-slate-400 focus:border-[var(--color-primary)] transition cursor-pointer" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}">
-              ${displayLabel}
-            </button>
-            <button type="button" class="btn-open-multiple-modal combo-icon-btn bg-transparent border-none p-1 text-[var(--color-primary)] hover:opacity-80 transition cursor-pointer leading-none shrink-0" data-mat-id="${mat.id}" data-mat-name="${escapeHtml(var1Name)}" title="${isValid ? 'Ubah Pengaturan' : 'Atur Pengaturan'}">
-              <i class="${iconClass} text-sm"></i>
-            </button>
+          <div class="flex flex-col items-center justify-center">
+            <input 
+              type="text" 
+              class="combo-order-multiple-input w-24 sm:w-28 px-3 py-1.5 rounded-md border ${isInvalidNumber ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+              data-mat-id="${mat.id}" 
+              value="${multipleVal}" 
+              placeholder="Input/Pilih" 
+              list="datalist-order-multiple-options"
+              autocomplete="off" 
+            />
+            <p class="combo-multiple-error text-[10px] text-red-600 font-semibold mt-0.5 ${isInvalidNumber ? 'block' : 'hidden'}" data-mat-id="${mat.id}">Minimal Kelipatan 2</p>
           </div>
         `;
       }
@@ -14157,12 +14244,14 @@ const ProductForm = (() => {
               <input 
                 type="number" 
                 id="input-order-multiple-single" 
-                min="1" 
-                value="${globalVal}" 
-                class="w-32 px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]" 
+                min="2" 
+                value="${parseInt(globalVal) >= 2 ? globalVal : ''}" 
+                placeholder="Minimal 2"
+                class="w-32 px-3 py-2 rounded-md border ${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]" 
               />
               <span class="text-xs text-slate-500 font-medium">pcs per transaksi</span>
             </div>
+            <p id="err-order-multiple-single" class="${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'block' : 'hidden'} text-[11px] font-semibold text-red-600">Minimal Kelipatan 2</p>
             <p class="text-[11px] text-slate-400">Contoh: Diatur 10, maka pembeli hanya dapat membeli 10, 20, 30, dst.</p>
           </div>
         ` : `
@@ -15265,6 +15354,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
+    if (primaryState.has_order_multiple && !primaryState.has_variants) {
+      const multVal = parseInt(primaryState.order_multiple_value, 10);
+      if (isNaN(multVal) || multVal < 2) {
+        addError('Kelipatan Pesanan wajib bernilai minimal 2.', document.getElementById('input-order-multiple-single') || document.getElementById('order-multiple-wrapper'));
+      }
+    }
+
     return {
       isValid: errors.length === 0,
       errors: errors,
@@ -15677,8 +15773,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       isPreviewTestMode = false;
       previewTestState.sidebarTab = 'preview';
       previewTestState.isDrawerOpen = false;
-      if (!previewTestState.qty || previewTestState.qty < (primaryState.min_order || 1)) {
-        previewTestState.qty = primaryState.min_order || 1;
+      if (!previewTestState.qty || previewTestState.qty < 1) {
+        previewTestState.qty = 1;
       }
     }
     updateStepVisibility();
@@ -18622,12 +18718,89 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       });
 
-      // 8. Tombol Buka Modal Kelipatan Order
-      document.querySelectorAll('.btn-open-multiple-modal').forEach(btn => {
-        btn.onclick = () => {
-          const matId = btn.getAttribute('data-mat-id');
-          const matName = btn.getAttribute('data-mat-name');
-          openOrderMultipleModal(matId, matName);
+      // 8. Input Langsung Kelipatan Order per Baris (Tanpa Modal & Tanpa Ikon)
+      document.querySelectorAll('.combo-order-multiple-input').forEach(inp => {
+        const handleMultipleInput = (e) => {
+          const matId = inp.getAttribute('data-mat-id');
+          const cell = inp.closest('td') || inp.parentElement;
+          const errEl = cell?.querySelector(`.combo-multiple-error[data-mat-id="${matId}"]`);
+          const mat = materialsState.find(m => String(m.id) === String(matId));
+          const raw = inp.value.trim();
+          const rLow = raw.toLowerCase();
+
+          if (rLow === 'tanpa kelipatan') {
+            if (mat) {
+              mat.order_multiple = 'Tanpa Kelipatan';
+              mat.order_multiple_type = 'none';
+              mat.order_multiple_value = 1;
+              mat.step_multiplier = 1;
+            }
+            if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
+            primaryState.order_multiples_by_variant[matId] = 1;
+            if (errEl) errEl.classList.add('hidden');
+            inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+            inp.classList.add('border-slate-300');
+          } else if (raw) {
+            const digits = raw.replace(/\D/g, '');
+            if (inp.value !== digits && rLow !== 'tanpa kelipatan') {
+              inp.value = digits;
+            }
+            if (digits) {
+              const num = parseInt(digits, 10);
+              if (num < 2) {
+                if (mat) {
+                  mat.order_multiple = num;
+                  mat.order_multiple_type = null;
+                  mat.order_multiple_value = num;
+                  mat.step_multiplier = num;
+                }
+                if (errEl) errEl.classList.remove('hidden');
+                inp.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+                inp.classList.remove('border-slate-300');
+              } else {
+                if (mat) {
+                  mat.order_multiple = num;
+                  mat.order_multiple_type = 'spesifik';
+                  mat.order_multiple_value = num;
+                  mat.step_multiplier = num;
+                }
+                if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
+                primaryState.order_multiples_by_variant[matId] = num;
+                if (errEl) errEl.classList.add('hidden');
+                inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+                inp.classList.add('border-slate-300');
+              }
+            } else {
+              if (mat) {
+                mat.order_multiple = null;
+                mat.order_multiple_type = null;
+                mat.order_multiple_value = null;
+              }
+              if (errEl) errEl.classList.add('hidden');
+              inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+              inp.classList.add('border-slate-300');
+            }
+          } else {
+            if (mat) {
+              mat.order_multiple = null;
+              mat.order_multiple_type = null;
+              mat.order_multiple_value = null;
+            }
+            if (errEl) errEl.classList.add('hidden');
+            inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+            inp.classList.add('border-slate-300');
+          }
+        };
+
+        inp.oninput = handleMultipleInput;
+        inp.onchange = handleMultipleInput;
+        inp.onblur = (e) => {
+          const raw = inp.value.trim();
+          const rLow = raw.toLowerCase();
+          if (rLow === 'tanpa kelipatan') {
+            inp.value = 'Tanpa Kelipatan';
+          }
+          handleMultipleInput(e);
         };
       });
     }
@@ -18706,11 +18879,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const tiers = mat?.wholesale_tiers || (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id]) || [];
 
       if (mode === 'normal') {
-        const tier1 = tiers[0] || { min_qty: 10, max_qty: 50, price: 0 };
-        const hasNoMax = tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0;
-        const minQty = tier1.min_qty || mat?.min_order || primaryState.min_order || 1;
-        const maxQty = hasNoMax ? '' : tier1.max_qty;
-        const discount = tier1.price || 0;
+        const tier1 = tiers[0] || null;
+        const hasNoMax = tier1 ? (tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0) : false;
+        const minQty = (tier1 && tier1.min_qty) ? tier1.min_qty : '';
+        const maxQty = (tier1 && !hasNoMax && tier1.max_qty) ? tier1.max_qty : '';
+        const discount = (tier1 && (tier1.price || tier1.discount)) ? (tier1.price || tier1.discount) : '';
 
         return `
           <div class="space-y-3">
@@ -18720,8 +18893,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                 <input 
                   type="number" 
                   id="modal-wholesale-normal-min" 
-                  min="${mat?.min_order || primaryState.min_order || 1}" 
+                  min="1" 
                   value="${minQty}" 
+                  placeholder="Cth: 10" 
                   class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)]" 
                 />
               </div>
@@ -18729,14 +18903,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                 <div class="flex items-center justify-between mb-1">
                   <label class="block text-[11px] font-bold text-slate-700">Max. Order</label>
                   <label class="inline-flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer">
-                    <input type="checkbox" id="chk-wholesale-no-max" ${hasNoMax ? 'checked' : ''} class="accent-[var(--color-primary)]" />
+                    <input type="checkbox" id="chk-wholesale-no-max" ${hasNoMax ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
                     <span>Tanpa Max</span>
                   </label>
                 </div>
                 <input 
                   type="number" 
                   id="modal-wholesale-normal-max" 
-                  min="${minQty}" 
+                  min="1" 
                   value="${maxQty}" 
                   placeholder="Tanpa Max" 
                   ${hasNoMax ? 'disabled' : ''} 
@@ -18756,8 +18930,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               </div>
             </div>
 
-            <div class="p-2.5 rounded-lg bg-[var(--color-primary-subtle)] border border-[var(--color-primary)]/20 text-xs text-slate-800 leading-relaxed font-normal" id="wholesale-normal-note">
-              Setiap pembelian <b>${minQty}</b> hingga <b>${hasNoMax ? 'seterusnya (tanpa batas)' : (maxQty || minQty)}</b> maka mendapatkan potongan <b>Rp${(discount || 0).toLocaleString('id-ID')}</b> per pcs.
+            <div class="p-2.5 rounded-lg bg-[var(--color-primary-subtle)] border border-[var(--color-primary)]/20 text-xs text-slate-800 leading-relaxed font-normal ${minQty && discount ? '' : 'hidden'}" id="wholesale-normal-note">
+              Setiap pembelian <b>${minQty}</b> hingga <b>${hasNoMax ? 'seterusnya (tanpa batas)' : (maxQty || minQty)}</b> maka mendapatkan potongan <b>Rp${(parseFloat(discount) || 0).toLocaleString('id-ID')}</b> per pcs.
             </div>
           </div>
         `;
@@ -18765,8 +18939,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       // Bertingkat
       const currentTiers = tiers.length > 0 ? tiers : [
-        { id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 },
-        { id: DB.generateUUID(), min_qty: 51, max_qty: 100, price: 1000 }
+        { id: DB.generateUUID(), min_qty: '', max_qty: '', price: '' }
       ];
 
       return `
@@ -18808,7 +18981,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                       <input 
                         type="number" 
                         data-field="price" 
-                        value="${t.price || 0}" 
+                        value="${(t.price !== undefined && t.price !== null && t.price !== 0 && t.price !== '') ? t.price : ''}" 
                         placeholder="Potongan" 
                         class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white" 
                       />
@@ -18874,9 +19047,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const rows = tbody.querySelectorAll('tr');
           const lastRow = rows[rows.length - 1];
           const lastMaxInp = lastRow?.querySelector('.tiered-max-input');
-          const lastMaxVal = parseInt(lastMaxInp?.value) || 50;
-          const newMin = lastMaxVal + 1;
-          const newMax = newMin + 50;
+          const lastMaxVal = parseInt(lastMaxInp?.value) || 0;
+          const newMin = lastMaxVal > 0 ? (lastMaxVal + 1) : '';
 
           const newTr = document.createElement('tr');
           newTr.setAttribute('data-tier-id', DB.generateUUID());
@@ -18885,13 +19057,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           newTr.innerHTML = `
             <td class="p-2.5 text-center font-bold text-slate-600">Tier ${rows.length + 1}</td>
             <td class="p-2.5">
-              <input type="number" data-field="min_qty" value="${newMin}" readonly class="w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-slate-100 text-slate-500 cursor-not-allowed" />
+              <input type="number" data-field="min_qty" value="${newMin}" placeholder="Min" readonly class="w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-slate-100 text-slate-500 cursor-not-allowed" />
             </td>
             <td class="p-2.5">
-              <input type="number" data-field="max_qty" value="${newMax}" placeholder="Tanpa Max" class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800" />
+              <input type="number" data-field="max_qty" value="" placeholder="Tanpa Max" class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800" />
             </td>
             <td class="p-2.5">
-              <input type="number" data-field="price" value="500" placeholder="Potongan" class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white" />
+              <input type="number" data-field="price" value="" placeholder="Potongan" class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white" />
             </td>
             <td class="p-2.5 text-center">
               <button type="button" class="btn-delete-wholesale-tier text-slate-400 hover:text-red-500 p-1 cursor-pointer transition">
@@ -19606,9 +19778,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       const singleMultipleInp = multipleWrap.querySelector('#input-order-multiple-single');
       if (singleMultipleInp) {
-        singleMultipleInp.oninput = singleMultipleInp.onchange = (e) => {
-          primaryState.order_multiple_value = parseInt(e.target.value) || 1;
+        const handleSingleMultiple = (e) => {
+          const valStr = e.target.value.trim();
+          const errEl = document.getElementById('err-order-multiple-single');
+          if (!valStr) {
+            primaryState.order_multiple_value = '';
+            if (errEl) errEl.classList.add('hidden');
+            singleMultipleInp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+            singleMultipleInp.classList.add('border-slate-300');
+          } else {
+            const num = parseInt(valStr, 10);
+            primaryState.order_multiple_value = num;
+            if (isNaN(num) || num < 2) {
+              if (errEl) errEl.classList.remove('hidden');
+              singleMultipleInp.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+              singleMultipleInp.classList.remove('border-slate-300');
+            } else {
+              if (errEl) errEl.classList.add('hidden');
+              singleMultipleInp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+              singleMultipleInp.classList.add('border-slate-300');
+            }
+          }
         };
+        singleMultipleInp.oninput = singleMultipleInp.onchange = handleSingleMultiple;
       }
 
       multipleWrap.querySelectorAll('input[name="order_multiple_type_radio"]').forEach(rad => {
@@ -22825,7 +23017,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Kelipatan Pesanan DOM sync
     const singleMultipleInp = document.getElementById('input-order-multiple-single');
     if (singleMultipleInp) {
-      primaryState.order_multiple_value = parseInt(singleMultipleInp.value) || 1;
+      const sVal = parseInt(singleMultipleInp.value, 10);
+      primaryState.order_multiple_value = !isNaN(sVal) ? sVal : null;
     }
     const variantMultRows = document.querySelectorAll('#variant-multiples-table-body tr[data-variant-id]');
     if (variantMultRows.length > 0) {
@@ -22922,6 +23115,37 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           } else {
             const digits = raw.replace(/\D/g, '');
             mat.max_order = digits ? parseInt(digits, 10) : null;
+          }
+        }
+        const multInp = row.querySelector('.combo-order-multiple-input');
+        if (multInp) {
+          const raw = multInp.value.trim();
+          const rLow = raw.toLowerCase();
+          if (rLow === 'tanpa kelipatan') {
+            mat.order_multiple = 'Tanpa Kelipatan';
+            mat.order_multiple_type = 'none';
+            mat.order_multiple_value = 1;
+            mat.step_multiplier = 1;
+            if (primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant[matId] = 1;
+          } else if (raw) {
+            const digits = raw.replace(/\D/g, '');
+            const num = digits ? parseInt(digits, 10) : null;
+            mat.order_multiple = num;
+            if (num !== null && num >= 2) {
+              mat.order_multiple_type = 'spesifik';
+              mat.order_multiple_value = num;
+              mat.step_multiplier = num;
+              if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
+              primaryState.order_multiples_by_variant[matId] = num;
+            } else {
+              mat.order_multiple_type = null;
+              mat.order_multiple_value = num;
+              mat.step_multiplier = num;
+            }
+          } else {
+            mat.order_multiple = null;
+            mat.order_multiple_type = null;
+            mat.order_multiple_value = null;
           }
         }
       }
@@ -23532,12 +23756,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
           // Kelipatan Order
           if (primaryState.has_order_multiple) {
-            const mType = mat.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id] !== undefined ? (primaryState.order_multiples_by_variant[mat.id] > 1 ? 'spesifik' : 'umum') : null);
-            const mVal = mat.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[mat.id]);
-            const isMValid = (mType === 'umum') || (mType === 'spesifik' && parseInt(mVal) >= 2);
+            const multInp = document.querySelector(`.combo-order-multiple-input[data-mat-id="${mat.id}"]`);
+            const rawVal = multInp ? multInp.value.trim() : (mat.order_multiple !== undefined && mat.order_multiple !== null ? String(mat.order_multiple).trim() : '');
+            const isNoMult = rawVal.toLowerCase() === 'tanpa kelipatan';
+            const num = parseInt(rawVal.replace(/\D/g, ''), 10);
+            const isNumValid = !isNaN(num) && num >= 2;
+            const isMValid = isNoMult || isNumValid;
             if (!isMValid) {
-              const btnEl = document.querySelector(`.btn-open-multiple-modal[data-mat-id="${mat.id}"]`);
-              addError(`List Variasi Produk (Baris ${var1Name}): Pengaturan Kelipatan Order belum valid (minimal kelipatan 2).`, btnEl || document.getElementById('combination-matrix-section'));
+              const elTarget = multInp || document.getElementById('combination-matrix-section');
+              addError(`List Variasi Produk (Baris ${var1Name}): Kelipatan Order belum valid (Pilih 'Tanpa Kelipatan' atau minimal angka 2).`, elTarget);
             }
           }
         });
@@ -23546,6 +23773,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     if (!primaryState.is_unlimited_stock && !primaryState.has_variants && (primaryState.stock === null || isNaN(primaryState.stock) || primaryState.stock < 0)) {
       addError('Masukkan kuota stok fisik yang valid jika batas stok aktif.', document.getElementById('input-stock-qty') || document.getElementById('stock-input-wrapper'));
+    }
+
+    if (primaryState.has_order_multiple && !primaryState.has_variants) {
+      const multVal = parseInt(primaryState.order_multiple_value, 10);
+      if (isNaN(multVal) || multVal < 2) {
+        addError('Kelipatan Pesanan wajib bernilai minimal 2.', document.getElementById('input-order-multiple-single') || document.getElementById('order-multiple-wrapper'));
+      }
     }
 
     if (primaryState.has_wholesale && (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0)) {

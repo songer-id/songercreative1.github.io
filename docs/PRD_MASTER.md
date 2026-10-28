@@ -717,6 +717,23 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menghapus selektor `.btn-open-wholesale-modal` dan `.btn-open-multiple-modal` dari rule background hijau muda (`var(--color-primary-subtle)`) di baris 2488 `css/admin.css`.
       - Menghapus selektor umum `button` dari rule border-radius di baris 1498 `css/admin.css`.
       - Menambahkan rule CSS scoped berpresisi tinggi untuk `.combo-text-btn` dan `.combo-icon-btn` di `#combination-matrix-section`.
+  - [x] **Penyempurnaan Form Produk Bagian 25: Input Langsung Kelipatan Order di Tabel Variasi, Modal Grosir Bebas Nilai Default, dan Stepper Qty Konsisten +1/-1 (`js/product-form.js`, `js/pdp.js`, `docs/PRD_MASTER.md`)**:
+    - **Kolom Kelipatan Order Menjadi Input Langsung Tanpa Modal & Tanpa Ikon**:
+      - Menghapus tombol pembuka modal dan ikon gerigi/pensil pada kolom Kelipatan Order di tabel List Variasi Produk.
+      - Saat header Kelipatan Order nonaktif, merender kotak disabled abu-abu bertuliskan `Nonaktif`.
+      - Saat header Kelipatan Order aktif, merender input teks langsung (`.combo-order-multiple-input`) dengan placeholder `Input/Pilih` tanpa nilai default otomatis (kondisi awal kosong `""`).
+      - Menyediakan saran popover / datalist bersih dengan opsi tunggal `"Tanpa Kelipatan"` saat input difokuskan/diklik; memilihnya menetapkan aturan tanpa kelipatan (step multiplier 1).
+      - Validasi pengetikan angka: jika diisi `< 2`, menampilkan pesan peringatan merah `"Minimal Kelipatan 2"` di bawah kotak input serta border merah. Jika diisi `>= 2`, pesan peringatan hilang dan baris dinyatakan valid.
+      - Input Kelipatan Order produk tunggal (`#input-order-multiple-single`) menerapkan aturan seragam: minimal 2 dan menampilkan pesan peringatan `"Minimal Kelipatan 2"` jika < 2.
+      - Memblokir tombol `Uji Coba Produk` dan `Simpan Produk` dengan pesan informatif jika terdapat baris kelipatan yang belum diatur atau bernilai < 2.
+    - **Pembersihan Seluruh Nilai Default di Modal Harga Grosir (`#modal-wholesale-config`)**:
+      - Saat membuka baris yang berstatus `Pilih`, kedua radio `Normal` dan `Bertingkat` dibiarkan uncheck tanpa pilihan default.
+      - Memilih jenis `Normal` menyajikan seluruh input field (`Min. Order`, `Max. Order`, `Potongan Harga`) dalam keadaan kosong murni (`""`) dengan placeholder informatif (menghilangkan angka default kaku 10, 50, 500).
+      - Memilih jenis `Bertingkat` menyajikan tabel tier dengan 1 baris kosong murni (`""`) tanpa angka default kaku (10, 50, 500, 1000). Tombol `+ Tambah Tier` juga menambahkan baris dengan kolom potongan kosong.
+    - **Stepper Qty Konsisten +1/-1 & Validasi Kelipatan Dinamis pada Drawer dan PDP**:
+      - Nilai awal Qty saat membuka drawer variasi maupun halaman PDP selalu dimulai dari angka `1` (menghapus auto-jump ke `min_order` atau `step_multiplier`).
+      - Tombol `+` selalu menambah +1 secara presisi, dan tombol `-` selalu mengurangi -1 (minimal 1).
+      - Jika nilai Qty saat ini belum memenuhi kelipatan yang ditentukan, menampilkan pesan notifikasi dinamis `"Jumlah pesanan wajib kelipatan [X] Pcs Mohon sesuaikan jumlah pesanan Cth: [Contoh kelipatan],Dst."` serta mengunci (disable) tombol `Beli Sekarang` dan `Masukkan ke Keranjang` baik di Drawer Shopee Preview, Mini PDP, maupun PDP utama.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
