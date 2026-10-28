@@ -2938,6 +2938,11 @@ const ProductForm = (() => {
           <option value="Siap Pakai & Praktis"></option>
         </datalist>
 
+        <!-- Modals Terintegrasi List Variasi Produk -->
+        ${renderWholesaleModalMarkup()}
+        ${renderOrderMultipleModalMarkup()}
+        ${renderSpecificOptionsModalMarkup()}
+
       </div>
     `;
 
@@ -13356,11 +13361,6 @@ const ProductForm = (() => {
 
           <!-- Kartu Pengaktif & Konfigurasi Ukuran (P x L) tepat di bawah Layanan Extras -->
           ${renderCustomDimensionCard()}
-
-          <!-- Modals Terintegrasi -->
-          ${renderWholesaleModalMarkup()}
-          ${renderOrderMultipleModalMarkup()}
-          ${renderSpecificOptionsModalMarkup()}
         </div>
       `;
     }
@@ -15345,10 +15345,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const containerWidth = navContainer.clientWidth;
     const targetScrollLeft = tabLeft - (containerWidth / 2) + (tabWidth / 2);
 
-    navContainer.scrollTo({
-      left: Math.max(0, targetScrollLeft),
-      behavior: 'smooth'
-    });
+    if (typeof navContainer.scrollTo === 'function') {
+      navContainer.scrollTo({
+        left: Math.max(0, targetScrollLeft),
+        behavior: 'smooth'
+      });
+    } else {
+      navContainer.scrollLeft = Math.max(0, targetScrollLeft);
+    }
   }
 
   function setActiveStep2NavTab(targetId, shouldCenter = true) {
@@ -15386,11 +15390,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const subnavHeight = subnavEl ? subnavEl.offsetHeight : 48;
       // Gulirkan viewport secara mulus ke seksi kartu dengan offset tepat di bawah subnav sticky
       const targetScroll = vp.scrollTop + (elRect.top - vpRect.top) - subnavHeight - 8;
-      vp.scrollTo({
-        top: Math.max(0, targetScroll),
-        behavior: 'smooth'
-      });
-    } else {
+      if (typeof vp.scrollTo === 'function') {
+        vp.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: 'smooth'
+        });
+      } else {
+        vp.scrollTop = Math.max(0, targetScroll);
+      }
+    } else if (typeof el.scrollIntoView === 'function') {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -15674,9 +15682,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
     updateStepVisibility();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window.scrollTo === 'function') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     const vp = document.getElementById('admin-main-viewport');
-    if (vp) vp.scrollTo({ top: 0, behavior: 'smooth' });
+    if (vp) {
+      if (typeof vp.scrollTo === 'function') {
+        vp.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        vp.scrollTop = 0;
+      }
+    }
   }
 
   if (typeof window !== 'undefined') {
@@ -15857,7 +15873,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           bindStep2InteractiveEvents();
         }
         initStep2SubnavObserver();
-        window.scrollTo(0, scrollY);
+        if (typeof window.scrollTo === 'function') {
+          window.scrollTo(0, scrollY);
+        }
       }
     };
 
@@ -23767,7 +23785,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           doScrollAndHighlight(firstInvalidEl);
         }
       } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof window.scrollTo === 'function') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
 
       if (window.lucide) window.lucide.createIcons();

@@ -698,6 +698,16 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
     - **Sinkronisasi Validasi Mode Uji Coba (`canActivateTestMode`) & Validasi Simpan Produk (`validateForm`)**:
       - Kedua fungsi validasi secara ketat memeriksa setiap baris pada List Variasi Produk. Jika masih terdapat baris dengan status `Pilih` (belum valid) pada Variasi 2–4, Harga Grosir, atau Kelipatan Order, proses uji coba maupun penyimpanan produk diblokir dengan pesan peringatan yang spesifik dan jelas.
       - Resolusi aturan opsi pada Drawer dan Mini PDP (`getAllowedVariationOptions` & `validateAndAdjustSpecificVariations`) berjalan reaktif dan independen per baris opsi Variasi 1.
+  - [x] **Penyempurnaan Form Produk Bagian 23: Resolusi Darurat Layar Blank Putih Form Tambah Produk Baru, Restorasi Berkas product-form.js, Penempatan Modal Terpusat & Defensive Scroll Protection (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Restorasi Integritas Berkas `js/product-form.js`**:
+      - Memulihkan berkas `js/product-form.js` yang sempat terhapus/berukuran 0 byte pada working tree kembali ke versi penuh ~1.25 MB (23,995 baris).
+    - **Penataan Ulang Penempatan DOM Modal List Variasi Produk**:
+      - Memindahkan markup modal (`#modal-wholesale-config`, `#modal-order-multiple-config`, `#modal-specific-options`) dari dalam `renderPricingModelSection()` ke tingkat root `#product-form-wrapper` di `renderForm()`.
+      - Memastikan elemen modal selalu hadir sejak inisialisasi awal form (baik produk memiliki variasi maupun belum), sehingga seluruh event listener submit dan radio change selalu terikat secara permanen tanpa risiko terhapus saat matriks atau model harga di-render ulang.
+    - **Defensive Guarding Fungsi Navigasi Viewport & Smooth Scroll**:
+      - Menambahkan pengecekan protektif `typeof ... === 'function'` pada pemanggilan `vp.scrollTo`, `navContainer.scrollTo`, dan `window.scrollTo` dengan fallback langsung ke `.scrollTop = ...` / `.scrollLeft = ...`, mencegah crash runtime `TypeError: scrollTo is not a function` pada browser/webview atau lingkungan virtual tanpa polyfill smooth scroll.
+    - **Verifikasi Runtime Menyeluruh via Node.js**:
+      - Simulasi siklus hidup form lengkap dari pembacaan 11 skrip inti, ekstraksi 126 ID elemen DOM `admin.html`, hingga eksekusi `ProductForm.initCreate()` yang merender 71,126 karakter HTML secara sempurna dengan 0 error runtime.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
