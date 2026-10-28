@@ -4903,12 +4903,19 @@ const ProductForm = (() => {
       return 'Pembelian telah mencapai batas maksimum!';
     }
 
-    // 2. Kondisi A: Minimum Order (jika minOrder > 1 dan nilai qty saat ini berada di bawah minOrder)
+    // 2. Kondisi Kelipatan Pesanan (jika Qty belum kelipatan yang ditentukan)
+    if (stepMult > 1 && (curQty % stepMult !== 0)) {
+      const nextValid = Math.ceil(curQty / stepMult) * stepMult;
+      const examples = [nextValid, nextValid + stepMult, nextValid + (2 * stepMult), nextValid + (3 * stepMult)].join(',');
+      return `Jumlah pesanan wajib kelipatan ${stepMult} Pcs Mohon sesuaikan jumlah pesanan Cth: ${examples},Dst.`;
+    }
+
+    // 3. Kondisi A: Minimum Order (jika minOrder > 1 dan nilai qty saat ini berada di bawah minOrder)
     if (minOrder > 1 && curQty < minOrder) {
       return `Produk ini Memiliki Minimum Jumlah Pembelian Sebesar ${minOrder}.<br>Mohon Penuhi Syarat Jumlah Minimum Sebelum Checkout`;
     }
 
-    // 3. Kondisi C & D: Harga Grosir Normal (1 Tingkat) & Bertingkat (Multi-Tier)
+    // 4. Kondisi C & D: Harga Grosir Normal (1 Tingkat) & Bertingkat (Multi-Tier)
     if (primaryState.has_wholesale && Array.isArray(wholesaleTiers) && wholesaleTiers.length > 0) {
       const validTiers = wholesaleTiers
         .map(t => ({
@@ -4925,11 +4932,6 @@ const ProductForm = (() => {
           return `Dapatkan Potongan Rp${Math.round(nextTier.discount).toLocaleString('id-ID')} untuk pesanan diatas ${nextTier.min_qty}.`;
         }
       }
-    }
-
-    // 4. Kondisi Kelipatan Pesanan (jika Qty belum kelipatan yang ditentukan)
-    if (stepMult > 1 && (curQty % stepMult !== 0)) {
-      return `Jumlah pesanan wajib kelipatan ${stepMult} pcs`;
     }
 
     return null;
@@ -4964,6 +4966,29 @@ const ProductForm = (() => {
       } else {
         contentEl.innerHTML = '';
         container.classList.add('hidden');
+      }
+    });
+  }
+
+  function updateShopeeDrawerSubmitButtonState(rule, curQty) {
+    const stepMult = rule?.order_multiple || 1;
+    const minOrder = rule?.min_order || 1;
+    const isMultipleInvalid = (stepMult > 1 && (curQty % stepMult !== 0));
+    const isMinOrderInvalid = (minOrder > 1 && curQty < minOrder);
+    const isInvalid = isMultipleInvalid || isMinOrderInvalid;
+
+    const submitButtons = document.querySelectorAll(
+      '.mini-pdp-drawer-root .btn-shopee-submit:not(#btn-close-spec-drawer):not(.btn-close-spec-drawer), #btn-shopee-drawer-confirm'
+    );
+
+    submitButtons.forEach(btn => {
+      btn.disabled = isInvalid;
+      if (isInvalid) {
+        btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+        btn.classList.remove('cursor-pointer', 'hover:opacity-95');
+      } else {
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+        btn.classList.add('cursor-pointer', 'hover:opacity-95');
       }
     });
   }
@@ -5181,13 +5206,17 @@ const ProductForm = (() => {
     let minOrderQty = rule.min_order;
     let maxOrderQty = rule.max_order;
 
-    if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
-      previewTestState.qty = minOrderQty;
+    if (!previewTestState.qty || previewTestState.qty < 1) {
+      previewTestState.qty = 1;
     }
     if (previewTestState.qty > maxOrderQty && maxOrderQty !== Infinity) {
       previewTestState.qty = maxOrderQty;
     }
     const curQty = previewTestState.qty;
+
+    const isMultipleInvalid = (rule.order_multiple > 1 && (curQty % rule.order_multiple !== 0));
+    const isMinOrderInvalid = (minOrderQty > 1 && curQty < minOrderQty);
+    const isSubmitDisabled = isMultipleInvalid || isMinOrderInvalid;
 
     // Evaluasi Harga Final
     let grandTotalPrice = 0;
@@ -5406,8 +5435,8 @@ const ProductForm = (() => {
           <div class="p-3 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
             <div class="drawer-qty-stepper inline-flex items-center rounded-none border-0 overflow-hidden bg-slate-100 shadow-none">
-              <button type="button" id="btn-shopee-qty-minus" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty <= minOrderQty ? 'disabled' : ''}>-</button>
-              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty input-shopee-qty w-12 h-7 text-center text-xs font-bold text-slate-800 bg-slate-50 rounded-none border-0 outline-none shadow-none appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
+              <button type="button" id="btn-shopee-qty-minus" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty <= 1 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty <= 1 ? 'disabled' : ''}>-</button>
+              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty input-shopee-qty w-12 h-7 text-center text-xs font-bold text-slate-800 bg-slate-50 rounded-none border-0 outline-none shadow-none appearance-none" value="${curQty}" min="1" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
               <button type="button" id="btn-shopee-qty-plus" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty >= maxOrderQty ? 'disabled' : ''}>+</button>
             </div>
           </div>
@@ -5415,7 +5444,7 @@ const ProductForm = (() => {
           ${orderNoticeHtml}
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
-            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-none hover:opacity-95 transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+            <button type="button" id="btn-shopee-drawer-confirm" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-none transition active:scale-[0.98] ${isSubmitDisabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'hover:opacity-95 cursor-pointer'}" ${isSubmitDisabled ? 'disabled' : ''} style="background-color: ${accentColor};">
               ${actionType === 'buy' ? 'Beli Sekarang' : 'Masukkan ke Keranjang'}
             </button>
           </div>
@@ -5541,8 +5570,8 @@ const ProductForm = (() => {
           <div class="p-3 pt-2 border-t border-slate-100 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
             <div class="drawer-qty-stepper inline-flex items-center rounded-none border-0 overflow-hidden bg-slate-100 shadow-none">
-              <button type="button" id="btn-shopee-qty-minus" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty <= minOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty <= minOrderQty ? 'disabled' : ''}>-</button>
-              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty input-shopee-qty w-12 h-7 text-center text-xs font-bold text-slate-800 bg-slate-50 rounded-none border-0 outline-none shadow-none appearance-none" value="${curQty}" min="${minOrderQty}" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
+              <button type="button" id="btn-shopee-qty-minus" class="btn-shopee-qty-minus btn-preview-qty-minus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty <= 1 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty <= 1 ? 'disabled' : ''}>-</button>
+              <input type="number" id="input-preview-test-qty" class="input-preview-test-qty input-shopee-qty w-12 h-7 text-center text-xs font-bold text-slate-800 bg-slate-50 rounded-none border-0 outline-none shadow-none appearance-none" value="${curQty}" min="1" ${maxOrderQty !== Infinity ? `max="${maxOrderQty}"` : ''} />
               <button type="button" id="btn-shopee-qty-plus" class="btn-shopee-qty-plus btn-preview-qty-plus w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 font-bold text-xs select-none rounded-none border-0 outline-none shadow-none transition ${curQty >= maxOrderQty ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}" ${curQty >= maxOrderQty ? 'disabled' : ''}>+</button>
             </div>
           </div>
@@ -5550,7 +5579,7 @@ const ProductForm = (() => {
           ${orderNoticeHtml}
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
-            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-none hover:opacity-95 transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+            <button type="button" id="btn-shopee-drawer-confirm" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-none transition active:scale-[0.98] ${isSubmitDisabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'hover:opacity-95 cursor-pointer'}" ${isSubmitDisabled ? 'disabled' : ''} style="background-color: ${accentColor};">
               ${actionType === 'buy' ? 'Beli Sekarang' : 'Masukkan ke Keranjang'}
             </button>
           </div>
@@ -5874,12 +5903,11 @@ const ProductForm = (() => {
 
   function updateDrawerQtyButtonsState() {
     const rule = resolveActiveCombinationRule();
-    const minOrderQty = rule.min_order;
     const maxOrderQty = rule.max_order;
-    const curQ = previewTestState.qty || minOrderQty;
+    const curQ = previewTestState.qty || 1;
 
     document.querySelectorAll('.btn-shopee-qty-minus, .btn-preview-qty-minus').forEach(btn => {
-      if (curQ <= minOrderQty) {
+      if (curQ <= 1) {
         btn.classList.add('opacity-40', 'cursor-not-allowed');
         btn.classList.remove('cursor-pointer');
         btn.disabled = true;
@@ -6052,8 +6080,8 @@ const ProductForm = (() => {
     let minOrderQty = rule.min_order;
     let maxOrderQty = rule.max_order;
 
-    if (!previewTestState.qty || previewTestState.qty < minOrderQty) {
-      previewTestState.qty = minOrderQty;
+    if (!previewTestState.qty || previewTestState.qty < 1) {
+      previewTestState.qty = 1;
     }
     if (previewTestState.qty > maxOrderQty && maxOrderQty !== Infinity) {
       previewTestState.qty = maxOrderQty;
@@ -6063,7 +6091,7 @@ const ProductForm = (() => {
     // Sinkronisasi input field Qty di drawer
     document.querySelectorAll('.input-preview-test-qty, #input-preview-test-qty').forEach(inp => {
       if (parseInt(inp.value) !== curQty) inp.value = curQty;
-      inp.min = minOrderQty;
+      inp.min = 1;
       if (maxOrderQty !== Infinity) inp.max = maxOrderQty;
       else inp.removeAttribute('max');
     });
@@ -6155,6 +6183,7 @@ const ProductForm = (() => {
     else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || rootPrimaryColor;
 
     updateShopeeDrawerOrderNotice(rule, curQty, accentColor);
+    updateShopeeDrawerSubmitButtonState(rule, curQty);
 
     updateDrawerSelectedOptionsDescriptions();
   }
@@ -6451,9 +6480,9 @@ const ProductForm = (() => {
         container.querySelectorAll('.btn-shopee-qty-minus, .btn-preview-qty-minus').forEach(btn => {
           btn.onclick = (e) => {
             e.preventDefault();
-            let curQ = previewTestState.qty || minOrderQty;
-            let nextQ = curQ - stepMultiplier;
-            if (nextQ < minOrderQty) nextQ = minOrderQty;
+            let curQ = previewTestState.qty || 1;
+            let nextQ = curQ - 1;
+            if (nextQ < 1) nextQ = 1;
             previewTestState.qty = nextQ;
             container.querySelectorAll('.input-preview-test-qty, #input-preview-test-qty').forEach(inp => {
               inp.value = nextQ;
@@ -6467,8 +6496,8 @@ const ProductForm = (() => {
         container.querySelectorAll('.btn-shopee-qty-plus, .btn-preview-qty-plus').forEach(btn => {
           btn.onclick = (e) => {
             e.preventDefault();
-            let curQ = previewTestState.qty || minOrderQty;
-            let nextQ = curQ + stepMultiplier;
+            let curQ = previewTestState.qty || 1;
+            let nextQ = curQ + 1;
             if (nextQ > maxOrderQty && maxOrderQty !== Infinity) nextQ = maxOrderQty;
             previewTestState.qty = nextQ;
             container.querySelectorAll('.input-preview-test-qty, #input-preview-test-qty').forEach(inp => {
@@ -6492,7 +6521,7 @@ const ProductForm = (() => {
           };
           inp.onchange = inp.onblur = (e) => {
             let val = parseInt(e.target.value);
-            if (isNaN(val) || val < minOrderQty) val = minOrderQty;
+            if (isNaN(val) || val < 1) val = 1;
             if (maxOrderQty !== Infinity && val > maxOrderQty) val = maxOrderQty;
             previewTestState.qty = val;
             inp.value = val;
@@ -6924,7 +6953,14 @@ const ProductForm = (() => {
         container.querySelectorAll('.btn-shopee-submit').forEach(btn => {
           btn.onclick = (e) => {
             e.preventDefault();
-            const curQ = previewTestState.qty || minOrderQty;
+            const curQ = previewTestState.qty || 1;
+            const currentRule = resolveActiveCombinationRule();
+            const stepMult = currentRule?.order_multiple || 1;
+            const minOrd = currentRule?.min_order || 1;
+
+            if ((stepMult > 1 && (curQ % stepMult !== 0)) || (minOrd > 1 && curQ < minOrd)) {
+              return;
+            }
 
             if (hasVariations && !checkAllVariationsSelected()) {
               const valRes = validatePreviewVariantSelection();
