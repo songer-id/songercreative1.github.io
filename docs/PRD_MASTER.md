@@ -605,6 +605,21 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
         - Ketentuan kelipatan pesanan: `"Jumlah pesanan wajib kelipatan ${stepMult} pcs"`.
         - Status / penawaran harga grosir: `"Harga grosir Rp[nominal]/pcs diterapkan"` atau `"Beli min. [N] pcs untuk harga grosir Rp[nominal]/pcs"`.
       - Ditampilkan dengan tipografi rapi (`text-[11px] font-normal text-amber-600` atau warna proporsional) dan otomatis tersembunyi (`hidden`) jika tidak ada ketentuan aktif pada kondisi saat itu.
+  - [x] **Penyempurnaan Form Produk Bagian 19: Otomatisasi Aturan Spesifik Variasi 2-4 di Pratinjau Uji Coba Drawer & Mini PDP, dan Penguncian Posisi "Dikirim Dari" Selalu Paling Bawah di Drawer Spesifikasi (`js/product-form.js`, `js/pdp.js`, `admin.html`, `docs/PRD_MASTER.md`)**:
+    - **Otomatisasi Aturan Spesifik Variasi 2 s.d. Variasi 4**:
+      - Mendeteksi scope `spesifik` vs `umum` dari `variation_scopes` dan pemetaan `specific_options_map` per opsi Variasi 1 (`materialsState`).
+      - Mengunci dan menonaktifkan (`disabled`, `opacity-40 cursor-not-allowed line-through pointer-events-none`) opsi Variasi 2, Variasi 3, dan Variasi 4 yang tidak diizinkan pada seluruh tipe tampilan (Chip, Accordion, dan Popover Select Shadcn) baik di Drawer maupun kartu Mini PDP.
+      - Menerapkan auto-reset pilihan: jika opsi yang terpilih sebelumnya menjadi tidak valid saat pengguna beralih opsi Variasi 1 atau opsi tingkat atas, sistem otomatis mengalihkan pilihan ke opsi valid pertama.
+      - Sinkronisasi matriks kombinasi ke batas `min_order`, `max_order`, `order_multiple`, dan diskon grosir bertingkat dengan pembaruan dinamis teks peringatan ketentuan pesanan (`#shopee-drawer-order-notice`).
+    - **Kunci Posisi "Dikirim Dari" Selalu Paling Bawah di Drawer Spesifikasi & Tab PDP**:
+      - Memisahkan `"Dikirim Dari"` dari pengumpulan baris umum/kondisional.
+      - Membatasi baris informasi lainnya maksimal 9 baris (`otherRows.slice(0, 9)`), kemudian menyematkan `"Dikirim Dari"` sebagai entri terakhir.
+      - Memastikan total baris selalu berada di antara 5 hingga 10 baris dengan posisi `"Dikirim Dari"` dijamin 100% konsisten berada tepat di atas tombol CTA Oke di Drawer Spesifikasi dan di bagian bawah tabel spesifikasi PDP.
+    - **Penyelarasan Desain SaaS Flat & Penghapusan Redundansi**:
+      - Menghapus banner kuning statis duplikat di header drawer karena status ketentuan grosir dan kelipatan telah ditangani secara elegan dan kontekstual oleh teks peringatan `#shopee-drawer-order-notice`.
+      - Menghapus bayangan kaku (`shadow-md`) pada tombol CTA Beli Sekarang / Keranjang dan tombol Oke Drawer Spesifikasi, beralih ke `shadow-none` dengan efek `hover:opacity-95` dan active scale untuk kesan flat SaaS profesional.
+    - **Cache Version Bump**:
+      - Memperbarui query string cache pada seluruh aset CSS dan script di `admin.html` ke `?v=8.1`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

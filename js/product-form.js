@@ -4890,44 +4890,25 @@ const ProductForm = (() => {
   }
 
   // Helper Teks Peringatan / Informasi Penyesuaian Ketentuan Pesanan di Bawah Drawer
-  function buildShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount) {
+  function buildShopeeDrawerOrderNotice(rule, curQty) {
     const minOrder = rule?.min_order || 1;
     const maxOrder = (rule?.max_order !== undefined && rule?.max_order !== null) ? rule.max_order : Infinity;
     const stepMult = rule?.order_multiple || 1;
-    const wholesaleTiers = rule?.wholesale_tiers || (primaryState.has_wholesale && Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : []);
-    const hasDiscount = Boolean(primaryState.has_discount);
+    const wholesaleTiers = (rule?.wholesale_tiers && rule.wholesale_tiers.length > 0)
+      ? rule.wholesale_tiers
+      : (primaryState.has_wholesale && Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : []);
 
-    // 1. Peringatan Batas Maksimal Pesanan
+    // 1. Kondisi B: Maksimum Order (Selain Tanpa Batas) Tercapai
     if (maxOrder !== Infinity && curQty >= maxOrder) {
-      const msg = hasDiscount
-        ? `Harga promo berlaku untuk maksimal ${maxOrder} pcs`
-        : `Maksimal pembelian ${maxOrder} pcs per pesanan`;
-      return {
-        text: msg,
-        colorClass: 'text-amber-600',
-        icon: 'bi-exclamation-triangle-fill'
-      };
+      return 'Pembelian telah mencapai batas maksimum!';
     }
 
-    // 2. Peringatan Batas Minimal Pesanan
-    if (minOrder > 1 && curQty <= minOrder) {
-      return {
-        text: `Minimal pembelian ${minOrder} pcs`,
-        colorClass: 'text-amber-600',
-        icon: 'bi-info-circle-fill'
-      };
+    // 2. Kondisi A: Minimum Order (jika minOrder > 1 dan nilai qty saat ini berada di bawah minOrder)
+    if (minOrder > 1 && curQty < minOrder) {
+      return `Produk ini Memiliki Minimum Jumlah Pembelian Sebesar ${minOrder}.<br>Mohon Penuhi Syarat Jumlah Minimum Sebelum Checkout`;
     }
 
-    // 3. Peringatan Kelipatan Pesanan (jika Qty bukan kelipatan kelipatan yang ditentukan)
-    if (stepMult > 1 && (curQty % stepMult !== 0)) {
-      return {
-        text: `Jumlah pesanan wajib kelipatan ${stepMult} pcs`,
-        colorClass: 'text-amber-600',
-        icon: 'bi-info-circle-fill'
-      };
-    }
-
-    // 4. Status / Informasi Harga Grosir
+    // 3. Kondisi C & D: Harga Grosir Normal (1 Tingkat) & Bertingkat (Multi-Tier)
     if (primaryState.has_wholesale && Array.isArray(wholesaleTiers) && wholesaleTiers.length > 0) {
       const validTiers = wholesaleTiers
         .map(t => ({
@@ -4938,78 +4919,50 @@ const ProductForm = (() => {
         .sort((a, b) => a.min_qty - b.min_qty);
 
       if (validTiers.length > 0) {
-        const activeTiers = validTiers.filter(t => curQty >= t.min_qty);
-        if (activeTiers.length > 0) {
-          const currentTier = activeTiers[activeTiers.length - 1];
-          const wholesaleUnitPrice = Math.max(0, unitPriceAfterDiscount - currentTier.discount);
-          return {
-            text: `Harga grosir Rp${Math.round(wholesaleUnitPrice).toLocaleString('id-ID')}/pcs diterapkan`,
-            colorClass: 'text-slate-600 font-medium',
-            icon: 'bi-tag-fill'
-          };
-        } else {
-          const firstTier = validTiers[0];
-          const firstTierPrice = Math.max(0, unitPriceAfterDiscount - firstTier.discount);
-          return {
-            text: `Beli min. ${firstTier.min_qty} pcs untuk harga grosir Rp${Math.round(firstTierPrice).toLocaleString('id-ID')}/pcs`,
-            colorClass: 'text-slate-500',
-            icon: 'bi-tag'
-          };
+        // Cari tier berikutnya yang belum tercapai (tier pertama dengan min_qty > curQty)
+        const nextTier = validTiers.find(t => curQty < t.min_qty);
+        if (nextTier) {
+          return `Dapatkan Potongan Rp${Math.round(nextTier.discount).toLocaleString('id-ID')} untuk pesanan diatas ${nextTier.min_qty}.`;
         }
       }
     }
 
-    // 5. Informasi Kelipatan Pesanan (jika aktif)
-    if (stepMult > 1) {
-      return {
-        text: `Jumlah pesanan wajib kelipatan ${stepMult} pcs`,
-        colorClass: 'text-slate-500',
-        icon: 'bi-info-circle'
-      };
-    }
-
-    // 6. Informasi Minimal Pembelian (jika min_order > 1)
-    if (minOrder > 1) {
-      return {
-        text: `Minimal pembelian ${minOrder} pcs`,
-        colorClass: 'text-slate-500',
-        icon: 'bi-info-circle'
-      };
+    // 4. Kondisi Kelipatan Pesanan (jika Qty belum kelipatan yang ditentukan)
+    if (stepMult > 1 && (curQty % stepMult !== 0)) {
+      return `Jumlah pesanan wajib kelipatan ${stepMult} pcs`;
     }
 
     return null;
   }
 
-  function renderShopeeDrawerOrderNoticeHtml(rule, curQty, unitPriceAfterDiscount) {
-    const notice = buildShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount);
+  function renderShopeeDrawerOrderNoticeHtml(rule, curQty, accentColor) {
+    const notice = buildShopeeDrawerOrderNotice(rule, curQty);
+    const safeColor = accentColor || 'var(--color-primary)';
     if (!notice) {
-      return `<div id="shopee-drawer-order-notice" class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white hidden"><div class="drawer-order-notice-content text-[11px] leading-tight"></div></div>`;
+      return `<div id="shopee-drawer-order-notice" class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white hidden"><div class="drawer-order-notice-content text-[11px] leading-tight font-normal line-clamp-2 max-h-[2.6em] overflow-hidden" style="color: ${safeColor};"></div></div>`;
     }
     return `
       <div id="shopee-drawer-order-notice" class="p-3 pt-0 pb-1.5 flex items-center justify-between shrink-0 bg-white">
-        <div class="drawer-order-notice-content flex items-center gap-1.5 text-[11px] leading-tight ${notice.colorClass}">
-          <i class="bi ${notice.icon} shrink-0 text-xs"></i>
-          <span class="truncate">${escapeHtml(notice.text)}</span>
+        <div class="drawer-order-notice-content text-[11px] leading-tight font-normal line-clamp-2 max-h-[2.6em] overflow-hidden" style="color: ${safeColor};">
+          ${notice}
         </div>
       </div>
     `;
   }
 
-  function updateShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount) {
+  function updateShopeeDrawerOrderNotice(rule, curQty, accentColor) {
     const noticeContainers = document.querySelectorAll('#shopee-drawer-order-notice');
     if (!noticeContainers.length) return;
-    const notice = buildShopeeDrawerOrderNotice(rule, curQty, unitPriceAfterDiscount);
+    const notice = buildShopeeDrawerOrderNotice(rule, curQty);
+    const safeColor = accentColor || 'var(--color-primary)';
     noticeContainers.forEach(container => {
+      const contentEl = container.querySelector('.drawer-order-notice-content') || container;
       if (notice) {
-        container.innerHTML = `
-          <div class="drawer-order-notice-content flex items-center gap-1.5 text-[11px] leading-tight ${notice.colorClass}">
-            <i class="bi ${notice.icon} shrink-0 text-xs"></i>
-            <span class="truncate">${escapeHtml(notice.text)}</span>
-          </div>
-        `;
+        contentEl.style.color = safeColor;
+        contentEl.innerHTML = notice;
         container.classList.remove('hidden');
       } else {
-        container.innerHTML = '<div class="drawer-order-notice-content text-[11px] leading-tight"></div>';
+        contentEl.innerHTML = '';
         container.classList.add('hidden');
       }
     });
@@ -5291,8 +5244,6 @@ const ProductForm = (() => {
       grandStrikePrice = strikeSubtotal + extrasActivePrice;
     }
 
-    const orderNoticeHtml = renderShopeeDrawerOrderNoticeHtml(rule, curQty, baseUnitPriceAfterDiscount);
-
     // Stok Display
     const stockDisplayText = getPreviewStockDisplay(selectedMat, validMaterials);
 
@@ -5302,6 +5253,8 @@ const ProductForm = (() => {
     let accentColor = rootPrimaryColor;
     if (primaryState.card_variant === 'B') accentColor = '#0f172a';
     else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || rootPrimaryColor;
+
+    const orderNoticeHtml = renderShopeeDrawerOrderNoticeHtml(rule, curQty, accentColor);
 
     const noneItem = validExtras.find(ex => ex.is_default_none);
     const noneId = noneItem?.id;
@@ -5432,13 +5385,6 @@ const ProductForm = (() => {
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
-              <div class="drawer-wholesale-banner-container ${wholesaleInfo.bannerText ? '' : 'hidden'}">
-                ${wholesaleInfo.bannerText ? `
-                  <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
-                    <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
-                  </div>
-                ` : ''}
-              </div>
             </div>
             <button type="button" class="btn-close-shopee-drawer absolute top-2 right-2 text-slate-400 hover:text-slate-700 text-sm p-1 cursor-pointer" title="Tutup">
               <i class="bi bi-x-lg"></i>
@@ -5469,7 +5415,7 @@ const ProductForm = (() => {
           ${orderNoticeHtml}
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
-            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-none hover:opacity-95 transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
               ${actionType === 'buy' ? 'Beli Sekarang' : 'Masukkan ke Keranjang'}
             </button>
           </div>
@@ -5568,13 +5514,6 @@ const ProductForm = (() => {
                 <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
-              <div class="drawer-wholesale-banner-container ${wholesaleInfo.bannerText ? '' : 'hidden'}">
-                ${wholesaleInfo.bannerText ? `
-                  <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
-                    <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
-                  </div>
-                ` : ''}
-              </div>
             </div>
             <button type="button" class="btn-close-shopee-drawer absolute top-2 right-2 text-slate-400 hover:text-slate-700 text-sm p-1 cursor-pointer" title="Tutup">
               <i class="bi bi-x-lg"></i>
@@ -5611,7 +5550,7 @@ const ProductForm = (() => {
           ${orderNoticeHtml}
 
           <div class="p-2.5 pt-0 shrink-0 bg-white">
-            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
+            <button type="button" class="btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white shadow-none hover:opacity-95 transition active:scale-[0.98] cursor-pointer" style="background-color: ${accentColor};">
               ${actionType === 'buy' ? 'Beli Sekarang' : 'Masukkan ke Keranjang'}
             </button>
           </div>
@@ -5811,7 +5750,7 @@ const ProductForm = (() => {
 
         <!-- Footer Tombol CTA Oke (Serasi dengan Tombol Drawer Beli Sekarang / Keranjang) -->
         <div class="p-2.5 pt-0 shrink-0 bg-white">
-          <button type="button" id="btn-close-spec-drawer" class="btn-close-spec-drawer btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold tracking-wide text-white shadow-md hover:shadow-lg transition active:scale-[0.98] cursor-pointer flex items-center justify-center" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
+          <button type="button" id="btn-close-spec-drawer" class="btn-close-spec-drawer btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold tracking-wide text-white shadow-none hover:opacity-95 transition active:scale-[0.98] cursor-pointer flex items-center justify-center" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
             Oke
           </button>
         </div>
@@ -6183,21 +6122,6 @@ const ProductForm = (() => {
       grandStrikePrice = strikeSubtotal + extrasActivePrice;
     }
 
-    // Update banner harga grosir dinamis di drawer
-    document.querySelectorAll('.drawer-wholesale-banner-container').forEach(cnt => {
-      if (wholesaleInfo.bannerText) {
-        cnt.innerHTML = `
-          <div class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-1 inline-block truncate max-w-full">
-            <i class="bi bi-tag-fill text-amber-600 mr-1"></i>${escapeHtml(wholesaleInfo.bannerText)}
-          </div>
-        `;
-        cnt.classList.remove('hidden');
-      } else {
-        cnt.innerHTML = '';
-        cnt.classList.add('hidden');
-      }
-    });
-
     document.querySelectorAll('.drawer-header-price').forEach(el => {
       if (hasVariations && !isAllVariationsSelected) {
         el.textContent = drawerPriceRangeString;
@@ -6223,7 +6147,14 @@ const ProductForm = (() => {
       }
     });
 
-    updateShopeeDrawerOrderNotice(rule, curQty, baseUnitPriceAfterDiscount);
+    const rootPrimaryColor = (typeof getComputedStyle !== 'undefined' && typeof document !== 'undefined')
+      ? (getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || getPrimaryThemeColor())
+      : getPrimaryThemeColor();
+    let accentColor = rootPrimaryColor;
+    if (primaryState.card_variant === 'B') accentColor = '#0f172a';
+    else if (primaryState.card_variant === 'C') accentColor = primaryState.footer_bg_color || rootPrimaryColor;
+
+    updateShopeeDrawerOrderNotice(rule, curQty, accentColor);
 
     updateDrawerSelectedOptionsDescriptions();
   }
