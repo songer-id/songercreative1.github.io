@@ -2657,6 +2657,8 @@ const DB = (() => {
         has_wholesale: Boolean(productData.has_wholesale),
         wholesale_mode: productData.wholesale_mode || 'normal',
         wholesale_tiers: Array.isArray(productData.wholesale_tiers) ? productData.wholesale_tiers : [],
+        wholesale_mode_by_variant: productData.wholesale_mode_by_variant || {},
+        wholesale_by_variant: productData.wholesale_by_variant || {},
         has_variation_2: productData.has_variation_2 !== undefined ? Boolean(productData.has_variation_2) : false,
         has_variation_3: productData.has_variation_3 !== undefined ? Boolean(productData.has_variation_3) : false,
         has_variation_4: productData.has_variation_4 !== undefined ? Boolean(productData.has_variation_4) : false,
@@ -2775,6 +2777,8 @@ const DB = (() => {
           min_order: m.min_order ? Math.max(1, parseInt(m.min_order) || 1) : 1,
           max_order: (m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Unlimited') ? parseInt(m.max_order) : null,
           step_multiplier: newProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
+          wholesale_mode: m.wholesale_mode || null,
+          wholesale_tiers: Array.isArray(m.wholesale_tiers) ? m.wholesale_tiers : [],
           created_at: now
         };
       });
@@ -2867,6 +2871,8 @@ const DB = (() => {
         has_wholesale: productData.has_wholesale !== undefined ? Boolean(productData.has_wholesale) : Boolean(products[index].has_wholesale),
         wholesale_mode: productData.wholesale_mode || products[index].wholesale_mode || 'normal',
         wholesale_tiers: Array.isArray(productData.wholesale_tiers) ? productData.wholesale_tiers : (products[index].wholesale_tiers || []),
+        wholesale_mode_by_variant: productData.wholesale_mode_by_variant || products[index].wholesale_mode_by_variant || {},
+        wholesale_by_variant: productData.wholesale_by_variant || products[index].wholesale_by_variant || {},
         has_variation_2: productData.has_variation_2 !== undefined ? Boolean(productData.has_variation_2) : Boolean(products[index].has_variation_2),
         has_variation_3: productData.has_variation_3 !== undefined ? Boolean(productData.has_variation_3) : Boolean(products[index].has_variation_3),
         has_variation_4: productData.has_variation_4 !== undefined ? Boolean(productData.has_variation_4) : Boolean(products[index].has_variation_4),
@@ -2985,6 +2991,8 @@ const DB = (() => {
           min_order: m.min_order ? Math.max(1, parseInt(m.min_order) || 1) : 1,
           max_order: (m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Unlimited') ? parseInt(m.max_order) : null,
           step_multiplier: updatedProduct.price_type === 7 ? (Math.max(1, parseInt(m.step_multiplier) || 1)) : 1,
+          wholesale_mode: m.wholesale_mode || null,
+          wholesale_tiers: Array.isArray(m.wholesale_tiers) ? m.wholesale_tiers : [],
           created_at: now
         };
       });

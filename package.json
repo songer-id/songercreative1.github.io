@@ -5,6 +5,12 @@
   "main": "src/services/app.js",
   "scripts": {
     "dev": "node src/services/app.js",
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke.spec.js",
+    "test:rules": "playwright test tests/product-rules.spec.js",
+    "test:crud": "playwright test tests/product-crud.spec.js",
+    "test:preview": "playwright test tests/product-preview.spec.js",
+    "test:wholesale": "playwright test tests/wholesale-variant.spec.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -27,6 +33,7 @@
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "prisma": "^5.20.0"
   }
 }

@@ -11,6 +11,7 @@
 const ProductForm = (() => {
   let formMode = 'create'; // 'create' | 'edit'
   let currentEditingId = null;
+  let currentStep = 1;
 
   // Forward declarations untuk handler interaktif & preview Step 2 yang diinisialisasi di bindFormEvents
   let bindStep2InteractiveEvents = null;
@@ -209,7 +210,7 @@ const ProductForm = (() => {
         clampTooltipToViewport(tip);
       }
     };
-    
+
   // Global Delegasi Custom Combobox (Stok, Max Order, Spesifikasi, Variasi)
   document.addEventListener('click', (e) => {
     // Delegasi klik tautan pengaturan lokasi -> menu Akun
@@ -535,7 +536,7 @@ const ProductForm = (() => {
     const allSessionInputs = typeof getActiveVariationLabelInputs === 'function' ? getActiveVariationLabelInputs() : [];
     const domInputs = document.querySelectorAll('.input-variation-label, .variation-name-input, #input-custom-dimension-label, #input-custom-dim-label, #input-var-label-extra3, #input-extra-service-label');
     const combined = Array.from(new Set([...allSessionInputs, ...domInputs]));
-    
+
     combined.forEach(inp => {
       if (inp && inp !== currentInput) {
         const val = (inp.value || '').trim();
@@ -628,7 +629,7 @@ const ProductForm = (() => {
   function bindCleanDatalistPopovers(scope = document) {
     if (!scope) return;
     const inputs = scope.querySelectorAll('input[list], input[data-datalist], input[data-datalist-id], .clean-datalist-input');
-    
+
     inputs.forEach(input => {
       const datalistId = input.getAttribute('data-datalist-id') || input.getAttribute('data-datalist') || input.getAttribute('list');
       if (!datalistId) return;
@@ -642,7 +643,7 @@ const ProductForm = (() => {
       input.removeAttribute('list');
       input.setAttribute('autocomplete', 'off');
       input.classList.add('clean-datalist-input');
-      
+
       if (isSingleOption) {
         input.classList.remove('pr-8');
         if (!input.classList.contains('pr-2.5') && !input.classList.contains('px-3')) {
@@ -773,7 +774,7 @@ const ProductForm = (() => {
       const syncControlButtons = syncClearAndArrowVisibility;
 
       // Elemen popover ditempel ke document.body agar tidak terpotong oleh overflow container tabel/kartu
-      let popover = inputBox.querySelector(':scope > .clean-datalist-popover') || 
+      let popover = inputBox.querySelector(':scope > .clean-datalist-popover') ||
                     wrapper.querySelector(':scope > .clean-datalist-popover') ||
                     (input._datalistPopover && document.body.contains(input._datalistPopover) ? input._datalistPopover : null);
       if (!popover) {
@@ -1357,6 +1358,8 @@ const ProductForm = (() => {
       },
       has_wholesale: false,
       wholesale_tiers: [],
+      wholesale_mode_by_variant: {},
+      wholesale_by_variant: {},
       has_order_multiple: false,
       order_multiple_type: 'all',
       order_multiple_value: 1,
@@ -1449,6 +1452,8 @@ const ProductForm = (() => {
       scope_extra_2: 'umum',
       scope_extra_3: 'umum',
       wholesale_mode: 'normal',
+      wholesale_mode_by_variant: {},
+      wholesale_by_variant: {},
       same_price_tiers: { tier1: false, main: false, extra_1: false, extra_2: false, extra_3: false },
       same_cost_tiers: { tier1: false, main: false, extra_1: false, extra_2: false, extra_3: false },
       stock_mode_tiers: { tier1: '', main: '', extra_1: '', extra_2: '', extra_3: '' },
@@ -1694,8 +1699,8 @@ const ProductForm = (() => {
     previewTestState.extraQty = {};
     previewTestState.qty = 1;
 
-    const imgs = Array.isArray(prod.images) && prod.images.length > 0 
-      ? [...prod.images] 
+    const imgs = Array.isArray(prod.images) && prod.images.length > 0
+      ? [...prod.images]
       : (prod.image_url ? [prod.image_url] : []);
 
     const inheritedFooter = getLastProductFooterConfig();
@@ -1786,6 +1791,8 @@ const ProductForm = (() => {
       },
       has_wholesale: prod.has_wholesale !== undefined ? Boolean(prod.has_wholesale) : (Array.isArray(prod.wholesale_tiers) && prod.wholesale_tiers.length > 0),
       wholesale_tiers: Array.isArray(prod.wholesale_tiers) ? JSON.parse(JSON.stringify(prod.wholesale_tiers)) : [],
+      wholesale_mode_by_variant: prod.wholesale_mode_by_variant ? JSON.parse(JSON.stringify(prod.wholesale_mode_by_variant)) : {},
+      wholesale_by_variant: prod.wholesale_by_variant ? JSON.parse(JSON.stringify(prod.wholesale_by_variant)) : {},
       has_order_multiple: prod.has_order_multiple !== undefined ? Boolean(prod.has_order_multiple) : Boolean(prod.order_multiple_value > 1 || prod.step_quantity > 1),
       order_multiple_type: prod.order_multiple_type || 'all',
       order_multiple_value: prod.order_multiple_value || prod.step_quantity || 1,
@@ -1882,6 +1889,23 @@ const ProductForm = (() => {
       ? JSON.parse(JSON.stringify(prod.materials))
       : [{ id: DB.generateUUID(), name: 'Produk Standar', price: prod.price || 0, cost_price: prod.cost_price || 0, step_multiplier: 1 }];
 
+    if (Array.isArray(materialsState)) {
+      materialsState.forEach(m => {
+        if (m && m.id) {
+          if (m.wholesale_mode && !primaryState.wholesale_mode_by_variant[m.id]) {
+            primaryState.wholesale_mode_by_variant[m.id] = m.wholesale_mode;
+          } else if (primaryState.wholesale_mode_by_variant[m.id] && !m.wholesale_mode) {
+            m.wholesale_mode = primaryState.wholesale_mode_by_variant[m.id];
+          }
+          if (Array.isArray(m.wholesale_tiers) && m.wholesale_tiers.length > 0 && !primaryState.wholesale_by_variant[m.id]) {
+            primaryState.wholesale_by_variant[m.id] = JSON.parse(JSON.stringify(m.wholesale_tiers));
+          } else if (primaryState.wholesale_by_variant[m.id] && (!m.wholesale_tiers || m.wholesale_tiers.length === 0)) {
+            m.wholesale_tiers = JSON.parse(JSON.stringify(primaryState.wholesale_by_variant[m.id]));
+          }
+        }
+      });
+    }
+
     const fins = prod.finishings || {};
     finishingsState = {
       main: (fins.main && Array.isArray(fins.main) && fins.main.length > 0)
@@ -1894,11 +1918,11 @@ const ProductForm = (() => {
 
     primaryState.has_variants = Boolean(prod.has_variants || (prod.materials && prod.materials.length > 1));
     if (!primaryState.has_variants) {
-      primaryState._savedNonVariantPrice = (prod.materials && prod.materials[0]?.price !== undefined && prod.materials[0]?.price !== null && prod.materials[0]?.price !== '') 
-        ? prod.materials[0].price 
+      primaryState._savedNonVariantPrice = (prod.materials && prod.materials[0]?.price !== undefined && prod.materials[0]?.price !== null && prod.materials[0]?.price !== '')
+        ? prod.materials[0].price
         : (prod.price !== undefined && prod.price !== null && prod.price !== '' ? prod.price : '');
-      primaryState._savedNonVariantCostPrice = (prod.materials && prod.materials[0]?.cost_price !== undefined && prod.materials[0]?.cost_price !== null && prod.materials[0]?.cost_price !== '') 
-        ? prod.materials[0].cost_price 
+      primaryState._savedNonVariantCostPrice = (prod.materials && prod.materials[0]?.cost_price !== undefined && prod.materials[0]?.cost_price !== null && prod.materials[0]?.cost_price !== '')
+        ? prod.materials[0].cost_price
         : (prod.cost_price !== undefined && prod.cost_price !== null && prod.cost_price !== '' ? prod.cost_price : '');
     } else {
       primaryState._savedNonVariantPrice = prod._savedNonVariantPrice !== undefined ? prod._savedNonVariantPrice : '';
@@ -1913,12 +1937,12 @@ const ProductForm = (() => {
     primaryState.has_extra_service = Boolean(prod.has_extra_service || prod.has_layer_5 || finishingsState.extra_3.length > 0);
     primaryState.has_layer_5 = primaryState.has_extra_service;
     const isLegacyDimension = Boolean(
-      prod.has_custom_dimension || 
-      prod.pricing_model === 'dimension' || 
-      prod.pricing_model === 'size' || 
-      prod.price_type === 1 || 
-      prod.custom_dimension_label || 
-      prod.dimension_main_component || 
+      prod.has_custom_dimension ||
+      prod.pricing_model === 'dimension' ||
+      prod.pricing_model === 'size' ||
+      prod.price_type === 1 ||
+      prod.custom_dimension_label ||
+      prod.dimension_main_component ||
       (prod.dimension_rules && prod.dimension_rules.length > 0)
     );
     primaryState.has_custom_dimension = primaryState.has_variants ? isLegacyDimension : false;
@@ -2117,7 +2141,7 @@ const ProductForm = (() => {
 
     container.innerHTML = `
       <div class="w-full max-w-none ${currentStep === 2 ? 'space-y-0' : 'space-y-5 sm:space-y-6'} pb-8 sm:pb-12" id="product-form-wrapper">
-        
+
         <!-- Header Top Bar (Hanya tampil di Step 1) -->
         <div id="product-form-top-bar" class="${currentStep === 2 ? 'hidden' : 'flex'} items-center justify-between border-b border-slate-200 pb-3 gap-3">
           <div class="flex items-center gap-2 text-sm text-slate-500">
@@ -2131,16 +2155,16 @@ const ProductForm = (() => {
 
         <!-- FORM MAIN CONTAINER WITH RIGHT PADDING WHEN PREVIEW SIDEBAR IS OPEN -->
         <div class="w-full relative">
-          
+
           <!-- WIZARD FORM COLUMN -->
           <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[300px] xl:pr-[340px]' : ''} ${currentStep === 2 ? 'space-y-0' : 'space-y-4 sm:space-y-6'} transition-all duration-300">
-            
+
             <!-- ============================================== -->
             <!-- STEP 1 PANE: INFORMASI PRODUK -->
             <!-- ============================================== -->
             <div id="step-pane-1" class="space-y-4 sm:space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}">
               ${currentStep === 1 ? renderFormErrorBannerHtml() : ''}
-              
+
               <!-- 1 KARTU UTAMA: INFORMASI PRODUK -->
               <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card w-full">
                 <!-- Header Card -->
@@ -2170,10 +2194,10 @@ const ProductForm = (() => {
                   </div>
                   <!-- Deskripsi Dinamis Jenis Produk -->
                   <p id="product-type-dynamic-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                    ${primaryState.product_type === 'physical' 
-                      ? 'Produk fisik yang memerlukan stok dan pengiriman kurir.' 
-                      : (primaryState.product_type === 'non_physical' 
-                        ? 'Layanan jasa atau produk digital tanpa pengiriman fisik.' 
+                    ${primaryState.product_type === 'physical'
+                      ? 'Produk fisik yang memerlukan stok dan pengiriman kurir.'
+                      : (primaryState.product_type === 'non_physical'
+                        ? 'Layanan jasa atau produk digital tanpa pengiriman fisik.'
                         : 'Pilih jenis produk untuk menentukan alur pengelolaan stok dan pengiriman.')}
                   </p>
                 </div>
@@ -2198,10 +2222,10 @@ const ProductForm = (() => {
                         <p class="text-xs text-slate-500 mt-0.5">Tampilkan produk di halaman toko pembeli.</p>
                       </div>
                       <label class="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          id="toggle-is-active-form" 
-                          ${primaryState.is_active ? 'checked' : ''} 
+                        <input
+                          type="checkbox"
+                          id="toggle-is-active-form"
+                          ${primaryState.is_active ? 'checked' : ''}
                           class="sr-only peer"
                         />
                         <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
@@ -2240,12 +2264,12 @@ const ProductForm = (() => {
 
                     <!-- Deskripsi Dinamis Model Kartu -->
                     <p id="card-model-dynamic-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                      ${primaryState.card_variant === 'A' 
-                        ? 'Tampilan standar (rasio 1:1) dengan rating, jumlah terjual, dan label promo. Cocok untuk produk umum.' 
-                        : (primaryState.card_variant === 'B' 
-                          ? 'Tampilan foto memanjang (rasio 3:4) yang menonjolkan visual produk. Cocok untuk pakaian, busana, dan merchandise.' 
-                          : (primaryState.card_variant === 'C' 
-                            ? 'Tampilan lanskap (rasio 4:3) dilengkapi informasi layanan di bawah kartu. Cocok untuk percetakan, jasa, dan produk custom.' 
+                      ${primaryState.card_variant === 'A'
+                        ? 'Tampilan standar (rasio 1:1) dengan rating, jumlah terjual, dan label promo. Cocok untuk produk umum.'
+                        : (primaryState.card_variant === 'B'
+                          ? 'Tampilan foto memanjang (rasio 3:4) yang menonjolkan visual produk. Cocok untuk pakaian, busana, dan merchandise.'
+                          : (primaryState.card_variant === 'C'
+                            ? 'Tampilan lanskap (rasio 4:3) dilengkapi informasi layanan di bawah kartu. Cocok untuk percetakan, jasa, dan produk custom.'
                             : 'Pilih model kartu untuk menentukan format rasio foto dan tata letak di etalase toko.'))}
                     </p>
                   </div>
@@ -2297,12 +2321,12 @@ const ProductForm = (() => {
                         </label>
                         <span id="name-char-count" class="text-xs font-mono text-slate-400">0 / 150</span>
                       </div>
-                      <input 
-                        type="text" 
-                        id="input-prod-name" 
+                      <input
+                        type="text"
+                        id="input-prod-name"
                         maxlength="150"
                         value="${escapeHtml(primaryState.name)}"
-                        placeholder="Contoh: Kemeja Formal Pria Premium, Tumbler Stainless Steel, Paket Hampers Spesial" 
+                        placeholder="Contoh: Kemeja Formal Pria Premium, Tumbler Stainless Steel, Paket Hampers Spesial"
                         class="w-full px-3 h-9 sm:h-10 rounded-md border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-slate-800 text-[13px] sm:text-sm placeholder:text-[13px] placeholder:font-normal placeholder:text-slate-400 font-medium transition outline-none"
                       />
                       <p id="name-min-length-error" class="hidden text-[11px] font-semibold text-red-600 mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle-fill"></i><span>Nama produk minimal harus 5 karakter.</span></p>
@@ -2347,14 +2371,14 @@ const ProductForm = (() => {
                               <span id="char-count-label-1" class="text-[10px] font-mono text-slate-400">0/15</span>
                             </div>
                             <div class="relative flex items-center clean-datalist-wrapper w-full">
-                              <input 
-                                type="text" 
-                                id="input-custom-label-1" 
+                              <input
+                                type="text"
+                                id="input-custom-label-1"
                                 list="custom-labels-history-list"
                                 data-datalist-id="custom-labels-history-list"
                                 autocomplete="off"
-                                value="${escapeHtml(primaryState.custom_labels?.[0] || '')}" 
-                                placeholder="Slot 1 (misal: Free Ongkir)" 
+                                value="${escapeHtml(primaryState.custom_labels?.[0] || '')}"
+                                placeholder="Slot 1 (misal: Free Ongkir)"
                                 class="input-custom-label-slot clean-datalist-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
                               />
                             </div>
@@ -2372,14 +2396,14 @@ const ProductForm = (() => {
                                   <div id="warn-label-2" class="hidden"></div>
                                 </div>
                                 <div class="relative flex items-center clean-datalist-wrapper w-full">
-                                  <input 
-                                    type="text" 
-                                    id="input-custom-label-2" 
+                                  <input
+                                    type="text"
+                                    id="input-custom-label-2"
                                     list="custom-labels-history-list"
                                     data-datalist-id="custom-labels-history-list"
                                     autocomplete="off"
-                                    value="${escapeHtml(primaryState.custom_labels?.[1] || '')}" 
-                                    placeholder="Slot 2 (misal: Best Seller)" 
+                                    value="${escapeHtml(primaryState.custom_labels?.[1] || '')}"
+                                    placeholder="Slot 2 (misal: Best Seller)"
                                     class="input-custom-label-slot clean-datalist-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
                                   />
                                 </div>
@@ -2443,7 +2467,7 @@ const ProductForm = (() => {
 
         <!-- DESKTOP FIXED OFF-CANVAS PREVIEW SIDEBAR (DOCK KANAN SEJATI) -->
         <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[300px] xl:w-[340px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}">
-          
+
           <!-- Sticky Header Sidebar: Step 1 (Preview Kartu Produk) vs Step 2 ([Preview] vs [Uji Coba]) -->
           <div class="p-2.5 px-3 border-b border-slate-200 bg-slate-50/95 shrink-0 flex items-center justify-between gap-2">
             <div id="desktop-preview-header-content" class="w-full max-w-[210px]">
@@ -2972,11 +2996,11 @@ const ProductForm = (() => {
               <label for="input-quick-cat-name" id="label-quick-cat-name" class="block font-bold text-slate-700">
                 Nama Kategori Baru <span class="text-red-500">*</span>
               </label>
-              <input 
-                type="text" 
-                id="input-quick-cat-name" 
-                placeholder="Contoh: Pakaian & Fashion, Elektronik, Makanan & Minuman..." 
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-xs font-medium outline-none transition" 
+              <input
+                type="text"
+                id="input-quick-cat-name"
+                placeholder="Contoh: Pakaian & Fashion, Elektronik, Makanan & Minuman..."
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-xs font-medium outline-none transition"
               />
               <p id="quick-cat-error-msg" class="hidden text-[11px] font-semibold text-red-600"></p>
             </div>
@@ -3130,14 +3154,14 @@ const ProductForm = (() => {
     const sets = DB.getSettings();
     const configGroup = sets.card_variants_config || {};
     const key = variantCode === 'A' ? 'variant_a' : variantCode === 'B' ? 'variant_b' : 'variant_c';
-    
+
     const useDefault = forceDefault || primaryState.use_default_card_design !== false;
     primaryState.use_default_card_design = useDefault;
 
     const defaultCfg = configGroup[key] || {};
     const cfg = (!useDefault && primaryState.card_config) ? primaryState.card_config : defaultCfg;
     const defThemeColor = getPrimaryThemeColor();
-    
+
     const setVal = (id, val) => {
       const el = document.getElementById(id);
       if (el) el.value = val || '';
@@ -3158,7 +3182,7 @@ const ProductForm = (() => {
     setVal('cfg-price-text', cfg.price_color || defThemeColor);
     setVal('cfg-btn-color', cfg.btn_color || defThemeColor);
     setVal('cfg-btn-text', cfg.btn_color || defThemeColor);
-    
+
     let showRatingVal = cfg.show_rating !== false;
     let showSalesVal = cfg.show_sales !== false && cfg.show_sales_count !== false;
     if (variantCode === 'B' && showRatingVal && showSalesVal) {
@@ -3346,7 +3370,7 @@ const ProductForm = (() => {
         rawVal = String(primaryState.variation_labels[key]).trim();
       }
     }
-    
+
     const isCleanCustom = !isPlaceholderOrEmptyVariationTitle(rawVal, defaultLabel);
     const hasCustomTitle = isCleanCustom;
     const effectiveTitle = isCleanCustom ? rawVal : defaultLabel;
@@ -3513,11 +3537,11 @@ const ProductForm = (() => {
 
   function canActivateTestMode() {
     if (currentStep === 1) {
-      return { 
-        allowed: false, 
+      return {
+        allowed: false,
         title: 'Mode Uji Coba Belum Tersedia',
         missingItems: ['Beralih ke Step 2 untuk menguji pratinjau Detail Produk.'],
-        reason: 'Mode Uji Coba khusus untuk menguji tampilan Detail Produk di Step 2.' 
+        reason: 'Mode Uji Coba khusus untuk menguji tampilan Detail Produk di Step 2.'
       };
     }
 
@@ -5211,8 +5235,8 @@ const ProductForm = (() => {
           ${dimSuggestions.map((s, idx) => {
             const isMatch = (parseFloat(dimLengthVal) === parseFloat(s.p)) && (parseFloat(dimWidthVal) === parseFloat(s.l));
             return `
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="btn-preview-dim-suggestion px-2.5 py-1 rounded-md text-xs font-semibold border transition cursor-pointer outline-none focus:outline-none ${isMatch ? 'text-white border-transparent' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}"
                 style="${isMatch ? 'background-color: var(--color-primary) !important;' : ''}"
                 data-p="${s.p}"
@@ -5519,14 +5543,14 @@ const ProductForm = (() => {
 
               const itemImg = ex.image_url || ex.image;
               const priceVal = parseFloat(ex.price) || 0;
-              const priceBadge = (!isNoneOption && priceVal > 0) 
-                ? `<span class="text-[10px] font-bold shrink-0" style="color: var(--color-primary);">+${formatIDR(priceVal)}</span>` 
+              const priceBadge = (!isNoneOption && priceVal > 0)
+                ? `<span class="text-[10px] font-bold shrink-0" style="color: var(--color-primary);">+${formatIDR(priceVal)}</span>`
                 : '';
 
               return `
                 <div class="extra-item-row flex items-center justify-between p-2 rounded border transition ${
-                  isItemActive 
-                    ? 'bg-white shadow-2xs is-active' 
+                  isItemActive
+                    ? 'bg-white shadow-2xs is-active'
                     : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
                 }" style="${isItemActive ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${exId}" data-type="${xt}">
                   <!-- Sisi Kiri: Foto Kecil (jika ada) + Nama Opsi + (+Rp[Harga Jual]) -->
@@ -5791,7 +5815,7 @@ const ProductForm = (() => {
     } else {
       isAvailable = (parseInt(primaryState.stock) || 0) > 0;
     }
-    const stockHtml = isAvailable 
+    const stockHtml = isAvailable
       ? '<span class="text-slate-800 font-medium">Tersedia</span>'
       : '<span class="text-red-600 font-semibold">Habis</span>';
 
@@ -6483,8 +6507,8 @@ const ProductForm = (() => {
           if (f) chosenVars.push(f.name.trim());
         }
 
-        let variantText = chosenVars.length > 0 
-          ? chosenVars.join(', ') 
+        let variantText = chosenVars.length > 0
+          ? chosenVars.join(', ')
           : (primaryState.has_variants ? 'Belum Dipilih' : 'Standar');
 
         if (primaryState.has_custom_dimension && isCustomDimensionValid()) {
@@ -7502,7 +7526,7 @@ const ProductForm = (() => {
     // Countdown configs & simulation toggle
     const simulateCountdown = (document.getElementById("cfg-simulate-countdown-preview")?.checked === true) || (document.getElementById("cfg-simulate-countdown-preview-mob")?.checked === true);
     const enableCountdown = document.getElementById('cfg-enable-countdown') ? document.getElementById('cfg-enable-countdown').checked : (primaryState.enable_countdown !== false);
-    
+
     // Status apakah countdown aktif (aktor utama daripada label khusus)
     const isCountdownActive = simulateCountdown || (enableCountdown && hasDiscount && !primaryState.is_promo_monthly_only);
     const effHasDiscount = hasDiscount || simulateCountdown;
@@ -8250,8 +8274,8 @@ const ProductForm = (() => {
                           ${validMaterials.map((m, idx) => {
                             const isSelected = previewTestState.selectedTier1Id === m.id;
                             const itemImg = m.image_url || m.image;
-                            const peekStyle = validMaterials.length >= 7 
-                              ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;' 
+                            const peekStyle = validMaterials.length >= 7
+                              ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;'
                               : 'width: 36px; height: 36px;';
                             return `
                               <button type="button" class="btn-preview-tier1 mini-pdp-var-chip rounded overflow-hidden border transition cursor-pointer relative shrink-0 flex items-center justify-center ${isSelected ? 'is-active border-2 shadow-xs' : 'border-transparent bg-slate-100 hover:bg-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${peekStyle} ${isSelected ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${m.id}" data-idx="${idx}" title="${escapeHtml(m.name)}">
@@ -8560,11 +8584,11 @@ const ProductForm = (() => {
         <label class="p-3 rounded-xl border ${isChecked ? 'border-emerald-500 bg-white ring-2 ring-emerald-500/20 shadow-xs radio-card-selected' : 'border-slate-200 bg-white hover:bg-slate-50'} cursor-pointer transition space-y-1 block">
           <div class="flex items-center justify-between">
             <span class="font-bold text-xs ${isChecked ? 'text-emerald-800' : 'text-slate-800'}">${pt.label}</span>
-            <input 
-              type="radio" 
-              name="price_type_radio" 
-              value="${pt.id}" 
-              ${isChecked ? 'checked' : ''} 
+            <input
+              type="radio"
+              name="price_type_radio"
+              value="${pt.id}"
+              ${isChecked ? 'checked' : ''}
               class="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
             />
           </div>
@@ -8913,7 +8937,7 @@ const ProductForm = (() => {
       if (minQty <= 1) {
         primaryState.affiliate_effective_unit_commission = val;
         const pct = basePrice > 0 ? ((val / basePrice) * 100).toFixed(1) : 0;
-        text = basePrice > 0 
+        text = basePrice > 0
           ? `Komisi Rp ${val.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar Rp${basePrice.toLocaleString('id-ID')}.`
           : `Komisi Rp ${val.toLocaleString('id-ID')} per pcs.`;
         badge = `Rp ${val.toLocaleString('id-ID')}`;
@@ -8931,7 +8955,7 @@ const ProductForm = (() => {
       const nomTotal1Pcs = basePrice > 0 ? Math.round(basePrice * (val / 100)) : 0;
       if (minQty <= 1) {
         primaryState.affiliate_effective_unit_commission = nomTotal1Pcs;
-        text = basePrice > 0 
+        text = basePrice > 0
           ? `Komisi ${val}% setara sekitar Rp ${nomTotal1Pcs.toLocaleString('id-ID')} dari harga dasar Rp${basePrice.toLocaleString('id-ID')}.`
           : `Komisi ${val}% dari harga dasar.`;
         badge = `${val}%`;
@@ -9100,12 +9124,12 @@ const ProductForm = (() => {
                   <option value="percentage" ${unit === 'percentage' ? 'selected' : ''}>[%] Persen</option>
                   <option value="fixed" ${unit === 'fixed' ? 'selected' : ''}>[IDR] Komisi Rp</option>
                 </select>
-                <input 
-                  type="text" 
-                  inputmode="decimal" 
-                  id="input-affiliate-single-value" 
-                  value="${val}" 
-                  placeholder="Masukkan nilai komisi..." 
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  id="input-affiliate-single-value"
+                  value="${val}"
+                  placeholder="Masukkan nilai komisi..."
                   class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none focus:outline-none"
                 />
               </div>
@@ -9125,12 +9149,12 @@ const ProductForm = (() => {
                   </div>
                 </div>
               </div>
-              <input 
-                type="number" 
-                id="input-affiliate-min-qty" 
-                min="1" 
-                value="${minQty}" 
-                placeholder="Contoh: 10 (Kosongkan jika berlaku mulai 1 pcs)" 
+              <input
+                type="number"
+                id="input-affiliate-min-qty"
+                min="1"
+                value="${minQty}"
+                placeholder="Contoh: 10 (Kosongkan jika berlaku mulai 1 pcs)"
                 class="w-full sm:w-80 px-3.5 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-900 focus:border-[var(--color-primary)] outline-none focus:outline-none"
               />
             </div>
@@ -9267,8 +9291,8 @@ const ProductForm = (() => {
     tbody.innerHTML = tiers.map((tier, idx) => {
       const minVal = (tier.min_qty !== null && tier.min_qty !== undefined) ? tier.min_qty : (idx === 0 ? 1 : '');
       const maxVal = (tier.max_qty !== null && tier.max_qty !== undefined) ? tier.max_qty : '';
-      const commVal = (tier.commission_val !== undefined && tier.commission_val !== null) 
-        ? tier.commission_val 
+      const commVal = (tier.commission_val !== undefined && tier.commission_val !== null)
+        ? tier.commission_val
         : (tier.commission_pct !== undefined && tier.commission_pct !== null ? tier.commission_pct : '');
 
       const isFirstRow = (idx === 0);
@@ -9621,7 +9645,7 @@ const ProductForm = (() => {
   // ==========================================================================
   // RENDER STEP 2: STICKY SUB-NAVBAR & 6 PROGRESSIVE GATING CARDS
   // ==========================================================================
-  
+
   // Helper Notifikasi Lokasi Pengiriman Toko (Kondisional: Sembunyi 100% jika valid)
   function renderShippingLocationNotice() {
     const settings = (typeof DB !== 'undefined' && DB.getSettings) ? DB.getSettings() : {};
@@ -9691,9 +9715,9 @@ const ProductForm = (() => {
         </div>
 
         <div class="mt-2.5">
-          <button 
-            type="button" 
-            id="btn-add-spec-row" 
+          <button
+            type="button"
+            id="btn-add-spec-row"
             class="btn-add-spec-row btn-add-custom-spec-row px-3.5 py-1.5 rounded-md border border-dashed transition cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-white hover:bg-slate-50 ${specs.length >= 10 ? 'opacity-40 cursor-not-allowed' : ''}"
             style="border-color: var(--color-primary); color: var(--color-primary);"
             ${specs.length >= 10 ? 'disabled' : ''}
@@ -9713,29 +9737,29 @@ const ProductForm = (() => {
       <tr class="custom-spec-row" data-index="${index}">
         <td class="py-1.5 pr-2 align-top">
           <div class="relative w-full clean-datalist-wrapper">
-            <input 
-              type="text" 
-              class="input-spec-title clean-datalist-input w-full h-9 px-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
-              placeholder="Ketik atau pilih judul..." 
+            <input
+              type="text"
+              class="input-spec-title clean-datalist-input w-full h-9 px-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs"
+              placeholder="Ketik atau pilih judul..."
               value="${escapeHtml(title)}"
               data-datalist-id="datalist-spec-titles"
               data-datalist="datalist-spec-titles"
-              autocomplete="off" 
+              autocomplete="off"
             />
           </div>
         </td>
         <td class="py-1.5 px-2 align-top">
-          <input 
-            type="text" 
-            class="input-spec-value w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs" 
-            placeholder="Masukkan keterangan..." 
+          <input
+            type="text"
+            class="input-spec-value w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs"
+            placeholder="Masukkan keterangan..."
             value="${escapeHtml(value)}"
           />
         </td>
         <td class="py-1.5 pl-2 text-center align-middle">
-          <button 
-            type="button" 
-            class="btn-delete-spec-row p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition cursor-pointer select-none" 
+          <button
+            type="button"
+            class="btn-delete-spec-row p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition cursor-pointer select-none"
             title="Hapus baris spesifikasi"
           >
             <i class="bi bi-trash text-sm"></i>
@@ -9837,12 +9861,12 @@ const ProductForm = (() => {
               </label>
               <span id="step2-name-char-count" class="text-xs font-mono text-slate-400">${(primaryState.name || '').length} / 150</span>
             </div>
-            <input 
-              type="text" 
-              id="step2-input-name" 
+            <input
+              type="text"
+              id="step2-input-name"
               maxlength="150"
               value="${escapeHtml(primaryState.name)}"
-              placeholder="Contoh: Kemeja Formal Pria Premium, Tumbler Stainless Steel..." 
+              placeholder="Contoh: Kemeja Formal Pria Premium, Tumbler Stainless Steel..."
               class="w-full px-4 py-2.5 rounded-md border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-slate-800 text-sm font-medium transition outline-none"
             />
             <p id="step2-name-min-length-error" class="hidden text-[11px] font-semibold text-red-600 mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle-fill"></i><span>Nama produk minimal harus 5 karakter.</span></p>
@@ -9955,7 +9979,7 @@ const ProductForm = (() => {
 
             <!-- Pengaturan Pembelian Khusus Produk Tunggal (Disembunyikan jika Menggunakan Variasi) -->
             <div id="single-product-purchase-settings" class="${(primaryState.pricing_model === 'normal' && !primaryState.has_variants) ? 'space-y-6' : 'hidden'}">
-              
+
 
               <!-- Stok Produk (Combobox: Nilai Rekomendasi Unlimited + Input Manual) -->
               <div class="space-y-2" id="single-product-stock-section">
@@ -9963,24 +9987,24 @@ const ProductForm = (() => {
                   <label for="input-stock-qty" class="block text-xs font-bold text-slate-800">
                     Stok Produk <span class="text-red-500">*</span>
                   </label>
-                  
+
                 </div>
 
                 <div class="relative w-full sm:w-64">
-                  <input 
-                    type="text" 
-                    id="input-stock-qty" 
+                  <input
+                    type="text"
+                    id="input-stock-qty"
                     list="datalist-stock-unlimited"
-                    class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white text-slate-800 focus:border-[var(--color-primary)]" 
-                    placeholder="Ketik angka atau pilih" 
-                    value="${primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : '')}" 
-                    autocomplete="off" 
+                    class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white text-slate-800 focus:border-[var(--color-primary)]"
+                    placeholder="Ketik angka atau pilih"
+                    value="${primaryState.is_unlimited_stock ? 'Unlimited' : (primaryState.stock !== null && primaryState.stock !== undefined ? primaryState.stock : '')}"
+                    autocomplete="off"
                   />
                   <div id="single-stock-error-msg" class="field-error-msg hidden mt-1 text-xs text-red-500"></div>
                 </div>
               </div>
 
-              
+
 
               <!-- Minimal Jumlah Pembelian -->
               <div class="space-y-2">
@@ -9988,17 +10012,17 @@ const ProductForm = (() => {
                   Minimal Jumlah Pembelian <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full sm:w-64">
-                  <input 
-                    type="number" 
-                    id="input-min-order" 
+                  <input
+                    type="number"
+                    id="input-min-order"
                     min="1"
-                    value="${primaryState.min_order || 1}" 
+                    value="${primaryState.min_order || 1}"
                     class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white"
                   />
                 </div>
               </div>
 
-              
+
 
               <!-- Maksimal Jumlah Pembelian (Native Datalist: Tanpa Batas + Input Manual) -->
               <div class="space-y-3">
@@ -10015,17 +10039,17 @@ const ProductForm = (() => {
                 </div>
 
                 <div class="w-full sm:w-64">
-                  <input 
-                    type="text" 
-                    id="input-normal-max-order" 
+                  <input
+                    type="text"
+                    id="input-normal-max-order"
                     list="datalist-max-order-unlimited"
-                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800" 
-                    placeholder="Input/Pilih" 
-                    value="${(primaryState.max_order === null || primaryState.max_order === undefined || primaryState.max_order === '') ? '' : (primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : primaryState.max_order)}" 
-                    autocomplete="off" 
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+                    placeholder="Input/Pilih"
+                    value="${(primaryState.max_order === null || primaryState.max_order === undefined || primaryState.max_order === '') ? '' : (primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : primaryState.max_order)}"
+                    autocomplete="off"
                   />
                 </div>
-                
+
               </div>
 
               <!-- Pembatas 1: Antara Minimal / Maksimal Jumlah Pembelian dan Bagian Harga Grosir -->
@@ -10035,9 +10059,9 @@ const ProductForm = (() => {
               <div class="space-y-3" id="section-wholesale">
                 <!-- Tombol Aksi [+ Harga Grosir] & Keterangan di Bawahnya (Tampil saat Belum Aktif) -->
                 <div id="wholesale-action-container" class="${primaryState.has_wholesale ? 'hidden' : 'flex'} flex-col items-start gap-1">
-                  <button 
-                    type="button" 
-                    id="btn-toggle-wholesale" 
+                  <button
+                    type="button"
+                    id="btn-toggle-wholesale"
                     class="px-3.5 py-1.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer hover:opacity-90"
                   >
                     <i class="bi bi-plus-lg"></i>
@@ -10052,10 +10076,10 @@ const ProductForm = (() => {
                     <span class="text-xs font-bold text-slate-800">Harga Grosir</span>
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold text-[var(--color-primary)] bg-[var(--color-primary-subtle)]">Aktif</span>
                   </div>
-                  <button 
-                    type="button" 
-                    id="btn-close-wholesale" 
-                    class="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer ml-auto flex items-center justify-center text-xs font-bold" 
+                  <button
+                    type="button"
+                    id="btn-close-wholesale"
+                    class="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer ml-auto flex items-center justify-center text-xs font-bold"
                     title="Nonaktifkan Harga Grosir"
                   >
                     <i class="bi bi-x-lg text-sm"></i>
@@ -10087,9 +10111,9 @@ const ProductForm = (() => {
               <div class="space-y-3" id="section-order-multiple">
                 <!-- Tombol Aksi [+ Kelipatan Pesanan] & Keterangan di Bawahnya (Tampil saat Belum Aktif) -->
                 <div id="order-multiple-action-container" class="${primaryState.has_order_multiple ? 'hidden' : 'flex'} flex-col items-start gap-1">
-                  <button 
-                    type="button" 
-                    id="btn-toggle-order-multiple" 
+                  <button
+                    type="button"
+                    id="btn-toggle-order-multiple"
                     class="px-3.5 py-1.5 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer hover:opacity-90"
                   >
                     <i class="bi bi-plus-lg"></i>
@@ -10104,10 +10128,10 @@ const ProductForm = (() => {
                     <span class="text-xs font-bold text-slate-800">Kelipatan Pesanan</span>
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold text-[var(--color-primary)] bg-[var(--color-primary-subtle)]">Aktif</span>
                   </div>
-                  <button 
-                    type="button" 
-                    id="btn-close-order-multiple" 
-                    class="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer ml-auto flex items-center justify-center text-xs font-bold" 
+                  <button
+                    type="button"
+                    id="btn-close-order-multiple"
+                    class="p-1 text-slate-400 hover:text-red-500 rounded transition cursor-pointer ml-auto flex items-center justify-center text-xs font-bold"
                     title="Nonaktifkan Kelipatan Pesanan"
                   >
                     <i class="bi bi-x-lg text-sm"></i>
@@ -10133,10 +10157,10 @@ const ProductForm = (() => {
                 <span class="text-[11px] text-slate-500 block mt-0.5">Atur kurir, ongkir, berat, dimensi, dan sistem COD</span>
               </div>
               <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
-                <input 
-                  type="checkbox" 
-                  id="toggle-shipping-enabled" 
-                  ${primaryState.has_shipping ? 'checked' : ''} 
+                <input
+                  type="checkbox"
+                  id="toggle-shipping-enabled"
+                  ${primaryState.has_shipping ? 'checked' : ''}
                   class="sr-only peer toggle-switch-input"
                 />
                 <div class="toggle-switch-track w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
@@ -10151,7 +10175,7 @@ const ProductForm = (() => {
 
             <!-- Kontainer Pengaturan Pengiriman (Aktif Saat ON) -->
             <div id="shipping-config-body" class="${primaryState.has_shipping ? 'block' : 'hidden'} space-y-5">
-              
+
               <!-- Petunjuk Lokasi Asal Pengiriman Otomatis (Kondisional) -->
               ${renderShippingLocationNotice()}
 
@@ -10172,12 +10196,12 @@ const ProductForm = (() => {
                       </div>
                     </div>
                     <div class="relative flex items-center">
-                      <input 
-                        type="number" 
-                        id="input-package-weight" 
+                      <input
+                        type="number"
+                        id="input-package-weight"
                         min="1"
                         step="any"
-                        value="${shippingCfg.weight !== undefined && shippingCfg.weight !== null && shippingCfg.weight !== '' ? shippingCfg.weight : ''}" 
+                        value="${shippingCfg.weight !== undefined && shippingCfg.weight !== null && shippingCfg.weight !== '' ? shippingCfg.weight : ''}"
                         class="w-full pl-3.5 pr-12 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition"
                         placeholder="Contoh: 500"
                       />
@@ -10238,10 +10262,10 @@ const ProductForm = (() => {
                       </div>
                     </div>
                     <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
-                      <input 
-                        type="checkbox" 
-                        id="toggle-is-cod" 
-                        ${shippingCfg.is_cod ? 'checked' : ''} 
+                      <input
+                        type="checkbox"
+                        id="toggle-is-cod"
+                        ${shippingCfg.is_cod ? 'checked' : ''}
                         class="sr-only peer toggle-switch-input"
                       />
                       <div class="toggle-switch-track w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
@@ -10262,56 +10286,56 @@ const ProductForm = (() => {
                   </div>
                   <div class="grid grid-cols-2 gap-2">
                     <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
-                      <input 
-                        type="checkbox" 
-                        name="courier_checkbox" 
-                        value="pickup" 
-                        ${couriersList.includes('pickup') ? 'checked' : ''} 
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
+                      <input
+                        type="checkbox"
+                        name="courier_checkbox"
+                        value="pickup"
+                        ${couriersList.includes('pickup') ? 'checked' : ''}
+                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Ambil di Toko</span>
                     </label>
 
                     <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
-                      <input 
-                        type="checkbox" 
-                        name="courier_checkbox" 
-                        value="local_store" 
-                        ${couriersList.includes('local_store') || couriersList.includes('instant') ? 'checked' : ''} 
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
+                      <input
+                        type="checkbox"
+                        name="courier_checkbox"
+                        value="local_store"
+                        ${couriersList.includes('local_store') || couriersList.includes('instant') ? 'checked' : ''}
+                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Kurir Toko / Lokal</span>
                     </label>
 
                     <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
-                      <input 
-                        type="checkbox" 
-                        name="courier_checkbox" 
-                        value="reguler" 
-                        ${couriersList.includes('reguler') ? 'checked' : ''} 
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
+                      <input
+                        type="checkbox"
+                        name="courier_checkbox"
+                        value="reguler"
+                        ${couriersList.includes('reguler') ? 'checked' : ''}
+                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Reguler Domestik</span>
                     </label>
 
                     <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
-                      <input 
-                        type="checkbox" 
-                        name="courier_checkbox" 
-                        value="cargo" 
-                        ${couriersList.includes('cargo') ? 'checked' : ''} 
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
+                      <input
+                        type="checkbox"
+                        name="courier_checkbox"
+                        value="cargo"
+                        ${couriersList.includes('cargo') ? 'checked' : ''}
+                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Kargo / Partai Besar</span>
                     </label>
 
                     <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition col-span-2 sm:col-span-1">
-                      <input 
-                        type="checkbox" 
-                        name="courier_checkbox" 
-                        value="international" 
-                        ${couriersList.includes('international') ? 'checked' : ''} 
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0" 
+                      <input
+                        type="checkbox"
+                        name="courier_checkbox"
+                        value="international"
+                        ${couriersList.includes('international') ? 'checked' : ''}
+                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Luar Negeri</span>
                     </label>
@@ -10356,13 +10380,13 @@ const ProductForm = (() => {
                       <span class="text-[11px] text-slate-600 font-medium whitespace-nowrap">Tarif Flat:</span>
                       <div class="relative flex-1 sm:max-w-xs">
                         <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">Rp</span>
-                        <input 
-                          type="number" 
-                          id="input-local-village-fee" 
-                          min="0" 
-                          step="500" 
-                          value="${shippingCfg.local_village_fee !== undefined && shippingCfg.local_village_fee !== null ? shippingCfg.local_village_fee : ''}" 
-                          placeholder="Contoh: 3000" 
+                        <input
+                          type="number"
+                          id="input-local-village-fee"
+                          min="0"
+                          step="500"
+                          value="${shippingCfg.local_village_fee !== undefined && shippingCfg.local_village_fee !== null ? shippingCfg.local_village_fee : ''}"
+                          placeholder="Contoh: 3000"
                           class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none bg-slate-50 focus:bg-white transition"
                         />
                       </div>
@@ -10392,13 +10416,13 @@ const ProductForm = (() => {
                       <span class="text-[11px] text-slate-600 font-medium whitespace-nowrap">Tarif Flat:</span>
                       <div class="relative flex-1 sm:max-w-xs">
                         <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">Rp</span>
-                        <input 
-                          type="number" 
-                          id="input-local-district-fee" 
-                          min="0" 
-                          step="500" 
-                          value="${shippingCfg.local_district_fee !== undefined && shippingCfg.local_district_fee !== null ? shippingCfg.local_district_fee : ''}" 
-                          placeholder="Contoh: 5000" 
+                        <input
+                          type="number"
+                          id="input-local-district-fee"
+                          min="0"
+                          step="500"
+                          value="${shippingCfg.local_district_fee !== undefined && shippingCfg.local_district_fee !== null ? shippingCfg.local_district_fee : ''}"
+                          placeholder="Contoh: 5000"
                           class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none bg-slate-50 focus:bg-white transition"
                         />
                       </div>
@@ -10407,9 +10431,9 @@ const ProductForm = (() => {
 
                   <!-- Checkbox Simpan Default Toko -->
                   <label class="flex items-center gap-2 cursor-pointer pt-0.5 select-none text-[11px] text-slate-700 font-medium">
-                    <input 
-                      type="checkbox" 
-                      id="chk-save-local-shipping-default" 
+                    <input
+                      type="checkbox"
+                      id="chk-save-local-shipping-default"
                       class="w-4 h-4 text-emerald-600 rounded cursor-pointer"
                     />
                     <span>Gunakan pengaturan ini sebagai bawaan toko</span>
@@ -10440,10 +10464,10 @@ const ProductForm = (() => {
                   </p>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                  <input 
-                    type="checkbox" 
-                    id="toggle-promo-monthly" 
-                    ${primaryState.auto_monthly_promo ? 'checked' : ''} 
+                  <input
+                    type="checkbox"
+                    id="toggle-promo-monthly"
+                    ${primaryState.auto_monthly_promo ? 'checked' : ''}
                     class="sr-only peer toggle-switch-input"
                   />
                   <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
@@ -10458,9 +10482,9 @@ const ProductForm = (() => {
                     <option value="percent" ${primaryState.monthly_discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
                     <option value="nominal" ${primaryState.monthly_discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
                   </select>
-                  <input 
-                    type="number" 
-                    id="input-monthly-promo-value" 
+                  <input
+                    type="number"
+                    id="input-monthly-promo-value"
                     min="0"
                     step="any"
                     value="${(primaryState.monthly_discount_value !== undefined && primaryState.monthly_discount_value !== null && primaryState.monthly_discount_value !== '') ? primaryState.monthly_discount_value : ''}"
@@ -10491,10 +10515,10 @@ const ProductForm = (() => {
                   </p>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                  <input 
-                    type="checkbox" 
-                    id="toggle-promo-daily" 
-                    ${primaryState.has_daily_promo ? 'checked' : ''} 
+                  <input
+                    type="checkbox"
+                    id="toggle-promo-daily"
+                    ${primaryState.has_daily_promo ? 'checked' : ''}
                     class="sr-only peer toggle-switch-input"
                   />
                   <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
@@ -10508,9 +10532,9 @@ const ProductForm = (() => {
                     <label for="input-promo-label" class="block text-xs font-bold text-slate-700 mb-1">
                       Label Teks Promo:
                     </label>
-                    <input 
-                      type="text" 
-                      id="input-promo-label" 
+                    <input
+                      type="text"
+                      id="input-promo-label"
                       value="${escapeHtml(primaryState.monthly_promo_label || 'Promo Spesial')}"
                       placeholder="Contoh: Promo Spesial"
                       class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs focus:border-[var(--color-primary)] outline-none font-semibold text-slate-800"
@@ -10524,9 +10548,9 @@ const ProductForm = (() => {
                         <option value="percent" ${primaryState.discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
                         <option value="nominal" ${primaryState.discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
                       </select>
-                      <input 
-                        type="number" 
-                        id="input-promo-discount-value" 
+                      <input
+                        type="number"
+                        id="input-promo-discount-value"
                         min="0"
                         step="any"
                         value="${(primaryState.discount_value !== undefined && primaryState.discount_value !== null && primaryState.discount_value !== '') ? primaryState.discount_value : ''}"
@@ -10557,9 +10581,9 @@ const ProductForm = (() => {
               <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">
                 Deskripsi Produk <span class="text-red-500">*</span>
               </h2>
-              <button 
-                type="button" 
-                id="btn-ai-generate-desc" 
+              <button
+                type="button"
+                id="btn-ai-generate-desc"
                 class="btn-primary-brand inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold text-white shadow-xs transition cursor-pointer"
                 title="Rangkai deskripsi produk secara otomatis dengan AI"
               >
@@ -10569,9 +10593,9 @@ const ProductForm = (() => {
             </div>
 
             <div>
-              <textarea 
-                id="input-prod-desc" 
-                rows="5" 
+              <textarea
+                id="input-prod-desc"
+                rows="5"
                 placeholder="Jelaskan spesifikasi produk, keunggulan bahan, kelengkapan, dan catatan penting untuk pemesan..."
                 class="w-full px-4 py-2.5 rounded-md border border-slate-300 focus:border-[var(--color-primary)] text-slate-800 text-sm transition outline-none resize-y"
               >${escapeHtml(primaryState.description)}</textarea>
@@ -10635,27 +10659,27 @@ const ProductForm = (() => {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label for="input-product-brand" class="block text-xs font-bold text-slate-800 mb-1">Merek (Opsional):</label>
-                  <input 
-                    type="text" 
-                    id="input-product-brand" 
+                  <input
+                    type="text"
+                    id="input-product-brand"
                     list="datalist-product-brands"
                     autocomplete="off"
-                    value="${escapeHtml(primaryState.brand || '')}" 
-                    placeholder="Tanpa Merek / Masukkan merek..." 
-                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white" 
+                    value="${escapeHtml(primaryState.brand || '')}"
+                    placeholder="Tanpa Merek / Masukkan merek..."
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white"
                   />
                 </div>
 
                 <div>
                   <label for="input-product-origin" class="block text-xs font-bold text-slate-800 mb-1">Asal Produk:</label>
-                  <input 
-                    type="text" 
-                    id="input-product-origin" 
+                  <input
+                    type="text"
+                    id="input-product-origin"
                     list="datalist-product-origins"
                     autocomplete="off"
-                    value="${escapeHtml(primaryState.product_origin || '')}" 
-                    placeholder="Contoh: Indonesia, Lokal, Impor..." 
-                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white" 
+                    value="${escapeHtml(primaryState.product_origin || '')}"
+                    placeholder="Contoh: Indonesia, Lokal, Impor..."
+                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-[var(--color-primary)] font-medium bg-white"
                   />
                 </div>
               </div>
@@ -10665,8 +10689,8 @@ const ProductForm = (() => {
                 <div>
                   <label for="select-warranty-unit" class="block text-xs font-bold text-slate-800 mb-1">Masa Garansi:</label>
                   <div class="flex items-center gap-2">
-                    <select 
-                      id="select-warranty-unit" 
+                    <select
+                      id="select-warranty-unit"
                       class="flex-1 h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
                     >
                       <option value="Tidak Ada Garansi" ${(primaryState.warranty_unit || 'Tidak Ada Garansi') === 'Tidak Ada Garansi' ? 'selected' : ''}>Tidak Ada Garansi</option>
@@ -10677,14 +10701,14 @@ const ProductForm = (() => {
                     </select>
 
                     <div id="container-warranty-duration" class="${['Hari', 'Bulan', 'Tahun'].includes(primaryState.warranty_unit) ? 'flex' : 'hidden'} items-center gap-1 w-24 shrink-0">
-                      <input 
-                        type="number" 
-                        id="input-warranty-duration" 
-                        min="1" 
-                        max="365" 
-                        value="${primaryState.warranty_duration || ''}" 
-                        placeholder="Jumlah" 
-                        class="w-full h-9 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]" 
+                      <input
+                        type="number"
+                        id="input-warranty-duration"
+                        min="1"
+                        max="365"
+                        value="${primaryState.warranty_duration || ''}"
+                        placeholder="Jumlah"
+                        class="w-full h-9 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]"
                       />
                     </div>
                   </div>
@@ -10692,8 +10716,8 @@ const ProductForm = (() => {
 
                 <div id="container-warranty-type" class="${(primaryState.warranty_unit && primaryState.warranty_unit !== 'Tidak Ada Garansi') ? 'block' : 'hidden'}">
                   <label for="select-warranty-type" class="block text-xs font-bold text-slate-800 mb-1">Jenis Garansi:</label>
-                  <select 
-                    id="select-warranty-type" 
+                  <select
+                    id="select-warranty-type"
                     class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
                   >
                     ${['Garansi Toko', 'Garansi Resmi Produsen', 'Garansi Distributor', 'Garansi Internasional'].map(opt => `
@@ -10715,10 +10739,10 @@ const ProductForm = (() => {
                     </p>
                   </div>
                   <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                    <input 
-                      type="checkbox" 
-                      id="toggle-is-preorder" 
-                      ${primaryState.is_preorder ? 'checked' : ''} 
+                    <input
+                      type="checkbox"
+                      id="toggle-is-preorder"
+                      ${primaryState.is_preorder ? 'checked' : ''}
                       class="sr-only peer toggle-switch-input"
                     />
                     <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
@@ -10728,13 +10752,13 @@ const ProductForm = (() => {
                 <div id="container-preorder-days" class="${primaryState.is_preorder ? 'block' : 'hidden'} pl-1">
                   <label for="input-preorder-days" class="block text-xs font-bold text-slate-800 mb-1">Estimasi Waktu Pre-Order (Hari):</label>
                   <div class="flex items-center gap-2 max-w-[200px]">
-                    <input 
-                      type="number" 
-                      id="input-preorder-days" 
-                      min="1" 
-                      max="90" 
-                      value="${primaryState.preorder_days || 7}" 
-                      class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]" 
+                    <input
+                      type="number"
+                      id="input-preorder-days"
+                      min="1"
+                      max="90"
+                      value="${primaryState.preorder_days || 7}"
+                      class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]"
                     />
                     <span class="text-xs text-slate-500 font-semibold">Hari</span>
                   </div>
@@ -10757,7 +10781,7 @@ const ProductForm = (() => {
             </div>
 
             <!-- Footer Strip Khusus Kartu Detail -->
-            <div 
+            <div
               id="section-card-footer-config"
               class="${primaryState.card_variant === 'C' ? 'block' : 'hidden'} pt-2 space-y-3"
             >
@@ -11377,8 +11401,8 @@ const ProductForm = (() => {
     }
 
     // 1. Prioritaskan aturan opsi spesifik
-    const specificRule = matchingRules.find(r => 
-      r.target_scope === 'specific' && Array.isArray(r.option_ids) && 
+    const specificRule = matchingRules.find(r =>
+      r.target_scope === 'specific' && Array.isArray(r.option_ids) &&
       (r.option_ids.includes(optId) || (optName && r.option_ids.includes(optName)))
     );
     if (specificRule) {
@@ -11478,12 +11502,12 @@ const ProductForm = (() => {
     const noneOptionHtml = `
       <label class="sandbox-finishing-chip flex items-start justify-between gap-2.5 p-3 rounded-xl border ${isNoneChecked ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30' : 'border-slate-200/90 bg-white'} transition select-none shadow-2xs cursor-pointer w-full">
         <div class="flex items-start gap-2.5 min-w-0 flex-1">
-          <input 
-            type="radio" 
-            name="sandbox_finishing_radio" 
-            class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer mt-0.5 shrink-0" 
-            value="" 
-            ${isNoneChecked ? 'checked' : ''} 
+          <input
+            type="radio"
+            name="sandbox_finishing_radio"
+            class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer mt-0.5 shrink-0"
+            value=""
+            ${isNoneChecked ? 'checked' : ''}
           />
           <div class="flex flex-col gap-1 min-w-0">
             <div class="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -11533,12 +11557,12 @@ const ProductForm = (() => {
       return `
         <label class="sandbox-finishing-chip flex items-start justify-between gap-2.5 p-3 rounded-xl border ${isChecked ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30' : 'border-slate-200/90 bg-white'} transition select-none shadow-2xs cursor-pointer w-full">
           <div class="flex items-start gap-2.5 min-w-0 flex-1">
-            <input 
-              type="radio" 
-              name="sandbox_finishing_radio" 
-              class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer mt-0.5 shrink-0" 
-              value="${item.id}" 
-              ${isChecked ? 'checked' : ''} 
+            <input
+              type="radio"
+              name="sandbox_finishing_radio"
+              class="sandbox-chk-fin accent-emerald-600 w-4 h-4 cursor-pointer mt-0.5 shrink-0"
+              value="${item.id}"
+              ${isChecked ? 'checked' : ''}
             />
             <div class="flex flex-col gap-1 min-w-0">
               <div class="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -11596,15 +11620,15 @@ const ProductForm = (() => {
           <div class="dim-add-controls-wrapper ${calcMode === 'add_dim' ? 'grid grid-cols-1 sm:flex' : 'hidden'} items-center gap-2 flex-wrap w-full md:w-auto bg-amber-100/60 md:bg-transparent p-2 md:p-0 rounded border border-amber-200 md:border-0">
             <div class="flex items-center gap-1.5 w-full sm:w-auto">
               <span class="text-slate-600 font-extrabold text-sm select-none">+</span>
-              <input 
-                type="number" 
-                step="any" 
-                min="0" 
-                placeholder="0" 
-                value="${dimAddVal}" 
-                class="input-option-dim-add w-full sm:w-20 px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900 outline-none focus:border-amber-500 text-center shadow-2xs" 
-                data-tier="${tier}" 
-                data-id="${finId}" 
+              <input
+                type="number"
+                step="any"
+                min="0"
+                placeholder="0"
+                value="${dimAddVal}"
+                class="input-option-dim-add w-full sm:w-20 px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900 outline-none focus:border-amber-500 text-center shadow-2xs"
+                data-tier="${tier}"
+                data-id="${finId}"
               />
               <span class="text-[11px] font-bold text-slate-600 dim-unit-text shrink-0">${dimUnit || '-'}</span>
             </div>
@@ -11917,7 +11941,7 @@ const ProductForm = (() => {
           <div class="space-y-0.5">
             <span class="text-slate-500 font-semibold block text-[11px]">Luas Murni (P × L):</span>
             <div class="font-bold text-slate-800 text-xs sm:text-sm break-words">
-              ${pMurni} ${dimUnit} × ${lMurni} ${dimUnit} = 
+              ${pMurni} ${dimUnit} × ${lMurni} ${dimUnit} =
               <span class="text-emerald-700 font-extrabold">${formatNumberLocal(unitAreaMurni, 2)} ${areaUnitLabel}</span>
               <span class="text-[11px] text-slate-500 font-medium">(${areaMurni.toFixed(4)} m²)</span>
             </div>
@@ -11929,7 +11953,7 @@ const ProductForm = (() => {
             </span>
             <div class="font-bold text-xs sm:text-sm break-words">
               ${hasAddDimEffect ? `
-                ${pEff.toFixed(1)} ${dimUnit} × ${lEff.toFixed(1)} ${dimUnit} = 
+                ${pEff.toFixed(1)} ${dimUnit} × ${lEff.toFixed(1)} ${dimUnit} =
                 <span class="text-amber-800 font-extrabold">${formatNumberLocal(unitAreaEff, 2)} ${areaUnitLabel}</span>
                 <span class="text-[11px] text-amber-600 font-semibold">(${areaEff.toFixed(4)} m²)</span>
               ` : `
@@ -11948,7 +11972,7 @@ const ProductForm = (() => {
         <!-- 2. Rincian Kalkulasi Harga & Biaya -->
         <div class="space-y-2 border-b border-slate-200/60 pb-2.5 text-xs">
           <div class="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Rincian Perhitungan:</div>
-          
+
           <!-- Rincian Komponen Utama -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 py-1">
             <div class="space-y-0.5 min-w-0">
@@ -12066,7 +12090,7 @@ const ProductForm = (() => {
               Secara bawaan, variasi lain dihitung harga tetap per item. Tambahkan aturan jika ada variasi yang mengikuti luas ukuran.
             </p>
           </div>
-          
+
           <div class="space-y-2.5 text-xs text-slate-600">
             <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
               <div class="font-bold text-slate-800 flex items-center gap-1.5">
@@ -12197,13 +12221,13 @@ const ProductForm = (() => {
                 </label>
                 <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-lg px-3 py-2 shadow-2xs">
                   <span class="text-slate-600 font-extrabold text-xs select-none">+</span>
-                  <input 
-                    type="number" 
-                    step="any" 
-                    min="0" 
-                    id="modal-input-dim-add-val" 
-                    placeholder="0" 
-                    class="w-full bg-transparent text-xs font-bold text-slate-900 outline-none text-center" 
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    id="modal-input-dim-add-val"
+                    placeholder="0"
+                    class="w-full bg-transparent text-xs font-bold text-slate-900 outline-none text-center"
                   />
                   <span class="text-xs font-bold text-slate-500 shrink-0 modal-dim-unit-text">${dimUnit || '-'}</span>
                 </div>
@@ -12270,7 +12294,7 @@ const ProductForm = (() => {
     if (inpIsAll) inpIsAll.value = isAll ? 'true' : 'false';
 
     if (titleEl) {
-      titleEl.textContent = isAll 
+      titleEl.textContent = isAll
         ? `Atur Perlakuan Ukuran: ${optName || 'Semua Opsi'}`
         : `Atur Perlakuan Ukuran: ${optName || optId}`;
     }
@@ -12331,9 +12355,9 @@ const ProductForm = (() => {
             <label class="text-[11px] font-bold text-slate-700 shrink-0">
               Pilih Variasi Target <span class="text-red-500">*</span>:
             </label>
-            <select 
-              class="select-rule-tier w-full sm:max-w-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer" 
-              data-rule-id="${ruleId}" 
+            <select
+              class="select-rule-tier w-full sm:max-w-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 shadow-2xs cursor-pointer"
+              data-rule-id="${ruleId}"
             >
               <option value="" ${!currentTier ? 'selected' : ''}>-- Pilih Variasi --</option>
               ${availableTiers.map(t => `
@@ -12341,10 +12365,10 @@ const ProductForm = (() => {
               `).join('')}
             </select>
           </div>
-          <button 
-            type="button" 
-            class="btn-delete-dim-rule inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer shrink-0" 
-            data-rule-id="${ruleId}" 
+          <button
+            type="button"
+            class="btn-delete-dim-rule inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer shrink-0"
+            data-rule-id="${ruleId}"
             title="Hapus Aturan Ini"
           >
             <i class="bi bi-trash3-fill text-xs"></i>
@@ -12361,24 +12385,24 @@ const ProductForm = (() => {
               </label>
               <div class="inline-flex items-center gap-3 text-xs">
                 <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                  <input 
-                    type="radio" 
-                    name="scope_${ruleId}" 
-                    value="specific" 
-                    class="radio-rule-scope accent-emerald-600 cursor-pointer" 
-                    data-rule-id="${ruleId}" 
-                    ${currentScope === 'specific' ? 'checked' : ''} 
+                  <input
+                    type="radio"
+                    name="scope_${ruleId}"
+                    value="specific"
+                    class="radio-rule-scope accent-emerald-600 cursor-pointer"
+                    data-rule-id="${ruleId}"
+                    ${currentScope === 'specific' ? 'checked' : ''}
                   />
                   <span class="text-xs font-medium text-slate-700">Pilih Opsi Tertentu</span>
                 </label>
                 <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                  <input 
-                    type="radio" 
-                    name="scope_${ruleId}" 
-                    value="all" 
-                    class="radio-rule-scope accent-emerald-600 cursor-pointer" 
-                    data-rule-id="${ruleId}" 
-                    ${currentScope === 'all' ? 'checked' : ''} 
+                  <input
+                    type="radio"
+                    name="scope_${ruleId}"
+                    value="all"
+                    class="radio-rule-scope accent-emerald-600 cursor-pointer"
+                    data-rule-id="${ruleId}"
+                    ${currentScope === 'all' ? 'checked' : ''}
                   />
                   <span class="text-xs font-medium text-slate-700">Semua Opsi di Variasi Ini</span>
                 </label>
@@ -12394,7 +12418,7 @@ const ProductForm = (() => {
                   ${validOptions.map(opt => {
                     const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
                     const isLegacyChecked = Array.isArray(rule.option_ids) && (rule.option_ids.includes(opt.id) || (opt.name && rule.option_ids.includes(opt.name)));
-                    
+
                     let optMode = 'flat';
                     let optSide = 'p_l';
                     let optVal = 0;
@@ -12413,13 +12437,13 @@ const ProductForm = (() => {
                     const optBadge = isCustomRule ? getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit) : '';
 
                     return `
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         class="btn-option-rule-chip rule-option-chip w-full sm:w-auto flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-xs font-semibold select-none transition ${isCustomRule ? 'bg-emerald-50/90 text-emerald-950 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'} shadow-2xs cursor-pointer text-left"
-                        data-rule-id="${ruleId}" 
-                        data-opt-id="${escapeHtml(opt.id)}" 
-                        data-opt-name="${escapeHtml(opt.name)}" 
-                        data-tier="${currentTier}" 
+                        data-rule-id="${ruleId}"
+                        data-opt-id="${escapeHtml(opt.id)}"
+                        data-opt-name="${escapeHtml(opt.name)}"
+                        data-tier="${currentTier}"
                         title="Klik untuk mengatur perlakuan ukuran: ${escapeHtml(opt.name)}"
                       >
                         <div class="min-w-0 flex flex-wrap items-center gap-1.5 flex-1">
@@ -12446,11 +12470,11 @@ const ProductForm = (() => {
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
                       ${groupBadge}
-                      <button 
-                        type="button" 
-                        class="btn-open-group-gear inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 border border-emerald-300 text-xs font-bold transition shadow-2xs cursor-pointer" 
-                        data-rule-id="${ruleId}" 
-                        data-tier="${currentTier}" 
+                      <button
+                        type="button"
+                        class="btn-open-group-gear inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 border border-emerald-300 text-xs font-bold transition shadow-2xs cursor-pointer"
+                        data-rule-id="${ruleId}"
+                        data-tier="${currentTier}"
                         title="Atur Perlakuan Ukuran Semua Opsi"
                       >
                         <i class="bi bi-gear-fill text-xs text-emerald-700"></i>
@@ -12476,19 +12500,19 @@ const ProductForm = (() => {
 
     const actionButtonsHtml = `
       <div class="inline-flex items-center gap-1.5 shrink-0">
-        <button 
-          type="button" 
-          id="btn-add-dimension-rule" 
-          ${!canAddNewRule ? 'disabled' : ''} 
+        <button
+          type="button"
+          id="btn-add-dimension-rule"
+          ${!canAddNewRule ? 'disabled' : ''}
           class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-bold transition shadow-2xs ${canAddNewRule ? 'hover:bg-emerald-100 hover:text-emerald-800 cursor-pointer' : 'opacity-50 cursor-not-allowed'}"
           ${!canAddNewRule ? 'title="Semua variasi tambahan yang aktif sudah memiliki aturan ukuran."' : ''}
         >
           <span>+ Buat Aturan Khusus</span>
         </button>
-        <button 
-          type="button" 
-          id="btn-help-dimension-rule" 
-          class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0" 
+        <button
+          type="button"
+          id="btn-help-dimension-rule"
+          class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
           title="Bantuan Aturan Hitung Ukuran"
         >
           <i class="bi bi-question-circle text-xs"></i>
@@ -12826,16 +12850,16 @@ const ProductForm = (() => {
               Nama Label Ukuran <span class="text-red-500">*</span>
             </label>
             <div class="relative w-full sm:w-80">
-              <input 
-                type="text" 
-                id="input-custom-dimension-label" 
-                data-tier="custom_dimension" 
-                value="${escapeHtml(labelVal)}" 
-                placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, Ukuran Kain" 
+              <input
+                type="text"
+                id="input-custom-dimension-label"
+                data-tier="custom_dimension"
+                value="${escapeHtml(labelVal)}"
+                placeholder="Cth. Masukkan Ukuran, Ukuran Spanduk, Ukuran Kain"
                 list="datalist-dimension-labels"
                 data-datalist-id="datalist-dimension-labels"
-                autocomplete="off" 
-                class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+                autocomplete="off"
+                class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs"
               />
               <div class="label-dup-error-msg hidden mt-1"></div>
               <div id="custom-dimension-label-error" class="hidden mt-1 flex items-center gap-1 text-[11px] text-red-600 font-medium leading-tight">
@@ -12895,22 +12919,22 @@ const ProductForm = (() => {
             <!-- Baris Input Tambah Saran Ukuran -->
             <div class="flex items-center gap-2 flex-wrap">
               <div class="flex items-center gap-1">
-                <input 
-                  type="number" 
-                  step="any" 
-                  min="0.01" 
-                  id="input-suggest-dim-p" 
-                  placeholder="P" 
+                <input
+                  type="number"
+                  step="any"
+                  min="0.01"
+                  id="input-suggest-dim-p"
+                  placeholder="P"
                   class="w-20 h-8 sm:h-9 px-2 text-center text-xs font-semibold rounded-md border border-slate-300 text-slate-900 bg-white outline-none focus:border-[var(--color-primary)] transition"
                   ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'disabled' : ''}
                 />
                 <span class="text-xs font-bold text-slate-400">×</span>
-                <input 
-                  type="number" 
-                  step="any" 
-                  min="0.01" 
-                  id="input-suggest-dim-l" 
-                  placeholder="L" 
+                <input
+                  type="number"
+                  step="any"
+                  min="0.01"
+                  id="input-suggest-dim-l"
+                  placeholder="L"
                   class="w-20 h-8 sm:h-9 px-2 text-center text-xs font-semibold rounded-md border border-slate-300 text-slate-900 bg-white outline-none focus:border-[var(--color-primary)] transition"
                   ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'disabled' : ''}
                 />
@@ -12918,9 +12942,9 @@ const ProductForm = (() => {
                   ${dimUnit === 'meter' ? 'm' : (dimUnit === 'mm' ? 'mm' : 'cm')}
                 </span>
               </div>
-              <button 
-                type="button" 
-                id="btn-add-dimension-suggestion" 
+              <button
+                type="button"
+                id="btn-add-dimension-suggestion"
                 class="h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'bg-slate-300 opacity-50 cursor-not-allowed' : 'btn-primary-brand'}"
                 ${(primaryState.custom_dimension_suggestions || []).length >= 6 ? 'disabled' : ''}
               >
@@ -12952,29 +12976,29 @@ const ProductForm = (() => {
                     </div>
                   </div>
                   <label for="chk-min-one-unit-price" class="relative inline-flex items-center cursor-pointer shrink-0">
-                    <input 
-                      type="checkbox" 
-                      id="chk-min-one-unit-price" 
-                      class="sr-only peer" 
+                    <input
+                      type="checkbox"
+                      id="chk-min-one-unit-price"
+                      class="sr-only peer"
                       ${Boolean(primaryState.dim_min_one_price) ? 'checked' : ''}
                     />
                     <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all relative shrink-0"></div>
                   </label>
                 </div>
-                
+
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-price-inputs" class="${Boolean(primaryState.dim_min_one_price) ? '' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
                   <div id="min-price-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 text-xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
-                        <input 
-                          type="number" 
-                          step="any" 
-                          min="0" 
-                          id="input-min-price-threshold" 
-                          value="${priceThresholdVal}" 
-                          placeholder="Cth. 100" 
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          id="input-min-price-threshold"
+                          value="${priceThresholdVal}"
+                          placeholder="Cth. 100"
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
@@ -12983,13 +13007,13 @@ const ProductForm = (() => {
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap sm:pl-1">maka dihitung =</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
-                        <input 
-                          type="number" 
-                          step="any" 
-                          min="0" 
-                          id="input-min-price-charge" 
-                          value="${priceChargeVal}" 
-                          placeholder="Cth. 100" 
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          id="input-min-price-charge"
+                          value="${priceChargeVal}"
+                          placeholder="Cth. 100"
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
@@ -13013,29 +13037,29 @@ const ProductForm = (() => {
                     </div>
                   </div>
                   <label for="chk-min-one-unit-hpp" class="relative inline-flex items-center cursor-pointer shrink-0">
-                    <input 
-                      type="checkbox" 
-                      id="chk-min-one-unit-hpp" 
-                      class="sr-only peer" 
+                    <input
+                      type="checkbox"
+                      id="chk-min-one-unit-hpp"
+                      class="sr-only peer"
                       ${Boolean(primaryState.dim_min_one_cost) ? 'checked' : ''}
                     />
                     <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all relative shrink-0"></div>
                   </label>
                 </div>
-                
+
                 <!-- Baris Input Ringkas (Muncul Saat ON) -->
                 <div id="container-min-hpp-inputs" class="${Boolean(primaryState.dim_min_one_cost) ? '' : 'hidden'} pt-2 border-t border-slate-200/80 text-xs text-slate-700">
                   <div id="min-hpp-custom-box" class="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 text-xs">
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap">Jika luas P × L di bawah</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
-                        <input 
-                          type="number" 
-                          step="any" 
-                          min="0" 
-                          id="input-min-hpp-threshold" 
-                          value="${hppThresholdVal}" 
-                          placeholder="Cth. 50" 
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          id="input-min-hpp-threshold"
+                          value="${hppThresholdVal}"
+                          placeholder="Cth. 50"
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
@@ -13044,13 +13068,13 @@ const ProductForm = (() => {
                     <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                       <span class="text-[11px] text-slate-600 whitespace-nowrap sm:pl-1">maka dihitung =</span>
                       <div class="inline-flex items-center gap-1.5 shrink-0">
-                        <input 
-                          type="number" 
-                          step="any" 
-                          min="0" 
-                          id="input-min-hpp-charge" 
-                          value="${hppChargeVal}" 
-                          placeholder="Cth. 50" 
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          id="input-min-hpp-charge"
+                          value="${hppChargeVal}"
+                          placeholder="Cth. 50"
                           class="w-20 sm:w-24 h-9 px-3 text-center font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:border-[var(--color-primary)] outline-none text-xs shadow-2xs transition"
                         />
                         <span class="unit-area-label text-[11px] font-bold text-slate-700 shrink-0">${areaUnitLabel}</span>
@@ -13069,9 +13093,9 @@ const ProductForm = (() => {
 
           <!-- Tombol Buka/Tutup Uji Coba Simulasi Hitung Harga -->
           <div class="pt-2 border-t border-slate-100">
-            <button 
-              type="button" 
-              id="btn-toggle-sandbox-simulator" 
+            <button
+              type="button"
+              id="btn-toggle-sandbox-simulator"
               class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg text-xs font-bold transition cursor-pointer shadow-2xs"
             >
               <span>Simulasi Hitung Harga</span>
@@ -13106,26 +13130,26 @@ const ProductForm = (() => {
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                   <div class="relative">
-                    <input 
-                      type="number" 
-                      step="any" 
-                      min="0" 
-                      id="sandbox-input-dim-p" 
-                      value="${sandboxPxlState.simLength || ''}" 
-                      placeholder="Panjang (P)" 
-                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      id="sandbox-input-dim-p"
+                      value="${sandboxPxlState.simLength || ''}"
+                      placeholder="Panjang (P)"
+                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center"
                     />
                     <span class="sandbox-dim-unit-p absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
                   </div>
                   <div class="relative">
-                    <input 
-                      type="number" 
-                      step="any" 
-                      min="0" 
-                      id="sandbox-input-dim-l" 
-                      value="${sandboxPxlState.simWidth || ''}" 
-                      placeholder="Lebar (L)" 
-                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center" 
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      id="sandbox-input-dim-l"
+                      value="${sandboxPxlState.simWidth || ''}"
+                      placeholder="Lebar (L)"
+                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center"
                     />
                     <span class="sandbox-dim-unit-l absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
                   </div>
@@ -13192,16 +13216,16 @@ const ProductForm = (() => {
               <div class="text-base font-bold text-slate-900">${title}</div>
               <div class="flex items-center gap-2 flex-wrap">
                 <div class="relative w-full sm:w-64">
-                  <input 
-                    type="text" 
-                    id="${inputLabelId}" 
-                    data-tier="${tier}" 
-                    data-label-key="${labelKey}" 
-                    value="${escapeHtml(labelVal)}" 
-                    placeholder="${placeholderLabel}" 
+                  <input
+                    type="text"
+                    id="${inputLabelId}"
+                    data-tier="${tier}"
+                    data-label-key="${labelKey}"
+                    value="${escapeHtml(labelVal)}"
+                    placeholder="${placeholderLabel}"
                     list="datalist-variation-labels"
-                    autocomplete="off" 
-                    class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+                    autocomplete="off"
+                    class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs"
                   />
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
@@ -13217,13 +13241,13 @@ const ProductForm = (() => {
 
             <!-- Sisi Kanan — Panel "Ketentuan Tambahan :" & Tombol Tutup ✕ -->
             <div class="flex flex-col sm:items-end w-full sm:w-auto">
-              <button 
-                type="button" 
-                id="${closeBtnId}" 
-                class="btn-close-variation-card btn-remove-variation-tier absolute top-3 right-3 sm:static text-slate-400 hover:text-red-500 text-lg cursor-pointer p-1 leading-none font-bold" 
-                data-tier="${tier}" 
-                data-tier-num="${tierNum}" 
-                data-tier-index="${tierNum}" 
+              <button
+                type="button"
+                id="${closeBtnId}"
+                class="btn-close-variation-card btn-remove-variation-tier absolute top-3 right-3 sm:static text-slate-400 hover:text-red-500 text-lg cursor-pointer p-1 leading-none font-bold"
+                data-tier="${tier}"
+                data-tier-num="${tierNum}"
+                data-tier-index="${tierNum}"
                 title="Tutup ${title}"
               >✕</button>
 
@@ -13288,16 +13312,16 @@ const ProductForm = (() => {
               </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <div class="relative w-full sm:w-64">
-                  <input 
-                    type="text" 
-                    id="input-var-label-extra3" 
-                    data-tier="extra_3" 
-                    data-label-key="label_extra_3" 
-                    value="${escapeHtml(labelVal)}" 
-                    placeholder="Cth. Langsung Proses, Dll" 
+                  <input
+                    type="text"
+                    id="input-var-label-extra3"
+                    data-tier="extra_3"
+                    data-label-key="label_extra_3"
+                    value="${escapeHtml(labelVal)}"
+                    placeholder="Cth. Langsung Proses, Dll"
                     list="datalist-extra-service-labels"
-                    autocomplete="off" 
-                    class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs" 
+                    autocomplete="off"
+                    class="input-variation-label w-full px-3 py-2 rounded-md border border-slate-400 text-xs font-medium bg-white outline-none focus:border-[var(--color-primary)] shadow-2xs"
                   />
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
@@ -13313,11 +13337,11 @@ const ProductForm = (() => {
 
             <!-- Sisi Kanan — Panel Ketentuan Tambahan & Tombol Tutup ✕ -->
             <div class="flex flex-col sm:items-end w-full sm:w-auto">
-              <button 
-                type="button" 
-                id="btn-close-extra-service" 
-                class="btn-close-variation-card absolute top-3 right-3 sm:static text-slate-400 hover:text-red-500 text-lg cursor-pointer p-1 leading-none font-bold" 
-                data-tier="extra_3" 
+              <button
+                type="button"
+                id="btn-close-extra-service"
+                class="btn-close-variation-card absolute top-3 right-3 sm:static text-slate-400 hover:text-red-500 text-lg cursor-pointer p-1 leading-none font-bold"
+                data-tier="extra_3"
                 title="Tutup Layanan Extras"
               >✕</button>
 
@@ -13382,10 +13406,10 @@ const ProductForm = (() => {
           <!-- Tombol Pemicu Tambah Variasi [2/3/4] -->
           <div class="pt-1">
             ${!isVar2Active ? `
-              <button 
-                type="button" 
-                id="btn-trigger-variasi-2" 
-                class="btn-trigger-variasi-dashed px-4 py-2 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer ${!var1HasOption ? 'opacity-50 cursor-not-allowed' : ''}" 
+              <button
+                type="button"
+                id="btn-trigger-variasi-2"
+                class="btn-trigger-variasi-dashed px-4 py-2 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer ${!var1HasOption ? 'opacity-50 cursor-not-allowed' : ''}"
                 style="border-color: var(--color-primary); color: var(--color-primary); background-color: #ffffff;"
                 title="${!var1HasOption ? 'Isi minimal 1 opsi pada Variasi 1 sebelum menambah Variasi 2' : 'Tambah Variasi 2'}"
               >
@@ -13393,9 +13417,9 @@ const ProductForm = (() => {
                 <span>Tambah Variasi 2</span>
               </button>
             ` : (!isVar3Active ? `
-              <button 
-                type="button" 
-                id="btn-trigger-variasi-3" 
+              <button
+                type="button"
+                id="btn-trigger-variasi-3"
                 class="btn-trigger-variasi-dashed px-4 py-2 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
                 style="border-color: var(--color-primary); color: var(--color-primary); background-color: #ffffff;"
               >
@@ -13403,9 +13427,9 @@ const ProductForm = (() => {
                 <span>Tambah Variasi 3</span>
               </button>
             ` : (!isVar4Active ? `
-              <button 
-                type="button" 
-                id="btn-trigger-variasi-4" 
+              <button
+                type="button"
+                id="btn-trigger-variasi-4"
                 class="btn-trigger-variasi-dashed px-4 py-2 rounded-md border border-dashed text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
                 style="border-color: var(--color-primary); color: var(--color-primary); background-color: #ffffff;"
               >
@@ -13459,9 +13483,9 @@ const ProductForm = (() => {
             <!-- Opsi tombol Variasi Produk -->
             <div class="flex items-center justify-between pb-1 flex-wrap gap-2">
               <div class="flex items-center gap-2">
-                <button 
-                  type="button" 
-                  id="btn-enable-variants" 
+                <button
+                  type="button"
+                  id="btn-enable-variants"
                   class="px-3.5 py-1.5 rounded-md border border-dashed transition cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-white"
                   style="border-color: var(--color-primary); color: var(--color-primary);"
                 >
@@ -13478,11 +13502,11 @@ const ProductForm = (() => {
                   <label for="input-single-price" class="block text-xs font-bold text-slate-800 mb-1">
                     Harga Jual (Rp) <span class="text-red-500">*</span>
                   </label>
-                  <input 
-                    type="number" 
-                    id="input-single-price" 
+                  <input
+                    type="number"
+                    id="input-single-price"
                     min="0"
-                    value="${firstMat.price !== undefined && firstMat.price !== null && firstMat.price !== '' ? firstMat.price : ''}" 
+                    value="${firstMat.price !== undefined && firstMat.price !== null && firstMat.price !== '' ? firstMat.price : ''}"
                     class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none bg-white"
                     placeholder="Masukkan harga..."
                   />
@@ -13492,11 +13516,11 @@ const ProductForm = (() => {
                   <label for="input-single-cost" class="block text-xs font-bold text-slate-800 mb-1">
                     Biaya Modal / HPP (Rp) <span class="text-red-500">*</span>
                   </label>
-                  <input 
-                    type="number" 
-                    id="input-single-cost" 
+                  <input
+                    type="number"
+                    id="input-single-cost"
                     min="0"
-                    value="${firstMat.cost_price !== undefined && firstMat.cost_price !== null && firstMat.cost_price !== '' ? firstMat.cost_price : ''}" 
+                    value="${firstMat.cost_price !== undefined && firstMat.cost_price !== null && firstMat.cost_price !== '' ? firstMat.cost_price : ''}"
                     class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-sm font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none bg-white"
                     placeholder="Masukkan harga..."
                     title="Biaya Modal"
@@ -13560,12 +13584,12 @@ const ProductForm = (() => {
             Jumlah Maksimal Pembelian Per Pesanan <span class="text-red-500">*</span>:
           </label>
           <div class="flex items-center gap-2">
-            <input 
-              type="number" 
-              id="input-max-order-qty" 
+            <input
+              type="number"
+              id="input-max-order-qty"
               min="1"
-              value="${primaryState.max_order_qty || ''}" 
-              placeholder="Contoh: 10" 
+              value="${primaryState.max_order_qty || ''}"
+              placeholder="Contoh: 10"
               class="w-48 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-emerald-500 outline-none bg-white"
             />
             <span class="text-xs text-slate-500 font-medium">produk per checkout</span>
@@ -13587,9 +13611,9 @@ const ProductForm = (() => {
       const maxQty = period.max_qty || 10;
       const days = parseInt(period.days) || 7;
       const periodType = period.period_type || 'non_recurring';
-      
+
       const singleCycleEnd = addDaysToDate(startDate, Math.max(1, days) - 1);
-      
+
       const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
         const cycleEnd = addDaysToDate(startDate, (cycle * Math.max(1, days)) - 1);
         return {
@@ -13605,11 +13629,11 @@ const ProductForm = (() => {
             <label for="input-period-start-date" class="block text-xs font-semibold text-slate-700 mb-1">
               Tanggal Mulai <span class="text-red-500">*</span>:
             </label>
-            <input 
-              type="date" 
-              id="input-period-start-date" 
+            <input
+              type="date"
+              id="input-period-start-date"
               min="${getTodayDateString()}"
-              value="${startDate}" 
+              value="${startDate}"
               class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-emerald-500 outline-none bg-white"
             />
             <span class="text-[10px] text-slate-400 mt-0.5 block">Tanggal di masa lalu otomatis dinonaktifkan.</span>
@@ -13618,19 +13642,19 @@ const ProductForm = (() => {
           <!-- Input teks/angka Maks. Jumlah Pembelian [jumlah] produk untuk [jumlah] Hari -->
           <div class="flex items-center flex-wrap gap-2 text-xs font-semibold text-slate-800">
             <span>Maks. Jumlah Pembelian</span>
-            <input 
-              type="number" 
-              id="input-period-max-qty" 
+            <input
+              type="number"
+              id="input-period-max-qty"
               min="1"
-              value="${maxQty}" 
+              value="${maxQty}"
               class="w-24 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-emerald-500 outline-none bg-white"
             />
             <span>produk untuk</span>
-            <input 
-              type="number" 
-              id="input-period-days" 
+            <input
+              type="number"
+              id="input-period-days"
               min="1"
-              value="${days}" 
+              value="${days}"
               class="w-20 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-emerald-500 outline-none bg-white"
             />
             <span>Hari</span>
@@ -13639,7 +13663,7 @@ const ProductForm = (() => {
           <!-- Pilihan Tipe Periode (Radio Button) -->
           <div class="space-y-3 pt-2 border-t border-slate-200/80">
             <label class="block text-xs font-bold text-slate-800">Pilihan Tipe Periode <span class="text-red-500">*</span>:</label>
-            
+
             <div class="space-y-3">
               <!-- Tidak Berulang -->
               <div class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-emerald-500 bg-white' : 'border-slate-200 bg-white'} space-y-2">
@@ -13806,14 +13830,14 @@ const ProductForm = (() => {
 
         return `
           <div class="flex flex-col items-center justify-center">
-            <input 
-              type="text" 
-              class="combo-order-multiple-input w-24 sm:w-28 px-3 py-1.5 rounded-md border ${isInvalidNumber ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
-              data-mat-id="${mat.id}" 
-              value="${multipleVal}" 
-              placeholder="Input/Pilih" 
+            <input
+              type="text"
+              class="combo-order-multiple-input w-24 sm:w-28 px-3 py-1.5 rounded-md border ${isInvalidNumber ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-mat-id="${mat.id}"
+              value="${multipleVal}"
+              placeholder="Input/Pilih"
               list="datalist-order-multiple-options"
-              autocomplete="off" 
+              autocomplete="off"
             />
             <p class="combo-multiple-error text-[10px] text-red-600 font-semibold mt-0.5 ${isInvalidNumber ? 'block' : 'hidden'}" data-mat-id="${mat.id}">Minimal Kelipatan 2</p>
           </div>
@@ -13846,25 +13870,25 @@ const ProductForm = (() => {
 
           <!-- Kolom Min. Order -->
           <td class="p-3 align-middle text-center min-w-[90px]">
-            <input 
-              type="number" 
-              min="1" 
-              class="combo-min-order-input w-20 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
-              data-mat-id="${mat.id}" 
-              value="${minOrderVal}" 
+            <input
+              type="number"
+              min="1"
+              class="combo-min-order-input w-20 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-mat-id="${mat.id}"
+              value="${minOrderVal}"
             />
           </td>
 
           <!-- Kolom Max. Order (Native Datalist) -->
           <td class="p-3 align-middle text-center min-w-[125px]">
-            <input 
-              type="text" 
-              class="combo-max-order-input w-24 sm:w-28 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs" 
-              data-mat-id="${mat.id}" 
-              value="${maxOrderVal}" 
-              placeholder="Input/Pilih" 
+            <input
+              type="text"
+              class="combo-max-order-input w-24 sm:w-28 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-mat-id="${mat.id}"
+              value="${maxOrderVal}"
+              placeholder="Input/Pilih"
               list="datalist-max-order-unlimited"
-              autocomplete="off" 
+              autocomplete="off"
             />
           </td>
 
@@ -14069,23 +14093,23 @@ const ProductForm = (() => {
     const tiers = primaryState.wholesale_tiers || [];
 
     if (mode === 'normal') {
-      const tier1 = tiers[0] || { min_qty: 10, max_qty: 50, price: 0 };
-      const hasNoMax = tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0;
-      const minQty = tier1.min_qty || primaryState.min_order || 1;
-      const maxQty = hasNoMax ? '' : tier1.max_qty;
-      const discount = tier1.price || 0;
+      const tier1 = tiers[0] || null;
+      const hasNoMax = tier1 ? (tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0) : true;
+      const minQty = tier1?.min_qty || '';
+      const maxQty = (tier1 && !hasNoMax && tier1.max_qty) ? tier1.max_qty : '';
+      const discount = (tier1 && (tier1.price || tier1.discount)) ? (tier1.price || tier1.discount) : '';
 
       return `
         <div class="space-y-3">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-[11px] font-bold text-slate-700 mb-1">Min. Order</label>
-              <input 
-                type="number" 
-                id="modal-wholesale-normal-min" 
-                min="${primaryState.min_order || 1}" 
-                value="${minQty}" 
-                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)]" 
+              <input
+                type="number"
+                id="modal-wholesale-normal-min"
+                min="${primaryState.min_order || 1}"
+                value="${minQty}"
+                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)]"
               />
             </div>
             <div>
@@ -14096,25 +14120,25 @@ const ProductForm = (() => {
                   <span>Tanpa Max</span>
                 </label>
               </div>
-              <input 
-                type="number" 
-                id="modal-wholesale-normal-max" 
-                min="${minQty}" 
-                value="${maxQty}" 
-                placeholder="Tanpa Max" 
-                ${hasNoMax ? 'disabled' : ''} 
-                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)] ${hasNoMax ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" 
+              <input
+                type="number"
+                id="modal-wholesale-normal-max"
+                min="${minQty}"
+                value="${maxQty}"
+                placeholder="Tanpa Max"
+                ${hasNoMax ? 'disabled' : ''}
+                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)] ${hasNoMax ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}"
               />
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-700 mb-1">Potongan Harga (-Rp)</label>
-              <input 
-                type="number" 
-                id="modal-wholesale-normal-discount" 
-                min="0" 
-                value="${discount}" 
-                placeholder="Cth: 500" 
-                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]" 
+              <input
+                type="number"
+                id="modal-wholesale-normal-discount"
+                min="0"
+                value="${discount}"
+                placeholder="Cth: 500"
+                class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]"
               />
             </div>
           </div>
@@ -14129,8 +14153,7 @@ const ProductForm = (() => {
 
     // Mode Bertingkat (Tiered Wholesale)
     const tieredRows = tiers.length > 0 ? tiers : [
-      { id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 },
-      { id: DB.generateUUID(), min_qty: 51, max_qty: 100, price: 1000 }
+      { id: DB.generateUUID(), min_qty: '', max_qty: '', price: '' }
     ];
 
     const firstTier = tieredRows[0] || { min_qty: 10, max_qty: 50, price: 500 };
@@ -14156,29 +14179,29 @@ const ProductForm = (() => {
                 <tr data-tier-id="${t.id}" data-idx="${tIdx}">
                   <td class="p-2.5 text-center font-bold text-slate-700">${tIdx + 1}</td>
                   <td class="p-2.5">
-                    <input 
-                      type="number" 
-                      data-field="min_qty" 
-                      value="${t.min_qty}" 
-                      ${tIdx > 0 ? 'readonly class="w-full px-2 py-1 rounded border border-slate-200 text-xs font-bold bg-slate-100 text-slate-500 cursor-not-allowed"' : 'class="w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-[var(--color-primary)]"'} 
+                    <input
+                      type="number"
+                      data-field="min_qty"
+                      value="${t.min_qty}"
+                      ${tIdx > 0 ? 'readonly class="w-full px-2 py-1 rounded border border-slate-200 text-xs font-bold bg-slate-100 text-slate-500 cursor-not-allowed"' : 'class="w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-[var(--color-primary)]"'}
                     />
                   </td>
                   <td class="p-2.5">
-                    <input 
-                      type="number" 
-                      data-field="max_qty" 
-                      value="${t.max_qty || ''}" 
-                      placeholder="Cth: 100" 
-                      class="tiered-max-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-[var(--color-primary)]" 
+                    <input
+                      type="number"
+                      data-field="max_qty"
+                      value="${t.max_qty || ''}"
+                      placeholder="Cth: 100"
+                      class="tiered-max-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold bg-white focus:border-[var(--color-primary)]"
                     />
                   </td>
                   <td class="p-2.5">
-                    <input 
-                      type="number" 
-                      data-field="price" 
-                      value="${t.price || 0}" 
-                      placeholder="Potongan Rp" 
-                      class="tiered-price-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white focus:border-[var(--color-primary)]" 
+                    <input
+                      type="number"
+                      data-field="price"
+                      value="${t.price || 0}"
+                      placeholder="Potongan Rp"
+                      class="tiered-price-input w-full px-2 py-1 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white focus:border-[var(--color-primary)]"
                     />
                   </td>
                   <td class="p-2.5 text-center">
@@ -14241,13 +14264,13 @@ const ProductForm = (() => {
               Kelipatan Pembelian Produk:
             </label>
             <div class="flex items-center gap-2">
-              <input 
-                type="number" 
-                id="input-order-multiple-single" 
-                min="2" 
-                value="${parseInt(globalVal) >= 2 ? globalVal : ''}" 
+              <input
+                type="number"
+                id="input-order-multiple-single"
+                min="2"
+                value="${parseInt(globalVal) >= 2 ? globalVal : ''}"
                 placeholder="Minimal 2"
-                class="w-32 px-3 py-2 rounded-md border ${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]" 
+                class="w-32 px-3 py-2 rounded-md border ${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]"
               />
               <span class="text-xs text-slate-500 font-medium">pcs per transaksi</span>
             </div>
@@ -14284,11 +14307,11 @@ const ProductForm = (() => {
                           </select>
                         </td>
                         <td class="p-2.5">
-                          <input 
-                            type="number" 
-                            min="1" 
-                            value="${val}" 
-                            class="input-variant-multiple w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white focus:border-[var(--color-primary)] outline-none" 
+                          <input
+                            type="number"
+                            min="1"
+                            value="${val}"
+                            class="input-variant-multiple w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white focus:border-[var(--color-primary)] outline-none"
                           />
                         </td>
                         <td class="p-2.5 text-center">
@@ -14363,7 +14386,7 @@ const ProductForm = (() => {
       const curName = (curRow?.querySelector('input[data-field="name"]')?.value || '').trim();
       const curPrice = (curRow?.querySelector('input[data-field="price"]')?.value || '').trim();
       const isCurEmpty = (curName === '' && curPrice === '');
-      
+
       const allTierRows = Array.from(document.querySelectorAll(`.variation-option-row[data-tier="${tier}"]`));
       const hasAnyFilled = allTierRows.some(r => {
         const n = r.querySelector('input[data-field="name"]');
@@ -14651,66 +14674,66 @@ const ProductForm = (() => {
           <div style="border-radius: 0px !important;" class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
             <!-- Kolom 1: Nama Opsi -->
             <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
-              <input 
-                type="text" 
-                data-field="name" 
-                value="${escapeHtml(mat.name || '')}" 
-                placeholder="${placeholderName}" 
-                style="border-radius: 0px !important;" 
-                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-slate-50 rounded-none" 
+              <input
+                type="text"
+                data-field="name"
+                value="${escapeHtml(mat.name || '')}"
+                placeholder="${placeholderName}"
+                style="border-radius: 0px !important;"
+                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-slate-50 rounded-none"
               />
               <span class="field-error-msg hidden"></span>
             </div>
             <!-- Kolom 2: Keterangan -->
             <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
-              <input 
-                type="text" 
-                data-field="description" 
-                value="${escapeHtml(mat.description || '')}" 
-                placeholder="Keterangan" 
-                style="border-radius: 0px !important;" 
-                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-slate-50 rounded-none" 
+              <input
+                type="text"
+                data-field="description"
+                value="${escapeHtml(mat.description || '')}"
+                placeholder="Keterangan"
+                style="border-radius: 0px !important;"
+                class="mat-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-slate-50 rounded-none"
               />
             </div>
             <!-- Kolom 3: Harga Jual -->
             <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center border-r border-slate-300">
-              <input 
-                type="number" 
-                min="0" 
-                data-field="price" 
-                value="${priceVal}" 
-                placeholder="Harga Jual" 
-                ${isSamePrice && idx > 0 && hasName ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-slate-50 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              <input
+                type="number"
+                min="0"
+                data-field="price"
+                value="${priceVal}"
+                placeholder="Harga Jual"
+                ${isSamePrice && idx > 0 && hasName ? 'readonly' : ''}
+                style="border-radius: 0px !important;"
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-slate-50 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}"
               />
               <span class="field-error-msg hidden"></span>
             </div>
             <!-- Kolom 4: Modal/Hpp -->
             <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
-              <input 
-                type="number" 
-                min="0" 
-                data-field="cost_price" 
-                value="${costVal}" 
-                placeholder="Biaya Modal" 
-                ${isSameCost && idx > 0 && hasName ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="mat-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-slate-50 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              <input
+                type="number"
+                min="0"
+                data-field="cost_price"
+                value="${costVal}"
+                placeholder="Biaya Modal"
+                ${isSameCost && idx > 0 && hasName ? 'readonly' : ''}
+                style="border-radius: 0px !important;"
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-slate-50 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}"
               />
               <span class="field-error-msg hidden"></span>
             </div>
             <!-- Kolom 5: Stok -->
             <div class="col-span-2 sm:col-span-2 min-w-[95px] flex flex-col justify-center">
-              <input 
-                type="${(stockMode === 'unlimited' && hasName) || mat.stock === null ? 'text' : 'number'}" 
-                min="0" 
-                data-field="stock" 
-                value="${stockVal}" 
-                placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}" 
-                ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-slate-50 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              <input
+                type="${(stockMode === 'unlimited' && hasName) || mat.stock === null ? 'text' : 'number'}"
+                min="0"
+                data-field="stock"
+                value="${stockVal}"
+                placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}"
+                ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''}
+                style="border-radius: 0px !important;"
+                class="mat-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-slate-50 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}"
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -14722,21 +14745,21 @@ const ProductForm = (() => {
               ${renderOptionProfitInfo(priceVal, costVal)}
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-0">
-              <button 
-                type="button" 
-                class="btn-delete-mat p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none text-xs" 
-                data-tier="tier1" 
-                data-id="${mat.id}" 
+              <button
+                type="button"
+                class="btn-delete-mat p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none text-xs"
+                data-tier="tier1"
+                data-id="${mat.id}"
                 ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
               >
                 <i class="bi bi-trash3-fill"></i>
               </button>
-              <button 
-                type="button" 
-                class="btn-move-row btn-move-mat p-1.5 text-slate-400 hover:text-[var(--color-primary)] transition cursor-grab active:cursor-grabbing text-xs leading-none" 
-                data-tier="tier1" 
-                data-id="${mat.id}" 
-                data-idx="${idx}" 
+              <button
+                type="button"
+                class="btn-move-row btn-move-mat p-1.5 text-slate-400 hover:text-[var(--color-primary)] transition cursor-grab active:cursor-grabbing text-xs leading-none"
+                data-tier="tier1"
+                data-id="${mat.id}"
+                data-idx="${idx}"
                 title="Geser / Pindah Urutan Opsi"
               >
                 <i class="bi bi-arrows-move"></i>
@@ -14802,14 +14825,14 @@ const ProductForm = (() => {
 
               <!-- Bagian 2: Nama Opsi -->
               <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
-                <input 
-                  type="text" 
-                  data-field="name" 
-                  value="${escapeHtml(isLastRow ? defaultNoneName : (fin.name || ''))}" 
-                  placeholder="${placeholderName}" 
-                  ${isLastRow ? 'readonly' : ''} 
-                  style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-3 py-2 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-slate-50'}" 
+                <input
+                  type="text"
+                  data-field="name"
+                  value="${escapeHtml(isLastRow ? defaultNoneName : (fin.name || ''))}"
+                  placeholder="${placeholderName}"
+                  ${isLastRow ? 'readonly' : ''}
+                  style="border-radius: 0px !important;"
+                  class="fin-input w-full px-3 py-2 text-xs outline-none font-medium rounded-none ${isLastRow ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-none' : 'bg-white text-slate-800 focus:bg-slate-50'}"
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
@@ -14826,45 +14849,45 @@ const ProductForm = (() => {
 
               <!-- Bagian 4: Harga Satuan -->
               <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center border-r border-slate-300">
-                <input 
-                  type="number" 
-                  min="0" 
-                  data-field="price" 
-                  value="${isLastRow ? 0 : priceVal}" 
-                  placeholder="Harga Satuan" 
-                  ${(isLastRow || (isSamePrice && idx > 0 && hasName)) ? 'readonly' : ''} 
-                  style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isLastRow || (isSamePrice && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-slate-50'}" 
+                <input
+                  type="number"
+                  min="0"
+                  data-field="price"
+                  value="${isLastRow ? 0 : priceVal}"
+                  placeholder="Harga Satuan"
+                  ${(isLastRow || (isSamePrice && idx > 0 && hasName)) ? 'readonly' : ''}
+                  style="border-radius: 0px !important;"
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold rounded-none ${(isLastRow || (isSamePrice && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-900 focus:bg-slate-50'}"
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
 
               <!-- Bagian 5: Modal/Hpp -->
               <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
-                <input 
-                  type="number" 
-                  min="0" 
-                  data-field="cost_price" 
-                  value="${isLastRow ? 0 : costVal}" 
-                  placeholder="Biaya Modal" 
-                  ${(isLastRow || (isSameCost && idx > 0 && hasName)) ? 'readonly' : ''} 
-                  style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-slate-50'}" 
+                <input
+                  type="number"
+                  min="0"
+                  data-field="cost_price"
+                  value="${isLastRow ? 0 : costVal}"
+                  placeholder="Biaya Modal"
+                  ${(isLastRow || (isSameCost && idx > 0 && hasName)) ? 'readonly' : ''}
+                  style="border-radius: 0px !important;"
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 rounded-none ${(isLastRow || (isSameCost && idx > 0 && hasName)) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white focus:bg-slate-50'}"
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
 
               <!-- Bagian 6: Stok -->
               <div class="col-span-2 sm:col-span-2 min-w-[95px] flex flex-col justify-center">
-                <input 
-                  type="${(stockMode === 'unlimited' && hasName) || fin.stock === null ? 'text' : 'number'}" 
-                  min="0" 
-                  data-field="stock" 
-                  value="${stockVal}" 
-                  placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}" 
-                  ${isLastRow || (stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''} 
-                  style="border-radius: 0px !important;" 
-                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || (stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-slate-50'}" 
+                <input
+                  type="${(stockMode === 'unlimited' && hasName) || fin.stock === null ? 'text' : 'number'}"
+                  min="0"
+                  data-field="stock"
+                  value="${stockVal}"
+                  placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}"
+                  ${isLastRow || (stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''}
+                  style="border-radius: 0px !important;"
+                  class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium rounded-none ${isLastRow || (stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-700 focus:bg-slate-50'}"
                 />
                 ${!isLastRow ? `<span class="field-error-msg hidden"></span>` : ''}
               </div>
@@ -14876,21 +14899,21 @@ const ProductForm = (() => {
                 ${!isLastRow ? renderOptionProfitInfo(priceVal, costVal) : ''}
               </div>
               <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-0">
-                <button 
-                  type="button" 
-                  class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none text-xs" 
-                  data-tier="${tier}" 
-                  data-id="${fin.id}" 
+                <button
+                  type="button"
+                  class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none text-xs"
+                  data-tier="${tier}"
+                  data-id="${fin.id}"
                   ${isLastRow ? 'disabled title="Opsi default tidak dapat dihapus"' : (isExtraProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"')}
                 >
                   <i class="bi bi-trash3-fill"></i>
                 </button>
-                <button 
-                  type="button" 
-                  class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-[var(--color-primary)] transition text-xs leading-none ${isLastRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}" 
-                  data-tier="${tier}" 
-                  data-id="${fin.id}" 
-                  data-idx="${idx}" 
+                <button
+                  type="button"
+                  class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-[var(--color-primary)] transition text-xs leading-none ${isLastRow ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-grab active:cursor-grabbing'}"
+                  data-tier="${tier}"
+                  data-id="${fin.id}"
+                  data-idx="${idx}"
                   ${isLastRow ? 'disabled title="Opsi default tetap di baris terakhir"' : 'title="Geser / Pindah Urutan Opsi"'}
                 >
                   <i class="bi bi-arrows-move"></i>
@@ -14915,66 +14938,66 @@ const ProductForm = (() => {
           <div class="flex-1 grid grid-cols-2 sm:grid-cols-12 bg-white border border-slate-400 rounded-none overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-slate-300 shadow-2xs">
             <!-- Kolom 1: Nama Opsi -->
             <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
-              <input 
-                type="text" 
-                data-field="name" 
-                value="${escapeHtml(fin.name || '')}" 
-                placeholder="${placeholderName}" 
-                style="border-radius: 0px !important;" 
-                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-slate-50 rounded-none" 
+              <input
+                type="text"
+                data-field="name"
+                value="${escapeHtml(fin.name || '')}"
+                placeholder="${placeholderName}"
+                style="border-radius: 0px !important;"
+                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white font-medium text-slate-800 focus:bg-slate-50 rounded-none"
               />
               <span class="field-error-msg hidden"></span>
             </div>
             <!-- Kolom 2: Keterangan -->
             <div class="col-span-2 sm:col-span-3 flex flex-col justify-center">
-              <input 
-                type="text" 
-                data-field="description" 
-                value="${escapeHtml(fin.description || '')}" 
-                placeholder="Keterangan" 
-                style="border-radius: 0px !important;" 
-                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-slate-50 rounded-none" 
+              <input
+                type="text"
+                data-field="description"
+                value="${escapeHtml(fin.description || '')}"
+                placeholder="Keterangan"
+                style="border-radius: 0px !important;"
+                class="fin-input w-full px-3 py-2 text-xs outline-none bg-white text-slate-700 focus:bg-slate-50 rounded-none"
               />
             </div>
             <!-- Kolom 3: Harga Jual -->
             <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center border-r border-slate-300">
-              <input 
-                type="number" 
-                min="0" 
-                data-field="price" 
-                value="${priceVal}" 
-                placeholder="Harga Jual" 
-                ${isSamePrice && idx > 0 && hasName ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-slate-50 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              <input
+                type="number"
+                min="0"
+                data-field="price"
+                value="${priceVal}"
+                placeholder="Harga Jual"
+                ${isSamePrice && idx > 0 && hasName ? 'readonly' : ''}
+                style="border-radius: 0px !important;"
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-bold text-slate-900 focus:bg-slate-50 rounded-none ${isSamePrice && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}"
               />
               <span class="field-error-msg hidden"></span>
             </div>
             <!-- Kolom 4: Modal/Hpp -->
             <div class="col-span-1 sm:col-span-2 min-w-[100px] flex flex-col justify-center">
-              <input 
-                type="number" 
-                min="0" 
-                data-field="cost_price" 
-                value="${costVal}" 
-                placeholder="Biaya Modal" 
-                ${isSameCost && idx > 0 && hasName ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-slate-50 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}" 
+              <input
+                type="number"
+                min="0"
+                data-field="cost_price"
+                value="${costVal}"
+                placeholder="Biaya Modal"
+                ${isSameCost && idx > 0 && hasName ? 'readonly' : ''}
+                style="border-radius: 0px !important;"
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none text-slate-700 focus:bg-slate-50 rounded-none ${isSameCost && idx > 0 && hasName ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white'}"
               />
               <span class="field-error-msg hidden"></span>
             </div>
             <!-- Kolom 5: Stok -->
             <div class="col-span-2 sm:col-span-2 min-w-[95px] flex flex-col justify-center">
-              <input 
-                type="${(stockMode === 'unlimited' && hasName) || fin.stock === null ? 'text' : 'number'}" 
-                min="0" 
-                data-field="stock" 
-                value="${stockVal}" 
-                placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}" 
-                ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''} 
-                style="border-radius: 0px !important;" 
-                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-slate-50 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}" 
+              <input
+                type="${(stockMode === 'unlimited' && hasName) || fin.stock === null ? 'text' : 'number'}"
+                min="0"
+                data-field="stock"
+                value="${stockVal}"
+                placeholder="${stockMode === 'unlimited' ? 'Unlimited' : 'Stok'}"
+                ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'readonly' : ''}
+                style="border-radius: 0px !important;"
+                class="fin-input w-full px-2.5 py-2 text-xs outline-none font-medium focus:bg-slate-50 rounded-none ${(stockMode === 'unlimited' && hasName) || (stockMode === 'same' && idx > 0 && hasName) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-700'}"
               />
               <span class="field-error-msg hidden"></span>
             </div>
@@ -14986,21 +15009,21 @@ const ProductForm = (() => {
               ${renderOptionProfitInfo(priceVal, costVal)}
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-0">
-              <button 
-                type="button" 
-                class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none text-xs" 
-                data-tier="${tier}" 
-                data-id="${fin.id}" 
+              <button
+                type="button"
+                class="btn-delete-fin p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none text-xs"
+                data-tier="${tier}"
+                data-id="${fin.id}"
                 ${isProtected ? 'disabled title="Minimal 1 opsi"' : 'title="Hapus Opsi"'}
               >
                 <i class="bi bi-trash3-fill"></i>
               </button>
-              <button 
-                type="button" 
-                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none" 
-                data-tier="${tier}" 
-                data-id="${fin.id}" 
-                data-idx="${idx}" 
+              <button
+                type="button"
+                class="btn-move-row btn-move-fin p-1.5 text-slate-400 hover:text-emerald-600 transition cursor-grab active:cursor-grabbing text-xs leading-none"
+                data-tier="${tier}"
+                data-id="${fin.id}"
+                data-idx="${idx}"
                 title="Geser / Pindah Urutan Opsi"
               >
                 <i class="bi bi-arrows-move"></i>
@@ -18809,10 +18832,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // =====================================================================
     // LOGIKA MODAL HARGA GROSIR (PER-BARIS INDEPENDEN)
     // =====================================================================
-    let currentWholesaleContext = { matId: null, matName: '' };
+    let currentWholesaleContext = {
+      matId: null,
+      matName: '',
+      normalBuffer: null,
+      tieredBuffer: []
+    };
 
     function openWholesaleModal(matId, matName) {
-      currentWholesaleContext = { matId, matName };
       const modal = document.getElementById('modal-wholesale-config');
       if (!modal) return;
 
@@ -18823,6 +18850,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       const mat = materialsState.find(m => m.id === matId);
       const mode = mat?.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]) || null;
+      const rawTiers = mat?.wholesale_tiers || (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[matId]) || [];
+      const clonedTiers = JSON.parse(JSON.stringify(rawTiers || []));
+
+      let initialNormal = null;
+      let initialTiered = [];
+
+      if (mode === 'normal') {
+        initialNormal = clonedTiers.length > 0 ? { ...clonedTiers[0] } : null;
+        initialTiered = clonedTiers.length > 0 ? clonedTiers.map(t => ({ ...t })) : [];
+      } else if (mode === 'tiered') {
+        initialTiered = clonedTiers.map(t => ({ ...t }));
+        initialNormal = clonedTiers.length > 0 ? { ...clonedTiers[0] } : null;
+      }
+
+      currentWholesaleContext = {
+        matId,
+        matName,
+        normalBuffer: initialNormal,
+        tieredBuffer: initialTiered
+      };
 
       const radNormal = modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]');
       const radTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]');
@@ -18874,29 +18921,34 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     function renderWholesaleTableForMat(mat) {
       const modal = document.getElementById('modal-wholesale-config');
-      const isTiered = modal?.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked;
-      const mode = isTiered ? 'tiered' : (mat?.wholesale_mode || 'normal');
-      const tiers = mat?.wholesale_tiers || (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id]) || [];
+      const checkedMode = modal?.querySelector('input[name="modal_wholesale_mode"]:checked')?.value;
+      const mode = checkedMode || mat?.wholesale_mode || 'normal';
 
       if (mode === 'normal') {
-        const tier1 = tiers[0] || null;
-        const hasNoMax = tier1 ? (tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0) : false;
-        const minQty = (tier1 && tier1.min_qty) ? tier1.min_qty : '';
-        const maxQty = (tier1 && !hasNoMax && tier1.max_qty) ? tier1.max_qty : '';
-        const discount = (tier1 && (tier1.price || tier1.discount)) ? (tier1.price || tier1.discount) : '';
+        const tier1 = currentWholesaleContext.normalBuffer ||
+                      (currentWholesaleContext.tieredBuffer && currentWholesaleContext.tieredBuffer[0]) ||
+                      (mat?.wholesale_tiers && mat.wholesale_tiers[0]) ||
+                      (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id]?.[0]) ||
+                      null;
+        const hasNoMax = tier1 ? (tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0 || tier1.hasNoMax === true) : false;
+        const minQty = (tier1 && tier1.min_qty !== undefined && tier1.min_qty !== null && tier1.min_qty !== '') ? tier1.min_qty : '';
+        const maxQty = (tier1 && !hasNoMax && tier1.max_qty !== undefined && tier1.max_qty !== null && tier1.max_qty !== '') ? tier1.max_qty : '';
+        const discount = (tier1 && (tier1.price !== undefined && tier1.price !== null && tier1.price !== ''))
+          ? tier1.price
+          : ((tier1 && tier1.discount) ? tier1.discount : '');
 
         return `
           <div class="space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Min. Order</label>
-                <input 
-                  type="number" 
-                  id="modal-wholesale-normal-min" 
-                  min="1" 
-                  value="${minQty}" 
-                  placeholder="Cth: 10" 
-                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)]" 
+                <input
+                  type="number"
+                  id="modal-wholesale-normal-min"
+                  min="1"
+                  value="${minQty}"
+                  placeholder="Cth: 10"
+                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)]"
                 />
               </div>
               <div>
@@ -18907,25 +18959,25 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                     <span>Tanpa Max</span>
                   </label>
                 </div>
-                <input 
-                  type="number" 
-                  id="modal-wholesale-normal-max" 
-                  min="1" 
-                  value="${maxQty}" 
-                  placeholder="Tanpa Max" 
-                  ${hasNoMax ? 'disabled' : ''} 
-                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)] ${hasNoMax ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}" 
+                <input
+                  type="number"
+                  id="modal-wholesale-normal-max"
+                  min="1"
+                  value="${maxQty}"
+                  placeholder="Tanpa Max"
+                  ${hasNoMax ? 'disabled' : ''}
+                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold bg-white outline-none focus:border-[var(--color-primary)] ${hasNoMax ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}"
                 />
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Potongan Harga (-Rp)</label>
-                <input 
-                  type="number" 
-                  id="modal-wholesale-normal-discount" 
-                  min="0" 
-                  value="${discount}" 
-                  placeholder="Cth: 500" 
-                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]" 
+                <input
+                  type="number"
+                  id="modal-wholesale-normal-discount"
+                  min="0"
+                  value="${discount}"
+                  placeholder="Cth: 500"
+                  class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]"
                 />
               </div>
             </div>
@@ -18938,7 +18990,24 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
 
       // Bertingkat
-      const currentTiers = tiers.length > 0 ? tiers : [
+      let tiers = (currentWholesaleContext.tieredBuffer && currentWholesaleContext.tieredBuffer.length > 0)
+        ? currentWholesaleContext.tieredBuffer
+        : (mat?.wholesale_tiers && mat.wholesale_tiers.length > 0
+            ? mat.wholesale_tiers
+            : (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id] ? primaryState.wholesale_by_variant[mat.id] : []));
+
+      // Jika tieredBuffer kosong tapi normalBuffer ada isinya, baris tier 1 mewarisi normalBuffer
+      if ((!tiers || tiers.length === 0) && currentWholesaleContext.normalBuffer && (currentWholesaleContext.normalBuffer.price !== '' || currentWholesaleContext.normalBuffer.min_qty !== '')) {
+        tiers = [{
+          id: currentWholesaleContext.normalBuffer.id || DB.generateUUID(),
+          min_qty: currentWholesaleContext.normalBuffer.min_qty || '',
+          max_qty: currentWholesaleContext.normalBuffer.max_qty || '',
+          price: currentWholesaleContext.normalBuffer.price || ''
+        }];
+        currentWholesaleContext.tieredBuffer = tiers;
+      }
+
+      const currentTiers = (tiers && tiers.length > 0) ? tiers : [
         { id: DB.generateUUID(), min_qty: '', max_qty: '', price: '' }
       ];
 
@@ -18948,53 +19017,57 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             <table class="w-full text-left text-xs">
               <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
                 <tr>
-                  <th class="p-2.5 w-12 text-center">Tingkat</th>
+                  <th class="p-2.5 w-12 text-center">No.</th>
                   <th class="p-2.5">Min. Order</th>
                   <th class="p-2.5">Max. Order</th>
-                  <th class="p-2.5">Potongan (-Rp)</th>
-                  <th class="p-2.5 w-10 text-center">Hapus</th>
+                  <th class="p-2.5">Potongan Harga</th>
+                  <th class="p-2.5 w-16 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody id="wholesale-tiers-table-body" class="divide-y divide-slate-200">
                 ${currentTiers.map((t, idx) => `
                   <tr data-tier-id="${t.id}" data-idx="${idx}">
-                    <td class="p-2.5 text-center font-bold text-slate-600">Tier ${idx + 1}</td>
+                    <td class="p-2.5 text-center font-bold text-slate-600 tier-number">${idx + 1}</td>
                     <td class="p-2.5">
-                      <input 
-                        type="number" 
-                        data-field="min_qty" 
-                        value="${t.min_qty}" 
-                        ${idx > 0 ? 'readonly' : ''} 
-                        class="w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center ${idx > 0 ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-800'}" 
+                      <input
+                        type="number"
+                        data-field="min_qty"
+                        value="${(t.min_qty !== undefined && t.min_qty !== null && t.min_qty !== '') ? t.min_qty : ''}"
+                        placeholder="Min"
+                        class="tiered-min-input w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)]"
                       />
                     </td>
                     <td class="p-2.5">
-                      <input 
-                        type="number" 
-                        data-field="max_qty" 
-                        value="${t.max_qty || ''}" 
-                        placeholder="Tanpa Max" 
-                        class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800" 
+                      <input
+                        type="number"
+                        data-field="max_qty"
+                        value="${(t.max_qty !== undefined && t.max_qty !== null && t.max_qty !== '') ? t.max_qty : ''}"
+                        placeholder="Tanpa Max"
+                        class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)]"
                       />
                     </td>
                     <td class="p-2.5">
-                      <input 
-                        type="number" 
-                        data-field="price" 
-                        value="${(t.price !== undefined && t.price !== null && t.price !== 0 && t.price !== '') ? t.price : ''}" 
-                        placeholder="Potongan" 
-                        class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white" 
+                      <input
+                        type="number"
+                        data-field="price"
+                        value="${(t.price !== undefined && t.price !== null && t.price !== 0 && t.price !== '') ? t.price : ''}"
+                        placeholder="Cth: 500"
+                        class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]"
                       />
                     </td>
                     <td class="p-2.5 text-center">
-                      <button type="button" class="btn-delete-wholesale-tier text-slate-400 hover:text-red-500 p-1 cursor-pointer transition" data-tier-id="${t.id}" ${currentTiers.length <= 1 ? 'disabled' : ''}>
-                        <i class="bi bi-trash3-fill"></i>
+                      <button type="button" class="btn-delete-wholesale-tier text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded cursor-pointer transition text-xs font-medium inline-flex items-center gap-1" data-tier-id="${t.id}" title="Hapus" ${currentTiers.length <= 1 ? 'disabled' : ''}>
+                        <i class="bi bi-trash3"></i><span class="text-xs">Hapus</span>
                       </button>
                     </td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
+          </div>
+          <div id="wholesale-tiered-conflict-msg" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-semibold leading-relaxed flex items-center gap-1.5">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span class="conflict-text"></span>
           </div>
           <div class="flex items-center justify-between">
             <button type="button" id="btn-add-wholesale-tier" class="px-3 py-1.5 rounded-md border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold cursor-pointer transition">
@@ -19003,6 +19076,78 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           </div>
         </div>
       `;
+    }
+
+    function checkTierConflicts(modal) {
+      const tbody = modal.querySelector('#wholesale-tiers-table-body');
+      if (!tbody) return { hasConflict: false };
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const conflictBanner = modal.querySelector('#wholesale-tiered-conflict-msg');
+      const conflictText = conflictBanner?.querySelector('.conflict-text');
+
+      let conflictFound = false;
+      let conflictMessage = '';
+
+      // Reset inline error highlights
+      rows.forEach(r => {
+        r.querySelectorAll('input').forEach(inp => {
+          inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+        });
+      });
+
+      for (let i = 0; i < rows.length; i++) {
+        const minInp = rows[i].querySelector('input[data-field="min_qty"]');
+        const maxInp = rows[i].querySelector('input[data-field="max_qty"]');
+        const minRaw = (minInp?.value || '').trim();
+        const maxRaw = (maxInp?.value || '').trim();
+        const minVal = parseInt(minRaw, 10);
+        const maxVal = maxRaw !== '' ? parseInt(maxRaw, 10) : null;
+
+        // Check reverse range on current row (max < min)
+        if (!isNaN(minVal) && maxVal !== null && !isNaN(maxVal) && maxVal < minVal) {
+          conflictFound = true;
+          conflictMessage = `Baris ke-${i + 1}: Max. Order (${maxVal}) tidak boleh lebih kecil dari Min. Order (${minVal}).`;
+          maxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+          minInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+          break;
+        }
+
+        // Check intermediate row with empty max_qty while subsequent rows exist
+        if (i < rows.length - 1 && maxRaw === '' && minRaw !== '') {
+          conflictFound = true;
+          conflictMessage = `Baris ke-${i + 1}: Max. Order wajib diisi karena terdapat tingkatan setelahnya.`;
+          maxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+          break;
+        }
+
+        // Check range conflict with previous row
+        if (i > 0) {
+          const prevRow = rows[i - 1];
+          const prevMaxInp = prevRow.querySelector('input[data-field="max_qty"]');
+          const prevMaxRaw = (prevMaxInp?.value || '').trim();
+          const prevMaxVal = prevMaxRaw !== '' ? parseInt(prevMaxRaw, 10) : null;
+
+          if (prevMaxVal !== null && !isNaN(prevMaxVal) && !isNaN(minVal) && minVal <= prevMaxVal) {
+            conflictFound = true;
+            conflictMessage = `Konflik rentang tier: Min. Order baris ke-${i + 1} (${minVal}) harus lebih besar dari Max. Order baris ke-${i} (${prevMaxVal}).`;
+            minInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+            prevMaxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+            break;
+          }
+        }
+      }
+
+      if (conflictBanner && conflictText) {
+        if (conflictFound) {
+          conflictText.textContent = conflictMessage;
+          conflictBanner.classList.remove('hidden');
+        } else {
+          conflictText.textContent = '';
+          conflictBanner.classList.add('hidden');
+        }
+      }
+
+      return { hasConflict: conflictFound, message: conflictMessage };
     }
 
     function bindWholesaleModalInputs(modal, mat) {
@@ -19046,33 +19191,39 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (!tbody) return;
           const rows = tbody.querySelectorAll('tr');
           const lastRow = rows[rows.length - 1];
-          const lastMaxInp = lastRow?.querySelector('.tiered-max-input');
-          const lastMaxVal = parseInt(lastMaxInp?.value) || 0;
-          const newMin = lastMaxVal > 0 ? (lastMaxVal + 1) : '';
+          const lastMaxInp = lastRow?.querySelector('input[data-field="max_qty"]');
+          const rawLastMax = (lastMaxInp?.value || '').trim();
+          const lastMaxVal = parseInt(rawLastMax, 10);
+          const newMin = (!isNaN(lastMaxVal) && lastMaxVal > 0) ? (lastMaxVal + 1) : '';
 
           const newTr = document.createElement('tr');
           newTr.setAttribute('data-tier-id', DB.generateUUID());
           newTr.setAttribute('data-idx', rows.length);
           newTr.className = 'divide-y divide-slate-200';
           newTr.innerHTML = `
-            <td class="p-2.5 text-center font-bold text-slate-600">Tier ${rows.length + 1}</td>
+            <td class="p-2.5 text-center font-bold text-slate-600 tier-number">${rows.length + 1}</td>
             <td class="p-2.5">
-              <input type="number" data-field="min_qty" value="${newMin}" placeholder="Min" readonly class="w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-slate-100 text-slate-500 cursor-not-allowed" />
+              <input type="number" data-field="min_qty" value="${newMin}" placeholder="Min" class="tiered-min-input w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)]" />
             </td>
             <td class="p-2.5">
-              <input type="number" data-field="max_qty" value="" placeholder="Tanpa Max" class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800" />
+              <input type="number" data-field="max_qty" value="" placeholder="Tanpa Max" class="tiered-max-input w-24 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)]" />
             </td>
             <td class="p-2.5">
-              <input type="number" data-field="price" value="" placeholder="Potongan" class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white" />
+              <input type="number" data-field="price" value="" placeholder="Cth: 500" class="w-28 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[var(--color-primary)]" />
             </td>
             <td class="p-2.5 text-center">
-              <button type="button" class="btn-delete-wholesale-tier text-slate-400 hover:text-red-500 p-1 cursor-pointer transition">
-                <i class="bi bi-trash3-fill"></i>
+              <button type="button" class="btn-delete-wholesale-tier text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded cursor-pointer transition text-xs font-medium inline-flex items-center gap-1" data-tier-id="${newTr.getAttribute('data-tier-id')}" title="Hapus">
+                <i class="bi bi-trash3"></i><span class="text-xs">Hapus</span>
               </button>
             </td>
           `;
           tbody.appendChild(newTr);
+
+          // Enable delete button on all rows since row count > 1
+          tbody.querySelectorAll('.btn-delete-wholesale-tier').forEach(b => b.removeAttribute('disabled'));
+
           bindTierDeleteAndAutoMin(modal);
+          checkTierConflicts(modal);
         };
       }
       bindTierDeleteAndAutoMin(modal);
@@ -19085,29 +19236,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const tbody = row?.parentElement;
           if (tbody && tbody.querySelectorAll('tr').length > 1) {
             row.remove();
-            tbody.querySelectorAll('tr').forEach((r, idx) => {
+            const remainingRows = tbody.querySelectorAll('tr');
+            remainingRows.forEach((r, idx) => {
               r.setAttribute('data-idx', idx);
-              const tdTitle = r.querySelector('td:first-child');
-              if (tdTitle) tdTitle.textContent = `Tier ${idx + 1}`;
+              const tdNo = r.querySelector('.tier-number') || r.querySelector('td:first-child');
+              if (tdNo) tdNo.textContent = String(idx + 1);
             });
+            if (remainingRows.length === 1) {
+              remainingRows[0].querySelector('.btn-delete-wholesale-tier')?.setAttribute('disabled', 'true');
+            }
+            checkTierConflicts(modal);
           }
         };
       });
 
-      modal.querySelectorAll('.tiered-max-input').forEach(inp => {
-        inp.oninput = (e) => {
-          const row = e.target.closest('tr');
-          const tbody = row?.parentElement;
-          if (!tbody) return;
-          const rows = Array.from(tbody.querySelectorAll('tr'));
-          const idx = rows.indexOf(row);
-          const maxVal = parseInt(e.target.value) || 0;
-          if (idx >= 0 && idx < rows.length - 1) {
-            const nextRow = rows[idx + 1];
-            const nextMinInp = nextRow.querySelector('input[data-field="min_qty"]');
-            if (nextMinInp) nextMinInp.value = maxVal + 1;
-          }
-        };
+      // Bind input events to check conflicts without overwriting seller values
+      modal.querySelectorAll('#wholesale-tiers-table-body input').forEach(inp => {
+        inp.oninput = () => checkTierConflicts(modal);
       });
     }
 
@@ -19115,10 +19260,77 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (modalWholesale) {
       modalWholesale.querySelectorAll('input[name="modal_wholesale_mode"]').forEach(rad => {
         rad.onchange = () => {
+          // Tangkap seluruh input DOM yang sedang aktif sebelum re-render tampilan baru
+          const currentTableBody = modalWholesale.querySelector('#wholesale-tiers-table-body');
+          if (currentTableBody) {
+            // Tampilan sebelumnya adalah Bertingkat
+            const rows = currentTableBody.querySelectorAll('tr');
+            const capturedTiers = [];
+            rows.forEach(tr => {
+              const minInp = tr.querySelector('input[data-field="min_qty"]');
+              const maxInp = tr.querySelector('input[data-field="max_qty"]');
+              const priceInp = tr.querySelector('input[data-field="price"]');
+              capturedTiers.push({
+                id: tr.getAttribute('data-tier-id') || DB.generateUUID(),
+                min_qty: minInp?.value !== '' ? (parseInt(minInp?.value) || minInp?.value) : '',
+                max_qty: (maxInp?.value !== '' && maxInp?.value !== null && maxInp?.value !== undefined) ? parseInt(maxInp.value) : null,
+                price: priceInp?.value !== '' ? (parseFloat(priceInp.value) || priceInp.value) : ''
+              });
+            });
+            currentWholesaleContext.tieredBuffer = capturedTiers;
+            if (capturedTiers.length > 0) {
+              const t1 = capturedTiers[0];
+              if (!currentWholesaleContext.normalBuffer || !currentWholesaleContext.normalBuffer.price || t1.price) {
+                currentWholesaleContext.normalBuffer = {
+                  id: t1.id,
+                  min_qty: t1.min_qty,
+                  max_qty: t1.max_qty,
+                  price: t1.price,
+                  hasNoMax: t1.max_qty === null || t1.max_qty === ''
+                };
+              }
+            }
+          } else {
+            // Tampilan sebelumnya adalah Normal
+            const inpMin = modalWholesale.querySelector('#modal-wholesale-normal-min');
+            const inpMax = modalWholesale.querySelector('#modal-wholesale-normal-max');
+            const inpDisc = modalWholesale.querySelector('#modal-wholesale-normal-discount');
+            const chkNoMax = modalWholesale.querySelector('#chk-wholesale-no-max');
+            if (inpMin || inpMax || inpDisc) {
+              const minVal = inpMin?.value !== '' ? (parseInt(inpMin?.value) || inpMin?.value) : '';
+              const hasNoMax = Boolean(chkNoMax?.checked);
+              const maxVal = hasNoMax ? null : (inpMax?.value !== '' ? (parseInt(inpMax?.value) || inpMax?.value) : '');
+              const discVal = inpDisc?.value !== '' ? (parseFloat(inpDisc?.value) || inpDisc?.value) : '';
+              currentWholesaleContext.normalBuffer = {
+                id: currentWholesaleContext.normalBuffer?.id || DB.generateUUID(),
+                min_qty: minVal,
+                max_qty: maxVal,
+                price: discVal,
+                hasNoMax: hasNoMax
+              };
+              if (!currentWholesaleContext.tieredBuffer || currentWholesaleContext.tieredBuffer.length <= 1) {
+                currentWholesaleContext.tieredBuffer = [{
+                  id: currentWholesaleContext.normalBuffer.id,
+                  min_qty: minVal,
+                  max_qty: maxVal,
+                  price: discVal
+                }];
+              } else {
+                // Pertahankan semua tier berikutnya (Tier 2, 3, dst.), sinkronkan hanya Tier 1
+                currentWholesaleContext.tieredBuffer[0].min_qty = minVal;
+                currentWholesaleContext.tieredBuffer[0].max_qty = maxVal;
+                currentWholesaleContext.tieredBuffer[0].price = discVal;
+              }
+            }
+          }
+
+          // Catatan: TIDAK memodifikasi mat.wholesale_tiers atau mat.wholesale_mode di sini.
+          // State materialsState dan primaryState hanya diperbarui saat pengguna klik 'Simpan Pengaturan'.
+
           syncWholesaleModeRadioStyles(modalWholesale);
-          const mat = materialsState.find(m => m.id === currentWholesaleContext.matId);
           const body = document.getElementById('modal-wholesale-body');
           if (body) {
+            const mat = materialsState.find(m => m.id === currentWholesaleContext.matId);
             body.innerHTML = renderWholesaleTableForMat(mat);
             bindWholesaleModalInputs(modalWholesale, mat);
           }
@@ -19141,17 +19353,24 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const isTiered = (radChecked.value === 'tiered');
 
         if (!isTiered) {
-          const inpMin = document.getElementById('modal-wholesale-normal-min');
-          const inpMax = document.getElementById('modal-wholesale-normal-max');
-          const inpDisc = document.getElementById('modal-wholesale-normal-discount');
-          const chkNoMax = document.getElementById('chk-wholesale-no-max');
+          const inpMin = modal.querySelector('#modal-wholesale-normal-min');
+          const inpMax = modal.querySelector('#modal-wholesale-normal-max');
+          const inpDisc = modal.querySelector('#modal-wholesale-normal-discount');
+          const chkNoMax = modal.querySelector('#chk-wholesale-no-max');
 
-          const minV = parseInt(inpMin?.value) || 1;
-          const maxV = chkNoMax?.checked ? null : (parseInt(inpMax?.value) || null);
           const discV = parseFloat(inpDisc?.value) || 0;
-
           if (discV <= 0) {
             alert('Potongan harga grosir harus lebih besar dari 0.');
+            return;
+          }
+          const minV = (inpMin?.value !== undefined && inpMin?.value !== '') ? parseInt(inpMin.value) : 1;
+          if (isNaN(minV) || minV < 1) {
+            alert('Min. Order harus bernilai minimal 1.');
+            return;
+          }
+          const maxV = chkNoMax?.checked ? null : (parseInt(inpMax?.value) || null);
+          if (!chkNoMax?.checked && maxV !== null && maxV < minV) {
+            alert('Max. Order tidak boleh lebih kecil dari Min. Order.');
             return;
           }
 
@@ -19171,23 +19390,82 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
           primaryState.wholesale_by_variant[matId] = tierData;
         } else {
+          const conflict = checkTierConflicts(modal);
+          if (conflict.hasConflict) {
+            alert(conflict.message);
+            return;
+          }
+
           const gatheredTiers = [];
-          modal.querySelectorAll('#wholesale-tiers-table-body tr').forEach(tr => {
+          const trList = Array.from(modal.querySelectorAll('#wholesale-tiers-table-body tr'));
+          let hasEmpty = false;
+          let reverseRow = null;
+          let intermediateMissingMax = null;
+          let overlapMsg = null;
+
+          for (let idx = 0; idx < trList.length; idx++) {
+            const tr = trList[idx];
             const minInp = tr.querySelector('input[data-field="min_qty"]');
             const maxInp = tr.querySelector('input[data-field="max_qty"]');
             const priceInp = tr.querySelector('input[data-field="price"]');
             const tId = tr.getAttribute('data-tier-id') || DB.generateUUID();
 
+            const minRaw = (minInp?.value || '').trim();
+            const maxRaw = (maxInp?.value || '').trim();
+            const priceRaw = (priceInp?.value || '').trim();
+
+            const minVal = parseInt(minRaw, 10);
+            const maxVal = maxRaw !== '' ? parseInt(maxRaw, 10) : null;
+            const priceVal = parseFloat(priceRaw);
+
+            if (minRaw === '' || isNaN(minVal) || minVal < 1 || priceRaw === '' || isNaN(priceVal) || priceVal <= 0) {
+              hasEmpty = true;
+              break;
+            }
+
+            if (maxVal !== null && maxVal < minVal) {
+              reverseRow = idx + 1;
+              break;
+            }
+
+            if (idx < trList.length - 1 && (maxVal === null || isNaN(maxVal))) {
+              intermediateMissingMax = idx + 1;
+              break;
+            }
+
+            if (idx > 0) {
+              const prevTier = gatheredTiers[idx - 1];
+              if (prevTier.max_qty !== null && minVal <= prevTier.max_qty) {
+                overlapMsg = `Rentang bertumpang tindih: Min. Order baris ke-${idx + 1} (${minVal}) harus lebih besar dari Max. Order baris ke-${idx} (${prevTier.max_qty}).`;
+                break;
+              }
+            }
+
             gatheredTiers.push({
               id: tId,
-              min_qty: parseInt(minInp?.value) || 1,
-              max_qty: maxInp?.value ? parseInt(maxInp.value) : null,
-              price: parseFloat(priceInp?.value) || 0
+              min_qty: minVal,
+              max_qty: maxVal,
+              price: priceVal
             });
-          });
+          }
 
-          if (gatheredTiers.length === 0 || !gatheredTiers.every(t => t.min_qty > 0 && t.price > 0)) {
+          if (hasEmpty || gatheredTiers.length === 0) {
             alert('Setiap tingkatan harga grosir wajib memiliki Min. Order (> 0) dan Potongan Harga (> 0).');
+            return;
+          }
+
+          if (reverseRow !== null) {
+            alert(`Max. Order tidak boleh lebih kecil dari Min. Order pada baris ke-${reverseRow}.`);
+            return;
+          }
+
+          if (intermediateMissingMax !== null) {
+            alert(`Baris ke-${intermediateMissingMax} wajib memiliki batas Max. Order karena terdapat tingkatan setelahnya.`);
+            return;
+          }
+
+          if (overlapMsg) {
+            alert(overlapMsg);
             return;
           }
 
@@ -19281,12 +19559,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               Kelipatan Pembelian untuk Opsi Ini:
             </label>
             <div class="flex items-center gap-2">
-              <input 
-                type="number" 
-                id="input-variant-multiple-val" 
-                min="2" 
-                value="${currentVal || 2}" 
-                class="w-28 px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]" 
+              <input
+                type="number"
+                id="input-variant-multiple-val"
+                min="2"
+                value="${currentVal || 2}"
+                class="w-28 px-3 py-2 rounded-md border border-slate-300 text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]"
               />
               <span class="text-xs text-slate-500 font-medium">pcs</span>
             </div>
@@ -19821,8 +20099,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     const activateWholesale = () => {
       primaryState.has_wholesale = true;
-      if (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0) {
-        primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
+      if (!primaryState.wholesale_tiers) {
+        primaryState.wholesale_tiers = [];
       }
       if (wholesaleActionContainer) {
         wholesaleActionContainer.classList.add('hidden');
@@ -22821,11 +23099,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     primaryState.description = document.getElementById('input-prod-desc')?.value || primaryState.description || '';
     primaryState.category_id = document.getElementById('select-step2-cat')?.value || document.getElementById('select-prod-cat')?.value || primaryState.category_id;
     primaryState.sub_category_id = document.getElementById('select-step2-sub-cat')?.value || document.getElementById('select-prod-sub-cat')?.value || primaryState.sub_category_id;
-    
+
     const variantRad = document.querySelector('input[name="card_variant_radio"]:checked');
     if (variantRad) primaryState.card_variant = variantRad.value;
     primaryState.card_variant_override = true;
-    
+
     const aspectRad = document.querySelector('input[name="photo_aspect_ratio"]:checked');
     if (aspectRad) primaryState.image_aspect_ratio = aspectRad.value;
 
@@ -23746,8 +24024,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (primaryState.has_wholesale) {
             const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]);
             const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
-            const isWValid = (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) ||
-                            (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0)));
+            let isWValid = false;
+            if (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) {
+              isWValid = true;
+            } else if (wMode === 'tiered' && wTiers.length > 0) {
+              const allBasicValid = wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0));
+              const noReverse = wTiers.every(t => t.max_qty === null || t.max_qty >= t.min_qty);
+              const intermediateValid = wTiers.slice(0, -1).every(t => t.max_qty !== null && t.max_qty > 0);
+              let noOverlap = true;
+              for (let ti = 1; ti < wTiers.length; ti++) {
+                if (wTiers[ti - 1].max_qty !== null && wTiers[ti].min_qty <= wTiers[ti - 1].max_qty) {
+                  noOverlap = false;
+                  break;
+                }
+              }
+              isWValid = allBasicValid && noReverse && intermediateValid && noOverlap;
+            }
             if (!isWValid) {
               const btnEl = document.querySelector(`.btn-open-wholesale-modal[data-mat-id="${mat.id}"]`);
               addError(`List Variasi Produk (Baris ${var1Name}): Pengaturan Harga Grosir belum valid.`, btnEl || document.getElementById('combination-matrix-section'));
@@ -23782,7 +24074,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
-    if (primaryState.has_wholesale && (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0)) {
+    if (primaryState.has_wholesale && !primaryState.has_variants && (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0)) {
       addError('Harga Grosir aktif namun belum memiliki pengaturan tingkatan harga.', document.getElementById('wholesale-table-wrapper') || document.getElementById('btn-toggle-wholesale'));
     }
 
@@ -23798,7 +24090,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const weightInp = document.getElementById('input-package-weight') || document.getElementById('input-pkg-weight');
       const weightErrEl = document.getElementById('package-weight-error-msg');
       const isWeightInvalid = pkgWeight === undefined || pkgWeight === null || pkgWeight === '' || isNaN(parseFloat(pkgWeight)) || parseFloat(pkgWeight) <= 0;
-      
+
       if (isWeightInvalid) {
         addError('Berat Paket wajib diisi jika pengiriman aktif.', weightInp || document.getElementById('card-step2-shipping'));
         if (weightInp) {

@@ -734,6 +734,18 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Nilai awal Qty saat membuka drawer variasi maupun halaman PDP selalu dimulai dari angka `1` (menghapus auto-jump ke `min_order` atau `step_multiplier`).
       - Tombol `+` selalu menambah +1 secara presisi, dan tombol `-` selalu mengurangi -1 (minimal 1).
       - Jika nilai Qty saat ini belum memenuhi kelipatan yang ditentukan, menampilkan pesan notifikasi dinamis `"Jumlah pesanan wajib kelipatan [X] Pcs Mohon sesuaikan jumlah pesanan Cth: [Contoh kelipatan],Dst."` serta mengunci (disable) tombol `Beli Sekarang` dan `Masukkan ke Keranjang` baik di Drawer Shopee Preview, Mini PDP, maupun PDP utama.
+    - [x] **Stabilisasi Form Produk Bagian 26: Persistensi & Validasi Harga Grosir Per Variasi (`js/product-form.js`, `js/db.js`, `tests/wholesale-variant.spec.js`)**:
+      - Memperbaiki ID collision pada selector input diskon grosir di `btnSaveWholesale` (menggantikan pencarian global `document.getElementById` dengan scoped `modal.querySelector` sehingga pembacaan nilai potongan harga variasi selalu akurat dan tidak terbentur input Step 1).
+      - Menyempurnakan mekanisme pergantian mode `Normal` <-> `Bertingkat` pada modal grosir per variasi tanpa kehilangan data, membaca nilai radio aktif secara presisi dan mempertahankan nilai in-flight antar mode.
+      - Menjamin persistensi penuh harga grosir per variasi ke database (`js/db.js`): menyimpan `wholesale_mode` dan `wholesale_tiers` pada setiap baris material di tabel `materials`, serta `wholesale_mode_by_variant` dan `wholesale_by_variant` pada tabel produk.
+      - Hidrasi dua arah dan Zero Mutation saat produk dimuat kembali ke Form Edit (`ProductForm.init('edit')`), memastikan indikator matriks kombinasi dan modal tiap variasi pulih sempurna.
+      - Menghapus seluruh nilai default tak diminta pada pembuatan tier baru, memvalidasi penolakan tier kosong dan rentang terbalik (max < min), serta memperbaiki validasi form submit agar tidak memblokir produk ber-variasi.
+      - **Tugas 01D — Penyempurnaan Tata Letak & Validasi Rentang Grosir Bertingkat**:
+        - Mengganti label berulang `Tier 1, Tier 2, Tier 3` dengan kolom `No.` berpenomoran urut otomatis (1, 2, 3...) yang diperbarui tanpa celah saat baris ditambah atau dihapus.
+        - Logika otomatis `Min. Order`: baris pertama dimulai kosong; baris baru otomatis menghitung `prevMax + 1` jika `Max. Order` sebelumnya valid, dan tetap kosong jika belum valid (tanpa angka default statis 10, 50, 500, atau 1.000).
+        - Kolom `Min. Order` pada baris berikutnya tidak lagi `readonly`, seller dapat mengoreksi nilai secara manual dengan validasi aman.
+        - Validasi rentang menyeluruh: pencegahan rentang terbalik, pencegahan baris perantara tanpa batas maksimum, dan penolakan rentang bertumpang tindih (overlap).
+        - Konflik akibat perubahan `Max. Order` memicu pesan peringatan antarmuka yang jelas (`#wholesale-tiered-conflict-msg`) tanpa diam-diam menimpa nilai manual seller pada baris lain.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
