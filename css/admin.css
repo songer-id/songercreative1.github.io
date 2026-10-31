@@ -1305,6 +1305,33 @@ input.toggle-same-cost:checked~div::after {
   border-radius: 0px !important;
 }
 
+/* Clean Table Style: Hapus kotak focus ring hijau & border dalam pada sel tabel variasi */
+#view-product-form .variation-option-row input.mat-input,
+#view-product-form .variation-option-row input.fin-input,
+#view-product-form .variation-option-row select.fin-input {
+  border: none !important;
+  border-width: 0px !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#view-product-form .variation-option-row input.mat-input:focus,
+#view-product-form .variation-option-row input.fin-input:focus,
+#view-product-form .variation-option-row select.fin-input:focus {
+  border: none !important;
+  border-width: 0px !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: #f8fafc !important; /* Soft Slate-50 highlight saat aktif */
+}
+
+#view-product-form .variation-option-row input.mat-input.border-red-500,
+#view-product-form .variation-option-row input.fin-input.border-red-500 {
+  border: 1px solid #ef4444 !important;
+}
+
 /* ==========================================================================
    DROPDOWN & DATALIST POPOVER STYLING (PRESISI MENEMPEL TEPAT DI BAWAH INPUT)
    ========================================================================== */
@@ -2618,8 +2645,8 @@ body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
 }
 
 /* 7. Input Focus Border, Focus Ring, Checkbox/Radio Accent, & Combobox Hover */
-#view-product-form input:not([type="checkbox"]):not([type="radio"]):focus:not(.border-red-500),
-#view-product-form select:focus:not(.border-red-500),
+#view-product-form input:not([type="checkbox"]):not([type="radio"]):not(.mat-input):not(.fin-input):focus:not(.border-red-500),
+#view-product-form select:not(.fin-input):focus:not(.border-red-500),
 #view-product-form textarea:focus:not(.border-red-500),
 #view-product-form .input-custom-label-slot:focus,
 #view-product-form [class*="focus:border-emerald-"]:focus,

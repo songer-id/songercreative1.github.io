@@ -469,9 +469,151 @@
     // 3. Finishing Utama
     const mainFinSec = document.getElementById('pdp-main-finishing-section');
     const mainFinList = document.getElementById('pdp-main-finishing-list');
-    const finishings = Array.isArray(prod.finishings) ? prod.finishings : [];
+    const extraFinSec = document.getElementById('pdp-extra-finishing-section');
+    const extraFinList = document.getElementById('pdp-extra-finishing-list');
+    const finishings = Array.isArray(prod.finishings)
+      ? prod.finishings
+      : (prod.finishings && typeof prod.finishings === 'object'
+          ? Object.entries(prod.finishings).flatMap(([tierKey, list]) => Array.isArray(list) ? list.map(f => ({ ...f, tier: f.tier || tierKey })) : [])
+          : []);
+    const mainOptions = finishings.filter(f => !f.tier || f.tier === 'main');
+    const extraOptions = finishings.filter(f => f.tier && f.tier !== 'main');
 
     updateFinishingAllowedState = (selectedMatId) => {
+      if (!prod) return;
+
+      if (typeof VariationEngine !== 'undefined') {
+        const curSelections = {
+          tier1: selectedMatId || configState.selectedMaterialId || null,
+          main: configState.selectedFinishingId || null,
+          extra_1: (configState.extraFinishingIds && configState.extraFinishingIds[0]) || null,
+          extra_2: (configState.extraFinishingIds && configState.extraFinishingIds[1]) || null
+        };
+
+        // 1. Variasi 2 (main)
+        if (mainFinList) {
+          const resMain = VariationEngine.resolveEffectiveAllowedOptions(prod, 'main', curSelections);
+          const isMainSkipped = Boolean(resMain.isSkipped);
+
+          if (isMainSkipped) {
+            configState.selectedFinishingId = null;
+            if (mainFinSec) {
+              mainFinSec.classList.remove('hidden');
+              mainFinSec.classList.add('opacity-70', 'is-skipped-tier');
+              let skipNotice = mainFinSec.querySelector('.pdp-tier-skipped-notice');
+              if (!skipNotice) {
+                skipNotice = document.createElement('div');
+                skipNotice.className = 'pdp-tier-skipped-notice p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center gap-2 italic';
+                mainFinSec.appendChild(skipNotice);
+              }
+              skipNotice.innerHTML = '<i class="bi bi-info-circle text-slate-400"></i> <span>Variasi ini dilewati untuk pilihan Anda saat ini.</span>';
+              skipNotice.classList.remove('hidden');
+              if (mainFinList) mainFinList.classList.add('hidden');
+            }
+          } else {
+            if (mainFinSec) {
+              mainFinSec.classList.remove('is-skipped-tier', 'opacity-70');
+              const skipNotice = mainFinSec.querySelector('.pdp-tier-skipped-notice');
+              if (skipNotice) skipNotice.classList.add('hidden');
+              if (mainFinList && mainOptions.length > 0) mainFinList.classList.remove('hidden');
+              if (mainOptions.length > 0) mainFinSec.classList.remove('hidden');
+            }
+          }
+
+          let curFinValid = false;
+          mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(radio => {
+            const isAllowed = !isMainSkipped && (!resMain.isSpecific || resMain.allowedIds.includes(radio.value));
+            radio.disabled = !isAllowed;
+            const optEl = radio.closest('.pdp-finishing-option');
+            if (optEl) {
+              if (!isAllowed) {
+                optEl.classList.add('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+              } else {
+                optEl.classList.remove('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+              }
+            }
+            if (radio.value === configState.selectedFinishingId && isAllowed) {
+              curFinValid = true;
+            }
+          });
+
+          if (!curFinValid && configState.selectedFinishingId) {
+            configState.selectedFinishingId = null;
+            mainFinList.querySelectorAll('input[name="pdp_main_finishing"]').forEach(r => {
+              r.checked = false;
+            });
+            mainFinList.querySelectorAll('.pdp-finishing-option').forEach(el => {
+              el.className = 'pdp-finishing-option p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer flex items-center justify-between text-xs transition';
+            });
+          }
+        }
+
+        // 2. Variasi 3 & 4 (extra_1, extra_2)
+        if (extraFinList && Array.isArray(extraOptions) && extraOptions.length > 0) {
+          const updatedSelections = {
+            ...curSelections,
+            main: configState.selectedFinishingId
+          };
+          const resExtra1 = VariationEngine.resolveEffectiveAllowedOptions(prod, 'extra_1', updatedSelections);
+          const resExtra2 = VariationEngine.resolveEffectiveAllowedOptions(prod, 'extra_2', updatedSelections);
+
+          let hasAnyVisibleExtra = false;
+
+          extraFinList.querySelectorAll('input[name="pdp_extra_finishing"]').forEach(cb => {
+            const fId = cb.value;
+            const fItem = extraOptions.find(f => f.id === fId);
+            if (!fItem) return;
+            const tierKey = fItem.tier;
+            const resTier = (tierKey === 'extra_2') ? resExtra2 : resExtra1;
+            const isSkipped = Boolean(resTier.isSkipped);
+            const isAllowed = !isSkipped && (!resTier.isSpecific || resTier.allowedIds.includes(fId));
+
+            cb.disabled = !isAllowed;
+            const optEl = cb.closest('label');
+            if (optEl) {
+              if (isSkipped) {
+                optEl.classList.add('hidden', 'opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+                if (cb.checked) {
+                  cb.checked = false;
+                  configState.extraFinishingIds = (configState.extraFinishingIds || []).filter(id => id !== fId);
+                }
+              } else if (!isAllowed) {
+                optEl.classList.remove('hidden');
+                optEl.classList.add('opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+                if (cb.checked) {
+                  cb.checked = false;
+                  configState.extraFinishingIds = (configState.extraFinishingIds || []).filter(id => id !== fId);
+                }
+              } else {
+                optEl.classList.remove('hidden', 'opacity-40', 'line-through', 'cursor-not-allowed', 'pointer-events-none');
+                hasAnyVisibleExtra = true;
+              }
+            }
+          });
+
+          if (extraFinSec) {
+            if (!hasAnyVisibleExtra && (resExtra1.isSkipped || resExtra2.isSkipped)) {
+              extraFinSec.classList.remove('hidden');
+              extraFinSec.classList.add('opacity-70', 'is-skipped-tier');
+              let skipNotice = extraFinSec.querySelector('.pdp-tier-skipped-notice');
+              if (!skipNotice) {
+                skipNotice = document.createElement('div');
+                skipNotice.className = 'pdp-tier-skipped-notice p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center gap-2 italic';
+                extraFinSec.appendChild(skipNotice);
+              }
+              skipNotice.innerHTML = '<i class="bi bi-info-circle text-slate-400"></i> <span>Variasi ini dilewati untuk pilihan Anda saat ini.</span>';
+              skipNotice.classList.remove('hidden');
+              if (extraFinList) extraFinList.classList.add('hidden');
+            } else {
+              extraFinSec.classList.remove('is-skipped-tier', 'opacity-70');
+              const skipNotice = extraFinSec.querySelector('.pdp-tier-skipped-notice');
+              if (skipNotice) skipNotice.classList.add('hidden');
+              if (extraFinList && extraOptions.length > 0) extraFinList.classList.remove('hidden');
+            }
+          }
+        }
+        return;
+      }
       if (!prod || !prod.specific_options_map || !selectedMatId) return;
 
       // 1. Variasi 2 (main)
@@ -556,7 +698,6 @@
       }
     };
 
-    const mainOptions = finishings.filter(f => !f.tier || f.tier === 'main');
     if (mainOptions.length > 0) {
       if (mainFinSec) mainFinSec.classList.remove('hidden');
       configState.selectedFinishingId = mainOptions[0].id;
@@ -579,6 +720,7 @@
               el.className = 'pdp-finishing-option p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer flex items-center justify-between text-xs transition';
             });
             radio.closest('.pdp-finishing-option').className = 'pdp-finishing-option p-2.5 rounded-xl border border-emerald-500 bg-emerald-50/40 font-bold text-emerald-900 cursor-pointer flex items-center justify-between text-xs transition';
+            updateFinishingAllowedState(configState.selectedMaterialId);
             recalculatePrice();
           });
         });
@@ -592,10 +734,6 @@
     }
 
     // 4. Finishing Ekstra
-    const extraFinSec = document.getElementById('pdp-extra-finishing-section');
-    const extraFinList = document.getElementById('pdp-extra-finishing-list');
-    const extraOptions = finishings.filter(f => f.tier && f.tier !== 'main');
-
     if (extraOptions.length > 0) {
       if (extraFinSec) extraFinSec.classList.remove('hidden');
       configState.extraFinishingIds = [];
@@ -778,6 +916,18 @@
     ];
 
     let isInvalid = false;
+    if (typeof VariationEngine !== 'undefined' && currentProduct && currentProduct.has_variants) {
+      const selections = {
+        tier1: configState.selectedMaterialId || null,
+        main: configState.selectedFinishingId || null,
+        extra_1: (configState.extraFinishingIds && configState.extraFinishingIds[0]) || null,
+        extra_2: (configState.extraFinishingIds && configState.extraFinishingIds[1]) || null
+      };
+      const snapshot = VariationEngine.getValidatedPricingSnapshot(currentProduct, selections);
+      if (!snapshot.isComplete) {
+        isInvalid = true;
+      }
+    }
     if (stepMult > 1 && (curQ % stepMult !== 0)) {
       isInvalid = true;
       if (stepNoteEl) {
@@ -1249,6 +1399,20 @@
     const calc = configState.lastCalculation;
     if (!calc) return;
 
+    if (typeof VariationEngine !== 'undefined' && currentProduct && currentProduct.has_variants) {
+      const selections = {
+        tier1: configState.selectedMaterialId || null,
+        main: configState.selectedFinishingId || null,
+        extra_1: (configState.extraFinishingIds && configState.extraFinishingIds[0]) || null,
+        extra_2: (configState.extraFinishingIds && configState.extraFinishingIds[1]) || null
+      };
+      const snapshot = VariationEngine.getValidatedPricingSnapshot(currentProduct, selections);
+      if (!snapshot.isComplete) {
+        alert('Silakan pilih variasi terlebih dahulu');
+        return;
+      }
+    }
+
     const curQ = configState.qty;
     const minOrder = currentProduct.min_order || 1;
     const stepMult = (currentProduct.has_order_multiple && parseInt(currentProduct.order_multiple_value) > 1) ? parseInt(currentProduct.order_multiple_value) : 1;
@@ -1358,6 +1522,20 @@
   function directWhatsAppCheckout() {
     const calc = configState.lastCalculation;
     if (!calc) return;
+
+    if (typeof VariationEngine !== 'undefined' && currentProduct && currentProduct.has_variants) {
+      const selections = {
+        tier1: configState.selectedMaterialId || null,
+        main: configState.selectedFinishingId || null,
+        extra_1: (configState.extraFinishingIds && configState.extraFinishingIds[0]) || null,
+        extra_2: (configState.extraFinishingIds && configState.extraFinishingIds[1]) || null
+      };
+      const snapshot = VariationEngine.getValidatedPricingSnapshot(currentProduct, selections);
+      if (!snapshot.isComplete) {
+        alert('Silakan pilih variasi terlebih dahulu');
+        return;
+      }
+    }
 
     const curQ = configState.qty;
     const minOrder = currentProduct.min_order || 1;

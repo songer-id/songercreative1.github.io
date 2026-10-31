@@ -1177,4 +1177,173 @@ test.describe('POS Songer Creative - Product Form Stabilization: Wholesale Persi
     await expect(modal).toBeVisible();
   });
 
+  // ===========================================================================
+  // TEST 13: VALIDASI TIER PERANTARA TANPA MAX ORDER & KOREKSI SIMPAN BERHASIL (TASK 01F)
+  // ===========================================================================
+  test('13. Validasi Tier Perantara: Penolakan simpan saat tier perantara tanpa batas maksimum, preservasi input, dan simpan berhasil setelah koreksi', async ({ page }) => {
+    await page.goto('/admin.html');
+    await page.waitForSelector('#admin-main-viewport');
+
+    // Buka form edit produk deterministik dan arahkan ke Step 2 (Variasi & Grosir)
+    await page.evaluate(() => {
+      AdminApp.navigate('edit-product', 'prod-test-pdp-001');
+      const p = ProductForm.getPrimaryState();
+      p.show_badge = false;
+      p.has_custom_labels = false;
+      p.has_wholesale = true;
+      const toggle = document.getElementById('toggle-enable-custom-labels');
+      if (toggle) toggle.checked = false;
+      ProductForm.goToStep(2);
+    });
+
+    const btnOpenWs = page.locator('.btn-open-wholesale-modal[data-mat-id="mat_flexi_001"]').first();
+    await expect(btnOpenWs).toBeVisible();
+    await btnOpenWs.click();
+
+    const modal = page.locator('#modal-wholesale-config');
+    await expect(modal).toBeVisible();
+
+    // 1. Aktifkan mode Harga Grosir Bertingkat
+    await modal.locator('input[name="modal_wholesale_mode"][value="tiered"]').click();
+    await expect(modal.locator('#wholesale-tiers-table-body')).toBeVisible();
+
+    const rows = modal.locator('#wholesale-tiers-table-body tr');
+
+    // 2. Konfigurasi Tier 1: Min = 1, Max = 10, Potongan = 500
+    await rows.nth(0).locator('input[data-field="min_qty"]').fill('1');
+    await rows.nth(0).locator('input[data-field="max_qty"]').fill('10');
+    await rows.nth(0).locator('input[data-field="price"]').fill('500');
+
+    // 3. Tambah Tier 2: Min otomatis 11 (10 + 1), Max dibiarkan kosong, Potongan = 1000
+    await modal.locator('#btn-add-wholesale-tier').click();
+    await expect(rows).toHaveCount(2);
+    expect(await rows.nth(1).locator('input[data-field="min_qty"]').inputValue()).toBe('11');
+    expect(await rows.nth(1).locator('input[data-field="max_qty"]').inputValue()).toBe('');
+    await rows.nth(1).locator('input[data-field="price"]').fill('1000');
+
+    // 4. Tambah Tier 3 saat Tier 2 Max masih kosong:
+    // Pada saat Tier 3 ditambahkan, Tier 2 menjadi tier perantara (intermediate tier) tanpa batas maksimum
+    await modal.locator('#btn-add-wholesale-tier').click();
+    await expect(rows).toHaveCount(3);
+
+    // Konfigurasi Tier 3: Min = 21, Max = 30, Potongan = 1500
+    await rows.nth(2).locator('input[data-field="min_qty"]').fill('21');
+    await rows.nth(2).locator('input[data-field="max_qty"]').fill('30');
+    await rows.nth(2).locator('input[data-field="price"]').fill('1500');
+
+    // 5. Verifikasi peringatan konflik tier perantara muncul di UI secara real-time
+    const conflictBanner = modal.locator('#wholesale-tiered-conflict-msg');
+    await expect(conflictBanner).toBeVisible();
+    await expect(conflictBanner).toContainText('Baris ke-2: Max. Order wajib diisi karena terdapat tingkatan setelahnya');
+
+    // Input Max pada Tier 2 ditandai dengan styling border merah
+    await expect(rows.nth(1).locator('input[data-field="max_qty"]')).toHaveClass(/border-red-500/);
+
+    // 6. Upayakan menyimpan pengaturan modal dengan kondisi Tier 2 Max kosong
+    let alertText = '';
+    page.once('dialog', async dialog => {
+      alertText = dialog.message();
+      await dialog.accept();
+    });
+
+    await modal.locator('#btn-save-wholesale-modal').click();
+
+    // 7. Verifikasi penolakan penyimpanan:
+    // a. Dialog penolakan muncul dengan pesan peringatan yang sesuai
+    expect(alertText).toContain('Baris ke-2');
+    expect(alertText.toLowerCase()).toContain('wajib diisi');
+
+    // b. Modal tetap terbuka
+    await expect(modal).toBeVisible();
+
+    // c. Nilai input yang sudah diketik tetap utuh (preservasi draft buffer)
+    expect(await rows.nth(0).locator('input[data-field="min_qty"]').inputValue()).toBe('1');
+    expect(await rows.nth(0).locator('input[data-field="max_qty"]').inputValue()).toBe('10');
+    expect(await rows.nth(0).locator('input[data-field="price"]').inputValue()).toBe('500');
+
+    expect(await rows.nth(1).locator('input[data-field="min_qty"]').inputValue()).toBe('11');
+    expect(await rows.nth(1).locator('input[data-field="max_qty"]').inputValue()).toBe('');
+    expect(await rows.nth(1).locator('input[data-field="price"]').inputValue()).toBe('1000');
+
+    expect(await rows.nth(2).locator('input[data-field="min_qty"]').inputValue()).toBe('21');
+    expect(await rows.nth(2).locator('input[data-field="max_qty"]').inputValue()).toBe('30');
+    expect(await rows.nth(2).locator('input[data-field="price"]').inputValue()).toBe('1500');
+
+    // d. Konfigurasi tidak ter-commit ke state materialsState
+    const uncommittedState = await page.evaluate(() => {
+      const mat = ProductForm.getMaterialsState().find(m => m.id === 'mat_flexi_001');
+      return {
+        wholesale_mode: mat?.wholesale_mode,
+        wholesale_tiers: mat?.wholesale_tiers
+      };
+    });
+    expect(uncommittedState.wholesale_tiers).toEqual([]);
+
+    // 8. Koreksi: Masukkan Max. Order = 20 pada Tier 2
+    await rows.nth(1).locator('input[data-field="max_qty"]').fill('20');
+
+    // Peringatan konflik visual otomatis hilang setelah nilai valid
+    await expect(conflictBanner).toBeHidden();
+    await expect(rows.nth(1).locator('input[data-field="max_qty"]')).not.toHaveClass(/border-red-500/);
+
+    // 9. Konfirmasi nilai ketiga rentang sebelum simpan ulang:
+    // Tier 1: 1–10 (500), Tier 2: 11–20 (1000), Tier 3: 21–30 (1500)
+    expect(await rows.nth(0).locator('input[data-field="min_qty"]').inputValue()).toBe('1');
+    expect(await rows.nth(0).locator('input[data-field="max_qty"]').inputValue()).toBe('10');
+    expect(await rows.nth(1).locator('input[data-field="min_qty"]').inputValue()).toBe('11');
+    expect(await rows.nth(1).locator('input[data-field="max_qty"]').inputValue()).toBe('20');
+    expect(await rows.nth(2).locator('input[data-field="min_qty"]').inputValue()).toBe('21');
+    expect(await rows.nth(2).locator('input[data-field="max_qty"]').inputValue()).toBe('30');
+
+    // 10. Klik Simpan Pengaturan kembali
+    await modal.locator('#btn-save-wholesale-modal').click();
+
+    // 11. Verifikasi penyimpanan berhasil: modal tertutup
+    await expect(modal).toBeHidden();
+
+    // 12. Verifikasi state data ter-commit dengan benar di materialsState
+    const committedState = await page.evaluate(() => {
+      const mat = ProductForm.getMaterialsState().find(m => m.id === 'mat_flexi_001');
+      return {
+        wholesale_mode: mat?.wholesale_mode,
+        wholesale_tiers: mat?.wholesale_tiers
+      };
+    });
+    expect(committedState.wholesale_mode).toBe('tiered');
+    expect(committedState.wholesale_tiers).toHaveLength(3);
+    expect(committedState.wholesale_tiers[0].min_qty).toBe(1);
+    expect(committedState.wholesale_tiers[0].max_qty).toBe(10);
+    expect(committedState.wholesale_tiers[0].price).toBe(500);
+
+    expect(committedState.wholesale_tiers[1].min_qty).toBe(11);
+    expect(committedState.wholesale_tiers[1].max_qty).toBe(20);
+    expect(committedState.wholesale_tiers[1].price).toBe(1000);
+
+    expect(committedState.wholesale_tiers[2].min_qty).toBe(21);
+    expect(committedState.wholesale_tiers[2].max_qty).toBe(30);
+    expect(committedState.wholesale_tiers[2].price).toBe(1500);
+
+    // 13. Buka kembali modal grosir dan pastikan hidrasi UI memuat ketiga tier secara presisi
+    await btnOpenWs.click();
+    await expect(modal).toBeVisible();
+
+    const reloadedRows = modal.locator('#wholesale-tiers-table-body tr');
+    await expect(reloadedRows).toHaveCount(3);
+    expect(await reloadedRows.nth(0).locator('input[data-field="min_qty"]').inputValue()).toBe('1');
+    expect(await reloadedRows.nth(0).locator('input[data-field="max_qty"]').inputValue()).toBe('10');
+    expect(await reloadedRows.nth(0).locator('input[data-field="price"]').inputValue()).toBe('500');
+
+    expect(await reloadedRows.nth(1).locator('input[data-field="min_qty"]').inputValue()).toBe('11');
+    expect(await reloadedRows.nth(1).locator('input[data-field="max_qty"]').inputValue()).toBe('20');
+    expect(await reloadedRows.nth(1).locator('input[data-field="price"]').inputValue()).toBe('1000');
+
+    expect(await reloadedRows.nth(2).locator('input[data-field="min_qty"]').inputValue()).toBe('21');
+    expect(await reloadedRows.nth(2).locator('input[data-field="max_qty"]').inputValue()).toBe('30');
+    expect(await reloadedRows.nth(2).locator('input[data-field="price"]').inputValue()).toBe('1500');
+
+    // Tutup modal
+    await modal.locator('.btn-close-modal[data-modal="modal-wholesale-config"]').first().click();
+    await expect(modal).toBeHidden();
+  });
+
 });

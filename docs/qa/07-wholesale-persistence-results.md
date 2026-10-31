@@ -54,28 +54,29 @@ Audit menyeluruh telah dilakukan dari komponen antarmuka hingga lapisan persiste
 
 ### 4. BUKTI EKSEKUSI PENGUJIAN OTOMATIS
 
-#### A. Suite Khusus Tugas 01, 01B & 01D (`tests/wholesale-variant.spec.js`)
+#### A. Suite Khusus Tugas 01, 01B, 01D & 01F (`tests/wholesale-variant.spec.js`)
 Perintah: `npm run test:wholesale`
 ```
-Running 12 tests using 1 worker
+Running 13 tests using 1 worker
 
-  ok  1 [chromium] › 1. Pengaturan Mode Normal pada Variasi 1: Validasi input, simpan modal, dan periksa indikator tabel (13.9s)
-  ok  2 [chromium] › 2. Pengaturan Mode Bertingkat pada Variasi 2 independen dari Variasi 1 tanpa nilai default tak diminta (6.5s)
-  ok  3 [chromium] › 3. Pergantian mode Normal ke Bertingkat dan sebaliknya mempertahankan data input secara aman (5.9s)
-  ok  4 [chromium] › 4. Simpan produk ke database mempertahankan konfigurasi harga grosir tiap variasi secara utuh (3.6s)
-  ok  5 [chromium] › 5. Muat ulang produk di Form Edit menghidrasi nilai harga grosir tiap variasi tanpa perubahan tak terduga (5.8s)
-  ok  6 [chromium] › 6. Edit konfigurasi harga grosir, simpan ulang (updateProduct), dan verifikasi nilai baru bertahan di DB (5.8s)
-  ok  7 [chromium] › 7. Regresi Pergantian Mode: Buat multi-tier bertingkat, beralih ke Normal lalu kembali ke Bertingkat mempertahankan semua tier secara utuh (7.5s)
-  ok  8 [chromium] › 8. Regresi Tutup Modal: Ubah konfigurasi lalu tutup modal tanpa simpan, pastikan data tersimpan sebelumnya tidak berubah (7.2s)
-  ok  9 [chromium] › 9. Regresi E2E Form Simpan & Buka Ulang: Simpan produk via formulir sebenarnya, buka kembali, dan verifikasi harga grosir tetap benar (8.4s)
-  ok 10 [chromium] › 10. Tata Letak Penomoran Otomatis: Kolom No., urutan angka 1, 2, 3, dan pembaruan nomor tanpa celah saat baris dihapus (6.1s)
-  ok 11 [chromium] › 11. Logika Auto Min. Order: Baris baru menghitung prevMax + 1 jika valid, tetap kosong jika tidak valid, dan seller dapat mengoreksi manual (6.8s)
-  ok 12 [chromium] › 12. Validasi Konflik Rentang: Penolakan rentang bertumpang tindih, peringatan konflik saat Max diubah tanpa menimpa nilai manual (7.0s)
+  ok  1 [chromium] › 1. Pengaturan Mode Normal pada Variasi 1: Validasi input, simpan modal, dan periksa indikator tabel (11.3s)
+  ok  2 [chromium] › 2. Pengaturan Mode Bertingkat pada Variasi 2 independen dari Variasi 1 tanpa nilai default tak diminta (6.3s)
+  ok  3 [chromium] › 3. Pergantian mode Normal ke Bertingkat dan sebaliknya mempertahankan data input secara aman (6.2s)
+  ok  4 [chromium] › 4. Simpan produk ke database mempertahankan konfigurasi harga grosir tiap variasi secara utuh (3.3s)
+  ok  5 [chromium] › 5. Muat ulang produk di Form Edit menghidrasi nilai harga grosir tiap variasi tanpa perubahan tak terduga (5.5s)
+  ok  6 [chromium] › 6. Edit konfigurasi harga grosir, simpan ulang (updateProduct), dan verifikasi nilai baru bertahan di DB (3.6s)
+  ok  7 [chromium] › 7. Regresi Pergantian Mode: Buat multi-tier bertingkat, beralih ke Normal lalu kembali ke Bertingkat mempertahankan semua tier secara utuh (7.0s)
+  ok  8 [chromium] › 8. Regresi Tutup Modal: Ubah konfigurasi lalu tutup modal tanpa simpan, pastikan data tersimpan sebelumnya tidak berubah (6.1s)
+  ok  9 [chromium] › 9. Regresi E2E Form Simpan & Buka Ulang: Simpan produk via formulir sebenarnya, buka kembali, dan verifikasi harga grosir tetap benar (9.4s)
+  ok 10 [chromium] › 10. Tata Letak Penomoran Otomatis: Kolom No., urutan angka 1, 2, 3, dan pembaruan nomor tanpa celah saat baris dihapus (6.7s)
+  ok 11 [chromium] › 11. Logika Auto Min. Order: Baris baru menghitung prevMax + 1 jika valid, tetap kosong jika tidak valid, dan seller dapat mengoreksi manual (5.8s)
+  ok 12 [chromium] › 12. Validasi Konflik Rentang: Penolakan rentang bertumpang tindih, peringatan konflik saat Max diubah tanpa menimpa nilai manual (7.4s)
+  ok 13 [chromium] › 13. Validasi Tier Perantara: Penolakan simpan saat tier perantara tanpa batas maksimum, preservasi input, dan simpan berhasil setelah koreksi (9.0s)
 
-  12 passed (1.6m)
+  13 passed (1.6m)
 ```
 **Exit Code:** `0`  
-**Hasil:** **12 PASS / 0 FAIL**
+**Hasil:** **13 PASS / 0 FAIL**
 
 #### B. Suite Regresi Product Rules (`tests/product-rules.spec.js`)
 Perintah: `npm run test:rules`
@@ -134,15 +135,23 @@ Perintah: `npm run test:preview`
 
 ---
 
-### 7. STATUS FILE DAN GIT
+### 7. AUDIT & PENYELESAIAN TUGAS 01F (VALIDASI TIER PERANTARA TANPA MAX ORDER)
+
+1. **Skenario Pengujian (Test 13)**:
+   - Menguji pembuatan 3 baris tier bertingkat: Tier 1 (1–10, disc 500), Tier 2 (11–kosong, disc 1000), Tier 3 (21–30, disc 1500).
+   - Memvalidasi bahwa baris ke-2 yang menjadi tier perantara tanpa `Max. Order` memicu deteksi konflik real-time (`#wholesale-tiered-conflict-msg`: *"Baris ke-2: Max. Order wajib diisi karena terdapat tingkatan setelahnya."*) serta border merah pada input Max.
+   - Menguji klik tombol **Simpan Pengaturan** saat kondisi invalid: dialog browser menolak penyimpanan, modal tetap terbuka, nilai input yang telah diketik tetap utuh (zero data loss), dan konfigurasi tidak bocor/ter-commit ke `materialsState`.
+   - Menguji koreksi input: mengisi `Max. Order = 20` pada baris ke-2. Memvalidasi peringatan visual otomatis hilang.
+   - Menyimpan ulang: memvalidasi modal berhasil ditutup dan seluruh konfigurasi 3 rentang tersimpan dengan sempurna di `materialsState` (1–10: 500, 11–20: 1000, 21–30: 1500).
+   - Membuka kembali modal dan memastikan hidrasi UI memuat ketiga tier secara presisi.
+
+---
+
+### 8. STATUS FILE DAN GIT
 
 - **File yang Diubah:**
-  - `js/db.js` (Persistensi materials dan product level)
-  - `js/product-form.js` (Scoped modal query, in-modal draft buffer, penomoran urut kolom `No.`, editable `Min. Order`, validasi rentang & deteksi konflik)
-  - `package.json` (Penambahan script `test:wholesale`)
-  - `docs/PRD_MASTER.md` (Pencatatan spesifikasi dan checklist bagian 26)
-  - `docs/qa/07-wholesale-persistence-results.md` (Dokumentasi audit dan verifikasi Tugas 01, 01B, 01D)
+  - `docs/qa/07-wholesale-persistence-results.md` (Pencatatan hasil eksekusi 13 tes dan dokumentasi Tugas 01F)
 - **File Test:**
-  - `tests/wholesale-variant.spec.js` (12 skenario automated reproduction & regression suite)
+  - `tests/wholesale-variant.spec.js` (13 skenario automated regression suite, penambahan Test 13)
 - **Status Git:** Tidak ada commit atau push ke `main` sesuai batasan mutlak.
 
