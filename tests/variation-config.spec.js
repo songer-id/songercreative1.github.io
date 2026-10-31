@@ -8,6 +8,10 @@ const {
   injectDeterministicStorage
 } = require('./fixtures/test-data');
 
+// Ambient declarations for browser globals evaluated inside page.evaluate() callbacks
+/** @type {any} */
+const { AdminApp, ProductForm, DB } = /** @type {any} */ (globalThis);
+
 test.describe('POS Songer Creative - Task 02E: Seller Variation Dependency Configuration UI', () => {
 
   /**
@@ -99,7 +103,7 @@ test.describe('POS Songer Creative - Task 02E: Seller Variation Dependency Confi
       const p = ProductForm.getPrimaryState();
       p.show_badge = false;
       p.has_custom_labels = false;
-      const toggle = document.getElementById('toggle-enable-custom-labels');
+      const toggle = /** @type {HTMLInputElement | null} */ (document.getElementById('toggle-enable-custom-labels'));
       if (toggle) toggle.checked = false;
       ProductForm.goToStep(2);
     }, product.id);
@@ -422,7 +426,7 @@ test.describe('POS Songer Creative - Task 02E: Seller Variation Dependency Confi
       const p = ProductForm.getPrimaryState();
       p.show_badge = false;
       p.has_custom_labels = false;
-      const toggle = document.getElementById('toggle-enable-custom-labels');
+      const toggle = /** @type {HTMLInputElement | null} */ (document.getElementById('toggle-enable-custom-labels'));
       if (toggle) toggle.checked = false;
       ProductForm.goToStep(2);
     }, product.id);

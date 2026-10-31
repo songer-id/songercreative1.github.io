@@ -104,6 +104,8 @@ const TEST_SETTINGS = {
  * @param {import('@playwright/test').Page} page
  * @param {Object} [options]
  * @param {boolean} [options.authenticated=true] Set true untuk langsung mengotentikasi sesi admin
+ * @param {any} [options.product] Produk uji tunggal deterministik
+ * @param {any[]} [options.products] Daftar produk uji deterministik
  */
 async function injectDeterministicStorage(page, options = { authenticated: true }) {
   await page.addInitScript(({ tenant, category, product, settings, opts }) => {

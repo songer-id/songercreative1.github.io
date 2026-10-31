@@ -499,8 +499,8 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
   - [x] **Penyempurnaan Form Produk Bagian 11: Otomatisasi Aturan Spesifik Variasi 2–4 di Pratinjau Uji Coba Mini PDP & Drawer, serta Kunci Posisi 'Dikirim Dari' Selalu Paling Bawah di Drawer Spesifikasi & PDP (`js/product-form.js`, `js/pdp.js`, `admin.html`, `docs/PRD_MASTER.md`)**:
     - **Otomatisasi Aturan Spesifik Variasi 2–4 di Pratinjau Uji Coba & Drawer (`js/product-form.js`)**:
       - Menyediakan fungsi pemetaan filter cakupan variasi `getAllowedVariationOptions(matId, tierKey)` dan sinkronisasi `validateAndAdjustSpecificVariations()`.
-      - Saat Variasi 1 (`Tier 1`) dipilih di kartu Mini PDP maupun di dalam Drawer Checkout (baik mode Chip tombol, Accordion, maupun Shadcn Popover Dropdown), opsi pada Variasi 2, 3, dan 4 yang tidak diizinkan oleh aturan spesifik Variasi 1 otomatis dinonaktifkan (`disabled`, `opacity-40 line-through cursor-not-allowed pointer-events-none`).
-      - Jika opsi yang sebelumnya sedang terpilih pada Variasi 2, 3, atau 4 tidak lagi valid setelah pengguna mengganti pilihan Variasi 1, sistem secara pintar dan reaktif mereset/menggeser pilihan ke opsi pertama yang diizinkan (atau `null` jika tidak ada opsi yang valid).
+      - Saat Variasi 1 (`Tier 1`) dipilih di kartu Mini PDP maupun di dalam Drawer Checkout (baik mode Chip tombol, Accordion, maupun Shadcn Popover Dropdown), opsi pada Variasi 2, 3, dan 4 yang tidak diizinkan oleh aturan spesifik otomatis disembunyikan (`hidden`), bukan sekadar dicoret atau dinonaktifkan (diperbarui pada SC-ADMIN-TRIAL-VARIATIONS-01).
+      - Jika opsi yang sebelumnya sedang terpilih pada Variasi 2, 3, atau 4 tidak lagi valid setelah pengguna mengganti pilihan induk, sistem mengosongkan pilihan menjadi `null` tanpa pemilihan otomatis pengganti, serta menyembunyikan grup variasi jika seluruh induk telah terpecahkan namun tidak ada opsi yang tersedia (diperbarui pada SC-ADMIN-TRIAL-VARIATIONS-01).
       - Mengimplementasikan `resolveActiveCombinationRule()` untuk memecahkan aturan minimal pesanan (`min_order`), batas maksimal pesanan (`max_order`), kelipatan pesanan (`order_multiple`), dan tingkatan harga grosir (`wholesale_tiers`) berdasarkan kombinasi varian yang sedang aktif terpilih.
       - Menghubungkan perhitungan harga grosir dinamis di `updateShopeeDrawerLivePricing()` dengan indikator banner diskon grosir di drawer dan memperbarui status enabled/disabled tombol kuantitas `[-]` dan `[+]` via `updateDrawerQtyButtonsState()`.
     - **Penerapan Otomatisasi Variasi Spesifik pada Halaman Detail Produk Pembeli (`js/pdp.js`)**:
@@ -510,6 +510,72 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - `otherRows` dipotong maksimal 9 baris teratas (`otherRows.slice(0, 9)`), kemudian baris `Dikirim Dari` ditambahkan sebagai elemen penutup paling akhir (`finalRows.push({ label: 'Dikirim Dari', ... })`).
       - Menjamin 100% posisi `Dikirim Dari` selalu berada di urutan paling bawah (tepat di atas tombol CTA "Oke") dengan total baris tetap terkunci antara 5 hingga 10 baris.
     - **Cache Version Bump**: Menaikkan cache query string di `admin.html` menjadi `?v=8.1`.
+  - [x] **Penyempurnaan Detail Produk Uji Coba Admin & Judul Dinamis Modal Ketersediaan Opsi (Task SC-ADMIN-TRIAL-VARIATIONS-01) (`js/product-form.js`, `js/variation-engine.js`, `docs/PRD_MASTER.md`)**:
+    - **Penyelarasan Ketersediaan & Pemilihan Variasi pada Mode Uji Coba Admin**:
+      - Mengacu pada konfigurasi `variation_dependencies` (V2 DAG) dan fallback warisan (`variation_scopes`) sebagai sumber kebenaran tunggal.
+      - **Menyembunyikan Opsi Spesifik yang Tidak Tersedia**: Opsi variasi spesifik yang tidak memenuhi syarat pemicu (trigger) disembunyikan sepenuhnya (`hidden`), bukan sekadar dicoret (`line-through`) atau dinonaktifkan, di seluruh mode tampilan: Chip tombol, Accordion, dan Dropdown Popover Shadcn, baik pada kontainer pratinjau desktop (`#desktop-preview-sidebar`) maupun mobile sheet (`#mobile-preview-sheet`).
+      - **Rekonsiliasi Pemilihan Turunan Tanpa Penggantian Otomatis**: Saat opsi induk diubah atau dikosongkan, seluruh opsi turunan yang tidak lagi valid dikosongkan menjadi `null` tanpa memilih opsi pengganti secara otomatis. Opsi umum/independen yang masih valid tetap dipertahankan.
+      - **Penyembunyian Grup Variasi Kosong Terpecahkan (Resolved Absence)**: Jika seluruh pilihan induk telah dipilih namun tidak ada satu pun opsi yang tersedia pada variasi turunan (`allowedIds.length === 0`), kelompok variasi tersebut disembunyikan dan dianggap terpenuhi (satisfied) sehingga tidak memblokir validasi checkout, sembari membedakannya secara tegas dari kondisi induk yang belum dipilih (pending parent).
+      - **Proteksi Event Listener & Keterangan Dinamis**: Opsi yang tersembunyi tidak dapat mengubah state melalui event klik, teks ringkasan akordeon/select segera sinkron, dan ringkasan keterangan opsi (`#drawer-selected-options-descriptions`) diperbarui reaktif tanpa menyisakan teks basi.
+    - **Judul Dinamis Modal Ketersediaan Opsi (`#modal-option-dependency`)**:
+      - Menampilkan format judul presisi: `Tipe Ketersediaan Opsi: [Nama Opsi] ([Judul Label Variasi])` (contoh: `Tipe Ketersediaan Opsi: CCC (Finishing)`).
+      - Menyelesaikan nama opsi dan label variasi target secara dinamis dari input terkini seller (termasuk input unsaved) dengan fallback nomor variasi resmi.
+    - **Revisi R1 (SC-ADMIN-TRIAL-VARIATIONS-01-R1)**:
+      - **Pembatasan Mesin Bersama (Scoped Engine)**: Perilaku *grup kosong terpecahkan dianggap terpenuhi* (`isEmptyResolved`) dibatasi secara ketat hanya untuk pemanggil Admin eksplisit via opsi `{ context: 'admin' }` (atau `scope: 'admin'`). Pemanggil default/tanpa parameter (seperti `js/pdp.js` pada halaman pembeli dan unit test) tetap mempertahankan kontrak mesin bersama aslinya: kelompok variasi yang kosong tanpa aturan lewati (`isSkipped`) tetap dianggap belum lengkap (`isComplete: false`, tercatat dalam `missingTiers`, berstatus `unselected`).
+      - **Ketepatan Kontrak Aturan Lewati (`skip_rules`)**: Menghapus properti fallback artefak pengujian (`trigger_id` / `trigger_option_id`) dari `isTierSkipped()` pada `js/variation-engine.js`. Kontrak aturan lewati dikembalikan murni mengevaluasi `rule.trigger_ids` bertipe array sesuai skema produksi pada `js/product-form.js`.
+      - **Integritas Pekerjaan Sebelumnya**: Penyelarasan file sebelumnya dijelaskan secara transparan perihal ketiadaan baseline working buffer uncommitted independen di luar commit `25c0bc2`, tanpa spekulasi atau rekonstruksi liar.
+    - *Catatan Verifikasi*: Logika runtime dan event/render telah diverifikasi lulus 16/16 pengujian Node.js serta pengujian unit verifikasi R1. Verifikasi visual tampilan/interaksi langsung di browser dicatat sebagai agenda verifikasi manual oleh pemilik proyek.
+  - [x] **Penyempurnaan UI Pengaturan Opsi dan Max. Order (`js/product-form.js`, `docs/PRD_MASTER.md`)**:
+    - **Perapian Modal Ketersediaan Opsi (`#modal-option-dependency`)**:
+      - Mempertahankan format judul presisi: `Tipe Ketersediaan Opsi: [Nama Opsi] ([Judul Label Variasi])` dengan dukungan *wrap* judul panjang (`break-words`) dan tombol tutup tetap stabil (`shrink-0`).
+      - Menyederhanakan kontrol Umum/Spesifik menjadi satu kontrol terpadu sejajar yang ringkas dengan status visual terpilih yang tegas (indikator dot dan kontras warna tema).
+      - Mengganti dua paragraf sejajar berulang dengan satu keterangan singkat dinamis (`#dep-mode-desc`) yang reaktif mengikuti mode aktif.
+      - Pada mode Spesifik, menerapkan susunan hierarki vertikal yang bersih: Variasi Induk $\rightarrow$ Pilihan Pemicu $\rightarrow$ Daftar Opsi.
+      - Merapikan daftar opsi pemicu menjadi satu wadah terpadu dengan pemisah garis tipis (`divide-y divide-slate-100`) tanpa kotak ber-border ganda yang bertumpuk.
+      - Menjaga area isi tetap dapat digulir mandiri (`overflow-y-auto`) dengan header dan tombol aksi footer (Batal / Simpan) yang selalu terlihat.
+    - **Peniadaan Panel Aturan Lewati Variasi Berikutnya dari Antarmuka Admin**:
+      - Menghilangkan panel accordion "Aturan Lewati Variasi Berikutnya" (`renderSkipRulesSectionMarkup` mengembalikan string kosong) dari render form Admin tanpa menambahkan komponen pengganti.
+      - Menjamin seluruh data aturan lewati yang telah tersimpan pada `variation_dependencies.skip_rules`, kompatibilitas evaluasi di mesin variasi runtime (`VariationEngine.isTierSkipped`), dan alur penyimpanan produk tetap utuh 100%.
+    - **Indikator Warna Gerigi Pengaturan Ketersediaan Opsi**:
+      - Menetapkan warna gerigi pengaturan opsi variasi sesuai status konfigurasi aktual:
+        - **Umum**: Menggunakan warna teks netral (`text-slate-500 hover:text-slate-700`).
+        - **Spesifik**: Menggunakan warna aksen tema aktif (`text-[var(--color-primary)]`).
+        - **Opsi Belum Lengkap**: Tetap nonaktif (`disabled`, `opacity-35 cursor-not-allowed pointer-events-none text-slate-400`).
+      - Menyematkan `aria-label` dan tooltip `title` eksplisit (`"Ketersediaan opsi: Umum"` atau `"Ketersediaan opsi: Spesifik"`).
+      - Status diperbarui secara reaktif setelah modal disimpan, form dirender ulang, atau saat membuka data produk untuk diedit, tanpa mengubah status jika seller menekan Batal.
+      - Gerigi dan kontrol kolom matriks kombinasi Variasi 2–4 tetap dipertahankan murni tanpa dialihfungsikan.
+    - **Penyempurnaan Input Max. Order pada List Variasi Produk**:
+      - Mengubah tipe elemen `.combo-max-order-input` menjadi `type="number"` dengan `step="1"` dan `min="1"`.
+      - Mempertahankan saran "Tanpa Batas" melalui popover kustom tanpa bergantung pada datalist teks.
+      - Saat saran dipilih, `value` input numerik tetap string kosong (`""`) dan `placeholder` menjadi `"Tanpa Batas"`, sedangkan state menyimpan representasi tanpa batas yang sah (`mat.max_order = null` dan `mat.is_unlimited_max_order = true`). Nilai non-numerik tidak pernah dimasukkan ke dalam `value` input number.
+      - Saat angka dimasukkan, input menampilkan angka dan menyimpan nilai integer positif ke state melalui alur yang ada.
+      - Placeholder `"Input/Pilih"` dipertahankan untuk kondisi awal baris variasi yang belum ditentukan nilainya.
+      - Sinkronisasi event input, change, blur, re-render matriks kombinasi, dan validasi form diintegrasikan secara selaras tanpa saling menimpa.
+    - *Catatan Verifikasi*: Seluruh verifikasi logika unit testing telah lulus 100% via Node.js CLI (verifikasi modal, peniadaan panel, persistensi data skip_rules, warna gerigi, dan siklus hidup Max. Order). Verifikasi visual langsung pada browser menjadi agenda pemeriksaan oleh pemilik proyek.
+  - [x] **Alih Fungsi Kolom Matriks Variasi 2–4 Menjadi Ringkasan Ketersediaan & Pembenahan Diagnostik Editor (`js/product-form.js`, `tests/variation-config.spec.js`, `tests/fixtures/test-data.js`, `docs/PRD_MASTER.md`)**:
+    - **Alih Fungsi Kolom Variasi 2–4 pada List Variasi Produk (`js/product-form.js`)**:
+      - Mengganti kontrol interaktif lama "Pilih/Umum/Spesifik" dan tombol gerigi/pensil pada sel matriks kombinasi menjadi ringkasan ketersediaan opsi hanya baca (*read-only*).
+      - Menjaga label dan kolom variasi seller tetap utuh dengan tata letak sel rata kiri (*left-aligned*), sejajar vertikal, tanpa kotak input, border dekoratif, maupun ikon pengaturan. Teks nama opsi panjang dipotong rapi menggunakan `truncate` (CSS ellipsis) tanpa merusak lebar kolom tabel.
+      - Menerapkan format ringkasan yang disetujui:
+        - `"Semua opsi"`: seluruh opsi pada variasi terkait berlaku tanpa syarat pilihan lanjutan.
+        - `"[Opsi 1], [Opsi 2] +N"` (contoh: `"Kis, Die +1"`): menampilkan maksimal dua nama opsi yang berlaku; badge `+N` (diformat dengan `text-[var(--color-primary)] font-semibold`) menunjukkan jumlah opsi berlaku lainnya.
+        - `"Sesuai [Label Induk]"` (atau `"Sesuai [Label Induk] +N"` jika bergantung pada lebih dari 1 variasi induk): ketersediaan masih bergantung pada pilihan variasi lain sebelumnya.
+        - `"—"`: benar-benar tidak ada opsi yang berlaku untuk baris Variasi 1 tersebut (bukan karena pilihan induk lanjutan belum ditentukan).
+      - Menghitung ketersediaan per baris secara deterministik hanya berdasarkan ID opsi Variasi 1 (`mat.id`) pada baris terkait melalui konfigurasi `variation_dependencies` (dan fallback migrasi warisan) tanpa mengambil contoh pilihan dari `previewTestState` atau memilihkan opsi turunan secara otomatis.
+      - **Popover Ringkas Hanya-Baca**: Interaksi klik, sentuh, atau keyboard (Enter / Space) pada sel ringkasan membuka popover melayang (*fixed singleton*, tidak terpotong oleh overflow scroll kontainer tabel) yang menampilkan daftar lengkap opsi berlaku, opsi tidak berlaku, serta rincian pemicu induk secara terstruktur tanpa ada kontrol pengubah di dalamnya. Popover ditutup secara mulus via klik di luar area (*outside click*) atau tombol `Escape`.
+      - **Pembaruan Reaktif**: Ringkasan diperbarui secara otomatis saat pengaturan dependensi opsi disimpan, nama opsi atau label variasi berubah, opsi ditambah atau dihapus, maupun saat data produk dimuat ulang untuk diedit.
+      - **Penyelarasan Validasi Simpan & Uji Coba**: Melepas binding kontrol lama (`.btn-open-scope-modal`) dan menghapus aturan validasi warisan yang sebelumnya mewajibkan pengisian langsung pada sel matriks variasi 2–4, sementara validasi DAG dependensi opsi riil tetap terjaga kokoh.
+    - **Pembenahan Diagnostik Editor pada `tests/variation-config.spec.js`**:
+      - Mengidentifikasi akar penyebab 18 diagnostik TypeScript / JSDoc:
+        1. Properti `product` dan `products` belum tercantum dalam JSDoc `@param [options]` fungsi `injectDeterministicStorage` di `tests/fixtures/test-data.js` (`TS2353`).
+        2. Penggunaan global peramban klien (`AdminApp`, `ProductForm`, `DB`) di dalam callback `page.evaluate()` belum terdefinisi dalam cakupan tipe pengujian Node.js (`TS2304`).
+        3. Properti `checked` pada elemen hasil `document.getElementById('toggle-enable-custom-labels')` yang terinferensi sebagai `HTMLElement` bukan `HTMLInputElement` (`TS2339`).
+      - Menyelesaikan penyebab akar secara bersih tanpa menghapus pengujian, tanpa `@ts-nocheck`, dan tanpa menambahkan `.skip` / `.only`:
+        - Menambahkan definisi JSDoc `@param {any} [options.product]` dan `@param {any[]} [options.products]` pada `tests/fixtures/test-data.js`.
+        - Menambahkan deklarasi ambient global peramban yang dievaluasi di `page.evaluate` pada `tests/variation-config.spec.js`.
+        - Menambahkan type cast `/** @type {HTMLInputElement | null} */` pada pemanggilan `document.getElementById('toggle-enable-custom-labels')`.
+      - Menjalankan pemeriksaan kompilator TypeScript IDE Antigravity: Diagnostik pada `tests/variation-config.spec.js` tuntas 100% (0 error).
+    - *Catatan Verifikasi*: Logika ketersediaan matriks diverifikasi lulus 7/7 skenario unit test berbasis Node.js CLI tanpa kegagalan. Seluruh file lulus verifikasi sintaks `node --check`.
   - [x] **Otomatisasi Global Cache Busting & Meta Tag No-Cache di Seluruh File HTML (`bump-version.js`, `admin.html`, `index.html`, `product.html`, `settings.html`, `theme-editor.html`, `superadmin/superadmin.html`, `docs/PRD_MASTER.md`)**:
     - **Script Automator `bump-version.js` di Root Proyek**:
       - Mengambil waktu lokal WIB (UTC+7) dengan format timestamp ringkas `YYYYMMDDHHmm` (atau argumen versi custom).

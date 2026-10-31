@@ -190,7 +190,9 @@
         allowedIds: [],
         allOptionIds: allOptionIds,
         isSpecific: true,
-        mode: 'skipped'
+        mode: 'skipped',
+        isEmptyResolved: false,
+        isPendingParent: false
       };
     }
 
@@ -200,6 +202,7 @@
     if (deps && deps.version === 2 && deps.options && typeof deps.options === 'object') {
       let hasV2Specific = false;
       const filteredV2 = [];
+      const relevantParentTiers = new Set();
 
       for (const opt of allTierOptions) {
         const rule = deps.options[opt.id];
@@ -210,6 +213,7 @@
         } else if (rule.mode === 'specific') {
           hasV2Specific = true;
           const parentTier = normalizeTierKey(rule.parent_tier);
+          if (parentTier) relevantParentTiers.add(parentTier);
           const activeParentId = selections[parentTier];
 
           // If parent is selected and matches any listed trigger ID:
@@ -220,18 +224,47 @@
         }
       }
 
+      let isEmptyResolved = false;
+      let isPendingParent = false;
+
+      if (filteredV2.length === 0) {
+        if (allTierOptions.length === 0) {
+          isEmptyResolved = true;
+        } else if (hasV2Specific && relevantParentTiers.size > 0) {
+          let allParentsResolved = true;
+          for (const pTier of relevantParentTiers) {
+            const pSel = selections[pTier];
+            const pSkipped = isTierSkipped(product, pTier, selections);
+            if (!pSel && !pSkipped) {
+              allParentsResolved = false;
+              break;
+            }
+          }
+          if (allParentsResolved) {
+            isEmptyResolved = true;
+          } else {
+            isPendingParent = true;
+          }
+        }
+      }
+
       return {
         isSkipped: false,
         allowedIds: filteredV2,
         allOptionIds: allOptionIds,
         isSpecific: hasV2Specific,
-        mode: hasV2Specific ? 'specific' : 'general'
+        mode: hasV2Specific ? 'specific' : 'general',
+        isEmptyResolved: isEmptyResolved,
+        isPendingParent: isPendingParent
       };
     }
 
     // 3. PRECEDENCE LAYER 2: Fallback to Legacy specific_options_map & variation_scopes
     const activeV1Id = selections.tier1;
-    if (activeV1Id) {
+    const v1Skipped = isTierSkipped(product, 'tier1', selections);
+    const isV1Resolved = Boolean(activeV1Id || v1Skipped);
+
+    if (activeV1Id || !isV1Resolved) {
       const mat = (product?.materials || []).find(m => m && m.id === activeV1Id);
       const legacyScope = (mat && mat.variation_scopes && mat.variation_scopes[normTier]) ||
                           (product?.variation_scopes_by_variant && product.variation_scopes_by_variant[activeV1Id] && product.variation_scopes_by_variant[activeV1Id][normTier]) ||
@@ -243,12 +276,17 @@
         const rawAllowed = mapForMat ? (mapForMat[normTier] || mapForMat[tierKey]) : null;
         const legacyAllowed = Array.isArray(rawAllowed) ? rawAllowed.filter(id => allOptionIds.includes(id)) : [];
 
+        const isEmpty = isV1Resolved && legacyAllowed.length === 0;
+        const isPending = !isV1Resolved;
+
         return {
           isSkipped: false,
           allowedIds: legacyAllowed,
           allOptionIds: allOptionIds,
           isSpecific: true,
-          mode: 'specific'
+          mode: 'specific',
+          isEmptyResolved: isEmpty,
+          isPendingParent: isPending
         };
       }
     }
@@ -259,7 +297,9 @@
       allowedIds: allOptionIds,
       allOptionIds: allOptionIds,
       isSpecific: false,
-      mode: 'general'
+      mode: 'general',
+      isEmptyResolved: allOptionIds.length === 0,
+      isPendingParent: false
     };
   }
 
@@ -277,6 +317,7 @@
    * @param {Object} product
    * @param {Record<string, string | null>} currentSelections
    * @param {string} changedTierKey - The tier that was modified ('tier1', 'main', etc.)
+   * @param {Object} [options] - Optional execution options (e.g. { context: 'admin' })
    * @returns {{
    *   selections: Record<string, string | null>,
    *   clearedTiers: string[],
@@ -285,7 +326,7 @@
    *   isComplete: boolean
    * }}
    */
-  function validateAndAdjustSelections(product, currentSelections, changedTierKey) {
+  function validateAndAdjustSelections(product, currentSelections, changedTierKey, options = {}) {
     const nextSelections = Object.assign({}, currentSelections || {});
     const clearedTiers = [];
     const skippedTiers = [];
@@ -323,13 +364,17 @@
       }
     }
 
+    const allowResolvedEmpty = Boolean(options && (options.context === 'admin' || options.scope === 'admin' || options.allowResolvedEmpty));
+
     // Determine completion status: all active tiers must be validly selected or skipped
+    // In explicit admin context, resolved empty tiers (all parents resolved, 0 options matching) are satisfied
     let isComplete = true;
     for (const tier of CANONICAL_TIERS) {
       if (!isTierActive(product, tier)) continue;
 
       const res = resolveEffectiveAllowedOptions(product, tier, nextSelections);
       if (res.isSkipped) continue; // Skipped tier is satisfied
+      if (allowResolvedEmpty && res.isEmptyResolved) continue; // In explicit admin context, resolved empty tier is satisfied
 
       const val = nextSelections[tier];
       if (!val || !res.allowedIds.includes(val)) {
@@ -359,6 +404,7 @@
    * 
    * @param {Object} product
    * @param {Record<string, string | null>} currentSelections
+   * @param {Object} [options] - Optional execution options (e.g. { context: 'admin' })
    * @returns {{
    *   isValid: boolean,
    *   isComplete: boolean,
@@ -381,10 +427,12 @@
    *   totalOptionCost: number
    * }}
    */
-  function getValidatedPricingSnapshot(product, currentSelections) {
+  function getValidatedPricingSnapshot(product, currentSelections, options = {}) {
     const rawSelections = currentSelections || {};
-    const adjusted = validateAndAdjustSelections(product, rawSelections, 'tier1');
+    const adjusted = validateAndAdjustSelections(product, rawSelections, 'tier1', options);
     const validSelections = adjusted.selections;
+
+    const allowResolvedEmpty = Boolean(options && (options.context === 'admin' || options.scope === 'admin' || options.allowResolvedEmpty));
 
     const tierStatus = {};
     const missingTiers = [];
@@ -412,6 +460,17 @@
         skippedTiers.push(tier);
         tierStatus[tier] = {
           status: 'skipped',
+          optionId: null,
+          optionName: null,
+          price: 0,
+          cost_price: 0
+        };
+        continue;
+      }
+
+      if (allowResolvedEmpty && res.isEmptyResolved) {
+        tierStatus[tier] = {
+          status: 'empty',
           optionId: null,
           optionName: null,
           price: 0,
