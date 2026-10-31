@@ -535,7 +535,7 @@ test.describe('POS Songer Creative - Task 02E: Seller Variation Dependency Confi
     const pWithV2 = { ...legacyProduct, variation_dependencies: converted };
     const bontaxRes = VariationEngine.resolveEffectiveAllowedOptions(pWithV2, 'main', { tier1: 'mat_bontax' });
     expect(bontaxRes.allowedIds).toEqual(['fin_potong_biasa']);
-    expect(bontaxRes.allowedIds.includes('fin_kisscut')).toBe(false);
+    expect(bontaxRes.allowedIds.indexOf('fin_kisscut')).toBe(-1);
 
     const vinylRes = VariationEngine.resolveEffectiveAllowedOptions(pWithV2, 'main', { tier1: 'mat_vinyl' });
     expect(vinylRes.allowedIds).toEqual(['fin_potong_biasa', 'fin_kisscut']);
