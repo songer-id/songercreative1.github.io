@@ -1386,6 +1386,7 @@ const ProductForm = (() => {
       wholesale_tiers: [],
       wholesale_mode_by_variant: {},
       wholesale_by_variant: {},
+      wholesale_enabled_by_variant: {},
       has_order_multiple: false,
       order_multiple_type: 'all',
       order_multiple_value: 1,
@@ -1480,6 +1481,7 @@ const ProductForm = (() => {
       wholesale_mode: 'normal',
       wholesale_mode_by_variant: {},
       wholesale_by_variant: {},
+      wholesale_enabled_by_variant: {},
       same_price_tiers: { tier1: false, main: false, extra_1: false, extra_2: false, extra_3: false },
       same_cost_tiers: { tier1: false, main: false, extra_1: false, extra_2: false, extra_3: false },
       stock_mode_tiers: { tier1: '', main: '', extra_1: '', extra_2: '', extra_3: '' },
@@ -1821,6 +1823,7 @@ const ProductForm = (() => {
       wholesale_tiers: Array.isArray(prod.wholesale_tiers) ? JSON.parse(JSON.stringify(prod.wholesale_tiers)) : [],
       wholesale_mode_by_variant: prod.wholesale_mode_by_variant ? JSON.parse(JSON.stringify(prod.wholesale_mode_by_variant)) : {},
       wholesale_by_variant: prod.wholesale_by_variant ? JSON.parse(JSON.stringify(prod.wholesale_by_variant)) : {},
+      wholesale_enabled_by_variant: prod.wholesale_enabled_by_variant ? JSON.parse(JSON.stringify(prod.wholesale_enabled_by_variant)) : {},
       has_order_multiple: prod.has_order_multiple !== undefined ? Boolean(prod.has_order_multiple) : Boolean(prod.order_multiple_value > 1 || prod.step_quantity > 1),
       order_multiple_type: prod.order_multiple_type || 'all',
       order_multiple_value: prod.order_multiple_value || prod.step_quantity || 1,
@@ -1920,6 +1923,19 @@ const ProductForm = (() => {
     if (Array.isArray(materialsState)) {
       materialsState.forEach(m => {
         if (m && m.id) {
+          if (primaryState.wholesale_enabled_by_variant && primaryState.wholesale_enabled_by_variant[m.id] !== undefined) {
+            m.is_wholesale_enabled = Boolean(primaryState.wholesale_enabled_by_variant[m.id]);
+          } else if (m.is_wholesale_enabled !== undefined) {
+            m.is_wholesale_enabled = Boolean(m.is_wholesale_enabled);
+            primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+            primaryState.wholesale_enabled_by_variant[m.id] = m.is_wholesale_enabled;
+          } else if (m.wholesale_mode && Array.isArray(m.wholesale_tiers) && m.wholesale_tiers.length > 0) {
+            m.is_wholesale_enabled = true;
+            primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+            primaryState.wholesale_enabled_by_variant[m.id] = true;
+          } else {
+            m.is_wholesale_enabled = false;
+          }
           if (m.wholesale_mode && !primaryState.wholesale_mode_by_variant[m.id]) {
             primaryState.wholesale_mode_by_variant[m.id] = m.wholesale_mode;
           } else if (primaryState.wholesale_mode_by_variant[m.id] && !m.wholesale_mode) {
@@ -3775,7 +3791,7 @@ const ProductForm = (() => {
           // Kolom Variasi 2-4 pada List Variasi Produk kini merupakan ringkasan ketersediaan hanya-baca.
 
           // 4. Validasi Harga Grosir (Jika Header Aktif)
-          if (primaryState.has_wholesale) {
+          if (primaryState.has_wholesale && isMatWholesaleActive(mat)) {
             const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]);
             const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
             const isWValid = (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) ||
@@ -3931,11 +3947,35 @@ const ProductForm = (() => {
     return true;
   }
 
+  function isMatWholesaleActive(mat) {
+    if (!mat) return false;
+    if (!primaryState.has_wholesale) return false;
+    const matId = mat.id;
+    if (mat.is_wholesale_enabled !== undefined) {
+      return Boolean(mat.is_wholesale_enabled);
+    }
+    if (primaryState.wholesale_enabled_by_variant && primaryState.wholesale_enabled_by_variant[matId] !== undefined) {
+      return Boolean(primaryState.wholesale_enabled_by_variant[matId]);
+    }
+    const mode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]);
+    const tiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[matId]);
+    if (mode && Array.isArray(tiers) && tiers.length > 0) {
+      return true;
+    }
+    return false;
+  }
+
   function getPreviewWholesaleDiscount(qty, unitPrice, customTiers = null) {
     if (!primaryState.has_wholesale) return { hasDiscount: false, discountPerPcs: 0, bannerText: '' };
-    const rawTiers = (Array.isArray(customTiers) && customTiers.length > 0)
-      ? customTiers
-      : (Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : []);
+    let rawTiers = [];
+    if (Array.isArray(customTiers)) {
+      rawTiers = customTiers;
+    } else if (primaryState.has_variants) {
+      const activeRule = (typeof resolveActiveCombinationRule === 'function') ? resolveActiveCombinationRule() : null;
+      rawTiers = (activeRule && activeRule.has_wholesale && Array.isArray(activeRule.wholesale_tiers)) ? activeRule.wholesale_tiers : [];
+    } else {
+      rawTiers = Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : [];
+    }
     const validTiers = rawTiers
       .map(t => ({
         min_qty: parseInt(t.min_qty) || 0,
@@ -4854,13 +4894,14 @@ const ProductForm = (() => {
           return specB - specA;
         });
         const best = matches[0];
+        const isRowWholesaleActive = selectedMat ? isMatWholesaleActive(selectedMat) : Boolean(primaryState.has_wholesale);
         return {
           mat: selectedMat,
           min_order: Math.max(1, parseInt(best.min_order) || parseInt(selectedMat?.min_order) || parseInt(primaryState.min_order) || 1),
           max_order: best.max_order !== undefined ? (best.max_order === 'Tanpa Batas' || best.max_order === 'Unlimited' ? Infinity : parseInt(best.max_order) || Infinity) : (selectedMat?.max_order ? parseInt(selectedMat.max_order) : Infinity),
           order_multiple: Math.max(1, parseInt(best.order_multiple) || (primaryState.has_order_multiple ? (primaryState.order_multiples_by_variant?.[t1Id] || parseInt(primaryState.order_multiple_value) || 1) : 1)),
-          wholesale_tiers: (Array.isArray(best.wholesale_tiers) && best.wholesale_tiers.length > 0) ? best.wholesale_tiers : (primaryState.wholesale_by_variant?.[t1Id] || primaryState.wholesale_tiers || []),
-          has_wholesale: best.has_wholesale !== undefined ? Boolean(best.has_wholesale) : Boolean(primaryState.has_wholesale),
+          wholesale_tiers: isRowWholesaleActive ? ((Array.isArray(best.wholesale_tiers) && best.wholesale_tiers.length > 0) ? best.wholesale_tiers : (primaryState.wholesale_by_variant?.[t1Id] || primaryState.wholesale_tiers || [])) : [],
+          has_wholesale: Boolean(primaryState.has_wholesale && isRowWholesaleActive && (best.has_wholesale !== undefined ? best.has_wholesale : true)),
           isAllowed: best.is_active !== false
         };
       }
@@ -4912,16 +4953,17 @@ const ProductForm = (() => {
     }
     if (orderMultiple < 1) orderMultiple = 1;
 
-    const wholesaleTiers = (primaryState.wholesale_by_variant && t1Id && primaryState.wholesale_by_variant[t1Id])
+    const isRowWholesaleActive = selectedMat ? isMatWholesaleActive(selectedMat) : Boolean(primaryState.has_wholesale);
+    const wholesaleTiers = (isRowWholesaleActive && primaryState.wholesale_by_variant && t1Id && primaryState.wholesale_by_variant[t1Id])
       ? primaryState.wholesale_by_variant[t1Id]
-      : (primaryState.wholesale_tiers || []);
+      : (isRowWholesaleActive && selectedMat && Array.isArray(selectedMat.wholesale_tiers) ? selectedMat.wholesale_tiers : (isRowWholesaleActive && !primaryState.has_variants ? (primaryState.wholesale_tiers || []) : []));
 
     return {
       mat: selectedMat,
       min_order: minOrder,
       max_order: maxOrder,
       order_multiple: orderMultiple,
-      has_wholesale: Boolean(primaryState.has_wholesale),
+      has_wholesale: Boolean(primaryState.has_wholesale && isRowWholesaleActive),
       wholesale_tiers: wholesaleTiers,
       isAllowed: true
     };
@@ -7355,7 +7397,7 @@ const ProductForm = (() => {
                   unitPriceAfterDiscount = Math.round(effUnitPrice * 0.5);
                 }
               }
-              const wsInfo = getPreviewWholesaleDiscount(curQ, unitPriceAfterDiscount);
+              const wsInfo = getPreviewWholesaleDiscount(curQ, unitPriceAfterDiscount, currentRule?.wholesale_tiers);
               let finalUnitPrice = unitPriceAfterDiscount;
               if (wsInfo.hasDiscount) {
                 finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wsInfo.discountPerPcs);
@@ -9002,14 +9044,10 @@ const ProductForm = (() => {
 
   function applyDepCardVisualState(cardEl, isSelected) {
     if (!cardEl) return;
-    const dot = cardEl.querySelector('.dep-mode-dot');
-
     if (isSelected) {
-      cardEl.className = 'dep-mode-card w-full py-2 px-3 text-xs font-bold rounded-md text-center transition flex items-center justify-center gap-1.5 cursor-pointer select-none bg-[var(--color-primary)] text-white shadow-xs border-0 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]';
-      if (dot) dot.textContent = '●';
+      cardEl.className = 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition';
     } else {
-      cardEl.className = 'dep-mode-card w-full py-2 px-3 text-xs font-semibold rounded-md text-center transition flex items-center justify-center gap-1.5 cursor-pointer select-none text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]';
-      if (dot) dot.textContent = '○';
+      cardEl.className = 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
     }
   }
 
@@ -9191,35 +9229,26 @@ const ProductForm = (() => {
           </div>
 
           <div class="flex-1 overflow-y-auto space-y-4 pr-1 my-1">
-            <input type="radio" name="dep_modal_mode" value="general" class="sr-only" />
-            <input type="radio" name="dep_modal_mode" value="specific" class="sr-only" />
-
             <!-- Pilihan Tipe Ketersediaan (Umum / Spesifik) -->
             <div class="space-y-2">
-              <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-lg">
+              <div class="grid grid-cols-2 gap-2 text-xs">
                 <!-- Pilihan 1: UMUM -->
-                <button
-                  type="button"
+                <label
                   id="lbl-dep-mode-umum"
-                  class="dep-mode-card w-full py-2 px-3 text-xs font-semibold rounded-md text-center transition flex items-center justify-center gap-1.5 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                  role="button"
-                  tabindex="0"
+                  class="p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition"
                 >
+                  <input type="radio" name="dep_modal_mode" value="general" class="accent-[var(--color-primary)] cursor-pointer" />
                   <span>Umum</span>
-                  <span class="dep-mode-dot text-sm leading-none">○</span>
-                </button>
+                </label>
 
                 <!-- Pilihan 2: SPESIFIK -->
-                <button
-                  type="button"
+                <label
                   id="lbl-dep-mode-spesifik"
-                  class="dep-mode-card w-full py-2 px-3 text-xs font-semibold rounded-md text-center transition flex items-center justify-center gap-1.5 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                  role="button"
-                  tabindex="0"
+                  class="p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition"
                 >
+                  <input type="radio" name="dep_modal_mode" value="specific" class="accent-[var(--color-primary)] cursor-pointer" />
                   <span>Spesifik</span>
-                  <span class="dep-mode-dot text-sm leading-none">○</span>
-                </button>
+                </label>
               </div>
 
               <!-- Satu Keterangan Singkat Sesuai Mode Aktif -->
@@ -9375,7 +9404,8 @@ const ProductForm = (() => {
     const cardUmum = document.getElementById('lbl-dep-mode-umum');
     const cardSpesifik = document.getElementById('lbl-dep-mode-spesifik');
     if (cardUmum) {
-      cardUmum.onclick = () => {
+      cardUmum.onclick = (e) => {
+        if (e.target && e.target.tagName === 'INPUT') return;
         setDepModalMode('general');
       };
       cardUmum.onkeydown = (e) => {
@@ -9386,7 +9416,8 @@ const ProductForm = (() => {
       };
     }
     if (cardSpesifik) {
-      cardSpesifik.onclick = () => {
+      cardSpesifik.onclick = (e) => {
+        if (e.target && e.target.tagName === 'INPUT') return;
         setDepModalMode('specific');
       };
       cardSpesifik.onkeydown = (e) => {
@@ -15257,6 +15288,7 @@ const ProductForm = (() => {
           return `<div class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-400 text-xs font-normal text-center select-none pointer-events-none">Nonaktif</div>`;
         }
 
+        const isEnabled = isMatWholesaleActive(mat);
         const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]) || null;
         const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
 
@@ -15264,14 +15296,16 @@ const ProductForm = (() => {
         let displayLabel = 'Pilih';
         let iconClass = 'bi bi-gear-fill';
 
-        if (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) {
-          isValid = true;
-          displayLabel = 'Normal';
-          iconClass = 'bi bi-pencil-square';
-        } else if (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0))) {
-          isValid = true;
-          displayLabel = 'Bertingkat';
-          iconClass = 'bi bi-pencil-square';
+        if (isEnabled) {
+          if (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) {
+            isValid = true;
+            displayLabel = 'Satuan';
+            iconClass = 'bi bi-pencil-square';
+          } else if (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0))) {
+            isValid = true;
+            displayLabel = 'Bertingkat';
+            iconClass = 'bi bi-pencil-square';
+          }
         }
 
         return `
@@ -15365,7 +15399,7 @@ const ProductForm = (() => {
               type="number"
               step="1"
               min="1"
-              class="combo-max-order-input w-24 sm:w-28 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              class="combo-max-order-input w-28 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
               data-mat-id="${mat.id}"
               value="${maxOrderVal}"
               placeholder="${maxOrderPlaceholder}"
@@ -15452,20 +15486,32 @@ const ProductForm = (() => {
             <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-wholesale-config"><i class="bi bi-x-lg"></i></button>
           </div>
 
-          <!-- Normal vs Bertingkat (Tanpa Kata 'Mode') -->
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <label id="lbl-wholesale-normal" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
-              <input type="radio" name="modal_wholesale_mode" value="normal" class="accent-[var(--color-primary)] cursor-pointer" />
-              <span>Normal</span>
-            </label>
-            <label id="lbl-wholesale-tiered" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
-              <input type="radio" name="modal_wholesale_mode" value="tiered" class="accent-[var(--color-primary)] cursor-pointer" />
-              <span>Bertingkat</span>
+          <!-- Switch Aktifkan Grosir per-Variasi 1 -->
+          <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" id="modal-wholesale-switch-enable" class="sr-only peer" />
+              <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-[var(--color-primary)] relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all peer-checked:after:translate-x-4"></div>
+              <span id="modal-wholesale-switch-label" class="ml-2.5 text-xs font-bold text-slate-700 leading-snug">Aktifkan Harga Grosir Pada Produk Jenis Variasi [Nama Opsi]</span>
             </label>
           </div>
 
-          <div id="modal-wholesale-body" class="space-y-3">
-            <!-- Dynamic Wholesale Body -->
+          <!-- Kontainer Mode & Form Grosir (Sembunyi jika Switch OFF) -->
+          <div id="modal-wholesale-content-wrapper" class="space-y-4">
+            <!-- Satuan vs Bertingkat (Tanpa Kata 'Mode') -->
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <label id="lbl-wholesale-normal" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+                <input type="radio" name="modal_wholesale_mode" value="normal" class="accent-[var(--color-primary)] cursor-pointer" />
+                <span>Satuan</span>
+              </label>
+              <label id="lbl-wholesale-tiered" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700">
+                <input type="radio" name="modal_wholesale_mode" value="tiered" class="accent-[var(--color-primary)] cursor-pointer" />
+                <span>Bertingkat</span>
+              </label>
+            </div>
+
+            <div id="modal-wholesale-body" class="space-y-3">
+              <!-- Dynamic Wholesale Body -->
+            </div>
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
@@ -20393,6 +20439,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
 
       const mat = materialsState.find(m => m.id === matId);
+      const isEnabled = isMatWholesaleActive(mat);
       const mode = mat?.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]) || null;
       const rawTiers = mat?.wholesale_tiers || (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[matId]) || [];
       const clonedTiers = JSON.parse(JSON.stringify(rawTiers || []));
@@ -20411,9 +20458,35 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       currentWholesaleContext = {
         matId,
         matName,
+        isEnabled,
+        mode: mode || null,
         normalBuffer: initialNormal,
         tieredBuffer: initialTiered
       };
+
+      const switchEnable = modal.querySelector('#modal-wholesale-switch-enable');
+      const switchLabel = modal.querySelector('#modal-wholesale-switch-label');
+      const contentWrapper = modal.querySelector('#modal-wholesale-content-wrapper');
+
+      if (switchLabel) {
+        switchLabel.textContent = `Aktifkan Harga Grosir Pada Produk Jenis Variasi ${matName || 'Opsi'}`;
+      }
+      if (switchEnable) {
+        switchEnable.checked = isEnabled;
+        switchEnable.onchange = () => {
+          if (contentWrapper) {
+            if (switchEnable.checked) {
+              contentWrapper.classList.remove('hidden');
+            } else {
+              contentWrapper.classList.add('hidden');
+            }
+          }
+        };
+      }
+      if (contentWrapper) {
+        if (isEnabled) contentWrapper.classList.remove('hidden');
+        else contentWrapper.classList.add('hidden');
+      }
 
       const radNormal = modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]');
       const radTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]');
@@ -20437,7 +20510,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         } else {
           body.innerHTML = `
             <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg">
-              Pilih salah satu jenis harga grosir (Normal atau Bertingkat) di atas.
+              Pilih salah satu jenis harga grosir (Satuan atau Bertingkat) di atas.
             </div>
           `;
         }
@@ -20466,7 +20539,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     function renderWholesaleTableForMat(mat) {
       const modal = document.getElementById('modal-wholesale-config');
       const checkedMode = modal?.querySelector('input[name="modal_wholesale_mode"]:checked')?.value;
-      const mode = checkedMode || mat?.wholesale_mode || 'normal';
+      const mode = checkedMode || currentWholesaleContext?.mode || mat?.wholesale_mode || null;
+
+      if (!mode) {
+        return `
+          <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg">
+            Pilih salah satu jenis harga grosir (Satuan atau Bertingkat) di atas.
+          </div>
+        `;
+      }
 
       if (mode === 'normal') {
         const tier1 = currentWholesaleContext.normalBuffer ||
@@ -20871,6 +20952,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           // Catatan: TIDAK memodifikasi mat.wholesale_tiers atau mat.wholesale_mode di sini.
           // State materialsState dan primaryState hanya diperbarui saat pengguna klik 'Simpan Pengaturan'.
 
+          currentWholesaleContext.mode = rad.value;
           syncWholesaleModeRadioStyles(modalWholesale);
           const body = document.getElementById('modal-wholesale-body');
           if (body) {
@@ -20889,9 +20971,27 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!modal) return;
         const matId = currentWholesaleContext.matId;
         const mat = materialsState.find(m => m.id === matId);
+
+        const switchEnable = modal.querySelector('#modal-wholesale-switch-enable');
+        const isSwitchOn = switchEnable ? Boolean(switchEnable.checked) : false;
+
+        if (!isSwitchOn) {
+          // Switch OFF: nonaktifkan grosir pada baris ini tanpa menghapus konfigurasi harga tersimpan
+          if (mat) {
+            mat.is_wholesale_enabled = false;
+          }
+          primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+          primaryState.wholesale_enabled_by_variant[matId] = false;
+
+          modal.classList.add('hidden');
+          refreshCombinationMatrixTable();
+          updateProductCardLivePreview();
+          return;
+        }
+
         const radChecked = modal.querySelector('input[name="modal_wholesale_mode"]:checked');
         if (!radChecked) {
-          alert('Silakan pilih salah satu jenis harga grosir (Normal atau Bertingkat).');
+          alert('Silakan pilih salah satu jenis harga grosir (Satuan atau Bertingkat).');
           return;
         }
         const isTiered = (radChecked.value === 'tiered');
@@ -20926,9 +21026,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }];
 
           if (mat) {
+            mat.is_wholesale_enabled = true;
             mat.wholesale_mode = 'normal';
             mat.wholesale_tiers = tierData;
           }
+          primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+          primaryState.wholesale_enabled_by_variant[matId] = true;
           primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
           primaryState.wholesale_mode_by_variant[matId] = 'normal';
           primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
@@ -21014,9 +21117,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
 
           if (mat) {
+            mat.is_wholesale_enabled = true;
             mat.wholesale_mode = 'tiered';
             mat.wholesale_tiers = gatheredTiers;
           }
+          primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+          primaryState.wholesale_enabled_by_variant[matId] = true;
           primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
           primaryState.wholesale_mode_by_variant[matId] = 'tiered';
           primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
@@ -25551,7 +25657,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
 
           // Harga Grosir
-          if (primaryState.has_wholesale) {
+          if (primaryState.has_wholesale && isMatWholesaleActive(mat)) {
             const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]);
             const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
             let isWValid = false;

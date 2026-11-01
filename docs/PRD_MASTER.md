@@ -812,6 +812,27 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
         - Kolom `Min. Order` pada baris berikutnya tidak lagi `readonly`, seller dapat mengoreksi nilai secara manual dengan validasi aman.
         - Validasi rentang menyeluruh: pencegahan rentang terbalik, pencegahan baris perantara tanpa batas maksimum, dan penolakan rentang bertumpang tindih (overlap).
         - Konflik akibat perubahan `Max. Order` memicu pesan peringatan antarmuka yang jelas (`#wholesale-tiered-conflict-msg`) tanpa diam-diam menimpa nilai manual seller pada baris lain.
+  - [x] **Penyempurnaan Form Produk Bagian 27: Perbaikan Tampilan Max. Order Variasi, Desain Kartu Radio Ketersediaan Opsi, dan Switch Aktivasi Grosir Per-Variasi (`js/product-form.js`, `css/admin.css`, `js/db.js`, `docs/PRD_MASTER.md`)**:
+    - **Penyempurnaan Tampilan Input Max. Order pada List Variasi Produk**:
+      - Menghilangkan tombol spinner panah naik-turun (`-webkit-inner-spin-button`, `-webkit-outer-spin-button`, `-moz-appearance: textfield`) khusus pada input `.combo-max-order-input` di seksi matriks kombinasi (`css/admin.css`).
+      - Mempertahankan `type="number"`, input angka, dan popover saran "Tanpa Batas".
+      - Menyesuaikan lebar dan padding input (`w-28 px-2.5 py-1.5`) agar teks placeholder `"Tanpa Batas"` terbaca utuh tanpa terpotong atau merusak struktur tata letak tabel/tampilan mobile.
+      - Saat tanpa batas: nilai input tetap string kosong `""`, placeholder `"Tanpa Batas"`, dan representasi state tersimpan sah (`max_order = null` dan `is_unlimited_max_order = true`).
+    - **Modernisasi Modal Ketersediaan Opsi (`#modal-option-dependency`)**:
+      - Mengganti segmented control lama menjadi dua kartu radio sejajar (`Umum` dan `Spesifik`) berdesain konsisten dengan modal pengaturan harga grosir.
+      - Menempatkan radio di sisi kiri dengan teks rata kiri, tinggi ringkas, border tipis, dan sudut `rounded-md`.
+      - Status aktif/terpilih menampilkan border dan radio beraksen warna tema (`var(--color-primary)`) dengan latar belakang `var(--color-primary-subtle)`, sedangkan status tidak terpilih berlatar belakang netral.
+      - Menghilangkan indikator bullet karakter ●/○ serta blok warna solid lama.
+      - Mempertahankan format judul presisi, deskripsi tunggal dinamis (`#dep-mode-desc`), pilihan induk/pemicu, tombol Simpan/Batal, dan seluruh logika keterkaitan opsi.
+    - **Switch Aktivasi & Reklasifikasi Modal Harga Grosir per Variasi 1 (`#modal-wholesale-config`)**:
+      - Menambahkan toggle switch aktivasi per baris di atas pilihan mode grosir dengan label dinamis: `"Aktifkan Harga Grosir Pada Produk Jenis Variasi [Nama Opsi Variasi 1]"`.
+      - Kondisi Switch OFF: menyembunyikan pilihan mode dan input grosir, tidak memblokir simpan, dan menonaktifkan penerapan diskon grosir baris tersebut pada perhitungan Uji Coba Admin tanpa menghapus konfigurasi harga yang tersimpan di buffer.
+      - Kondisi Switch ON: menampilkan pilihan mode (Satuan / Bertingkat) dan form input terkait.
+      - Mengganti teks tampilan `"Normal"` menjadi `"Satuan"` pada modal dan ringkasan sel tabel List Variasi Produk, sembari mempertahankan nilai internal `'normal'` agar data lama kompatibel 100%.
+      - Status aktivasi per-variasi disimpan independen (`mat.is_wholesale_enabled` dan `product.wholesale_enabled_by_variant`) serta dipulihkan sempurna saat edit produk.
+      - Menjaga kompatibilitas mundur: produk lama dengan data grosir yang sudah aktif tetap aktif (fallback ke `true` jika data tier terisi).
+      - Menjaga konfigurasi baru agar tidak otomatis memilih mode atau mengisi angka default.
+      - Perhitungan harga Uji Coba Admin menghormati status aktif per baris tanpa mengubah rumus harga yang ada.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
