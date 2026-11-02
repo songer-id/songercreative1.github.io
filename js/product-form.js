@@ -30,6 +30,7 @@ const ProductForm = (() => {
     sidebarTab: 'preview', // 'preview' | 'test'
     isDrawerOpen: false,
     drawerActionType: 'buy', // 'buy' | 'cart'
+    isInlineSizeGuideOpen: false,
     selectedTier1Id: null,
     selectedTier2Id: null,
     selectedTier3Id: null,
@@ -49,7 +50,7 @@ const ProductForm = (() => {
         const raw = localStorage.getItem('store_default_local_shipping');
         if (raw) return JSON.parse(raw);
       }
-    } catch (e) {}
+    } catch (e) { }
     return null;
   }
 
@@ -136,7 +137,7 @@ const ProductForm = (() => {
       }
       const rootColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
       if (rootColor) return rootColor;
-    } catch (_) {}
+    } catch (_) { }
     return '#33b589';
   }
 
@@ -211,22 +212,22 @@ const ProductForm = (() => {
       }
     };
 
-  // Global Delegasi Custom Combobox (Stok, Max Order, Spesifikasi, Variasi)
-  document.addEventListener('click', (e) => {
-    // Delegasi klik tautan pengaturan lokasi -> menu Akun
-    const btnGotoAcc = e.target.closest('.btn-goto-account-settings');
-    if (btnGotoAcc) {
-      e.preventDefault();
-      if (typeof AdminApp !== 'undefined' && AdminApp.navigate) {
-        AdminApp.navigate('account');
-      } else if (typeof App !== 'undefined' && App.navigate) {
-        App.navigate('account');
-      } else {
-        const navAcc = document.getElementById('admin-nav-account') || document.querySelector('[data-view="account"], #nav-item-account, [data-target="account"]');
-        if (navAcc) navAcc.click();
+    // Global Delegasi Custom Combobox (Stok, Max Order, Spesifikasi, Variasi)
+    document.addEventListener('click', (e) => {
+      // Delegasi klik tautan pengaturan lokasi -> menu Akun
+      const btnGotoAcc = e.target.closest('.btn-goto-account-settings');
+      if (btnGotoAcc) {
+        e.preventDefault();
+        if (typeof AdminApp !== 'undefined' && AdminApp.navigate) {
+          AdminApp.navigate('account');
+        } else if (typeof App !== 'undefined' && App.navigate) {
+          App.navigate('account');
+        } else {
+          const navAcc = document.getElementById('admin-nav-account') || document.querySelector('[data-view="account"], #nav-item-account, [data-target="account"]');
+          if (navAcc) navAcc.click();
+        }
       }
-    }
-  });
+    });
 
     document.addEventListener('pointerover', handleTooltipTrigger, { passive: true });
     document.addEventListener('focusin', handleTooltipTrigger, { passive: true });
@@ -235,8 +236,9 @@ const ProductForm = (() => {
 
   // Primary metadata state
   let primaryState = {
-      custom_specs: [],
-      name: '',
+    custom_specs: [],
+    size_guide: null,
+    name: '',
     brand: '',
     product_origin: '',
     warranty_unit: 'Tidak Ada Garansi',
@@ -358,7 +360,7 @@ const ProductForm = (() => {
     has_custom_labels: false,
     custom_labels: [],
     custom_dimension_suggestions: [],
-    shipping_config: (function() {
+    shipping_config: (function () {
       const defLocal = getStoreDefaultLocalShipping();
       return {
         is_cod: false,
@@ -483,7 +485,7 @@ const ProductForm = (() => {
               if (val && !options.includes(val)) options.push(val);
             });
           }
-        } catch (_) {}
+        } catch (_) { }
       }
     } else if (listId === 'footer-texts-history-list') {
       const defaultFooters = [
@@ -506,7 +508,7 @@ const ProductForm = (() => {
               if (val && !options.includes(val)) options.push(val);
             });
           }
-        } catch (_) {}
+        } catch (_) { }
       }
     } else if (listId === 'datalist-stock-unlimited') {
       options = ['Unlimited'];
@@ -516,6 +518,15 @@ const ProductForm = (() => {
       options = ['Tanpa Kelipatan'];
     } else if (listId === 'datalist-dimension-labels') {
       options = ['Masukkan Ukuran', 'Ukuran Spanduk', 'Ukuran Kain'];
+    } else if (listId === 'datalist-size-col-titles') {
+      const curTpl = (primaryState.size_guide && primaryState.size_guide.template) || 'pakaian';
+      if (curTpl === 'celana') {
+        options = ['Ukuran', 'Panjang Celana', 'Lingkar Pinggang', 'Lingkar Pinggul', 'Lingkar Paha', 'Lebar Kaki', 'Pisak'];
+      } else if (curTpl === 'sepatu') {
+        options = ['Ukuran EU', 'Ukuran US', 'Ukuran UK', 'Panjang Kaki (cm)', 'Lebar Kaki (cm)', 'Insole (cm)'];
+      } else {
+        options = ['Ukuran', 'Panjang', 'Lebar Dada', 'Lingkar Dada', 'Bahu', 'Panjang Lengan', 'Rekomendasi Berat', 'Rekomendasi Tinggi'];
+      }
     }
     return options;
   }
@@ -776,8 +787,8 @@ const ProductForm = (() => {
 
       // Elemen popover ditempel ke document.body agar tidak terpotong oleh overflow container tabel/kartu
       let popover = inputBox.querySelector(':scope > .clean-datalist-popover') ||
-                    wrapper.querySelector(':scope > .clean-datalist-popover') ||
-                    (input._datalistPopover && document.body.contains(input._datalistPopover) ? input._datalistPopover : null);
+        wrapper.querySelector(':scope > .clean-datalist-popover') ||
+        (input._datalistPopover && document.body.contains(input._datalistPopover) ? input._datalistPopover : null);
       if (!popover) {
         popover = document.createElement('div');
         popover.className = 'clean-datalist-popover fixed bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-[99999] hidden select-none';
@@ -1320,6 +1331,7 @@ const ProductForm = (() => {
     previewTestState.sidebarTab = 'preview';
     previewTestState.isDrawerOpen = false;
     previewTestState.drawerActionType = 'buy';
+    previewTestState.isInlineSizeGuideOpen = false;
     previewTestState.selectedTier1Id = null;
     previewTestState.selectedTier2Id = null;
     previewTestState.selectedTier3Id = null;
@@ -1353,14 +1365,14 @@ const ProductForm = (() => {
       card_variant: '', // Default '' (kosong, seller wajib memilih sendiri!)
       card_variant_manual_override: false,
       card_variant_override: false,
-    variation_labels: {
-      label_product: 'Produk',
-      label_tier_1: 'Jenis Produk',
-      label_tier_2: 'Finishing / Variasi 2',
-      label_extra_1: 'Topping / Tambahan 1',
-      label_extra_2: 'Tambahan 2',
-      label_extra_3: 'Tambahan 3'
-    },
+      variation_labels: {
+        label_product: 'Produk',
+        label_tier_1: 'Jenis Produk',
+        label_tier_2: 'Finishing / Variasi 2',
+        label_extra_1: 'Topping / Tambahan 1',
+        label_extra_2: 'Tambahan 2',
+        label_extra_3: 'Tambahan 3'
+      },
       // Step 2: Informasi Penjualan
       pricing_model: 'normal',
       has_variants: false,
@@ -1408,7 +1420,7 @@ const ProductForm = (() => {
       has_custom_labels: false,
       custom_labels: [],
       custom_dimension_suggestions: [],
-      shipping_config: (function() {
+      shipping_config: (function () {
         const defLocal = getStoreDefaultLocalShipping();
         return {
           is_cod: false,
@@ -1555,6 +1567,7 @@ const ProductForm = (() => {
         has_custom_labels: Boolean(primaryState.has_custom_labels),
         custom_labels: Array.isArray(primaryState.custom_labels) ? primaryState.custom_labels : [],
         custom_specs: Array.isArray(primaryState.custom_specs) ? primaryState.custom_specs : [],
+        size_guide: primaryState.size_guide ? JSON.stringify(primaryState.size_guide) : null,
         warranty_period: primaryState.warranty_period || '',
         warranty_type: primaryState.warranty_type || '',
         is_preorder: Boolean(primaryState.is_preorder),
@@ -1584,6 +1597,7 @@ const ProductForm = (() => {
     if (primaryState.product_origin && primaryState.product_origin.trim() !== '') return true;
     if (Array.isArray(primaryState.custom_labels) && primaryState.custom_labels.some(l => l && l.trim())) return true;
     if (Array.isArray(primaryState.custom_specs) && primaryState.custom_specs.some(s => s && (s.title?.trim() || s.desc?.trim()))) return true;
+    if (primaryState.size_guide && primaryState.size_guide.enabled) return true;
     if (Array.isArray(materialsState) && materialsState.some(m => (m.price > 0 || m.cost_price > 0 || (m.name && m.name !== 'Produk Standar')))) return true;
     return false;
   }
@@ -1647,7 +1661,7 @@ const ProductForm = (() => {
         if (mode === 'create') {
           try {
             localStorage.removeItem(DRAFT_STORAGE_KEY);
-          } catch (e) {}
+          } catch (e) { }
         }
         resetFormState();
         const menuToOpen = (typeof ProductForm !== 'undefined' && ProductForm.lastActiveMenuBeforeForm) ? ProductForm.lastActiveMenuBeforeForm : (targetMenu || 'products');
@@ -1721,6 +1735,7 @@ const ProductForm = (() => {
     previewTestState.sidebarTab = 'preview';
     previewTestState.isDrawerOpen = false;
     previewTestState.drawerActionType = 'buy';
+    previewTestState.isInlineSizeGuideOpen = false;
     previewTestState.selectedTier1Id = null;
     previewTestState.selectedTier2Id = null;
     previewTestState.selectedTier3Id = null;
@@ -1778,6 +1793,7 @@ const ProductForm = (() => {
       warranty_type: prod.warranty_type || '',
       is_preorder: Boolean(prod.is_preorder),
       preorder_days: parseInt(prod.preorder_days) || 7,
+      size_guide: prod.size_guide ? JSON.parse(JSON.stringify(prod.size_guide)) : null,
       product_type: prod.product_type || 'physical',
       status: prod.status || 'published',
       has_shipping: prod.has_shipping !== undefined ? Boolean(prod.has_shipping) : ((prod.product_type || 'physical') !== 'non_physical'),
@@ -1844,7 +1860,7 @@ const ProductForm = (() => {
       has_custom_labels: prod.has_custom_labels !== undefined ? Boolean(prod.has_custom_labels) : (Array.isArray(prod.custom_labels) && prod.custom_labels.length > 0),
       custom_labels: prod.card_variant === 'B' ? [] : (Array.isArray(prod.custom_labels) ? [...prod.custom_labels].filter(Boolean) : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])),
       custom_dimension_suggestions: Array.isArray(prod.custom_dimension_suggestions) ? prod.custom_dimension_suggestions.slice(0, 6) : [],
-      shipping_config: (function() {
+      shipping_config: (function () {
         const sc = prod.shipping_config || {};
         let rawCouriers = Array.isArray(sc.couriers) ? [...sc.couriers] : ['pickup', 'local_store', 'reguler'];
         if (rawCouriers.includes('instant')) {
@@ -2033,6 +2049,28 @@ const ProductForm = (() => {
       };
     }
 
+    if (primaryState.size_guide && primaryState.size_guide.enabled) {
+      const activeSizeTiers = (typeof getActiveVariationTiersForSizeGuide === 'function')
+        ? getActiveVariationTiersForSizeGuide()
+        : [];
+      if (activeSizeTiers.length >= 2) {
+        let linked = (primaryState.size_guide.linked_variation || '').trim();
+        if (linked === 'main') linked = 'tier2';
+        else if (linked === 'extra_1') linked = 'tier3';
+        else if (linked === 'extra_2') linked = 'tier4';
+        const isMatch = activeSizeTiers.some(t => t.key === linked);
+        if (!isMatch) {
+          primaryState.size_guide.linked_variation = '';
+        } else {
+          primaryState.size_guide.linked_variation = linked;
+        }
+      } else if (activeSizeTiers.length === 1) {
+        primaryState.size_guide.linked_variation = 'tier1';
+      } else {
+        primaryState.size_guide.linked_variation = '';
+      }
+    }
+
     renderForm();
     initialEditSnapshot = getNormalizedProductStateSnapshot();
     if (typeof ProductForm !== 'undefined') {
@@ -2072,12 +2110,12 @@ const ProductForm = (() => {
 
       const p = draft.primaryState;
       const hasContent = (p.name && p.name.trim() !== '') ||
-                         (p.product_type && p.product_type !== '') ||
-                         (Array.isArray(p.images) && p.images.length > 0) ||
-                         (p.category_id && p.category_id !== '') ||
-                         (p.description && p.description.trim() !== '') ||
-                         (p.has_custom_labels === true || (Array.isArray(p.custom_labels) && p.custom_labels.length > 0)) ||
-                         (draft.currentStep === 2);
+        (p.product_type && p.product_type !== '') ||
+        (Array.isArray(p.images) && p.images.length > 0) ||
+        (p.category_id && p.category_id !== '') ||
+        (p.description && p.description.trim() !== '') ||
+        (p.has_custom_labels === true || (Array.isArray(p.custom_labels) && p.custom_labels.length > 0)) ||
+        (draft.currentStep === 2);
       if (!hasContent) return false;
 
       Object.assign(primaryState, p);
@@ -2134,7 +2172,7 @@ const ProductForm = (() => {
   function clearDraftStorage() {
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function hasStoredDraft() {
@@ -2240,10 +2278,10 @@ const ProductForm = (() => {
                   <!-- Deskripsi Dinamis Jenis Produk -->
                   <p id="product-type-dynamic-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
                     ${primaryState.product_type === 'physical'
-                      ? 'Produk fisik yang memerlukan stok dan pengiriman kurir.'
-                      : (primaryState.product_type === 'non_physical'
-                        ? 'Layanan jasa atau produk digital tanpa pengiriman fisik.'
-                        : 'Pilih jenis produk untuk menentukan alur pengelolaan stok dan pengiriman.')}
+        ? 'Produk fisik yang memerlukan stok dan pengiriman kurir.'
+        : (primaryState.product_type === 'non_physical'
+          ? 'Layanan jasa atau produk digital tanpa pengiriman fisik.'
+          : 'Pilih jenis produk untuk menentukan alur pengelolaan stok dan pengiriman.')}
                   </p>
                 </div>
 
@@ -2310,12 +2348,12 @@ const ProductForm = (() => {
                     <!-- Deskripsi Dinamis Model Kartu -->
                     <p id="card-model-dynamic-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
                       ${primaryState.card_variant === 'A'
-                        ? 'Tampilan standar (rasio 1:1) dengan rating, jumlah terjual, dan label promo. Cocok untuk produk umum.'
-                        : (primaryState.card_variant === 'B'
-                          ? 'Tampilan foto memanjang (rasio 3:4) yang menonjolkan visual produk. Cocok untuk pakaian, busana, dan merchandise.'
-                          : (primaryState.card_variant === 'C'
-                            ? 'Tampilan lanskap (rasio 4:3) dilengkapi informasi layanan di bawah kartu. Cocok untuk percetakan, jasa, dan produk custom.'
-                            : 'Pilih model kartu untuk menentukan format rasio foto dan tata letak di etalase toko.'))}
+        ? 'Tampilan standar (rasio 1:1) dengan rating, jumlah terjual, dan label promo. Cocok untuk produk umum.'
+        : (primaryState.card_variant === 'B'
+          ? 'Tampilan foto memanjang (rasio 3:4) yang menonjolkan visual produk. Cocok untuk pakaian, busana, dan merchandise.'
+          : (primaryState.card_variant === 'C'
+            ? 'Tampilan lanskap (rasio 4:3) dilengkapi informasi layanan di bawah kartu. Cocok untuk percetakan, jasa, dan produk custom.'
+            : 'Pilih model kartu untuk menentukan format rasio foto dan tata letak di etalase toko.'))}
                     </p>
                   </div>
 
@@ -2430,9 +2468,9 @@ const ProductForm = (() => {
                             <div id="error-custom-label-1" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                           </div>
                           ${(() => {
-                            const l1 = (primaryState.custom_labels?.[0] || '').trim();
-                            const canShowLabel2 = l1.length > 0 && l1.length <= 15;
-                            return `
+        const l1 = (primaryState.custom_labels?.[0] || '').trim();
+        const canShowLabel2 = l1.length > 0 && l1.length <= 15;
+        return `
                               <div id="wrapper-custom-label-2" class="relative ${canShowLabel2 ? '' : 'hidden'}">
                                 <div class="flex items-center justify-between mb-1">
                                   <label for="input-custom-label-2" class="block text-[11px] font-semibold text-slate-700">
@@ -2455,7 +2493,7 @@ const ProductForm = (() => {
                                 <div id="error-custom-label-2" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                               </div>
                             `;
-                          })()}
+      })()}
                         </div>
 
                         <!-- Native HTML5 Datalist untuk Label Khusus (Persis Gambar 2) -->
@@ -3569,7 +3607,7 @@ const ProductForm = (() => {
           scrollBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TR' && el.tagName !== 'TABLE') {
-          try { el.focus({ preventScroll: true }); } catch (err) {}
+          try { el.focus({ preventScroll: true }); } catch (err) { }
         }
         if (scrollBox.classList) {
           scrollBox.classList.add('ring-2', 'ring-amber-400', 'transition-all');
@@ -3795,7 +3833,7 @@ const ProductForm = (() => {
             const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]);
             const wTiers = mat.wholesale_tiers || (primaryState.wholesale_by_variant && primaryState.wholesale_by_variant[mat.id]) || [];
             const isWValid = (wMode === 'normal' && wTiers.length > 0 && (wTiers[0].price > 0 || wTiers[0].discount > 0)) ||
-                            (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0)));
+              (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0)));
             if (!isWValid) {
               missingItems.push(`Harga Grosir (Baris ${var1Name})`);
               if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-wholesale-modal[data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
@@ -3868,7 +3906,7 @@ const ProductForm = (() => {
         const ex = validExtras[i];
         const exLabel = ex.name.trim();
         const rowEl = document.querySelector(`.variation-option-row[data-tier="extra_3"][data-id="${ex.id}"]`) ||
-                      document.querySelectorAll(`.variation-option-row[data-tier="extra_3"]`)[i];
+          document.querySelectorAll(`.variation-option-row[data-tier="extra_3"]`)[i];
 
         // 1. Jenis Input
         const typeSel = rowEl?.querySelector('select[data-field="extra_type"]') || rowEl?.querySelector('select.fin-extra-type');
@@ -4738,7 +4776,7 @@ const ProductForm = (() => {
   function getAllowedVariationOptions(matId, tierKey) {
     const normalizedTier = (tierKey === 'tier2' || tierKey === 'main') ? 'main'
       : ((tierKey === 'tier3' || tierKey === 'extra_1') ? 'extra_1'
-      : ((tierKey === 'tier4' || tierKey === 'extra_2') ? 'extra_2' : tierKey));
+        : ((tierKey === 'tier4' || tierKey === 'extra_2') ? 'extra_2' : tierKey));
 
     if (typeof VariationEngine !== 'undefined') {
       const prod = getRuntimeProductAdapter();
@@ -4760,10 +4798,10 @@ const ProductForm = (() => {
 
     const mat = (materialsState || []).find(m => m.id === matId);
     const scope = (mat && mat.variation_scopes && mat.variation_scopes[normalizedTier]) ||
-                  (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[matId] && primaryState.variation_scopes_by_variant[matId][normalizedTier]) ||
-                  (primaryState.variation_scopes && primaryState.variation_scopes[matId] && primaryState.variation_scopes[matId][normalizedTier]) ||
-                  (primaryState.variation_scopes && primaryState.variation_scopes[normalizedTier]) ||
-                  primaryState['scope_' + normalizedTier];
+      (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[matId] && primaryState.variation_scopes_by_variant[matId][normalizedTier]) ||
+      (primaryState.variation_scopes && primaryState.variation_scopes[matId] && primaryState.variation_scopes[matId][normalizedTier]) ||
+      (primaryState.variation_scopes && primaryState.variation_scopes[normalizedTier]) ||
+      primaryState['scope_' + normalizedTier];
 
     const isSpecific = (scope === 'spesifik');
 
@@ -5087,11 +5125,23 @@ const ProductForm = (() => {
 
     const shouldHideGroup = Boolean(tierCheck.isSkipped || tierCheck.isEmptyResolved);
 
+    const effectiveLinkedTier = (typeof getEffectiveLinkedVariation === 'function') ? getEffectiveLinkedVariation() : null;
+    const isLinkedToThisGroup = Boolean(effectiveLinkedTier && (effectiveLinkedTier === tierKey || (tierKey === 'main' && effectiveLinkedTier === 'tier2') || (tierKey === 'extra_1' && effectiveLinkedTier === 'tier3') || (tierKey === 'extra_2' && effectiveLinkedTier === 'tier4')));
+
+    const sizeGuideLinkHtml = isLinkedToThisGroup ? `
+      <div class="text-left pt-1">
+        <button type="button" class="btn-open-size-guide-drawer text-[11px] font-medium text-slate-500 hover:text-slate-800 transition cursor-pointer select-none inline-flex items-center gap-0.5">
+          <span>Tabel Ukuran</span>
+          <i class="bi bi-chevron-right text-[10px] text-slate-400"></i>
+        </button>
+      </div>
+    ` : '';
+
     // 1. MODE SELECT (Shadcn UI Custom Select Popover)
     if (mode === 'select') {
       return `
         <div class="space-y-1.5 var-group-tier-wrapper ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''} ${shouldHideGroup ? 'hidden' : ''}" data-tier="${tierKey}" data-tier-wrapper="true">
-          <div class="text-xs font-medium text-slate-600 mb-1">${escapeHtml(group.label)}</div>
+          <div class="text-[11px] font-medium text-slate-600 mb-1">${escapeHtml(group.label)}</div>
           <div class="relative w-full shadcn-select-wrapper" data-tier="${tierKey}">
             <button type="button" class="btn-shadcn-select-trigger w-full h-9 px-3 rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer select-none" data-tier="${tierKey}">
               <span class="shadcn-select-value truncate ${selectedOpt ? 'font-semibold text-slate-900' : 'text-slate-400'}">
@@ -5101,17 +5151,18 @@ const ProductForm = (() => {
             </button>
             <div class="shadcn-select-popover hidden absolute left-0 right-0 top-full mt-1 rounded-md border border-slate-200 bg-white shadow-lg max-h-48 overflow-y-auto p-1 z-50">
               ${group.options.map(opt => {
-                const isSelected = group.selectedId === opt.id;
-                const isOptDisabled = tierCheck.isSpecific && (!tierCheck.allowedIds || !tierCheck.allowedIds.includes(opt.id));
-                return `
+        const isSelected = group.selectedId === opt.id;
+        const isOptDisabled = tierCheck.isSpecific && (!tierCheck.allowedIds || !tierCheck.allowedIds.includes(opt.id));
+        return `
                   <div class="btn-shadcn-select-item flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition ${isOptDisabled ? 'hidden pointer-events-none' : (isSelected ? 'font-bold bg-slate-50 cursor-pointer' : 'text-slate-700 hover:bg-slate-100/70 cursor-pointer')}" data-tier="${tierKey}" data-id="${opt.id}" data-disabled="${isOptDisabled ? 'true' : 'false'}" style="${isSelected && !isOptDisabled ? 'color: var(--color-primary);' : ''}">
                     <span class="truncate">${escapeHtml(opt.name)}</span>
                     ${isSelected && !isOptDisabled ? '<i class="bi bi-check2 text-sm font-bold shrink-0 ml-1.5" style="color: var(--color-primary);"></i>' : ''}
                   </div>
                 `;
-              }).join('')}
+      }).join('')}
             </div>
           </div>
+          ${sizeGuideLinkHtml}
         </div>
       `;
     }
@@ -5120,24 +5171,24 @@ const ProductForm = (() => {
     const chipsHtml = `
       <div class="flex flex-wrap gap-1.5">
         ${group.options.length > 0 ? group.options.map((opt) => {
-          const isSelected = group.selectedId === opt.id;
-          const isOptDisabled = tierCheck.isSpecific && (!tierCheck.allowedIds || !tierCheck.allowedIds.includes(opt.id));
-          const disabledClasses = isOptDisabled ? 'hidden pointer-events-none' : '';
-          const disabledAttr = isOptDisabled ? 'disabled="disabled"' : '';
-          if (opt.image) {
-            return `
+      const isSelected = group.selectedId === opt.id;
+      const isOptDisabled = tierCheck.isSpecific && (!tierCheck.allowedIds || !tierCheck.allowedIds.includes(opt.id));
+      const disabledClasses = isOptDisabled ? 'hidden pointer-events-none' : '';
+      const disabledAttr = isOptDisabled ? 'disabled="disabled"' : '';
+      if (opt.image) {
+        return `
               <button type="button" ${disabledAttr} class="${group.btnClass} mini-pdp-var-chip inline-flex items-center gap-1.5 p-1 pr-2.5 rounded text-[11px] font-medium transition cursor-pointer ${disabledClasses} ${isSelected && !isOptDisabled ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
                 <img src="${opt.image}" class="w-5 h-5 rounded-xs object-cover shrink-0 bg-slate-100" alt="${escapeHtml(opt.name)}" />
                 <span class="truncate max-w-[120px]">${escapeHtml(opt.name)}</span>
               </button>
             `;
-          }
-          return `
+      }
+      return `
             <button type="button" ${disabledAttr} class="${group.btnClass} mini-pdp-var-chip px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center justify-center ${disabledClasses} ${isSelected && !isOptDisabled ? 'is-active' : ''}" data-tier="${tierKey}" data-id="${opt.id}">
               <span>${escapeHtml(opt.name)}</span>
             </button>
           `;
-        }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
+    }).join('') : '<span class="text-[10px] text-slate-400 italic">Belum ada opsi</span>'}
       </div>
     `;
 
@@ -5151,13 +5202,14 @@ const ProductForm = (() => {
         <div class="var-accordion-card space-y-1.5 ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''} ${shouldHideGroup ? 'hidden' : ''}" data-tier="${tierKey}" data-tier-wrapper="true">
           <div class="btn-toggle-var-accordion w-full py-2 px-2.5 bg-slate-50/80 hover:bg-slate-100/80 rounded-md flex items-center justify-between text-xs font-semibold text-slate-800 cursor-pointer transition select-none" data-tier="${tierKey}">
             <div class="flex items-center gap-1.5 min-w-0">
-              <span>${escapeHtml(group.label)}</span>
+              <span class="text-[11px] font-medium text-slate-600">${escapeHtml(group.label)}</span>
               <span class="var-accordion-selected-text text-[11px] text-slate-500 font-normal truncate">${selectedName ? `(${escapeHtml(selectedName)})` : '<span class="text-slate-400 font-normal text-[10px] italic">(Belum dipilih)</span>'}</span>
             </div>
             <i class="bi bi-chevron-right text-slate-400 text-[10px] transition-transform duration-200 shrink-0 ${isAccordionOpen ? 'rotate-90' : ''}"></i>
           </div>
           <div class="var-accordion-body pt-1 ${isAccordionOpen ? '' : 'hidden'}">
             ${chipsHtml}
+            ${sizeGuideLinkHtml}
           </div>
         </div>
       `;
@@ -5166,8 +5218,9 @@ const ProductForm = (() => {
     // 3. MODE DEFAULT
     return `
       <div class="space-y-1.5 var-group-tier-wrapper ${groupIndex > 0 ? 'pt-2 border-t border-slate-100' : ''} ${shouldHideGroup ? 'hidden' : ''}" data-tier="${tierKey}" data-tier-wrapper="true">
-        <div class="text-xs font-medium text-slate-600 mb-1.5">${escapeHtml(group.label)}</div>
+        <div class="text-[11px] font-medium text-slate-600 mb-1.5">${escapeHtml(group.label)}</div>
         ${chipsHtml}
+        ${sizeGuideLinkHtml}
       </div>
     `;
   }
@@ -5374,8 +5427,8 @@ const ProductForm = (() => {
         <div class="text-[11px] font-semibold text-slate-500">Saran Ukuran:</div>
         <div class="flex flex-wrap gap-1.5">
           ${dimSuggestions.map((s, idx) => {
-            const isMatch = (parseFloat(dimLengthVal) === parseFloat(s.p)) && (parseFloat(dimWidthVal) === parseFloat(s.l));
-            return `
+      const isMatch = (parseFloat(dimLengthVal) === parseFloat(s.p)) && (parseFloat(dimWidthVal) === parseFloat(s.l));
+      return `
               <button
                 type="button"
                 class="btn-preview-dim-suggestion px-2.5 py-1 rounded-md text-xs font-semibold border transition cursor-pointer outline-none focus:outline-none ${isMatch ? 'text-white border-transparent' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}"
@@ -5386,7 +5439,7 @@ const ProductForm = (() => {
                 ${s.p} × ${s.l}
               </button>
             `;
-          }).join('')}
+    }).join('')}
         </div>
       </div>
     ` : '';
@@ -5674,26 +5727,25 @@ const ProductForm = (() => {
         ${isAccordionOpen ? `
           <div class="flex flex-col gap-1.5 pt-1">
             ${validExtras.map((ex, idx) => {
-              const exId = ex.id || `ex_${idx}`;
-              const isNoneOption = Boolean(ex.is_default_none);
-              const xt = String(ex.extra_type || '').toLowerCase();
-              const isQtyType = !isNoneOption && xt === 'qty';
-              const extraItemQty = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
-              const isSelected = Boolean(previewTestState.selectedExtras[exId]);
-              const isItemActive = isQtyType ? (extraItemQty > 0) : isSelected;
+      const exId = ex.id || `ex_${idx}`;
+      const isNoneOption = Boolean(ex.is_default_none);
+      const xt = String(ex.extra_type || '').toLowerCase();
+      const isQtyType = !isNoneOption && xt === 'qty';
+      const extraItemQty = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
+      const isSelected = Boolean(previewTestState.selectedExtras[exId]);
+      const isItemActive = isQtyType ? (extraItemQty > 0) : isSelected;
 
-              const itemImg = ex.image_url || ex.image;
-              const priceVal = parseFloat(ex.price) || 0;
-              const priceBadge = (!isNoneOption && priceVal > 0)
-                ? `<span class="text-[10px] font-bold shrink-0" style="color: var(--color-primary);">+${formatIDR(priceVal)}</span>`
-                : '';
+      const itemImg = ex.image_url || ex.image;
+      const priceVal = parseFloat(ex.price) || 0;
+      const priceBadge = (!isNoneOption && priceVal > 0)
+        ? `<span class="text-[10px] font-bold shrink-0" style="color: var(--color-primary);">+${formatIDR(priceVal)}</span>`
+        : '';
 
-              return `
-                <div class="extra-item-row flex items-center justify-between p-2 rounded border transition ${
-                  isItemActive
-                    ? 'bg-white shadow-2xs is-active'
-                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                }" style="${isItemActive ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${exId}" data-type="${xt}">
+      return `
+                <div class="extra-item-row flex items-center justify-between p-2 rounded border transition ${isItemActive
+          ? 'bg-white shadow-2xs is-active'
+          : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+        }" style="${isItemActive ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${exId}" data-type="${xt}">
                   <!-- Sisi Kiri: Foto Kecil (jika ada) + Nama Opsi + (+Rp[Harga Jual]) -->
                   <div class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer select-none extra-item-trigger" data-id="${exId}" data-type="${xt}">
                     ${itemImg ? `
@@ -5725,7 +5777,7 @@ const ProductForm = (() => {
                   </div>
                 </div>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         ` : ''}
       </div>
@@ -6201,6 +6253,169 @@ const ProductForm = (() => {
     });
   }
 
+  function renderProductSizeGuideContentHtml() {
+    const guide = primaryState.size_guide || {};
+    const guideType = guide.type || 'table';
+    const curTpl = (typeof defaultSizeGuideTemplates !== 'undefined' && defaultSizeGuideTemplates[guide.template])
+      ? defaultSizeGuideTemplates[guide.template]
+      : (typeof defaultSizeGuideTemplates !== 'undefined' ? defaultSizeGuideTemplates.pakaian : { columns: ['Ukuran', 'Panjang', 'Lebar Dada', 'Bahu', 'Rekomendasi Berat', 'Rekomendasi Tinggi'], rows: [['S', '66 cm', '48 cm', '42 cm', '45 - 55 kg', '155 - 165 cm'], ['M', '68 cm', '50 cm', '44 cm', '55 - 65 kg', '160 - 170 cm'], ['L', '70 cm', '52 cm', '46 cm', '65 - 75 kg', '165 - 175 cm'], ['XL', '72 cm', '54 cm', '48 cm', '75 - 85 kg', '170 - 180 cm']] });
+
+    const columns = (Array.isArray(guide.columns) && guide.columns.length > 0)
+      ? guide.columns
+      : curTpl.columns;
+    const rows = (Array.isArray(guide.rows) && guide.rows.length > 0)
+      ? guide.rows
+      : curTpl.rows;
+
+    if (guideType === 'image') {
+      if (guide.image_url) {
+        return `
+          <div class="p-2 sm:p-3 overflow-x-auto flex items-center justify-center bg-slate-50 border border-slate-200 rounded-none">
+            <img src="${escapeHtml(guide.image_url)}" alt="Panduan Ukuran" class="max-h-[50vh] max-w-full rounded-none object-contain" />
+          </div>
+        `;
+      } else {
+        return `
+          <div class="p-4 text-center text-[11px] text-slate-400 italic bg-slate-50 border border-slate-200 rounded-none">
+            Gambar panduan ukuran belum diunggah.
+          </div>
+        `;
+      }
+    }
+
+    return `
+      <div class="overflow-x-auto rounded-none border border-slate-200 bg-white scrollbar-thin">
+        <table class="w-full text-center text-[10px] border-collapse rounded-none">
+          <thead>
+            <tr style="background-color: var(--color-primary-subtle); color: var(--color-primary);" class="border-b border-slate-200 font-bold">
+              ${columns.map(c => `
+                <th class="p-1.5 sm:p-2 border-r border-slate-200/80 last:border-r-0 whitespace-nowrap text-[10px] sm:text-[11px] font-bold text-center" style="color: var(--color-primary);">
+                  ${escapeHtml(c)}
+                </th>
+              `).join('')}
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            ${rows.map(r => `
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                ${columns.map((_, colIdx) => `
+                  <td class="p-1.5 sm:p-2 border-r border-slate-100 last:border-r-0 whitespace-nowrap text-[10px] font-medium text-center" style="color: var(--color-primary);">
+                    ${escapeHtml((r && r[colIdx] !== undefined && r[colIdx] !== null) ? String(r[colIdx]) : '')}
+                  </td>
+                `).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function buildProductSizeGuideDrawerHtml() {
+    return `
+      <div class="size-guide-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 opacity-100 cursor-pointer"></div>
+      <div class="size-guide-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
+        <!-- Header Drawer -->
+        <div class="border-b border-slate-200 w-full bg-white shrink-0">
+          <h3 class="text-sm font-bold text-slate-800 text-center py-3">Tabel Ukuran</h3>
+        </div>
+
+        <!-- Body Panduan Ukuran (Tabel atau Gambar) -->
+        <div class="p-3 max-h-[60vh] overflow-y-auto">
+          ${renderProductSizeGuideContentHtml()}
+        </div>
+
+        <!-- Footer Tombol CTA Oke -->
+        <div class="p-2.5 pt-0 shrink-0 bg-white">
+          <button type="button" id="btn-close-size-guide-drawer" class="btn-close-size-guide-drawer btn-shopee-submit w-full py-2.5 px-3 rounded-xl text-xs font-bold tracking-wide text-white shadow-none hover:opacity-95 transition active:scale-[0.98] cursor-pointer flex items-center justify-center" style="background-color: var(--color-primary);" onmouseover="this.style.backgroundColor='var(--color-primary-hover)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
+            Oke
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function openProductSizeGuideDrawer() {
+    if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+    const roots = [
+      document.getElementById('preview-scoped-modal-root'),
+      document.getElementById('preview-scoped-modal-root-mob')
+    ].filter(Boolean);
+
+    const sizeGuideDrawerHtml = buildProductSizeGuideDrawerHtml();
+
+    roots.forEach(root => {
+      if (root.id === 'preview-scoped-modal-root') {
+        root.className = 'absolute inset-0 z-50 flex flex-col justify-end overflow-hidden p-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300';
+      } else {
+        root.className = 'absolute inset-0 z-[100] flex flex-col justify-end overflow-hidden p-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300';
+      }
+      root.innerHTML = sizeGuideDrawerHtml;
+      root.classList.remove('hidden');
+
+      const sheet = root.querySelector('.size-guide-drawer-sheet');
+      const backdrop = root.querySelector('.size-guide-drawer-backdrop');
+      if (sheet && backdrop) {
+        sheet.classList.add('translate-y-full');
+        sheet.classList.remove('translate-y-0');
+        backdrop.classList.add('opacity-0');
+        backdrop.classList.remove('opacity-100');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            sheet.classList.remove('translate-y-full');
+            sheet.classList.add('translate-y-0');
+          });
+        });
+      }
+
+      root.querySelectorAll('.btn-close-size-guide-drawer, #btn-close-size-guide-drawer').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          closeProductSizeGuideDrawer();
+        };
+      });
+
+      if (backdrop) {
+        backdrop.onclick = (e) => {
+          e.preventDefault();
+          closeProductSizeGuideDrawer();
+        };
+      }
+    });
+  }
+
+  function closeProductSizeGuideDrawer() {
+    const roots = [
+      document.getElementById('preview-scoped-modal-root'),
+      document.getElementById('preview-scoped-modal-root-mob')
+    ].filter(Boolean);
+
+    roots.forEach(root => {
+      const sheet = root.querySelector('.size-guide-drawer-sheet');
+      const backdrop = root.querySelector('.size-guide-drawer-backdrop');
+      if (sheet) {
+        sheet.classList.remove('translate-y-0');
+        sheet.classList.add('translate-y-full');
+      }
+      if (backdrop) {
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+      }
+      setTimeout(() => {
+        root.classList.add('hidden');
+        root.classList.remove('flex');
+        root.innerHTML = '';
+        if (root.id === 'preview-scoped-modal-root') {
+          root.className = 'absolute inset-0 z-50 hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs';
+        } else {
+          root.className = 'absolute inset-0 z-[100] hidden flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs';
+        }
+      }, 250);
+    });
+  }
+
   function openShopeeCheckoutDrawer(actionType) {
     const check = canActivateTestMode();
     if (!check.allowed) {
@@ -6527,12 +6742,27 @@ const ProductForm = (() => {
       document.getElementById('mobile-card-preview-container')
     ].filter(Boolean);
 
-    // Buka Drawer Spesifikasi (Aktif di mode Pratinjau maupun mode Uji Coba, Desktop & Mobile Sheet)
+    // Buka Drawer Spesifikasi & Tabel Ukuran (Aktif di mode Pratinjau maupun mode Uji Coba, Desktop & Mobile Sheet)
     containers.forEach(container => {
       container.querySelectorAll('.btn-open-spec-drawer').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
           openProductSpecDrawer();
+        };
+      });
+      container.querySelectorAll('.btn-open-size-guide-drawer').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openProductSizeGuideDrawer();
+        };
+      });
+      container.querySelectorAll('.btn-toggle-inline-size-guide').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          previewTestState.isInlineSizeGuideOpen = !previewTestState.isInlineSizeGuideOpen;
+          updateProductCardLivePreview();
         };
       });
     });
@@ -6728,7 +6958,7 @@ const ProductForm = (() => {
                     if (typeof App !== 'undefined' && App.showToast) {
                       App.showToast('Pesan WhatsApp berhasil disalin!', 'success');
                     }
-                  }).catch(() => {});
+                  }).catch(() => { });
                 };
               }
             }
@@ -6857,7 +7087,7 @@ const ProductForm = (() => {
               if (maxOrderQty !== Infinity && val > maxOrderQty) val = maxOrderQty;
               previewTestState.qty = val;
               updateShopeeDrawerVariationOptionsAvailability(container);
-            updateShopeeDrawerLivePricing();
+              updateShopeeDrawerLivePricing();
               updateDrawerQtyButtonsState();
             }
           };
@@ -6978,20 +7208,20 @@ const ProductForm = (() => {
               return;
             } else if (tier === 'tier2') {
               previewTestState.selectedTier2Id = (previewTestState.selectedTier2Id === id) ? null : id;
-          validateAndAdjustSpecificVariations('main');
+              validateAndAdjustSpecificVariations('main');
             } else if (tier === 'tier3') {
               previewTestState.selectedTier3Id = (previewTestState.selectedTier3Id === id) ? null : id;
-          validateAndAdjustSpecificVariations('extra_1');
+              validateAndAdjustSpecificVariations('extra_1');
             } else if (tier === 'tier4') {
               previewTestState.selectedTier4Id = (previewTestState.selectedTier4Id === id) ? null : id;
-          validateAndAdjustSpecificVariations('extra_2');
+              validateAndAdjustSpecificVariations('extra_2');
             }
 
             if (wrapper) {
               const currentSelId = tier === 'tier1' ? previewTestState.selectedTier1Id
                 : tier === 'tier2' ? previewTestState.selectedTier2Id
-                : tier === 'tier3' ? previewTestState.selectedTier3Id
-                : previewTestState.selectedTier4Id;
+                  : tier === 'tier3' ? previewTestState.selectedTier3Id
+                    : previewTestState.selectedTier4Id;
               const valEl = wrapper.querySelector('.shadcn-select-value');
               if (valEl) {
                 const groupLabel = getVariationLabel(tier, tier === 'tier1' ? 'Variasi 1' : tier === 'tier2' ? 'Variasi 2' : tier === 'tier3' ? 'Variasi 3' : 'Variasi 4');
@@ -7363,7 +7593,7 @@ const ProductForm = (() => {
             if (primaryState.has_custom_dimension && !isCustomDimensionValid()) {
               previewTestState.dimError = true;
               updateShopeeDrawerVariationOptionsAvailability(container);
-            updateShopeeDrawerLivePricing();
+              updateShopeeDrawerLivePricing();
               const pVal = parseFloat(previewTestState.dimLength);
               const lVal = parseFloat(previewTestState.dimWidth);
               const sec = container.querySelector('#drawer-custom-dimension-section');
@@ -7592,7 +7822,7 @@ const ProductForm = (() => {
             if (selStart !== null && selEnd !== null) {
               inp.setSelectionRange(selStart, selEnd);
             }
-          } catch (_) {}
+          } catch (_) { }
         });
       } else if (focusedDimField === 'p') {
         const pInp = document.querySelector('.input-shopee-dim-p');
@@ -7602,7 +7832,7 @@ const ProductForm = (() => {
             if (selStart !== null && selEnd !== null) {
               pInp.setSelectionRange(selStart, selEnd);
             }
-          } catch (_) {}
+          } catch (_) { }
         }
       } else if (focusedDimField === 'l') {
         const lInp = document.querySelector('.input-shopee-dim-l');
@@ -7612,7 +7842,7 @@ const ProductForm = (() => {
             if (selStart !== null && selEnd !== null) {
               lInp.setSelectionRange(selStart, selEnd);
             }
-          } catch (_) {}
+          } catch (_) { }
         }
       }
     };
@@ -8414,6 +8644,7 @@ const ProductForm = (() => {
       }
       const isDrawerOpen = Boolean(isTestMode && previewTestState.isDrawerOpen);
       const drawerHtml = isDrawerOpen ? buildShopeeDrawerHtml(previewTestState.drawerActionType || 'buy') : '';
+      const effectiveLinkedTier = (typeof getEffectiveLinkedVariation === 'function') ? getEffectiveLinkedVariation() : null;
 
       const miniPdpHtml = `
         <div class="mini-pdp-card w-full bg-white rounded-none border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
@@ -8461,28 +8692,28 @@ const ProductForm = (() => {
                   ${escapeHtml(name)}
                 </h3>
 
-                <!-- Grosir (Jika Aktif) -->
-                ${wholesaleInfo.bannerText ? `
-                  <div class="mt-1 flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-200">
-                    <i class="bi bi-tag-fill text-amber-600"></i>
-                    <span>${escapeHtml(wholesaleInfo.bannerText)}</span>
-                  </div>
-                ` : ''}
-
                 <!-- URUTAN 3: Judul Variasi 1 & Slider Horizontal Gambar Variasi 1 (6.5 Item Peek) -->
                 ${primaryState.has_variants ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div class="mb-1.5 flex items-center leading-tight">${formatVariationReactiveHeader(getVariationLabel('tier1', 'Variasi 1'), validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
+                    <div class="mb-1.5 flex items-center justify-between gap-1 leading-tight">
+                      <div class="flex items-center min-w-0">${formatVariationReactiveHeader(getVariationLabel('tier1', 'Variasi 1'), validMaterials.length, selectedMat ? selectedMat.name : '')}</div>
+                      ${(effectiveLinkedTier === 'tier1' && selectedMat && selectedMat.name && String(selectedMat.name).trim() !== '' && String(selectedMat.name).trim().toLowerCase() !== 'produk standar') ? `
+                        <button type="button" class="btn-toggle-inline-size-guide text-[11px] font-medium text-slate-500 hover:text-slate-800 transition cursor-pointer select-none shrink-0 inline-flex items-center gap-0.5">
+                          <span>Tabel Ukuran</span>
+                          <i class="bi bi-chevron-right text-[10px] text-slate-400 transition-transform duration-200 ${previewTestState.isInlineSizeGuideOpen ? 'rotate-90' : ''}"></i>
+                        </button>
+                      ` : ''}
+                    </div>
                     ${validMaterials.length > 0 ? (
-                      hasAnyTier1Image ? `
+            hasAnyTier1Image ? `
                         <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
                           ${validMaterials.map((m, idx) => {
-                            const isSelected = previewTestState.selectedTier1Id === m.id;
-                            const itemImg = m.image_url || m.image;
-                            const peekStyle = validMaterials.length >= 7
-                              ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;'
-                              : 'width: 36px; height: 36px;';
-                            return `
+              const isSelected = previewTestState.selectedTier1Id === m.id;
+              const itemImg = m.image_url || m.image;
+              const peekStyle = validMaterials.length >= 7
+                ? 'flex: 0 0 calc((100% - 36px) / 6.5); width: calc((100% - 36px) / 6.5); aspect-ratio: 1/1;'
+                : 'width: 36px; height: 36px;';
+              return `
                               <button type="button" class="btn-preview-tier1 mini-pdp-var-chip rounded overflow-hidden border transition cursor-pointer relative shrink-0 flex items-center justify-center ${isSelected ? 'is-active border-2 shadow-xs' : 'border-transparent bg-slate-100 hover:bg-slate-200'} ${!isTestMode ? 'pointer-events-none select-none' : ''}" style="${peekStyle} ${isSelected ? 'border-color: var(--color-primary) !important;' : ''}" data-id="${m.id}" data-idx="${idx}" title="${escapeHtml(m.name)}">
                                 ${itemImg ? `
                                   <img src="${itemImg}" class="w-full h-full object-cover" alt="${escapeHtml(m.name)}" />
@@ -8493,21 +8724,21 @@ const ProductForm = (() => {
                                 `}
                               </button>
                             `;
-                          }).join('')}
+            }).join('')}
                         </div>
                       ` : `
                         <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5">
                           ${validMaterials.map((m, idx) => {
-                            const isSelected = previewTestState.selectedTier1Id === m.id;
-                            return `
+              const isSelected = previewTestState.selectedTier1Id === m.id;
+              return `
                               <button type="button" class="btn-preview-tier1 mini-pdp-var-chip px-2.5 py-1.5 rounded text-[10px] font-semibold transition cursor-pointer flex items-center justify-center shrink-0 whitespace-nowrap ${isSelected ? 'is-active' : ''} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${m.id}" data-idx="${idx}">
                                 <span>${escapeHtml(m.name.trim())}</span>
                               </button>
                             `;
-                          }).join('')}
+            }).join('')}
                         </div>
                       `
-                    ) : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))} belum diisi</span>`}
+          ) : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier1', 'Variasi 1'))} belum diisi</span>`}
                     ${(selectedMat && selectedMat.description && String(selectedMat.description).trim() !== '') ? `
                       <p class="text-[10px] text-slate-400 font-normal leading-relaxed mt-1.5 preview-tier1-desc">
                         ${escapeHtml(String(selectedMat.description).trim())}
@@ -8517,10 +8748,10 @@ const ProductForm = (() => {
                 ` : ''}
 
                 <!-- URUTAN 4: Variasi ke-2 & Ringkasan Variasi 3, 4, Extras (Maksimal 2 Variasi di Awal) -->
-                ${(primaryState.has_variation_2 && !(function() {
-                  const check = getAllowedVariationOptions(previewTestState.selectedTier1Id, 'main');
-                  return Boolean(check.isSkipped || check.isEmptyResolved);
-                })()) ? `
+                ${(primaryState.has_variation_2 && !(function () {
+          const check = getAllowedVariationOptions(previewTestState.selectedTier1Id, 'main');
+          return Boolean(check.isSkipped || check.isEmptyResolved);
+        })()) ? `
                   <div class="space-y-1.5 pt-2 border-t border-slate-100">
                     ${hasExtraTiers ? `
                       <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-[11px] text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
@@ -8531,22 +8762,30 @@ const ProductForm = (() => {
                         <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                       </div>
                     ` : `
-                      <div class="mb-1.5 flex items-center leading-tight">${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}</div>
+                      <div class="mb-1.5 flex items-center justify-between gap-1 leading-tight">
+                        <div class="flex items-center min-w-0">${formatVariationReactiveHeader(getVariationLabel('tier2', 'Variasi 2'), validV2.length, selectedV2 ? selectedV2.name : '')}</div>
+                        ${(effectiveLinkedTier === 'tier2' && selectedV2 && selectedV2.name && String(selectedV2.name).trim() !== '' && String(selectedV2.name).trim().toLowerCase() !== 'produk standar') ? `
+                          <button type="button" class="btn-toggle-inline-size-guide text-[11px] font-medium text-slate-500 hover:text-slate-800 transition cursor-pointer select-none shrink-0 inline-flex items-center gap-0.5">
+                            <span>Tabel Ukuran</span>
+                            <i class="bi bi-chevron-right text-[10px] text-slate-400 transition-transform duration-200 ${previewTestState.isInlineSizeGuideOpen ? 'rotate-90' : ''}"></i>
+                          </button>
+                        ` : ''}
+                      </div>
                     `}
                     <div class="flex items-center justify-start gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-nowrap">
                       ${validV2.length > 0 ? validV2.map((f, idx) => {
-                        const fId = f.id || `v2_${idx}`;
-                        const isSelected = previewTestState.selectedTier2Id === fId;
-                        const v2Check = getAllowedVariationOptions(previewTestState.selectedTier1Id, 'main');
-                        const isOptDisabled = v2Check.isSkipped || (v2Check.isSpecific && (!v2Check.allowedIds || !v2Check.allowedIds.includes(fId)));
-                        const disabledClasses = isOptDisabled ? 'hidden pointer-events-none' : '';
-                        const disabledAttr = isOptDisabled ? 'disabled="disabled"' : '';
-                        return `
+          const fId = f.id || `v2_${idx}`;
+          const isSelected = previewTestState.selectedTier2Id === fId;
+          const v2Check = getAllowedVariationOptions(previewTestState.selectedTier1Id, 'main');
+          const isOptDisabled = v2Check.isSkipped || (v2Check.isSpecific && (!v2Check.allowedIds || !v2Check.allowedIds.includes(fId)));
+          const disabledClasses = isOptDisabled ? 'hidden pointer-events-none' : '';
+          const disabledAttr = isOptDisabled ? 'disabled="disabled"' : '';
+          return `
                           <button type="button" ${disabledAttr} class="btn-preview-tier2 mini-pdp-var-chip px-2.5 py-1.5 rounded text-[10px] font-semibold transition cursor-pointer flex items-center justify-center shrink-0 whitespace-nowrap ${disabledClasses} ${isSelected && !isOptDisabled ? 'is-active' : ''} ${!isTestMode ? 'pointer-events-none select-none' : ''}" data-id="${fId}">
                             <span>${escapeHtml(f.name.trim())}</span>
                           </button>
                         `;
-                      }).join('') : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))} belum diisi</span>`}
+        }).join('') : `<span class="text-[10px] text-slate-400 italic">${escapeHtml(getVariationLabel('tier2', 'Variasi 2'))} belum diisi</span>`}
                     </div>
                     ${(selectedV2 && selectedV2.description && String(selectedV2.description).trim() !== '') ? `
                       <p class="text-[10px] text-slate-400 font-normal leading-relaxed mt-1.5 preview-tier2-desc">
@@ -8559,20 +8798,37 @@ const ProductForm = (() => {
                     <div class="btn-open-all-variations-drawer flex items-center justify-between gap-1 text-[11px] text-slate-600 py-1 ${isTestMode ? 'cursor-pointer hover:text-slate-900' : ''}">
                       <div class="truncate flex items-center leading-tight">
                         ${(!primaryState.has_variants && !primaryState.has_variation_2 && hasExtras && !hasTier3 && !hasTier4 && !hasCustomDim)
-                          ? formatVariationReactiveHeader(getVariationLabel('extras', 'Layanan Extras'), validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)
-                          : `<span class="text-[11px] font-medium text-slate-700">Pilihan Variasi:</span><span class="font-normal text-slate-400 text-[11px] ml-1"> (${summaryParts.join(', ')})</span>`
-                        }
+            ? formatVariationReactiveHeader(getVariationLabel('extras', 'Layanan Extras'), validExtras.filter(ex => !ex.is_default_none).length, extrasSelectedName)
+            : `<span class="text-[11px] font-medium text-slate-700">Pilihan Variasi:</span><span class="font-normal text-slate-400 text-[11px] ml-1"> (${summaryParts.join(', ')})</span>`
+          }
                       </div>
                       <i class="bi bi-chevron-right text-[11px] text-slate-400 shrink-0"></i>
                     </div>
                   </div>
                 ` : '')}
 
+                <!-- Baris Pemicu Expand/Collapse Tabel Ukuran (Tepat di Atas Spesifikasi) -->
+                ${(primaryState.size_guide && primaryState.size_guide.enabled) ? `
+                  <div class="pt-2 border-t border-slate-100">
+                    <div class="btn-toggle-inline-size-guide flex items-center justify-between gap-1 text-xs text-slate-600 py-1 cursor-pointer hover:text-slate-900 select-none">
+                      <div class="truncate flex items-center">
+                        <span class="text-xs font-medium text-slate-700 leading-normal">Tabel Ukuran</span>
+                      </div>
+                      <i class="bi bi-chevron-right text-xs text-slate-400 shrink-0 transition-transform duration-200 ${previewTestState.isInlineSizeGuideOpen ? 'rotate-90' : ''}"></i>
+                    </div>
+                    ${previewTestState.isInlineSizeGuideOpen ? `
+                      <div class="inline-size-guide-content pt-1.5 pb-1">
+                        ${renderProductSizeGuideContentHtml()}
+                      </div>
+                    ` : ''}
+                  </div>
+                ` : ''}
+
                 <!-- Baris Pemicu Drawer Spesifikasi -->
                 <div class="pt-2 border-t border-slate-100">
                   <div class="btn-open-spec-drawer flex items-center justify-between gap-1 text-xs text-slate-600 py-1 cursor-pointer hover:text-slate-900 select-none">
-                    <div class="truncate">
-                      <span class="font-bold text-slate-800">Spesifikasi</span>
+                    <div class="truncate flex items-center">
+                      <span class="text-xs font-medium text-slate-700 leading-normal">Spesifikasi</span>
                       <span class="font-normal text-slate-400 text-[11px] truncate"> (Stok, Merek, Garansi, Dikirim Dari...)</span>
                     </div>
                     <i class="bi bi-chevron-right text-xs text-slate-400 shrink-0"></i>
@@ -8881,7 +9137,7 @@ const ProductForm = (() => {
     }
     const normTier = (typeof VariationEngine !== 'undefined') ? VariationEngine.normalizeTierKey(tier) : tier;
     const scope = (primaryState.variation_scopes && (primaryState.variation_scopes[normTier] || primaryState.variation_scopes[tier])) ||
-                  primaryState[`scope_${normTier}`] || 'umum';
+      primaryState[`scope_${normTier}`] || 'umum';
     if (scope === 'spesifik') {
       const matMap = primaryState.specific_options_map || {};
       for (const mId in matMap) {
@@ -9356,15 +9612,15 @@ const ProductForm = (() => {
           </thead>
           <tbody class="divide-y divide-slate-100">
             ${rules.map((rule, idx) => {
-              const pLabel = getVariationTierDisplayName(rule.parent_tier);
-              const tLabel = getVariationTierDisplayName(rule.target_tier);
-              const parentOpts = getTierOptionsForProduct(rule.parent_tier);
-              const triggerNames = (rule.trigger_ids || []).map(tid => {
-                const opt = parentOpts.find(o => o.id === tid);
-                return opt ? opt.name : tid;
-              }).join(', ') || 'Semua';
+      const pLabel = getVariationTierDisplayName(rule.parent_tier);
+      const tLabel = getVariationTierDisplayName(rule.target_tier);
+      const parentOpts = getTierOptionsForProduct(rule.parent_tier);
+      const triggerNames = (rule.trigger_ids || []).map(tid => {
+        const opt = parentOpts.find(o => o.id === tid);
+        return opt ? opt.name : tid;
+      }).join(', ') || 'Semua';
 
-              return `
+      return `
                 <tr class="hover:bg-slate-50 transition skip-rule-row" data-skip-idx="${idx}">
                   <td class="py-2 px-3 font-medium text-slate-800">${escapeHtml(pLabel)}</td>
                   <td class="py-2 px-3 text-slate-700">
@@ -9378,7 +9634,7 @@ const ProductForm = (() => {
                   </td>
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </div>
@@ -10311,11 +10567,11 @@ const ProductForm = (() => {
                 </thead>
                 <tbody id="affiliate-tiers-table-body" class="divide-y divide-slate-100 bg-white">
                   ${tiers.map((tier, idx) => {
-                    const minVal = (tier.min_qty !== null && tier.min_qty !== undefined) ? tier.min_qty : (idx === 0 ? 1 : '');
-                    const maxVal = (tier.max_qty !== null && tier.max_qty !== undefined) ? tier.max_qty : '';
-                    const commVal = (tier.commission_val !== undefined && tier.commission_val !== null) ? tier.commission_val : (tier.commission_pct !== undefined && tier.commission_pct !== null ? tier.commission_pct : '');
-                    const isFirstRow = (idx === 0);
-                    return `
+      const minVal = (tier.min_qty !== null && tier.min_qty !== undefined) ? tier.min_qty : (idx === 0 ? 1 : '');
+      const maxVal = (tier.max_qty !== null && tier.max_qty !== undefined) ? tier.max_qty : '';
+      const commVal = (tier.commission_val !== undefined && tier.commission_val !== null) ? tier.commission_val : (tier.commission_pct !== undefined && tier.commission_pct !== null ? tier.commission_pct : '');
+      const isFirstRow = (idx === 0);
+      return `
                       <tr data-tier-index="${idx}">
                         <td class="py-2 px-3">
                           ${isFirstRow ? `
@@ -10341,7 +10597,7 @@ const ProductForm = (() => {
                         </td>
                       </tr>
                     `;
-                  }).join('')}
+    }).join('')}
                 </tbody>
               </table>
             </div>
@@ -10883,6 +11139,1000 @@ const ProductForm = (() => {
     `;
   }
 
+  // Template default panduan ukuran produk (Pakaian, Celana, Sepatu)
+  const defaultSizeGuideTemplates = {
+    pakaian: {
+      name: 'Pakaian',
+      columns: ['Ukuran', 'Panjang', 'Lebar Dada', 'Bahu', 'Rekomendasi Berat', 'Rekomendasi Tinggi'],
+      rows: [
+        ['S', '66', '48', '42', '45-55 kg', '155-165 cm'],
+        ['M', '68', '50', '44', '55-65 kg', '160-170 cm'],
+        ['L', '70', '52', '46', '65-75 kg', '165-175 cm'],
+        ['XL', '72', '54', '48', '75-85 kg', '170-180 cm']
+      ]
+    },
+    celana: {
+      name: 'Celana',
+      columns: ['Ukuran', 'Panjang Celana', 'Lingkar Pinggang', 'Lingkar Pinggul', 'Lingkar Paha'],
+      rows: [
+        ['28', '98', '72', '90', '52'],
+        ['30', '100', '76', '94', '54'],
+        ['32', '102', '80', '98', '56'],
+        ['34', '104', '84', '102', '58']
+      ]
+    },
+    sepatu: {
+      name: 'Sepatu',
+      columns: ['Ukuran EU', 'Ukuran US', 'Ukuran UK', 'Panjang Kaki (cm)'],
+      rows: [
+        ['39', '6.5', '6', '24.5'],
+        ['40', '7', '6.5', '25.0'],
+        ['41', '8', '7.5', '26.0'],
+        ['42', '8.5', '8', '26.5'],
+        ['43', '9.5', '9', '27.5']
+      ]
+    }
+  };
+
+  function renderSizeGuideTheadHtml(columns = []) {
+    return `
+      <tr>
+        ${columns.map((col, cIdx) => `
+          <th class="p-2 sm:p-2.5 text-center min-w-[125px]" data-col-idx="${cIdx}">
+            <div class="flex items-center justify-center gap-1">
+              <div class="relative w-full clean-datalist-wrapper">
+                <input
+                  type="text"
+                  class="size-col-header-input clean-datalist-input w-full px-2 py-1 text-center font-bold text-xs text-slate-800 bg-white border border-slate-300 hover:border-slate-400 focus:border-[var(--color-primary)] rounded outline-none shadow-2xs"
+                  value="${escapeHtml(col)}"
+                  placeholder="Nama Kolom"
+                  data-col-idx="${cIdx}"
+                  data-datalist-id="datalist-size-col-titles"
+                  data-datalist="datalist-size-col-titles"
+                  autocomplete="off"
+                />
+              </div>
+              ${columns.length > 2 ? `
+                <button type="button" class="btn-del-size-col text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50 inline-flex items-center justify-center cursor-pointer transition shrink-0" data-col-idx="${cIdx}" title="Hapus Kolom">
+                  <i class="bi bi-trash3-fill text-xs pointer-events-none"></i>
+                </button>
+              ` : ''}
+            </div>
+          </th>
+        `).join('')}
+        <th class="p-2 sm:p-2.5 text-center w-12 whitespace-nowrap">
+          <div class="flex items-center justify-center">
+            <button
+              type="button"
+              id="btn-add-size-col-header"
+              class="btn-add-size-col w-6 h-6 rounded bg-[var(--color-primary)] text-white hover:opacity-90 inline-flex items-center justify-center text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+              title="Tambah Kolom"
+            >
+              <i class="bi bi-plus text-base leading-none pointer-events-none"></i>
+            </button>
+          </div>
+        </th>
+      </tr>
+    `;
+  }
+
+  function renderSizeGuideTbodyHtml(columns = [], rows = []) {
+    return rows.map((row, rIdx) => `
+      <tr class="hover:bg-slate-50 transition border-b border-slate-200" data-row-idx="${rIdx}">
+        ${columns.map((_, cIdx) => `
+          <td class="p-2 sm:p-2.5 align-middle text-center min-w-[110px]">
+            <input
+              type="text"
+              class="size-cell-input w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-row-idx="${rIdx}"
+              data-col-idx="${cIdx}"
+              value="${escapeHtml((Array.isArray(row) ? row[cIdx] : '') || '')}"
+              placeholder="—"
+            />
+          </td>
+        `).join('')}
+        <td class="p-2 sm:p-2.5 align-middle text-center w-12">
+          <button
+            type="button"
+            class="btn-del-size-row text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer shrink-0"
+            data-row-idx="${rIdx}"
+            title="Hapus Baris"
+          >
+            <i class="bi bi-trash3-fill text-xs pointer-events-none"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function getActiveVariationTiersForSizeGuide() {
+    const isVarMode = Boolean(primaryState.has_variants || primaryState.has_variations);
+    if (!isVarMode) return [];
+
+    const tiers = [];
+    tiers.push({
+      key: 'tier1',
+      label: getVariationLabel('tier1', 'Variasi 1')
+    });
+
+    if (primaryState.has_variation_2) {
+      tiers.push({
+        key: 'tier2',
+        label: getVariationLabel('tier2', 'Variasi 2')
+      });
+    }
+
+    if (primaryState.has_variation_2 && primaryState.has_variation_3) {
+      tiers.push({
+        key: 'tier3',
+        label: getVariationLabel('tier3', 'Variasi 3')
+      });
+    }
+
+    if (primaryState.has_variation_2 && primaryState.has_variation_3 && primaryState.has_variation_4) {
+      tiers.push({
+        key: 'tier4',
+        label: getVariationLabel('tier4', 'Variasi 4')
+      });
+    }
+
+    return tiers;
+  }
+
+  function getEffectiveLinkedVariation() {
+    const guide = primaryState.size_guide;
+    if (!guide || !guide.enabled) return null;
+
+    const activeTiers = getActiveVariationTiersForSizeGuide();
+    if (activeTiers.length === 0) return null;
+    if (activeTiers.length === 1) {
+      return activeTiers[0].key; // 1 variasi aktif: otomatis dikaitkan ke variasi tersebut tanpa dropdown
+    }
+
+    // 2-4 variasi aktif
+    let linked = guide.linked_variation;
+    if (!linked) return null;
+    if (linked === 'main') linked = 'tier2';
+    else if (linked === 'extra_1') linked = 'tier3';
+    else if (linked === 'extra_2') linked = 'tier4';
+
+    const match = activeTiers.find(t => t.key === linked);
+    return match ? match.key : null;
+  }
+
+  function renderSizeGuideVariationLinkMarkup(guide) {
+    const activeTiers = getActiveVariationTiersForSizeGuide();
+    if (activeTiers.length < 2) return '';
+
+    let currentLinked = (guide && guide.linked_variation) || '';
+    if (currentLinked === 'main') currentLinked = 'tier2';
+    else if (currentLinked === 'extra_1') currentLinked = 'tier3';
+    else if (currentLinked === 'extra_2') currentLinked = 'tier4';
+
+    const matchedTier = currentLinked ? activeTiers.find(t => t.key === currentLinked) : null;
+    const currentKey = matchedTier ? matchedTier.key : '';
+    const currentLabel = matchedTier ? matchedTier.label : '';
+
+    return `
+      <div id="size-guide-variation-link-group" class="space-y-1.5 pb-2 border-b border-slate-100">
+        <label for="custom-select-size-guide-linked-variation" class="block text-xs font-bold text-slate-800">
+          Kaitkan dengan Variasi <span class="text-rose-500">*</span>
+        </label>
+        <div class="relative w-full custom-select-group" id="size-guide-linked-variation-wrapper">
+          <!-- Trigger Dropdown Kustom Bergaya Input/Pilih (Hanya Dapat Memilih, Tanpa Input Manual) -->
+          <div
+            id="custom-select-size-guide-linked-variation"
+            tabindex="0"
+            role="button"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-700 transition cursor-pointer flex items-center justify-between select-none relative"
+          >
+            <span id="selected-size-guide-variation-label" class="${currentLabel ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'} truncate">
+              ${currentLabel ? escapeHtml(currentLabel) : 'Pilih variasi'}
+            </span>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+              <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="size-guide-variation-chevron"></i>
+            </div>
+          </div>
+
+          <!-- Hidden Input untuk Nilai Internal (tier1, tier2, tier3, tier4) -->
+          <input type="hidden" id="select-size-guide-linked-variation" value="${currentKey}" />
+
+          <!-- Daftar Pilihan Kustom (Bukan Bawaan Browser) -->
+          <div
+            id="size-guide-variation-popover"
+            class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto p-1 z-50 hidden select-none"
+            role="listbox"
+          >
+            ${activeTiers.map(t => {
+              const isSelected = (currentKey === t.key);
+              return `
+                <div
+                  class="custom-size-guide-var-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                  data-value="${escapeHtml(t.key)}"
+                  data-label="${escapeHtml(t.label)}"
+                  role="option"
+                  aria-selected="${isSelected ? 'true' : 'false'}"
+                >
+                  <span>${escapeHtml(t.label)}</span>
+                  ${isSelected ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        <div id="size-guide-linked-variation-error" class="text-[11px] text-red-500 font-medium hidden">
+          Pilih variasi yang dikaitkan dengan Tabel Ukuran.
+        </div>
+        <p class="text-[11px] text-slate-500">
+          Akses Tabel Ukuran akan ditampilkan langsung pada variasi yang Anda pilih.
+        </p>
+      </div>
+    `;
+  }
+
+  function bindCustomSizeGuideVariationSelect() {
+    const trigger = document.getElementById('custom-select-size-guide-linked-variation');
+    const popover = document.getElementById('size-guide-variation-popover');
+    const hiddenInput = document.getElementById('select-size-guide-linked-variation');
+    const labelSpan = document.getElementById('selected-size-guide-variation-label');
+    const chevron = document.getElementById('size-guide-variation-chevron');
+    const errEl = document.getElementById('size-guide-linked-variation-error');
+
+    if (!trigger || !popover || !hiddenInput) return;
+
+    const togglePopover = (open) => {
+      const isOpen = (open !== undefined) ? open : popover.classList.contains('hidden');
+      if (isOpen) {
+        if (typeof closeAllCleanDatalistPopovers === 'function') {
+          closeAllCleanDatalistPopovers();
+        }
+        popover.classList.remove('hidden');
+        trigger.setAttribute('aria-expanded', 'true');
+        if (chevron) chevron.classList.add('rotate-180');
+      } else {
+        popover.classList.add('hidden');
+        trigger.setAttribute('aria-expanded', 'false');
+        if (chevron) chevron.classList.remove('rotate-180');
+      }
+    };
+
+    trigger.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePopover();
+    };
+
+    trigger.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        togglePopover();
+      } else if (e.key === 'Escape') {
+        togglePopover(false);
+      }
+    };
+
+    const clickOutsideHandler = (e) => {
+      if (!trigger.contains(e.target) && !popover.contains(e.target)) {
+        togglePopover(false);
+      }
+    };
+    if (trigger._sizeGuideClickOutside) {
+      document.removeEventListener('click', trigger._sizeGuideClickOutside);
+    }
+    trigger._sizeGuideClickOutside = clickOutsideHandler;
+    document.addEventListener('click', clickOutsideHandler);
+
+    popover.querySelectorAll('.custom-size-guide-var-item').forEach(item => {
+      item.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const val = item.getAttribute('data-value') || '';
+        const label = item.getAttribute('data-label') || '';
+
+        hiddenInput.value = val;
+        primaryState.size_guide = primaryState.size_guide || {};
+        primaryState.size_guide.linked_variation = val || null;
+
+        if (labelSpan) {
+          labelSpan.textContent = label || 'Pilih variasi';
+          if (val) {
+            labelSpan.className = 'text-slate-800 font-semibold truncate';
+          } else {
+            labelSpan.className = 'text-slate-400 font-normal truncate';
+          }
+        }
+
+        popover.querySelectorAll('.custom-size-guide-var-item').forEach(el => {
+          const isThis = (el === item);
+          el.setAttribute('aria-selected', isThis ? 'true' : 'false');
+          if (isThis) {
+            el.className = 'custom-size-guide-var-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]';
+            if (!el.querySelector('.bi-check2')) {
+              el.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>');
+            }
+          } else {
+            el.className = 'custom-size-guide-var-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between';
+            const checkIcon = el.querySelector('.bi-check2');
+            if (checkIcon) checkIcon.remove();
+          }
+        });
+
+        if (val) {
+          trigger.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          if (errEl) errEl.classList.add('hidden');
+          const typeErr = document.getElementById('size-guide-type-error');
+          if (typeErr) typeErr.classList.add('hidden');
+        }
+
+        togglePopover(false);
+
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+        if (typeof updateProductCardLivePreview === 'function') updateProductCardLivePreview();
+      };
+    });
+  }
+
+  function refreshSizeGuideVariationLinkDropdown() {
+    const panel = document.getElementById('size-guide-content-panel');
+    if (!panel) return;
+    const existingGroup = document.getElementById('size-guide-variation-link-group');
+    const activeTiers = getActiveVariationTiersForSizeGuide();
+    const guide = primaryState.size_guide || {};
+
+    if (activeTiers.length < 2) {
+      if (existingGroup) existingGroup.remove();
+      return;
+    }
+
+    const newHtml = renderSizeGuideVariationLinkMarkup(guide);
+    if (existingGroup) {
+      existingGroup.outerHTML = newHtml;
+    } else {
+      panel.insertAdjacentHTML('afterbegin', newHtml);
+    }
+
+    bindCustomSizeGuideVariationSelect();
+  }
+
+  function bindSizeGuideEvents() {
+    const toggleEnable = document.getElementById('toggle-size-guide-enable');
+    const contentPanel = document.getElementById('size-guide-content-panel');
+    const typeRadios = document.querySelectorAll('input[name="size_guide_type"]');
+    const tablePanel = document.getElementById('size-guide-table-panel');
+    const imagePanel = document.getElementById('size-guide-image-panel');
+    const lblTable = document.getElementById('lbl-size-guide-type-table');
+    const lblImage = document.getElementById('lbl-size-guide-type-image');
+    const thead = document.getElementById('size-guide-thead');
+    const tbody = document.getElementById('size-guide-tbody');
+    const btnAddRow = document.getElementById('btn-add-size-row');
+    const btnAddCol = document.getElementById('btn-add-size-col');
+    const tplButtons = document.querySelectorAll('.btn-size-template');
+
+    function syncTemplateButtonStyles(activeKey) {
+      tplButtons.forEach(btn => {
+        const k = btn.getAttribute('data-template');
+        if (k === activeKey) {
+          btn.className = 'btn-size-template px-3 py-1.5 rounded-md border text-xs font-bold transition cursor-pointer border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]';
+        } else {
+          btn.className = 'btn-size-template px-3 py-1.5 rounded-md border text-xs font-bold transition cursor-pointer border-slate-300 bg-white text-slate-700 hover:bg-slate-50';
+        }
+      });
+    }
+
+    function renderSizeGuideTableContent() {
+      const guide = primaryState.size_guide || {};
+      const curTpl = defaultSizeGuideTemplates[guide.template] || defaultSizeGuideTemplates.pakaian;
+      const cols = (Array.isArray(guide.columns) && guide.columns.length > 0) ? guide.columns : curTpl.columns;
+      const rows = (Array.isArray(guide.rows) && guide.rows.length > 0) ? guide.rows : curTpl.rows;
+      if (thead) {
+        thead.innerHTML = renderSizeGuideTheadHtml(cols);
+        if (typeof bindCleanDatalistPopovers === 'function') {
+          bindCleanDatalistPopovers(thead);
+        }
+      }
+      if (tbody) tbody.innerHTML = renderSizeGuideTbodyHtml(cols, rows);
+    }
+
+    // Inisialisasi awal saran judul kolom pada thead
+    if (thead && typeof bindCleanDatalistPopovers === 'function') {
+      bindCleanDatalistPopovers(thead);
+    }
+
+    function showSizeGuideTemplateConfirmModal(targetKey, onConfirm) {
+      let modal = document.getElementById('modal-size-guide-template-confirm');
+      if (!modal) {
+        const div = document.createElement('div');
+        div.id = 'modal-size-guide-template-confirm';
+        div.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs transition-opacity duration-200';
+        div.innerHTML = `
+          <div class="bg-white rounded-lg shadow-xl border border-slate-200 max-w-sm w-full p-5 space-y-4">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style="background-color: var(--color-primary-subtle); color: var(--color-primary);">
+                <i class="bi bi-question-circle text-lg"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="text-sm font-bold text-slate-800">Ganti template ukuran?</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">Data tabel saat ini akan diganti.</p>
+              </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button type="button" id="btn-size-tpl-cancel" class="px-3.5 py-1.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer">
+                Batal
+              </button>
+              <button type="button" id="btn-size-tpl-proceed" class="px-3.5 py-1.5 rounded-md text-xs font-bold text-white transition cursor-pointer shadow-2xs" style="background-color: var(--color-primary);">
+                Ganti Template
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(div);
+        modal = div;
+      }
+
+      modal.classList.remove('hidden');
+
+      const btnCancel = modal.querySelector('#btn-size-tpl-cancel');
+      const btnProceed = modal.querySelector('#btn-size-tpl-proceed');
+
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        if (btnCancel) btnCancel.onclick = null;
+        if (btnProceed) btnProceed.onclick = null;
+      };
+
+      if (btnCancel) {
+        btnCancel.onclick = () => {
+          closeModal();
+        };
+      }
+
+      if (btnProceed) {
+        btnProceed.onclick = () => {
+          closeModal();
+          if (typeof onConfirm === 'function') onConfirm();
+        };
+      }
+    }
+
+    if (toggleEnable) {
+      toggleEnable.onchange = (e) => {
+        const isChecked = e ? e.target.checked : toggleEnable.checked;
+
+        if (isChecked) {
+          // Sync state dari DOM terlebih dahulu agar nilai terkini tersimpan
+          if (typeof syncStateFromDOM === 'function') {
+            try { syncStateFromDOM(); } catch (_) { }
+          }
+
+          // Khusus Produk Tanpa Variasi: Cek apakah Harga Jual valid (> 0)
+          if (!primaryState.has_variants) {
+            const singlePriceInp = document.getElementById('input-single-price') || document.getElementById('input-base-price') || document.getElementById('input-prod-price') || document.getElementById('input-product-price');
+            const currentPrice = parseFloat(singlePriceInp ? singlePriceInp.value.trim() : (primaryState.price ?? materialsState[0]?.price));
+
+            if (isNaN(currentPrice) || currentPrice <= 0) {
+              // Batalkan pengaktifan toggle Panduan Ukuran
+              toggleEnable.checked = false;
+              if (primaryState.size_guide) {
+                primaryState.size_guide.enabled = false;
+              }
+              if (contentPanel) {
+                contentPanel.classList.remove('block');
+                contentPanel.classList.add('hidden');
+              }
+
+              // Tampilkan pesan peringatan ringkas via banner & toast
+              const warnMsg = 'Isi Harga Jual terlebih dahulu.';
+              if (typeof showWizardErrorBanner === 'function') {
+                showWizardErrorBanner([warnMsg]);
+              }
+              if (typeof showToast === 'function') {
+                showToast(warnMsg, 'warning');
+              }
+
+              // Arahkan ke input Harga Jual dengan ring highlight merah dan fokus otomatis
+              if (singlePriceInp) {
+                const targetScrollEl = singlePriceInp.closest('table, .variation-card-block, .step2-section-card, .form-group') || singlePriceInp;
+                if (typeof targetScrollEl.scrollIntoView === 'function') {
+                  targetScrollEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                targetScrollEl.classList.add('ring-2', 'ring-red-400', 'transition-all');
+                if (singlePriceInp !== targetScrollEl && singlePriceInp.classList?.add) {
+                  singlePriceInp.classList.add('ring-2', 'ring-red-400', 'border-red-500', 'transition-all');
+                }
+
+                setTimeout(() => {
+                  targetScrollEl.classList.remove('ring-2', 'ring-red-400', 'transition-all');
+                  if (singlePriceInp !== targetScrollEl && singlePriceInp.classList?.remove) {
+                    singlePriceInp.classList.remove('ring-2', 'ring-red-400', 'border-red-500', 'transition-all');
+                  }
+                }, 3000);
+
+                setTimeout(() => {
+                  try {
+                    if (typeof singlePriceInp.focus === 'function') {
+                      singlePriceInp.focus({ preventScroll: true });
+                    }
+                  } catch (_) { }
+                }, 250);
+              }
+              return;
+            }
+          }
+
+          // Harga Jual valid (atau produk ber-variasi): sembunyikan banner error jika ada
+          if (typeof hideWizardErrorBanner === 'function') {
+            hideWizardErrorBanner();
+          }
+        }
+
+        primaryState.size_guide = primaryState.size_guide || {
+          enabled: false,
+          type: '',
+          template: 'pakaian',
+          columns: [...defaultSizeGuideTemplates.pakaian.columns],
+          rows: defaultSizeGuideTemplates.pakaian.rows.map(r => [...r]),
+          image_url: '',
+          linked_variation: null
+        };
+        primaryState.size_guide.enabled = toggleEnable.checked;
+        if (contentPanel) {
+          if (toggleEnable.checked) {
+            contentPanel.classList.remove('hidden');
+            contentPanel.classList.add('block');
+          } else {
+            contentPanel.classList.remove('block');
+            contentPanel.classList.add('hidden');
+          }
+        }
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+        if (typeof updateProductCardLivePreview === 'function') updateProductCardLivePreview();
+      };
+      toggleEnable.onclick = (e) => {
+        if (typeof toggleEnable.onchange === 'function') toggleEnable.onchange(e);
+      };
+    }
+
+    bindCustomSizeGuideVariationSelect();
+
+    function handleTypeSelectAttempt(e) {
+      const activeTiers = (typeof getActiveVariationTiersForSizeGuide === 'function')
+        ? getActiveVariationTiersForSizeGuide()
+        : [];
+      const currentLinked = (primaryState.size_guide && primaryState.size_guide.linked_variation)
+        || (document.getElementById('select-size-guide-linked-variation')?.value)
+        || '';
+
+      if (activeTiers.length >= 2 && !currentLinked) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        const currentType = (primaryState.size_guide && primaryState.size_guide.type) || '';
+        typeRadios.forEach(rad => {
+          rad.checked = Boolean(currentType && rad.value === currentType);
+        });
+
+        if (lblTable) {
+          lblTable.className = (currentType === 'table')
+            ? 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition';
+        }
+        if (lblImage) {
+          lblImage.className = (currentType === 'image')
+            ? 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition';
+        }
+
+        if (tablePanel) {
+          if (currentType === 'table') tablePanel.classList.remove('hidden');
+          else tablePanel.classList.add('hidden');
+        }
+        if (imagePanel) {
+          if (currentType === 'image') imagePanel.classList.remove('hidden');
+          else imagePanel.classList.add('hidden');
+        }
+
+        // Tampilkan petunjuk singkat: "Pilih variasi terlebih dahulu."
+        const typeErr = document.getElementById('size-guide-type-error');
+        if (typeErr) {
+          typeErr.textContent = 'Pilih variasi terlebih dahulu.';
+          typeErr.classList.remove('hidden');
+        }
+        const linkErr = document.getElementById('size-guide-linked-variation-error');
+        if (linkErr) {
+          linkErr.textContent = 'Pilih variasi terlebih dahulu.';
+          linkErr.classList.remove('hidden');
+        }
+
+        // Arahkan fokus dan gulir ke dropdown Kaitkan dengan Variasi
+        const trigger = document.getElementById('custom-select-size-guide-linked-variation');
+        const popover = document.getElementById('size-guide-variation-popover');
+        const chevron = document.getElementById('size-guide-variation-chevron');
+
+        if (trigger) {
+          trigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          trigger.focus();
+          trigger.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+          setTimeout(() => {
+            trigger.classList.remove('ring-2', 'ring-red-200');
+          }, 2000);
+        }
+
+        // Buka daftar pilihannya jika mekanisme yang ada mendukung
+        if (popover) {
+          popover.classList.remove('hidden');
+          if (trigger) trigger.setAttribute('aria-expanded', 'true');
+          if (chevron) chevron.classList.add('rotate-180');
+        }
+
+        if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+          App.showToast('Pilih variasi terlebih dahulu.', 'warning');
+        }
+
+        return false;
+      }
+
+      const typeErr = document.getElementById('size-guide-type-error');
+      if (typeErr) typeErr.classList.add('hidden');
+      return true;
+    }
+
+    if (lblTable) {
+      lblTable.onclick = (e) => {
+        if (!handleTypeSelectAttempt(e)) return;
+      };
+    }
+    if (lblImage) {
+      lblImage.onclick = (e) => {
+        if (!handleTypeSelectAttempt(e)) return;
+      };
+    }
+
+    typeRadios.forEach(rad => {
+      rad.onclick = (e) => {
+        if (!handleTypeSelectAttempt(e)) return;
+      };
+      rad.onchange = (e) => {
+        if (!handleTypeSelectAttempt(e)) return;
+        const isTable = (rad.value === 'table');
+        if (primaryState.size_guide) primaryState.size_guide.type = rad.value;
+        if (lblTable) {
+          lblTable.className = isTable
+            ? 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition';
+        }
+        if (lblImage) {
+          lblImage.className = !isTable
+            ? 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition';
+        }
+        if (tablePanel) {
+          if (isTable) tablePanel.classList.remove('hidden');
+          else tablePanel.classList.add('hidden');
+        }
+        if (imagePanel) {
+          if (!isTable) imagePanel.classList.remove('hidden');
+          else imagePanel.classList.add('hidden');
+        }
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+      };
+    });
+
+    tplButtons.forEach(btn => {
+      btn.onclick = () => {
+        const tKey = btn.getAttribute('data-template');
+        const targetTpl = defaultSizeGuideTemplates[tKey];
+        if (!targetTpl) return;
+
+        // Periksa apakah ada data sel yang sudah diisi oleh pengguna
+        let hasUserData = false;
+        if (tbody) {
+          tbody.querySelectorAll('.size-cell-input').forEach(inp => {
+            if (inp.value && inp.value.trim() !== '') hasUserData = true;
+          });
+        }
+
+        const applyTemplate = () => {
+          primaryState.size_guide = primaryState.size_guide || {};
+          primaryState.size_guide.template = tKey;
+          primaryState.size_guide.columns = [...targetTpl.columns];
+          primaryState.size_guide.rows = targetTpl.rows.map(r => [...r]);
+
+          renderSizeGuideTableContent();
+          syncTemplateButtonStyles(tKey);
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+        };
+
+        if (hasUserData) {
+          showSizeGuideTemplateConfirmModal(tKey, applyTemplate);
+        } else {
+          applyTemplate();
+        }
+      };
+    });
+
+    const handleAddColumn = () => {
+      syncSizeGuideStateFromDOM();
+      primaryState.size_guide = primaryState.size_guide || {};
+      const curCols = (primaryState.size_guide.columns && primaryState.size_guide.columns.length > 0)
+        ? primaryState.size_guide.columns
+        : [...defaultSizeGuideTemplates.pakaian.columns];
+      curCols.push(`Kolom ${curCols.length + 1}`);
+      primaryState.size_guide.columns = curCols;
+      primaryState.size_guide.rows = primaryState.size_guide.rows || [];
+      primaryState.size_guide.rows.forEach(r => {
+        if (Array.isArray(r)) r.push('');
+      });
+      renderSizeGuideTableContent();
+      if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+      if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+    };
+
+    if (btnAddRow) {
+      btnAddRow.onclick = () => {
+        syncSizeGuideStateFromDOM();
+        primaryState.size_guide = primaryState.size_guide || {};
+        const cols = (primaryState.size_guide.columns && primaryState.size_guide.columns.length > 0)
+          ? primaryState.size_guide.columns
+          : defaultSizeGuideTemplates.pakaian.columns;
+        const newRow = new Array(cols.length).fill('');
+        primaryState.size_guide.rows = primaryState.size_guide.rows || [];
+        primaryState.size_guide.rows.push(newRow);
+        renderSizeGuideTableContent();
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+      };
+    }
+
+    if (btnAddCol) {
+      btnAddCol.onclick = handleAddColumn;
+    }
+
+    if (tbody) {
+      tbody.onclick = (e) => {
+        const delBtn = e.target.closest('.btn-del-size-row');
+        if (delBtn) {
+          syncSizeGuideStateFromDOM();
+          const rIdx = parseInt(delBtn.getAttribute('data-row-idx'), 10);
+          if (!isNaN(rIdx) && primaryState.size_guide?.rows) {
+            if (primaryState.size_guide.rows.length <= 1) {
+              primaryState.size_guide.rows[0] = primaryState.size_guide.rows[0].map(() => '');
+            } else {
+              primaryState.size_guide.rows.splice(rIdx, 1);
+            }
+            renderSizeGuideTableContent();
+            if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+            if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+          }
+        }
+      };
+
+      tbody.oninput = () => {
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+      };
+    }
+
+    if (thead) {
+      thead.onclick = (e) => {
+        const addColBtn = e.target.closest('.btn-add-size-col');
+        if (addColBtn) {
+          handleAddColumn();
+          return;
+        }
+
+        const delColBtn = e.target.closest('.btn-del-size-col');
+        if (delColBtn) {
+          syncSizeGuideStateFromDOM();
+          const cIdx = parseInt(delColBtn.getAttribute('data-col-idx'), 10);
+          if (!isNaN(cIdx) && primaryState.size_guide?.columns) {
+            if (primaryState.size_guide.columns.length <= 2) {
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Panduan ukuran harus memiliki minimal 2 kolom.', 'warning');
+              }
+              return;
+            }
+            primaryState.size_guide.columns.splice(cIdx, 1);
+            if (primaryState.size_guide.rows) {
+              primaryState.size_guide.rows.forEach(r => {
+                if (Array.isArray(r)) r.splice(cIdx, 1);
+              });
+            }
+            renderSizeGuideTableContent();
+            if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+            if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+          }
+        }
+      };
+
+      thead.oninput = () => {
+        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+      };
+
+      thead.onchange = () => {
+        if (typeof syncSizeGuideStateFromDOM === 'function') syncSizeGuideStateFromDOM();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+      };
+    }
+
+    // Image upload events
+    const dropzone = document.getElementById('size-guide-image-dropzone');
+    const fileInp = document.getElementById('input-size-guide-image');
+    if (dropzone && fileInp) {
+      dropzone.onclick = (e) => {
+        if (e.target.closest('#btn-remove-size-guide-img')) return;
+        fileInp.click();
+      };
+      fileInp.onchange = () => {
+        const file = fileInp.files && fileInp.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (re) => {
+            const dataUrl = re.target.result;
+            primaryState.size_guide = primaryState.size_guide || {};
+            primaryState.size_guide.image_url = dataUrl;
+            dropzone.innerHTML = `
+              <div class="relative max-w-xs mx-auto">
+                <img id="size-guide-image-preview" src="${dataUrl}" alt="Panduan Ukuran" class="max-h-56 rounded-md border border-slate-200 object-contain mx-auto" />
+                <button type="button" id="btn-remove-size-guide-img" class="mt-2 text-xs text-red-600 hover:text-red-800 font-bold underline cursor-pointer">
+                  Hapus Gambar
+                </button>
+              </div>
+            `;
+            bindSizeGuideImageRemoveEvent();
+            if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+            if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+    }
+
+    function bindSizeGuideImageRemoveEvent() {
+      const btnRemove = document.getElementById('btn-remove-size-guide-img');
+      if (btnRemove) {
+        btnRemove.onclick = (e) => {
+          e.stopPropagation();
+          if (primaryState.size_guide) primaryState.size_guide.image_url = '';
+          if (fileInp) fileInp.value = '';
+          if (dropzone) {
+            dropzone.innerHTML = `
+              <div class="text-slate-500 text-xs font-medium">
+                <span class="font-bold text-[var(--color-primary)]">Klik untuk unggah</span> foto bagan panduan ukuran
+                <p class="text-[10px] text-slate-400 mt-1">PNG, JPG, atau WEBP hingga 2MB</p>
+              </div>
+            `;
+          }
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+        };
+      }
+    }
+    bindSizeGuideImageRemoveEvent();
+  }
+
+  function renderSizeGuideSectionHtml() {
+    const guide = primaryState.size_guide || {};
+    const isEnabled = Boolean(guide.enabled);
+    const guideType = guide.type || '';
+    const currentTemplate = guide.template || 'pakaian';
+    const tpl = defaultSizeGuideTemplates[currentTemplate] || defaultSizeGuideTemplates.pakaian;
+    const columns = (Array.isArray(guide.columns) && guide.columns.length > 0)
+      ? guide.columns
+      : tpl.columns;
+    const rows = (Array.isArray(guide.rows) && guide.rows.length > 0)
+      ? guide.rows
+      : tpl.rows;
+    const imgUrl = guide.image_url || '';
+
+    return `
+      <div class="space-y-3" id="card-size-guide-wrapper">
+        <div class="flex items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <div class="text-sm font-bold text-slate-900">Panduan Ukuran</div>
+            <p class="text-xs text-slate-500">Bantu pembeli memilih ukuran yang pas dengan bagan atau tabel ukuran produk.</p>
+          </div>
+          <!-- Toggle Checkbox (Default OFF) -->
+          <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
+            <input type="checkbox" id="toggle-size-guide-enable" class="sr-only peer" ${isEnabled ? 'checked' : ''}>
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+          </label>
+        </div>
+
+        <!-- Kontainer Panduan Ukuran (Sembunyi jika Switch OFF) -->
+        <div id="size-guide-content-panel" class="${isEnabled ? 'block' : 'hidden'} pt-3 border-t border-slate-100 space-y-3.5">
+          <!-- Pilihan Keterkaitan Variasi (Hanya tampil jika 2-4 variasi aktif) -->
+          ${renderSizeGuideVariationLinkMarkup(guide)}
+
+          <!-- Pilihan Tipe Panduan: Tabel Data vs Upload Gambar -->
+          <div class="space-y-1.5" id="size-guide-type-selection-wrapper">
+            <label class="block text-xs font-bold text-slate-800">Tipe Panduan Ukuran:</label>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <label id="lbl-size-guide-type-table" class="p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold ${guideType === 'table' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'} transition">
+                <input type="radio" name="size_guide_type" value="table" class="accent-[var(--color-primary)] cursor-pointer" ${guideType === 'table' ? 'checked' : ''} />
+                <span>Tabel Data</span>
+              </label>
+              <label id="lbl-size-guide-type-image" class="p-2.5 rounded-md border flex items-center gap-2 cursor-pointer font-bold ${guideType === 'image' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'} transition">
+                <input type="radio" name="size_guide_type" value="image" class="accent-[var(--color-primary)] cursor-pointer" ${guideType === 'image' ? 'checked' : ''} />
+                <span>Upload Gambar</span>
+              </label>
+            </div>
+            <div id="size-guide-type-error" class="text-[11px] text-red-500 font-medium hidden">
+              Pilih variasi terlebih dahulu.
+            </div>
+          </div>
+
+          <!-- Panel 1: Tabel Data -->
+          <div id="size-guide-table-panel" class="${guideType === 'table' ? 'block' : 'hidden'} space-y-3">
+            <!-- Template Cepat: Pakaian, Celana, Sepatu -->
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-xs font-bold text-slate-700 mr-1">Template Cepat:</span>
+                <button type="button" class="btn-size-template px-3 py-1.5 rounded-md border text-xs font-bold transition cursor-pointer ${currentTemplate === 'pakaian' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}" data-template="pakaian">
+                  Pakaian
+                </button>
+                <button type="button" class="btn-size-template px-3 py-1.5 rounded-md border text-xs font-bold transition cursor-pointer ${currentTemplate === 'celana' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}" data-template="celana">
+                  Celana
+                </button>
+                <button type="button" class="btn-size-template px-3 py-1.5 rounded-md border text-xs font-bold transition cursor-pointer ${currentTemplate === 'sepatu' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}" data-template="sepatu">
+                  Sepatu
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabel Gaya List Variasi Produk -->
+            <div class="overflow-x-auto rounded-lg border border-slate-300 bg-white shadow-xs scrollbar-thin">
+              <table class="w-full text-left text-xs border-collapse" id="size-guide-matrix-table">
+                <thead class="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold" id="size-guide-thead">
+                  ${renderSizeGuideTheadHtml(columns)}
+                </thead>
+                <tbody id="size-guide-tbody" class="divide-y divide-slate-200">
+                  ${renderSizeGuideTbodyHtml(columns, rows)}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Tombol Tambah Baris -->
+            <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+              <button type="button" id="btn-add-size-row" class="px-3 py-1.5 rounded-md border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold cursor-pointer transition">
+                + Tambah Baris
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel 2: Upload Gambar -->
+          <div id="size-guide-image-panel" class="${guideType === 'image' ? 'block' : 'hidden'} space-y-3">
+            <input type="file" id="input-size-guide-image" accept="image/*" class="hidden" />
+            <div id="size-guide-image-dropzone" class="p-4 border-2 border-dashed border-slate-300 rounded-lg text-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex flex-col items-center justify-center gap-2">
+              ${imgUrl ? `
+                <div class="relative max-w-xs mx-auto">
+                  <img id="size-guide-image-preview" src="${imgUrl}" alt="Panduan Ukuran" class="max-h-56 rounded-md border border-slate-200 object-contain mx-auto" />
+                  <button type="button" id="btn-remove-size-guide-img" class="mt-2 text-xs text-red-600 hover:text-red-800 font-bold underline cursor-pointer">
+                    Hapus Gambar
+                  </button>
+                </div>
+              ` : `
+                <div class="text-slate-500 text-xs font-medium">
+                  <span class="font-bold text-[var(--color-primary)]">Klik untuk unggah</span> foto bagan panduan ukuran
+                  <p class="text-[10px] text-slate-400 mt-1">PNG, JPG, atau WEBP hingga 2MB</p>
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function renderStep2Content() {
     const isPhysical = primaryState.product_type !== 'non_physical';
     const shippingCfg = primaryState.shipping_config || {
@@ -11041,7 +12291,7 @@ const ProductForm = (() => {
               <div id="step2-gallery-strip" class="flex items-center gap-2 overflow-x-auto pb-1">
                 ${(primaryState.images || []).map((img, i) => `
                   <div class="w-14 h-14 rounded-md border border-slate-200 overflow-hidden shrink-0 relative bg-slate-50">
-                    <img src="${img}" alt="Cover ${i+1}" class="w-full h-full object-cover" />
+                    <img src="${img}" alt="Cover ${i + 1}" class="w-full h-full object-cover" />
                     ${i === 0 ? '<span class="absolute bottom-0 inset-x-0 bg-emerald-600 text-[8px] text-white font-bold text-center py-0.5">Cover</span>' : ''}
                   </div>
                 `).join('')}
@@ -12040,6 +13290,25 @@ const ProductForm = (() => {
           <option value="SKU Induk"></option>
         </datalist>
 
+        <datalist id="datalist-size-col-titles">
+          <option value="Ukuran"></option>
+          <option value="Panjang"></option>
+          <option value="Lebar Dada"></option>
+          <option value="Lingkar Dada"></option>
+          <option value="Bahu"></option>
+          <option value="Panjang Lengan"></option>
+          <option value="Rekomendasi Berat"></option>
+          <option value="Rekomendasi Tinggi"></option>
+          <option value="Panjang Celana"></option>
+          <option value="Lingkar Pinggang"></option>
+          <option value="Lingkar Pinggul"></option>
+          <option value="Lingkar Paha"></option>
+          <option value="Ukuran EU"></option>
+          <option value="Ukuran US"></option>
+          <option value="Ukuran UK"></option>
+          <option value="Panjang Kaki (cm)"></option>
+        </datalist>
+
         </div> <!-- Close step2-cards-container -->
       </div> <!-- Close step2-content-wrapper -->
     `;
@@ -12162,6 +13431,10 @@ const ProductForm = (() => {
         }
       }
     });
+
+    if (typeof refreshSizeGuideVariationLinkDropdown === 'function') {
+      refreshSizeGuideVariationLinkDropdown();
+    }
 
     return { hasDuplicate, firstDuplicateEl, targetInputs };
   }
@@ -13530,27 +14803,27 @@ const ProductForm = (() => {
                   <div class="text-xs text-slate-400 italic py-1">Belum ada opsi yang diisi pada variasi ini.</div>
                 ` : `
                   ${validOptions.map(opt => {
-                    const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
-                    const isLegacyChecked = Array.isArray(rule.option_ids) && (rule.option_ids.includes(opt.id) || (opt.name && rule.option_ids.includes(opt.name)));
+      const optOverride = rule.option_rules?.[opt.id] || (opt.name ? rule.option_rules?.[opt.name] : null);
+      const isLegacyChecked = Array.isArray(rule.option_ids) && (rule.option_ids.includes(opt.id) || (opt.name && rule.option_ids.includes(opt.name)));
 
-                    let optMode = 'flat';
-                    let optSide = 'p_l';
-                    let optVal = 0;
+      let optMode = 'flat';
+      let optSide = 'p_l';
+      let optVal = 0;
 
-                    if (optOverride) {
-                      optMode = optOverride.calc_mode || 'flat';
-                      optSide = optOverride.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
-                      optVal = optOverride.dim_add_val || 0;
-                    } else if (isLegacyChecked) {
-                      optMode = rule.calc_mode || 'area';
-                      optSide = rule.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
-                      optVal = rule.dim_add_val || 0;
-                    }
+      if (optOverride) {
+        optMode = optOverride.calc_mode || 'flat';
+        optSide = optOverride.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
+        optVal = optOverride.dim_add_val || 0;
+      } else if (isLegacyChecked) {
+        optMode = rule.calc_mode || 'area';
+        optSide = rule.dim_add_side || (optMode === 'side_length' ? 'top' : 'p_l');
+        optVal = rule.dim_add_val || 0;
+      }
 
-                    const isCustomRule = optMode !== 'flat';
-                    const optBadge = isCustomRule ? getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit) : '';
+      const isCustomRule = optMode !== 'flat';
+      const optBadge = isCustomRule ? getRuleSummaryBadgeHtml(optMode, optSide, optVal, dimUnit) : '';
 
-                    return `
+      return `
                       <button
                         type="button"
                         class="btn-option-rule-chip rule-option-chip w-full sm:w-auto flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-xs font-semibold select-none transition ${isCustomRule ? 'bg-emerald-50/90 text-emerald-950 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'} shadow-2xs cursor-pointer text-left"
@@ -13569,14 +14842,14 @@ const ProductForm = (() => {
                         </span>
                       </button>
                     `;
-                  }).join('')}
+    }).join('')}
                 `}
               </div>
             ` : `
               <!-- Tampilan Cakupan Semua Opsi di Variasi Ini (Dengan Ikon Gear & Badge) -->
               ${(() => {
-                const groupBadge = getRuleSummaryBadgeHtml(rule.calc_mode || 'area', rule.dim_add_side || ((rule.calc_mode || 'area') === 'side_length' ? 'top' : 'p_l'), rule.dim_add_val || 0, dimUnit);
-                return `
+          const groupBadge = getRuleSummaryBadgeHtml(rule.calc_mode || 'area', rule.dim_add_side || ((rule.calc_mode || 'area') === 'side_length' ? 'top' : 'p_l'), rule.dim_add_val || 0, dimUnit);
+          return `
                   <div class="p-2.5 bg-emerald-50/70 border border-emerald-200/90 rounded-lg text-xs text-emerald-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
                       <i class="bi bi-check2-circle text-emerald-600 shrink-0 text-sm"></i>
@@ -13597,7 +14870,7 @@ const ProductForm = (() => {
                     </div>
                   </div>
                 `;
-              })()}
+        })()}
             `}
           </div>
         ` : ''}
@@ -13646,12 +14919,12 @@ const ProductForm = (() => {
         <!-- Daftar Kartu Aturan (1 Kartu = 1 Variasi) -->
         <div id="dimension-rules-list" class="space-y-3">
           ${rules.map((rule, idx) => {
-            const tiersForRule = getAvailableRuleTierChoices(rule.id);
-            if (rule.tier_key && !tiersForRule.some(t => t.tier === rule.tier_key)) {
-              tiersForRule.unshift({ tier: rule.tier_key, label: getTierDisplayName(rule.tier_key) });
-            }
-            return renderSingleDimensionRuleCardHtml(rule, idx, tiersForRule, dimUnit);
-          }).join('')}
+      const tiersForRule = getAvailableRuleTierChoices(rule.id);
+      if (rule.tier_key && !tiersForRule.some(t => t.tier === rule.tier_key)) {
+        tiersForRule.unshift({ tier: rule.tier_key, label: getTierDisplayName(rule.tier_key) });
+      }
+      return renderSingleDimensionRuleCardHtml(rule, idx, tiersForRule, dimUnit);
+    }).join('')}
         </div>
 
         <!-- Tombol Aksi di Bawah setelah kartu terakhir jika SUDAH ada aturan aktif -->
@@ -13919,6 +15192,311 @@ const ProductForm = (() => {
         };
       }
     });
+  }
+
+  // Modal Input Ukuran Simulasi (P x L)
+  function renderSandboxDimensionModalMarkup() {
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || 'cm';
+    return `
+      <!-- Modal Input Ukuran Simulasi (P x L) -->
+      <div id="modal-sandbox-dim-input" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs hidden" style="z-index: 9999;">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-4 border border-slate-100 animate-modal-pop relative max-h-[90vh] overflow-y-auto">
+          <!-- Header Modal -->
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-7 h-7 rounded-lg bg-[var(--color-primary-subtle)] text-[var(--color-primary)] flex items-center justify-center font-bold text-xs shrink-0">
+                <i class="bi bi-aspect-ratio"></i>
+              </div>
+              <h3 class="text-xs sm:text-sm font-bold text-slate-800 truncate">
+                Masukkan Ukuran (P × L)
+              </h3>
+            </div>
+            <button type="button" class="btn-close-sandbox-dim-modal text-slate-400 hover:text-slate-600 p-1 cursor-pointer shrink-0">
+              <i class="bi bi-x-lg text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Body: Mobile vertikal, Desktop 2 kolom -->
+          <div class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label for="modal-sandbox-input-p" class="block text-xs font-bold text-slate-700">
+                  Panjang (P):
+                </label>
+                <div class="relative flex items-center">
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    id="modal-sandbox-input-p"
+                    placeholder="0"
+                    value="${sandboxPxlState.simLength || ''}"
+                    class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-[var(--color-primary)] text-center transition"
+                  />
+                  <span class="modal-sandbox-unit-p absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">${dimUnit || 'cm'}</span>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <label for="modal-sandbox-input-l" class="block text-xs font-bold text-slate-700">
+                  Lebar (L):
+                </label>
+                <div class="relative flex items-center">
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    id="modal-sandbox-input-l"
+                    placeholder="0"
+                    value="${sandboxPxlState.simWidth || ''}"
+                    class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-[var(--color-primary)] text-center transition"
+                  />
+                  <span class="modal-sandbox-unit-l absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">${dimUnit || 'cm'}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pesan Error Validasi -->
+            <div id="modal-sandbox-dim-error" class="text-[11px] text-red-500 font-medium hidden">
+              Masukkan angka Panjang (P) dan Lebar (L) yang valid (lebih besar dari 0).
+            </div>
+          </div>
+
+          <!-- Footer Action Buttons: Batal & Terapkan -->
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              id="btn-cancel-sandbox-dim-modal"
+              class="btn-close-sandbox-dim-modal px-4 py-2 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              id="btn-apply-sandbox-dim-modal"
+              class="px-4 py-2 rounded-md text-xs font-bold text-white transition cursor-pointer shadow-2xs hover:opacity-95"
+              style="background-color: var(--color-primary);"
+            >
+              Terapkan
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Helper Buka Modal Input Ukuran Simulasi (P x L)
+  function openSandboxDimensionModal() {
+    let modal = document.getElementById('modal-sandbox-dim-input');
+    if (!modal) {
+      const container = document.getElementById('form-container') || document.body;
+      if (container && typeof container.insertAdjacentHTML === 'function') {
+        container.insertAdjacentHTML('beforeend', renderSandboxDimensionModalMarkup());
+        modal = document.getElementById('modal-sandbox-dim-input');
+      }
+    }
+    if (!modal) return;
+
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || 'cm';
+    modal.querySelectorAll('.modal-sandbox-unit-p, .modal-sandbox-unit-l').forEach(el => {
+      el.textContent = dimUnit;
+    });
+
+    const inputP = document.getElementById('modal-sandbox-input-p');
+    const inputL = document.getElementById('modal-sandbox-input-l');
+    const errEl = document.getElementById('modal-sandbox-dim-error');
+
+    // Selalu muat nilai terakhir yang diterapkan
+    if (inputP) {
+      inputP.value = (sandboxPxlState.simLength !== undefined && sandboxPxlState.simLength !== null && sandboxPxlState.simLength !== '') ? sandboxPxlState.simLength : '';
+      inputP.classList.remove('border-red-500');
+    }
+    if (inputL) {
+      inputL.value = (sandboxPxlState.simWidth !== undefined && sandboxPxlState.simWidth !== null && sandboxPxlState.simWidth !== '') ? sandboxPxlState.simWidth : '';
+      inputL.classList.remove('border-red-500');
+    }
+    if (errEl) {
+      errEl.classList.add('hidden');
+    }
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    if (inputP && typeof inputP.focus === 'function') {
+      try { inputP.focus(); } catch (_) { }
+    }
+    setTimeout(() => {
+      if (inputP && typeof inputP.focus === 'function') {
+        try { inputP.focus(); } catch (_) { }
+      }
+    }, 50);
+  }
+
+  // Helper Tutup Modal Input Ukuran Simulasi (P x L)
+  function closeSandboxDimensionModal() {
+    const modal = document.getElementById('modal-sandbox-dim-input');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+
+    const errEl = document.getElementById('modal-sandbox-dim-error');
+    if (errEl) errEl.classList.add('hidden');
+    const inputP = document.getElementById('modal-sandbox-input-p');
+    const inputL = document.getElementById('modal-sandbox-input-l');
+    if (inputP) inputP.classList.remove('border-red-500');
+    if (inputL) inputL.classList.remove('border-red-500');
+  }
+
+  // Helper Terapkan Nilai Ukuran Simulasi (P x L)
+  function applySandboxDimensionModal() {
+    const inputP = document.getElementById('modal-sandbox-input-p');
+    const inputL = document.getElementById('modal-sandbox-input-l');
+    const errEl = document.getElementById('modal-sandbox-dim-error');
+    const summarySpan = document.getElementById('sandbox-dim-summary-text');
+    const hiddenP = document.getElementById('sandbox-input-dim-p');
+    const hiddenL = document.getElementById('sandbox-input-dim-l');
+
+    const pRaw = inputP ? String(inputP.value).trim() : '';
+    const lRaw = inputL ? String(inputL.value).trim() : '';
+    const pVal = parseFloat(pRaw);
+    const lVal = parseFloat(lRaw);
+
+    let hasError = false;
+    if (isNaN(pVal) || pVal <= 0) {
+      if (inputP) inputP.classList.add('border-red-500');
+      hasError = true;
+    } else {
+      if (inputP) inputP.classList.remove('border-red-500');
+    }
+
+    if (isNaN(lVal) || lVal <= 0) {
+      if (inputL) inputL.classList.add('border-red-500');
+      hasError = true;
+    } else {
+      if (inputL) inputL.classList.remove('border-red-500');
+    }
+
+    if (hasError) {
+      if (errEl) {
+        errEl.textContent = 'Masukkan angka Panjang (P) dan Lebar (L) yang valid (lebih besar dari 0).';
+        errEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    // Terapkan nilai ke state
+    sandboxPxlState.simLength = pVal;
+    sandboxPxlState.simWidth = lVal;
+
+    if (hiddenP) hiddenP.value = pVal;
+    if (hiddenL) hiddenL.value = lVal;
+
+    const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || 'cm';
+    if (summarySpan) {
+      summarySpan.textContent = `${pVal} × ${lVal} ${dimUnit}`;
+      summarySpan.className = 'text-slate-900 font-bold';
+    }
+
+    closeSandboxDimensionModal();
+    updateSandboxCalculation();
+    if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+    if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+  }
+
+  function bindSandboxDimensionModalEvents() {
+    const btnOpen = document.getElementById('btn-open-sandbox-dim-modal');
+    const modal = document.getElementById('modal-sandbox-dim-input');
+
+    if (btnOpen) {
+      btnOpen.onclick = (e) => {
+        e.preventDefault();
+        openSandboxDimensionModal();
+      };
+    }
+
+    if (modal) {
+      modal.querySelectorAll('.btn-close-sandbox-dim-modal, #btn-cancel-sandbox-dim-modal').forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          closeSandboxDimensionModal();
+        };
+      });
+
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          closeSandboxDimensionModal();
+        }
+      };
+
+      const btnApply = document.getElementById('btn-apply-sandbox-dim-modal');
+      if (btnApply) {
+        btnApply.onclick = (e) => {
+          e.preventDefault();
+          applySandboxDimensionModal();
+        };
+      }
+
+      const inputP = document.getElementById('modal-sandbox-input-p');
+      const inputL = document.getElementById('modal-sandbox-input-l');
+      const handleKey = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applySandboxDimensionModal();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeSandboxDimensionModal();
+        }
+      };
+      if (inputP) inputP.onkeydown = handleKey;
+      if (inputL) inputL.onkeydown = handleKey;
+    }
+
+    // Global document delegation (Dipasang satu kali secara persisten agar tahan terhadap render ulang DOM)
+    if (typeof document !== 'undefined' && !window.__sandboxDimModalDelegated) {
+      window.__sandboxDimModalDelegated = true;
+      document.addEventListener('click', (e) => {
+        const btn = e.target && typeof e.target.closest === 'function' ? e.target.closest('#btn-open-sandbox-dim-modal') : null;
+        if (btn) {
+          e.preventDefault();
+          openSandboxDimensionModal();
+          return;
+        }
+
+        const closeBtn = e.target && typeof e.target.closest === 'function' ? e.target.closest('.btn-close-sandbox-dim-modal, #btn-cancel-sandbox-dim-modal') : null;
+        if (closeBtn) {
+          e.preventDefault();
+          closeSandboxDimensionModal();
+          return;
+        }
+
+        const applyBtn = e.target && typeof e.target.closest === 'function' ? e.target.closest('#btn-apply-sandbox-dim-modal') : null;
+        if (applyBtn) {
+          e.preventDefault();
+          applySandboxDimensionModal();
+          return;
+        }
+
+        const mEl = document.getElementById('modal-sandbox-dim-input');
+        if (mEl && e.target === mEl) {
+          closeSandboxDimensionModal();
+          return;
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        const mEl = document.getElementById('modal-sandbox-dim-input');
+        if (!mEl || mEl.classList.contains('hidden') || mEl.style.display === 'none') return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeSandboxDimensionModal();
+        } else if (e.key === 'Enter') {
+          const activeEl = document.activeElement;
+          if (activeEl && (activeEl.id === 'modal-sandbox-input-p' || activeEl.id === 'modal-sandbox-input-l')) {
+            e.preventDefault();
+            applySandboxDimensionModal();
+          }
+        }
+      });
+    }
   }
 
   // Helper render kartu & konfigurasi Input Ukuran (P x L) (Mobile-First Layout)
@@ -14237,36 +15815,26 @@ const ProductForm = (() => {
                 </select>
               </div>
 
-              <!-- Kotak Input Simulasi P x L (Grid Berimbang 2 Kolom) -->
+              <!-- Kontrol Pemicu Modal Ukuran Simulasi P x L (Ringkas) -->
               <div class="md:col-span-6 space-y-1 w-full">
                 <label class="block text-[11px] font-bold text-slate-700">
                   Masukkan Ukuran (P x L):
                 </label>
-                <div class="grid grid-cols-2 gap-2">
-                  <div class="relative">
-                    <input
-                      type="number"
-                      step="any"
-                      min="0"
-                      id="sandbox-input-dim-p"
-                      value="${sandboxPxlState.simLength || ''}"
-                      placeholder="Panjang (P)"
-                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center"
-                    />
-                    <span class="sandbox-dim-unit-p absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
-                  </div>
-                  <div class="relative">
-                    <input
-                      type="number"
-                      step="any"
-                      min="0"
-                      id="sandbox-input-dim-l"
-                      value="${sandboxPxlState.simWidth || ''}"
-                      placeholder="Lebar (L)"
-                      class="w-full pl-3 pr-10 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 shadow-2xs text-center"
-                    />
-                    <span class="sandbox-dim-unit-l absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 select-none">${dimUnit || '-'}</span>
-                  </div>
+                <div class="relative">
+                  <button
+                    type="button"
+                    id="btn-open-sandbox-dim-modal"
+                    class="w-full h-9 px-3 bg-white border border-slate-300 hover:border-[var(--color-primary)] rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 transition flex items-center justify-between shadow-2xs cursor-pointer select-none group"
+                  >
+                    <span id="sandbox-dim-summary-text" class="${(sandboxPxlState.simLength && sandboxPxlState.simWidth) ? 'text-slate-900 font-bold' : 'text-slate-400 font-normal'}">
+                      ${(sandboxPxlState.simLength && sandboxPxlState.simWidth)
+                        ? `${sandboxPxlState.simLength} × ${sandboxPxlState.simWidth} ${dimUnit || 'cm'}`
+                        : 'Masukkan Ukuran (P x L)'}
+                    </span>
+                    <i class="bi bi-pencil-square text-slate-400 group-hover:text-[var(--color-primary)] text-xs transition-colors shrink-0"></i>
+                  </button>
+                  <input type="hidden" id="sandbox-input-dim-p" value="${escapeHtml(String(sandboxPxlState.simLength || ''))}" />
+                  <input type="hidden" id="sandbox-input-dim-l" value="${escapeHtml(String(sandboxPxlState.simWidth || ''))}" />
                 </div>
               </div>
             </div>
@@ -14294,6 +15862,12 @@ const ProductForm = (() => {
           <span>Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.</span>
         </div>
       </div>
+
+      <!-- Panduan Ukuran Produk (Pakaian, Celana, Sepatu) Tepat di Bawah Input Ukuran (P x L) -->
+      <div class="border-t border-slate-100 pt-3" id="section-size-guide-wrapper">
+        ${renderSizeGuideSectionHtml()}
+      </div>
+      ${renderSandboxDimensionModalMarkup()}
     `;
   }
 
@@ -15083,23 +16657,23 @@ const ProductForm = (() => {
         </p>
         <ul class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
           ${avail.tierOptions.map(opt => {
-            const isAllowed = avail.allowedOptions.some(a => String(a.id) === String(opt.id));
-            if (isAllowed) {
-              return `
+        const isAllowed = avail.allowedOptions.some(a => String(a.id) === String(opt.id));
+        if (isAllowed) {
+          return `
                 <li class="flex items-center gap-2 text-xs text-emerald-900 bg-emerald-50/80 px-2.5 py-1.5 rounded-lg border border-emerald-100 font-medium">
                   <i class="bi bi-check-circle-fill text-emerald-600 text-xs shrink-0"></i>
                   <span class="truncate">${escapeHtml(opt.name)}</span>
                 </li>
               `;
-            } else {
-              return `
+        } else {
+          return `
                 <li class="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100 opacity-70">
                   <i class="bi bi-dash-circle text-slate-400 text-xs shrink-0"></i>
                   <span class="truncate line-through">${escapeHtml(opt.name)}</span>
                 </li>
               `;
-            }
-          }).join('')}
+        }
+      }).join('')}
         </ul>
       `;
     } else if (avail.detailType === 'parent_dependent') {
@@ -15120,8 +16694,8 @@ const ProductForm = (() => {
             </div>
             <div class="space-y-1.5">
               ${depOpts.map(d => {
-                const trigNames = (d.triggerIds || []).map(getPOptName).filter(Boolean).join(', ');
-                return `
+          const trigNames = (d.triggerIds || []).map(getPOptName).filter(Boolean).join(', ');
+          return `
                   <div class="bg-slate-50 rounded-lg p-2 border border-slate-100 text-xs">
                     <div class="font-semibold text-slate-800">${escapeHtml(d.option.name)}</div>
                     <div class="text-[10px] text-slate-500 mt-0.5">
@@ -15129,7 +16703,7 @@ const ProductForm = (() => {
                     </div>
                   </div>
                 `;
-              }).join('')}
+        }).join('')}
             </div>
           </div>
         `;
@@ -15479,19 +17053,18 @@ const ProductForm = (() => {
       <div id="modal-wholesale-config" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between pb-2 border-b border-slate-200">
-            <div>
-              <h3 class="text-sm font-bold text-slate-900" id="wholesale-modal-title">Pengaturan Harga Grosir</h3>
-              <p class="text-[11px] text-slate-500" id="wholesale-modal-subtitle">Atur tingkatan harga grosir untuk opsi ini</p>
-            </div>
+            <h3 class="text-sm font-bold text-slate-900" id="wholesale-modal-title">Pengaturan Harga Grosir</h3>
             <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-wholesale-config"><i class="bi bi-x-lg"></i></button>
           </div>
 
           <!-- Switch Aktifkan Grosir per-Variasi 1 -->
           <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-            <label class="relative inline-flex items-center cursor-pointer select-none">
-              <input type="checkbox" id="modal-wholesale-switch-enable" class="sr-only peer" />
-              <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-[var(--color-primary)] relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all peer-checked:after:translate-x-4"></div>
-              <span id="modal-wholesale-switch-label" class="ml-2.5 text-xs font-bold text-slate-700 leading-snug">Aktifkan Harga Grosir Pada Produk Jenis Variasi [Nama Opsi]</span>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none w-full">
+              <div class="relative shrink-0">
+                <input type="checkbox" id="modal-wholesale-switch-enable" class="sr-only peer" />
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-[var(--color-primary)] relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all peer-checked:after:translate-x-4"></div>
+              </div>
+              <span id="modal-wholesale-switch-label" class="text-xs font-bold text-slate-700 leading-snug break-words flex-1 min-w-0">Aktifkan harga grosir untuk [Nama Opsi]</span>
             </label>
           </div>
 
@@ -15820,12 +17393,12 @@ const ProductForm = (() => {
                 </thead>
                 <tbody id="variant-multiples-table-body" class="divide-y divide-slate-200">
                   ${configuredRows.map((vId, rIdx) => {
-                    const val = variantMap[vId] || 1;
-                    // Filter: exclude options chosen by OTHER rows to prevent duplication!
-                    const otherChosenIds = configuredRows.filter((id, i) => i !== rIdx);
-                    const selectableOptions = availableVariants.filter(v => !otherChosenIds.includes(v.id) || v.id === vId);
+      const val = variantMap[vId] || 1;
+      // Filter: exclude options chosen by OTHER rows to prevent duplication!
+      const otherChosenIds = configuredRows.filter((id, i) => i !== rIdx);
+      const selectableOptions = availableVariants.filter(v => !otherChosenIds.includes(v.id) || v.id === vId);
 
-                    return `
+      return `
                       <tr data-variant-id="${vId}">
                         <td class="p-2.5">
                           <select class="select-variant-multiple-id w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-medium bg-white focus:border-[var(--color-primary)] outline-none">
@@ -15849,7 +17422,7 @@ const ProductForm = (() => {
                         </td>
                       </tr>
                     `;
-                  }).join('')}
+    }).join('')}
                 </tbody>
               </table>
             </div>
@@ -16969,7 +18542,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       el.classList.remove('border-red-500');
       el.classList.add('border-slate-300');
       if (typeof validateSingleCost === 'function') {
-        try { validateSingleCost(false); } catch (_) {}
+        try { validateSingleCost(false); } catch (_) { }
       }
       return true;
     }
@@ -17259,7 +18832,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (step < currentStep) {
       // Mundur ke langkah sebelumnya: sinkronisasi data yang terisi tanpa blocking error
       if (typeof syncStateFromDOM === 'function') {
-        try { syncStateFromDOM(); } catch (_) {}
+        try { syncStateFromDOM(); } catch (_) { }
       }
     }
 
@@ -17513,7 +19086,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // UPDATE PROGRESSIVE GATING STEP 2 DOM
     let prevCard1Valid = false;
-    updateStep2CardGatingDOM = function(force = false) {
+    updateStep2CardGatingDOM = function (force = false) {
       if (currentStep !== 2) return;
       const isCard1Valid = (getMissingLabelsForCard(2).length === 0);
       if (force || isCard1Valid !== prevCard1Valid) {
@@ -17535,2200 +19108,2653 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // SUB-NAVBAR ANCHOR SCROLL SPY & TAB NAVIGATION TERPUSAT DI MODUL SCOPE (initStep2SubnavObserver)
 
-  // =====================================================================
-  // HELPER RESET KUSTOMISASI UKURAN (P x L) SAAT VARIASI NONAKTIF
-  // =====================================================================
-  function resetCustomDimensionToOff() {
-    primaryState.has_custom_dimension = false;
-    primaryState.is_custom_dimension = false;
-    primaryState.enable_custom_dimension = false;
-    const toggleCustomDim = document.getElementById('toggle-custom-dimension');
-    if (toggleCustomDim) {
-      toggleCustomDim.checked = false;
-    }
-    const configBody = document.getElementById('custom-dimension-config-body');
-    if (configBody) {
-      configBody.classList.remove('block');
-      configBody.classList.add('hidden');
-    }
-    const warnEl = document.getElementById('custom-dim-no-variant-warning');
-    if (warnEl) {
-      warnEl.classList.add('hidden');
-    }
-    if (typeof previewTestState !== 'undefined') {
-      previewTestState.dimLength = '';
-      previewTestState.dimWidth = '';
-      previewTestState.dimError = false;
-    }
-    const errEl = document.getElementById('custom-dimension-label-error');
-    if (errEl) errEl.classList.add('hidden');
-    const unitErrEl = document.getElementById('custom-dimension-unit-error');
-    if (unitErrEl) unitErrEl.classList.add('hidden');
-    const selectDimUnit = document.getElementById('select-dimension-unit');
-    if (selectDimUnit) {
-      selectDimUnit.classList.remove('border-red-500');
-      selectDimUnit.classList.add('border-slate-300');
-    }
-    const dimLabelInp = document.getElementById('input-custom-dimension-label');
-    if (dimLabelInp) {
-      dimLabelInp.classList.remove('border-red-500');
-      dimLabelInp.classList.add('border-slate-400');
-    }
-    if (typeof hideWizardErrorBanner === 'function') {
-      hideWizardErrorBanner();
-    }
-    if (typeof updateProductCardLivePreview === 'function') {
-      updateProductCardLivePreview();
-    }
-  }
-
-  // =====================================================================
-  // LOGIKA PERGESERAN OTOMATIS (SHIFT-UP) VARIASI 1–4 SAAT DI-CLOSE (✕)
-  // =====================================================================
-  rebuildCombinationMatrix = () => {
-    const section = document.getElementById('combination-matrix-section');
-    if (section && typeof renderCombinationMatrixTable === 'function') {
-      section.outerHTML = renderCombinationMatrixTable();
-      if (typeof bindCombinationMatrixEvents === 'function') {
-        bindCombinationMatrixEvents();
+    // =====================================================================
+    // HELPER RESET KUSTOMISASI UKURAN (P x L) SAAT VARIASI NONAKTIF
+    // =====================================================================
+    function resetCustomDimensionToOff() {
+      primaryState.has_custom_dimension = false;
+      primaryState.is_custom_dimension = false;
+      primaryState.enable_custom_dimension = false;
+      const toggleCustomDim = document.getElementById('toggle-custom-dimension');
+      if (toggleCustomDim) {
+        toggleCustomDim.checked = false;
       }
-    }
-  };
-
-  closeAndShiftVariationTier = function(closedTierIndex) {
-    // 1. Panggil syncStateFromDOM() terlebih dahulu agar seluruh ketikan terbaru di DOM tersimpan ke state
-    if (typeof syncStateFromDOM === 'function') {
-      syncStateFromDOM();
-    }
-
-    // Pastikan nilai ketentuan tambahan (toggle price, cost, stock) tersinkronisasi jika ada di DOM
-    ['tier1', 'main', 'extra_1', 'extra_2'].forEach(t => {
-      const chkPrice = document.querySelector(`.toggle-same-price[data-tier="${t}"]`);
-      if (chkPrice && primaryState.same_price_tiers) {
-        primaryState.same_price_tiers[t] = chkPrice.checked;
+      const configBody = document.getElementById('custom-dimension-config-body');
+      if (configBody) {
+        configBody.classList.remove('block');
+        configBody.classList.add('hidden');
       }
-      const chkCost = document.querySelector(`.toggle-same-cost[data-tier="${t}"]`);
-      if (chkCost && primaryState.same_cost_tiers) {
-        primaryState.same_cost_tiers[t] = chkCost.checked;
+      const warnEl = document.getElementById('custom-dim-no-variant-warning');
+      if (warnEl) {
+        warnEl.classList.add('hidden');
       }
-      const radStock = document.querySelector(`input[name="stock_mode_${t}"]:checked`);
-      if (radStock && primaryState.stock_mode_tiers) {
-        primaryState.stock_mode_tiers[t] = radStock.value;
+      if (typeof previewTestState !== 'undefined') {
+        previewTestState.dimLength = '';
+        previewTestState.dimWidth = '';
+        previewTestState.dimError = false;
       }
-    });
-
-    // 2. Representasi Data Setiap Tingkat Variasi (Slot 1 s/d 4)
-    const slots = [
-      {
-        slot: 1,
-        isActive: Boolean(primaryState.has_variants),
-        label: primaryState.variation_labels?.label_tier_1 || '',
-        items: (materialsState || []).map(m => ({
-          id: m.id || DB.generateUUID(),
-          name: m.name || '',
-          description: m.description || '',
-          price: m.price !== undefined ? m.price : '',
-          cost_price: m.cost_price !== undefined ? m.cost_price : '',
-          stock: m.stock !== undefined ? m.stock : '',
-          image: m.image || m.image_url || '',
-          image_url: m.image_url || m.image || '',
-          step_multiplier: m.step_multiplier || 1,
-          min_order: m.min_order || 1,
-          max_order: m.max_order !== undefined ? m.max_order : null
-        })),
-        same_price: Boolean(primaryState.same_price_tiers?.tier1),
-        same_cost: Boolean(primaryState.same_cost_tiers?.tier1),
-        stock_mode: primaryState.stock_mode_tiers?.tier1 || '',
-        scope: 'umum'
-      },
-      {
-        slot: 2,
-        isActive: Boolean(primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0)),
-        label: primaryState.variation_labels?.label_tier_2 || '',
-        items: (finishingsState.main || []).map(f => ({
-          id: f.id || DB.generateUUID(),
-          tier: 'main',
-          name: f.name || '',
-          description: f.description || '',
-          price: f.price !== undefined ? f.price : '',
-          cost_price: f.cost_price !== undefined ? f.cost_price : '',
-          stock: f.stock !== undefined ? f.stock : '',
-          image: f.image || f.image_url || '',
-          image_url: f.image_url || f.image || '',
-          parent_id: f.parent_id || ''
-        })),
-        same_price: Boolean(primaryState.same_price_tiers?.main),
-        same_cost: Boolean(primaryState.same_cost_tiers?.main),
-        stock_mode: primaryState.stock_mode_tiers?.main || '',
-        scope: primaryState.variation_scopes?.main || primaryState.scope_main || 'umum'
-      },
-      {
-        slot: 3,
-        isActive: Boolean(primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0)),
-        label: primaryState.variation_labels?.label_extra_1 || '',
-        items: (finishingsState.extra_1 || []).map(f => ({
-          id: f.id || DB.generateUUID(),
-          tier: 'extra_1',
-          name: f.name || '',
-          description: f.description || '',
-          price: f.price !== undefined ? f.price : '',
-          cost_price: f.cost_price !== undefined ? f.cost_price : '',
-          stock: f.stock !== undefined ? f.stock : '',
-          image: f.image || f.image_url || '',
-          image_url: f.image_url || f.image || '',
-          parent_id: f.parent_id || ''
-        })),
-        same_price: Boolean(primaryState.same_price_tiers?.extra_1),
-        same_cost: Boolean(primaryState.same_cost_tiers?.extra_1),
-        stock_mode: primaryState.stock_mode_tiers?.extra_1 || '',
-        scope: primaryState.variation_scopes?.extra_1 || primaryState.scope_extra_1 || 'umum'
-      },
-      {
-        slot: 4,
-        isActive: Boolean(primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0)),
-        label: primaryState.variation_labels?.label_extra_2 || '',
-        items: (finishingsState.extra_2 || []).map(f => ({
-          id: f.id || DB.generateUUID(),
-          tier: 'extra_2',
-          name: f.name || '',
-          description: f.description || '',
-          price: f.price !== undefined ? f.price : '',
-          cost_price: f.cost_price !== undefined ? f.cost_price : '',
-          stock: f.stock !== undefined ? f.stock : '',
-          image: f.image || f.image_url || '',
-          image_url: f.image_url || f.image || '',
-          parent_id: f.parent_id || ''
-        })),
-        same_price: Boolean(primaryState.same_price_tiers?.extra_2),
-        same_cost: Boolean(primaryState.same_cost_tiers?.extra_2),
-        stock_mode: primaryState.stock_mode_tiers?.extra_2 || '',
-        scope: primaryState.variation_scopes?.extra_2 || primaryState.scope_extra_2 || 'umum'
+      const errEl = document.getElementById('custom-dimension-label-error');
+      if (errEl) errEl.classList.add('hidden');
+      const unitErrEl = document.getElementById('custom-dimension-unit-error');
+      if (unitErrEl) unitErrEl.classList.add('hidden');
+      const selectDimUnit = document.getElementById('select-dimension-unit');
+      if (selectDimUnit) {
+        selectDimUnit.classList.remove('border-red-500');
+        selectDimUnit.classList.add('border-slate-300');
       }
-    ];
-
-    const targetIdx = Number(closedTierIndex);
-    // Ambil daftar seluruh tingkat variasi yang sedang aktif, kecualikan closedTierIndex
-    const remainingSlotsData = slots.filter(s => s.isActive && s.slot !== targetIdx);
-
-    if (!primaryState.variation_labels) primaryState.variation_labels = {};
-    if (!primaryState.same_price_tiers) primaryState.same_price_tiers = {};
-    if (!primaryState.same_cost_tiers) primaryState.same_cost_tiers = {};
-    if (!primaryState.stock_mode_tiers) primaryState.stock_mode_tiers = {};
-    if (!primaryState.variation_scopes) primaryState.variation_scopes = {};
-
-    if (remainingSlotsData.length === 0) {
-      // 0 Variasi tersisa: Kembali ke Produk Tunggal (Tanpa Variasi)
-      primaryState.has_variants = false;
-      primaryState.has_variation_2 = false;
-      primaryState.has_layer_2 = false;
-      primaryState.has_variation_3 = false;
-      primaryState.has_layer_3 = false;
-      primaryState.has_variation_4 = false;
-      primaryState.has_layer_4 = false;
-
-      finishingsState.main = [];
-      finishingsState.extra_1 = [];
-      finishingsState.extra_2 = [];
-
-      primaryState.same_price_tiers.tier1 = false;
-      primaryState.same_price_tiers.main = false;
-      primaryState.same_price_tiers.extra_1 = false;
-      primaryState.same_price_tiers.extra_2 = false;
-
-      primaryState.same_cost_tiers.tier1 = false;
-      primaryState.same_cost_tiers.main = false;
-      primaryState.same_cost_tiers.extra_1 = false;
-      primaryState.same_cost_tiers.extra_2 = false;
-
-      primaryState.stock_mode_tiers.tier1 = '';
-      primaryState.stock_mode_tiers.main = '';
-      primaryState.stock_mode_tiers.extra_1 = '';
-      primaryState.stock_mode_tiers.extra_2 = '';
-
-      // TAHAP 1 - POIN 2: Otomatis matikan (set ke OFF / false) status Kustomisasi Ukuran PxL
-      resetCustomDimensionToOff();
-
-      // TAHAP 1 - POIN 3: Isolasi memori Harga Jual dan Biaya Modal Non-Variasi
-      // JANGAN PERNAH mengambil nilai Harga Jual atau Biaya Modal dari opsi variasi!
-      const rawRestoredPrice = (primaryState._savedNonVariantPrice !== undefined && primaryState._savedNonVariantPrice !== null)
-        ? String(primaryState._savedNonVariantPrice).trim()
-        : '';
-      const rawRestoredCost = (primaryState._savedNonVariantCostPrice !== undefined && primaryState._savedNonVariantCostPrice !== null)
-        ? String(primaryState._savedNonVariantCostPrice).trim()
-        : '';
-
-      const restoredPrice = (rawRestoredPrice !== '' && !isNaN(parseFloat(rawRestoredPrice))) ? rawRestoredPrice : '';
-      const restoredCost = (rawRestoredCost !== '' && !isNaN(parseFloat(rawRestoredCost))) ? rawRestoredCost : '';
-
-      primaryState.price = (restoredPrice !== '') ? parseFloat(restoredPrice) : null;
-      primaryState.cost_price = (restoredCost !== '') ? parseFloat(restoredCost) : null;
-      primaryState.normal_price = primaryState.price;
-      primaryState.normal_cost_price = primaryState.cost_price;
-
-      materialsState = [{
-        id: DB.generateUUID(),
-        name: primaryState.name || 'Produk Standar',
-        price: restoredPrice,
-        cost_price: restoredCost,
-        step_multiplier: 1
-      }];
-
-      const singleSettings = document.getElementById('single-product-purchase-settings');
-      if (singleSettings && primaryState.pricing_model === 'normal') {
-        singleSettings.classList.remove('hidden');
-        singleSettings.className = 'space-y-6';
+      const dimLabelInp = document.getElementById('input-custom-dimension-label');
+      if (dimLabelInp) {
+        dimLabelInp.classList.remove('border-red-500');
+        dimLabelInp.classList.add('border-slate-400');
       }
-    } else {
-      // Ada variasi tersisa: Geser naik (Shift-Up) ke Slot 1, 2, 3, dst.
-      // Slot 1: Selalu terisi
-      const d1 = remainingSlotsData[0];
-      primaryState.has_variants = true;
-      primaryState.variation_labels.label_tier_1 = d1.label || '';
-      primaryState.same_price_tiers.tier1 = d1.same_price;
-      primaryState.same_cost_tiers.tier1 = d1.same_cost;
-      primaryState.stock_mode_tiers.tier1 = d1.stock_mode;
-
-      let m1Items = d1.items.map(it => ({
-        id: it.id || DB.generateUUID(),
-        name: it.name || '',
-        description: it.description || '',
-        price: it.price !== undefined ? it.price : '',
-        cost_price: it.cost_price !== undefined ? it.cost_price : '',
-        stock: it.stock !== undefined ? it.stock : '',
-        image: it.image || it.image_url || '',
-        image_url: it.image_url || it.image || '',
-        step_multiplier: it.step_multiplier || 1,
-        min_order: it.min_order || 1,
-        max_order: it.max_order !== undefined ? it.max_order : null
-      }));
-      while (m1Items.length < 2) {
-        m1Items.push({
-          id: DB.generateUUID(),
-          name: '',
-          description: '',
-          price: d1.same_price ? (m1Items[0]?.price ?? '') : '',
-          cost_price: d1.same_cost ? (m1Items[0]?.cost_price ?? '') : '',
-          stock: d1.stock_mode === 'unlimited' ? null : (d1.stock_mode === 'same' ? (m1Items[0]?.stock ?? '') : ''),
-          image: '',
-          image_url: '',
-          step_multiplier: 1,
-          min_order: 1,
-          max_order: null
-        });
+      if (typeof hideWizardErrorBanner === 'function') {
+        hideWizardErrorBanner();
       }
-      materialsState = m1Items;
-
-      // Slot 2
-      if (remainingSlotsData.length >= 2) {
-        const d2 = remainingSlotsData[1];
-        primaryState.has_variation_2 = true;
-        primaryState.has_layer_2 = true;
-        primaryState.variation_labels.label_tier_2 = d2.label || '';
-        primaryState.same_price_tiers.main = d2.same_price;
-        primaryState.same_cost_tiers.main = d2.same_cost;
-        primaryState.stock_mode_tiers.main = d2.stock_mode;
-        primaryState.variation_scopes.main = d2.scope || 'umum';
-        primaryState.scope_main = d2.scope || 'umum';
-
-        let f2Items = d2.items.map(it => ({
-          id: it.id || DB.generateUUID(),
-          tier: 'main',
-          name: it.name || '',
-          description: it.description || '',
-          price: it.price !== undefined ? it.price : '',
-          cost_price: it.cost_price !== undefined ? it.cost_price : '',
-          stock: it.stock !== undefined ? it.stock : '',
-          image: it.image || it.image_url || '',
-          image_url: it.image_url || it.image || '',
-          parent_id: (it.parent_id && m1Items.some(m => m.id === it.parent_id)) ? it.parent_id : ''
-        }));
-        while (f2Items.length < 2) {
-          f2Items.push({
-            id: DB.generateUUID(),
-            tier: 'main',
-            name: '',
-            description: '',
-            price: d2.same_price ? (f2Items[0]?.price ?? '') : '',
-            cost_price: d2.same_cost ? (f2Items[0]?.cost_price ?? '') : '',
-            stock: d2.stock_mode === 'unlimited' ? null : (d2.stock_mode === 'same' ? (f2Items[0]?.stock ?? '') : ''),
-            image: '',
-            image_url: '',
-            parent_id: ''
-          });
-        }
-        finishingsState.main = f2Items;
-      } else {
-        primaryState.has_variation_2 = false;
-        primaryState.has_layer_2 = false;
-        primaryState.variation_labels.label_tier_2 = '';
-        primaryState.same_price_tiers.main = false;
-        primaryState.same_cost_tiers.main = false;
-        primaryState.stock_mode_tiers.main = '';
-        finishingsState.main = [];
-      }
-
-      // Slot 3
-      if (remainingSlotsData.length >= 3) {
-        const d3 = remainingSlotsData[2];
-        primaryState.has_variation_3 = true;
-        primaryState.has_layer_3 = true;
-        primaryState.variation_labels.label_extra_1 = d3.label || '';
-        primaryState.same_price_tiers.extra_1 = d3.same_price;
-        primaryState.same_cost_tiers.extra_1 = d3.same_cost;
-        primaryState.stock_mode_tiers.extra_1 = d3.stock_mode;
-        primaryState.variation_scopes.extra_1 = d3.scope || 'umum';
-        primaryState.scope_extra_1 = d3.scope || 'umum';
-
-        let f3Items = d3.items.map(it => ({
-          id: it.id || DB.generateUUID(),
-          tier: 'extra_1',
-          name: it.name || '',
-          description: it.description || '',
-          price: it.price !== undefined ? it.price : '',
-          cost_price: it.cost_price !== undefined ? it.cost_price : '',
-          stock: it.stock !== undefined ? it.stock : '',
-          image: it.image || it.image_url || '',
-          image_url: it.image_url || it.image || '',
-          parent_id: ''
-        }));
-        while (f3Items.length < 2) {
-          f3Items.push({
-            id: DB.generateUUID(),
-            tier: 'extra_1',
-            name: '',
-            description: '',
-            price: d3.same_price ? (f3Items[0]?.price ?? '') : '',
-            cost_price: d3.same_cost ? (f3Items[0]?.cost_price ?? '') : '',
-            stock: d3.stock_mode === 'unlimited' ? null : (d3.stock_mode === 'same' ? (f3Items[0]?.stock ?? '') : ''),
-            image: '',
-            image_url: '',
-            parent_id: ''
-          });
-        }
-        finishingsState.extra_1 = f3Items;
-      } else {
-        primaryState.has_variation_3 = false;
-        primaryState.has_layer_3 = false;
-        primaryState.variation_labels.label_extra_1 = '';
-        primaryState.same_price_tiers.extra_1 = false;
-        primaryState.same_cost_tiers.extra_1 = false;
-        primaryState.stock_mode_tiers.extra_1 = '';
-        finishingsState.extra_1 = [];
-      }
-
-      // Slot 4
-      if (remainingSlotsData.length >= 4) {
-        const d4 = remainingSlotsData[3];
-        primaryState.has_variation_4 = true;
-        primaryState.has_layer_4 = true;
-        primaryState.variation_labels.label_extra_2 = d4.label || '';
-        primaryState.same_price_tiers.extra_2 = d4.same_price;
-        primaryState.same_cost_tiers.extra_2 = d4.same_cost;
-        primaryState.stock_mode_tiers.extra_2 = d4.stock_mode;
-        primaryState.variation_scopes.extra_2 = d4.scope || 'umum';
-        primaryState.scope_extra_2 = d4.scope || 'umum';
-
-        let f4Items = d4.items.map(it => ({
-          id: it.id || DB.generateUUID(),
-          tier: 'extra_2',
-          name: it.name || '',
-          description: it.description || '',
-          price: it.price !== undefined ? it.price : '',
-          cost_price: it.cost_price !== undefined ? it.cost_price : '',
-          stock: it.stock !== undefined ? it.stock : '',
-          image: it.image || it.image_url || '',
-          image_url: it.image_url || it.image || '',
-          parent_id: ''
-        }));
-        while (f4Items.length < 2) {
-          f4Items.push({
-            id: DB.generateUUID(),
-            tier: 'extra_2',
-            name: '',
-            description: '',
-            price: d4.same_price ? (f4Items[0]?.price ?? '') : '',
-            cost_price: d4.same_cost ? (f4Items[0]?.cost_price ?? '') : '',
-            stock: d4.stock_mode === 'unlimited' ? null : (d4.stock_mode === 'same' ? (f4Items[0]?.stock ?? '') : ''),
-            image: '',
-            image_url: '',
-            parent_id: ''
-          });
-        }
-        finishingsState.extra_2 = f4Items;
-      } else {
-        primaryState.has_variation_4 = false;
-        primaryState.has_layer_4 = false;
-        primaryState.variation_labels.label_extra_2 = '';
-        primaryState.same_price_tiers.extra_2 = false;
-        primaryState.same_cost_tiers.extra_2 = false;
-        primaryState.stock_mode_tiers.extra_2 = '';
-        finishingsState.extra_2 = [];
-      }
-
-      const singleSettings = document.getElementById('single-product-purchase-settings');
-      if (singleSettings) {
-        singleSettings.classList.add('hidden');
-      }
-    }
-
-    // Sinkronkan preview test state jika item terpilih berubah
-    if (typeof previewTestState !== 'undefined') {
-      if (materialsState && materialsState.length > 0) {
-        if (!materialsState.some(m => m.id === previewTestState.selectedTier1Id)) {
-          previewTestState.selectedTier1Id = materialsState[0].id;
-        }
-      } else {
-        previewTestState.selectedTier1Id = null;
-      }
-      if (finishingsState.main && finishingsState.main.length > 0) {
-        if (!finishingsState.main.some(f => f.id === previewTestState.selectedTier2Id)) {
-          previewTestState.selectedTier2Id = finishingsState.main[0].id;
-        }
-      } else {
-        previewTestState.selectedTier2Id = null;
-      }
-    }
-
-    // 3. Render ulang bagian kartu variasi & pricing model section
-    const container = document.getElementById('pricing-model-interactive-container');
-    if (container && typeof renderPricingModelSection === 'function') {
-      container.innerHTML = renderPricingModelSection();
-    }
-    if (typeof bindStep2InteractiveEvents === 'function') {
-      bindStep2InteractiveEvents();
-    }
-
-    // 4. Bangun ulang matriks kombinasi
-    rebuildCombinationMatrix();
-
-    // 5. Perbarui validasi judul kembar & rekomendasi combobox
-    if (typeof refreshVariationTitleDuplicateErrors === 'function') {
-      refreshVariationTitleDuplicateErrors();
-    }
-    if (typeof updateVariationTitleComboboxRecommendations === 'function') {
-      updateVariationTitleComboboxRecommendations();
-    }
-
-    // 6. Panggil updateProductCardLivePreview()
-    if (typeof updateProductCardLivePreview === 'function') {
-      updateProductCardLivePreview();
-    }
-    if (window.lucide && typeof window.lucide.createIcons === 'function') {
-      window.lucide.createIcons();
-    }
-  }
-
-  // BIND EVENT INTERAKTIF STEP 2
-  bindStep2InteractiveEvents = function() {
-    // Card 6: Komisi Afiliasi Events (Dipanggil mandiri di awal)
-    if (typeof bindAffiliateCommissionEvents === 'function') {
-      try { bindAffiliateCommissionEvents(); } catch (_) {}
-    }
-
-    // Card 6: Spesifikasi & Garansi Events
-    const inpBrand = document.getElementById('input-product-brand');
-    if (inpBrand) {
-      inpBrand.oninput = (e) => {
-        primaryState.brand = e.target.value.trim();
+      if (typeof updateProductCardLivePreview === 'function') {
         updateProductCardLivePreview();
-      };
-    }
-
-    const inpOrigin = document.getElementById('input-product-origin');
-    if (inpOrigin) {
-      inpOrigin.oninput = (e) => {
-        primaryState.product_origin = e.target.value.trim();
-        updateProductCardLivePreview();
-      };
-    }
-
-    const selWarrantyUnit = document.getElementById('select-warranty-unit');
-    const inpWarrantyDuration = document.getElementById('input-warranty-duration');
-    const containerWarrantyDuration = document.getElementById('container-warranty-duration');
-    const containerWarrantyType = document.getElementById('container-warranty-type');
-    const selWarrantyType = document.getElementById('select-warranty-type');
-
-    function syncWarrantyInputsUI() {
-      const unit = selWarrantyUnit ? selWarrantyUnit.value : 'Tidak Ada Garansi';
-      const isCustomDuration = ['Hari', 'Bulan', 'Tahun'].includes(unit);
-      const hasWarranty = unit !== 'Tidak Ada Garansi';
-
-      if (containerWarrantyDuration) {
-        if (isCustomDuration) {
-          containerWarrantyDuration.classList.remove('hidden');
-          containerWarrantyDuration.classList.add('flex');
-        } else {
-          containerWarrantyDuration.classList.add('hidden');
-          containerWarrantyDuration.classList.remove('flex');
-        }
       }
+    }
 
-      if (containerWarrantyType) {
-        if (hasWarranty) {
-          containerWarrantyType.classList.remove('hidden');
-          if (!primaryState.warranty_type) {
-            primaryState.warranty_type = 'Garansi Toko';
-            if (selWarrantyType) selWarrantyType.value = 'Garansi Toko';
-          }
-        } else {
-          containerWarrantyType.classList.add('hidden');
-          primaryState.warranty_type = '';
+    // =====================================================================
+    // LOGIKA PERGESERAN OTOMATIS (SHIFT-UP) VARIASI 1–4 SAAT DI-CLOSE (✕)
+    // =====================================================================
+    rebuildCombinationMatrix = () => {
+      const section = document.getElementById('combination-matrix-section');
+      if (section && typeof renderCombinationMatrixTable === 'function') {
+        section.outerHTML = renderCombinationMatrixTable();
+        if (typeof bindCombinationMatrixEvents === 'function') {
+          bindCombinationMatrixEvents();
         }
-      }
-
-      primaryState.warranty_unit = unit;
-      primaryState.warranty_duration = (isCustomDuration && inpWarrantyDuration) ? inpWarrantyDuration.value.trim() : '';
-      primaryState.warranty_period = computeWarrantyPeriod(primaryState.warranty_unit, primaryState.warranty_duration);
-      updateProductCardLivePreview();
-    }
-
-    if (selWarrantyUnit) {
-      selWarrantyUnit.onchange = syncWarrantyInputsUI;
-    }
-    if (inpWarrantyDuration) {
-      inpWarrantyDuration.oninput = syncWarrantyInputsUI;
-    }
-
-    if (selWarrantyType) {
-      selWarrantyType.onchange = (e) => {
-        primaryState.warranty_type = e.target.value;
-        updateProductCardLivePreview();
-      };
-    }
-
-    const togglePo = document.getElementById('toggle-is-preorder');
-    const containerPoDays = document.getElementById('container-preorder-days');
-    const inpPoDays = document.getElementById('input-preorder-days');
-    if (togglePo) {
-      togglePo.onchange = (e) => {
-        primaryState.is_preorder = e.target.checked;
-        if (e.target.checked) {
-          if (containerPoDays) containerPoDays.classList.remove('hidden');
-          if (!primaryState.preorder_days) {
-            primaryState.preorder_days = 7;
-            if (inpPoDays) inpPoDays.value = 7;
-          }
-        } else {
-          if (containerPoDays) containerPoDays.classList.add('hidden');
-        }
-        updateProductCardLivePreview();
-      };
-    }
-
-    if (inpPoDays) {
-      inpPoDays.oninput = (e) => {
-        primaryState.preorder_days = parseInt(e.target.value) || 7;
-        updateProductCardLivePreview();
-      };
-    }
-
-    const inpSku = document.getElementById('input-prod-sku');
-    if (inpSku) {
-      inpSku.oninput = (e) => {
-        primaryState.sku = e.target.value.trim();
-        updateProductCardLivePreview();
-      };
-    }
-    // Tombol Aksi Bawah & Subnav Step 2: Kembali ke Step 1
-    const handleStep2BackAction = (e) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      if (formMode === 'edit') {
-        if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
-          App.navigate('list');
-        } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
-          AdminApp.navigateTo('products');
-        } else {
-          window.location.hash = '#products';
-        }
-      } else {
-        goToStep(1);
       }
     };
 
-    const btn2Prev = document.getElementById('btn-step-2-prev');
-    if (btn2Prev) {
-      btn2Prev.onclick = handleStep2BackAction;
-    }
+    closeAndShiftVariationTier = function (closedTierIndex) {
+      // 1. Panggil syncStateFromDOM() terlebih dahulu agar seluruh ketikan terbaru di DOM tersimpan ke state
+      if (typeof syncStateFromDOM === 'function') {
+        syncStateFromDOM();
+      }
 
-    const btnDraft = document.getElementById('btn-save-draft');
-    if (btnDraft) btnDraft.onclick = () => handleFormSubmit(true);
+      // Pastikan nilai ketentuan tambahan (toggle price, cost, stock) tersinkronisasi jika ada di DOM
+      ['tier1', 'main', 'extra_1', 'extra_2'].forEach(t => {
+        const chkPrice = document.querySelector(`.toggle-same-price[data-tier="${t}"]`);
+        if (chkPrice && primaryState.same_price_tiers) {
+          primaryState.same_price_tiers[t] = chkPrice.checked;
+        }
+        const chkCost = document.querySelector(`.toggle-same-cost[data-tier="${t}"]`);
+        if (chkCost && primaryState.same_cost_tiers) {
+          primaryState.same_cost_tiers[t] = chkCost.checked;
+        }
+        const radStock = document.querySelector(`input[name="stock_mode_${t}"]:checked`);
+        if (radStock && primaryState.stock_mode_tiers) {
+          primaryState.stock_mode_tiers[t] = radStock.value;
+        }
+      });
 
-    const btnSubmit = document.getElementById('btn-submit-product');
-    if (btnSubmit) btnSubmit.onclick = () => handleFormSubmit(false);
+      // 2. Representasi Data Setiap Tingkat Variasi (Slot 1 s/d 4)
+      const slots = [
+        {
+          slot: 1,
+          isActive: Boolean(primaryState.has_variants),
+          label: primaryState.variation_labels?.label_tier_1 || '',
+          items: (materialsState || []).map(m => ({
+            id: m.id || DB.generateUUID(),
+            name: m.name || '',
+            description: m.description || '',
+            price: m.price !== undefined ? m.price : '',
+            cost_price: m.cost_price !== undefined ? m.cost_price : '',
+            stock: m.stock !== undefined ? m.stock : '',
+            image: m.image || m.image_url || '',
+            image_url: m.image_url || m.image || '',
+            step_multiplier: m.step_multiplier || 1,
+            min_order: m.min_order || 1,
+            max_order: m.max_order !== undefined ? m.max_order : null
+          })),
+          same_price: Boolean(primaryState.same_price_tiers?.tier1),
+          same_cost: Boolean(primaryState.same_cost_tiers?.tier1),
+          stock_mode: primaryState.stock_mode_tiers?.tier1 || '',
+          scope: 'umum'
+        },
+        {
+          slot: 2,
+          isActive: Boolean(primaryState.has_variation_2 || (finishingsState.main && finishingsState.main.length > 0)),
+          label: primaryState.variation_labels?.label_tier_2 || '',
+          items: (finishingsState.main || []).map(f => ({
+            id: f.id || DB.generateUUID(),
+            tier: 'main',
+            name: f.name || '',
+            description: f.description || '',
+            price: f.price !== undefined ? f.price : '',
+            cost_price: f.cost_price !== undefined ? f.cost_price : '',
+            stock: f.stock !== undefined ? f.stock : '',
+            image: f.image || f.image_url || '',
+            image_url: f.image_url || f.image || '',
+            parent_id: f.parent_id || ''
+          })),
+          same_price: Boolean(primaryState.same_price_tiers?.main),
+          same_cost: Boolean(primaryState.same_cost_tiers?.main),
+          stock_mode: primaryState.stock_mode_tiers?.main || '',
+          scope: primaryState.variation_scopes?.main || primaryState.scope_main || 'umum'
+        },
+        {
+          slot: 3,
+          isActive: Boolean(primaryState.has_variation_3 || (finishingsState.extra_1 && finishingsState.extra_1.length > 0)),
+          label: primaryState.variation_labels?.label_extra_1 || '',
+          items: (finishingsState.extra_1 || []).map(f => ({
+            id: f.id || DB.generateUUID(),
+            tier: 'extra_1',
+            name: f.name || '',
+            description: f.description || '',
+            price: f.price !== undefined ? f.price : '',
+            cost_price: f.cost_price !== undefined ? f.cost_price : '',
+            stock: f.stock !== undefined ? f.stock : '',
+            image: f.image || f.image_url || '',
+            image_url: f.image_url || f.image || '',
+            parent_id: f.parent_id || ''
+          })),
+          same_price: Boolean(primaryState.same_price_tiers?.extra_1),
+          same_cost: Boolean(primaryState.same_cost_tiers?.extra_1),
+          stock_mode: primaryState.stock_mode_tiers?.extra_1 || '',
+          scope: primaryState.variation_scopes?.extra_1 || primaryState.scope_extra_1 || 'umum'
+        },
+        {
+          slot: 4,
+          isActive: Boolean(primaryState.has_variation_4 || (finishingsState.extra_2 && finishingsState.extra_2.length > 0)),
+          label: primaryState.variation_labels?.label_extra_2 || '',
+          items: (finishingsState.extra_2 || []).map(f => ({
+            id: f.id || DB.generateUUID(),
+            tier: 'extra_2',
+            name: f.name || '',
+            description: f.description || '',
+            price: f.price !== undefined ? f.price : '',
+            cost_price: f.cost_price !== undefined ? f.cost_price : '',
+            stock: f.stock !== undefined ? f.stock : '',
+            image: f.image || f.image_url || '',
+            image_url: f.image_url || f.image || '',
+            parent_id: f.parent_id || ''
+          })),
+          same_price: Boolean(primaryState.same_price_tiers?.extra_2),
+          same_cost: Boolean(primaryState.same_cost_tiers?.extra_2),
+          stock_mode: primaryState.stock_mode_tiers?.extra_2 || '',
+          scope: primaryState.variation_scopes?.extra_2 || primaryState.scope_extra_2 || 'umum'
+        }
+      ];
 
-    // Tombol Pratinjau di bar Sub-Navbar Step 2
-    const btnSubnavPreview = document.getElementById('btn-subnav-toggle-preview');
-    if (btnSubnavPreview) {
-      btnSubnavPreview.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (window.innerWidth >= 1024) {
-          if (typeof setSidebarState === 'function') {
-            setSidebarState(!isLivePreviewOpen);
-          } else if (typeof ProductForm.setSidebarState === 'function') {
-            ProductForm.setSidebarState(!isLivePreviewOpen);
+      const targetIdx = Number(closedTierIndex);
+      // Ambil daftar seluruh tingkat variasi yang sedang aktif, kecualikan closedTierIndex
+      const remainingSlotsData = slots.filter(s => s.isActive && s.slot !== targetIdx);
+
+      if (!primaryState.variation_labels) primaryState.variation_labels = {};
+      if (!primaryState.same_price_tiers) primaryState.same_price_tiers = {};
+      if (!primaryState.same_cost_tiers) primaryState.same_cost_tiers = {};
+      if (!primaryState.stock_mode_tiers) primaryState.stock_mode_tiers = {};
+      if (!primaryState.variation_scopes) primaryState.variation_scopes = {};
+
+      if (remainingSlotsData.length === 0) {
+        // 0 Variasi tersisa: Kembali ke Produk Tunggal (Tanpa Variasi)
+        primaryState.has_variants = false;
+        primaryState.has_variation_2 = false;
+        primaryState.has_layer_2 = false;
+        primaryState.has_variation_3 = false;
+        primaryState.has_layer_3 = false;
+        primaryState.has_variation_4 = false;
+        primaryState.has_layer_4 = false;
+
+        finishingsState.main = [];
+        finishingsState.extra_1 = [];
+        finishingsState.extra_2 = [];
+
+        primaryState.same_price_tiers.tier1 = false;
+        primaryState.same_price_tiers.main = false;
+        primaryState.same_price_tiers.extra_1 = false;
+        primaryState.same_price_tiers.extra_2 = false;
+
+        primaryState.same_cost_tiers.tier1 = false;
+        primaryState.same_cost_tiers.main = false;
+        primaryState.same_cost_tiers.extra_1 = false;
+        primaryState.same_cost_tiers.extra_2 = false;
+
+        primaryState.stock_mode_tiers.tier1 = '';
+        primaryState.stock_mode_tiers.main = '';
+        primaryState.stock_mode_tiers.extra_1 = '';
+        primaryState.stock_mode_tiers.extra_2 = '';
+
+        // TAHAP 1 - POIN 2: Otomatis matikan (set ke OFF / false) status Kustomisasi Ukuran PxL
+        resetCustomDimensionToOff();
+
+        // TAHAP 1 - POIN 3: Isolasi memori Harga Jual dan Biaya Modal Non-Variasi
+        // JANGAN PERNAH mengambil nilai Harga Jual atau Biaya Modal dari opsi variasi!
+        const rawRestoredPrice = (primaryState._savedNonVariantPrice !== undefined && primaryState._savedNonVariantPrice !== null)
+          ? String(primaryState._savedNonVariantPrice).trim()
+          : '';
+        const rawRestoredCost = (primaryState._savedNonVariantCostPrice !== undefined && primaryState._savedNonVariantCostPrice !== null)
+          ? String(primaryState._savedNonVariantCostPrice).trim()
+          : '';
+
+        const restoredPrice = (rawRestoredPrice !== '' && !isNaN(parseFloat(rawRestoredPrice))) ? rawRestoredPrice : '';
+        const restoredCost = (rawRestoredCost !== '' && !isNaN(parseFloat(rawRestoredCost))) ? rawRestoredCost : '';
+
+        primaryState.price = (restoredPrice !== '') ? parseFloat(restoredPrice) : null;
+        primaryState.cost_price = (restoredCost !== '') ? parseFloat(restoredCost) : null;
+        primaryState.normal_price = primaryState.price;
+        primaryState.normal_cost_price = primaryState.cost_price;
+
+        materialsState = [{
+          id: DB.generateUUID(),
+          name: primaryState.name || 'Produk Standar',
+          price: restoredPrice,
+          cost_price: restoredCost,
+          step_multiplier: 1
+        }];
+
+        const singleSettings = document.getElementById('single-product-purchase-settings');
+        if (singleSettings && primaryState.pricing_model === 'normal') {
+          singleSettings.classList.remove('hidden');
+          singleSettings.className = 'space-y-6';
+        }
+      } else {
+        // Ada variasi tersisa: Geser naik (Shift-Up) ke Slot 1, 2, 3, dst.
+        // Slot 1: Selalu terisi
+        const d1 = remainingSlotsData[0];
+        primaryState.has_variants = true;
+        primaryState.variation_labels.label_tier_1 = d1.label || '';
+        primaryState.same_price_tiers.tier1 = d1.same_price;
+        primaryState.same_cost_tiers.tier1 = d1.same_cost;
+        primaryState.stock_mode_tiers.tier1 = d1.stock_mode;
+
+        let m1Items = d1.items.map(it => ({
+          id: it.id || DB.generateUUID(),
+          name: it.name || '',
+          description: it.description || '',
+          price: it.price !== undefined ? it.price : '',
+          cost_price: it.cost_price !== undefined ? it.cost_price : '',
+          stock: it.stock !== undefined ? it.stock : '',
+          image: it.image || it.image_url || '',
+          image_url: it.image_url || it.image || '',
+          step_multiplier: it.step_multiplier || 1,
+          min_order: it.min_order || 1,
+          max_order: it.max_order !== undefined ? it.max_order : null
+        }));
+        while (m1Items.length < 2) {
+          m1Items.push({
+            id: DB.generateUUID(),
+            name: '',
+            description: '',
+            price: d1.same_price ? (m1Items[0]?.price ?? '') : '',
+            cost_price: d1.same_cost ? (m1Items[0]?.cost_price ?? '') : '',
+            stock: d1.stock_mode === 'unlimited' ? null : (d1.stock_mode === 'same' ? (m1Items[0]?.stock ?? '') : ''),
+            image: '',
+            image_url: '',
+            step_multiplier: 1,
+            min_order: 1,
+            max_order: null
+          });
+        }
+        materialsState = m1Items;
+
+        // Slot 2
+        if (remainingSlotsData.length >= 2) {
+          const d2 = remainingSlotsData[1];
+          primaryState.has_variation_2 = true;
+          primaryState.has_layer_2 = true;
+          primaryState.variation_labels.label_tier_2 = d2.label || '';
+          primaryState.same_price_tiers.main = d2.same_price;
+          primaryState.same_cost_tiers.main = d2.same_cost;
+          primaryState.stock_mode_tiers.main = d2.stock_mode;
+          primaryState.variation_scopes.main = d2.scope || 'umum';
+          primaryState.scope_main = d2.scope || 'umum';
+
+          let f2Items = d2.items.map(it => ({
+            id: it.id || DB.generateUUID(),
+            tier: 'main',
+            name: it.name || '',
+            description: it.description || '',
+            price: it.price !== undefined ? it.price : '',
+            cost_price: it.cost_price !== undefined ? it.cost_price : '',
+            stock: it.stock !== undefined ? it.stock : '',
+            image: it.image || it.image_url || '',
+            image_url: it.image_url || it.image || '',
+            parent_id: (it.parent_id && m1Items.some(m => m.id === it.parent_id)) ? it.parent_id : ''
+          }));
+          while (f2Items.length < 2) {
+            f2Items.push({
+              id: DB.generateUUID(),
+              tier: 'main',
+              name: '',
+              description: '',
+              price: d2.same_price ? (f2Items[0]?.price ?? '') : '',
+              cost_price: d2.same_cost ? (f2Items[0]?.cost_price ?? '') : '',
+              stock: d2.stock_mode === 'unlimited' ? null : (d2.stock_mode === 'same' ? (f2Items[0]?.stock ?? '') : ''),
+              image: '',
+              image_url: '',
+              parent_id: ''
+            });
+          }
+          finishingsState.main = f2Items;
+        } else {
+          primaryState.has_variation_2 = false;
+          primaryState.has_layer_2 = false;
+          primaryState.variation_labels.label_tier_2 = '';
+          primaryState.same_price_tiers.main = false;
+          primaryState.same_cost_tiers.main = false;
+          primaryState.stock_mode_tiers.main = '';
+          finishingsState.main = [];
+        }
+
+        // Slot 3
+        if (remainingSlotsData.length >= 3) {
+          const d3 = remainingSlotsData[2];
+          primaryState.has_variation_3 = true;
+          primaryState.has_layer_3 = true;
+          primaryState.variation_labels.label_extra_1 = d3.label || '';
+          primaryState.same_price_tiers.extra_1 = d3.same_price;
+          primaryState.same_cost_tiers.extra_1 = d3.same_cost;
+          primaryState.stock_mode_tiers.extra_1 = d3.stock_mode;
+          primaryState.variation_scopes.extra_1 = d3.scope || 'umum';
+          primaryState.scope_extra_1 = d3.scope || 'umum';
+
+          let f3Items = d3.items.map(it => ({
+            id: it.id || DB.generateUUID(),
+            tier: 'extra_1',
+            name: it.name || '',
+            description: it.description || '',
+            price: it.price !== undefined ? it.price : '',
+            cost_price: it.cost_price !== undefined ? it.cost_price : '',
+            stock: it.stock !== undefined ? it.stock : '',
+            image: it.image || it.image_url || '',
+            image_url: it.image_url || it.image || '',
+            parent_id: ''
+          }));
+          while (f3Items.length < 2) {
+            f3Items.push({
+              id: DB.generateUUID(),
+              tier: 'extra_1',
+              name: '',
+              description: '',
+              price: d3.same_price ? (f3Items[0]?.price ?? '') : '',
+              cost_price: d3.same_cost ? (f3Items[0]?.cost_price ?? '') : '',
+              stock: d3.stock_mode === 'unlimited' ? null : (d3.stock_mode === 'same' ? (f3Items[0]?.stock ?? '') : ''),
+              image: '',
+              image_url: '',
+              parent_id: ''
+            });
+          }
+          finishingsState.extra_1 = f3Items;
+        } else {
+          primaryState.has_variation_3 = false;
+          primaryState.has_layer_3 = false;
+          primaryState.variation_labels.label_extra_1 = '';
+          primaryState.same_price_tiers.extra_1 = false;
+          primaryState.same_cost_tiers.extra_1 = false;
+          primaryState.stock_mode_tiers.extra_1 = '';
+          finishingsState.extra_1 = [];
+        }
+
+        // Slot 4
+        if (remainingSlotsData.length >= 4) {
+          const d4 = remainingSlotsData[3];
+          primaryState.has_variation_4 = true;
+          primaryState.has_layer_4 = true;
+          primaryState.variation_labels.label_extra_2 = d4.label || '';
+          primaryState.same_price_tiers.extra_2 = d4.same_price;
+          primaryState.same_cost_tiers.extra_2 = d4.same_cost;
+          primaryState.stock_mode_tiers.extra_2 = d4.stock_mode;
+          primaryState.variation_scopes.extra_2 = d4.scope || 'umum';
+          primaryState.scope_extra_2 = d4.scope || 'umum';
+
+          let f4Items = d4.items.map(it => ({
+            id: it.id || DB.generateUUID(),
+            tier: 'extra_2',
+            name: it.name || '',
+            description: it.description || '',
+            price: it.price !== undefined ? it.price : '',
+            cost_price: it.cost_price !== undefined ? it.cost_price : '',
+            stock: it.stock !== undefined ? it.stock : '',
+            image: it.image || it.image_url || '',
+            image_url: it.image_url || it.image || '',
+            parent_id: ''
+          }));
+          while (f4Items.length < 2) {
+            f4Items.push({
+              id: DB.generateUUID(),
+              tier: 'extra_2',
+              name: '',
+              description: '',
+              price: d4.same_price ? (f4Items[0]?.price ?? '') : '',
+              cost_price: d4.same_cost ? (f4Items[0]?.cost_price ?? '') : '',
+              stock: d4.stock_mode === 'unlimited' ? null : (d4.stock_mode === 'same' ? (f4Items[0]?.stock ?? '') : ''),
+              image: '',
+              image_url: '',
+              parent_id: ''
+            });
+          }
+          finishingsState.extra_2 = f4Items;
+        } else {
+          primaryState.has_variation_4 = false;
+          primaryState.has_layer_4 = false;
+          primaryState.variation_labels.label_extra_2 = '';
+          primaryState.same_price_tiers.extra_2 = false;
+          primaryState.same_cost_tiers.extra_2 = false;
+          primaryState.stock_mode_tiers.extra_2 = '';
+          finishingsState.extra_2 = [];
+        }
+
+        const singleSettings = document.getElementById('single-product-purchase-settings');
+        if (singleSettings) {
+          singleSettings.classList.add('hidden');
+        }
+      }
+
+      // Sinkronkan preview test state jika item terpilih berubah
+      if (typeof previewTestState !== 'undefined') {
+        if (materialsState && materialsState.length > 0) {
+          if (!materialsState.some(m => m.id === previewTestState.selectedTier1Id)) {
+            previewTestState.selectedTier1Id = materialsState[0].id;
           }
         } else {
-          if (typeof openMobilePreview === 'function') {
-            openMobilePreview();
+          previewTestState.selectedTier1Id = null;
+        }
+        if (finishingsState.main && finishingsState.main.length > 0) {
+          if (!finishingsState.main.some(f => f.id === previewTestState.selectedTier2Id)) {
+            previewTestState.selectedTier2Id = finishingsState.main[0].id;
+          }
+        } else {
+          previewTestState.selectedTier2Id = null;
+        }
+      }
+
+      // 3. Render ulang bagian kartu variasi & pricing model section
+      const container = document.getElementById('pricing-model-interactive-container');
+      if (container && typeof renderPricingModelSection === 'function') {
+        container.innerHTML = renderPricingModelSection();
+      }
+      if (typeof bindStep2InteractiveEvents === 'function') {
+        bindStep2InteractiveEvents();
+      }
+
+      // 4. Bangun ulang matriks kombinasi
+      rebuildCombinationMatrix();
+
+      // 5. Perbarui validasi judul kembar & rekomendasi combobox
+      if (typeof refreshVariationTitleDuplicateErrors === 'function') {
+        refreshVariationTitleDuplicateErrors();
+      }
+      if (typeof updateVariationTitleComboboxRecommendations === 'function') {
+        updateVariationTitleComboboxRecommendations();
+      }
+
+      // 6. Panggil updateProductCardLivePreview()
+      if (typeof updateProductCardLivePreview === 'function') {
+        updateProductCardLivePreview();
+      }
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    // BIND EVENT INTERAKTIF STEP 2
+    bindStep2InteractiveEvents = function () {
+      // Card 6: Komisi Afiliasi Events (Dipanggil mandiri di awal)
+      if (typeof bindAffiliateCommissionEvents === 'function') {
+        try { bindAffiliateCommissionEvents(); } catch (_) { }
+      }
+
+      // Card 6: Spesifikasi & Garansi Events
+      const inpBrand = document.getElementById('input-product-brand');
+      if (inpBrand) {
+        inpBrand.oninput = (e) => {
+          primaryState.brand = e.target.value.trim();
+          updateProductCardLivePreview();
+        };
+      }
+
+      const inpOrigin = document.getElementById('input-product-origin');
+      if (inpOrigin) {
+        inpOrigin.oninput = (e) => {
+          primaryState.product_origin = e.target.value.trim();
+          updateProductCardLivePreview();
+        };
+      }
+
+      const selWarrantyUnit = document.getElementById('select-warranty-unit');
+      const inpWarrantyDuration = document.getElementById('input-warranty-duration');
+      const containerWarrantyDuration = document.getElementById('container-warranty-duration');
+      const containerWarrantyType = document.getElementById('container-warranty-type');
+      const selWarrantyType = document.getElementById('select-warranty-type');
+
+      function syncWarrantyInputsUI() {
+        const unit = selWarrantyUnit ? selWarrantyUnit.value : 'Tidak Ada Garansi';
+        const isCustomDuration = ['Hari', 'Bulan', 'Tahun'].includes(unit);
+        const hasWarranty = unit !== 'Tidak Ada Garansi';
+
+        if (containerWarrantyDuration) {
+          if (isCustomDuration) {
+            containerWarrantyDuration.classList.remove('hidden');
+            containerWarrantyDuration.classList.add('flex');
+          } else {
+            containerWarrantyDuration.classList.add('hidden');
+            containerWarrantyDuration.classList.remove('flex');
           }
         }
-      };
-    }
 
-    // Card 1 Event Listeners di Step 2
-    const step2Name = document.getElementById('step2-input-name');
-    if (step2Name) {
-      handleProductNameValidation(primaryState.name || '', false);
-      step2Name.oninput = (e) => {
-        primaryState.name = e.target.value;
-        const inputProdName = document.getElementById('input-prod-name');
-        if (inputProdName) inputProdName.value = e.target.value;
-        handleProductNameValidation(e.target.value, false);
-        updateProductCardLivePreview();
-        updateStep2CardGatingDOM();
-      };
-      step2Name.onblur = (e) => {
-        handleProductNameValidation(e.target.value, false);
-      };
-    }
-
-    const step2Cat = document.getElementById('select-step2-cat');
-    const step2SubCat = document.getElementById('select-step2-sub-cat');
-    if (step2Cat) {
-      step2Cat.onchange = (e) => {
-        primaryState.category_id = e.target.value;
-        if (step2SubCat) {
-          const subs = primaryState.category_id && DB.getSubCategories ? DB.getSubCategories(primaryState.category_id) : [];
-          step2SubCat.innerHTML = '<option value="">-- Tanpa Sub-Kategori --</option>' + subs.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-          primaryState.sub_category_id = '';
+        if (containerWarrantyType) {
+          if (hasWarranty) {
+            containerWarrantyType.classList.remove('hidden');
+            if (!primaryState.warranty_type) {
+              primaryState.warranty_type = 'Garansi Toko';
+              if (selWarrantyType) selWarrantyType.value = 'Garansi Toko';
+            }
+          } else {
+            containerWarrantyType.classList.add('hidden');
+            primaryState.warranty_type = '';
+          }
         }
+
+        primaryState.warranty_unit = unit;
+        primaryState.warranty_duration = (isCustomDuration && inpWarrantyDuration) ? inpWarrantyDuration.value.trim() : '';
+        primaryState.warranty_period = computeWarrantyPeriod(primaryState.warranty_unit, primaryState.warranty_duration);
         updateProductCardLivePreview();
-        updateStep2CardGatingDOM(true);
-      };
-    }
+      }
 
-    if (step2SubCat) {
-      step2SubCat.onchange = (e) => {
-        primaryState.sub_category_id = e.target.value;
-        updateProductCardLivePreview();
-      };
-    }
+      if (selWarrantyUnit) {
+        selWarrantyUnit.onchange = syncWarrantyInputsUI;
+      }
+      if (inpWarrantyDuration) {
+        inpWarrantyDuration.oninput = syncWarrantyInputsUI;
+      }
 
-    const btnQuickCatStep2 = document.getElementById('btn-quick-add-category-step2');
-    if (btnQuickCatStep2) {
-      btnQuickCatStep2.onclick = (e) => {
-        e.preventDefault();
-        openQuickCatModal();
-      };
-    }
+      if (selWarrantyType) {
+        selWarrantyType.onchange = (e) => {
+          primaryState.warranty_type = e.target.value;
+          updateProductCardLivePreview();
+        };
+      }
 
-    const btnStep2Upload = document.getElementById('btn-step2-upload-more');
-    if (btnStep2Upload) {
-      btnStep2Upload.onclick = (e) => {
+      const togglePo = document.getElementById('toggle-is-preorder');
+      const containerPoDays = document.getElementById('container-preorder-days');
+      const inpPoDays = document.getElementById('input-preorder-days');
+      if (togglePo) {
+        togglePo.onchange = (e) => {
+          primaryState.is_preorder = e.target.checked;
+          if (e.target.checked) {
+            if (containerPoDays) containerPoDays.classList.remove('hidden');
+            if (!primaryState.preorder_days) {
+              primaryState.preorder_days = 7;
+              if (inpPoDays) inpPoDays.value = 7;
+            }
+          } else {
+            if (containerPoDays) containerPoDays.classList.add('hidden');
+          }
+          updateProductCardLivePreview();
+        };
+      }
+
+      if (inpPoDays) {
+        inpPoDays.oninput = (e) => {
+          primaryState.preorder_days = parseInt(e.target.value) || 7;
+          updateProductCardLivePreview();
+        };
+      }
+
+      const inpSku = document.getElementById('input-prod-sku');
+      if (inpSku) {
+        inpSku.oninput = (e) => {
+          primaryState.sku = e.target.value.trim();
+          updateProductCardLivePreview();
+        };
+      }
+      // Tombol Aksi Bawah & Subnav Step 2: Kembali ke Step 1
+      const handleStep2BackAction = (e) => {
         if (e) {
           e.preventDefault();
           e.stopPropagation();
-          if (e.isTrusted === false) return;
         }
-        const fileInput = document.getElementById('input-prod-images-hidden') || document.getElementById('input-prod-image');
-        if (fileInput) fileInput.click();
-      };
-    }
-
-    // Pricing Model Selection (Normal, Size, Weight, Volume)
-    const selectPricingModel = document.getElementById('select-pricing-model');
-    if (selectPricingModel) {
-      selectPricingModel.onchange = e => {
-        primaryState.pricing_model = e.target.value;
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        const singleSettings = document.getElementById('single-product-purchase-settings');
-        if (singleSettings) {
-          if (primaryState.pricing_model === 'normal' && !primaryState.has_variants) {
-            singleSettings.classList.remove('hidden');
-            singleSettings.className = 'space-y-6';
+        if (formMode === 'edit') {
+          if (typeof App !== 'undefined' && typeof App.navigate === 'function') {
+            App.navigate('list');
+          } else if (typeof AdminApp !== 'undefined' && typeof AdminApp.navigateTo === 'function') {
+            AdminApp.navigateTo('products');
           } else {
-            singleSettings.classList.add('hidden');
+            window.location.hash = '#products';
+          }
+        } else {
+          goToStep(1);
+        }
+      };
+
+      const btn2Prev = document.getElementById('btn-step-2-prev');
+      if (btn2Prev) {
+        btn2Prev.onclick = handleStep2BackAction;
+      }
+
+      const btnDraft = document.getElementById('btn-save-draft');
+      if (btnDraft) btnDraft.onclick = () => handleFormSubmit(true);
+
+      const btnSubmit = document.getElementById('btn-submit-product');
+      if (btnSubmit) btnSubmit.onclick = () => handleFormSubmit(false);
+
+      // Tombol Pratinjau di bar Sub-Navbar Step 2
+      const btnSubnavPreview = document.getElementById('btn-subnav-toggle-preview');
+      if (btnSubnavPreview) {
+        btnSubnavPreview.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (window.innerWidth >= 1024) {
+            if (typeof setSidebarState === 'function') {
+              setSidebarState(!isLivePreviewOpen);
+            } else if (typeof ProductForm.setSidebarState === 'function') {
+              ProductForm.setSidebarState(!isLivePreviewOpen);
+            }
+          } else {
+            if (typeof openMobilePreview === 'function') {
+              openMobilePreview();
+            }
+          }
+        };
+      }
+
+      // Card 1 Event Listeners di Step 2
+      const step2Name = document.getElementById('step2-input-name');
+      if (step2Name) {
+        handleProductNameValidation(primaryState.name || '', false);
+        step2Name.oninput = (e) => {
+          primaryState.name = e.target.value;
+          const inputProdName = document.getElementById('input-prod-name');
+          if (inputProdName) inputProdName.value = e.target.value;
+          handleProductNameValidation(e.target.value, false);
+          updateProductCardLivePreview();
+          updateStep2CardGatingDOM();
+        };
+        step2Name.onblur = (e) => {
+          handleProductNameValidation(e.target.value, false);
+        };
+      }
+
+      const step2Cat = document.getElementById('select-step2-cat');
+      const step2SubCat = document.getElementById('select-step2-sub-cat');
+      if (step2Cat) {
+        step2Cat.onchange = (e) => {
+          primaryState.category_id = e.target.value;
+          if (step2SubCat) {
+            const subs = primaryState.category_id && DB.getSubCategories ? DB.getSubCategories(primaryState.category_id) : [];
+            step2SubCat.innerHTML = '<option value="">-- Tanpa Sub-Kategori --</option>' + subs.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+            primaryState.sub_category_id = '';
+          }
+          updateProductCardLivePreview();
+          updateStep2CardGatingDOM(true);
+        };
+      }
+
+      if (step2SubCat) {
+        step2SubCat.onchange = (e) => {
+          primaryState.sub_category_id = e.target.value;
+          updateProductCardLivePreview();
+        };
+      }
+
+      const btnQuickCatStep2 = document.getElementById('btn-quick-add-category-step2');
+      if (btnQuickCatStep2) {
+        btnQuickCatStep2.onclick = (e) => {
+          e.preventDefault();
+          openQuickCatModal();
+        };
+      }
+
+      const btnStep2Upload = document.getElementById('btn-step2-upload-more');
+      if (btnStep2Upload) {
+        btnStep2Upload.onclick = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.isTrusted === false) return;
+          }
+          const fileInput = document.getElementById('input-prod-images-hidden') || document.getElementById('input-prod-image');
+          if (fileInput) fileInput.click();
+        };
+      }
+
+      // Pricing Model Selection (Normal, Size, Weight, Volume)
+      const selectPricingModel = document.getElementById('select-pricing-model');
+      if (selectPricingModel) {
+        selectPricingModel.onchange = e => {
+          primaryState.pricing_model = e.target.value;
+          const container = document.getElementById('pricing-model-interactive-container');
+          if (container) container.innerHTML = renderPricingModelSection();
+          const singleSettings = document.getElementById('single-product-purchase-settings');
+          if (singleSettings) {
+            if (primaryState.pricing_model === 'normal' && !primaryState.has_variants) {
+              singleSettings.classList.remove('hidden');
+              singleSettings.className = 'space-y-6';
+            } else {
+              singleSettings.classList.add('hidden');
+            }
+          }
+          bindStep2InteractiveEvents();
+          updateProductCardLivePreview();
+        };
+      }
+
+      // Tombol Variasi Produk: Buka Variasi 1 (Minimal 2 Baris Awal)
+      const btnToggleVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
+      if (btnToggleVariants) {
+        btnToggleVariants.onclick = () => {
+          // Simpan memori harga jual & biaya modal non-variasi saat ini sebelum beralih ke variasi
+          const singleP = document.getElementById('input-single-price');
+          const singleC = document.getElementById('input-single-cost');
+          if (singleP) {
+            primaryState._savedNonVariantPrice = singleP.value.trim();
+          } else if (materialsState.length > 0 && materialsState[0].price !== undefined && materialsState[0].price !== null) {
+            primaryState._savedNonVariantPrice = String(materialsState[0].price).trim();
+          }
+          if (singleC) {
+            primaryState._savedNonVariantCostPrice = singleC.value.trim();
+          } else if (materialsState.length > 0 && materialsState[0].cost_price !== undefined && materialsState[0].cost_price !== null) {
+            primaryState._savedNonVariantCostPrice = String(materialsState[0].cost_price).trim();
+          }
+
+          // Otomatis sembunyikan pesan peringatan jika sebelumnya muncul
+          const warnEl = document.getElementById('custom-dim-no-variant-warning');
+          if (warnEl) warnEl.classList.add('hidden');
+          hideWizardErrorBanner();
+
+          primaryState.has_variants = true;
+          materialsState = [
+            { id: DB.generateUUID(), name: '', description: '', price: '', cost_price: '', stock: '', image_url: '', step_multiplier: 1 },
+            { id: DB.generateUUID(), name: '', description: '', price: '', cost_price: '', stock: '', image_url: '', step_multiplier: 1 }
+          ];
+          if (primaryState.same_price_tiers) primaryState.same_price_tiers.tier1 = false;
+          if (primaryState.same_cost_tiers) primaryState.same_cost_tiers.tier1 = false;
+          if (primaryState.stock_mode_tiers) primaryState.stock_mode_tiers.tier1 = '';
+          const singleSettings = document.getElementById('single-product-purchase-settings');
+          if (singleSettings) singleSettings.classList.add('hidden');
+          const container = document.getElementById('pricing-model-interactive-container');
+          if (container) container.innerHTML = renderPricingModelSection();
+          bindStep2InteractiveEvents();
+          updateProductCardLivePreview();
+          if (window.lucide) window.lucide.createIcons();
+        };
+      }
+
+      // Tombol Tutup Variasi 1 (Pergeseran Otomatis / Shift-Up)
+      const btnCloseVar1 = document.getElementById('btn-close-var-tier-1') || document.getElementById('btn-close-variasi-1');
+      if (btnCloseVar1) {
+        btnCloseVar1.onclick = () => closeAndShiftVariationTier(1);
+      }
+      const btnDisableVariants = document.getElementById('btn-disable-variants');
+      if (btnDisableVariants) {
+        btnDisableVariants.onclick = () => closeAndShiftVariationTier(1);
+      }
+      document.querySelectorAll('.btn-remove-variation-group').forEach(btn => {
+        btn.onclick = () => closeAndShiftVariationTier(1);
+      });
+
+      // Single Price & Cost Inputs (Produk Tunggal)
+      const singlePrice = document.getElementById('input-single-price');
+      const singleCost = document.getElementById('input-single-cost');
+      const singleBadge = document.getElementById('single-margin-badge');
+      const singlePriceErr = document.getElementById('single-price-error-msg');
+      const singleCostErr = document.getElementById('single-cost-error-msg');
+
+      // Validasi harga tunggal terpusat di modul scope ProductForm (validateSinglePrice)
+
+      function validateSingleCost(isBlur = false) {
+        if (!singleCost) return true;
+        const raw = (singleCost.value || '').trim();
+        if (raw === '' || raw === null) {
+          singleCost.classList.remove('text-red-600', 'font-bold');
+          singleCost.classList.add('text-slate-900');
+          if (isBlur) {
+            if (singleCostErr) { singleCostErr.textContent = 'Wajib diisi'; singleCostErr.classList.remove('hidden'); }
+            singleCost.classList.remove('border-slate-300');
+            singleCost.classList.add('border-red-500');
+            return false;
+          }
+          if (singleCostErr && !singleCostErr.classList.contains('hidden')) {
+            singleCostErr.textContent = 'Wajib diisi';
+            singleCost.classList.remove('border-slate-300');
+            singleCost.classList.add('border-red-500');
+          }
+          return false;
+        }
+        const num = parseFloat(raw);
+        if (isNaN(num) || num < 0) {
+          singleCost.classList.remove('text-red-600', 'font-bold');
+          singleCost.classList.add('text-slate-900');
+          if (isBlur) {
+            if (singleCostErr) { singleCostErr.textContent = 'Wajib diisi'; singleCostErr.classList.remove('hidden'); }
+            singleCost.classList.remove('border-slate-300');
+            singleCost.classList.add('border-red-500');
+            return false;
+          }
+          if (singleCostErr && !singleCostErr.classList.contains('hidden')) {
+            singleCostErr.textContent = 'Wajib diisi';
+            singleCost.classList.remove('border-slate-300');
+            singleCost.classList.add('border-red-500');
+          }
+          return false;
+        }
+
+        // Validasi Real-Time HPP > Harga Jual
+        const pRaw = (singlePrice?.value || '').trim();
+        const pVal = pRaw !== '' && !isNaN(parseFloat(pRaw)) ? parseFloat(pRaw) : NaN;
+        if (!isNaN(pVal) && pVal > 0 && num > pVal) {
+          singleCost.classList.add('text-red-600', 'font-bold', 'border-red-500');
+          singleCost.classList.remove('text-slate-900', 'border-slate-300');
+          if (singleCostErr) {
+            singleCostErr.textContent = 'Hpp melebihi Harga Jual';
+            singleCostErr.classList.remove('hidden');
+          }
+          return false;
+        } else {
+          singleCost.classList.remove('text-red-600', 'font-bold', 'border-red-500');
+          singleCost.classList.add('text-slate-900', 'border-slate-300');
+          if (singleCostErr) {
+            singleCostErr.textContent = '';
+            singleCostErr.classList.add('hidden');
+          }
+          return true;
+        }
+      }
+
+      function updateSingleMargin() {
+        const rawP = (singlePrice?.value || '').trim();
+        const rawC = (singleCost?.value || '').trim();
+        const p = (rawP === '' || isNaN(parseFloat(rawP))) ? '' : parseFloat(rawP);
+        const c = (rawC === '' || isNaN(parseFloat(rawC))) ? '' : parseFloat(rawC);
+        if (materialsState.length > 0) {
+          materialsState[0].price = p;
+          materialsState[0].cost_price = c;
+          if (!primaryState.has_variants) {
+            materialsState[0].name = 'Produk Standar';
           }
         }
-        bindStep2InteractiveEvents();
+        if (!primaryState.has_variants) {
+          primaryState._savedNonVariantPrice = rawP;
+          primaryState._savedNonVariantCostPrice = rawC;
+          primaryState.price = (p !== '') ? p : null;
+          primaryState.cost_price = (c !== '') ? c : null;
+          primaryState.normal_price = primaryState.price;
+          primaryState.normal_cost_price = primaryState.cost_price;
+        }
+        if (singleBadge) singleBadge.innerHTML = calculateMarginBadge(p, c);
+        validateSinglePrice(false);
+        validateSingleCost(false);
         updateProductCardLivePreview();
-      };
-    }
-
-    // Tombol Variasi Produk: Buka Variasi 1 (Minimal 2 Baris Awal)
-    const btnToggleVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
-    if (btnToggleVariants) {
-      btnToggleVariants.onclick = () => {
-        // Simpan memori harga jual & biaya modal non-variasi saat ini sebelum beralih ke variasi
-        const singleP = document.getElementById('input-single-price');
-        const singleC = document.getElementById('input-single-cost');
-        if (singleP) {
-          primaryState._savedNonVariantPrice = singleP.value.trim();
-        } else if (materialsState.length > 0 && materialsState[0].price !== undefined && materialsState[0].price !== null) {
-          primaryState._savedNonVariantPrice = String(materialsState[0].price).trim();
-        }
-        if (singleC) {
-          primaryState._savedNonVariantCostPrice = singleC.value.trim();
-        } else if (materialsState.length > 0 && materialsState[0].cost_price !== undefined && materialsState[0].cost_price !== null) {
-          primaryState._savedNonVariantCostPrice = String(materialsState[0].cost_price).trim();
-        }
-
-        // Otomatis sembunyikan pesan peringatan jika sebelumnya muncul
-        const warnEl = document.getElementById('custom-dim-no-variant-warning');
-        if (warnEl) warnEl.classList.add('hidden');
-        hideWizardErrorBanner();
-
-        primaryState.has_variants = true;
-        materialsState = [
-          { id: DB.generateUUID(), name: '', description: '', price: '', cost_price: '', stock: '', image_url: '', step_multiplier: 1 },
-          { id: DB.generateUUID(), name: '', description: '', price: '', cost_price: '', stock: '', image_url: '', step_multiplier: 1 }
-        ];
-        if (primaryState.same_price_tiers) primaryState.same_price_tiers.tier1 = false;
-        if (primaryState.same_cost_tiers) primaryState.same_cost_tiers.tier1 = false;
-        if (primaryState.stock_mode_tiers) primaryState.stock_mode_tiers.tier1 = '';
-        const singleSettings = document.getElementById('single-product-purchase-settings');
-        if (singleSettings) singleSettings.classList.add('hidden');
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
-    }
-
-    // Tombol Tutup Variasi 1 (Pergeseran Otomatis / Shift-Up)
-    const btnCloseVar1 = document.getElementById('btn-close-var-tier-1') || document.getElementById('btn-close-variasi-1');
-    if (btnCloseVar1) {
-      btnCloseVar1.onclick = () => closeAndShiftVariationTier(1);
-    }
-    const btnDisableVariants = document.getElementById('btn-disable-variants');
-    if (btnDisableVariants) {
-      btnDisableVariants.onclick = () => closeAndShiftVariationTier(1);
-    }
-    document.querySelectorAll('.btn-remove-variation-group').forEach(btn => {
-      btn.onclick = () => closeAndShiftVariationTier(1);
-    });
-
-    // Single Price & Cost Inputs (Produk Tunggal)
-    const singlePrice = document.getElementById('input-single-price');
-    const singleCost = document.getElementById('input-single-cost');
-    const singleBadge = document.getElementById('single-margin-badge');
-    const singlePriceErr = document.getElementById('single-price-error-msg');
-    const singleCostErr = document.getElementById('single-cost-error-msg');
-
-    // Validasi harga tunggal terpusat di modul scope ProductForm (validateSinglePrice)
-
-    function validateSingleCost(isBlur = false) {
-      if (!singleCost) return true;
-      const raw = (singleCost.value || '').trim();
-      if (raw === '' || raw === null) {
-        singleCost.classList.remove('text-red-600', 'font-bold');
-        singleCost.classList.add('text-slate-900');
-        if (isBlur) {
-          if (singleCostErr) { singleCostErr.textContent = 'Wajib diisi'; singleCostErr.classList.remove('hidden'); }
-          singleCost.classList.remove('border-slate-300');
-          singleCost.classList.add('border-red-500');
-          return false;
-        }
-        if (singleCostErr && !singleCostErr.classList.contains('hidden')) {
-          singleCostErr.textContent = 'Wajib diisi';
-          singleCost.classList.remove('border-slate-300');
-          singleCost.classList.add('border-red-500');
-        }
-        return false;
-      }
-      const num = parseFloat(raw);
-      if (isNaN(num) || num < 0) {
-        singleCost.classList.remove('text-red-600', 'font-bold');
-        singleCost.classList.add('text-slate-900');
-        if (isBlur) {
-          if (singleCostErr) { singleCostErr.textContent = 'Wajib diisi'; singleCostErr.classList.remove('hidden'); }
-          singleCost.classList.remove('border-slate-300');
-          singleCost.classList.add('border-red-500');
-          return false;
-        }
-        if (singleCostErr && !singleCostErr.classList.contains('hidden')) {
-          singleCostErr.textContent = 'Wajib diisi';
-          singleCost.classList.remove('border-slate-300');
-          singleCost.classList.add('border-red-500');
-        }
-        return false;
       }
 
-      // Validasi Real-Time HPP > Harga Jual
-      const pRaw = (singlePrice?.value || '').trim();
-      const pVal = pRaw !== '' && !isNaN(parseFloat(pRaw)) ? parseFloat(pRaw) : NaN;
-      if (!isNaN(pVal) && pVal > 0 && num > pVal) {
-        singleCost.classList.add('text-red-600', 'font-bold', 'border-red-500');
-        singleCost.classList.remove('text-slate-900', 'border-slate-300');
-        if (singleCostErr) {
-          singleCostErr.textContent = 'Hpp melebihi Harga Jual';
-          singleCostErr.classList.remove('hidden');
+      // Single Stock Input (Produk Tunggal - Combobox Rekomendasi Unlimited + Input Angka)
+      const singleStock = document.getElementById('input-stock-qty');
+      const singleStockErr = document.getElementById('single-stock-error-msg');
+      const clearStockBtn = document.getElementById('btn-clear-stock-qty');
+
+      function syncStockStateAndClearBtn(val) {
+        const trimmed = (val || '').trim();
+        const isUnl = trimmed.toLowerCase() === 'unlimited' || trimmed.toLowerCase() === 'tanpa batas';
+
+        if (isUnl) {
+          primaryState.is_unlimited_stock = true;
+          primaryState.stock = null;
+          if (materialsState.length > 0) materialsState[0].stock = null;
+        } else if (trimmed === '') {
+          primaryState.is_unlimited_stock = false;
+          primaryState.stock = null;
+          if (materialsState.length > 0) materialsState[0].stock = null;
+        } else {
+          const num = parseInt(trimmed, 10);
+          primaryState.is_unlimited_stock = false;
+          primaryState.stock = isNaN(num) ? null : Math.max(0, num);
+          if (materialsState.length > 0) materialsState[0].stock = primaryState.stock;
         }
-        return false;
-      } else {
-        singleCost.classList.remove('text-red-600', 'font-bold', 'border-red-500');
-        singleCost.classList.add('text-slate-900', 'border-slate-300');
-        if (singleCostErr) {
-          singleCostErr.textContent = '';
-          singleCostErr.classList.add('hidden');
+
+        if (clearStockBtn) {
+          if (trimmed.length > 0) {
+            clearStockBtn.classList.remove('hidden');
+            clearStockBtn.classList.add('flex');
+          } else {
+            clearStockBtn.classList.remove('flex');
+            clearStockBtn.classList.add('hidden');
+          }
         }
+      }
+
+      function validateSingleStock(isBlur = false) {
+        if (!singleStock) return true;
+        const raw = (singleStock.value || '').trim();
+        const isUnl = raw.toLowerCase() === 'unlimited' || raw.toLowerCase() === 'tanpa batas' || primaryState.is_unlimited_stock;
+        if (isUnl) {
+          if (singleStockErr) { singleStockErr.textContent = ''; singleStockErr.classList.add('hidden'); }
+          singleStock.classList.remove('border-red-500');
+          singleStock.classList.add('border-slate-300');
+          return true;
+        }
+        if (raw === '' || isNaN(parseInt(raw, 10)) || parseInt(raw, 10) < 0) {
+          if (isBlur) {
+            singleStock.classList.remove('border-slate-300');
+            singleStock.classList.add('border-red-500');
+            if (singleStockErr) {
+              singleStockErr.textContent = 'Stok produk wajib diisi angka (minimal "0") atau pilih "Unlimited"';
+              singleStockErr.classList.remove('hidden');
+            }
+            return false;
+          }
+          return false;
+        }
+        singleStock.classList.remove('border-red-500');
+        singleStock.classList.add('border-slate-300');
+        if (singleStockErr) { singleStockErr.textContent = ''; singleStockErr.classList.add('hidden'); }
         return true;
       }
-    }
 
-    function updateSingleMargin() {
-      const rawP = (singlePrice?.value || '').trim();
-      const rawC = (singleCost?.value || '').trim();
-      const p = (rawP === '' || isNaN(parseFloat(rawP))) ? '' : parseFloat(rawP);
-      const c = (rawC === '' || isNaN(parseFloat(rawC))) ? '' : parseFloat(rawC);
-      if (materialsState.length > 0) {
-        materialsState[0].price = p;
-        materialsState[0].cost_price = c;
-        if (!primaryState.has_variants) {
-          materialsState[0].name = 'Produk Standar';
-        }
+      if (singlePrice) {
+        singlePrice.oninput = updateSingleMargin;
+        singlePrice.onblur = () => validateSinglePrice(true);
       }
-      if (!primaryState.has_variants) {
-        primaryState._savedNonVariantPrice = rawP;
-        primaryState._savedNonVariantCostPrice = rawC;
-        primaryState.price = (p !== '') ? p : null;
-        primaryState.cost_price = (c !== '') ? c : null;
-        primaryState.normal_price = primaryState.price;
-        primaryState.normal_cost_price = primaryState.cost_price;
+      if (singleCost) {
+        singleCost.oninput = updateSingleMargin;
+        singleCost.onblur = () => validateSingleCost(true);
       }
-      if (singleBadge) singleBadge.innerHTML = calculateMarginBadge(p, c);
-      validateSinglePrice(false);
-      validateSingleCost(false);
-      updateProductCardLivePreview();
-    }
-
-    // Single Stock Input (Produk Tunggal - Combobox Rekomendasi Unlimited + Input Angka)
-    const singleStock = document.getElementById('input-stock-qty');
-    const singleStockErr = document.getElementById('single-stock-error-msg');
-    const clearStockBtn = document.getElementById('btn-clear-stock-qty');
-
-    function syncStockStateAndClearBtn(val) {
-      const trimmed = (val || '').trim();
-      const isUnl = trimmed.toLowerCase() === 'unlimited' || trimmed.toLowerCase() === 'tanpa batas';
-
-      if (isUnl) {
-        primaryState.is_unlimited_stock = true;
-        primaryState.stock = null;
-        if (materialsState.length > 0) materialsState[0].stock = null;
-      } else if (trimmed === '') {
-        primaryState.is_unlimited_stock = false;
-        primaryState.stock = null;
-        if (materialsState.length > 0) materialsState[0].stock = null;
-      } else {
-        const num = parseInt(trimmed, 10);
-        primaryState.is_unlimited_stock = false;
-        primaryState.stock = isNaN(num) ? null : Math.max(0, num);
-        if (materialsState.length > 0) materialsState[0].stock = primaryState.stock;
+      if (singleStock) {
+        singleStock.disabled = false;
+        singleStock.readOnly = false;
+        singleStock.oninput = (e) => {
+          syncStockStateAndClearBtn(e.target.value);
+          validateSingleStock(false);
+          updateProductCardLivePreview();
+        };
+        singleStock.onchange = (e) => {
+          syncStockStateAndClearBtn(e.target.value);
+          validateSingleStock(false);
+          updateProductCardLivePreview();
+        };
+        singleStock.onblur = () => validateSingleStock(true);
       }
 
       if (clearStockBtn) {
-        if (trimmed.length > 0) {
-          clearStockBtn.classList.remove('hidden');
-          clearStockBtn.classList.add('flex');
-        } else {
-          clearStockBtn.classList.remove('flex');
-          clearStockBtn.classList.add('hidden');
-        }
-      }
-    }
-
-    function validateSingleStock(isBlur = false) {
-      if (!singleStock) return true;
-      const raw = (singleStock.value || '').trim();
-      const isUnl = raw.toLowerCase() === 'unlimited' || raw.toLowerCase() === 'tanpa batas' || primaryState.is_unlimited_stock;
-      if (isUnl) {
-        if (singleStockErr) { singleStockErr.textContent = ''; singleStockErr.classList.add('hidden'); }
-        singleStock.classList.remove('border-red-500');
-        singleStock.classList.add('border-slate-300');
-        return true;
-      }
-      if (raw === '' || isNaN(parseInt(raw, 10)) || parseInt(raw, 10) < 0) {
-        if (isBlur) {
-          singleStock.classList.remove('border-slate-300');
-          singleStock.classList.add('border-red-500');
-          if (singleStockErr) {
-            singleStockErr.textContent = 'Stok produk wajib diisi angka (minimal "0") atau pilih "Unlimited"';
-            singleStockErr.classList.remove('hidden');
+        clearStockBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (singleStock) {
+            singleStock.value = '';
+            syncStockStateAndClearBtn('');
+            validateSingleStock(false);
+            updateProductCardLivePreview();
+            singleStock.focus();
           }
-          return false;
+        };
+      }
+
+      // Kustomisasi Label Input pada Setiap Variasi Real-Time Sync
+      function handleVariationLabelInput(inp, val) {
+        const labelKey = inp.getAttribute('data-label-key') || ((inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') ? 'label_tier_1' : '');
+        const tier = inp.getAttribute('data-tier') || ((inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') ? 'tier1' : '');
+        if (!primaryState.variation_labels) primaryState.variation_labels = {};
+        if (labelKey) primaryState.variation_labels[labelKey] = val;
+        if (labelKey === 'label_tier_1' || tier === 'tier1' || inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') {
+          primaryState.variation_1_label = val;
         }
-        return false;
-      }
-      singleStock.classList.remove('border-red-500');
-      singleStock.classList.add('border-slate-300');
-      if (singleStockErr) { singleStockErr.textContent = ''; singleStockErr.classList.add('hidden'); }
-      return true;
-    }
 
-    if (singlePrice) {
-      singlePrice.oninput = updateSingleMargin;
-      singlePrice.onblur = () => validateSinglePrice(true);
-    }
-    if (singleCost) {
-      singleCost.oninput = updateSingleMargin;
-      singleCost.onblur = () => validateSingleCost(true);
-    }
-    if (singleStock) {
-      singleStock.disabled = false;
-      singleStock.readOnly = false;
-      singleStock.oninput = (e) => {
-        syncStockStateAndClearBtn(e.target.value);
-        validateSingleStock(false);
-        updateProductCardLivePreview();
-      };
-      singleStock.onchange = (e) => {
-        syncStockStateAndClearBtn(e.target.value);
-        validateSingleStock(false);
-        updateProductCardLivePreview();
-      };
-      singleStock.onblur = () => validateSingleStock(true);
-    }
-
-    if (clearStockBtn) {
-      clearStockBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (singleStock) {
-          singleStock.value = '';
-          syncStockStateAndClearBtn('');
-          validateSingleStock(false);
-          updateProductCardLivePreview();
-          singleStock.focus();
+        // Update header pada tabel kombinasi bawah jika label berubah
+        const comboSection = document.getElementById('combination-matrix-section');
+        if (comboSection) {
+          const comboVar1Th = comboSection.querySelector('th:first-child');
+          if (comboVar1Th && (labelKey === 'label_tier_1' || tier === 'tier1')) comboVar1Th.textContent = val || 'Variasi 1';
         }
-      };
-    }
 
-    // Kustomisasi Label Input pada Setiap Variasi Real-Time Sync
-    function handleVariationLabelInput(inp, val) {
-      const labelKey = inp.getAttribute('data-label-key') || ((inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') ? 'label_tier_1' : '');
-      const tier = inp.getAttribute('data-tier') || ((inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') ? 'tier1' : '');
-      if (!primaryState.variation_labels) primaryState.variation_labels = {};
-      if (labelKey) primaryState.variation_labels[labelKey] = val;
-      if (labelKey === 'label_tier_1' || tier === 'tier1' || inp.id === 'input-variation-1-label' || inp.id === 'input-var-label-tier1') {
-        primaryState.variation_1_label = val;
-      }
-
-      // Update header pada tabel kombinasi bawah jika label berubah
-      const comboSection = document.getElementById('combination-matrix-section');
-      if (comboSection) {
-        const comboVar1Th = comboSection.querySelector('th:first-child');
-        if (comboVar1Th && (labelKey === 'label_tier_1' || tier === 'tier1')) comboVar1Th.textContent = val || 'Variasi 1';
-      }
-
-      // Jika mengubah label Layanan Extras, update nama opsi default 'Tanpa [Judul Extras]' pada baris terakhir
-      if (labelKey === 'label_extra_3' || tier === 'extra_3') {
-        const extraTitle = val || 'Layanan Extras';
-        const defaultNoneName = `Tanpa ${extraTitle}`;
-        ensureExtraServiceNoneAtBottom();
-        const lastIdx = (finishingsState.extra_3 || []).length - 1;
-        const lastRowNameInp = document.querySelector(`#finishings-extra_3-rows-container .variation-option-row[data-idx="${lastIdx}"] input[data-field="name"]`);
-        if (lastRowNameInp) {
-          lastRowNameInp.value = defaultNoneName;
+        // Jika mengubah label Layanan Extras, update nama opsi default 'Tanpa [Judul Extras]' pada baris terakhir
+        if (labelKey === 'label_extra_3' || tier === 'extra_3') {
+          const extraTitle = val || 'Layanan Extras';
+          const defaultNoneName = `Tanpa ${extraTitle}`;
+          ensureExtraServiceNoneAtBottom();
+          const lastIdx = (finishingsState.extra_3 || []).length - 1;
+          const lastRowNameInp = document.querySelector(`#finishings-extra_3-rows-container .variation-option-row[data-idx="${lastIdx}"] input[data-field="name"]`);
+          if (lastRowNameInp) {
+            lastRowNameInp.value = defaultNoneName;
+          }
         }
-      }
 
-      refreshVariationTitleDuplicateErrors();
-      if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix();
-      updateProductCardLivePreview();
-    }
-
-    document.querySelectorAll('.input-variation-label, #input-var-label-tier1, #input-variation-1-label').forEach(inp => {
-      inp.oninput = (e) => {
-        handleVariationLabelInput(inp, e.target.value.trim());
-      };
-      inp.onblur = () => {
         refreshVariationTitleDuplicateErrors();
-      };
-    });
+        if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix();
+        updateProductCardLivePreview();
+      }
 
-    if (!window._variationLabelInputListenerBound) {
-      window._variationLabelInputListenerBound = true;
-      document.addEventListener('input', (e) => {
-        const inp = e.target.closest('.input-variation-label, #input-var-label-tier1, #input-variation-1-label');
-        if (!inp) return;
-        handleVariationLabelInput(inp, inp.value.trim());
+      document.querySelectorAll('.input-variation-label, #input-var-label-tier1, #input-variation-1-label').forEach(inp => {
+        inp.oninput = (e) => {
+          handleVariationLabelInput(inp, e.target.value.trim());
+        };
+        inp.onblur = () => {
+          refreshVariationTitleDuplicateErrors();
+        };
       });
-      document.addEventListener('blur', (e) => {
-        const inp = e.target.closest('.input-variation-label, #input-var-label-tier1, #input-variation-1-label');
-        if (!inp) return;
-        refreshVariationTitleDuplicateErrors();
-      }, true);
-    }
 
-    // =====================================================================
-    // RANTAI AKTIVASI & PENONAKTIFAN BERJENJANG (VARIASI 2, 3, 4 + LAYANAN EKSTRA)
-    // =====================================================================
-
-    // Pemicu Variasi 2
-    const btnTriggerVar2 = document.getElementById('btn-trigger-variasi-2');
-    if (btnTriggerVar2) {
-      btnTriggerVar2.onclick = () => {
-        const var1HasOption = materialsState.some(m => m.name && m.name.trim() !== '');
-        if (!var1HasOption) {
-          alert('Isi minimal 1 nama opsi pada Variasi 1 sebelum menambahkan Variasi 2.');
-          return;
-        }
-        primaryState.has_variation_2 = true;
-        primaryState.has_layer_2 = true;
-        if (!finishingsState.main || finishingsState.main.length < 2) {
-          finishingsState.main = [
-            { id: DB.generateUUID(), tier: 'main', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' },
-            { id: DB.generateUUID(), tier: 'main', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' }
-          ];
-        }
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
-    }
-
-    // Tutup Variasi 2 (Pergeseran Otomatis / Shift-Up)
-    const btnCloseVar2 = document.getElementById('btn-close-variasi-2') || document.getElementById('btn-close-var-tier-2');
-    if (btnCloseVar2) {
-      btnCloseVar2.onclick = () => closeAndShiftVariationTier(2);
-    }
-
-    // Pemicu Variasi 3
-    const btnTriggerVar3 = document.getElementById('btn-trigger-variasi-3');
-    if (btnTriggerVar3) {
-      btnTriggerVar3.onclick = () => {
-        primaryState.has_variation_3 = true;
-        primaryState.has_layer_3 = true;
-        if (!finishingsState.extra_1 || finishingsState.extra_1.length < 2) {
-          finishingsState.extra_1 = [
-            { id: DB.generateUUID(), tier: 'extra_1', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' },
-            { id: DB.generateUUID(), tier: 'extra_1', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' }
-          ];
-        }
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
-    }
-
-    // Tutup Variasi 3 (Pergeseran Otomatis / Shift-Up)
-    const btnCloseVar3 = document.getElementById('btn-close-variasi-3') || document.getElementById('btn-close-var-tier-3');
-    if (btnCloseVar3) {
-      btnCloseVar3.onclick = () => closeAndShiftVariationTier(3);
-    }
-
-    // Pemicu Variasi 4
-    const btnTriggerVar4 = document.getElementById('btn-trigger-variasi-4');
-    if (btnTriggerVar4) {
-      btnTriggerVar4.onclick = () => {
-        primaryState.has_variation_4 = true;
-        primaryState.has_layer_4 = true;
-        if (!finishingsState.extra_2 || finishingsState.extra_2.length < 2) {
-          finishingsState.extra_2 = [
-            { id: DB.generateUUID(), tier: 'extra_2', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' },
-            { id: DB.generateUUID(), tier: 'extra_2', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' }
-          ];
-        }
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
-    }
-
-    // Tutup Variasi 4 (Pergeseran Otomatis / Shift-Up)
-    const btnCloseVar4 = document.getElementById('btn-close-variasi-4') || document.getElementById('btn-close-var-tier-4');
-    if (btnCloseVar4) {
-      btnCloseVar4.onclick = () => closeAndShiftVariationTier(4);
-    }
-
-    // Delegasi Event untuk seluruh tombol Tutup Variasi (.btn-close-variation-card & .btn-remove-variation-tier)
-    document.querySelectorAll('.btn-close-variation-card, .btn-remove-variation-tier').forEach(btn => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const tierIdx = parseInt(btn.getAttribute('data-tier-index') || btn.getAttribute('data-tier-num'), 10);
-        if (!isNaN(tierIdx)) {
-          closeAndShiftVariationTier(tierIdx);
-        }
-      };
-    });
-
-    // Pemicu Layanan Extras (Berlaku untuk Mode Variasi maupun Mode Normal / Produk Tunggal)
-    const triggerExtraBtns = document.querySelectorAll('#btn-trigger-extra-service, #btn-trigger-extra-service-normal, .btn-trigger-extra-action');
-    triggerExtraBtns.forEach(btn => {
-      btn.onclick = () => {
-        primaryState.has_extra_service = true;
-        primaryState.has_layer_5 = true;
-        ensureExtraServiceNoneAtBottom();
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
-    });
-
-    // Tutup Layanan Extras
-    const btnCloseExtra = document.getElementById('btn-close-extra-service');
-    if (btnCloseExtra) {
-      btnCloseExtra.onclick = () => {
-        primaryState.has_extra_service = false;
-        primaryState.has_layer_5 = false;
-        finishingsState.extra_3 = [];
-
-        const container = document.getElementById('pricing-model-interactive-container');
-        if (container) container.innerHTML = renderPricingModelSection();
-        bindStep2InteractiveEvents();
-        updateProductCardLivePreview();
-        if (window.lucide) window.lucide.createIcons();
-      };
-    }
-
-    function updateSandboxCalculation() {
-      const container = document.getElementById('sandbox-calc-results-breakdown');
-      if (container) {
-        container.innerHTML = renderSandboxCalculationResultsHtml();
+      if (!window._variationLabelInputListenerBound) {
+        window._variationLabelInputListenerBound = true;
+        document.addEventListener('input', (e) => {
+          const inp = e.target.closest('.input-variation-label, #input-var-label-tier1, #input-variation-1-label');
+          if (!inp) return;
+          handleVariationLabelInput(inp, inp.value.trim());
+        });
+        document.addEventListener('blur', (e) => {
+          const inp = e.target.closest('.input-variation-label, #input-var-label-tier1, #input-variation-1-label');
+          if (!inp) return;
+          refreshVariationTitleDuplicateErrors();
+        }, true);
       }
-    }
 
-    // Toggle Pengaktif Input Ukuran (P x L)
-    const toggleCustomDim = document.getElementById('toggle-custom-dimension');
-    if (toggleCustomDim) {
-      toggleCustomDim.onchange = (e) => {
-        const isChecked = e.target.checked;
-        if (isChecked) {
-          // 1. Panggil syncStateFromDOM() terlebih dahulu agar data terkini tersimpan
-          if (typeof syncStateFromDOM === 'function') {
-            syncStateFromDOM();
-          }
+      // =====================================================================
+      // RANTAI AKTIVASI & PENONAKTIFAN BERJENJANG (VARIASI 2, 3, 4 + LAYANAN EKSTRA)
+      // =====================================================================
 
-          // Cek apakah produk tidak memiliki variasi
-          if (!primaryState.has_variants) {
-            toggleCustomDim.checked = false;
-            primaryState.has_custom_dimension = false;
-            const configBody = document.getElementById('custom-dimension-config-body');
-            if (configBody) {
-              configBody.classList.remove('block');
-              configBody.classList.add('hidden');
-            }
-
-            // Tampilkan pesan peringatan tepat di bawah kartu #card-custom-dimension-pxl
-            const warnEl = document.getElementById('custom-dim-no-variant-warning');
-            if (warnEl) warnEl.classList.remove('hidden');
-
-            // Tampilkan pada banner peringatan
-            const warnMsg = 'Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.';
-            showWizardErrorBanner([warnMsg]);
-
-            // Auto-Scroll & Highlight tombol + Variasi Produk
-            const btnVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
-            if (btnVariants) {
-              btnVariants.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              btnVariants.classList.add('ring-2', 'ring-red-400', 'transition-all');
-              setTimeout(() => {
-                btnVariants.classList.remove('ring-2', 'ring-red-400', 'transition-all');
-              }, 3000);
-            }
+      // Pemicu Variasi 2
+      const btnTriggerVar2 = document.getElementById('btn-trigger-variasi-2');
+      if (btnTriggerVar2) {
+        btnTriggerVar2.onclick = () => {
+          const var1HasOption = materialsState.some(m => m.name && m.name.trim() !== '');
+          if (!var1HasOption) {
+            alert('Isi minimal 1 nama opsi pada Variasi 1 sebelum menambahkan Variasi 2.');
             return;
           }
-
-          // Sembunyikan pesan peringatan jika sebelumnya muncul
-          const warnEl = document.getElementById('custom-dim-no-variant-warning');
-          if (warnEl) warnEl.classList.add('hidden');
-
-          // 2. Jalankan validasi prasyarat sebelum mengizinkan ukuran P x L diaktifkan
-          const prereqResult = validatePrerequisitesBeforeCustomDimension();
-          if (!prereqResult.isValid) {
-            // Batalkan pengaktifan toggle
-            toggleCustomDim.checked = false;
-            primaryState.has_custom_dimension = false;
-            const configBody = document.getElementById('custom-dimension-config-body');
-            if (configBody) {
-              configBody.classList.remove('block');
-              configBody.classList.add('hidden');
-            }
-
-            // Tampilkan banner peringatan singkat via showWizardErrorBanner
-            showWizardErrorBanner(prereqResult.errors);
-
-            // Auto-scroll halus ke bagian yang belum valid dengan ring highlight merah
-            if (prereqResult.firstInvalidEl) {
-              const el = prereqResult.firstInvalidEl;
-              const targetScrollEl = el.closest('table, .variation-card-block, .step2-section-card, .form-group') || el;
-              targetScrollEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              targetScrollEl.classList.add('ring-2', 'ring-red-400', 'transition-all');
-              if (el !== targetScrollEl && typeof el.classList?.add === 'function') {
-                el.classList.add('ring-2', 'ring-red-400', 'transition-all');
-              }
-              setTimeout(() => {
-                targetScrollEl.classList.remove('ring-2', 'ring-red-400', 'transition-all');
-                if (el !== targetScrollEl && typeof el.classList?.remove === 'function') {
-                  el.classList.remove('ring-2', 'ring-red-400', 'transition-all');
-                }
-              }, 3000);
-
-              if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TABLE' && el.tagName !== 'TR') {
-                setTimeout(() => {
-                  try { el.focus({ preventScroll: true }); } catch (err) {}
-                }, 250);
-              }
-            }
-            return;
+          primaryState.has_variation_2 = true;
+          primaryState.has_layer_2 = true;
+          if (!finishingsState.main || finishingsState.main.length < 2) {
+            finishingsState.main = [
+              { id: DB.generateUUID(), tier: 'main', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' },
+              { id: DB.generateUUID(), tier: 'main', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' }
+            ];
           }
-
-          // Seluruh data prasyarat valid: sembunyikan banner error & aktifkan P x L
-          hideWizardErrorBanner();
-          primaryState.has_custom_dimension = true;
-          const configBody = document.getElementById('custom-dimension-config-body');
-          if (configBody) {
-            configBody.classList.remove('hidden');
-            configBody.classList.add('block');
-
-            // Muat ulang daftar pilihan komponen utama yang valid
-            const mainCompSel = document.getElementById('select-dimension-main-component');
-            if (mainCompSel) {
-              mainCompSel.innerHTML = getDimensionMainComponentOptionsHtml();
-            }
-
-            refreshDimensionRulesDOM();
-            refreshSandboxFinishingList();
-
-            const dimLabelInp = document.getElementById('input-custom-dimension-label');
-            if (dimLabelInp) {
-              if (!dimLabelInp.value) {
-                dimLabelInp.value = primaryState.custom_dimension_label || '';
-              }
-              dimLabelInp.focus();
-            }
-          }
-
-          // Update sandbox kalkulator
-          updateSandboxCalculation();
-          updateVariationTitleComboboxRecommendations();
-          refreshVariationTitleDuplicateErrors();
+          const container = document.getElementById('pricing-model-interactive-container');
+          if (container) container.innerHTML = renderPricingModelSection();
+          bindStep2InteractiveEvents();
           updateProductCardLivePreview();
-        } else {
-          primaryState.has_custom_dimension = false;
-          const warnEl = document.getElementById('custom-dim-no-variant-warning');
-          if (warnEl) warnEl.classList.add('hidden');
-          hideWizardErrorBanner();
-          const configBody = document.getElementById('custom-dimension-config-body');
-          if (configBody) {
-            configBody.classList.remove('block');
-            configBody.classList.add('hidden');
-            previewTestState.dimLength = '';
-            previewTestState.dimWidth = '';
-            previewTestState.dimError = false;
-            const errEl = document.getElementById('custom-dimension-label-error');
-            if (errEl) errEl.classList.add('hidden');
-            const unitErrEl = document.getElementById('custom-dimension-unit-error');
-            if (unitErrEl) unitErrEl.classList.add('hidden');
-            const selectDimUnit = document.getElementById('select-dimension-unit');
-            if (selectDimUnit) {
-              selectDimUnit.classList.remove('border-red-500');
-              selectDimUnit.classList.add('border-slate-300');
-            }
-            const dimLabelInp = document.getElementById('input-custom-dimension-label');
-            if (dimLabelInp) {
-              dimLabelInp.classList.remove('border-red-500');
-              dimLabelInp.classList.add('border-slate-400');
-            }
+          if (window.lucide) window.lucide.createIcons();
+        };
+      }
+
+      // Tutup Variasi 2 (Pergeseran Otomatis / Shift-Up)
+      const btnCloseVar2 = document.getElementById('btn-close-variasi-2') || document.getElementById('btn-close-var-tier-2');
+      if (btnCloseVar2) {
+        btnCloseVar2.onclick = () => closeAndShiftVariationTier(2);
+      }
+
+      // Pemicu Variasi 3
+      const btnTriggerVar3 = document.getElementById('btn-trigger-variasi-3');
+      if (btnTriggerVar3) {
+        btnTriggerVar3.onclick = () => {
+          primaryState.has_variation_3 = true;
+          primaryState.has_layer_3 = true;
+          if (!finishingsState.extra_1 || finishingsState.extra_1.length < 2) {
+            finishingsState.extra_1 = [
+              { id: DB.generateUUID(), tier: 'extra_1', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' },
+              { id: DB.generateUUID(), tier: 'extra_1', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' }
+            ];
           }
-
-          updateVariationTitleComboboxRecommendations();
-          refreshVariationTitleDuplicateErrors();
+          const container = document.getElementById('pricing-model-interactive-container');
+          if (container) container.innerHTML = renderPricingModelSection();
+          bindStep2InteractiveEvents();
           updateProductCardLivePreview();
-        }
-      };
-    }
-
-    // Input Nama Label Ukuran (P x L)
-    const inputCustomDimLabel = document.getElementById('input-custom-dimension-label');
-    if (inputCustomDimLabel) {
-      inputCustomDimLabel.oninput = (e) => {
-        primaryState.custom_dimension_label = e.target.value.trim();
-        if (primaryState.custom_dimension_label) {
-          e.target.classList.remove('border-red-500');
-          e.target.classList.add('border-slate-400');
-          const errEl = document.getElementById('custom-dimension-label-error');
-          if (errEl) errEl.classList.add('hidden');
-        }
-        updateVariationTitleComboboxRecommendations();
-        refreshVariationTitleDuplicateErrors();
-        updateProductCardLivePreview();
-      };
-    }
-
-    // Dropdown Komponen Utama Ukuran
-    const selectDimensionMainComp = document.getElementById('select-dimension-main-component');
-    if (selectDimensionMainComp) {
-      selectDimensionMainComp.onchange = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        primaryState.dimension_main_component = e.target.value;
-        // Bersihkan aturan yang menargetkan variasi yang baru saja dipilih sebagai Komponen Utama
-        if (Array.isArray(primaryState.dimension_rules)) {
-          primaryState.dimension_rules = primaryState.dimension_rules.filter(r => r.tier_key !== e.target.value);
-        }
-        refreshDimensionRulesDOM();
-        const sMainSel = document.getElementById('sandbox-select-main-option');
-        if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
-        refreshSandboxFinishingList();
-        updateSandboxCalculation();
-      };
-    }
-
-    // Dropdown Satuan Ukuran
-    const selectDimensionUnit = document.getElementById('select-dimension-unit');
-    if (selectDimensionUnit) {
-      selectDimensionUnit.onchange = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        const chosenUnit = e.target.value || '';
-        primaryState.dimension_unit = chosenUnit;
-        primaryState.custom_dimension_unit = chosenUnit;
-
-        if (chosenUnit) {
-          selectDimensionUnit.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
-          selectDimensionUnit.classList.add('border-slate-300');
-          const unitErr = document.getElementById('custom-dimension-unit-error');
-          if (unitErr) unitErr.classList.add('hidden');
-        }
-
-        const areaUnitLabel = getDimensionAreaUnitLabel(chosenUnit);
-        document.querySelectorAll('.unit-area-label').forEach(el => {
-          el.textContent = areaUnitLabel;
-        });
-
-        // Sinkronisasi indikator satuan di input Simulasi (P dan L) seketika
-        document.querySelectorAll('.sandbox-dim-unit-p, .sandbox-dim-unit-l').forEach(el => {
-          el.textContent = chosenUnit || '-';
-        });
-
-        document.querySelectorAll('.badge-unit-text').forEach(el => el.textContent = chosenUnit ? `[${chosenUnit}]` : '');
-        document.querySelectorAll('.dim-unit-text').forEach(el => el.textContent = chosenUnit || '-');
-        refreshDimensionRulesDOM();
-        const sMainSel = document.getElementById('sandbox-select-main-option');
-        if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
-        refreshSandboxFinishingList();
-        updateSandboxCalculation();
-        if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
-      };
-    }
-
-    // Saran Ukuran Cepat (P x L) Event Listeners
-    const btnAddSuggestDim = document.getElementById('btn-add-dimension-suggestion');
-    const inpSuggestP = document.getElementById('input-suggest-dim-p');
-    const inpSuggestL = document.getElementById('input-suggest-dim-l');
-    const listSuggestEl = document.getElementById('dimension-suggestions-list');
-    const countSuggestEl = document.getElementById('suggest-dim-count');
-
-    function refreshDimSuggestionState() {
-      if (!Array.isArray(primaryState.custom_dimension_suggestions)) {
-        primaryState.custom_dimension_suggestions = [];
+          if (window.lucide) window.lucide.createIcons();
+        };
       }
-      const count = primaryState.custom_dimension_suggestions.length;
-      if (countSuggestEl) countSuggestEl.textContent = `${count} / 6`;
-      const isMax = count >= 6;
-      if (inpSuggestP) inpSuggestP.disabled = isMax;
-      if (inpSuggestL) inpSuggestL.disabled = isMax;
-      if (btnAddSuggestDim) {
-        btnAddSuggestDim.disabled = isMax;
-        if (isMax) {
-          btnAddSuggestDim.className = 'h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none bg-slate-300 opacity-50 cursor-not-allowed';
-        } else {
-          btnAddSuggestDim.className = 'h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none btn-primary-brand';
-        }
-      }
-      if (listSuggestEl) {
-        listSuggestEl.innerHTML = renderDimensionSuggestionChipsHtml();
-        bindRemoveDimSuggestionChips();
-      }
-    }
 
-    function bindRemoveDimSuggestionChips() {
-      if (!listSuggestEl) return;
-      listSuggestEl.querySelectorAll('.btn-remove-dim-suggestion').forEach(btn => {
+      // Tutup Variasi 3 (Pergeseran Otomatis / Shift-Up)
+      const btnCloseVar3 = document.getElementById('btn-close-variasi-3') || document.getElementById('btn-close-var-tier-3');
+      if (btnCloseVar3) {
+        btnCloseVar3.onclick = () => closeAndShiftVariationTier(3);
+      }
+
+      // Pemicu Variasi 4
+      const btnTriggerVar4 = document.getElementById('btn-trigger-variasi-4');
+      if (btnTriggerVar4) {
+        btnTriggerVar4.onclick = () => {
+          primaryState.has_variation_4 = true;
+          primaryState.has_layer_4 = true;
+          if (!finishingsState.extra_2 || finishingsState.extra_2.length < 2) {
+            finishingsState.extra_2 = [
+              { id: DB.generateUUID(), tier: 'extra_2', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' },
+              { id: DB.generateUUID(), tier: 'extra_2', name: '', description: '', price: '', cost_price: '', stock: '', parent_id: '' }
+            ];
+          }
+          const container = document.getElementById('pricing-model-interactive-container');
+          if (container) container.innerHTML = renderPricingModelSection();
+          bindStep2InteractiveEvents();
+          updateProductCardLivePreview();
+          if (window.lucide) window.lucide.createIcons();
+        };
+      }
+
+      // Tutup Variasi 4 (Pergeseran Otomatis / Shift-Up)
+      const btnCloseVar4 = document.getElementById('btn-close-variasi-4') || document.getElementById('btn-close-var-tier-4');
+      if (btnCloseVar4) {
+        btnCloseVar4.onclick = () => closeAndShiftVariationTier(4);
+      }
+
+      // Delegasi Event untuk seluruh tombol Tutup Variasi (.btn-close-variation-card & .btn-remove-variation-tier)
+      document.querySelectorAll('.btn-close-variation-card, .btn-remove-variation-tier').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
-          const idx = parseInt(btn.getAttribute('data-idx'), 10);
-          if (!isNaN(idx) && primaryState.custom_dimension_suggestions) {
-            primaryState.custom_dimension_suggestions.splice(idx, 1);
+          e.stopPropagation();
+          const tierIdx = parseInt(btn.getAttribute('data-tier-index') || btn.getAttribute('data-tier-num'), 10);
+          if (!isNaN(tierIdx)) {
+            closeAndShiftVariationTier(tierIdx);
+          }
+        };
+      });
+
+      // Pemicu Layanan Extras (Berlaku untuk Mode Variasi maupun Mode Normal / Produk Tunggal)
+      const triggerExtraBtns = document.querySelectorAll('#btn-trigger-extra-service, #btn-trigger-extra-service-normal, .btn-trigger-extra-action');
+      triggerExtraBtns.forEach(btn => {
+        btn.onclick = () => {
+          primaryState.has_extra_service = true;
+          primaryState.has_layer_5 = true;
+          ensureExtraServiceNoneAtBottom();
+          const container = document.getElementById('pricing-model-interactive-container');
+          if (container) container.innerHTML = renderPricingModelSection();
+          bindStep2InteractiveEvents();
+          updateProductCardLivePreview();
+          if (window.lucide) window.lucide.createIcons();
+        };
+      });
+
+      // Tutup Layanan Extras
+      const btnCloseExtra = document.getElementById('btn-close-extra-service');
+      if (btnCloseExtra) {
+        btnCloseExtra.onclick = () => {
+          primaryState.has_extra_service = false;
+          primaryState.has_layer_5 = false;
+          finishingsState.extra_3 = [];
+
+          const container = document.getElementById('pricing-model-interactive-container');
+          if (container) container.innerHTML = renderPricingModelSection();
+          bindStep2InteractiveEvents();
+          updateProductCardLivePreview();
+          if (window.lucide) window.lucide.createIcons();
+        };
+      }
+
+      function updateSandboxCalculation() {
+        const container = document.getElementById('sandbox-calc-results-breakdown');
+        if (container) {
+          container.innerHTML = renderSandboxCalculationResultsHtml();
+        }
+      }
+
+      // Toggle Pengaktif Input Ukuran (P x L)
+      const toggleCustomDim = document.getElementById('toggle-custom-dimension');
+      if (toggleCustomDim) {
+        toggleCustomDim.onchange = (e) => {
+          const isChecked = e.target.checked;
+          if (isChecked) {
+            // 1. Panggil syncStateFromDOM() terlebih dahulu agar data terkini tersimpan
+            if (typeof syncStateFromDOM === 'function') {
+              syncStateFromDOM();
+            }
+
+            // Cek apakah produk tidak memiliki variasi
+            if (!primaryState.has_variants) {
+              toggleCustomDim.checked = false;
+              primaryState.has_custom_dimension = false;
+              const configBody = document.getElementById('custom-dimension-config-body');
+              if (configBody) {
+                configBody.classList.remove('block');
+                configBody.classList.add('hidden');
+              }
+
+              // Tampilkan pesan peringatan tepat di bawah kartu #card-custom-dimension-pxl
+              const warnEl = document.getElementById('custom-dim-no-variant-warning');
+              if (warnEl) warnEl.classList.remove('hidden');
+
+              // Tampilkan pada banner peringatan
+              const warnMsg = 'Fitur Input Ukuran (P x L) hanya mendukung produk yang memiliki variasi. Silakan aktifkan Variasi Produk terlebih dahulu.';
+              showWizardErrorBanner([warnMsg]);
+
+              // Auto-Scroll & Highlight tombol + Variasi Produk
+              const btnVariants = document.getElementById('btn-enable-variants') || document.getElementById('btn-toggle-has-variants');
+              if (btnVariants) {
+                btnVariants.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                btnVariants.classList.add('ring-2', 'ring-red-400', 'transition-all');
+                setTimeout(() => {
+                  btnVariants.classList.remove('ring-2', 'ring-red-400', 'transition-all');
+                }, 3000);
+              }
+              return;
+            }
+
+            // Sembunyikan pesan peringatan jika sebelumnya muncul
+            const warnEl = document.getElementById('custom-dim-no-variant-warning');
+            if (warnEl) warnEl.classList.add('hidden');
+
+            // 2. Jalankan validasi prasyarat sebelum mengizinkan ukuran P x L diaktifkan
+            const prereqResult = validatePrerequisitesBeforeCustomDimension();
+            if (!prereqResult.isValid) {
+              // Batalkan pengaktifan toggle
+              toggleCustomDim.checked = false;
+              primaryState.has_custom_dimension = false;
+              const configBody = document.getElementById('custom-dimension-config-body');
+              if (configBody) {
+                configBody.classList.remove('block');
+                configBody.classList.add('hidden');
+              }
+
+              // Tampilkan banner peringatan singkat via showWizardErrorBanner
+              showWizardErrorBanner(prereqResult.errors);
+
+              // Auto-scroll halus ke bagian yang belum valid dengan ring highlight merah
+              if (prereqResult.firstInvalidEl) {
+                const el = prereqResult.firstInvalidEl;
+                const targetScrollEl = el.closest('table, .variation-card-block, .step2-section-card, .form-group') || el;
+                targetScrollEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                targetScrollEl.classList.add('ring-2', 'ring-red-400', 'transition-all');
+                if (el !== targetScrollEl && typeof el.classList?.add === 'function') {
+                  el.classList.add('ring-2', 'ring-red-400', 'transition-all');
+                }
+                setTimeout(() => {
+                  targetScrollEl.classList.remove('ring-2', 'ring-red-400', 'transition-all');
+                  if (el !== targetScrollEl && typeof el.classList?.remove === 'function') {
+                    el.classList.remove('ring-2', 'ring-red-400', 'transition-all');
+                  }
+                }, 3000);
+
+                if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TABLE' && el.tagName !== 'TR') {
+                  setTimeout(() => {
+                    try { el.focus({ preventScroll: true }); } catch (err) { }
+                  }, 250);
+                }
+              }
+              return;
+            }
+
+            // Seluruh data prasyarat valid: sembunyikan banner error & aktifkan P x L
+            hideWizardErrorBanner();
+            primaryState.has_custom_dimension = true;
+            const configBody = document.getElementById('custom-dimension-config-body');
+            if (configBody) {
+              configBody.classList.remove('hidden');
+              configBody.classList.add('block');
+
+              // Muat ulang daftar pilihan komponen utama yang valid
+              const mainCompSel = document.getElementById('select-dimension-main-component');
+              if (mainCompSel) {
+                mainCompSel.innerHTML = getDimensionMainComponentOptionsHtml();
+              }
+
+              refreshDimensionRulesDOM();
+              refreshSandboxFinishingList();
+
+              const dimLabelInp = document.getElementById('input-custom-dimension-label');
+              if (dimLabelInp) {
+                if (!dimLabelInp.value) {
+                  dimLabelInp.value = primaryState.custom_dimension_label || '';
+                }
+                dimLabelInp.focus();
+              }
+            }
+
+            // Update sandbox kalkulator
+            updateSandboxCalculation();
+            updateVariationTitleComboboxRecommendations();
+            refreshVariationTitleDuplicateErrors();
+            updateProductCardLivePreview();
+          } else {
+            primaryState.has_custom_dimension = false;
+            const warnEl = document.getElementById('custom-dim-no-variant-warning');
+            if (warnEl) warnEl.classList.add('hidden');
+            hideWizardErrorBanner();
+            const configBody = document.getElementById('custom-dimension-config-body');
+            if (configBody) {
+              configBody.classList.remove('block');
+              configBody.classList.add('hidden');
+              previewTestState.dimLength = '';
+              previewTestState.dimWidth = '';
+              previewTestState.dimError = false;
+              const errEl = document.getElementById('custom-dimension-label-error');
+              if (errEl) errEl.classList.add('hidden');
+              const unitErrEl = document.getElementById('custom-dimension-unit-error');
+              if (unitErrEl) unitErrEl.classList.add('hidden');
+              const selectDimUnit = document.getElementById('select-dimension-unit');
+              if (selectDimUnit) {
+                selectDimUnit.classList.remove('border-red-500');
+                selectDimUnit.classList.add('border-slate-300');
+              }
+              const dimLabelInp = document.getElementById('input-custom-dimension-label');
+              if (dimLabelInp) {
+                dimLabelInp.classList.remove('border-red-500');
+                dimLabelInp.classList.add('border-slate-400');
+              }
+            }
+
+            updateVariationTitleComboboxRecommendations();
+            refreshVariationTitleDuplicateErrors();
+            updateProductCardLivePreview();
+          }
+        };
+      }
+
+      // Input Nama Label Ukuran (P x L)
+      const inputCustomDimLabel = document.getElementById('input-custom-dimension-label');
+      if (inputCustomDimLabel) {
+        inputCustomDimLabel.oninput = (e) => {
+          primaryState.custom_dimension_label = e.target.value.trim();
+          if (primaryState.custom_dimension_label) {
+            e.target.classList.remove('border-red-500');
+            e.target.classList.add('border-slate-400');
+            const errEl = document.getElementById('custom-dimension-label-error');
+            if (errEl) errEl.classList.add('hidden');
+          }
+          updateVariationTitleComboboxRecommendations();
+          refreshVariationTitleDuplicateErrors();
+          updateProductCardLivePreview();
+        };
+      }
+
+      // Dropdown Komponen Utama Ukuran
+      const selectDimensionMainComp = document.getElementById('select-dimension-main-component');
+      if (selectDimensionMainComp) {
+        selectDimensionMainComp.onchange = (e) => {
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          primaryState.dimension_main_component = e.target.value;
+          // Bersihkan aturan yang menargetkan variasi yang baru saja dipilih sebagai Komponen Utama
+          if (Array.isArray(primaryState.dimension_rules)) {
+            primaryState.dimension_rules = primaryState.dimension_rules.filter(r => r.tier_key !== e.target.value);
+          }
+          refreshDimensionRulesDOM();
+          const sMainSel = document.getElementById('sandbox-select-main-option');
+          if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+        };
+      }
+
+      // Dropdown Satuan Ukuran
+      const selectDimensionUnit = document.getElementById('select-dimension-unit');
+      if (selectDimensionUnit) {
+        selectDimensionUnit.onchange = (e) => {
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          const chosenUnit = e.target.value || '';
+          primaryState.dimension_unit = chosenUnit;
+          primaryState.custom_dimension_unit = chosenUnit;
+
+          if (chosenUnit) {
+            selectDimensionUnit.classList.remove('border-red-500', 'ring-2', 'ring-red-400');
+            selectDimensionUnit.classList.add('border-slate-300');
+            const unitErr = document.getElementById('custom-dimension-unit-error');
+            if (unitErr) unitErr.classList.add('hidden');
+          }
+
+          const areaUnitLabel = getDimensionAreaUnitLabel(chosenUnit);
+          document.querySelectorAll('.unit-area-label').forEach(el => {
+            el.textContent = areaUnitLabel;
+          });
+
+          // Sinkronisasi indikator satuan di input Simulasi (P dan L) seketika
+          document.querySelectorAll('.sandbox-dim-unit-p, .sandbox-dim-unit-l').forEach(el => {
+            el.textContent = chosenUnit || '-';
+          });
+
+          document.querySelectorAll('.badge-unit-text').forEach(el => el.textContent = chosenUnit ? `[${chosenUnit}]` : '');
+          document.querySelectorAll('.dim-unit-text').forEach(el => el.textContent = chosenUnit || '-');
+          refreshDimensionRulesDOM();
+          const sMainSel = document.getElementById('sandbox-select-main-option');
+          if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
+          refreshSandboxFinishingList();
+          updateSandboxCalculation();
+          if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
+        };
+      }
+
+      // Saran Ukuran Cepat (P x L) Event Listeners
+      const btnAddSuggestDim = document.getElementById('btn-add-dimension-suggestion');
+      const inpSuggestP = document.getElementById('input-suggest-dim-p');
+      const inpSuggestL = document.getElementById('input-suggest-dim-l');
+      const listSuggestEl = document.getElementById('dimension-suggestions-list');
+      const countSuggestEl = document.getElementById('suggest-dim-count');
+
+      function refreshDimSuggestionState() {
+        if (!Array.isArray(primaryState.custom_dimension_suggestions)) {
+          primaryState.custom_dimension_suggestions = [];
+        }
+        const count = primaryState.custom_dimension_suggestions.length;
+        if (countSuggestEl) countSuggestEl.textContent = `${count} / 6`;
+        const isMax = count >= 6;
+        if (inpSuggestP) inpSuggestP.disabled = isMax;
+        if (inpSuggestL) inpSuggestL.disabled = isMax;
+        if (btnAddSuggestDim) {
+          btnAddSuggestDim.disabled = isMax;
+          if (isMax) {
+            btnAddSuggestDim.className = 'h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none bg-slate-300 opacity-50 cursor-not-allowed';
+          } else {
+            btnAddSuggestDim.className = 'h-8 sm:h-9 px-3 rounded-md text-xs font-bold text-white transition cursor-pointer outline-none focus:outline-none btn-primary-brand';
+          }
+        }
+        if (listSuggestEl) {
+          listSuggestEl.innerHTML = renderDimensionSuggestionChipsHtml();
+          bindRemoveDimSuggestionChips();
+        }
+      }
+
+      function bindRemoveDimSuggestionChips() {
+        if (!listSuggestEl) return;
+        listSuggestEl.querySelectorAll('.btn-remove-dim-suggestion').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const idx = parseInt(btn.getAttribute('data-idx'), 10);
+            if (!isNaN(idx) && primaryState.custom_dimension_suggestions) {
+              primaryState.custom_dimension_suggestions.splice(idx, 1);
+              refreshDimSuggestionState();
+              saveDraftToStorage();
+              updateProductCardLivePreview();
+            }
+          };
+        });
+      }
+
+      if (btnAddSuggestDim) {
+        btnAddSuggestDim.onclick = (e) => {
+          e.preventDefault();
+          if (!Array.isArray(primaryState.custom_dimension_suggestions)) {
+            primaryState.custom_dimension_suggestions = [];
+          }
+          if (primaryState.custom_dimension_suggestions.length >= 6) return;
+          const pVal = parseFloat(inpSuggestP ? inpSuggestP.value : 0);
+          const lVal = parseFloat(inpSuggestL ? inpSuggestL.value : 0);
+          if (!pVal || pVal <= 0 || !lVal || lVal <= 0) {
+            if (!pVal && inpSuggestP) inpSuggestP.focus();
+            else if (!lVal && inpSuggestL) inpSuggestL.focus();
+            return;
+          }
+
+          const isDuplicate = primaryState.custom_dimension_suggestions.some(s => s.p === pVal && s.l === lVal);
+          if (!isDuplicate) {
+            primaryState.custom_dimension_suggestions.push({ p: pVal, l: lVal });
+            if (inpSuggestP) inpSuggestP.value = '';
+            if (inpSuggestL) inpSuggestL.value = '';
             refreshDimSuggestionState();
             saveDraftToStorage();
             updateProductCardLivePreview();
           }
         };
-      });
-    }
+      }
+      bindRemoveDimSuggestionChips();
 
-    if (btnAddSuggestDim) {
-      btnAddSuggestDim.onclick = (e) => {
-        e.preventDefault();
-        if (!Array.isArray(primaryState.custom_dimension_suggestions)) {
-          primaryState.custom_dimension_suggestions = [];
-        }
-        if (primaryState.custom_dimension_suggestions.length >= 6) return;
-        const pVal = parseFloat(inpSuggestP ? inpSuggestP.value : 0);
-        const lVal = parseFloat(inpSuggestL ? inpSuggestL.value : 0);
-        if (!pVal || pVal <= 0 || !lVal || lVal <= 0) {
-          if (!pVal && inpSuggestP) inpSuggestP.focus();
-          else if (!lVal && inpSuggestL) inpSuggestL.focus();
-          return;
-        }
-
-        const isDuplicate = primaryState.custom_dimension_suggestions.some(s => s.p === pVal && s.l === lVal);
-        if (!isDuplicate) {
-          primaryState.custom_dimension_suggestions.push({ p: pVal, l: lVal });
-          if (inpSuggestP) inpSuggestP.value = '';
-          if (inpSuggestL) inpSuggestL.value = '';
-          refreshDimSuggestionState();
-          saveDraftToStorage();
-          updateProductCardLivePreview();
-        }
-      };
-    }
-    bindRemoveDimSuggestionChips();
-
-    // Pembulatan Ukuran Minimal (Harga Jual)
-    const toggleDimMinOnePrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
-    if (toggleDimMinOnePrice) {
-      toggleDimMinOnePrice.onchange = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        primaryState.dim_min_one_price = e.target.checked;
-        const cont = document.getElementById('container-min-price-inputs');
-        const box = document.getElementById('min-price-custom-box');
-        if (cont) {
-          cont.classList.toggle('hidden', !e.target.checked);
-          cont.classList.remove('opacity-40', 'pointer-events-none');
-        }
-        if (box) {
-          box.classList.remove('opacity-40', 'pointer-events-none');
-        }
-        updateSandboxCalculation();
-        if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
-      };
-    }
-
-    const inMinPriceTh = document.getElementById('input-min-price-threshold');
-    if (inMinPriceTh) {
-      inMinPriceTh.oninput = (e) => {
-        primaryState.min_area_threshold = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
-        updateSandboxCalculation();
-        if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
-      };
-    }
-
-    const inMinPriceCh = document.getElementById('input-min-price-charge');
-    if (inMinPriceCh) {
-      inMinPriceCh.oninput = (e) => {
-        primaryState.min_area_charge_value = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
-        updateSandboxCalculation();
-        if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
-      };
-    }
-
-    // Pembulatan Ukuran Minimal (Biaya Modal / HPP — Independen)
-    const toggleDimMinOneCost = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
-    if (toggleDimMinOneCost) {
-      toggleDimMinOneCost.onchange = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        primaryState.dim_min_one_cost = e.target.checked;
-        const cont = document.getElementById('container-min-hpp-inputs');
-        const box = document.getElementById('min-hpp-custom-box');
-        if (cont) {
-          cont.classList.toggle('hidden', !e.target.checked);
-          cont.classList.remove('opacity-40', 'pointer-events-none');
-        }
-        if (box) {
-          box.classList.remove('opacity-40', 'pointer-events-none');
-        }
-        updateSandboxCalculation();
-      };
-    }
-
-    // Sinkronisasi status tampilan kontainer batas minimal saat inisialisasi / navigasi
-    const pChk = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
-    const pCont = document.getElementById('container-min-price-inputs');
-    const pBox = document.getElementById('min-price-custom-box');
-    if (pChk && pCont) {
-      pCont.classList.toggle('hidden', !pChk.checked);
-      pCont.classList.remove('opacity-40', 'pointer-events-none');
-      if (pBox) pBox.classList.remove('opacity-40', 'pointer-events-none');
-    }
-    const hChk = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
-    const hCont = document.getElementById('container-min-hpp-inputs');
-    const hBox = document.getElementById('min-hpp-custom-box');
-    if (hChk && hCont) {
-      hCont.classList.toggle('hidden', !hChk.checked);
-      hCont.classList.remove('opacity-40', 'pointer-events-none');
-      if (hBox) hBox.classList.remove('opacity-40', 'pointer-events-none');
-    }
-
-    const inMinHppTh = document.getElementById('input-min-hpp-threshold');
-    if (inMinHppTh) {
-      inMinHppTh.oninput = (e) => {
-        primaryState.min_hpp_threshold = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
-        updateSandboxCalculation();
-      };
-    }
-
-    const inMinHppCh = document.getElementById('input-min-hpp-charge');
-    if (inMinHppCh) {
-      inMinHppCh.oninput = (e) => {
-        primaryState.min_hpp_charge_value = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
-        updateSandboxCalculation();
-      };
-    }
-
-    // Tombol Toggle Buka/Tutup Simulasi Hitung Harga
-    const btnToggleSandbox = document.getElementById('btn-toggle-sandbox-simulator');
-    if (btnToggleSandbox) {
-      btnToggleSandbox.onclick = (e) => {
-        e.preventDefault();
-        if (!checkDimensionUnitSelected()) return;
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        sandboxPxlState.isOpen = !sandboxPxlState.isOpen;
-        const panel = document.getElementById('sandbox-pxl-calculator-panel');
-        const chev = document.getElementById('icon-sandbox-chevron');
-        if (panel) {
-          if (sandboxPxlState.isOpen) {
-            panel.classList.remove('hidden');
-            panel.classList.add('block');
-            updateSandboxCalculation();
-          } else {
-            panel.classList.remove('block');
-            panel.classList.add('hidden');
+      // Pembulatan Ukuran Minimal (Harga Jual)
+      const toggleDimMinOnePrice = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
+      if (toggleDimMinOnePrice) {
+        toggleDimMinOnePrice.onchange = (e) => {
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          primaryState.dim_min_one_price = e.target.checked;
+          const cont = document.getElementById('container-min-price-inputs');
+          const box = document.getElementById('min-price-custom-box');
+          if (cont) {
+            cont.classList.toggle('hidden', !e.target.checked);
+            cont.classList.remove('opacity-40', 'pointer-events-none');
           }
-        }
-        if (chev) {
-          chev.className = `bi ${sandboxPxlState.isOpen ? 'bi-chevron-up' : 'bi-chevron-down'} text-xs`;
-        }
-      };
-    }
-
-    // Kontrol Sandbox P x L
-    const sInputDimP = document.getElementById('sandbox-input-dim-p');
-    if (sInputDimP) {
-      sInputDimP.oninput = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        sandboxPxlState.simLength = e.target.value;
-        updateSandboxCalculation();
-      };
-    }
-
-    const sInputDimL = document.getElementById('sandbox-input-dim-l');
-    if (sInputDimL) {
-      sInputDimL.oninput = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        sandboxPxlState.simWidth = e.target.value;
-        updateSandboxCalculation();
-      };
-    }
-
-    const sSelectMainOpt = document.getElementById('sandbox-select-main-option');
-    if (sSelectMainOpt) {
-      sSelectMainOpt.onchange = (e) => {
-        if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-        sandboxPxlState.selectedMainOptionId = e.target.value;
-        updateSandboxCalculation();
-      };
-    }
-
-    bindSandboxCheckboxes();
-    bindDimensionRulesEvents();
-
-    // =====================================================================
-    // KETENTUAN TAMBAHAN (GLOBAL TOGGLES PER KARTU)
-    // =====================================================================
-    function bindKetentuanTambahan() {
-      // 1. Semua Harga Jual Sama (Flashback Restore)
-      document.querySelectorAll('.toggle-same-price').forEach(chk => {
-        chk.onchange = (e) => {
-          const tier = e.target.getAttribute('data-tier');
-          if (!primaryState.same_price_tiers) primaryState.same_price_tiers = {};
-          const isChecked = e.target.checked;
-          primaryState.same_price_tiers[tier] = isChecked;
-          const list = tier === 'tier1' ? materialsState : finishingsState[tier];
-          if (list && list.length > 0) {
-            if (isChecked) {
-              list.forEach(item => {
-                item._prev_price = (item.price !== undefined && item.price !== null) ? item.price : '';
-              });
-              const firstVal = list[0]?.price ?? '';
-              list.forEach((item, idx) => {
-                if (idx > 0 && item.name && item.name.trim() !== '') item.price = firstVal;
-              });
-            } else {
-              list.forEach(item => {
-                if (item._prev_price !== undefined) {
-                  item.price = item._prev_price;
-                }
-              });
-            }
+          if (box) {
+            box.classList.remove('opacity-40', 'pointer-events-none');
           }
-          const container = document.getElementById(tier === 'tier1' ? 'materials-rows-container' : `finishings-${tier}-rows-container`);
-          if (container) {
-            container.innerHTML = tier === 'tier1' ? renderMaterialsRows(false) : renderFinishingRows(tier);
-            if (tier === 'tier1') bindMaterialRowEvents(); else bindFinishingTierRows(tier);
-          }
-          updateProductCardLivePreview();
+          updateSandboxCalculation();
+          if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
         };
-      });
+      }
 
-      // 2. Semua Modal/Hpp Sama (Flashback Restore)
-      document.querySelectorAll('.toggle-same-cost').forEach(chk => {
-        chk.onchange = (e) => {
-          const tier = e.target.getAttribute('data-tier');
-          if (!primaryState.same_cost_tiers) primaryState.same_cost_tiers = {};
-          const isChecked = e.target.checked;
-          primaryState.same_cost_tiers[tier] = isChecked;
-          const list = tier === 'tier1' ? materialsState : finishingsState[tier];
-          if (list && list.length > 0) {
-            if (isChecked) {
-              list.forEach(item => {
-                item._prev_cost_price = (item.cost_price !== undefined && item.cost_price !== null) ? item.cost_price : '';
-              });
-              const firstVal = list[0]?.cost_price ?? '';
-              list.forEach((item, idx) => {
-                if (idx > 0 && item.name && item.name.trim() !== '') item.cost_price = firstVal;
-              });
-            } else {
-              list.forEach(item => {
-                if (item._prev_cost_price !== undefined) {
-                  item.cost_price = item._prev_cost_price;
-                }
-              });
-            }
+      const inMinPriceTh = document.getElementById('input-min-price-threshold');
+      if (inMinPriceTh) {
+        inMinPriceTh.oninput = (e) => {
+          primaryState.min_area_threshold = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
+          updateSandboxCalculation();
+          if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
+        };
+      }
+
+      const inMinPriceCh = document.getElementById('input-min-price-charge');
+      if (inMinPriceCh) {
+        inMinPriceCh.oninput = (e) => {
+          primaryState.min_area_charge_value = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
+          updateSandboxCalculation();
+          if (typeof updateShopeeDrawerLivePricing === 'function') updateShopeeDrawerLivePricing();
+        };
+      }
+
+      // Pembulatan Ukuran Minimal (Biaya Modal / HPP — Independen)
+      const toggleDimMinOneCost = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
+      if (toggleDimMinOneCost) {
+        toggleDimMinOneCost.onchange = (e) => {
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          primaryState.dim_min_one_cost = e.target.checked;
+          const cont = document.getElementById('container-min-hpp-inputs');
+          const box = document.getElementById('min-hpp-custom-box');
+          if (cont) {
+            cont.classList.toggle('hidden', !e.target.checked);
+            cont.classList.remove('opacity-40', 'pointer-events-none');
           }
-          const container = document.getElementById(tier === 'tier1' ? 'materials-rows-container' : `finishings-${tier}-rows-container`);
-          if (container) {
-            container.innerHTML = tier === 'tier1' ? renderMaterialsRows(false) : renderFinishingRows(tier);
-            if (tier === 'tier1') bindMaterialRowEvents(); else bindFinishingTierRows(tier);
+          if (box) {
+            box.classList.remove('opacity-40', 'pointer-events-none');
           }
-          updateProductCardLivePreview();
+          updateSandboxCalculation();
         };
-      });
+      }
 
-      // 3. Radio Stock Mode (Unlimited vs Same vs Uncheck & Flashback Restore)
-      document.querySelectorAll('.radio-stock-mode').forEach(rad => {
-        rad.onclick = (e) => {
-          const tier = rad.getAttribute('data-tier');
-          const val = rad.value;
-          if (!primaryState.stock_mode_tiers) primaryState.stock_mode_tiers = {};
-          const currentMode = primaryState.stock_mode_tiers[tier] || '';
-          const list = tier === 'tier1' ? materialsState : finishingsState[tier];
+      // Sinkronisasi status tampilan kontainer batas minimal saat inisialisasi / navigasi
+      const pChk = document.getElementById('chk-min-one-unit-price') || document.getElementById('toggle-dim-min-one-price');
+      const pCont = document.getElementById('container-min-price-inputs');
+      const pBox = document.getElementById('min-price-custom-box');
+      if (pChk && pCont) {
+        pCont.classList.toggle('hidden', !pChk.checked);
+        pCont.classList.remove('opacity-40', 'pointer-events-none');
+        if (pBox) pBox.classList.remove('opacity-40', 'pointer-events-none');
+      }
+      const hChk = document.getElementById('chk-min-one-unit-hpp') || document.getElementById('toggle-dim-min-one-cost');
+      const hCont = document.getElementById('container-min-hpp-inputs');
+      const hBox = document.getElementById('min-hpp-custom-box');
+      if (hChk && hCont) {
+        hCont.classList.toggle('hidden', !hChk.checked);
+        hCont.classList.remove('opacity-40', 'pointer-events-none');
+        if (hBox) hBox.classList.remove('opacity-40', 'pointer-events-none');
+      }
 
-          if (currentMode === val) {
-            // Uncheck: kembali ke kondisi normal (tanpa ketentuan stock global)
-            rad.checked = false;
-            primaryState.stock_mode_tiers[tier] = '';
-            if (list) {
-              list.forEach(item => {
-                if (item._prev_stock !== undefined) {
-                  item.stock = item._prev_stock;
-                }
-              });
-            }
-          } else {
-            // Mode baru aktif: simpan snapshot stock jika belum ada
-            if (!currentMode && list) {
-              list.forEach(item => {
-                if (item._prev_stock === undefined) {
-                  item._prev_stock = (item.stock !== undefined && item.stock !== null) ? item.stock : '';
-                }
-              });
-            }
-            primaryState.stock_mode_tiers[tier] = val;
-            if (val === 'same' && list && list.length > 0) {
-              const firstVal = list[0]?.stock ?? '';
-              list.forEach((item, idx) => {
-                if (idx > 0 && item.name && item.name.trim() !== '') item.stock = firstVal;
-              });
-            } else if (val === 'unlimited' && list) {
-              list.forEach(item => {
-                if (item.name && item.name.trim() !== '') {
-                  item.stock = null;
-                }
-              });
-            }
-          }
-
-          const container = document.getElementById(tier === 'tier1' ? 'materials-rows-container' : `finishings-${tier}-rows-container`);
-          if (container) {
-            container.innerHTML = tier === 'tier1' ? renderMaterialsRows(false) : renderFinishingRows(tier);
-            if (tier === 'tier1') bindMaterialRowEvents(); else bindFinishingTierRows(tier);
-          }
-          updateProductCardLivePreview();
+      const inMinHppTh = document.getElementById('input-min-hpp-threshold');
+      if (inMinHppTh) {
+        inMinHppTh.oninput = (e) => {
+          primaryState.min_hpp_threshold = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
+          updateSandboxCalculation();
         };
-      });
-    }
-    bindKetentuanTambahan();
+      }
 
-    // =====================================================================
-    // EVENT BARIS VARIASI 1 (STRIP ROW + AUTO-APPEND + REAL-TIME NAME SYNC)
-    // =====================================================================
-    function bindMaterialRowEvents() {
-      const container = document.getElementById('materials-rows-container');
-      if (!container) return;
+      const inMinHppCh = document.getElementById('input-min-hpp-charge');
+      if (inMinHppCh) {
+        inMinHppCh.oninput = (e) => {
+          primaryState.min_hpp_charge_value = e.target.value.trim() !== '' ? parseFloat(e.target.value) : null;
+          updateSandboxCalculation();
+        };
+      }
 
-      // Hapus Opsi (Proteksi minimal 1 opsi)
-      container.querySelectorAll('.btn-delete-mat').forEach(btn => {
-        btn.onclick = (e) => {
-          if (materialsState.length <= 1) return;
-          const row = e.target.closest('.variation-option-row');
-          if (!row) return;
-          const id = row.getAttribute('data-id');
-          materialsState = materialsState.filter(m => m.id !== id);
-          cleanUpDependencyReferences(id);
-          container.innerHTML = renderMaterialsRows(false);
-          bindMaterialRowEvents();
-          refreshCombinationMatrixTable();
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Geser / Drag & Drop dan Tukar Urutan Baris Variasi 1
-      let draggedMatIdx = null;
-      container.querySelectorAll('.variation-option-row').forEach(row => {
-        row.setAttribute('draggable', 'true');
-        row.ondragstart = (e) => {
-          draggedMatIdx = parseInt(row.getAttribute('data-idx'));
-          e.dataTransfer.effectAllowed = 'move';
-          row.classList.add('opacity-50');
-        };
-        row.ondragend = () => {
-          row.classList.remove('opacity-50');
-          container.querySelectorAll('.variation-option-row').forEach(r => r.classList.remove('ring-2', 'ring-emerald-500'));
-        };
-        row.ondragover = (e) => {
+      // Tombol Toggle Buka/Tutup Simulasi Hitung Harga
+      const btnToggleSandbox = document.getElementById('btn-toggle-sandbox-simulator');
+      if (btnToggleSandbox) {
+        btnToggleSandbox.onclick = (e) => {
           e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          row.classList.add('ring-2', 'ring-emerald-500');
+          if (!checkDimensionUnitSelected()) return;
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          sandboxPxlState.isOpen = !sandboxPxlState.isOpen;
+          const panel = document.getElementById('sandbox-pxl-calculator-panel');
+          const chev = document.getElementById('icon-sandbox-chevron');
+          if (panel) {
+            if (sandboxPxlState.isOpen) {
+              panel.classList.remove('hidden');
+              panel.classList.add('block');
+              updateSandboxCalculation();
+              bindSandboxDimensionModalEvents();
+            } else {
+              panel.classList.remove('block');
+              panel.classList.add('hidden');
+            }
+          }
+          if (chev) {
+            chev.className = `bi ${sandboxPxlState.isOpen ? 'bi-chevron-up' : 'bi-chevron-down'} text-xs`;
+          }
         };
-        row.ondragleave = () => {
-          row.classList.remove('ring-2', 'ring-emerald-500');
+      }
+
+      // Kontrol Sandbox P x L
+      const sInputDimP = document.getElementById('sandbox-input-dim-p');
+      if (sInputDimP) {
+        sInputDimP.oninput = (e) => {
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          sandboxPxlState.simLength = e.target.value;
+          updateSandboxCalculation();
         };
-        row.ondrop = (e) => {
-          e.preventDefault();
-          const targetIdx = parseInt(row.getAttribute('data-idx'));
-          if (draggedMatIdx !== null && !isNaN(targetIdx) && draggedMatIdx !== targetIdx) {
-            const item = materialsState.splice(draggedMatIdx, 1)[0];
-            materialsState.splice(targetIdx, 0, item);
+      }
+
+      const sInputDimL = document.getElementById('sandbox-input-dim-l');
+      if (sInputDimL) {
+        sInputDimL.oninput = (e) => {
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          sandboxPxlState.simWidth = e.target.value;
+          updateSandboxCalculation();
+        };
+      }
+
+      const sSelectMainOpt = document.getElementById('sandbox-select-main-option');
+      if (sSelectMainOpt) {
+        sSelectMainOpt.onchange = (e) => {
+          if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+          sandboxPxlState.selectedMainOptionId = e.target.value;
+          updateSandboxCalculation();
+        };
+      }
+
+      bindSandboxDimensionModalEvents();
+      bindSandboxCheckboxes();
+      bindDimensionRulesEvents();
+
+      // =====================================================================
+      // KETENTUAN TAMBAHAN (GLOBAL TOGGLES PER KARTU)
+      // =====================================================================
+      function bindKetentuanTambahan() {
+        // 1. Semua Harga Jual Sama (Flashback Restore)
+        document.querySelectorAll('.toggle-same-price').forEach(chk => {
+          chk.onchange = (e) => {
+            const tier = e.target.getAttribute('data-tier');
+            if (!primaryState.same_price_tiers) primaryState.same_price_tiers = {};
+            const isChecked = e.target.checked;
+            primaryState.same_price_tiers[tier] = isChecked;
+            const list = tier === 'tier1' ? materialsState : finishingsState[tier];
+            if (list && list.length > 0) {
+              if (isChecked) {
+                list.forEach(item => {
+                  item._prev_price = (item.price !== undefined && item.price !== null) ? item.price : '';
+                });
+                const firstVal = list[0]?.price ?? '';
+                list.forEach((item, idx) => {
+                  if (idx > 0 && item.name && item.name.trim() !== '') item.price = firstVal;
+                });
+              } else {
+                list.forEach(item => {
+                  if (item._prev_price !== undefined) {
+                    item.price = item._prev_price;
+                  }
+                });
+              }
+            }
+            const container = document.getElementById(tier === 'tier1' ? 'materials-rows-container' : `finishings-${tier}-rows-container`);
+            if (container) {
+              container.innerHTML = tier === 'tier1' ? renderMaterialsRows(false) : renderFinishingRows(tier);
+              if (tier === 'tier1') bindMaterialRowEvents(); else bindFinishingTierRows(tier);
+            }
+            updateProductCardLivePreview();
+          };
+        });
+
+        // 2. Semua Modal/Hpp Sama (Flashback Restore)
+        document.querySelectorAll('.toggle-same-cost').forEach(chk => {
+          chk.onchange = (e) => {
+            const tier = e.target.getAttribute('data-tier');
+            if (!primaryState.same_cost_tiers) primaryState.same_cost_tiers = {};
+            const isChecked = e.target.checked;
+            primaryState.same_cost_tiers[tier] = isChecked;
+            const list = tier === 'tier1' ? materialsState : finishingsState[tier];
+            if (list && list.length > 0) {
+              if (isChecked) {
+                list.forEach(item => {
+                  item._prev_cost_price = (item.cost_price !== undefined && item.cost_price !== null) ? item.cost_price : '';
+                });
+                const firstVal = list[0]?.cost_price ?? '';
+                list.forEach((item, idx) => {
+                  if (idx > 0 && item.name && item.name.trim() !== '') item.cost_price = firstVal;
+                });
+              } else {
+                list.forEach(item => {
+                  if (item._prev_cost_price !== undefined) {
+                    item.cost_price = item._prev_cost_price;
+                  }
+                });
+              }
+            }
+            const container = document.getElementById(tier === 'tier1' ? 'materials-rows-container' : `finishings-${tier}-rows-container`);
+            if (container) {
+              container.innerHTML = tier === 'tier1' ? renderMaterialsRows(false) : renderFinishingRows(tier);
+              if (tier === 'tier1') bindMaterialRowEvents(); else bindFinishingTierRows(tier);
+            }
+            updateProductCardLivePreview();
+          };
+        });
+
+        // 3. Radio Stock Mode (Unlimited vs Same vs Uncheck & Flashback Restore)
+        document.querySelectorAll('.radio-stock-mode').forEach(rad => {
+          rad.onclick = (e) => {
+            const tier = rad.getAttribute('data-tier');
+            const val = rad.value;
+            if (!primaryState.stock_mode_tiers) primaryState.stock_mode_tiers = {};
+            const currentMode = primaryState.stock_mode_tiers[tier] || '';
+            const list = tier === 'tier1' ? materialsState : finishingsState[tier];
+
+            if (currentMode === val) {
+              // Uncheck: kembali ke kondisi normal (tanpa ketentuan stock global)
+              rad.checked = false;
+              primaryState.stock_mode_tiers[tier] = '';
+              if (list) {
+                list.forEach(item => {
+                  if (item._prev_stock !== undefined) {
+                    item.stock = item._prev_stock;
+                  }
+                });
+              }
+            } else {
+              // Mode baru aktif: simpan snapshot stock jika belum ada
+              if (!currentMode && list) {
+                list.forEach(item => {
+                  if (item._prev_stock === undefined) {
+                    item._prev_stock = (item.stock !== undefined && item.stock !== null) ? item.stock : '';
+                  }
+                });
+              }
+              primaryState.stock_mode_tiers[tier] = val;
+              if (val === 'same' && list && list.length > 0) {
+                const firstVal = list[0]?.stock ?? '';
+                list.forEach((item, idx) => {
+                  if (idx > 0 && item.name && item.name.trim() !== '') item.stock = firstVal;
+                });
+              } else if (val === 'unlimited' && list) {
+                list.forEach(item => {
+                  if (item.name && item.name.trim() !== '') {
+                    item.stock = null;
+                  }
+                });
+              }
+            }
+
+            const container = document.getElementById(tier === 'tier1' ? 'materials-rows-container' : `finishings-${tier}-rows-container`);
+            if (container) {
+              container.innerHTML = tier === 'tier1' ? renderMaterialsRows(false) : renderFinishingRows(tier);
+              if (tier === 'tier1') bindMaterialRowEvents(); else bindFinishingTierRows(tier);
+            }
+            updateProductCardLivePreview();
+          };
+        });
+      }
+      bindKetentuanTambahan();
+
+      // =====================================================================
+      // EVENT BARIS VARIASI 1 (STRIP ROW + AUTO-APPEND + REAL-TIME NAME SYNC)
+      // =====================================================================
+      function bindMaterialRowEvents() {
+        const container = document.getElementById('materials-rows-container');
+        if (!container) return;
+
+        // Hapus Opsi (Proteksi minimal 1 opsi)
+        container.querySelectorAll('.btn-delete-mat').forEach(btn => {
+          btn.onclick = (e) => {
+            if (materialsState.length <= 1) return;
+            const row = e.target.closest('.variation-option-row');
+            if (!row) return;
+            const id = row.getAttribute('data-id');
+            materialsState = materialsState.filter(m => m.id !== id);
+            cleanUpDependencyReferences(id);
             container.innerHTML = renderMaterialsRows(false);
             bindMaterialRowEvents();
             refreshCombinationMatrixTable();
             updateProductCardLivePreview();
-          }
-        };
-      });
+          };
+        });
 
-      // Klik Tombol Geser (bi-arrows-move) untuk Tukar Urutan (Fallback Mobile)
-      container.querySelectorAll('.btn-move-mat').forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const idx = parseInt(btn.getAttribute('data-idx'));
-          if (isNaN(idx) || materialsState.length <= 1) return;
-          const targetIdx = idx === materialsState.length - 1 ? idx - 1 : idx + 1;
-          const temp = materialsState[idx];
-          materialsState[idx] = materialsState[targetIdx];
-          materialsState[targetIdx] = temp;
-          container.innerHTML = renderMaterialsRows(false);
-          bindMaterialRowEvents();
-          refreshCombinationMatrixTable();
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Input Per Baris (Auto-Append, Real-time propagation, & Sync to Combo Table)
-      container.querySelectorAll('.mat-input').forEach(inp => {
-        inp.onblur = (e) => {
-          validateOptionField(e.target, true);
-          const field = e.target.getAttribute('data-field');
-          if (field === 'name') {
-            refreshOptionDuplicateErrors('tier1');
-          }
-        };
-
-        inp.onchange = inp.oninput = (e) => {
-          const row = e.target.closest('.variation-option-row');
-          if (!row) return;
-          const id = row.getAttribute('data-id');
-          const field = e.target.getAttribute('data-field');
-          const idx = parseInt(row.getAttribute('data-idx'));
-          let item = (materialsState && materialsState.find(m => String(m.id) === String(id))) || (!isNaN(idx) && materialsState ? materialsState[idx] : null);
-          if (!item && materialsState && !isNaN(idx) && idx >= 0) {
-            item = {
-              id: id || DB.generateUUID(),
-              name: '',
-              description: '',
-              price: '',
-              cost_price: '',
-              stock: null,
-              image_url: '',
-              step_multiplier: 1
-            };
-            materialsState[idx] = item;
-          }
-
-          if (item) {
-            if (field === 'price') {
-              item.price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
-              item._prev_price = item.price;
-            } else if (field === 'cost_price') {
-              item.cost_price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
-              item._prev_cost_price = item.cost_price;
-            } else if (field === 'stock') {
-              item.stock = (e.target.value === '' || e.target.value === 'Unlimited' || e.target.value === 'Tanpa Batas') ? null : (parseInt(e.target.value) || 0);
-              item._prev_stock = item.stock;
-            } else {
-              item[field] = e.target.value;
+        // Geser / Drag & Drop dan Tukar Urutan Baris Variasi 1
+        let draggedMatIdx = null;
+        container.querySelectorAll('.variation-option-row').forEach(row => {
+          row.setAttribute('draggable', 'true');
+          row.ondragstart = (e) => {
+            draggedMatIdx = parseInt(row.getAttribute('data-idx'));
+            e.dataTransfer.effectAllowed = 'move';
+            row.classList.add('opacity-50');
+          };
+          row.ondragend = () => {
+            row.classList.remove('opacity-50');
+            container.querySelectorAll('.variation-option-row').forEach(r => r.classList.remove('ring-2', 'ring-emerald-500'));
+          };
+          row.ondragover = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            row.classList.add('ring-2', 'ring-emerald-500');
+          };
+          row.ondragleave = () => {
+            row.classList.remove('ring-2', 'ring-emerald-500');
+          };
+          row.ondrop = (e) => {
+            e.preventDefault();
+            const targetIdx = parseInt(row.getAttribute('data-idx'));
+            if (draggedMatIdx !== null && !isNaN(targetIdx) && draggedMatIdx !== targetIdx) {
+              const item = materialsState.splice(draggedMatIdx, 1)[0];
+              materialsState.splice(targetIdx, 0, item);
+              container.innerHTML = renderMaterialsRows(false);
+              bindMaterialRowEvents();
+              refreshCombinationMatrixTable();
+              updateProductCardLivePreview();
             }
-          }
+          };
+        });
 
-          // Sinkronisasi Nama Real-Time ke Tabel Kombinasi di Bagian Bawah & Auto-Apply Ketentuan Seragam
-          if (field === 'name') {
-            const isNameFilled = Boolean(e.target.value.trim() !== '');
-            const isSameP = Boolean(primaryState.same_price_tiers?.tier1);
-            const isSameC = Boolean(primaryState.same_cost_tiers?.tier1);
-            const sMode = primaryState.stock_mode_tiers?.tier1 || '';
-
-            if (idx > 0) {
-              const pInp = row.querySelector('input[data-field="price"]');
-              const cInp = row.querySelector('input[data-field="cost_price"]');
-              const sInp = row.querySelector('input[data-field="stock"]');
-
-              if (isNameFilled) {
-                if (isSameP) {
-                  item.price = materialsState[0]?.price ?? '';
-                  if (pInp) {
-                    pInp.value = item.price;
-                    pInp.readOnly = true;
-                    pInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    pInp.classList.remove('bg-white');
-                  }
-                }
-                if (isSameC) {
-                  item.cost_price = materialsState[0]?.cost_price ?? '';
-                  if (cInp) {
-                    cInp.value = item.cost_price;
-                    cInp.readOnly = true;
-                    cInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    cInp.classList.remove('bg-white');
-                  }
-                }
-                if (sMode === 'unlimited') {
-                  item.stock = null;
-                  if (sInp) {
-                    sInp.type = 'text';
-                    sInp.value = 'Unlimited';
-                    sInp.placeholder = 'Unlimited';
-                    sInp.readOnly = true;
-                    sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.remove('bg-white', 'text-slate-700');
-                  }
-                } else if (sMode === 'same') {
-                  item.stock = materialsState[0]?.stock ?? '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = item.stock;
-                    sInp.readOnly = true;
-                    sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.remove('bg-white', 'text-slate-700');
-                  }
-                }
-              } else {
-                if (isSameP) {
-                  item.price = '';
-                  if (pInp) {
-                    pInp.value = '';
-                    pInp.readOnly = false;
-                    pInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    pInp.classList.add('bg-white');
-                  }
-                }
-                if (isSameC) {
-                  item.cost_price = '';
-                  if (cInp) {
-                    cInp.value = '';
-                    cInp.readOnly = false;
-                    cInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    cInp.classList.add('bg-white');
-                  }
-                }
-                if (sMode === 'unlimited') {
-                  item.stock = '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = '';
-                    sInp.placeholder = 'Stok';
-                    sInp.readOnly = false;
-                    sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.add('bg-white', 'text-slate-700');
-                  }
-                } else if (sMode === 'same') {
-                  item.stock = '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = '';
-                    sInp.readOnly = false;
-                    sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.add('bg-white', 'text-slate-700');
-                  }
-                }
-              }
-              updateRowProfitInfo(row);
-            } else if (idx === 0) {
-              if (sMode === 'unlimited') {
-                const sInp = row.querySelector('input[data-field="stock"]');
-                if (isNameFilled) {
-                  item.stock = null;
-                  if (sInp) {
-                    sInp.type = 'text';
-                    sInp.value = 'Unlimited';
-                    sInp.placeholder = 'Unlimited';
-                    sInp.readOnly = true;
-                    sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.remove('bg-white', 'text-slate-700');
-                  }
-                } else {
-                  item.stock = '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = '';
-                    sInp.placeholder = 'Stok';
-                    sInp.readOnly = false;
-                    sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.add('bg-white', 'text-slate-700');
-                  }
-                }
-              }
-            }
-
-            const comboLabel = document.querySelector(`.combo-var1-label[data-id="${id}"]`);
-            if (comboLabel) {
-              comboLabel.textContent = e.target.value.trim() || `Opsi ${idx + 1}`;
-            }
-            refreshCombinationMatrixTable();
-            validateOptionField(e.target, false);
-            refreshOptionDuplicateErrors('tier1');
-            // Update status tombol Tambah Variasi 2 jika nama mulai terisi
-            const btnVar2 = document.getElementById('btn-trigger-variasi-2');
-            if (btnVar2) {
-              const hasAny = materialsState.some(m => m.name && m.name.trim() !== '');
-              if (hasAny) {
-                btnVar2.classList.remove('opacity-50', 'cursor-not-allowed');
-                btnVar2.title = 'Tambah Variasi 2';
-              }
-            }
-          } else {
-            validateOptionField(e.target, false);
-          }
-
-          if (field === 'price' || field === 'cost_price' || field === 'name' || field === 'stock') {
-            updateRowProfitInfo(row);
-          }
-
-          // Ketentuan Tambahan Real-Time Propagation dari Baris 0
-          if (idx === 0) {
-            if (field === 'price' && primaryState.same_price_tiers?.tier1) {
-              const val = item.price;
-              materialsState.forEach((m, mIdx) => {
-                if (mIdx > 0 && m.name && m.name.trim() !== '') m.price = val;
-              });
-              container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
-                const rId = r.getAttribute('data-id');
-                const mItem = materialsState.find(m => String(m.id) === String(rId));
-                if (mItem && mItem.name && mItem.name.trim() !== '') {
-                  const pi = r.querySelector('input[data-field="price"]');
-                  if (pi) pi.value = val;
-                  updateRowProfitInfo(r);
-                }
-              });
-            } else if (field === 'cost_price' && primaryState.same_cost_tiers?.tier1) {
-              const val = item.cost_price;
-              materialsState.forEach((m, mIdx) => {
-                if (mIdx > 0 && m.name && m.name.trim() !== '') m.cost_price = val;
-              });
-              container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
-                const rId = r.getAttribute('data-id');
-                const mItem = materialsState.find(m => String(m.id) === String(rId));
-                if (mItem && mItem.name && mItem.name.trim() !== '') {
-                  const ci = r.querySelector('input[data-field="cost_price"]');
-                  if (ci) ci.value = val;
-                  updateRowProfitInfo(r);
-                }
-              });
-            } else if (field === 'stock' && primaryState.stock_mode_tiers?.tier1 === 'same') {
-              const val = item.stock;
-              materialsState.forEach((m, mIdx) => {
-                if (mIdx > 0 && m.name && m.name.trim() !== '') m.stock = val;
-              });
-              container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
-                const rId = r.getAttribute('data-id');
-                const mItem = materialsState.find(m => String(m.id) === String(rId));
-                if (mItem && mItem.name && mItem.name.trim() !== '') {
-                  const si = r.querySelector('input[data-field="stock"]');
-                  if (si) si.value = val;
-                }
-              });
-            }
-          }
-
-          // Auto-Append Baris Baru jika Mengetik di Baris Paling Terakhir
-          if (idx === materialsState.length - 1 && e.target.value.trim() !== '') {
-            const newMat = {
-              id: DB.generateUUID(),
-              name: '',
-              description: '',
-              price: '',
-              cost_price: '',
-              stock: '',
-              image_url: '',
-              step_multiplier: 1
-            };
-            materialsState.push(newMat);
-            // Append row baru tanpa menghancurkan focus input saat ini
+        // Klik Tombol Geser (bi-arrows-move) untuk Tukar Urutan (Fallback Mobile)
+        container.querySelectorAll('.btn-move-mat').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            if (isNaN(idx) || materialsState.length <= 1) return;
+            const targetIdx = idx === materialsState.length - 1 ? idx - 1 : idx + 1;
+            const temp = materialsState[idx];
+            materialsState[idx] = materialsState[targetIdx];
+            materialsState[targetIdx] = temp;
             container.innerHTML = renderMaterialsRows(false);
             bindMaterialRowEvents();
             refreshCombinationMatrixTable();
-            // Restore focus ke input yang sedang diketik
-            const activeInp = container.querySelector(`.variation-option-row[data-id="${id}"] input[data-field="${field}"]`);
-            if (activeInp) {
-              activeInp.focus();
-              try {
-                const valLen = String(activeInp.value || '').length;
-                if (typeof activeInp.setSelectionRange === 'function' && ['text', 'search', 'url', 'tel', 'password'].includes(activeInp.type)) {
-                  activeInp.setSelectionRange(valLen, valLen);
-                }
-              } catch (_) {}
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Input Per Baris (Auto-Append, Real-time propagation, & Sync to Combo Table)
+        container.querySelectorAll('.mat-input').forEach(inp => {
+          inp.onblur = (e) => {
+            validateOptionField(e.target, true);
+            const field = e.target.getAttribute('data-field');
+            if (field === 'name') {
+              refreshOptionDuplicateErrors('tier1');
             }
+          };
+
+          inp.onchange = inp.oninput = (e) => {
+            const row = e.target.closest('.variation-option-row');
+            if (!row) return;
+            const id = row.getAttribute('data-id');
+            const field = e.target.getAttribute('data-field');
+            const idx = parseInt(row.getAttribute('data-idx'));
+            let item = (materialsState && materialsState.find(m => String(m.id) === String(id))) || (!isNaN(idx) && materialsState ? materialsState[idx] : null);
+            if (!item && materialsState && !isNaN(idx) && idx >= 0) {
+              item = {
+                id: id || DB.generateUUID(),
+                name: '',
+                description: '',
+                price: '',
+                cost_price: '',
+                stock: null,
+                image_url: '',
+                step_multiplier: 1
+              };
+              materialsState[idx] = item;
+            }
+
+            if (item) {
+              if (field === 'price') {
+                item.price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                item._prev_price = item.price;
+              } else if (field === 'cost_price') {
+                item.cost_price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                item._prev_cost_price = item.cost_price;
+              } else if (field === 'stock') {
+                item.stock = (e.target.value === '' || e.target.value === 'Unlimited' || e.target.value === 'Tanpa Batas') ? null : (parseInt(e.target.value) || 0);
+                item._prev_stock = item.stock;
+              } else {
+                item[field] = e.target.value;
+              }
+            }
+
+            // Sinkronisasi Nama Real-Time ke Tabel Kombinasi di Bagian Bawah & Auto-Apply Ketentuan Seragam
+            if (field === 'name') {
+              const isNameFilled = Boolean(e.target.value.trim() !== '');
+              const isSameP = Boolean(primaryState.same_price_tiers?.tier1);
+              const isSameC = Boolean(primaryState.same_cost_tiers?.tier1);
+              const sMode = primaryState.stock_mode_tiers?.tier1 || '';
+
+              if (idx > 0) {
+                const pInp = row.querySelector('input[data-field="price"]');
+                const cInp = row.querySelector('input[data-field="cost_price"]');
+                const sInp = row.querySelector('input[data-field="stock"]');
+
+                if (isNameFilled) {
+                  if (isSameP) {
+                    item.price = materialsState[0]?.price ?? '';
+                    if (pInp) {
+                      pInp.value = item.price;
+                      pInp.readOnly = true;
+                      pInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      pInp.classList.remove('bg-white');
+                    }
+                  }
+                  if (isSameC) {
+                    item.cost_price = materialsState[0]?.cost_price ?? '';
+                    if (cInp) {
+                      cInp.value = item.cost_price;
+                      cInp.readOnly = true;
+                      cInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      cInp.classList.remove('bg-white');
+                    }
+                  }
+                  if (sMode === 'unlimited') {
+                    item.stock = null;
+                    if (sInp) {
+                      sInp.type = 'text';
+                      sInp.value = 'Unlimited';
+                      sInp.placeholder = 'Unlimited';
+                      sInp.readOnly = true;
+                      sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.remove('bg-white', 'text-slate-700');
+                    }
+                  } else if (sMode === 'same') {
+                    item.stock = materialsState[0]?.stock ?? '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = item.stock;
+                      sInp.readOnly = true;
+                      sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.remove('bg-white', 'text-slate-700');
+                    }
+                  }
+                } else {
+                  if (isSameP) {
+                    item.price = '';
+                    if (pInp) {
+                      pInp.value = '';
+                      pInp.readOnly = false;
+                      pInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      pInp.classList.add('bg-white');
+                    }
+                  }
+                  if (isSameC) {
+                    item.cost_price = '';
+                    if (cInp) {
+                      cInp.value = '';
+                      cInp.readOnly = false;
+                      cInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      cInp.classList.add('bg-white');
+                    }
+                  }
+                  if (sMode === 'unlimited') {
+                    item.stock = '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = '';
+                      sInp.placeholder = 'Stok';
+                      sInp.readOnly = false;
+                      sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.add('bg-white', 'text-slate-700');
+                    }
+                  } else if (sMode === 'same') {
+                    item.stock = '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = '';
+                      sInp.readOnly = false;
+                      sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.add('bg-white', 'text-slate-700');
+                    }
+                  }
+                }
+                updateRowProfitInfo(row);
+              } else if (idx === 0) {
+                if (sMode === 'unlimited') {
+                  const sInp = row.querySelector('input[data-field="stock"]');
+                  if (isNameFilled) {
+                    item.stock = null;
+                    if (sInp) {
+                      sInp.type = 'text';
+                      sInp.value = 'Unlimited';
+                      sInp.placeholder = 'Unlimited';
+                      sInp.readOnly = true;
+                      sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.remove('bg-white', 'text-slate-700');
+                    }
+                  } else {
+                    item.stock = '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = '';
+                      sInp.placeholder = 'Stok';
+                      sInp.readOnly = false;
+                      sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.add('bg-white', 'text-slate-700');
+                    }
+                  }
+                }
+              }
+
+              const comboLabel = document.querySelector(`.combo-var1-label[data-id="${id}"]`);
+              if (comboLabel) {
+                comboLabel.textContent = e.target.value.trim() || `Opsi ${idx + 1}`;
+              }
+              refreshCombinationMatrixTable();
+              validateOptionField(e.target, false);
+              refreshOptionDuplicateErrors('tier1');
+              // Update status tombol Tambah Variasi 2 jika nama mulai terisi
+              const btnVar2 = document.getElementById('btn-trigger-variasi-2');
+              if (btnVar2) {
+                const hasAny = materialsState.some(m => m.name && m.name.trim() !== '');
+                if (hasAny) {
+                  btnVar2.classList.remove('opacity-50', 'cursor-not-allowed');
+                  btnVar2.title = 'Tambah Variasi 2';
+                }
+              }
+            } else {
+              validateOptionField(e.target, false);
+            }
+
+            if (field === 'price' || field === 'cost_price' || field === 'name' || field === 'stock') {
+              updateRowProfitInfo(row);
+            }
+
+            // Ketentuan Tambahan Real-Time Propagation dari Baris 0
+            if (idx === 0) {
+              if (field === 'price' && primaryState.same_price_tiers?.tier1) {
+                const val = item.price;
+                materialsState.forEach((m, mIdx) => {
+                  if (mIdx > 0 && m.name && m.name.trim() !== '') m.price = val;
+                });
+                container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
+                  const rId = r.getAttribute('data-id');
+                  const mItem = materialsState.find(m => String(m.id) === String(rId));
+                  if (mItem && mItem.name && mItem.name.trim() !== '') {
+                    const pi = r.querySelector('input[data-field="price"]');
+                    if (pi) pi.value = val;
+                    updateRowProfitInfo(r);
+                  }
+                });
+              } else if (field === 'cost_price' && primaryState.same_cost_tiers?.tier1) {
+                const val = item.cost_price;
+                materialsState.forEach((m, mIdx) => {
+                  if (mIdx > 0 && m.name && m.name.trim() !== '') m.cost_price = val;
+                });
+                container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
+                  const rId = r.getAttribute('data-id');
+                  const mItem = materialsState.find(m => String(m.id) === String(rId));
+                  if (mItem && mItem.name && mItem.name.trim() !== '') {
+                    const ci = r.querySelector('input[data-field="cost_price"]');
+                    if (ci) ci.value = val;
+                    updateRowProfitInfo(r);
+                  }
+                });
+              } else if (field === 'stock' && primaryState.stock_mode_tiers?.tier1 === 'same') {
+                const val = item.stock;
+                materialsState.forEach((m, mIdx) => {
+                  if (mIdx > 0 && m.name && m.name.trim() !== '') m.stock = val;
+                });
+                container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
+                  const rId = r.getAttribute('data-id');
+                  const mItem = materialsState.find(m => String(m.id) === String(rId));
+                  if (mItem && mItem.name && mItem.name.trim() !== '') {
+                    const si = r.querySelector('input[data-field="stock"]');
+                    if (si) si.value = val;
+                  }
+                });
+              }
+            }
+
+            // Auto-Append Baris Baru jika Mengetik di Baris Paling Terakhir
+            if (idx === materialsState.length - 1 && e.target.value.trim() !== '') {
+              const newMat = {
+                id: DB.generateUUID(),
+                name: '',
+                description: '',
+                price: '',
+                cost_price: '',
+                stock: '',
+                image_url: '',
+                step_multiplier: 1
+              };
+              materialsState.push(newMat);
+              // Append row baru tanpa menghancurkan focus input saat ini
+              container.innerHTML = renderMaterialsRows(false);
+              bindMaterialRowEvents();
+              refreshCombinationMatrixTable();
+              // Restore focus ke input yang sedang diketik
+              const activeInp = container.querySelector(`.variation-option-row[data-id="${id}"] input[data-field="${field}"]`);
+              if (activeInp) {
+                activeInp.focus();
+                try {
+                  const valLen = String(activeInp.value || '').length;
+                  if (typeof activeInp.setSelectionRange === 'function' && ['text', 'search', 'url', 'tel', 'password'].includes(activeInp.type)) {
+                    activeInp.setSelectionRange(valLen, valLen);
+                  }
+                } catch (_) { }
+              }
+            }
+
+            updateProductCardLivePreview();
+          };
+        });
+      }
+      bindMaterialRowEvents();
+
+      // =====================================================================
+      // EVENT BARIS PENDUKUNG (VARIASI 2, 3, 4 + LAYANAN EXTRAS)
+      // =====================================================================
+      function bindFinishingTierRows(tier) {
+        const container = document.getElementById(`finishings-${tier}-rows-container`);
+        if (!container) return;
+
+        const list = finishingsState[tier];
+        if (!list) return;
+
+        // Hapus Opsi (Proteksi minimal 1 opsi & proteksi opsi default Tanpa pada extra_3)
+        container.querySelectorAll('.btn-delete-fin').forEach(btn => {
+          btn.onclick = (e) => {
+            if (tier === 'extra_3') {
+              if ((finishingsState[tier] || []).length <= 2) return;
+            } else {
+              if ((finishingsState[tier] || []).length <= 1) return;
+            }
+            const row = e.target.closest('.variation-option-row');
+            if (!row) return;
+            const idx = parseInt(row.getAttribute('data-idx'));
+            if (tier === 'extra_3' && (idx >= finishingsState[tier].length - 1 || finishingsState[tier][idx]?.is_default_none)) return;
+            const id = row.getAttribute('data-id');
+            finishingsState[tier] = finishingsState[tier].filter(f => f.id !== id);
+            cleanUpDependencyReferences(id);
+            container.innerHTML = renderFinishingRows(tier);
+            bindFinishingTierRows(tier);
+            if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix();
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Geser / Drag & Drop dan Tukar Urutan Baris Finishing / Extras
+        let draggedFinIdx = null;
+        container.querySelectorAll('.variation-option-row').forEach(row => {
+          const rIdx = parseInt(row.getAttribute('data-idx'));
+          if (tier === 'extra_3' && (rIdx >= list.length - 1 || list[rIdx]?.is_default_none)) {
+            row.removeAttribute('draggable');
+            return;
           }
+          row.setAttribute('draggable', 'true');
+          row.ondragstart = (e) => {
+            draggedFinIdx = parseInt(row.getAttribute('data-idx'));
+            e.dataTransfer.effectAllowed = 'move';
+            row.classList.add('opacity-50');
+          };
+          row.ondragend = () => {
+            row.classList.remove('opacity-50');
+            container.querySelectorAll('.variation-option-row').forEach(r => r.classList.remove('ring-2', 'ring-emerald-500'));
+          };
+          row.ondragover = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            row.classList.add('ring-2', 'ring-emerald-500');
+          };
+          row.ondragleave = () => {
+            row.classList.remove('ring-2', 'ring-emerald-500');
+          };
+          row.ondrop = (e) => {
+            e.preventDefault();
+            const targetIdx = parseInt(row.getAttribute('data-idx'));
+            if (tier === 'extra_3' && (targetIdx >= list.length - 1 || draggedFinIdx >= list.length - 1)) return;
+            const currentList = finishingsState[tier];
+            if (currentList && draggedFinIdx !== null && !isNaN(targetIdx) && draggedFinIdx !== targetIdx) {
+              const item = currentList.splice(draggedFinIdx, 1)[0];
+              currentList.splice(targetIdx, 0, item);
+              container.innerHTML = renderFinishingRows(tier);
+              bindFinishingTierRows(tier);
+              updateProductCardLivePreview();
+            }
+          };
+        });
 
-          updateProductCardLivePreview();
-        };
-      });
-    }
-    bindMaterialRowEvents();
+        // Klik Tombol Geser (bi-arrows-move) untuk Tukar Urutan (Fallback Mobile)
+        container.querySelectorAll('.btn-move-fin').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const currentList = finishingsState[tier];
+            if (!currentList || currentList.length <= 1 || isNaN(idx)) return;
+            if (tier === 'extra_3' && (idx >= currentList.length - 1 || currentList[idx]?.is_default_none)) return;
 
-    // =====================================================================
-    // EVENT BARIS PENDUKUNG (VARIASI 2, 3, 4 + LAYANAN EXTRAS)
-    // =====================================================================
-    function bindFinishingTierRows(tier) {
-      const container = document.getElementById(`finishings-${tier}-rows-container`);
-      if (!container) return;
+            let targetIdx = idx === (tier === 'extra_3' ? currentList.length - 2 : currentList.length - 1) ? idx - 1 : idx + 1;
+            if (tier === 'extra_3' && targetIdx >= currentList.length - 1) {
+              targetIdx = idx - 1;
+            }
+            if (targetIdx < 0 || targetIdx === idx) return;
 
-      const list = finishingsState[tier];
-      if (!list) return;
-
-      // Hapus Opsi (Proteksi minimal 1 opsi & proteksi opsi default Tanpa pada extra_3)
-      container.querySelectorAll('.btn-delete-fin').forEach(btn => {
-        btn.onclick = (e) => {
-          if (tier === 'extra_3') {
-            if ((finishingsState[tier] || []).length <= 2) return;
-          } else {
-            if ((finishingsState[tier] || []).length <= 1) return;
-          }
-          const row = e.target.closest('.variation-option-row');
-          if (!row) return;
-          const idx = parseInt(row.getAttribute('data-idx'));
-          if (tier === 'extra_3' && (idx >= finishingsState[tier].length - 1 || finishingsState[tier][idx]?.is_default_none)) return;
-          const id = row.getAttribute('data-id');
-          finishingsState[tier] = finishingsState[tier].filter(f => f.id !== id);
-          cleanUpDependencyReferences(id);
-          container.innerHTML = renderFinishingRows(tier);
-          bindFinishingTierRows(tier);
-          if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix();
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Geser / Drag & Drop dan Tukar Urutan Baris Finishing / Extras
-      let draggedFinIdx = null;
-      container.querySelectorAll('.variation-option-row').forEach(row => {
-        const rIdx = parseInt(row.getAttribute('data-idx'));
-        if (tier === 'extra_3' && (rIdx >= list.length - 1 || list[rIdx]?.is_default_none)) {
-          row.removeAttribute('draggable');
-          return;
-        }
-        row.setAttribute('draggable', 'true');
-        row.ondragstart = (e) => {
-          draggedFinIdx = parseInt(row.getAttribute('data-idx'));
-          e.dataTransfer.effectAllowed = 'move';
-          row.classList.add('opacity-50');
-        };
-        row.ondragend = () => {
-          row.classList.remove('opacity-50');
-          container.querySelectorAll('.variation-option-row').forEach(r => r.classList.remove('ring-2', 'ring-emerald-500'));
-        };
-        row.ondragover = (e) => {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          row.classList.add('ring-2', 'ring-emerald-500');
-        };
-        row.ondragleave = () => {
-          row.classList.remove('ring-2', 'ring-emerald-500');
-        };
-        row.ondrop = (e) => {
-          e.preventDefault();
-          const targetIdx = parseInt(row.getAttribute('data-idx'));
-          if (tier === 'extra_3' && (targetIdx >= list.length - 1 || draggedFinIdx >= list.length - 1)) return;
-          const currentList = finishingsState[tier];
-          if (currentList && draggedFinIdx !== null && !isNaN(targetIdx) && draggedFinIdx !== targetIdx) {
-            const item = currentList.splice(draggedFinIdx, 1)[0];
-            currentList.splice(targetIdx, 0, item);
+            const temp = currentList[idx];
+            currentList[idx] = currentList[targetIdx];
+            currentList[targetIdx] = temp;
             container.innerHTML = renderFinishingRows(tier);
             bindFinishingTierRows(tier);
             updateProductCardLivePreview();
-          }
-        };
+          };
+        });
+
+        // Upload Gambar untuk Layanan Extras
+        if (tier === 'extra_3') {
+          container.querySelectorAll('.extra-file-input').forEach(fileInp => {
+            fileInp.onchange = async (e) => {
+              const file = e.target.files && e.target.files[0];
+              if (!file) return;
+              const id = fileInp.getAttribute('data-id');
+              try {
+                const base64 = await compressProductImage(file, 800, 800, 0.8);
+                const item = (finishingsState.extra_3 || []).find(f => f.id === id);
+                if (item) {
+                  item.image_url = base64;
+                  item.image = base64;
+                }
+                const lbl = fileInp.closest('div')?.querySelector(`label[for="${fileInp.id}"]`) || fileInp.nextElementSibling;
+                if (lbl) {
+                  lbl.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-md" />`;
+                }
+                container.innerHTML = renderFinishingRows('extra_3');
+                bindFinishingTierRows('extra_3');
+                updateProductCardLivePreview();
+              } catch (err) {
+                console.warn('Gagal memproses foto layanan ekstra:', err);
+              }
+            };
+          });
+        }
+
+        // Input Per Baris (Auto-Append & Ketentuan Tambahan Real-Time)
+        container.querySelectorAll('.fin-input').forEach(inp => {
+          inp.onblur = (e) => {
+            validateOptionField(e.target, true);
+            const field = e.target.getAttribute('data-field');
+            if (field === 'name') {
+              refreshOptionDuplicateErrors(tier);
+            }
+          };
+
+          inp.onchange = inp.oninput = (e) => {
+            const row = e.target.closest('.variation-option-row');
+            if (!row) return;
+            const id = row.getAttribute('data-id');
+            const field = e.target.getAttribute('data-field');
+            const idx = parseInt(row.getAttribute('data-idx'));
+            const currentList = finishingsState[tier];
+            let item = (currentList && currentList.find(f => String(f.id) === String(id))) || (!isNaN(idx) && currentList ? currentList[idx] : null);
+            if (!item && currentList && !isNaN(idx) && idx >= 0) {
+              item = {
+                id: id || DB.generateUUID(),
+                name: '',
+                description: '',
+                price: '',
+                cost_price: '',
+                stock: null,
+                image_url: '',
+                step_multiplier: 1
+              };
+              currentList[idx] = item;
+            }
+
+            if (tier === 'extra_3' && (idx === (currentList ? currentList.length - 1 : -1) || item?.is_default_none)) {
+              const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
+              if (item) {
+                item.name = `Tanpa ${extraTitle}`;
+                item.price = 0;
+                item.cost_price = 0;
+                item.extra_type = 'pilihan_ganda';
+                item.is_default_none = true;
+              }
+              return;
+            }
+
+            if (item) {
+              if (field === 'price') {
+                item.price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                item._prev_price = item.price;
+              } else if (field === 'cost_price') {
+                item.cost_price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                item._prev_cost_price = item.cost_price;
+              } else if (field === 'stock') {
+                item.stock = (e.target.value === '' || e.target.value === 'Unlimited' || e.target.value === 'Tanpa Batas') ? null : (parseInt(e.target.value) || 0);
+                item._prev_stock = item.stock;
+              } else {
+                item[field] = e.target.value;
+              }
+            }
+
+            if (field === 'name') {
+              const isNameFilled = Boolean(e.target.value.trim() !== '');
+              const isSameP = Boolean(primaryState.same_price_tiers?.[tier]);
+              const isSameC = Boolean(primaryState.same_cost_tiers?.[tier]);
+              const sMode = primaryState.stock_mode_tiers?.[tier] || '';
+
+              if (idx > 0 && !item?.is_default_none) {
+                const pInp = row.querySelector('input[data-field="price"]');
+                const cInp = row.querySelector('input[data-field="cost_price"]');
+                const sInp = row.querySelector('input[data-field="stock"]');
+
+                if (isNameFilled) {
+                  if (isSameP) {
+                    item.price = currentList[0]?.price ?? '';
+                    if (pInp) {
+                      pInp.value = item.price;
+                      pInp.readOnly = true;
+                      pInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      pInp.classList.remove('bg-white');
+                    }
+                  }
+                  if (isSameC) {
+                    item.cost_price = currentList[0]?.cost_price ?? '';
+                    if (cInp) {
+                      cInp.value = item.cost_price;
+                      cInp.readOnly = true;
+                      cInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      cInp.classList.remove('bg-white');
+                    }
+                  }
+                  if (sMode === 'unlimited') {
+                    item.stock = null;
+                    if (sInp) {
+                      sInp.type = 'text';
+                      sInp.value = 'Unlimited';
+                      sInp.placeholder = 'Unlimited';
+                      sInp.readOnly = true;
+                      sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.remove('bg-white', 'text-slate-700');
+                    }
+                  } else if (sMode === 'same') {
+                    item.stock = currentList[0]?.stock ?? '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = item.stock;
+                      sInp.readOnly = true;
+                      sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.remove('bg-white', 'text-slate-700');
+                    }
+                  }
+                } else {
+                  if (isSameP) {
+                    item.price = '';
+                    if (pInp) {
+                      pInp.value = '';
+                      pInp.readOnly = false;
+                      pInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      pInp.classList.add('bg-white');
+                    }
+                  }
+                  if (isSameC) {
+                    item.cost_price = '';
+                    if (cInp) {
+                      cInp.value = '';
+                      cInp.readOnly = false;
+                      cInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      cInp.classList.add('bg-white');
+                    }
+                  }
+                  if (sMode === 'unlimited') {
+                    item.stock = '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = '';
+                      sInp.placeholder = 'Stok';
+                      sInp.readOnly = false;
+                      sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.add('bg-white', 'text-slate-700');
+                    }
+                  } else if (sMode === 'same') {
+                    item.stock = '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = '';
+                      sInp.readOnly = false;
+                      sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.add('bg-white', 'text-slate-700');
+                    }
+                  }
+                }
+                updateRowProfitInfo(row);
+              } else if (idx === 0) {
+                if (sMode === 'unlimited') {
+                  const sInp = row.querySelector('input[data-field="stock"]');
+                  if (isNameFilled) {
+                    item.stock = null;
+                    if (sInp) {
+                      sInp.type = 'text';
+                      sInp.value = 'Unlimited';
+                      sInp.placeholder = 'Unlimited';
+                      sInp.readOnly = true;
+                      sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.remove('bg-white', 'text-slate-700');
+                    }
+                  } else {
+                    item.stock = '';
+                    if (sInp) {
+                      sInp.type = 'number';
+                      sInp.value = '';
+                      sInp.placeholder = 'Stok';
+                      sInp.readOnly = false;
+                      sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                      sInp.classList.add('bg-white', 'text-slate-700');
+                    }
+                  }
+                }
+              }
+
+              validateOptionField(e.target, false);
+              refreshOptionDuplicateErrors(tier);
+            } else {
+              validateOptionField(e.target, false);
+            }
+
+            if (field === 'price' || field === 'cost_price' || field === 'name' || field === 'stock') {
+              updateRowProfitInfo(row);
+              updateRowOptionGear(row, tier, id);
+            }
+
+            // Ketentuan Tambahan Propagation dari Baris 0
+            if (idx === 0) {
+              if (field === 'price' && primaryState.same_price_tiers?.[tier]) {
+                const val = item.price;
+                currentList.forEach((f, fIdx) => {
+                  if (fIdx > 0 && f.name && f.name.trim() !== '' && !f.is_default_none) f.price = val;
+                });
+                container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
+                  const rId = r.getAttribute('data-id');
+                  const fItem = currentList.find(f => String(f.id) === String(rId));
+                  if (fItem && fItem.name && fItem.name.trim() !== '' && !fItem.is_default_none) {
+                    const pi = r.querySelector('input[data-field="price"]');
+                    if (pi) pi.value = val;
+                    updateRowProfitInfo(r);
+                    updateRowOptionGear(r, tier, rId);
+                  }
+                });
+              } else if (field === 'cost_price' && primaryState.same_cost_tiers?.[tier]) {
+                const val = item.cost_price;
+                currentList.forEach((f, fIdx) => {
+                  if (fIdx > 0 && f.name && f.name.trim() !== '' && !f.is_default_none) f.cost_price = val;
+                });
+                container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
+                  const rId = r.getAttribute('data-id');
+                  const fItem = currentList.find(f => String(f.id) === String(rId));
+                  if (fItem && fItem.name && fItem.name.trim() !== '' && !fItem.is_default_none) {
+                    const ci = r.querySelector('input[data-field="cost_price"]');
+                    if (ci) ci.value = val;
+                    updateRowProfitInfo(r);
+                    updateRowOptionGear(r, tier, rId);
+                  }
+                });
+              } else if (field === 'stock' && primaryState.stock_mode_tiers?.[tier] === 'same') {
+                const val = item.stock;
+                currentList.forEach((f, fIdx) => {
+                  if (fIdx > 0 && f.name && f.name.trim() !== '' && !f.is_default_none) f.stock = val;
+                });
+                container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
+                  const rId = r.getAttribute('data-id');
+                  const fItem = currentList.find(f => String(f.id) === String(rId));
+                  if (fItem && fItem.name && fItem.name.trim() !== '' && !fItem.is_default_none) {
+                    const si = r.querySelector('input[data-field="stock"]');
+                    if (si) si.value = val;
+                    updateRowOptionGear(r, tier, rId);
+                  }
+                });
+              }
+            }
+
+            // Auto-Append Baris Baru jika Mengetik di Baris Paling Terakhir (atau baris sebelum Tanpa pada extra_3)
+            const isTriggerRow = (tier === 'extra_3')
+              ? (idx === currentList.length - 2)
+              : (idx === currentList.length - 1);
+
+            if (isTriggerRow && e.target.value.trim() !== '') {
+              const newFin = {
+                id: DB.generateUUID(),
+                tier: tier,
+                name: '',
+                description: '',
+                price: '',
+                cost_price: '',
+                stock: '',
+                extra_type: tier === 'extra_3' ? '' : undefined,
+                parent_id: '',
+                calc_mode: 'flat',
+                dim_add_val: 0,
+                dim_add_side: 'p_l'
+              };
+              if (tier === 'extra_3') {
+                currentList.splice(currentList.length - 1, 0, newFin);
+              } else {
+                currentList.push(newFin);
+              }
+              container.innerHTML = renderFinishingRows(tier);
+              bindFinishingTierRows(tier);
+              // Restore focus
+              const activeInp = container.querySelector(`.variation-option-row[data-id="${id}"] [data-field="${field}"]`);
+              if (activeInp) {
+                activeInp.focus();
+                try {
+                  const valLen = String(activeInp.value || '').length;
+                  if (typeof activeInp.setSelectionRange === 'function' && ['text', 'search', 'url', 'tel', 'password'].includes(activeInp.type)) {
+                    activeInp.setSelectionRange(valLen, valLen);
+                  }
+                } catch (_) { }
+              }
+            }
+
+            // Sinkronisasi dinamis ke opsi Sandbox jika ada perubahan harga/nama
+            const sMainSel = document.getElementById('sandbox-select-main-option');
+            if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
+            const sFinList = document.getElementById('sandbox-finishing-options-list');
+            if (sFinList) {
+              sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
+              bindSandboxCheckboxes();
+            }
+            updateSandboxCalculation();
+            if (field === 'name' && typeof rebuildCombinationMatrix === 'function') {
+              rebuildCombinationMatrix();
+            }
+
+            updateProductCardLivePreview();
+          };
+        });
+
+        // Lapisan 2: Binding Dropdown Mode Hitung & Kontekstual Tambahan Ukuran per Baris
+        container.querySelectorAll('.select-option-calc-mode').forEach(sel => {
+          sel.onchange = (e) => {
+            const row = e.target.closest('.variation-option-row');
+            const id = row?.getAttribute('data-id');
+            const item = (finishingsState[tier] || []).find(f => f.id === id);
+            if (item) {
+              item.calc_mode = e.target.value;
+              if (item.calc_mode === 'side_length') {
+                if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'perimeter'].includes(item.dim_add_side)) {
+                  item.dim_add_side = 'top';
+                }
+              } else if (item.calc_mode === 'add_dim') {
+                if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'p_l', 'p', 'l', 'perimeter'].includes(item.dim_add_side)) {
+                  item.dim_add_side = 'p_l';
+                }
+              }
+              const addWrap = row.querySelector('.dim-add-controls-wrapper');
+              if (addWrap) {
+                if (item.calc_mode === 'add_dim') {
+                  addWrap.classList.remove('hidden');
+                  addWrap.classList.add('grid', 'grid-cols-1', 'sm:flex');
+                } else {
+                  addWrap.classList.remove('grid', 'grid-cols-1', 'sm:flex');
+                  addWrap.classList.add('hidden');
+                }
+              }
+              const sideWrap = row.querySelector('.dim-side-controls-wrapper');
+              if (sideWrap) {
+                if (item.calc_mode === 'side_length') {
+                  sideWrap.classList.remove('hidden');
+                  sideWrap.classList.add('block');
+                } else {
+                  sideWrap.classList.remove('block');
+                  sideWrap.classList.add('hidden');
+                }
+              }
+              const sFinList = document.getElementById('sandbox-finishing-options-list');
+              if (sFinList) {
+                sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
+                bindSandboxCheckboxes();
+              }
+              updateSandboxCalculation();
+            }
+          };
+        });
+
+        container.querySelectorAll('.input-option-dim-add').forEach(inp => {
+          inp.oninput = (e) => {
+            const row = e.target.closest('.variation-option-row');
+            const id = row?.getAttribute('data-id');
+            const item = (finishingsState[tier] || []).find(f => f.id === id);
+            if (item) {
+              item.dim_add_val = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+              const sFinList = document.getElementById('sandbox-finishing-options-list');
+              if (sFinList) {
+                sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
+                bindSandboxCheckboxes();
+              }
+              updateSandboxCalculation();
+            }
+          };
+        });
+
+        container.querySelectorAll('.select-option-dim-side').forEach(sel => {
+          sel.onchange = (e) => {
+            const row = e.target.closest('.variation-option-row');
+            const id = row?.getAttribute('data-id');
+            const item = (finishingsState[tier] || []).find(f => f.id === id);
+            if (item) {
+              item.dim_add_side = e.target.value;
+              const sFinList = document.getElementById('sandbox-finishing-options-list');
+              if (sFinList) {
+                sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
+                bindSandboxCheckboxes();
+              }
+              updateSandboxCalculation();
+            }
+          };
+        });
+
+        container.querySelectorAll('.select-option-dim-side-len').forEach(sel => {
+          sel.onchange = (e) => {
+            const row = e.target.closest('.variation-option-row');
+            const id = row?.getAttribute('data-id');
+            const item = (finishingsState[tier] || []).find(f => f.id === id);
+            if (item) {
+              item.dim_add_side = e.target.value;
+              const sFinList = document.getElementById('sandbox-finishing-options-list');
+              if (sFinList) {
+                sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
+                bindSandboxCheckboxes();
+              }
+              updateSandboxCalculation();
+            }
+          };
+        });
+
+        container.querySelectorAll('.btn-option-dependency-indicator').forEach(btn => {
+          btn.onclick = () => {
+            if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
+            const t = btn.getAttribute('data-tier');
+            const id = btn.getAttribute('data-id');
+            openOptionDependencyModal(t, id);
+          };
+        });
+      }
+
+      ['main', 'extra_1', 'extra_2', 'extra_3'].forEach(tier => {
+        bindFinishingTierRows(tier);
       });
 
-      // Klik Tombol Geser (bi-arrows-move) untuk Tukar Urutan (Fallback Mobile)
-      container.querySelectorAll('.btn-move-fin').forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const idx = parseInt(btn.getAttribute('data-idx'));
-          const currentList = finishingsState[tier];
-          if (!currentList || currentList.length <= 1 || isNaN(idx)) return;
-          if (tier === 'extra_3' && (idx >= currentList.length - 1 || currentList[idx]?.is_default_none)) return;
-
-          let targetIdx = idx === (tier === 'extra_3' ? currentList.length - 2 : currentList.length - 1) ? idx - 1 : idx + 1;
-          if (tier === 'extra_3' && targetIdx >= currentList.length - 1) {
-            targetIdx = idx - 1;
+      // =====================================================================
+      // TABEL MATRIKS KOMBINASI BAWAH & MODAL GROSIR / KELIPATAN
+      // =====================================================================
+      function refreshCombinationMatrixTable() {
+        const section = document.getElementById('combination-matrix-section');
+        if (section) {
+          section.outerHTML = renderCombinationMatrixTable();
+          bindCombinationMatrixEvents();
+          if (typeof bindCleanDatalistPopovers === 'function') {
+            const newSec = document.getElementById('combination-matrix-section');
+            if (newSec) bindCleanDatalistPopovers(newSec);
           }
-          if (targetIdx < 0 || targetIdx === idx) return;
+        }
+      }
+      const refreshCombinationMatrixDOM = refreshCombinationMatrixTable;
+      rebuildCombinationMatrix = refreshCombinationMatrixTable;
 
-          const temp = currentList[idx];
-          currentList[idx] = currentList[targetIdx];
-          currentList[targetIdx] = temp;
-          container.innerHTML = renderFinishingRows(tier);
-          bindFinishingTierRows(tier);
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Upload Gambar untuk Layanan Extras
-      if (tier === 'extra_3') {
-        container.querySelectorAll('.extra-file-input').forEach(fileInp => {
+      function bindCombinationMatrixEvents() {
+        // 1. Upload Foto Variasi 1 dari Tabel Kombinasi
+        document.querySelectorAll('.combo-var1-file-input').forEach(fileInp => {
           fileInp.onchange = async (e) => {
             const file = e.target.files && e.target.files[0];
             if (!file) return;
             const id = fileInp.getAttribute('data-id');
             try {
               const base64 = await compressProductImage(file, 800, 800, 0.8);
-              const item = (finishingsState.extra_3 || []).find(f => f.id === id);
+              const item = materialsState.find(m => m.id === id);
               if (item) {
                 item.image_url = base64;
                 item.image = base64;
@@ -19737,648 +21763,207 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               if (lbl) {
                 lbl.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-md" />`;
               }
-              container.innerHTML = renderFinishingRows('extra_3');
-              bindFinishingTierRows('extra_3');
+              refreshCombinationMatrixTable();
               updateProductCardLivePreview();
             } catch (err) {
-              console.warn('Gagal memproses foto layanan ekstra:', err);
+              console.warn('Gagal memproses gambar variasi:', err);
             }
           };
         });
-      }
 
-      // Input Per Baris (Auto-Append & Ketentuan Tambahan Real-Time)
-      container.querySelectorAll('.fin-input').forEach(inp => {
-        inp.onblur = (e) => {
-          validateOptionField(e.target, true);
-          const field = e.target.getAttribute('data-field');
-          if (field === 'name') {
-            refreshOptionDuplicateErrors(tier);
-          }
-        };
-
-        inp.onchange = inp.oninput = (e) => {
-          const row = e.target.closest('.variation-option-row');
-          if (!row) return;
-          const id = row.getAttribute('data-id');
-          const field = e.target.getAttribute('data-field');
-          const idx = parseInt(row.getAttribute('data-idx'));
-          const currentList = finishingsState[tier];
-          let item = (currentList && currentList.find(f => String(f.id) === String(id))) || (!isNaN(idx) && currentList ? currentList[idx] : null);
-          if (!item && currentList && !isNaN(idx) && idx >= 0) {
-            item = {
-              id: id || DB.generateUUID(),
-              name: '',
-              description: '',
-              price: '',
-              cost_price: '',
-              stock: null,
-              image_url: '',
-              step_multiplier: 1
-            };
-            currentList[idx] = item;
-          }
-
-          if (tier === 'extra_3' && (idx === (currentList ? currentList.length - 1 : -1) || item?.is_default_none)) {
-            const extraTitle = getVariationLabel('extra_3', 'Layanan Extras');
-            if (item) {
-              item.name = `Tanpa ${extraTitle}`;
-              item.price = 0;
-              item.cost_price = 0;
-              item.extra_type = 'pilihan_ganda';
-              item.is_default_none = true;
-            }
-            return;
-          }
-
-          if (item) {
-            if (field === 'price') {
-              item.price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
-              item._prev_price = item.price;
-            } else if (field === 'cost_price') {
-              item.cost_price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
-              item._prev_cost_price = item.cost_price;
-            } else if (field === 'stock') {
-              item.stock = (e.target.value === '' || e.target.value === 'Unlimited' || e.target.value === 'Tanpa Batas') ? null : (parseInt(e.target.value) || 0);
-              item._prev_stock = item.stock;
-            } else {
-              item[field] = e.target.value;
-            }
-          }
-
-          if (field === 'name') {
-            const isNameFilled = Boolean(e.target.value.trim() !== '');
-            const isSameP = Boolean(primaryState.same_price_tiers?.[tier]);
-            const isSameC = Boolean(primaryState.same_cost_tiers?.[tier]);
-            const sMode = primaryState.stock_mode_tiers?.[tier] || '';
-
-            if (idx > 0 && !item?.is_default_none) {
-              const pInp = row.querySelector('input[data-field="price"]');
-              const cInp = row.querySelector('input[data-field="cost_price"]');
-              const sInp = row.querySelector('input[data-field="stock"]');
-
-              if (isNameFilled) {
-                if (isSameP) {
-                  item.price = currentList[0]?.price ?? '';
-                  if (pInp) {
-                    pInp.value = item.price;
-                    pInp.readOnly = true;
-                    pInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    pInp.classList.remove('bg-white');
-                  }
-                }
-                if (isSameC) {
-                  item.cost_price = currentList[0]?.cost_price ?? '';
-                  if (cInp) {
-                    cInp.value = item.cost_price;
-                    cInp.readOnly = true;
-                    cInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    cInp.classList.remove('bg-white');
-                  }
-                }
-                if (sMode === 'unlimited') {
-                  item.stock = null;
-                  if (sInp) {
-                    sInp.type = 'text';
-                    sInp.value = 'Unlimited';
-                    sInp.placeholder = 'Unlimited';
-                    sInp.readOnly = true;
-                    sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.remove('bg-white', 'text-slate-700');
-                  }
-                } else if (sMode === 'same') {
-                  item.stock = currentList[0]?.stock ?? '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = item.stock;
-                    sInp.readOnly = true;
-                    sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.remove('bg-white', 'text-slate-700');
-                  }
-                }
-              } else {
-                if (isSameP) {
-                  item.price = '';
-                  if (pInp) {
-                    pInp.value = '';
-                    pInp.readOnly = false;
-                    pInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    pInp.classList.add('bg-white');
-                  }
-                }
-                if (isSameC) {
-                  item.cost_price = '';
-                  if (cInp) {
-                    cInp.value = '';
-                    cInp.readOnly = false;
-                    cInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    cInp.classList.add('bg-white');
-                  }
-                }
-                if (sMode === 'unlimited') {
-                  item.stock = '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = '';
-                    sInp.placeholder = 'Stok';
-                    sInp.readOnly = false;
-                    sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.add('bg-white', 'text-slate-700');
-                  }
-                } else if (sMode === 'same') {
-                  item.stock = '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = '';
-                    sInp.readOnly = false;
-                    sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.add('bg-white', 'text-slate-700');
-                  }
-                }
-              }
-              updateRowProfitInfo(row);
-            } else if (idx === 0) {
-              if (sMode === 'unlimited') {
-                const sInp = row.querySelector('input[data-field="stock"]');
-                if (isNameFilled) {
-                  item.stock = null;
-                  if (sInp) {
-                    sInp.type = 'text';
-                    sInp.value = 'Unlimited';
-                    sInp.placeholder = 'Unlimited';
-                    sInp.readOnly = true;
-                    sInp.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.remove('bg-white', 'text-slate-700');
-                  }
-                } else {
-                  item.stock = '';
-                  if (sInp) {
-                    sInp.type = 'number';
-                    sInp.value = '';
-                    sInp.placeholder = 'Stok';
-                    sInp.readOnly = false;
-                    sInp.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                    sInp.classList.add('bg-white', 'text-slate-700');
-                  }
-                }
-              }
-            }
-
-            validateOptionField(e.target, false);
-            refreshOptionDuplicateErrors(tier);
-          } else {
-            validateOptionField(e.target, false);
-          }
-
-          if (field === 'price' || field === 'cost_price' || field === 'name' || field === 'stock') {
-            updateRowProfitInfo(row);
-            updateRowOptionGear(row, tier, id);
-          }
-
-          // Ketentuan Tambahan Propagation dari Baris 0
-          if (idx === 0) {
-            if (field === 'price' && primaryState.same_price_tiers?.[tier]) {
-              const val = item.price;
-              currentList.forEach((f, fIdx) => {
-                if (fIdx > 0 && f.name && f.name.trim() !== '' && !f.is_default_none) f.price = val;
-              });
-              container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
-                const rId = r.getAttribute('data-id');
-                const fItem = currentList.find(f => String(f.id) === String(rId));
-                if (fItem && fItem.name && fItem.name.trim() !== '' && !fItem.is_default_none) {
-                  const pi = r.querySelector('input[data-field="price"]');
-                  if (pi) pi.value = val;
-                  updateRowProfitInfo(r);
-                  updateRowOptionGear(r, tier, rId);
-                }
-              });
-            } else if (field === 'cost_price' && primaryState.same_cost_tiers?.[tier]) {
-              const val = item.cost_price;
-              currentList.forEach((f, fIdx) => {
-                if (fIdx > 0 && f.name && f.name.trim() !== '' && !f.is_default_none) f.cost_price = val;
-              });
-              container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
-                const rId = r.getAttribute('data-id');
-                const fItem = currentList.find(f => String(f.id) === String(rId));
-                if (fItem && fItem.name && fItem.name.trim() !== '' && !fItem.is_default_none) {
-                  const ci = r.querySelector('input[data-field="cost_price"]');
-                  if (ci) ci.value = val;
-                  updateRowProfitInfo(r);
-                  updateRowOptionGear(r, tier, rId);
-                }
-              });
-            } else if (field === 'stock' && primaryState.stock_mode_tiers?.[tier] === 'same') {
-              const val = item.stock;
-              currentList.forEach((f, fIdx) => {
-                if (fIdx > 0 && f.name && f.name.trim() !== '' && !f.is_default_none) f.stock = val;
-              });
-              container.querySelectorAll('.variation-option-row:not([data-idx="0"])').forEach(r => {
-                const rId = r.getAttribute('data-id');
-                const fItem = currentList.find(f => String(f.id) === String(rId));
-                if (fItem && fItem.name && fItem.name.trim() !== '' && !fItem.is_default_none) {
-                  const si = r.querySelector('input[data-field="stock"]');
-                  if (si) si.value = val;
-                  updateRowOptionGear(r, tier, rId);
-                }
-              });
-            }
-          }
-
-          // Auto-Append Baris Baru jika Mengetik di Baris Paling Terakhir (atau baris sebelum Tanpa pada extra_3)
-          const isTriggerRow = (tier === 'extra_3')
-            ? (idx === currentList.length - 2)
-            : (idx === currentList.length - 1);
-
-          if (isTriggerRow && e.target.value.trim() !== '') {
-            const newFin = {
-              id: DB.generateUUID(),
-              tier: tier,
-              name: '',
-              description: '',
-              price: '',
-              cost_price: '',
-              stock: '',
-              extra_type: tier === 'extra_3' ? '' : undefined,
-              parent_id: '',
-              calc_mode: 'flat',
-              dim_add_val: 0,
-              dim_add_side: 'p_l'
-            };
-            if (tier === 'extra_3') {
-              currentList.splice(currentList.length - 1, 0, newFin);
-            } else {
-              currentList.push(newFin);
-            }
-            container.innerHTML = renderFinishingRows(tier);
-            bindFinishingTierRows(tier);
-            // Restore focus
-            const activeInp = container.querySelector(`.variation-option-row[data-id="${id}"] [data-field="${field}"]`);
-            if (activeInp) {
-              activeInp.focus();
-              try {
-                const valLen = String(activeInp.value || '').length;
-                if (typeof activeInp.setSelectionRange === 'function' && ['text', 'search', 'url', 'tel', 'password'].includes(activeInp.type)) {
-                  activeInp.setSelectionRange(valLen, valLen);
-                }
-              } catch (_) {}
-            }
-          }
-
-          // Sinkronisasi dinamis ke opsi Sandbox jika ada perubahan harga/nama
-          const sMainSel = document.getElementById('sandbox-select-main-option');
-          if (sMainSel) sMainSel.innerHTML = getSandboxMainComponentOptionsHtml();
-          const sFinList = document.getElementById('sandbox-finishing-options-list');
-          if (sFinList) {
-            sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
-            bindSandboxCheckboxes();
-          }
-          updateSandboxCalculation();
-          if (field === 'name' && typeof rebuildCombinationMatrix === 'function') {
-            rebuildCombinationMatrix();
-          }
-
-          updateProductCardLivePreview();
-        };
-      });
-
-      // Lapisan 2: Binding Dropdown Mode Hitung & Kontekstual Tambahan Ukuran per Baris
-      container.querySelectorAll('.select-option-calc-mode').forEach(sel => {
-        sel.onchange = (e) => {
-          const row = e.target.closest('.variation-option-row');
-          const id = row?.getAttribute('data-id');
-          const item = (finishingsState[tier] || []).find(f => f.id === id);
-          if (item) {
-            item.calc_mode = e.target.value;
-            if (item.calc_mode === 'side_length') {
-              if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'perimeter'].includes(item.dim_add_side)) {
-                item.dim_add_side = 'top';
-              }
-            } else if (item.calc_mode === 'add_dim') {
-              if (!['top', 'bottom', 'top_bottom', 'side_one', 'left_right', 'p_l', 'p', 'l', 'perimeter'].includes(item.dim_add_side)) {
-                item.dim_add_side = 'p_l';
-              }
-            }
-            const addWrap = row.querySelector('.dim-add-controls-wrapper');
-            if (addWrap) {
-              if (item.calc_mode === 'add_dim') {
-                addWrap.classList.remove('hidden');
-                addWrap.classList.add('grid', 'grid-cols-1', 'sm:flex');
-              } else {
-                addWrap.classList.remove('grid', 'grid-cols-1', 'sm:flex');
-                addWrap.classList.add('hidden');
-              }
-            }
-            const sideWrap = row.querySelector('.dim-side-controls-wrapper');
-            if (sideWrap) {
-              if (item.calc_mode === 'side_length') {
-                sideWrap.classList.remove('hidden');
-                sideWrap.classList.add('block');
-              } else {
-                sideWrap.classList.remove('block');
-                sideWrap.classList.add('hidden');
-              }
-            }
-            const sFinList = document.getElementById('sandbox-finishing-options-list');
-            if (sFinList) {
-              sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
-              bindSandboxCheckboxes();
-            }
-            updateSandboxCalculation();
-          }
-        };
-      });
-
-      container.querySelectorAll('.input-option-dim-add').forEach(inp => {
-        inp.oninput = (e) => {
-          const row = e.target.closest('.variation-option-row');
-          const id = row?.getAttribute('data-id');
-          const item = (finishingsState[tier] || []).find(f => f.id === id);
-          if (item) {
-            item.dim_add_val = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
-            const sFinList = document.getElementById('sandbox-finishing-options-list');
-            if (sFinList) {
-              sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
-              bindSandboxCheckboxes();
-            }
-            updateSandboxCalculation();
-          }
-        };
-      });
-
-      container.querySelectorAll('.select-option-dim-side').forEach(sel => {
-        sel.onchange = (e) => {
-          const row = e.target.closest('.variation-option-row');
-          const id = row?.getAttribute('data-id');
-          const item = (finishingsState[tier] || []).find(f => f.id === id);
-          if (item) {
-            item.dim_add_side = e.target.value;
-            const sFinList = document.getElementById('sandbox-finishing-options-list');
-            if (sFinList) {
-              sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
-              bindSandboxCheckboxes();
-            }
-            updateSandboxCalculation();
-          }
-        };
-      });
-
-      container.querySelectorAll('.select-option-dim-side-len').forEach(sel => {
-        sel.onchange = (e) => {
-          const row = e.target.closest('.variation-option-row');
-          const id = row?.getAttribute('data-id');
-          const item = (finishingsState[tier] || []).find(f => f.id === id);
-          if (item) {
-            item.dim_add_side = e.target.value;
-            const sFinList = document.getElementById('sandbox-finishing-options-list');
-            if (sFinList) {
-              sFinList.innerHTML = getSandboxFinishingCheckboxesHtml();
-              bindSandboxCheckboxes();
-            }
-            updateSandboxCalculation();
-          }
-        };
-      });
-
-      container.querySelectorAll('.btn-option-dependency-indicator').forEach(btn => {
-        btn.onclick = () => {
-          if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
-          const t = btn.getAttribute('data-tier');
-          const id = btn.getAttribute('data-id');
-          openOptionDependencyModal(t, id);
-        };
-      });
-    }
-
-    ['main', 'extra_1', 'extra_2', 'extra_3'].forEach(tier => {
-      bindFinishingTierRows(tier);
-    });
-
-    // =====================================================================
-    // TABEL MATRIKS KOMBINASI BAWAH & MODAL GROSIR / KELIPATAN
-    // =====================================================================
-    function refreshCombinationMatrixTable() {
-      const section = document.getElementById('combination-matrix-section');
-      if (section) {
-        section.outerHTML = renderCombinationMatrixTable();
-        bindCombinationMatrixEvents();
-        if (typeof bindCleanDatalistPopovers === 'function') {
-          const newSec = document.getElementById('combination-matrix-section');
-          if (newSec) bindCleanDatalistPopovers(newSec);
-        }
-      }
-    }
-    const refreshCombinationMatrixDOM = refreshCombinationMatrixTable;
-    rebuildCombinationMatrix = refreshCombinationMatrixTable;
-
-    function bindCombinationMatrixEvents() {
-      // 1. Upload Foto Variasi 1 dari Tabel Kombinasi
-      document.querySelectorAll('.combo-var1-file-input').forEach(fileInp => {
-        fileInp.onchange = async (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          const id = fileInp.getAttribute('data-id');
-          try {
-            const base64 = await compressProductImage(file, 800, 800, 0.8);
+        // 1b. Hapus Foto Variasi 1 dari Tabel Kombinasi
+        document.querySelectorAll('.btn-clear-combo-img').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
             const item = materialsState.find(m => m.id === id);
             if (item) {
-              item.image_url = base64;
-              item.image = base64;
+              item.image_url = '';
+              item.image = '';
+              refreshCombinationMatrixTable();
+              updateProductCardLivePreview();
             }
-            const lbl = fileInp.closest('div')?.querySelector(`label[for="${fileInp.id}"]`) || fileInp.nextElementSibling;
-            if (lbl) {
-              lbl.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-md" />`;
-            }
-            refreshCombinationMatrixTable();
-            updateProductCardLivePreview();
-          } catch (err) {
-            console.warn('Gagal memproses gambar variasi:', err);
-          }
-        };
-      });
+          };
+        });
 
-      // 1b. Hapus Foto Variasi 1 dari Tabel Kombinasi
-      document.querySelectorAll('.btn-clear-combo-img').forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const id = btn.getAttribute('data-id');
-          const item = materialsState.find(m => m.id === id);
-          if (item) {
-            item.image_url = '';
-            item.image = '';
-            refreshCombinationMatrixTable();
-            updateProductCardLivePreview();
-          }
-        };
-      });
+        // 2. Min. Order per Baris
+        document.querySelectorAll('.combo-min-order-input').forEach(inp => {
+          inp.oninput = (e) => {
+            const matId = inp.getAttribute('data-mat-id');
+            const item = materialsState.find(m => m.id === matId);
+            if (item) item.min_order = Math.max(1, parseInt(e.target.value) || 1);
+          };
+        });
 
-      // 2. Min. Order per Baris
-      document.querySelectorAll('.combo-min-order-input').forEach(inp => {
-        inp.oninput = (e) => {
-          const matId = inp.getAttribute('data-mat-id');
-          const item = materialsState.find(m => m.id === matId);
-          if (item) item.min_order = Math.max(1, parseInt(e.target.value) || 1);
-        };
-      });
-
-      // 3. Max. Order per Baris (Input Number + Popover Datalist: Mendukung 'Tanpa Batas' / Angka)
-      document.querySelectorAll('.combo-max-order-input').forEach(inp => {
-        const handleComboMax = (e) => {
-          const matId = inp.getAttribute('data-mat-id');
-          const item = materialsState.find(m => m.id === matId);
-          if (item) {
-            const raw = e.target.value.trim();
-            if (raw) {
-              const digits = raw.replace(/\D/g, '');
-              const num = digits ? parseInt(digits, 10) : null;
-              item.max_order = num;
-              item.is_unlimited_max_order = false;
-              inp.placeholder = 'Input/Pilih';
-            } else {
-              if (inp.placeholder === 'Tanpa Batas') {
-                item.max_order = null;
-                item.is_unlimited_max_order = true;
-              } else {
-                item.max_order = undefined;
-                item.is_unlimited_max_order = false;
-              }
-            }
-          }
-        };
-        inp.oninput = handleComboMax;
-        inp.onchange = handleComboMax;
-        inp.onblur = (e) => {
-          const matId = inp.getAttribute('data-mat-id');
-          const item = materialsState.find(m => m.id === matId);
-          if (item) {
-            const raw = (inp.value || '').trim();
-            if (raw) {
-              const digits = raw.replace(/\D/g, '');
-              const num = digits ? parseInt(digits, 10) : null;
-              if (num !== null && num > 0) {
-                inp.value = String(num);
-                inp.placeholder = 'Input/Pilih';
+        // 3. Max. Order per Baris (Input Number + Popover Datalist: Mendukung 'Tanpa Batas' / Angka)
+        document.querySelectorAll('.combo-max-order-input').forEach(inp => {
+          const handleComboMax = (e) => {
+            const matId = inp.getAttribute('data-mat-id');
+            const item = materialsState.find(m => m.id === matId);
+            if (item) {
+              const raw = e.target.value.trim();
+              if (raw) {
+                const digits = raw.replace(/\D/g, '');
+                const num = digits ? parseInt(digits, 10) : null;
                 item.max_order = num;
                 item.is_unlimited_max_order = false;
-              } else {
-                inp.value = '';
                 inp.placeholder = 'Input/Pilih';
-                item.max_order = undefined;
-                item.is_unlimited_max_order = false;
-              }
-            } else {
-              if (inp.placeholder === 'Tanpa Batas' || item.is_unlimited_max_order || item.max_order === null) {
-                inp.value = '';
-                inp.placeholder = 'Tanpa Batas';
-                item.max_order = null;
-                item.is_unlimited_max_order = true;
               } else {
-                inp.value = '';
-                inp.placeholder = 'Input/Pilih';
-                item.max_order = undefined;
-                item.is_unlimited_max_order = false;
+                if (inp.placeholder === 'Tanpa Batas') {
+                  item.max_order = null;
+                  item.is_unlimited_max_order = true;
+                } else {
+                  item.max_order = undefined;
+                  item.is_unlimited_max_order = false;
+                }
               }
             }
-          }
-        };
-      });
+          };
+          inp.oninput = handleComboMax;
+          inp.onchange = handleComboMax;
+          inp.onblur = (e) => {
+            const matId = inp.getAttribute('data-mat-id');
+            const item = materialsState.find(m => m.id === matId);
+            if (item) {
+              const raw = (inp.value || '').trim();
+              if (raw) {
+                const digits = raw.replace(/\D/g, '');
+                const num = digits ? parseInt(digits, 10) : null;
+                if (num !== null && num > 0) {
+                  inp.value = String(num);
+                  inp.placeholder = 'Input/Pilih';
+                  item.max_order = num;
+                  item.is_unlimited_max_order = false;
+                } else {
+                  inp.value = '';
+                  inp.placeholder = 'Input/Pilih';
+                  item.max_order = undefined;
+                  item.is_unlimited_max_order = false;
+                }
+              } else {
+                if (inp.placeholder === 'Tanpa Batas' || item.is_unlimited_max_order || item.max_order === null) {
+                  inp.value = '';
+                  inp.placeholder = 'Tanpa Batas';
+                  item.max_order = null;
+                  item.is_unlimited_max_order = true;
+                } else {
+                  inp.value = '';
+                  inp.placeholder = 'Input/Pilih';
+                  item.max_order = undefined;
+                  item.is_unlimited_max_order = false;
+                }
+              }
+            }
+          };
+        });
 
-      // 4. Header Checkbox: Harga Grosir
-      const chkWholesale = document.getElementById('chk-combo-header-wholesale');
-      if (chkWholesale) {
-        chkWholesale.onchange = (e) => {
-          primaryState.has_wholesale = e.target.checked;
-          refreshCombinationMatrixTable();
-          updateProductCardLivePreview();
-        };
-      }
+        // 4. Header Checkbox: Harga Grosir
+        const chkWholesale = document.getElementById('chk-combo-header-wholesale');
+        if (chkWholesale) {
+          chkWholesale.onchange = (e) => {
+            primaryState.has_wholesale = e.target.checked;
+            refreshCombinationMatrixTable();
+            updateProductCardLivePreview();
+          };
+        }
 
-      // 5. Header Checkbox: Kelipatan Order
-      const chkMultiple = document.getElementById('chk-combo-header-order-multiple');
-      if (chkMultiple) {
-        chkMultiple.onchange = (e) => {
-          primaryState.has_order_multiple = e.target.checked;
-          refreshCombinationMatrixTable();
-          updateProductCardLivePreview();
-        };
-      }
+        // 5. Header Checkbox: Kelipatan Order
+        const chkMultiple = document.getElementById('chk-combo-header-order-multiple');
+        if (chkMultiple) {
+          chkMultiple.onchange = (e) => {
+            primaryState.has_order_multiple = e.target.checked;
+            refreshCombinationMatrixTable();
+            updateProductCardLivePreview();
+          };
+        }
 
-      // 6. Sel Ringkasan Ketersediaan Opsi Variasi 2 s.d. 4 (Hanya Baca + Popover)
-      document.querySelectorAll('.combo-summary-cell').forEach(cell => {
-        const handleOpen = () => {
-          const matId = cell.getAttribute('data-mat-id');
-          const tier = cell.getAttribute('data-tier');
-          showMatrixAvailabilityPopover(cell, matId, tier);
-        };
-        cell.onclick = (e) => {
-          e.stopPropagation();
-          handleOpen();
-        };
-        cell.onkeydown = (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
+        // 6. Sel Ringkasan Ketersediaan Opsi Variasi 2 s.d. 4 (Hanya Baca + Popover)
+        document.querySelectorAll('.combo-summary-cell').forEach(cell => {
+          const handleOpen = () => {
+            const matId = cell.getAttribute('data-mat-id');
+            const tier = cell.getAttribute('data-tier');
+            showMatrixAvailabilityPopover(cell, matId, tier);
+          };
+          cell.onclick = (e) => {
             e.stopPropagation();
             handleOpen();
-          }
-        };
-      });
-
-      // 7. Tombol Buka Modal Harga Grosir
-      document.querySelectorAll('.btn-open-wholesale-modal').forEach(btn => {
-        btn.onclick = () => {
-          const matId = btn.getAttribute('data-mat-id');
-          const matName = btn.getAttribute('data-mat-name');
-          openWholesaleModal(matId, matName);
-        };
-      });
-
-      // 8. Input Langsung Kelipatan Order per Baris (Tanpa Modal & Tanpa Ikon)
-      document.querySelectorAll('.combo-order-multiple-input').forEach(inp => {
-        const handleMultipleInput = (e) => {
-          const matId = inp.getAttribute('data-mat-id');
-          const cell = inp.closest('td') || inp.parentElement;
-          const errEl = cell?.querySelector(`.combo-multiple-error[data-mat-id="${matId}"]`);
-          const mat = materialsState.find(m => String(m.id) === String(matId));
-          const raw = inp.value.trim();
-          const rLow = raw.toLowerCase();
-
-          if (rLow === 'tanpa kelipatan') {
-            if (mat) {
-              mat.order_multiple = 'Tanpa Kelipatan';
-              mat.order_multiple_type = 'none';
-              mat.order_multiple_value = 1;
-              mat.step_multiplier = 1;
+          };
+          cell.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              handleOpen();
             }
-            if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
-            primaryState.order_multiples_by_variant[matId] = 1;
-            if (errEl) errEl.classList.add('hidden');
-            inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
-            inp.classList.add('border-slate-300');
-          } else if (raw) {
-            const digits = raw.replace(/\D/g, '');
-            if (inp.value !== digits && rLow !== 'tanpa kelipatan') {
-              inp.value = digits;
-            }
-            if (digits) {
-              const num = parseInt(digits, 10);
-              if (num < 2) {
-                if (mat) {
-                  mat.order_multiple = num;
-                  mat.order_multiple_type = null;
-                  mat.order_multiple_value = num;
-                  mat.step_multiplier = num;
+          };
+        });
+
+        // 7. Tombol Buka Modal Harga Grosir
+        document.querySelectorAll('.btn-open-wholesale-modal').forEach(btn => {
+          btn.onclick = () => {
+            const matId = btn.getAttribute('data-mat-id');
+            const matName = btn.getAttribute('data-mat-name');
+            openWholesaleModal(matId, matName);
+          };
+        });
+
+        // 8. Input Langsung Kelipatan Order per Baris (Tanpa Modal & Tanpa Ikon)
+        document.querySelectorAll('.combo-order-multiple-input').forEach(inp => {
+          const handleMultipleInput = (e) => {
+            const matId = inp.getAttribute('data-mat-id');
+            const cell = inp.closest('td') || inp.parentElement;
+            const errEl = cell?.querySelector(`.combo-multiple-error[data-mat-id="${matId}"]`);
+            const mat = materialsState.find(m => String(m.id) === String(matId));
+            const raw = inp.value.trim();
+            const rLow = raw.toLowerCase();
+
+            if (rLow === 'tanpa kelipatan') {
+              if (mat) {
+                mat.order_multiple = 'Tanpa Kelipatan';
+                mat.order_multiple_type = 'none';
+                mat.order_multiple_value = 1;
+                mat.step_multiplier = 1;
+              }
+              if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
+              primaryState.order_multiples_by_variant[matId] = 1;
+              if (errEl) errEl.classList.add('hidden');
+              inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+              inp.classList.add('border-slate-300');
+            } else if (raw) {
+              const digits = raw.replace(/\D/g, '');
+              if (inp.value !== digits && rLow !== 'tanpa kelipatan') {
+                inp.value = digits;
+              }
+              if (digits) {
+                const num = parseInt(digits, 10);
+                if (num < 2) {
+                  if (mat) {
+                    mat.order_multiple = num;
+                    mat.order_multiple_type = null;
+                    mat.order_multiple_value = num;
+                    mat.step_multiplier = num;
+                  }
+                  if (errEl) errEl.classList.remove('hidden');
+                  inp.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+                  inp.classList.remove('border-slate-300');
+                } else {
+                  if (mat) {
+                    mat.order_multiple = num;
+                    mat.order_multiple_type = 'spesifik';
+                    mat.order_multiple_value = num;
+                    mat.step_multiplier = num;
+                  }
+                  if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
+                  primaryState.order_multiples_by_variant[matId] = num;
+                  if (errEl) errEl.classList.add('hidden');
+                  inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+                  inp.classList.add('border-slate-300');
                 }
-                if (errEl) errEl.classList.remove('hidden');
-                inp.classList.add('border-red-500', 'ring-1', 'ring-red-400');
-                inp.classList.remove('border-slate-300');
               } else {
                 if (mat) {
-                  mat.order_multiple = num;
-                  mat.order_multiple_type = 'spesifik';
-                  mat.order_multiple_value = num;
-                  mat.step_multiplier = num;
+                  mat.order_multiple = null;
+                  mat.order_multiple_type = null;
+                  mat.order_multiple_value = null;
                 }
-                if (!primaryState.order_multiples_by_variant) primaryState.order_multiples_by_variant = {};
-                primaryState.order_multiples_by_variant[matId] = num;
                 if (errEl) errEl.classList.add('hidden');
                 inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
                 inp.classList.add('border-slate-300');
@@ -20393,176 +21978,164 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
               inp.classList.add('border-slate-300');
             }
-          } else {
-            if (mat) {
-              mat.order_multiple = null;
-              mat.order_multiple_type = null;
-              mat.order_multiple_value = null;
+          };
+
+          inp.oninput = handleMultipleInput;
+          inp.onchange = handleMultipleInput;
+          inp.onblur = (e) => {
+            const raw = inp.value.trim();
+            const rLow = raw.toLowerCase();
+            if (rLow === 'tanpa kelipatan') {
+              inp.value = 'Tanpa Kelipatan';
             }
-            if (errEl) errEl.classList.add('hidden');
-            inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
-            inp.classList.add('border-slate-300');
-          }
-        };
-
-        inp.oninput = handleMultipleInput;
-        inp.onchange = handleMultipleInput;
-        inp.onblur = (e) => {
-          const raw = inp.value.trim();
-          const rLow = raw.toLowerCase();
-          if (rLow === 'tanpa kelipatan') {
-            inp.value = 'Tanpa Kelipatan';
-          }
-          handleMultipleInput(e);
-        };
-      });
-    }
-    bindCombinationMatrixEvents();
-
-    // =====================================================================
-    // LOGIKA MODAL HARGA GROSIR (PER-BARIS INDEPENDEN)
-    // =====================================================================
-    let currentWholesaleContext = {
-      matId: null,
-      matName: '',
-      normalBuffer: null,
-      tieredBuffer: []
-    };
-
-    function openWholesaleModal(matId, matName) {
-      const modal = document.getElementById('modal-wholesale-config');
-      if (!modal) return;
-
-      const title = document.getElementById('wholesale-modal-title');
-      const subtitle = document.getElementById('wholesale-modal-subtitle');
-      if (title) title.textContent = 'Pengaturan Harga Grosir';
-      if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
-
-      const mat = materialsState.find(m => m.id === matId);
-      const isEnabled = isMatWholesaleActive(mat);
-      const mode = mat?.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]) || null;
-      const rawTiers = mat?.wholesale_tiers || (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[matId]) || [];
-      const clonedTiers = JSON.parse(JSON.stringify(rawTiers || []));
-
-      let initialNormal = null;
-      let initialTiered = [];
-
-      if (mode === 'normal') {
-        initialNormal = clonedTiers.length > 0 ? { ...clonedTiers[0] } : null;
-        initialTiered = clonedTiers.length > 0 ? clonedTiers.map(t => ({ ...t })) : [];
-      } else if (mode === 'tiered') {
-        initialTiered = clonedTiers.map(t => ({ ...t }));
-        initialNormal = clonedTiers.length > 0 ? { ...clonedTiers[0] } : null;
+            handleMultipleInput(e);
+          };
+        });
       }
+      bindCombinationMatrixEvents();
 
-      currentWholesaleContext = {
-        matId,
-        matName,
-        isEnabled,
-        mode: mode || null,
-        normalBuffer: initialNormal,
-        tieredBuffer: initialTiered
+      // =====================================================================
+      // LOGIKA MODAL HARGA GROSIR (PER-BARIS INDEPENDEN)
+      // =====================================================================
+      let currentWholesaleContext = {
+        matId: null,
+        matName: '',
+        normalBuffer: null,
+        tieredBuffer: []
       };
 
-      const switchEnable = modal.querySelector('#modal-wholesale-switch-enable');
-      const switchLabel = modal.querySelector('#modal-wholesale-switch-label');
-      const contentWrapper = modal.querySelector('#modal-wholesale-content-wrapper');
+      function openWholesaleModal(matId, matName) {
+        const modal = document.getElementById('modal-wholesale-config');
+        if (!modal) return;
 
-      if (switchLabel) {
-        switchLabel.textContent = `Aktifkan Harga Grosir Pada Produk Jenis Variasi ${matName || 'Opsi'}`;
-      }
-      if (switchEnable) {
-        switchEnable.checked = isEnabled;
-        switchEnable.onchange = () => {
-          if (contentWrapper) {
-            if (switchEnable.checked) {
-              contentWrapper.classList.remove('hidden');
-            } else {
-              contentWrapper.classList.add('hidden');
-            }
-          }
+        const title = document.getElementById('wholesale-modal-title');
+        if (title) title.textContent = 'Pengaturan Harga Grosir';
+
+        const mat = materialsState.find(m => m.id === matId);
+        const isEnabled = isMatWholesaleActive(mat);
+        const mode = mat?.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[matId]) || null;
+        const rawTiers = mat?.wholesale_tiers || (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[matId]) || [];
+        const clonedTiers = JSON.parse(JSON.stringify(rawTiers || []));
+
+        let initialNormal = null;
+        let initialTiered = [];
+
+        if (mode === 'normal') {
+          initialNormal = clonedTiers.length > 0 ? { ...clonedTiers[0] } : null;
+          initialTiered = clonedTiers.length > 0 ? clonedTiers.map(t => ({ ...t })) : [];
+        } else if (mode === 'tiered') {
+          initialTiered = clonedTiers.map(t => ({ ...t }));
+          initialNormal = clonedTiers.length > 0 ? { ...clonedTiers[0] } : null;
+        }
+
+        currentWholesaleContext = {
+          matId,
+          matName,
+          isEnabled,
+          mode: mode || null,
+          normalBuffer: initialNormal,
+          tieredBuffer: initialTiered
         };
-      }
-      if (contentWrapper) {
-        if (isEnabled) contentWrapper.classList.remove('hidden');
-        else contentWrapper.classList.add('hidden');
-      }
 
-      const radNormal = modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]');
-      const radTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]');
-      if (mode === 'tiered') {
-        if (radTiered) radTiered.checked = true;
-        if (radNormal) radNormal.checked = false;
-      } else if (mode === 'normal') {
-        if (radNormal) radNormal.checked = true;
-        if (radTiered) radTiered.checked = false;
-      } else {
-        if (radNormal) radNormal.checked = false;
-        if (radTiered) radTiered.checked = false;
-      }
-      syncWholesaleModeRadioStyles(modal);
+        const switchEnable = modal.querySelector('#modal-wholesale-switch-enable');
+        const switchLabel = modal.querySelector('#modal-wholesale-switch-label');
+        const contentWrapper = modal.querySelector('#modal-wholesale-content-wrapper');
 
-      const body = document.getElementById('modal-wholesale-body');
-      if (body) {
-        if (mode === 'normal' || mode === 'tiered') {
-          body.innerHTML = renderWholesaleTableForMat(mat);
-          bindWholesaleModalInputs(modal, mat);
+        if (switchLabel) {
+          switchLabel.textContent = `Aktifkan harga grosir untuk ${matName || 'Opsi'}`;
+        }
+        if (switchEnable) {
+          switchEnable.checked = isEnabled;
+          switchEnable.onchange = () => {
+            if (contentWrapper) {
+              if (switchEnable.checked) {
+                contentWrapper.classList.remove('hidden');
+              } else {
+                contentWrapper.classList.add('hidden');
+              }
+            }
+          };
+        }
+        if (contentWrapper) {
+          if (isEnabled) contentWrapper.classList.remove('hidden');
+          else contentWrapper.classList.add('hidden');
+        }
+
+        const radNormal = modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]');
+        const radTiered = modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]');
+        if (mode === 'tiered') {
+          if (radTiered) radTiered.checked = true;
+          if (radNormal) radNormal.checked = false;
+        } else if (mode === 'normal') {
+          if (radNormal) radNormal.checked = true;
+          if (radTiered) radTiered.checked = false;
         } else {
-          body.innerHTML = `
+          if (radNormal) radNormal.checked = false;
+          if (radTiered) radTiered.checked = false;
+        }
+        syncWholesaleModeRadioStyles(modal);
+
+        const body = document.getElementById('modal-wholesale-body');
+        if (body) {
+          if (mode === 'normal' || mode === 'tiered') {
+            body.innerHTML = renderWholesaleTableForMat(mat);
+            bindWholesaleModalInputs(modal, mat);
+          } else {
+            body.innerHTML = `
             <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg">
               Pilih salah satu jenis harga grosir (Satuan atau Bertingkat) di atas.
             </div>
           `;
+          }
+        }
+
+        modal.classList.remove('hidden');
+      }
+
+      function syncWholesaleModeRadioStyles(modal) {
+        const isNormal = Boolean(modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]')?.checked);
+        const isTiered = Boolean(modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked);
+        const lblNormal = modal.querySelector('#lbl-wholesale-normal');
+        const lblTiered = modal.querySelector('#lbl-wholesale-tiered');
+        if (lblNormal) {
+          lblNormal.className = isNormal
+            ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
+        }
+        if (lblTiered) {
+          lblTiered.className = isTiered
+            ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
         }
       }
 
-      modal.classList.remove('hidden');
-    }
+      function renderWholesaleTableForMat(mat) {
+        const modal = document.getElementById('modal-wholesale-config');
+        const checkedMode = modal?.querySelector('input[name="modal_wholesale_mode"]:checked')?.value;
+        const mode = checkedMode || currentWholesaleContext?.mode || mat?.wholesale_mode || null;
 
-    function syncWholesaleModeRadioStyles(modal) {
-      const isNormal = Boolean(modal.querySelector('input[name="modal_wholesale_mode"][value="normal"]')?.checked);
-      const isTiered = Boolean(modal.querySelector('input[name="modal_wholesale_mode"][value="tiered"]')?.checked);
-      const lblNormal = modal.querySelector('#lbl-wholesale-normal');
-      const lblTiered = modal.querySelector('#lbl-wholesale-tiered');
-      if (lblNormal) {
-        lblNormal.className = isNormal
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
-      }
-      if (lblTiered) {
-        lblTiered.className = isTiered
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
-      }
-    }
-
-    function renderWholesaleTableForMat(mat) {
-      const modal = document.getElementById('modal-wholesale-config');
-      const checkedMode = modal?.querySelector('input[name="modal_wholesale_mode"]:checked')?.value;
-      const mode = checkedMode || currentWholesaleContext?.mode || mat?.wholesale_mode || null;
-
-      if (!mode) {
-        return `
+        if (!mode) {
+          return `
           <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg">
             Pilih salah satu jenis harga grosir (Satuan atau Bertingkat) di atas.
           </div>
         `;
-      }
+        }
 
-      if (mode === 'normal') {
-        const tier1 = currentWholesaleContext.normalBuffer ||
-                      (currentWholesaleContext.tieredBuffer && currentWholesaleContext.tieredBuffer[0]) ||
-                      (mat?.wholesale_tiers && mat.wholesale_tiers[0]) ||
-                      (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id]?.[0]) ||
-                      null;
-        const hasNoMax = tier1 ? (tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0 || tier1.hasNoMax === true) : false;
-        const minQty = (tier1 && tier1.min_qty !== undefined && tier1.min_qty !== null && tier1.min_qty !== '') ? tier1.min_qty : '';
-        const maxQty = (tier1 && !hasNoMax && tier1.max_qty !== undefined && tier1.max_qty !== null && tier1.max_qty !== '') ? tier1.max_qty : '';
-        const discount = (tier1 && (tier1.price !== undefined && tier1.price !== null && tier1.price !== ''))
-          ? tier1.price
-          : ((tier1 && tier1.discount) ? tier1.discount : '');
+        if (mode === 'normal') {
+          const tier1 = currentWholesaleContext.normalBuffer ||
+            (currentWholesaleContext.tieredBuffer && currentWholesaleContext.tieredBuffer[0]) ||
+            (mat?.wholesale_tiers && mat.wholesale_tiers[0]) ||
+            (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id]?.[0]) ||
+            null;
+          const hasNoMax = tier1 ? (tier1.max_qty === null || tier1.max_qty === undefined || tier1.max_qty === '' || tier1.max_qty === 0 || tier1.hasNoMax === true) : false;
+          const minQty = (tier1 && tier1.min_qty !== undefined && tier1.min_qty !== null && tier1.min_qty !== '') ? tier1.min_qty : '';
+          const maxQty = (tier1 && !hasNoMax && tier1.max_qty !== undefined && tier1.max_qty !== null && tier1.max_qty !== '') ? tier1.max_qty : '';
+          const discount = (tier1 && (tier1.price !== undefined && tier1.price !== null && tier1.price !== ''))
+            ? tier1.price
+            : ((tier1 && tier1.discount) ? tier1.discount : '');
 
-        return `
+          return `
           <div class="space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
@@ -20612,31 +22185,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             </div>
           </div>
         `;
-      }
+        }
 
-      // Bertingkat
-      let tiers = (currentWholesaleContext.tieredBuffer && currentWholesaleContext.tieredBuffer.length > 0)
-        ? currentWholesaleContext.tieredBuffer
-        : (mat?.wholesale_tiers && mat.wholesale_tiers.length > 0
+        // Bertingkat
+        let tiers = (currentWholesaleContext.tieredBuffer && currentWholesaleContext.tieredBuffer.length > 0)
+          ? currentWholesaleContext.tieredBuffer
+          : (mat?.wholesale_tiers && mat.wholesale_tiers.length > 0
             ? mat.wholesale_tiers
             : (primaryState.wholesale_by_variant && mat && primaryState.wholesale_by_variant[mat.id] ? primaryState.wholesale_by_variant[mat.id] : []));
 
-      // Jika tieredBuffer kosong tapi normalBuffer ada isinya, baris tier 1 mewarisi normalBuffer
-      if ((!tiers || tiers.length === 0) && currentWholesaleContext.normalBuffer && (currentWholesaleContext.normalBuffer.price !== '' || currentWholesaleContext.normalBuffer.min_qty !== '')) {
-        tiers = [{
-          id: currentWholesaleContext.normalBuffer.id || DB.generateUUID(),
-          min_qty: currentWholesaleContext.normalBuffer.min_qty || '',
-          max_qty: currentWholesaleContext.normalBuffer.max_qty || '',
-          price: currentWholesaleContext.normalBuffer.price || ''
-        }];
-        currentWholesaleContext.tieredBuffer = tiers;
-      }
+        // Jika tieredBuffer kosong tapi normalBuffer ada isinya, baris tier 1 mewarisi normalBuffer
+        if ((!tiers || tiers.length === 0) && currentWholesaleContext.normalBuffer && (currentWholesaleContext.normalBuffer.price !== '' || currentWholesaleContext.normalBuffer.min_qty !== '')) {
+          tiers = [{
+            id: currentWholesaleContext.normalBuffer.id || DB.generateUUID(),
+            min_qty: currentWholesaleContext.normalBuffer.min_qty || '',
+            max_qty: currentWholesaleContext.normalBuffer.max_qty || '',
+            price: currentWholesaleContext.normalBuffer.price || ''
+          }];
+          currentWholesaleContext.tieredBuffer = tiers;
+        }
 
-      const currentTiers = (tiers && tiers.length > 0) ? tiers : [
-        { id: DB.generateUUID(), min_qty: '', max_qty: '', price: '' }
-      ];
+        const currentTiers = (tiers && tiers.length > 0) ? tiers : [
+          { id: DB.generateUUID(), min_qty: '', max_qty: '', price: '' }
+        ];
 
-      return `
+        return `
         <div class="space-y-3">
           <div class="overflow-x-auto border border-slate-200 rounded-lg">
             <table class="w-full text-left text-xs">
@@ -20701,131 +22274,131 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           </div>
         </div>
       `;
-    }
+      }
 
-    function checkTierConflicts(modal) {
-      const tbody = modal.querySelector('#wholesale-tiers-table-body');
-      if (!tbody) return { hasConflict: false };
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      const conflictBanner = modal.querySelector('#wholesale-tiered-conflict-msg');
-      const conflictText = conflictBanner?.querySelector('.conflict-text');
+      function checkTierConflicts(modal) {
+        const tbody = modal.querySelector('#wholesale-tiers-table-body');
+        if (!tbody) return { hasConflict: false };
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const conflictBanner = modal.querySelector('#wholesale-tiered-conflict-msg');
+        const conflictText = conflictBanner?.querySelector('.conflict-text');
 
-      let conflictFound = false;
-      let conflictMessage = '';
+        let conflictFound = false;
+        let conflictMessage = '';
 
-      // Reset inline error highlights
-      rows.forEach(r => {
-        r.querySelectorAll('input').forEach(inp => {
-          inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+        // Reset inline error highlights
+        rows.forEach(r => {
+          r.querySelectorAll('input').forEach(inp => {
+            inp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+          });
         });
-      });
 
-      for (let i = 0; i < rows.length; i++) {
-        const minInp = rows[i].querySelector('input[data-field="min_qty"]');
-        const maxInp = rows[i].querySelector('input[data-field="max_qty"]');
-        const minRaw = (minInp?.value || '').trim();
-        const maxRaw = (maxInp?.value || '').trim();
-        const minVal = parseInt(minRaw, 10);
-        const maxVal = maxRaw !== '' ? parseInt(maxRaw, 10) : null;
+        for (let i = 0; i < rows.length; i++) {
+          const minInp = rows[i].querySelector('input[data-field="min_qty"]');
+          const maxInp = rows[i].querySelector('input[data-field="max_qty"]');
+          const minRaw = (minInp?.value || '').trim();
+          const maxRaw = (maxInp?.value || '').trim();
+          const minVal = parseInt(minRaw, 10);
+          const maxVal = maxRaw !== '' ? parseInt(maxRaw, 10) : null;
 
-        // Check reverse range on current row (max < min)
-        if (!isNaN(minVal) && maxVal !== null && !isNaN(maxVal) && maxVal < minVal) {
-          conflictFound = true;
-          conflictMessage = `Baris ke-${i + 1}: Max. Order (${maxVal}) tidak boleh lebih kecil dari Min. Order (${minVal}).`;
-          maxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
-          minInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
-          break;
-        }
-
-        // Check intermediate row with empty max_qty while subsequent rows exist
-        if (i < rows.length - 1 && maxRaw === '' && minRaw !== '') {
-          conflictFound = true;
-          conflictMessage = `Baris ke-${i + 1}: Max. Order wajib diisi karena terdapat tingkatan setelahnya.`;
-          maxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
-          break;
-        }
-
-        // Check range conflict with previous row
-        if (i > 0) {
-          const prevRow = rows[i - 1];
-          const prevMaxInp = prevRow.querySelector('input[data-field="max_qty"]');
-          const prevMaxRaw = (prevMaxInp?.value || '').trim();
-          const prevMaxVal = prevMaxRaw !== '' ? parseInt(prevMaxRaw, 10) : null;
-
-          if (prevMaxVal !== null && !isNaN(prevMaxVal) && !isNaN(minVal) && minVal <= prevMaxVal) {
+          // Check reverse range on current row (max < min)
+          if (!isNaN(minVal) && maxVal !== null && !isNaN(maxVal) && maxVal < minVal) {
             conflictFound = true;
-            conflictMessage = `Konflik rentang tier: Min. Order baris ke-${i + 1} (${minVal}) harus lebih besar dari Max. Order baris ke-${i} (${prevMaxVal}).`;
+            conflictMessage = `Baris ke-${i + 1}: Max. Order (${maxVal}) tidak boleh lebih kecil dari Min. Order (${minVal}).`;
+            maxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
             minInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
-            prevMaxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
             break;
           }
-        }
-      }
 
-      if (conflictBanner && conflictText) {
-        if (conflictFound) {
-          conflictText.textContent = conflictMessage;
-          conflictBanner.classList.remove('hidden');
-        } else {
-          conflictText.textContent = '';
-          conflictBanner.classList.add('hidden');
-        }
-      }
-
-      return { hasConflict: conflictFound, message: conflictMessage };
-    }
-
-    function bindWholesaleModalInputs(modal, mat) {
-      const inpMin = modal.querySelector('#modal-wholesale-normal-min');
-      const inpMax = modal.querySelector('#modal-wholesale-normal-max');
-      const inpDisc = modal.querySelector('#modal-wholesale-normal-discount');
-      const chkNoMax = modal.querySelector('#chk-wholesale-no-max');
-      const noteNormal = modal.querySelector('#wholesale-normal-note');
-
-      function updateNormalFormulaNote() {
-        const minVal = parseInt(inpMin?.value) || 1;
-        const noMax = chkNoMax?.checked;
-        const maxVal = noMax ? '' : (parseInt(inpMax?.value) || minVal);
-        const discVal = parseFloat(inpDisc?.value) || 0;
-        if (noteNormal) {
-          noteNormal.innerHTML = `Setiap pembelian <b>${minVal}</b> hingga <b>${noMax ? 'seterusnya (tanpa batas)' : maxVal}</b> maka mendapatkan potongan <b>Rp${discVal.toLocaleString('id-ID')}</b> per pcs.`;
-        }
-      }
-
-      if (chkNoMax && inpMax) {
-        chkNoMax.onchange = (e) => {
-          inpMax.disabled = e.target.checked;
-          if (e.target.checked) {
-            inpMax.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
-            inpMax.value = '';
-          } else {
-            inpMax.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+          // Check intermediate row with empty max_qty while subsequent rows exist
+          if (i < rows.length - 1 && maxRaw === '' && minRaw !== '') {
+            conflictFound = true;
+            conflictMessage = `Baris ke-${i + 1}: Max. Order wajib diisi karena terdapat tingkatan setelahnya.`;
+            maxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+            break;
           }
-          updateNormalFormulaNote();
-        };
+
+          // Check range conflict with previous row
+          if (i > 0) {
+            const prevRow = rows[i - 1];
+            const prevMaxInp = prevRow.querySelector('input[data-field="max_qty"]');
+            const prevMaxRaw = (prevMaxInp?.value || '').trim();
+            const prevMaxVal = prevMaxRaw !== '' ? parseInt(prevMaxRaw, 10) : null;
+
+            if (prevMaxVal !== null && !isNaN(prevMaxVal) && !isNaN(minVal) && minVal <= prevMaxVal) {
+              conflictFound = true;
+              conflictMessage = `Konflik rentang tier: Min. Order baris ke-${i + 1} (${minVal}) harus lebih besar dari Max. Order baris ke-${i} (${prevMaxVal}).`;
+              minInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+              prevMaxInp?.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+              break;
+            }
+          }
+        }
+
+        if (conflictBanner && conflictText) {
+          if (conflictFound) {
+            conflictText.textContent = conflictMessage;
+            conflictBanner.classList.remove('hidden');
+          } else {
+            conflictText.textContent = '';
+            conflictBanner.classList.add('hidden');
+          }
+        }
+
+        return { hasConflict: conflictFound, message: conflictMessage };
       }
 
-      if (inpMin) inpMin.oninput = updateNormalFormulaNote;
-      if (inpMax) inpMax.oninput = updateNormalFormulaNote;
-      if (inpDisc) inpDisc.oninput = updateNormalFormulaNote;
+      function bindWholesaleModalInputs(modal, mat) {
+        const inpMin = modal.querySelector('#modal-wholesale-normal-min');
+        const inpMax = modal.querySelector('#modal-wholesale-normal-max');
+        const inpDisc = modal.querySelector('#modal-wholesale-normal-discount');
+        const chkNoMax = modal.querySelector('#chk-wholesale-no-max');
+        const noteNormal = modal.querySelector('#wholesale-normal-note');
 
-      const btnAddTier = modal.querySelector('#btn-add-wholesale-tier');
-      if (btnAddTier) {
-        btnAddTier.onclick = () => {
-          const tbody = modal.querySelector('#wholesale-tiers-table-body');
-          if (!tbody) return;
-          const rows = tbody.querySelectorAll('tr');
-          const lastRow = rows[rows.length - 1];
-          const lastMaxInp = lastRow?.querySelector('input[data-field="max_qty"]');
-          const rawLastMax = (lastMaxInp?.value || '').trim();
-          const lastMaxVal = parseInt(rawLastMax, 10);
-          const newMin = (!isNaN(lastMaxVal) && lastMaxVal > 0) ? (lastMaxVal + 1) : '';
+        function updateNormalFormulaNote() {
+          const minVal = parseInt(inpMin?.value) || 1;
+          const noMax = chkNoMax?.checked;
+          const maxVal = noMax ? '' : (parseInt(inpMax?.value) || minVal);
+          const discVal = parseFloat(inpDisc?.value) || 0;
+          if (noteNormal) {
+            noteNormal.innerHTML = `Setiap pembelian <b>${minVal}</b> hingga <b>${noMax ? 'seterusnya (tanpa batas)' : maxVal}</b> maka mendapatkan potongan <b>Rp${discVal.toLocaleString('id-ID')}</b> per pcs.`;
+          }
+        }
 
-          const newTr = document.createElement('tr');
-          newTr.setAttribute('data-tier-id', DB.generateUUID());
-          newTr.setAttribute('data-idx', rows.length);
-          newTr.className = 'divide-y divide-slate-200';
-          newTr.innerHTML = `
+        if (chkNoMax && inpMax) {
+          chkNoMax.onchange = (e) => {
+            inpMax.disabled = e.target.checked;
+            if (e.target.checked) {
+              inpMax.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+              inpMax.value = '';
+            } else {
+              inpMax.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+            }
+            updateNormalFormulaNote();
+          };
+        }
+
+        if (inpMin) inpMin.oninput = updateNormalFormulaNote;
+        if (inpMax) inpMax.oninput = updateNormalFormulaNote;
+        if (inpDisc) inpDisc.oninput = updateNormalFormulaNote;
+
+        const btnAddTier = modal.querySelector('#btn-add-wholesale-tier');
+        if (btnAddTier) {
+          btnAddTier.onclick = () => {
+            const tbody = modal.querySelector('#wholesale-tiers-table-body');
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr');
+            const lastRow = rows[rows.length - 1];
+            const lastMaxInp = lastRow?.querySelector('input[data-field="max_qty"]');
+            const rawLastMax = (lastMaxInp?.value || '').trim();
+            const lastMaxVal = parseInt(rawLastMax, 10);
+            const newMin = (!isNaN(lastMaxVal) && lastMaxVal > 0) ? (lastMaxVal + 1) : '';
+
+            const newTr = document.createElement('tr');
+            newTr.setAttribute('data-tier-id', DB.generateUUID());
+            newTr.setAttribute('data-idx', rows.length);
+            newTr.className = 'divide-y divide-slate-200';
+            newTr.innerHTML = `
             <td class="p-2.5 text-center font-bold text-slate-600 tier-number">${rows.length + 1}</td>
             <td class="p-2.5">
               <input type="number" data-field="min_qty" value="${newMin}" placeholder="Min" class="tiered-min-input w-20 px-2 py-1.5 rounded border border-slate-300 text-xs font-bold text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)]" />
@@ -20842,368 +22415,368 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               </button>
             </td>
           `;
-          tbody.appendChild(newTr);
+            tbody.appendChild(newTr);
 
-          // Enable delete button on all rows since row count > 1
-          tbody.querySelectorAll('.btn-delete-wholesale-tier').forEach(b => b.removeAttribute('disabled'));
+            // Enable delete button on all rows since row count > 1
+            tbody.querySelectorAll('.btn-delete-wholesale-tier').forEach(b => b.removeAttribute('disabled'));
 
-          bindTierDeleteAndAutoMin(modal);
-          checkTierConflicts(modal);
-        };
-      }
-      bindTierDeleteAndAutoMin(modal);
-    }
-
-    function bindTierDeleteAndAutoMin(modal) {
-      modal.querySelectorAll('.btn-delete-wholesale-tier').forEach(btn => {
-        btn.onclick = (e) => {
-          const row = e.target.closest('tr');
-          const tbody = row?.parentElement;
-          if (tbody && tbody.querySelectorAll('tr').length > 1) {
-            row.remove();
-            const remainingRows = tbody.querySelectorAll('tr');
-            remainingRows.forEach((r, idx) => {
-              r.setAttribute('data-idx', idx);
-              const tdNo = r.querySelector('.tier-number') || r.querySelector('td:first-child');
-              if (tdNo) tdNo.textContent = String(idx + 1);
-            });
-            if (remainingRows.length === 1) {
-              remainingRows[0].querySelector('.btn-delete-wholesale-tier')?.setAttribute('disabled', 'true');
-            }
+            bindTierDeleteAndAutoMin(modal);
             checkTierConflicts(modal);
+          };
+        }
+        bindTierDeleteAndAutoMin(modal);
+      }
+
+      function bindTierDeleteAndAutoMin(modal) {
+        modal.querySelectorAll('.btn-delete-wholesale-tier').forEach(btn => {
+          btn.onclick = (e) => {
+            const row = e.target.closest('tr');
+            const tbody = row?.parentElement;
+            if (tbody && tbody.querySelectorAll('tr').length > 1) {
+              row.remove();
+              const remainingRows = tbody.querySelectorAll('tr');
+              remainingRows.forEach((r, idx) => {
+                r.setAttribute('data-idx', idx);
+                const tdNo = r.querySelector('.tier-number') || r.querySelector('td:first-child');
+                if (tdNo) tdNo.textContent = String(idx + 1);
+              });
+              if (remainingRows.length === 1) {
+                remainingRows[0].querySelector('.btn-delete-wholesale-tier')?.setAttribute('disabled', 'true');
+              }
+              checkTierConflicts(modal);
+            }
+          };
+        });
+
+        // Bind input events to check conflicts without overwriting seller values
+        modal.querySelectorAll('#wholesale-tiers-table-body input').forEach(inp => {
+          inp.oninput = () => checkTierConflicts(modal);
+        });
+      }
+
+      const modalWholesale = document.getElementById('modal-wholesale-config');
+      if (modalWholesale) {
+        modalWholesale.querySelectorAll('input[name="modal_wholesale_mode"]').forEach(rad => {
+          rad.onchange = () => {
+            // Tangkap seluruh input DOM yang sedang aktif sebelum re-render tampilan baru
+            const currentTableBody = modalWholesale.querySelector('#wholesale-tiers-table-body');
+            if (currentTableBody) {
+              // Tampilan sebelumnya adalah Bertingkat
+              const rows = currentTableBody.querySelectorAll('tr');
+              const capturedTiers = [];
+              rows.forEach(tr => {
+                const minInp = tr.querySelector('input[data-field="min_qty"]');
+                const maxInp = tr.querySelector('input[data-field="max_qty"]');
+                const priceInp = tr.querySelector('input[data-field="price"]');
+                capturedTiers.push({
+                  id: tr.getAttribute('data-tier-id') || DB.generateUUID(),
+                  min_qty: minInp?.value !== '' ? (parseInt(minInp?.value) || minInp?.value) : '',
+                  max_qty: (maxInp?.value !== '' && maxInp?.value !== null && maxInp?.value !== undefined) ? parseInt(maxInp.value) : null,
+                  price: priceInp?.value !== '' ? (parseFloat(priceInp.value) || priceInp.value) : ''
+                });
+              });
+              currentWholesaleContext.tieredBuffer = capturedTiers;
+              if (capturedTiers.length > 0) {
+                const t1 = capturedTiers[0];
+                if (!currentWholesaleContext.normalBuffer || !currentWholesaleContext.normalBuffer.price || t1.price) {
+                  currentWholesaleContext.normalBuffer = {
+                    id: t1.id,
+                    min_qty: t1.min_qty,
+                    max_qty: t1.max_qty,
+                    price: t1.price,
+                    hasNoMax: t1.max_qty === null || t1.max_qty === ''
+                  };
+                }
+              }
+            } else {
+              // Tampilan sebelumnya adalah Normal
+              const inpMin = modalWholesale.querySelector('#modal-wholesale-normal-min');
+              const inpMax = modalWholesale.querySelector('#modal-wholesale-normal-max');
+              const inpDisc = modalWholesale.querySelector('#modal-wholesale-normal-discount');
+              const chkNoMax = modalWholesale.querySelector('#chk-wholesale-no-max');
+              if (inpMin || inpMax || inpDisc) {
+                const minVal = inpMin?.value !== '' ? (parseInt(inpMin?.value) || inpMin?.value) : '';
+                const hasNoMax = Boolean(chkNoMax?.checked);
+                const maxVal = hasNoMax ? null : (inpMax?.value !== '' ? (parseInt(inpMax?.value) || inpMax?.value) : '');
+                const discVal = inpDisc?.value !== '' ? (parseFloat(inpDisc?.value) || inpDisc?.value) : '';
+                currentWholesaleContext.normalBuffer = {
+                  id: currentWholesaleContext.normalBuffer?.id || DB.generateUUID(),
+                  min_qty: minVal,
+                  max_qty: maxVal,
+                  price: discVal,
+                  hasNoMax: hasNoMax
+                };
+                if (!currentWholesaleContext.tieredBuffer || currentWholesaleContext.tieredBuffer.length <= 1) {
+                  currentWholesaleContext.tieredBuffer = [{
+                    id: currentWholesaleContext.normalBuffer.id,
+                    min_qty: minVal,
+                    max_qty: maxVal,
+                    price: discVal
+                  }];
+                } else {
+                  // Pertahankan semua tier berikutnya (Tier 2, 3, dst.), sinkronkan hanya Tier 1
+                  currentWholesaleContext.tieredBuffer[0].min_qty = minVal;
+                  currentWholesaleContext.tieredBuffer[0].max_qty = maxVal;
+                  currentWholesaleContext.tieredBuffer[0].price = discVal;
+                }
+              }
+            }
+
+            // Catatan: TIDAK memodifikasi mat.wholesale_tiers atau mat.wholesale_mode di sini.
+            // State materialsState dan primaryState hanya diperbarui saat pengguna klik 'Simpan Pengaturan'.
+
+            currentWholesaleContext.mode = rad.value;
+            syncWholesaleModeRadioStyles(modalWholesale);
+            const body = document.getElementById('modal-wholesale-body');
+            if (body) {
+              const mat = materialsState.find(m => m.id === currentWholesaleContext.matId);
+              body.innerHTML = renderWholesaleTableForMat(mat);
+              bindWholesaleModalInputs(modalWholesale, mat);
+            }
+          };
+        });
+      }
+
+      const btnSaveWholesale = document.getElementById('btn-save-wholesale-modal');
+      if (btnSaveWholesale) {
+        btnSaveWholesale.onclick = () => {
+          const modal = document.getElementById('modal-wholesale-config');
+          if (!modal) return;
+          const matId = currentWholesaleContext.matId;
+          const mat = materialsState.find(m => m.id === matId);
+
+          const switchEnable = modal.querySelector('#modal-wholesale-switch-enable');
+          const isSwitchOn = switchEnable ? Boolean(switchEnable.checked) : false;
+
+          if (!isSwitchOn) {
+            // Switch OFF: nonaktifkan grosir pada baris ini tanpa menghapus konfigurasi harga tersimpan
+            if (mat) {
+              mat.is_wholesale_enabled = false;
+            }
+            primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+            primaryState.wholesale_enabled_by_variant[matId] = false;
+
+            modal.classList.add('hidden');
+            refreshCombinationMatrixTable();
+            updateProductCardLivePreview();
+            return;
           }
-        };
-      });
 
-      // Bind input events to check conflicts without overwriting seller values
-      modal.querySelectorAll('#wholesale-tiers-table-body input').forEach(inp => {
-        inp.oninput = () => checkTierConflicts(modal);
-      });
-    }
+          const radChecked = modal.querySelector('input[name="modal_wholesale_mode"]:checked');
+          if (!radChecked) {
+            alert('Silakan pilih salah satu jenis harga grosir (Satuan atau Bertingkat).');
+            return;
+          }
+          const isTiered = (radChecked.value === 'tiered');
 
-    const modalWholesale = document.getElementById('modal-wholesale-config');
-    if (modalWholesale) {
-      modalWholesale.querySelectorAll('input[name="modal_wholesale_mode"]').forEach(rad => {
-        rad.onchange = () => {
-          // Tangkap seluruh input DOM yang sedang aktif sebelum re-render tampilan baru
-          const currentTableBody = modalWholesale.querySelector('#wholesale-tiers-table-body');
-          if (currentTableBody) {
-            // Tampilan sebelumnya adalah Bertingkat
-            const rows = currentTableBody.querySelectorAll('tr');
-            const capturedTiers = [];
-            rows.forEach(tr => {
+          if (!isTiered) {
+            const inpMin = modal.querySelector('#modal-wholesale-normal-min');
+            const inpMax = modal.querySelector('#modal-wholesale-normal-max');
+            const inpDisc = modal.querySelector('#modal-wholesale-normal-discount');
+            const chkNoMax = modal.querySelector('#chk-wholesale-no-max');
+
+            const discV = parseFloat(inpDisc?.value) || 0;
+            if (discV <= 0) {
+              alert('Potongan harga grosir harus lebih besar dari 0.');
+              return;
+            }
+            const minV = (inpMin?.value !== undefined && inpMin?.value !== '') ? parseInt(inpMin.value) : 1;
+            if (isNaN(minV) || minV < 1) {
+              alert('Min. Order harus bernilai minimal 1.');
+              return;
+            }
+            const maxV = chkNoMax?.checked ? null : (parseInt(inpMax?.value) || null);
+            if (!chkNoMax?.checked && maxV !== null && maxV < minV) {
+              alert('Max. Order tidak boleh lebih kecil dari Min. Order.');
+              return;
+            }
+
+            const tierData = [{
+              id: DB.generateUUID(),
+              min_qty: minV,
+              max_qty: maxV,
+              price: discV
+            }];
+
+            if (mat) {
+              mat.is_wholesale_enabled = true;
+              mat.wholesale_mode = 'normal';
+              mat.wholesale_tiers = tierData;
+            }
+            primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+            primaryState.wholesale_enabled_by_variant[matId] = true;
+            primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
+            primaryState.wholesale_mode_by_variant[matId] = 'normal';
+            primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
+            primaryState.wholesale_by_variant[matId] = tierData;
+          } else {
+            const conflict = checkTierConflicts(modal);
+            if (conflict.hasConflict) {
+              alert(conflict.message);
+              return;
+            }
+
+            const gatheredTiers = [];
+            const trList = Array.from(modal.querySelectorAll('#wholesale-tiers-table-body tr'));
+            let hasEmpty = false;
+            let reverseRow = null;
+            let intermediateMissingMax = null;
+            let overlapMsg = null;
+
+            for (let idx = 0; idx < trList.length; idx++) {
+              const tr = trList[idx];
               const minInp = tr.querySelector('input[data-field="min_qty"]');
               const maxInp = tr.querySelector('input[data-field="max_qty"]');
               const priceInp = tr.querySelector('input[data-field="price"]');
-              capturedTiers.push({
-                id: tr.getAttribute('data-tier-id') || DB.generateUUID(),
-                min_qty: minInp?.value !== '' ? (parseInt(minInp?.value) || minInp?.value) : '',
-                max_qty: (maxInp?.value !== '' && maxInp?.value !== null && maxInp?.value !== undefined) ? parseInt(maxInp.value) : null,
-                price: priceInp?.value !== '' ? (parseFloat(priceInp.value) || priceInp.value) : ''
-              });
-            });
-            currentWholesaleContext.tieredBuffer = capturedTiers;
-            if (capturedTiers.length > 0) {
-              const t1 = capturedTiers[0];
-              if (!currentWholesaleContext.normalBuffer || !currentWholesaleContext.normalBuffer.price || t1.price) {
-                currentWholesaleContext.normalBuffer = {
-                  id: t1.id,
-                  min_qty: t1.min_qty,
-                  max_qty: t1.max_qty,
-                  price: t1.price,
-                  hasNoMax: t1.max_qty === null || t1.max_qty === ''
-                };
+              const tId = tr.getAttribute('data-tier-id') || DB.generateUUID();
+
+              const minRaw = (minInp?.value || '').trim();
+              const maxRaw = (maxInp?.value || '').trim();
+              const priceRaw = (priceInp?.value || '').trim();
+
+              const minVal = parseInt(minRaw, 10);
+              const maxVal = maxRaw !== '' ? parseInt(maxRaw, 10) : null;
+              const priceVal = parseFloat(priceRaw);
+
+              if (minRaw === '' || isNaN(minVal) || minVal < 1 || priceRaw === '' || isNaN(priceVal) || priceVal <= 0) {
+                hasEmpty = true;
+                break;
               }
-            }
-          } else {
-            // Tampilan sebelumnya adalah Normal
-            const inpMin = modalWholesale.querySelector('#modal-wholesale-normal-min');
-            const inpMax = modalWholesale.querySelector('#modal-wholesale-normal-max');
-            const inpDisc = modalWholesale.querySelector('#modal-wholesale-normal-discount');
-            const chkNoMax = modalWholesale.querySelector('#chk-wholesale-no-max');
-            if (inpMin || inpMax || inpDisc) {
-              const minVal = inpMin?.value !== '' ? (parseInt(inpMin?.value) || inpMin?.value) : '';
-              const hasNoMax = Boolean(chkNoMax?.checked);
-              const maxVal = hasNoMax ? null : (inpMax?.value !== '' ? (parseInt(inpMax?.value) || inpMax?.value) : '');
-              const discVal = inpDisc?.value !== '' ? (parseFloat(inpDisc?.value) || inpDisc?.value) : '';
-              currentWholesaleContext.normalBuffer = {
-                id: currentWholesaleContext.normalBuffer?.id || DB.generateUUID(),
+
+              if (maxVal !== null && maxVal < minVal) {
+                reverseRow = idx + 1;
+                break;
+              }
+
+              if (idx < trList.length - 1 && (maxVal === null || isNaN(maxVal))) {
+                intermediateMissingMax = idx + 1;
+                break;
+              }
+
+              if (idx > 0) {
+                const prevTier = gatheredTiers[idx - 1];
+                if (prevTier.max_qty !== null && minVal <= prevTier.max_qty) {
+                  overlapMsg = `Rentang bertumpang tindih: Min. Order baris ke-${idx + 1} (${minVal}) harus lebih besar dari Max. Order baris ke-${idx} (${prevTier.max_qty}).`;
+                  break;
+                }
+              }
+
+              gatheredTiers.push({
+                id: tId,
                 min_qty: minVal,
                 max_qty: maxVal,
-                price: discVal,
-                hasNoMax: hasNoMax
-              };
-              if (!currentWholesaleContext.tieredBuffer || currentWholesaleContext.tieredBuffer.length <= 1) {
-                currentWholesaleContext.tieredBuffer = [{
-                  id: currentWholesaleContext.normalBuffer.id,
-                  min_qty: minVal,
-                  max_qty: maxVal,
-                  price: discVal
-                }];
-              } else {
-                // Pertahankan semua tier berikutnya (Tier 2, 3, dst.), sinkronkan hanya Tier 1
-                currentWholesaleContext.tieredBuffer[0].min_qty = minVal;
-                currentWholesaleContext.tieredBuffer[0].max_qty = maxVal;
-                currentWholesaleContext.tieredBuffer[0].price = discVal;
-              }
+                price: priceVal
+              });
             }
+
+            if (hasEmpty || gatheredTiers.length === 0) {
+              alert('Setiap tingkatan harga grosir wajib memiliki Min. Order (> 0) dan Potongan Harga (> 0).');
+              return;
+            }
+
+            if (reverseRow !== null) {
+              alert(`Max. Order tidak boleh lebih kecil dari Min. Order pada baris ke-${reverseRow}.`);
+              return;
+            }
+
+            if (intermediateMissingMax !== null) {
+              alert(`Baris ke-${intermediateMissingMax} wajib memiliki batas Max. Order karena terdapat tingkatan setelahnya.`);
+              return;
+            }
+
+            if (overlapMsg) {
+              alert(overlapMsg);
+              return;
+            }
+
+            if (mat) {
+              mat.is_wholesale_enabled = true;
+              mat.wholesale_mode = 'tiered';
+              mat.wholesale_tiers = gatheredTiers;
+            }
+            primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
+            primaryState.wholesale_enabled_by_variant[matId] = true;
+            primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
+            primaryState.wholesale_mode_by_variant[matId] = 'tiered';
+            primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
+            primaryState.wholesale_by_variant[matId] = gatheredTiers;
           }
-
-          // Catatan: TIDAK memodifikasi mat.wholesale_tiers atau mat.wholesale_mode di sini.
-          // State materialsState dan primaryState hanya diperbarui saat pengguna klik 'Simpan Pengaturan'.
-
-          currentWholesaleContext.mode = rad.value;
-          syncWholesaleModeRadioStyles(modalWholesale);
-          const body = document.getElementById('modal-wholesale-body');
-          if (body) {
-            const mat = materialsState.find(m => m.id === currentWholesaleContext.matId);
-            body.innerHTML = renderWholesaleTableForMat(mat);
-            bindWholesaleModalInputs(modalWholesale, mat);
-          }
-        };
-      });
-    }
-
-    const btnSaveWholesale = document.getElementById('btn-save-wholesale-modal');
-    if (btnSaveWholesale) {
-      btnSaveWholesale.onclick = () => {
-        const modal = document.getElementById('modal-wholesale-config');
-        if (!modal) return;
-        const matId = currentWholesaleContext.matId;
-        const mat = materialsState.find(m => m.id === matId);
-
-        const switchEnable = modal.querySelector('#modal-wholesale-switch-enable');
-        const isSwitchOn = switchEnable ? Boolean(switchEnable.checked) : false;
-
-        if (!isSwitchOn) {
-          // Switch OFF: nonaktifkan grosir pada baris ini tanpa menghapus konfigurasi harga tersimpan
-          if (mat) {
-            mat.is_wholesale_enabled = false;
-          }
-          primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
-          primaryState.wholesale_enabled_by_variant[matId] = false;
 
           modal.classList.add('hidden');
           refreshCombinationMatrixTable();
           updateProductCardLivePreview();
-          return;
-        }
-
-        const radChecked = modal.querySelector('input[name="modal_wholesale_mode"]:checked');
-        if (!radChecked) {
-          alert('Silakan pilih salah satu jenis harga grosir (Satuan atau Bertingkat).');
-          return;
-        }
-        const isTiered = (radChecked.value === 'tiered');
-
-        if (!isTiered) {
-          const inpMin = modal.querySelector('#modal-wholesale-normal-min');
-          const inpMax = modal.querySelector('#modal-wholesale-normal-max');
-          const inpDisc = modal.querySelector('#modal-wholesale-normal-discount');
-          const chkNoMax = modal.querySelector('#chk-wholesale-no-max');
-
-          const discV = parseFloat(inpDisc?.value) || 0;
-          if (discV <= 0) {
-            alert('Potongan harga grosir harus lebih besar dari 0.');
-            return;
-          }
-          const minV = (inpMin?.value !== undefined && inpMin?.value !== '') ? parseInt(inpMin.value) : 1;
-          if (isNaN(minV) || minV < 1) {
-            alert('Min. Order harus bernilai minimal 1.');
-            return;
-          }
-          const maxV = chkNoMax?.checked ? null : (parseInt(inpMax?.value) || null);
-          if (!chkNoMax?.checked && maxV !== null && maxV < minV) {
-            alert('Max. Order tidak boleh lebih kecil dari Min. Order.');
-            return;
-          }
-
-          const tierData = [{
-            id: DB.generateUUID(),
-            min_qty: minV,
-            max_qty: maxV,
-            price: discV
-          }];
-
-          if (mat) {
-            mat.is_wholesale_enabled = true;
-            mat.wholesale_mode = 'normal';
-            mat.wholesale_tiers = tierData;
-          }
-          primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
-          primaryState.wholesale_enabled_by_variant[matId] = true;
-          primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
-          primaryState.wholesale_mode_by_variant[matId] = 'normal';
-          primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
-          primaryState.wholesale_by_variant[matId] = tierData;
-        } else {
-          const conflict = checkTierConflicts(modal);
-          if (conflict.hasConflict) {
-            alert(conflict.message);
-            return;
-          }
-
-          const gatheredTiers = [];
-          const trList = Array.from(modal.querySelectorAll('#wholesale-tiers-table-body tr'));
-          let hasEmpty = false;
-          let reverseRow = null;
-          let intermediateMissingMax = null;
-          let overlapMsg = null;
-
-          for (let idx = 0; idx < trList.length; idx++) {
-            const tr = trList[idx];
-            const minInp = tr.querySelector('input[data-field="min_qty"]');
-            const maxInp = tr.querySelector('input[data-field="max_qty"]');
-            const priceInp = tr.querySelector('input[data-field="price"]');
-            const tId = tr.getAttribute('data-tier-id') || DB.generateUUID();
-
-            const minRaw = (minInp?.value || '').trim();
-            const maxRaw = (maxInp?.value || '').trim();
-            const priceRaw = (priceInp?.value || '').trim();
-
-            const minVal = parseInt(minRaw, 10);
-            const maxVal = maxRaw !== '' ? parseInt(maxRaw, 10) : null;
-            const priceVal = parseFloat(priceRaw);
-
-            if (minRaw === '' || isNaN(minVal) || minVal < 1 || priceRaw === '' || isNaN(priceVal) || priceVal <= 0) {
-              hasEmpty = true;
-              break;
-            }
-
-            if (maxVal !== null && maxVal < minVal) {
-              reverseRow = idx + 1;
-              break;
-            }
-
-            if (idx < trList.length - 1 && (maxVal === null || isNaN(maxVal))) {
-              intermediateMissingMax = idx + 1;
-              break;
-            }
-
-            if (idx > 0) {
-              const prevTier = gatheredTiers[idx - 1];
-              if (prevTier.max_qty !== null && minVal <= prevTier.max_qty) {
-                overlapMsg = `Rentang bertumpang tindih: Min. Order baris ke-${idx + 1} (${minVal}) harus lebih besar dari Max. Order baris ke-${idx} (${prevTier.max_qty}).`;
-                break;
-              }
-            }
-
-            gatheredTiers.push({
-              id: tId,
-              min_qty: minVal,
-              max_qty: maxVal,
-              price: priceVal
-            });
-          }
-
-          if (hasEmpty || gatheredTiers.length === 0) {
-            alert('Setiap tingkatan harga grosir wajib memiliki Min. Order (> 0) dan Potongan Harga (> 0).');
-            return;
-          }
-
-          if (reverseRow !== null) {
-            alert(`Max. Order tidak boleh lebih kecil dari Min. Order pada baris ke-${reverseRow}.`);
-            return;
-          }
-
-          if (intermediateMissingMax !== null) {
-            alert(`Baris ke-${intermediateMissingMax} wajib memiliki batas Max. Order karena terdapat tingkatan setelahnya.`);
-            return;
-          }
-
-          if (overlapMsg) {
-            alert(overlapMsg);
-            return;
-          }
-
-          if (mat) {
-            mat.is_wholesale_enabled = true;
-            mat.wholesale_mode = 'tiered';
-            mat.wholesale_tiers = gatheredTiers;
-          }
-          primaryState.wholesale_enabled_by_variant = primaryState.wholesale_enabled_by_variant || {};
-          primaryState.wholesale_enabled_by_variant[matId] = true;
-          primaryState.wholesale_mode_by_variant = primaryState.wholesale_mode_by_variant || {};
-          primaryState.wholesale_mode_by_variant[matId] = 'tiered';
-          primaryState.wholesale_by_variant = primaryState.wholesale_by_variant || {};
-          primaryState.wholesale_by_variant[matId] = gatheredTiers;
-        }
-
-        modal.classList.add('hidden');
-        refreshCombinationMatrixTable();
-        updateProductCardLivePreview();
-      };
-    }
-
-    // =====================================================================
-    // LOGIKA MODAL KELIPATAN ORDER (PER-BARIS INDEPENDEN)
-    // =====================================================================
-    let currentMultipleContext = { matId: null, matName: '' };
-
-    function openOrderMultipleModal(matId, matName) {
-      currentMultipleContext = { matId, matName };
-      const modal = document.getElementById('modal-order-multiple-config');
-      if (!modal) return;
-
-      const title = document.getElementById('multiple-modal-title');
-      const subtitle = document.getElementById('multiple-modal-subtitle');
-      if (title) title.textContent = 'Pengaturan Kelipatan Order';
-      if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
-
-      const mat = materialsState.find(m => m.id === matId);
-      const type = mat?.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId] !== undefined ? (primaryState.order_multiples_by_variant[matId] > 1 ? 'spesifik' : 'umum') : null);
-      const currentVal = mat?.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId]);
-
-      const radUmum = modal.querySelector('input[name="modal_order_multiple_radio"][value="umum"]');
-      const radSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]');
-      if (type === 'spesifik') {
-        if (radSpesifik) radSpesifik.checked = true;
-        if (radUmum) radUmum.checked = false;
-      } else if (type === 'umum') {
-        if (radUmum) radUmum.checked = true;
-        if (radSpesifik) radSpesifik.checked = false;
-      } else {
-        if (radUmum) radUmum.checked = false;
-        if (radSpesifik) radSpesifik.checked = false;
+        };
       }
-      syncMultipleRadioStyles(modal);
 
-      const body = document.getElementById('modal-order-multiple-body');
-      if (body) {
-        if (type === 'umum' || type === 'spesifik') {
-          body.innerHTML = renderMultipleBody(type, currentVal || 2);
+      // =====================================================================
+      // LOGIKA MODAL KELIPATAN ORDER (PER-BARIS INDEPENDEN)
+      // =====================================================================
+      let currentMultipleContext = { matId: null, matName: '' };
+
+      function openOrderMultipleModal(matId, matName) {
+        currentMultipleContext = { matId, matName };
+        const modal = document.getElementById('modal-order-multiple-config');
+        if (!modal) return;
+
+        const title = document.getElementById('multiple-modal-title');
+        const subtitle = document.getElementById('multiple-modal-subtitle');
+        if (title) title.textContent = 'Pengaturan Kelipatan Order';
+        if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
+
+        const mat = materialsState.find(m => m.id === matId);
+        const type = mat?.order_multiple_type || (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId] !== undefined ? (primaryState.order_multiples_by_variant[matId] > 1 ? 'spesifik' : 'umum') : null);
+        const currentVal = mat?.order_multiple_value !== undefined ? mat.order_multiple_value : (primaryState.order_multiples_by_variant && primaryState.order_multiples_by_variant[matId]);
+
+        const radUmum = modal.querySelector('input[name="modal_order_multiple_radio"][value="umum"]');
+        const radSpesifik = modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]');
+        if (type === 'spesifik') {
+          if (radSpesifik) radSpesifik.checked = true;
+          if (radUmum) radUmum.checked = false;
+        } else if (type === 'umum') {
+          if (radUmum) radUmum.checked = true;
+          if (radSpesifik) radSpesifik.checked = false;
         } else {
-          body.innerHTML = `
+          if (radUmum) radUmum.checked = false;
+          if (radSpesifik) radSpesifik.checked = false;
+        }
+        syncMultipleRadioStyles(modal);
+
+        const body = document.getElementById('modal-order-multiple-body');
+        if (body) {
+          if (type === 'umum' || type === 'spesifik') {
+            body.innerHTML = renderMultipleBody(type, currentVal || 2);
+          } else {
+            body.innerHTML = `
             <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-lg">
               Pilih salah satu jenis kelipatan pesanan (Umum atau Spesifik) di atas.
             </div>
           `;
+          }
+        }
+
+        modal.classList.remove('hidden');
+      }
+
+      function syncMultipleRadioStyles(modal) {
+        const isUmum = Boolean(modal.querySelector('input[name="modal_order_multiple_radio"][value="umum"]')?.checked);
+        const isSpesifik = Boolean(modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]')?.checked);
+        const lblUmum = modal.querySelector('#lbl-multiple-umum');
+        const lblSpesifik = modal.querySelector('#lbl-multiple-spesifik');
+        if (lblUmum) {
+          lblUmum.className = isUmum
+            ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
+        }
+        if (lblSpesifik) {
+          lblSpesifik.className = isSpesifik
+            ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
         }
       }
 
-      modal.classList.remove('hidden');
-    }
-
-    function syncMultipleRadioStyles(modal) {
-      const isUmum = Boolean(modal.querySelector('input[name="modal_order_multiple_radio"][value="umum"]')?.checked);
-      const isSpesifik = Boolean(modal.querySelector('input[name="modal_order_multiple_radio"][value="spesifik"]')?.checked);
-      const lblUmum = modal.querySelector('#lbl-multiple-umum');
-      const lblSpesifik = modal.querySelector('#lbl-multiple-spesifik');
-      if (lblUmum) {
-        lblUmum.className = isUmum
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
-      }
-      if (lblSpesifik) {
-        lblSpesifik.className = isSpesifik
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
-      }
-    }
-
-    function renderMultipleBody(type, currentVal) {
-      if (type === 'spesifik') {
-        return `
+      function renderMultipleBody(type, currentVal) {
+        if (type === 'spesifik') {
+          return `
           <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
             <label class="block text-xs font-bold text-slate-800">
               Kelipatan Pembelian untuk Opsi Ini:
@@ -21221,140 +22794,140 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             <p class="text-[11px] text-slate-400">Contoh: Diatur 10, maka pelanggan hanya dapat memesan opsi ini dalam kelipatan 10 pcs (10, 20, 30, dst).</p>
           </div>
         `;
-      }
-      return `
+        }
+        return `
         <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 leading-relaxed">
           Opsi ini mengikuti kelipatan pesanan umum (1 pcs atau ketentuan standar produk).
         </div>
       `;
-    }
+      }
 
-    const modalMultiple = document.getElementById('modal-order-multiple-config');
-    if (modalMultiple) {
-      modalMultiple.querySelectorAll('input[name="modal_order_multiple_radio"]').forEach(rad => {
-        rad.onchange = () => {
-          syncMultipleRadioStyles(modalMultiple);
-          const mat = materialsState.find(m => m.id === currentMultipleContext.matId);
-          const isSpesifik = rad.value === 'spesifik';
-          const body = document.getElementById('modal-order-multiple-body');
-          if (body) {
-            body.innerHTML = renderMultipleBody(isSpesifik ? 'spesifik' : 'umum', mat?.order_multiple_value || 2);
-          }
-        };
-      });
-    }
+      const modalMultiple = document.getElementById('modal-order-multiple-config');
+      if (modalMultiple) {
+        modalMultiple.querySelectorAll('input[name="modal_order_multiple_radio"]').forEach(rad => {
+          rad.onchange = () => {
+            syncMultipleRadioStyles(modalMultiple);
+            const mat = materialsState.find(m => m.id === currentMultipleContext.matId);
+            const isSpesifik = rad.value === 'spesifik';
+            const body = document.getElementById('modal-order-multiple-body');
+            if (body) {
+              body.innerHTML = renderMultipleBody(isSpesifik ? 'spesifik' : 'umum', mat?.order_multiple_value || 2);
+            }
+          };
+        });
+      }
 
-    const btnSaveMultiple = document.getElementById('btn-save-multiple-modal');
-    if (btnSaveMultiple) {
-      btnSaveMultiple.onclick = () => {
-        const modal = document.getElementById('modal-order-multiple-config');
-        if (!modal) return;
-        const matId = currentMultipleContext.matId;
-        const mat = materialsState.find(m => m.id === matId);
-        const radChecked = modal.querySelector('input[name="modal_order_multiple_radio"]:checked');
-        if (!radChecked) {
-          alert('Silakan pilih salah satu jenis kelipatan (Umum atau Spesifik).');
-          return;
-        }
-        const isSpesifik = (radChecked.value === 'spesifik');
-
-        if (isSpesifik) {
-          const inpVal = document.getElementById('input-variant-multiple-val');
-          const val = parseInt(inpVal?.value) || 2;
-          if (val < 2) {
-            alert('Kelipatan pesanan spesifik minimal bernilai 2.');
+      const btnSaveMultiple = document.getElementById('btn-save-multiple-modal');
+      if (btnSaveMultiple) {
+        btnSaveMultiple.onclick = () => {
+          const modal = document.getElementById('modal-order-multiple-config');
+          if (!modal) return;
+          const matId = currentMultipleContext.matId;
+          const mat = materialsState.find(m => m.id === matId);
+          const radChecked = modal.querySelector('input[name="modal_order_multiple_radio"]:checked');
+          if (!radChecked) {
+            alert('Silakan pilih salah satu jenis kelipatan (Umum atau Spesifik).');
             return;
           }
-          if (mat) {
-            mat.order_multiple_type = 'spesifik';
-            mat.order_multiple_value = val;
+          const isSpesifik = (radChecked.value === 'spesifik');
+
+          if (isSpesifik) {
+            const inpVal = document.getElementById('input-variant-multiple-val');
+            const val = parseInt(inpVal?.value) || 2;
+            if (val < 2) {
+              alert('Kelipatan pesanan spesifik minimal bernilai 2.');
+              return;
+            }
+            if (mat) {
+              mat.order_multiple_type = 'spesifik';
+              mat.order_multiple_value = val;
+            }
+            primaryState.order_multiples_by_variant = primaryState.order_multiples_by_variant || {};
+            primaryState.order_multiples_by_variant[matId] = val;
+          } else {
+            if (mat) {
+              mat.order_multiple_type = 'umum';
+              mat.order_multiple_value = 1;
+            }
+            primaryState.order_multiples_by_variant = primaryState.order_multiples_by_variant || {};
+            primaryState.order_multiples_by_variant[matId] = 1;
           }
-          primaryState.order_multiples_by_variant = primaryState.order_multiples_by_variant || {};
-          primaryState.order_multiples_by_variant[matId] = val;
-        } else {
-          if (mat) {
-            mat.order_multiple_type = 'umum';
-            mat.order_multiple_value = 1;
-          }
-          primaryState.order_multiples_by_variant = primaryState.order_multiples_by_variant || {};
-          primaryState.order_multiples_by_variant[matId] = 1;
-        }
 
-        modal.classList.add('hidden');
-        refreshCombinationMatrixTable();
-        updateProductCardLivePreview();
-      };
-    }
-
-    // =====================================================================
-    // LOGIKA MODAL SPESIFIK OPTIONS (PER-BARIS INDEPENDEN)
-    // =====================================================================
-    let currentSpecificContext = { tier: 'main', matId: null, matName: '' };
-
-    function openSpecificOptionsModal(tier, matId, matName) {
-      currentSpecificContext = { tier, matId, matName };
-      const modal = document.getElementById('modal-specific-options');
-      const title = document.getElementById('specific-modal-title');
-      const subtitle = document.getElementById('specific-modal-subtitle');
-      const container = document.getElementById('specific-options-checklist-container');
-      const umumContainer = document.getElementById('specific-umum-list-container');
-      const countEl = document.getElementById('specific-selected-count');
-      const btnToggleAll = document.getElementById('btn-specific-toggle-all');
-
-      if (!modal) return;
-
-      const tierLabels = {
-        main: primaryState.variation_labels?.label_tier_2 || 'Variasi 2',
-        extra_1: primaryState.variation_labels?.label_extra_1 || 'Variasi 3',
-        extra_2: primaryState.variation_labels?.label_extra_2 || 'Variasi 4'
-      };
-
-      if (title) title.textContent = `Pengaturan ${tierLabels[tier] || 'Variasi'}`;
-      if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
-
-      const mat = materialsState.find(m => m.id === matId);
-      const currentScope = (mat && mat.variation_scopes && mat.variation_scopes[tier]) ||
-                           (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[matId] && primaryState.variation_scopes_by_variant[matId][tier]) ||
-                           null;
-
-      const radUmum = modal.querySelector('input[name="modal_scope_type"][value="umum"]');
-      const radSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]');
-
-      if (currentScope === 'spesifik') {
-        if (radSpesifik) radSpesifik.checked = true;
-        if (radUmum) radUmum.checked = false;
-      } else if (currentScope === 'umum') {
-        if (radUmum) radUmum.checked = true;
-        if (radSpesifik) radSpesifik.checked = false;
-      } else {
-        if (radUmum) radUmum.checked = false;
-        if (radSpesifik) radSpesifik.checked = false;
+          modal.classList.add('hidden');
+          refreshCombinationMatrixTable();
+          updateProductCardLivePreview();
+        };
       }
-      syncSpecificScopeRadioStyles(modal);
 
-      const optionsList = (finishingsState[tier] || []).filter(f => f && f.name && f.name.trim() !== '');
-      const validOptIds = optionsList.map(o => o.id);
-      const rawSelected = (primaryState.specific_options_map && primaryState.specific_options_map[matId] && primaryState.specific_options_map[matId][tier]) || [];
-      const currentSelected = rawSelected.filter(id => validOptIds.includes(id));
+      // =====================================================================
+      // LOGIKA MODAL SPESIFIK OPTIONS (PER-BARIS INDEPENDEN)
+      // =====================================================================
+      let currentSpecificContext = { tier: 'main', matId: null, matName: '' };
 
-      // 1. Render Daftar Opsi Umum
-      if (umumContainer) {
-        umumContainer.innerHTML = optionsList.length === 0 ? `
+      function openSpecificOptionsModal(tier, matId, matName) {
+        currentSpecificContext = { tier, matId, matName };
+        const modal = document.getElementById('modal-specific-options');
+        const title = document.getElementById('specific-modal-title');
+        const subtitle = document.getElementById('specific-modal-subtitle');
+        const container = document.getElementById('specific-options-checklist-container');
+        const umumContainer = document.getElementById('specific-umum-list-container');
+        const countEl = document.getElementById('specific-selected-count');
+        const btnToggleAll = document.getElementById('btn-specific-toggle-all');
+
+        if (!modal) return;
+
+        const tierLabels = {
+          main: primaryState.variation_labels?.label_tier_2 || 'Variasi 2',
+          extra_1: primaryState.variation_labels?.label_extra_1 || 'Variasi 3',
+          extra_2: primaryState.variation_labels?.label_extra_2 || 'Variasi 4'
+        };
+
+        if (title) title.textContent = `Pengaturan ${tierLabels[tier] || 'Variasi'}`;
+        if (subtitle) subtitle.textContent = `Untuk opsi: ${matName || 'Opsi'}`;
+
+        const mat = materialsState.find(m => m.id === matId);
+        const currentScope = (mat && mat.variation_scopes && mat.variation_scopes[tier]) ||
+          (primaryState.variation_scopes_by_variant && primaryState.variation_scopes_by_variant[matId] && primaryState.variation_scopes_by_variant[matId][tier]) ||
+          null;
+
+        const radUmum = modal.querySelector('input[name="modal_scope_type"][value="umum"]');
+        const radSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]');
+
+        if (currentScope === 'spesifik') {
+          if (radSpesifik) radSpesifik.checked = true;
+          if (radUmum) radUmum.checked = false;
+        } else if (currentScope === 'umum') {
+          if (radUmum) radUmum.checked = true;
+          if (radSpesifik) radSpesifik.checked = false;
+        } else {
+          if (radUmum) radUmum.checked = false;
+          if (radSpesifik) radSpesifik.checked = false;
+        }
+        syncSpecificScopeRadioStyles(modal);
+
+        const optionsList = (finishingsState[tier] || []).filter(f => f && f.name && f.name.trim() !== '');
+        const validOptIds = optionsList.map(o => o.id);
+        const rawSelected = (primaryState.specific_options_map && primaryState.specific_options_map[matId] && primaryState.specific_options_map[matId][tier]) || [];
+        const currentSelected = rawSelected.filter(id => validOptIds.includes(id));
+
+        // 1. Render Daftar Opsi Umum
+        if (umumContainer) {
+          umumContainer.innerHTML = optionsList.length === 0 ? `
           <div class="text-center py-4 text-slate-400 italic text-xs">Belum ada opsi pada variasi ini.</div>
         ` : optionsList.map(opt => `
           <div class="p-2 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-800">
             ${escapeHtml(opt.name.trim())}
           </div>
         `).join('');
-      }
+        }
 
-      // 2. Render Daftar Opsi Spesifik dengan Radio Bullets
-      if (container) {
-        container.innerHTML = optionsList.length === 0 ? `
+        // 2. Render Daftar Opsi Spesifik dengan Radio Bullets
+        if (container) {
+          container.innerHTML = optionsList.length === 0 ? `
           <div class="text-center py-4 text-slate-400 italic text-xs">Belum ada opsi pada variasi ini.</div>
         ` : optionsList.map((opt) => {
-          const isChecked = currentSelected.includes(opt.id);
-          return `
+            const isChecked = currentSelected.includes(opt.id);
+            return `
             <label class="specific-opt-item flex items-center justify-between p-2 rounded-md bg-white border border-slate-200 hover:border-[var(--color-primary)] cursor-pointer transition select-none text-xs" data-opt-id="${opt.id}">
               <span class="font-medium text-slate-800">${escapeHtml(opt.name.trim())}</span>
               <div class="specific-radio-bullet w-4 h-4 rounded-full border ${isChecked ? 'border-[var(--color-primary)] flex items-center justify-center' : 'border-slate-300 flex items-center justify-center'} transition shrink-0">
@@ -21363,410 +22936,410 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               <input type="checkbox" class="hidden specific-opt-checkbox" data-opt-id="${opt.id}" ${isChecked ? 'checked' : ''} />
             </label>
           `;
-        }).join('');
+          }).join('');
 
-        const updateBulletAndCount = () => {
-          const checkboxes = container.querySelectorAll('.specific-opt-checkbox');
-          let checkedCount = 0;
-          checkboxes.forEach(chk => {
-            const item = chk.closest('.specific-opt-item');
-            const bullet = item?.querySelector('.specific-radio-bullet');
-            if (chk.checked) {
-              checkedCount++;
-              if (bullet) {
-                bullet.className = 'specific-radio-bullet w-4 h-4 rounded-full border border-[var(--color-primary)] flex items-center justify-center transition shrink-0';
-                bullet.innerHTML = '<span class="w-2 h-2 rounded-full" style="background-color: var(--color-primary);"></span>';
+          const updateBulletAndCount = () => {
+            const checkboxes = container.querySelectorAll('.specific-opt-checkbox');
+            let checkedCount = 0;
+            checkboxes.forEach(chk => {
+              const item = chk.closest('.specific-opt-item');
+              const bullet = item?.querySelector('.specific-radio-bullet');
+              if (chk.checked) {
+                checkedCount++;
+                if (bullet) {
+                  bullet.className = 'specific-radio-bullet w-4 h-4 rounded-full border border-[var(--color-primary)] flex items-center justify-center transition shrink-0';
+                  bullet.innerHTML = '<span class="w-2 h-2 rounded-full" style="background-color: var(--color-primary);"></span>';
+                }
+              } else {
+                if (bullet) {
+                  bullet.className = 'specific-radio-bullet w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center transition shrink-0';
+                  bullet.innerHTML = '';
+                }
               }
-            } else {
-              if (bullet) {
-                bullet.className = 'specific-radio-bullet w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center transition shrink-0';
-                bullet.innerHTML = '';
-              }
+            });
+
+            if (countEl) countEl.textContent = `${checkedCount} dipilih`;
+            if (btnToggleAll) {
+              btnToggleAll.textContent = (optionsList.length > 0 && checkedCount === optionsList.length) ? 'Batal Pilih Semua' : 'Pilih Semua';
             }
+          };
+
+          container.querySelectorAll('.specific-opt-checkbox').forEach(chk => {
+            chk.onchange = updateBulletAndCount;
           });
 
-          if (countEl) countEl.textContent = `${checkedCount} dipilih`;
           if (btnToggleAll) {
-            btnToggleAll.textContent = (optionsList.length > 0 && checkedCount === optionsList.length) ? 'Batal Pilih Semua' : 'Pilih Semua';
+            btnToggleAll.onclick = () => {
+              const checkboxes = container.querySelectorAll('.specific-opt-checkbox');
+              const allChecked = Array.from(checkboxes).length > 0 && Array.from(checkboxes).every(c => c.checked);
+              checkboxes.forEach(chk => {
+                chk.checked = !allChecked;
+              });
+              updateBulletAndCount();
+            };
+          }
+
+          updateBulletAndCount();
+        }
+
+        modal.classList.remove('hidden');
+      }
+
+      function syncSpecificScopeRadioStyles(modal) {
+        const radUmum = modal.querySelector('input[name="modal_scope_type"][value="umum"]');
+        const radSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]');
+        const lblUmum = modal.querySelector('#lbl-scope-umum');
+        const lblSpesifik = modal.querySelector('#lbl-scope-spesifik');
+        const chkWrapper = modal.querySelector('#specific-checklist-wrapper');
+        const infoWrapper = modal.querySelector('#specific-umum-info-wrapper');
+
+        const isUmum = Boolean(radUmum?.checked);
+        const isSpesifik = Boolean(radSpesifik?.checked);
+
+        if (lblUmum) {
+          lblUmum.className = isUmum
+            ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
+        }
+        if (lblSpesifik) {
+          lblSpesifik.className = isSpesifik
+            ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
+            : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
+        }
+
+        if (infoWrapper) {
+          if (isUmum) infoWrapper.classList.remove('hidden');
+          else infoWrapper.classList.add('hidden');
+        }
+
+        if (chkWrapper) {
+          if (isSpesifik) chkWrapper.classList.remove('hidden');
+          else chkWrapper.classList.add('hidden');
+        }
+      }
+
+      const modalSpecific = document.getElementById('modal-specific-options');
+      if (modalSpecific) {
+        modalSpecific.querySelectorAll('input[name="modal_scope_type"]').forEach(rad => {
+          rad.onchange = () => {
+            syncSpecificScopeRadioStyles(modalSpecific);
+          };
+        });
+      }
+
+      const btnApplySpecific = document.getElementById('btn-apply-specific-modal');
+      if (btnApplySpecific) {
+        btnApplySpecific.onclick = () => {
+          const modal = document.getElementById('modal-specific-options');
+          const container = document.getElementById('specific-options-checklist-container');
+          if (!container || !modal) return;
+
+          const radChecked = modal.querySelector('input[name="modal_scope_type"]:checked');
+          if (!radChecked) {
+            alert('Silakan pilih salah satu aturan (Umum atau Spesifik).');
+            return;
+          }
+
+          const { tier, matId } = currentSpecificContext;
+          const mat = materialsState.find(m => m.id === matId);
+          const isSpesifik = (radChecked.value === 'spesifik');
+
+          if (isSpesifik) {
+            const checkedIds = Array.from(container.querySelectorAll('.specific-opt-checkbox:checked')).map(c => c.getAttribute('data-opt-id'));
+            if (checkedIds.length === 0) {
+              alert('Silakan pilih minimal 1 opsi spesifik untuk varian ini.');
+              return;
+            }
+            if (mat) {
+              mat.variation_scopes = mat.variation_scopes || {};
+              mat.variation_scopes[tier] = 'spesifik';
+            }
+            primaryState.variation_scopes_by_variant = primaryState.variation_scopes_by_variant || {};
+            primaryState.variation_scopes_by_variant[matId] = primaryState.variation_scopes_by_variant[matId] || {};
+            primaryState.variation_scopes_by_variant[matId][tier] = 'spesifik';
+
+            primaryState.variation_scopes = primaryState.variation_scopes || {};
+            primaryState.variation_scopes[matId] = primaryState.variation_scopes_by_variant[matId];
+
+            primaryState.specific_options_map = primaryState.specific_options_map || {};
+            primaryState.specific_options_map[matId] = primaryState.specific_options_map[matId] || {};
+            primaryState.specific_options_map[matId][tier] = checkedIds;
+          } else {
+            if (mat) {
+              mat.variation_scopes = mat.variation_scopes || {};
+              mat.variation_scopes[tier] = 'umum';
+            }
+            primaryState.variation_scopes_by_variant = primaryState.variation_scopes_by_variant || {};
+            primaryState.variation_scopes_by_variant[matId] = primaryState.variation_scopes_by_variant[matId] || {};
+            primaryState.variation_scopes_by_variant[matId][tier] = 'umum';
+
+            primaryState.variation_scopes = primaryState.variation_scopes || {};
+            primaryState.variation_scopes[matId] = primaryState.variation_scopes_by_variant[matId];
+          }
+
+          modal.classList.add('hidden');
+          refreshCombinationMatrixTable();
+          updateProductCardLivePreview();
+        };
+      }
+
+      // Modal Close Buttons (✕ & Batal)
+      document.querySelectorAll('.btn-close-modal').forEach(btn => {
+        btn.onclick = () => {
+          const modalId = btn.getAttribute('data-modal');
+          const modal = document.getElementById(modalId) || btn.closest('.fixed');
+          if (modal) modal.classList.add('hidden');
+        };
+      });
+
+      bindOptionDependencyModalEvents();
+      bindSkipRulesSectionEvents();
+
+      // =====================================================================
+      // STEP 2 CONTROLS LAINNYA (STOK, PENGIRIMAN, PROMO, AI)
+
+
+      // Maksimal Pembelian (Combobox Normal Mode)
+      const normalMaxInp = document.getElementById('input-normal-max-order');
+      if (normalMaxInp) {
+        const handleNormalMaxInput = (e) => {
+          const raw = e.target.value.trim();
+          const rLow = raw.toLowerCase();
+          if (!raw || rLow === 'tanpa batas' || rLow === 'tanpa max order' || raw === '0' || rLow === 'unlimited') {
+            primaryState.max_order = null;
+            primaryState.max_order_qty = null;
+            primaryState.max_order_type = 'unlimited';
+            primaryState.is_unlimited_max_order = true;
+          } else {
+            const digits = raw.replace(/\D/g, '');
+            const num = digits ? parseInt(digits, 10) : null;
+            primaryState.max_order = num;
+            primaryState.max_order_qty = num;
+            primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+            primaryState.is_unlimited_max_order = !num;
           }
         };
+        normalMaxInp.oninput = handleNormalMaxInput;
+        normalMaxInp.onchange = handleNormalMaxInput;
+        normalMaxInp.onblur = (e) => {
+          const raw = (normalMaxInp.value || '').trim();
+          const rLow = raw.toLowerCase();
+          if (rLow === 'tanpa batas' || rLow === 'unlimited') {
+            normalMaxInp.value = 'Tanpa Batas';
+            primaryState.max_order = null;
+            primaryState.max_order_qty = null;
+            primaryState.max_order_type = 'unlimited';
+            primaryState.is_unlimited_max_order = true;
+          } else if (raw) {
+            const digits = raw.replace(/\D/g, '');
+            const num = digits ? parseInt(digits, 10) : null;
+            normalMaxInp.value = num !== null ? String(num) : '';
+            primaryState.max_order = num;
+            primaryState.max_order_qty = num;
+            primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+            primaryState.is_unlimited_max_order = !num;
+          } else {
+            normalMaxInp.value = '';
+            primaryState.max_order = null;
+            primaryState.max_order_qty = null;
+            primaryState.max_order_type = 'unlimited';
+            primaryState.is_unlimited_max_order = true;
+          }
+        };
+      }
 
-        container.querySelectorAll('.specific-opt-checkbox').forEach(chk => {
-          chk.onchange = updateBulletAndCount;
+      const selMaxOrderType = document.getElementById('select-max-order-type');
+      if (selMaxOrderType) {
+        selMaxOrderType.onchange = e => {
+          primaryState.max_order_type = e.target.value;
+          const wrap = document.getElementById('max-order-conditional-wrapper');
+          if (wrap) wrap.innerHTML = renderMaxOrderSection();
+          bindStep2InteractiveEvents();
+        };
+      }
+
+      // Helper Binding Harga Grosir Interaktif (Berfungsi untuk Inline & Modal)
+      function bindInlineWholesaleEvents() {
+        const wholesaleWrap = document.getElementById('wholesale-table-wrapper');
+        if (!wholesaleWrap) return;
+
+        wholesaleWrap.querySelectorAll('input[name="inline_wholesale_mode"]').forEach(rad => {
+          rad.onchange = (e) => {
+            primaryState.wholesale_mode = e.target.value;
+            const body = document.getElementById('inline-wholesale-body');
+            if (body) {
+              body.innerHTML = renderWholesaleTable();
+              bindInlineWholesaleEvents();
+            }
+          };
         });
 
-        if (btnToggleAll) {
-          btnToggleAll.onclick = () => {
-            const checkboxes = container.querySelectorAll('.specific-opt-checkbox');
-            const allChecked = Array.from(checkboxes).length > 0 && Array.from(checkboxes).every(c => c.checked);
-            checkboxes.forEach(chk => {
-              chk.checked = !allChecked;
+        const inpMin = wholesaleWrap.querySelector('#modal-wholesale-normal-min');
+        const inpMax = wholesaleWrap.querySelector('#modal-wholesale-normal-max');
+        const inpDisc = wholesaleWrap.querySelector('#modal-wholesale-normal-discount');
+        const chkNoMax = wholesaleWrap.querySelector('#chk-wholesale-no-max');
+        const noteNormal = wholesaleWrap.querySelector('#wholesale-normal-note');
+
+        function syncNormalWholesale() {
+          const minVal = parseInt(inpMin?.value) || 1;
+          const noMax = chkNoMax?.checked;
+          const maxVal = noMax ? null : (parseInt(inpMax?.value) || minVal);
+          const discVal = parseFloat(inpDisc?.value) || 0;
+          primaryState.wholesale_tiers = [{
+            id: DB.generateUUID(),
+            min_qty: minVal,
+            max_qty: maxVal,
+            price: discVal
+          }];
+          if (noteNormal) {
+            noteNormal.innerHTML = `Setiap pembelian <b>${minVal}</b> hingga <b>${noMax ? 'seterusnya (tanpa batas)' : (maxVal || minVal)}</b> maka mendapatkan potongan <b>Rp${discVal.toLocaleString('id-ID')}</b> per pcs.`;
+          }
+        }
+
+        if (chkNoMax && inpMax) {
+          chkNoMax.onchange = (e) => {
+            inpMax.disabled = e.target.checked;
+            if (e.target.checked) {
+              inpMax.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+              inpMax.value = '';
+            } else {
+              inpMax.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
+            }
+            syncNormalWholesale();
+          };
+        }
+        if (inpMin) inpMin.oninput = syncNormalWholesale;
+        if (inpMax) inpMax.oninput = syncNormalWholesale;
+        if (inpDisc) inpDisc.oninput = syncNormalWholesale;
+
+        const btnAddTier = wholesaleWrap.querySelector('#btn-add-wholesale-tier');
+        if (btnAddTier) {
+          btnAddTier.onclick = () => {
+            if (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0) {
+              primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
+            }
+            const lastTier = primaryState.wholesale_tiers[primaryState.wholesale_tiers.length - 1];
+            const nextMin = (parseInt(lastTier.max_qty) || 50) + 1;
+            primaryState.wholesale_tiers.push({
+              id: DB.generateUUID(),
+              min_qty: nextMin,
+              max_qty: nextMin + 50,
+              price: (lastTier.price || 500) + 500
             });
-            updateBulletAndCount();
+            const body = document.getElementById('inline-wholesale-body');
+            if (body) {
+              body.innerHTML = renderWholesaleTable();
+              bindInlineWholesaleEvents();
+            }
           };
         }
 
-        updateBulletAndCount();
-      }
-
-      modal.classList.remove('hidden');
-    }
-
-    function syncSpecificScopeRadioStyles(modal) {
-      const radUmum = modal.querySelector('input[name="modal_scope_type"][value="umum"]');
-      const radSpesifik = modal.querySelector('input[name="modal_scope_type"][value="spesifik"]');
-      const lblUmum = modal.querySelector('#lbl-scope-umum');
-      const lblSpesifik = modal.querySelector('#lbl-scope-spesifik');
-      const chkWrapper = modal.querySelector('#specific-checklist-wrapper');
-      const infoWrapper = modal.querySelector('#specific-umum-info-wrapper');
-
-      const isUmum = Boolean(radUmum?.checked);
-      const isSpesifik = Boolean(radSpesifik?.checked);
-
-      if (lblUmum) {
-        lblUmum.className = isUmum
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
-      }
-      if (lblSpesifik) {
-        lblSpesifik.className = isSpesifik
-          ? 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition'
-          : 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
-      }
-
-      if (infoWrapper) {
-        if (isUmum) infoWrapper.classList.remove('hidden');
-        else infoWrapper.classList.add('hidden');
-      }
-
-      if (chkWrapper) {
-        if (isSpesifik) chkWrapper.classList.remove('hidden');
-        else chkWrapper.classList.add('hidden');
-      }
-    }
-
-    const modalSpecific = document.getElementById('modal-specific-options');
-    if (modalSpecific) {
-      modalSpecific.querySelectorAll('input[name="modal_scope_type"]').forEach(rad => {
-        rad.onchange = () => {
-          syncSpecificScopeRadioStyles(modalSpecific);
-        };
-      });
-    }
-
-    const btnApplySpecific = document.getElementById('btn-apply-specific-modal');
-    if (btnApplySpecific) {
-      btnApplySpecific.onclick = () => {
-        const modal = document.getElementById('modal-specific-options');
-        const container = document.getElementById('specific-options-checklist-container');
-        if (!container || !modal) return;
-
-        const radChecked = modal.querySelector('input[name="modal_scope_type"]:checked');
-        if (!radChecked) {
-          alert('Silakan pilih salah satu aturan (Umum atau Spesifik).');
-          return;
-        }
-
-        const { tier, matId } = currentSpecificContext;
-        const mat = materialsState.find(m => m.id === matId);
-        const isSpesifik = (radChecked.value === 'spesifik');
-
-        if (isSpesifik) {
-          const checkedIds = Array.from(container.querySelectorAll('.specific-opt-checkbox:checked')).map(c => c.getAttribute('data-opt-id'));
-          if (checkedIds.length === 0) {
-            alert('Silakan pilih minimal 1 opsi spesifik untuk varian ini.');
-            return;
-          }
-          if (mat) {
-            mat.variation_scopes = mat.variation_scopes || {};
-            mat.variation_scopes[tier] = 'spesifik';
-          }
-          primaryState.variation_scopes_by_variant = primaryState.variation_scopes_by_variant || {};
-          primaryState.variation_scopes_by_variant[matId] = primaryState.variation_scopes_by_variant[matId] || {};
-          primaryState.variation_scopes_by_variant[matId][tier] = 'spesifik';
-
-          primaryState.variation_scopes = primaryState.variation_scopes || {};
-          primaryState.variation_scopes[matId] = primaryState.variation_scopes_by_variant[matId];
-
-          primaryState.specific_options_map = primaryState.specific_options_map || {};
-          primaryState.specific_options_map[matId] = primaryState.specific_options_map[matId] || {};
-          primaryState.specific_options_map[matId][tier] = checkedIds;
-        } else {
-          if (mat) {
-            mat.variation_scopes = mat.variation_scopes || {};
-            mat.variation_scopes[tier] = 'umum';
-          }
-          primaryState.variation_scopes_by_variant = primaryState.variation_scopes_by_variant || {};
-          primaryState.variation_scopes_by_variant[matId] = primaryState.variation_scopes_by_variant[matId] || {};
-          primaryState.variation_scopes_by_variant[matId][tier] = 'umum';
-
-          primaryState.variation_scopes = primaryState.variation_scopes || {};
-          primaryState.variation_scopes[matId] = primaryState.variation_scopes_by_variant[matId];
-        }
-
-        modal.classList.add('hidden');
-        refreshCombinationMatrixTable();
-        updateProductCardLivePreview();
-      };
-    }
-
-    // Modal Close Buttons (✕ & Batal)
-    document.querySelectorAll('.btn-close-modal').forEach(btn => {
-      btn.onclick = () => {
-        const modalId = btn.getAttribute('data-modal');
-        const modal = document.getElementById(modalId) || btn.closest('.fixed');
-        if (modal) modal.classList.add('hidden');
-      };
-    });
-
-    bindOptionDependencyModalEvents();
-    bindSkipRulesSectionEvents();
-
-    // =====================================================================
-    // STEP 2 CONTROLS LAINNYA (STOK, PENGIRIMAN, PROMO, AI)
-
-
-    // Maksimal Pembelian (Combobox Normal Mode)
-    const normalMaxInp = document.getElementById('input-normal-max-order');
-    if (normalMaxInp) {
-      const handleNormalMaxInput = (e) => {
-        const raw = e.target.value.trim();
-        const rLow = raw.toLowerCase();
-        if (!raw || rLow === 'tanpa batas' || rLow === 'tanpa max order' || raw === '0' || rLow === 'unlimited') {
-          primaryState.max_order = null;
-          primaryState.max_order_qty = null;
-          primaryState.max_order_type = 'unlimited';
-          primaryState.is_unlimited_max_order = true;
-        } else {
-          const digits = raw.replace(/\D/g, '');
-          const num = digits ? parseInt(digits, 10) : null;
-          primaryState.max_order = num;
-          primaryState.max_order_qty = num;
-          primaryState.max_order_type = num ? 'per_order' : 'unlimited';
-          primaryState.is_unlimited_max_order = !num;
-        }
-      };
-      normalMaxInp.oninput = handleNormalMaxInput;
-      normalMaxInp.onchange = handleNormalMaxInput;
-      normalMaxInp.onblur = (e) => {
-        const raw = (normalMaxInp.value || '').trim();
-        const rLow = raw.toLowerCase();
-        if (rLow === 'tanpa batas' || rLow === 'unlimited') {
-          normalMaxInp.value = 'Tanpa Batas';
-          primaryState.max_order = null;
-          primaryState.max_order_qty = null;
-          primaryState.max_order_type = 'unlimited';
-          primaryState.is_unlimited_max_order = true;
-        } else if (raw) {
-          const digits = raw.replace(/\D/g, '');
-          const num = digits ? parseInt(digits, 10) : null;
-          normalMaxInp.value = num !== null ? String(num) : '';
-          primaryState.max_order = num;
-          primaryState.max_order_qty = num;
-          primaryState.max_order_type = num ? 'per_order' : 'unlimited';
-          primaryState.is_unlimited_max_order = !num;
-        } else {
-          normalMaxInp.value = '';
-          primaryState.max_order = null;
-          primaryState.max_order_qty = null;
-          primaryState.max_order_type = 'unlimited';
-          primaryState.is_unlimited_max_order = true;
-        }
-      };
-    }
-
-    const selMaxOrderType = document.getElementById('select-max-order-type');
-    if (selMaxOrderType) {
-      selMaxOrderType.onchange = e => {
-        primaryState.max_order_type = e.target.value;
-        const wrap = document.getElementById('max-order-conditional-wrapper');
-        if (wrap) wrap.innerHTML = renderMaxOrderSection();
-        bindStep2InteractiveEvents();
-      };
-    }
-
-    // Helper Binding Harga Grosir Interaktif (Berfungsi untuk Inline & Modal)
-    function bindInlineWholesaleEvents() {
-      const wholesaleWrap = document.getElementById('wholesale-table-wrapper');
-      if (!wholesaleWrap) return;
-
-      wholesaleWrap.querySelectorAll('input[name="inline_wholesale_mode"]').forEach(rad => {
-        rad.onchange = (e) => {
-          primaryState.wholesale_mode = e.target.value;
-          const body = document.getElementById('inline-wholesale-body');
-          if (body) {
-            body.innerHTML = renderWholesaleTable();
-            bindInlineWholesaleEvents();
-          }
-        };
-      });
-
-      const inpMin = wholesaleWrap.querySelector('#modal-wholesale-normal-min');
-      const inpMax = wholesaleWrap.querySelector('#modal-wholesale-normal-max');
-      const inpDisc = wholesaleWrap.querySelector('#modal-wholesale-normal-discount');
-      const chkNoMax = wholesaleWrap.querySelector('#chk-wholesale-no-max');
-      const noteNormal = wholesaleWrap.querySelector('#wholesale-normal-note');
-
-      function syncNormalWholesale() {
-        const minVal = parseInt(inpMin?.value) || 1;
-        const noMax = chkNoMax?.checked;
-        const maxVal = noMax ? null : (parseInt(inpMax?.value) || minVal);
-        const discVal = parseFloat(inpDisc?.value) || 0;
-        primaryState.wholesale_tiers = [{
-          id: DB.generateUUID(),
-          min_qty: minVal,
-          max_qty: maxVal,
-          price: discVal
-        }];
-        if (noteNormal) {
-          noteNormal.innerHTML = `Setiap pembelian <b>${minVal}</b> hingga <b>${noMax ? 'seterusnya (tanpa batas)' : (maxVal || minVal)}</b> maka mendapatkan potongan <b>Rp${discVal.toLocaleString('id-ID')}</b> per pcs.`;
-        }
-      }
-
-      if (chkNoMax && inpMax) {
-        chkNoMax.onchange = (e) => {
-          inpMax.disabled = e.target.checked;
-          if (e.target.checked) {
-            inpMax.classList.add('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
-            inpMax.value = '';
-          } else {
-            inpMax.classList.remove('bg-slate-100', 'text-slate-400', 'cursor-not-allowed');
-          }
-          syncNormalWholesale();
-        };
-      }
-      if (inpMin) inpMin.oninput = syncNormalWholesale;
-      if (inpMax) inpMax.oninput = syncNormalWholesale;
-      if (inpDisc) inpDisc.oninput = syncNormalWholesale;
-
-      const btnAddTier = wholesaleWrap.querySelector('#btn-add-wholesale-tier');
-      if (btnAddTier) {
-        btnAddTier.onclick = () => {
-          if (!primaryState.wholesale_tiers || primaryState.wholesale_tiers.length === 0) {
-            primaryState.wholesale_tiers = [{ id: DB.generateUUID(), min_qty: 10, max_qty: 50, price: 500 }];
-          }
-          const lastTier = primaryState.wholesale_tiers[primaryState.wholesale_tiers.length - 1];
-          const nextMin = (parseInt(lastTier.max_qty) || 50) + 1;
-          primaryState.wholesale_tiers.push({
-            id: DB.generateUUID(),
-            min_qty: nextMin,
-            max_qty: nextMin + 50,
-            price: (lastTier.price || 500) + 500
-          });
-          const body = document.getElementById('inline-wholesale-body');
-          if (body) {
-            body.innerHTML = renderWholesaleTable();
-            bindInlineWholesaleEvents();
-          }
-        };
-      }
-
-      wholesaleWrap.querySelectorAll('.btn-delete-wholesale-tier').forEach(btn => {
-        btn.onclick = () => {
-          if ((primaryState.wholesale_tiers || []).length <= 1) return;
-          const tierId = btn.getAttribute('data-tier-id');
-          primaryState.wholesale_tiers = primaryState.wholesale_tiers.filter(t => t.id !== tierId);
-          const body = document.getElementById('inline-wholesale-body');
-          if (body) {
-            body.innerHTML = renderWholesaleTable();
-            bindInlineWholesaleEvents();
-          }
-        };
-      });
-
-      wholesaleWrap.querySelectorAll('.tiered-max-input').forEach(inp => {
-        inp.oninput = (e) => {
-          const row = e.target.closest('tr');
-          const idx = parseInt(row?.getAttribute('data-idx'));
-          const maxVal = parseInt(e.target.value) || 0;
-          if (primaryState.wholesale_tiers && primaryState.wholesale_tiers[idx]) {
-            primaryState.wholesale_tiers[idx].max_qty = maxVal;
-            if (primaryState.wholesale_tiers[idx + 1]) {
-              primaryState.wholesale_tiers[idx + 1].min_qty = maxVal + 1;
-              const nextRow = wholesaleWrap.querySelector(`tr[data-idx="${idx + 1}"] input[data-field="min_qty"]`);
-              if (nextRow) nextRow.value = maxVal + 1;
+        wholesaleWrap.querySelectorAll('.btn-delete-wholesale-tier').forEach(btn => {
+          btn.onclick = () => {
+            if ((primaryState.wholesale_tiers || []).length <= 1) return;
+            const tierId = btn.getAttribute('data-tier-id');
+            primaryState.wholesale_tiers = primaryState.wholesale_tiers.filter(t => t.id !== tierId);
+            const body = document.getElementById('inline-wholesale-body');
+            if (body) {
+              body.innerHTML = renderWholesaleTable();
+              bindInlineWholesaleEvents();
             }
-          }
-        };
-      });
+          };
+        });
 
-      wholesaleWrap.querySelectorAll('.tiered-price-input').forEach(inp => {
-        inp.oninput = (e) => {
-          const row = e.target.closest('tr');
-          const idx = parseInt(row?.getAttribute('data-idx'));
-          const priceVal = parseFloat(e.target.value) || 0;
-          if (primaryState.wholesale_tiers && primaryState.wholesale_tiers[idx]) {
-            primaryState.wholesale_tiers[idx].price = priceVal;
-          }
-        };
-      });
-    }
+        wholesaleWrap.querySelectorAll('.tiered-max-input').forEach(inp => {
+          inp.oninput = (e) => {
+            const row = e.target.closest('tr');
+            const idx = parseInt(row?.getAttribute('data-idx'));
+            const maxVal = parseInt(e.target.value) || 0;
+            if (primaryState.wholesale_tiers && primaryState.wholesale_tiers[idx]) {
+              primaryState.wholesale_tiers[idx].max_qty = maxVal;
+              if (primaryState.wholesale_tiers[idx + 1]) {
+                primaryState.wholesale_tiers[idx + 1].min_qty = maxVal + 1;
+                const nextRow = wholesaleWrap.querySelector(`tr[data-idx="${idx + 1}"] input[data-field="min_qty"]`);
+                if (nextRow) nextRow.value = maxVal + 1;
+              }
+            }
+          };
+        });
 
-    // Helper Binding Kelipatan Pesanan Interaktif (Produk Tunggal)
-    function bindInlineMultipleEvents() {
-      const multipleWrap = document.getElementById('order-multiple-wrapper');
-      if (!multipleWrap) return;
+        wholesaleWrap.querySelectorAll('.tiered-price-input').forEach(inp => {
+          inp.oninput = (e) => {
+            const row = e.target.closest('tr');
+            const idx = parseInt(row?.getAttribute('data-idx'));
+            const priceVal = parseFloat(e.target.value) || 0;
+            if (primaryState.wholesale_tiers && primaryState.wholesale_tiers[idx]) {
+              primaryState.wholesale_tiers[idx].price = priceVal;
+            }
+          };
+        });
+      }
 
-      const singleMultipleInp = multipleWrap.querySelector('#input-order-multiple-single');
-      if (singleMultipleInp) {
-        const handleSingleMultiple = (e) => {
-          const valStr = e.target.value.trim();
-          const errEl = document.getElementById('err-order-multiple-single');
-          if (!valStr) {
-            primaryState.order_multiple_value = '';
-            if (errEl) errEl.classList.add('hidden');
-            singleMultipleInp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
-            singleMultipleInp.classList.add('border-slate-300');
-          } else {
-            const num = parseInt(valStr, 10);
-            primaryState.order_multiple_value = num;
-            if (isNaN(num) || num < 2) {
-              if (errEl) errEl.classList.remove('hidden');
-              singleMultipleInp.classList.add('border-red-500', 'ring-1', 'ring-red-400');
-              singleMultipleInp.classList.remove('border-slate-300');
-            } else {
+      // Helper Binding Kelipatan Pesanan Interaktif (Produk Tunggal)
+      function bindInlineMultipleEvents() {
+        const multipleWrap = document.getElementById('order-multiple-wrapper');
+        if (!multipleWrap) return;
+
+        const singleMultipleInp = multipleWrap.querySelector('#input-order-multiple-single');
+        if (singleMultipleInp) {
+          const handleSingleMultiple = (e) => {
+            const valStr = e.target.value.trim();
+            const errEl = document.getElementById('err-order-multiple-single');
+            if (!valStr) {
+              primaryState.order_multiple_value = '';
               if (errEl) errEl.classList.add('hidden');
               singleMultipleInp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
               singleMultipleInp.classList.add('border-slate-300');
+            } else {
+              const num = parseInt(valStr, 10);
+              primaryState.order_multiple_value = num;
+              if (isNaN(num) || num < 2) {
+                if (errEl) errEl.classList.remove('hidden');
+                singleMultipleInp.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+                singleMultipleInp.classList.remove('border-slate-300');
+              } else {
+                if (errEl) errEl.classList.add('hidden');
+                singleMultipleInp.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+                singleMultipleInp.classList.add('border-slate-300');
+              }
             }
-          }
-        };
-        singleMultipleInp.oninput = singleMultipleInp.onchange = handleSingleMultiple;
+          };
+          singleMultipleInp.oninput = singleMultipleInp.onchange = handleSingleMultiple;
+        }
+
+        multipleWrap.querySelectorAll('input[name="order_multiple_type_radio"]').forEach(rad => {
+          rad.onchange = (e) => {
+            primaryState.order_multiple_type = e.target.value;
+            multipleWrap.innerHTML = renderOrderMultipleSection();
+            bindInlineMultipleEvents();
+          };
+        });
       }
 
-      multipleWrap.querySelectorAll('input[name="order_multiple_type_radio"]').forEach(rad => {
-        rad.onchange = (e) => {
-          primaryState.order_multiple_type = e.target.value;
-          multipleWrap.innerHTML = renderOrderMultipleSection();
-          bindInlineMultipleEvents();
-        };
-      });
-    }
+      // Tombol Toggle & Tutup Harga Grosir (Produk Tunggal / Mode Normal)
+      const btnToggleWholesale = document.getElementById('btn-toggle-wholesale');
+      const btnCloseWholesale = document.getElementById('btn-close-wholesale');
+      const wholesaleActionContainer = document.getElementById('wholesale-action-container');
+      const wholesaleActiveHeader = document.getElementById('wholesale-active-header');
+      const wholesaleWrap = document.getElementById('wholesale-table-wrapper');
 
-    // Tombol Toggle & Tutup Harga Grosir (Produk Tunggal / Mode Normal)
-    const btnToggleWholesale = document.getElementById('btn-toggle-wholesale');
-    const btnCloseWholesale = document.getElementById('btn-close-wholesale');
-    const wholesaleActionContainer = document.getElementById('wholesale-action-container');
-    const wholesaleActiveHeader = document.getElementById('wholesale-active-header');
-    const wholesaleWrap = document.getElementById('wholesale-table-wrapper');
-
-    const activateWholesale = () => {
-      primaryState.has_wholesale = true;
-      if (!primaryState.wholesale_tiers) {
-        primaryState.wholesale_tiers = [];
-      }
-      if (wholesaleActionContainer) {
-        wholesaleActionContainer.classList.add('hidden');
-        wholesaleActionContainer.classList.remove('flex');
-      }
-      if (wholesaleActiveHeader) {
-        wholesaleActiveHeader.classList.remove('hidden');
-        wholesaleActiveHeader.classList.add('flex');
-      }
-      if (wholesaleWrap) {
-        wholesaleWrap.classList.remove('hidden');
-        wholesaleWrap.classList.add('block');
-        wholesaleWrap.innerHTML = `
+      const activateWholesale = () => {
+        primaryState.has_wholesale = true;
+        if (!primaryState.wholesale_tiers) {
+          primaryState.wholesale_tiers = [];
+        }
+        if (wholesaleActionContainer) {
+          wholesaleActionContainer.classList.add('hidden');
+          wholesaleActionContainer.classList.remove('flex');
+        }
+        if (wholesaleActiveHeader) {
+          wholesaleActiveHeader.classList.remove('hidden');
+          wholesaleActiveHeader.classList.add('flex');
+        }
+        if (wholesaleWrap) {
+          wholesaleWrap.classList.remove('hidden');
+          wholesaleWrap.classList.add('block');
+          wholesaleWrap.innerHTML = `
           <div class="grid grid-cols-2 gap-2 text-xs mb-3">
             <label class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${primaryState.wholesale_mode !== 'tiered' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'}">
               <input type="radio" name="inline_wholesale_mode" value="normal" ${primaryState.wholesale_mode !== 'tiered' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
@@ -21781,323 +23354,325 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             ${renderWholesaleTable()}
           </div>
         `;
-        bindInlineWholesaleEvents();
-      }
-    };
-
-    const deactivateWholesale = () => {
-      primaryState.has_wholesale = false;
-      if (wholesaleActiveHeader) {
-        wholesaleActiveHeader.classList.add('hidden');
-        wholesaleActiveHeader.classList.remove('flex');
-      }
-      if (wholesaleWrap) {
-        wholesaleWrap.classList.add('hidden');
-        wholesaleWrap.classList.remove('block');
-      }
-      if (wholesaleActionContainer) {
-        wholesaleActionContainer.classList.remove('hidden');
-        wholesaleActionContainer.classList.add('flex');
-      }
-    };
-
-    if (btnToggleWholesale) {
-      btnToggleWholesale.onclick = activateWholesale;
-    }
-    if (btnCloseWholesale) {
-      btnCloseWholesale.onclick = deactivateWholesale;
-    }
-    if (primaryState.has_wholesale && wholesaleWrap && !wholesaleWrap.classList.contains('hidden')) {
-      bindInlineWholesaleEvents();
-    }
-
-    // Tombol Toggle & Tutup Kelipatan Pesanan (Produk Tunggal / Mode Normal)
-    const btnToggleMultiple = document.getElementById('btn-toggle-order-multiple');
-    const btnCloseMultiple = document.getElementById('btn-close-order-multiple');
-    const orderMultipleActionContainer = document.getElementById('order-multiple-action-container');
-    const orderMultipleActiveHeader = document.getElementById('order-multiple-active-header');
-    const multipleWrap = document.getElementById('order-multiple-wrapper');
-
-    const activateOrderMultiple = () => {
-      primaryState.has_order_multiple = true;
-      if (orderMultipleActionContainer) {
-        orderMultipleActionContainer.classList.add('hidden');
-        orderMultipleActionContainer.classList.remove('flex');
-      }
-      if (orderMultipleActiveHeader) {
-        orderMultipleActiveHeader.classList.remove('hidden');
-        orderMultipleActiveHeader.classList.add('flex');
-      }
-      if (multipleWrap) {
-        multipleWrap.classList.remove('hidden');
-        multipleWrap.classList.add('block');
-        multipleWrap.innerHTML = renderOrderMultipleSection();
-        bindInlineMultipleEvents();
-      }
-    };
-
-    const deactivateOrderMultiple = () => {
-      primaryState.has_order_multiple = false;
-      if (orderMultipleActiveHeader) {
-        orderMultipleActiveHeader.classList.add('hidden');
-        orderMultipleActiveHeader.classList.remove('flex');
-      }
-      if (multipleWrap) {
-        multipleWrap.classList.add('hidden');
-        multipleWrap.classList.remove('block');
-      }
-      if (orderMultipleActionContainer) {
-        orderMultipleActionContainer.classList.remove('hidden');
-        orderMultipleActionContainer.classList.add('flex');
-      }
-    };
-
-    if (btnToggleMultiple) {
-      btnToggleMultiple.onclick = activateOrderMultiple;
-    }
-    if (btnCloseMultiple) {
-      btnCloseMultiple.onclick = deactivateOrderMultiple;
-    }
-    if (primaryState.has_order_multiple && multipleWrap && !multipleWrap.classList.contains('hidden')) {
-      bindInlineMultipleEvents();
-    }
-
-    // Init Affiliate Listeners
-    initAffiliateGlobalListeners();
-
-    function bindCustomSpecsEvents() {
-      const btnAdd = document.getElementById('btn-add-spec-row') || document.getElementById('btn-add-custom-spec-row');
-      const tbody = document.getElementById('custom-specs-tbody');
-      const countBadge = document.getElementById('custom-specs-counter') || document.getElementById('custom-specs-count');
-
-      const updateSpecsUIState = () => {
-        const rows = tbody ? tbody.querySelectorAll('tr.custom-spec-row') : [];
-        if (countBadge) countBadge.textContent = `${rows.length} / 10`;
-        if (btnAdd) {
-          if (rows.length >= 10) {
-            btnAdd.disabled = true;
-            btnAdd.classList.add('opacity-40', 'cursor-not-allowed');
-          } else {
-            btnAdd.disabled = false;
-            btnAdd.classList.remove('opacity-40', 'cursor-not-allowed');
-          }
+          bindInlineWholesaleEvents();
         }
       };
 
-      if (btnAdd && tbody) {
-        btnAdd.onclick = () => {
-          const rows = tbody.querySelectorAll('tr.custom-spec-row');
-          if (rows.length >= 10) return;
-          const newIndex = rows.length;
-          const tempDiv = document.createElement('tbody');
-          tempDiv.innerHTML = renderSingleSpecRowHtml({ title: '', value: '' }, newIndex);
-          const newRow = tempDiv.firstElementChild;
-          if (newRow) {
-            tbody.appendChild(newRow);
-            if (typeof bindCleanDatalistPopovers === 'function') {
-              bindCleanDatalistPopovers(newRow);
-            }
-            updateSpecsUIState();
-            if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-            if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
-          }
-        };
+      const deactivateWholesale = () => {
+        primaryState.has_wholesale = false;
+        if (wholesaleActiveHeader) {
+          wholesaleActiveHeader.classList.add('hidden');
+          wholesaleActiveHeader.classList.remove('flex');
+        }
+        if (wholesaleWrap) {
+          wholesaleWrap.classList.add('hidden');
+          wholesaleWrap.classList.remove('block');
+        }
+        if (wholesaleActionContainer) {
+          wholesaleActionContainer.classList.remove('hidden');
+          wholesaleActionContainer.classList.add('flex');
+        }
+      };
+
+      if (btnToggleWholesale) {
+        btnToggleWholesale.onclick = activateWholesale;
+      }
+      if (btnCloseWholesale) {
+        btnCloseWholesale.onclick = deactivateWholesale;
+      }
+      if (primaryState.has_wholesale && wholesaleWrap && !wholesaleWrap.classList.contains('hidden')) {
+        bindInlineWholesaleEvents();
       }
 
-      if (tbody) {
-        tbody.onclick = (e) => {
-          const delBtn = e.target.closest('.btn-delete-spec-row');
-          if (delBtn) {
-            const tr = delBtn.closest('tr.custom-spec-row');
-            if (tr) {
-              tr.remove();
+      // Tombol Toggle & Tutup Kelipatan Pesanan (Produk Tunggal / Mode Normal)
+      const btnToggleMultiple = document.getElementById('btn-toggle-order-multiple');
+      const btnCloseMultiple = document.getElementById('btn-close-order-multiple');
+      const orderMultipleActionContainer = document.getElementById('order-multiple-action-container');
+      const orderMultipleActiveHeader = document.getElementById('order-multiple-active-header');
+      const multipleWrap = document.getElementById('order-multiple-wrapper');
+
+      const activateOrderMultiple = () => {
+        primaryState.has_order_multiple = true;
+        if (orderMultipleActionContainer) {
+          orderMultipleActionContainer.classList.add('hidden');
+          orderMultipleActionContainer.classList.remove('flex');
+        }
+        if (orderMultipleActiveHeader) {
+          orderMultipleActiveHeader.classList.remove('hidden');
+          orderMultipleActiveHeader.classList.add('flex');
+        }
+        if (multipleWrap) {
+          multipleWrap.classList.remove('hidden');
+          multipleWrap.classList.add('block');
+          multipleWrap.innerHTML = renderOrderMultipleSection();
+          bindInlineMultipleEvents();
+        }
+      };
+
+      const deactivateOrderMultiple = () => {
+        primaryState.has_order_multiple = false;
+        if (orderMultipleActiveHeader) {
+          orderMultipleActiveHeader.classList.add('hidden');
+          orderMultipleActiveHeader.classList.remove('flex');
+        }
+        if (multipleWrap) {
+          multipleWrap.classList.add('hidden');
+          multipleWrap.classList.remove('block');
+        }
+        if (orderMultipleActionContainer) {
+          orderMultipleActionContainer.classList.remove('hidden');
+          orderMultipleActionContainer.classList.add('flex');
+        }
+      };
+
+      if (btnToggleMultiple) {
+        btnToggleMultiple.onclick = activateOrderMultiple;
+      }
+      if (btnCloseMultiple) {
+        btnCloseMultiple.onclick = deactivateOrderMultiple;
+      }
+      if (primaryState.has_order_multiple && multipleWrap && !multipleWrap.classList.contains('hidden')) {
+        bindInlineMultipleEvents();
+      }
+
+      // Init Affiliate Listeners
+      initAffiliateGlobalListeners();
+
+      function bindCustomSpecsEvents() {
+        const btnAdd = document.getElementById('btn-add-spec-row') || document.getElementById('btn-add-custom-spec-row');
+        const tbody = document.getElementById('custom-specs-tbody');
+        const countBadge = document.getElementById('custom-specs-counter') || document.getElementById('custom-specs-count');
+
+        const updateSpecsUIState = () => {
+          const rows = tbody ? tbody.querySelectorAll('tr.custom-spec-row') : [];
+          if (countBadge) countBadge.textContent = `${rows.length} / 10`;
+          if (btnAdd) {
+            if (rows.length >= 10) {
+              btnAdd.disabled = true;
+              btnAdd.classList.add('opacity-40', 'cursor-not-allowed');
+            } else {
+              btnAdd.disabled = false;
+              btnAdd.classList.remove('opacity-40', 'cursor-not-allowed');
+            }
+          }
+        };
+
+        if (btnAdd && tbody) {
+          btnAdd.onclick = () => {
+            const rows = tbody.querySelectorAll('tr.custom-spec-row');
+            if (rows.length >= 10) return;
+            const newIndex = rows.length;
+            const tempDiv = document.createElement('tbody');
+            tempDiv.innerHTML = renderSingleSpecRowHtml({ title: '', value: '' }, newIndex);
+            const newRow = tempDiv.firstElementChild;
+            if (newRow) {
+              tbody.appendChild(newRow);
+              if (typeof bindCleanDatalistPopovers === 'function') {
+                bindCleanDatalistPopovers(newRow);
+              }
               updateSpecsUIState();
               if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
               if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
             }
-          }
-        };
+          };
+        }
 
-        tbody.oninput = (e) => {
-          if (e.target.matches('.input-spec-title, .input-spec-value')) {
-            if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
-            if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+        if (tbody) {
+          tbody.onclick = (e) => {
+            const delBtn = e.target.closest('.btn-delete-spec-row');
+            if (delBtn) {
+              const tr = delBtn.closest('tr.custom-spec-row');
+              if (tr) {
+                tr.remove();
+                updateSpecsUIState();
+                if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+                if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+              }
+            }
+          };
+
+          tbody.oninput = (e) => {
+            if (e.target.matches('.input-spec-title, .input-spec-value')) {
+              if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
+              if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+            }
+          };
+        }
+      }
+
+      bindCustomSpecsEvents();
+
+      bindSizeGuideEvents();
+
+      // Card 3: Pengiriman
+      const toggleShipping = document.getElementById('toggle-shipping-enabled');
+      const shippingBody = document.getElementById('shipping-config-body');
+      const shippingDisabledBanner = document.getElementById('shipping-disabled-banner');
+      if (toggleShipping) {
+        toggleShipping.onchange = (e) => {
+          primaryState.has_shipping = e.target.checked;
+          if (shippingBody) {
+            shippingBody.classList.toggle('hidden', !primaryState.has_shipping);
+            shippingBody.classList.toggle('block', primaryState.has_shipping);
+          }
+          if (shippingDisabledBanner) {
+            shippingDisabledBanner.classList.toggle('hidden', primaryState.has_shipping);
+            shippingDisabledBanner.classList.toggle('block', !primaryState.has_shipping);
+          }
+          updateProductCardLivePreview();
+        };
+      }
+
+      const toggleCod = document.getElementById('toggle-is-cod');
+      if (toggleCod) {
+        toggleCod.onchange = (e) => {
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          primaryState.shipping_config.is_cod = e.target.checked;
+          if (e.target.checked) {
+            primaryState.shipping_config.cod_local = true;
+            primaryState.shipping_config.cod_expedition = true;
+          }
+          updateProductCardLivePreview();
+        };
+      }
+
+      const courierCheckboxes = document.querySelectorAll('input[name="courier_checkbox"]');
+      courierCheckboxes.forEach(cb => {
+        cb.onchange = () => {
+          const checkedBoxes = document.querySelectorAll('input[name="courier_checkbox"]:checked');
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          const couriers = Array.from(checkedBoxes).map(b => b.value);
+          primaryState.shipping_config.couriers = couriers;
+
+          // Tampilkan / Sembunyikan Panel Pengaturan Tarif Kurir Toko
+          const localBox = document.getElementById('local-delivery-rates-box');
+          if (localBox) {
+            if (couriers.includes('local_store') || couriers.includes('instant')) {
+              localBox.classList.remove('hidden');
+              localBox.classList.add('block');
+            } else {
+              localBox.classList.add('hidden');
+              localBox.classList.remove('block');
+            }
+          }
+          updateProductCardLivePreview();
+        };
+      });
+
+      // Event Pengaturan Tarif Kurir Toko (Satu Desa & Satu Kecamatan)
+      const villageRadios = document.querySelectorAll('input[name="radio_village_rate"]');
+      const villageInputCont = document.getElementById('village-rate-input-container');
+      const villageFeeInput = document.getElementById('input-local-village-fee');
+      const btnVillageFree = document.querySelector('.btn-rate-village-free');
+      const btnVillageCustom = document.querySelector('.btn-rate-village-custom');
+
+      villageRadios.forEach(r => {
+        r.onchange = (e) => {
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          const isFree = (e.target.value === 'free');
+          primaryState.shipping_config.local_village_free = isFree;
+          if (villageInputCont) {
+            villageInputCont.classList.toggle('hidden', isFree);
+            villageInputCont.classList.toggle('flex', !isFree);
+          }
+          if (btnVillageFree && btnVillageCustom) {
+            btnVillageFree.className = `btn-rate-village-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+            btnVillageCustom.className = `btn-rate-village-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${!isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+          }
+          updateProductCardLivePreview();
+        };
+      });
+
+      if (villageFeeInput) {
+        villageFeeInput.oninput = (e) => {
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          primaryState.shipping_config.local_village_fee = e.target.value.trim();
+          updateProductCardLivePreview();
+        };
+      }
+
+      const districtRadios = document.querySelectorAll('input[name="radio_district_rate"]');
+      const districtInputCont = document.getElementById('district-rate-input-container');
+      const districtFeeInput = document.getElementById('input-local-district-fee');
+      const btnDistrictFree = document.querySelector('.btn-rate-district-free');
+      const btnDistrictCustom = document.querySelector('.btn-rate-district-custom');
+
+      districtRadios.forEach(r => {
+        r.onchange = (e) => {
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          const isFree = (e.target.value === 'free');
+          primaryState.shipping_config.local_district_free = isFree;
+          if (districtInputCont) {
+            districtInputCont.classList.toggle('hidden', isFree);
+            districtInputCont.classList.toggle('flex', !isFree);
+          }
+          if (btnDistrictFree && btnDistrictCustom) {
+            btnDistrictFree.className = `btn-rate-district-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+            btnDistrictCustom.className = `btn-rate-district-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${!isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
+          }
+          updateProductCardLivePreview();
+        };
+      });
+
+      if (districtFeeInput) {
+        districtFeeInput.oninput = (e) => {
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          primaryState.shipping_config.local_district_fee = e.target.value.trim();
+          updateProductCardLivePreview();
+        };
+      }
+
+      const chkSaveDefault = document.getElementById('chk-save-local-shipping-default');
+      if (chkSaveDefault) {
+        chkSaveDefault.onchange = (e) => {
+          if (e.target.checked && primaryState.shipping_config) {
+            try {
+              localStorage.setItem('store_default_local_shipping', JSON.stringify({
+                local_village_free: primaryState.shipping_config.local_village_free !== false,
+                local_village_fee: primaryState.shipping_config.local_village_fee ?? '',
+                local_district_free: Boolean(primaryState.shipping_config.local_district_free),
+                local_district_fee: primaryState.shipping_config.local_district_fee ?? ''
+              }));
+              if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Pengaturan tarif lokal disimpan sebagai bawaan toko!', 'success');
+              }
+            } catch (err) { }
           }
         };
       }
-    }
 
-    bindCustomSpecsEvents();
+      function updateVolumetricWeightCalculation() {
+        const lInp = document.getElementById('input-dim-length');
+        const wInp = document.getElementById('input-dim-width');
+        const hInp = document.getElementById('input-dim-height');
+        const weightInp = document.getElementById('input-package-weight');
+        const unitSel = document.getElementById('select-package-weight-unit');
+        const infoEl = document.getElementById('volumetric-weight-info');
 
-    // Card 3: Pengiriman
-    const toggleShipping = document.getElementById('toggle-shipping-enabled');
-    const shippingBody = document.getElementById('shipping-config-body');
-    const shippingDisabledBanner = document.getElementById('shipping-disabled-banner');
-    if (toggleShipping) {
-      toggleShipping.onchange = (e) => {
-        primaryState.has_shipping = e.target.checked;
-        if (shippingBody) {
-          shippingBody.classList.toggle('hidden', !primaryState.has_shipping);
-          shippingBody.classList.toggle('block', primaryState.has_shipping);
-        }
-        if (shippingDisabledBanner) {
-          shippingDisabledBanner.classList.toggle('hidden', primaryState.has_shipping);
-          shippingDisabledBanner.classList.toggle('block', !primaryState.has_shipping);
-        }
-        updateProductCardLivePreview();
-      };
-    }
+        if (!infoEl) return;
 
-    const toggleCod = document.getElementById('toggle-is-cod');
-    if (toggleCod) {
-      toggleCod.onchange = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.is_cod = e.target.checked;
-        if (e.target.checked) {
-          primaryState.shipping_config.cod_local = true;
-          primaryState.shipping_config.cod_expedition = true;
-        }
-        updateProductCardLivePreview();
-      };
-    }
+        const l = parseFloat(lInp?.value) || 0;
+        const w = parseFloat(wInp?.value) || 0;
+        const h = parseFloat(hInp?.value) || 0;
 
-    const courierCheckboxes = document.querySelectorAll('input[name="courier_checkbox"]');
-    courierCheckboxes.forEach(cb => {
-      cb.onchange = () => {
-        const checkedBoxes = document.querySelectorAll('input[name="courier_checkbox"]:checked');
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        const couriers = Array.from(checkedBoxes).map(b => b.value);
-        primaryState.shipping_config.couriers = couriers;
+        if (l > 0 && w > 0 && h > 0) {
+          // Formula: Berat Volumetrik (kg) = (P * L * T) / 6000, gram = kg * 1000
+          const volKg = (l * w * h) / 6000;
+          const volGram = Math.round(volKg * 1000);
+          const volKgFormatted = (Math.round(volKg * 100) / 100).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+          const volGramFormatted = volGram.toLocaleString('id-ID');
 
-        // Tampilkan / Sembunyikan Panel Pengaturan Tarif Kurir Toko
-        const localBox = document.getElementById('local-delivery-rates-box');
-        if (localBox) {
-          if (couriers.includes('local_store') || couriers.includes('instant')) {
-            localBox.classList.remove('hidden');
-            localBox.classList.add('block');
-          } else {
-            localBox.classList.add('hidden');
-            localBox.classList.remove('block');
+          // Bandingkan dengan berat paket aktual jika diisi
+          let pkgGram = 0;
+          if (weightInp && weightInp.value.trim() !== '') {
+            const rawW = parseFloat(weightInp.value) || 0;
+            const unit = unitSel?.value || 'gram';
+            pkgGram = unit === 'kg' ? rawW * 1000 : rawW;
           }
-        }
-        updateProductCardLivePreview();
-      };
-    });
 
-    // Event Pengaturan Tarif Kurir Toko (Satu Desa & Satu Kecamatan)
-    const villageRadios = document.querySelectorAll('input[name="radio_village_rate"]');
-    const villageInputCont = document.getElementById('village-rate-input-container');
-    const villageFeeInput = document.getElementById('input-local-village-fee');
-    const btnVillageFree = document.querySelector('.btn-rate-village-free');
-    const btnVillageCustom = document.querySelector('.btn-rate-village-custom');
+          const isVolumetricHeavier = pkgGram > 0 && volGram > pkgGram;
 
-    villageRadios.forEach(r => {
-      r.onchange = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        const isFree = (e.target.value === 'free');
-        primaryState.shipping_config.local_village_free = isFree;
-        if (villageInputCont) {
-          villageInputCont.classList.toggle('hidden', isFree);
-          villageInputCont.classList.toggle('flex', !isFree);
-        }
-        if (btnVillageFree && btnVillageCustom) {
-          btnVillageFree.className = `btn-rate-village-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
-          btnVillageCustom.className = `btn-rate-village-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${!isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
-        }
-        updateProductCardLivePreview();
-      };
-    });
-
-    if (villageFeeInput) {
-      villageFeeInput.oninput = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.local_village_fee = e.target.value.trim();
-        updateProductCardLivePreview();
-      };
-    }
-
-    const districtRadios = document.querySelectorAll('input[name="radio_district_rate"]');
-    const districtInputCont = document.getElementById('district-rate-input-container');
-    const districtFeeInput = document.getElementById('input-local-district-fee');
-    const btnDistrictFree = document.querySelector('.btn-rate-district-free');
-    const btnDistrictCustom = document.querySelector('.btn-rate-district-custom');
-
-    districtRadios.forEach(r => {
-      r.onchange = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        const isFree = (e.target.value === 'free');
-        primaryState.shipping_config.local_district_free = isFree;
-        if (districtInputCont) {
-          districtInputCont.classList.toggle('hidden', isFree);
-          districtInputCont.classList.toggle('flex', !isFree);
-        }
-        if (btnDistrictFree && btnDistrictCustom) {
-          btnDistrictFree.className = `btn-rate-district-free px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
-          btnDistrictCustom.className = `btn-rate-district-custom px-2.5 py-1 rounded-md cursor-pointer flex items-center gap-1.5 transition ${!isFree ? 'bg-white text-emerald-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'}`;
-        }
-        updateProductCardLivePreview();
-      };
-    });
-
-    if (districtFeeInput) {
-      districtFeeInput.oninput = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.local_district_fee = e.target.value.trim();
-        updateProductCardLivePreview();
-      };
-    }
-
-    const chkSaveDefault = document.getElementById('chk-save-local-shipping-default');
-    if (chkSaveDefault) {
-      chkSaveDefault.onchange = (e) => {
-        if (e.target.checked && primaryState.shipping_config) {
-          try {
-            localStorage.setItem('store_default_local_shipping', JSON.stringify({
-              local_village_free: primaryState.shipping_config.local_village_free !== false,
-              local_village_fee: primaryState.shipping_config.local_village_fee ?? '',
-              local_district_free: Boolean(primaryState.shipping_config.local_district_free),
-              local_district_fee: primaryState.shipping_config.local_district_fee ?? ''
-            }));
-            if (typeof App !== 'undefined' && App.showToast) {
-              App.showToast('Pengaturan tarif lokal disimpan sebagai bawaan toko!', 'success');
-            }
-          } catch (err) {}
-        }
-      };
-    }
-
-    function updateVolumetricWeightCalculation() {
-      const lInp = document.getElementById('input-dim-length');
-      const wInp = document.getElementById('input-dim-width');
-      const hInp = document.getElementById('input-dim-height');
-      const weightInp = document.getElementById('input-package-weight');
-      const unitSel = document.getElementById('select-package-weight-unit');
-      const infoEl = document.getElementById('volumetric-weight-info');
-
-      if (!infoEl) return;
-
-      const l = parseFloat(lInp?.value) || 0;
-      const w = parseFloat(wInp?.value) || 0;
-      const h = parseFloat(hInp?.value) || 0;
-
-      if (l > 0 && w > 0 && h > 0) {
-        // Formula: Berat Volumetrik (kg) = (P * L * T) / 6000, gram = kg * 1000
-        const volKg = (l * w * h) / 6000;
-        const volGram = Math.round(volKg * 1000);
-        const volKgFormatted = (Math.round(volKg * 100) / 100).toLocaleString('id-ID', { maximumFractionDigits: 2 });
-        const volGramFormatted = volGram.toLocaleString('id-ID');
-
-        // Bandingkan dengan berat paket aktual jika diisi
-        let pkgGram = 0;
-        if (weightInp && weightInp.value.trim() !== '') {
-          const rawW = parseFloat(weightInp.value) || 0;
-          const unit = unitSel?.value || 'gram';
-          pkgGram = unit === 'kg' ? rawW * 1000 : rawW;
-        }
-
-        const isVolumetricHeavier = pkgGram > 0 && volGram > pkgGram;
-
-        infoEl.innerHTML = `
+          infoEl.innerHTML = `
           <div class="flex items-start gap-2">
             <i class="bi bi-box-seam text-emerald-600 text-sm mt-0.5 shrink-0"></i>
             <div class="space-y-0.5 min-w-0">
@@ -22113,264 +23688,264 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             </div>
           </div>
         `;
-        infoEl.classList.remove('hidden');
-      } else {
-        infoEl.classList.add('hidden');
-        infoEl.innerHTML = '';
-      }
-    }
-
-    const pkgWeightInp = document.getElementById('input-package-weight');
-    const pkgWeightUnitSel = document.getElementById('select-package-weight-unit');
-    const dimLInp = document.getElementById('input-dim-length');
-    const dimWInp = document.getElementById('input-dim-width');
-    const dimHInp = document.getElementById('input-dim-height');
-
-    if (pkgWeightInp) {
-      pkgWeightInp.oninput = (e) => {
-        const val = e.target.value.trim();
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.weight = val !== '' ? (parseFloat(val) || '') : '';
-        const weightErrEl = document.getElementById('package-weight-error-msg');
-        if (val !== '' && parseFloat(val) > 0) {
-          pkgWeightInp.classList.remove('border-red-500');
-          pkgWeightInp.classList.add('border-slate-300');
-          if (weightErrEl) weightErrEl.classList.add('hidden');
+          infoEl.classList.remove('hidden');
+        } else {
+          infoEl.classList.add('hidden');
+          infoEl.innerHTML = '';
         }
-        updateVolumetricWeightCalculation();
-        updateProductCardLivePreview();
-      };
-    }
+      }
 
-    if (pkgWeightUnitSel) {
-      pkgWeightUnitSel.onchange = (e) => {
-        if (!primaryState.shipping_config) primaryState.shipping_config = {};
-        primaryState.shipping_config.weight_unit = e.target.value || 'gram';
-        updateVolumetricWeightCalculation();
-        updateProductCardLivePreview();
-      };
-    }
+      const pkgWeightInp = document.getElementById('input-package-weight');
+      const pkgWeightUnitSel = document.getElementById('select-package-weight-unit');
+      const dimLInp = document.getElementById('input-dim-length');
+      const dimWInp = document.getElementById('input-dim-width');
+      const dimHInp = document.getElementById('input-dim-height');
 
-    [dimLInp, dimWInp, dimHInp].forEach(inp => {
-      if (inp) {
-        inp.oninput = () => {
+      if (pkgWeightInp) {
+        pkgWeightInp.oninput = (e) => {
+          const val = e.target.value.trim();
           if (!primaryState.shipping_config) primaryState.shipping_config = {};
-          if (inp === dimLInp) primaryState.shipping_config.length = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
-          if (inp === dimWInp) primaryState.shipping_config.width = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
-          if (inp === dimHInp) primaryState.shipping_config.height = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
+          primaryState.shipping_config.weight = val !== '' ? (parseFloat(val) || '') : '';
+          const weightErrEl = document.getElementById('package-weight-error-msg');
+          if (val !== '' && parseFloat(val) > 0) {
+            pkgWeightInp.classList.remove('border-red-500');
+            pkgWeightInp.classList.add('border-slate-300');
+            if (weightErrEl) weightErrEl.classList.add('hidden');
+          }
           updateVolumetricWeightCalculation();
+          updateProductCardLivePreview();
         };
       }
-    });
 
-    // Inisialisasi hitungan volumetrik jika sudah ada nilai
-    updateVolumetricWeightCalculation();
-
-    // Card 4: Program Promo (2 Toggle Mandiri: Promo Bulanan & Promo Harian)
-    const togglePromoMonthly = document.getElementById('toggle-promo-monthly');
-    const promoMonthlyInputsBox = document.getElementById('promo-monthly-inputs-box');
-    const selectMonthlyPromoType = document.getElementById('select-monthly-promo-type');
-    const inputMonthlyPromoVal = document.getElementById('input-monthly-promo-value');
-
-    function updateMonthlyDiscountAutoConvert() {
-      const dType = selectMonthlyPromoType ? selectMonthlyPromoType.value : (primaryState.monthly_discount_type || 'percent');
-      const rawVal = inputMonthlyPromoVal ? inputMonthlyPromoVal.value : primaryState.monthly_discount_value;
-      const dVal = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
-      const box = document.getElementById('monthly-discount-auto-convert-box');
-      const autoText = document.getElementById('monthly-discount-auto-convert-text');
-      const autoBadge = document.getElementById('monthly-discount-auto-convert-badge');
-
-      let basePrice = 0;
-      if (materialsState.length > 0 && materialsState[0].price > 0) {
-        basePrice = materialsState[0].price;
-      } else if (primaryState.price > 0) {
-        basePrice = primaryState.price;
+      if (pkgWeightUnitSel) {
+        pkgWeightUnitSel.onchange = (e) => {
+          if (!primaryState.shipping_config) primaryState.shipping_config = {};
+          primaryState.shipping_config.weight_unit = e.target.value || 'gram';
+          updateVolumetricWeightCalculation();
+          updateProductCardLivePreview();
+        };
       }
 
-      if (dVal <= 0 || basePrice <= 0) {
+      [dimLInp, dimWInp, dimHInp].forEach(inp => {
+        if (inp) {
+          inp.oninput = () => {
+            if (!primaryState.shipping_config) primaryState.shipping_config = {};
+            if (inp === dimLInp) primaryState.shipping_config.length = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
+            if (inp === dimWInp) primaryState.shipping_config.width = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
+            if (inp === dimHInp) primaryState.shipping_config.height = inp.value.trim() !== '' ? (parseFloat(inp.value) || '') : '';
+            updateVolumetricWeightCalculation();
+          };
+        }
+      });
+
+      // Inisialisasi hitungan volumetrik jika sudah ada nilai
+      updateVolumetricWeightCalculation();
+
+      // Card 4: Program Promo (2 Toggle Mandiri: Promo Bulanan & Promo Harian)
+      const togglePromoMonthly = document.getElementById('toggle-promo-monthly');
+      const promoMonthlyInputsBox = document.getElementById('promo-monthly-inputs-box');
+      const selectMonthlyPromoType = document.getElementById('select-monthly-promo-type');
+      const inputMonthlyPromoVal = document.getElementById('input-monthly-promo-value');
+
+      function updateMonthlyDiscountAutoConvert() {
+        const dType = selectMonthlyPromoType ? selectMonthlyPromoType.value : (primaryState.monthly_discount_type || 'percent');
+        const rawVal = inputMonthlyPromoVal ? inputMonthlyPromoVal.value : primaryState.monthly_discount_value;
+        const dVal = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
+        const box = document.getElementById('monthly-discount-auto-convert-box');
+        const autoText = document.getElementById('monthly-discount-auto-convert-text');
+        const autoBadge = document.getElementById('monthly-discount-auto-convert-badge');
+
+        let basePrice = 0;
+        if (materialsState.length > 0 && materialsState[0].price > 0) {
+          basePrice = materialsState[0].price;
+        } else if (primaryState.price > 0) {
+          basePrice = primaryState.price;
+        }
+
+        if (dVal <= 0 || basePrice <= 0) {
+          if (box) {
+            box.classList.add('hidden');
+            box.classList.remove('flex');
+          }
+          return;
+        }
+
         if (box) {
-          box.classList.add('hidden');
-          box.classList.remove('flex');
+          box.classList.remove('hidden');
+          box.classList.add('flex');
         }
-        return;
+
+        if (dType === 'percent') {
+          const nomPotongan = Math.round(basePrice * (dVal / 100));
+          if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan Rp ${nomPotongan.toLocaleString('id-ID')} dari harga dasar ${formatIDR(basePrice)}.`;
+          if (autoBadge) autoBadge.textContent = `${Math.min(100, Math.round(dVal))}%`;
+        } else {
+          const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
+          if (autoText) autoText.textContent = `Potongan Rp ${dVal.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar ${formatIDR(basePrice)}.`;
+          if (autoBadge) autoBadge.textContent = `${pct}%`;
+        }
       }
 
-      if (box) {
-        box.classList.remove('hidden');
-        box.classList.add('flex');
+      if (togglePromoMonthly) {
+        togglePromoMonthly.onchange = e => {
+          primaryState.auto_monthly_promo = e.target.checked;
+          primaryState.include_in_monthly_promo = e.target.checked;
+          if (promoMonthlyInputsBox) {
+            promoMonthlyInputsBox.classList.toggle('hidden', !e.target.checked);
+            promoMonthlyInputsBox.classList.toggle('block', e.target.checked);
+          }
+          updateMonthlyDiscountAutoConvert();
+          updateProductCardLivePreview();
+          saveDraftToStorage();
+        };
       }
 
-      if (dType === 'percent') {
-        const nomPotongan = Math.round(basePrice * (dVal / 100));
-        if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan Rp ${nomPotongan.toLocaleString('id-ID')} dari harga dasar ${formatIDR(basePrice)}.`;
-        if (autoBadge) autoBadge.textContent = `${Math.min(100, Math.round(dVal))}%`;
-      } else {
-        const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
-        if (autoText) autoText.textContent = `Potongan Rp ${dVal.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar ${formatIDR(basePrice)}.`;
-        if (autoBadge) autoBadge.textContent = `${pct}%`;
+      if (selectMonthlyPromoType) {
+        selectMonthlyPromoType.onchange = e => {
+          primaryState.monthly_discount_type = e.target.value || 'percent';
+          updateMonthlyDiscountAutoConvert();
+          saveDraftToStorage();
+        };
       }
-    }
 
-    if (togglePromoMonthly) {
-      togglePromoMonthly.onchange = e => {
-        primaryState.auto_monthly_promo = e.target.checked;
-        primaryState.include_in_monthly_promo = e.target.checked;
-        if (promoMonthlyInputsBox) {
-          promoMonthlyInputsBox.classList.toggle('hidden', !e.target.checked);
-          promoMonthlyInputsBox.classList.toggle('block', e.target.checked);
+      if (inputMonthlyPromoVal) {
+        inputMonthlyPromoVal.oninput = e => {
+          const raw = e.target.value;
+          primaryState.monthly_discount_value = (raw !== '' && raw !== null && raw !== undefined) ? (parseFloat(raw) || 0) : '';
+          updateMonthlyDiscountAutoConvert();
+          saveDraftToStorage();
+        };
+      }
+
+      // Inisialisasi awal helper promo bulanan
+      updateMonthlyDiscountAutoConvert();
+
+      const togglePromoDaily = document.getElementById('toggle-promo-daily');
+      const promoDailyInputsBox = document.getElementById('promo-daily-inputs-box');
+      if (togglePromoDaily) {
+        togglePromoDaily.onchange = e => {
+          primaryState.has_daily_promo = e.target.checked;
+          primaryState.has_monthly_discount = e.target.checked;
+          if (promoDailyInputsBox) {
+            promoDailyInputsBox.classList.toggle('hidden', !e.target.checked);
+            promoDailyInputsBox.classList.toggle('block', e.target.checked);
+          }
+          updateDiscountAutoConvert();
+          updateProductCardLivePreview();
+          saveDraftToStorage();
+        };
+      }
+
+      const promoLabelInp = document.getElementById('input-promo-label');
+      if (promoLabelInp) {
+        promoLabelInp.oninput = e => {
+          primaryState.monthly_promo_label = e.target.value || 'Promo Spesial';
+          updateProductCardLivePreview();
+          saveDraftToStorage();
+        };
+      }
+
+      const selectPromoType = document.getElementById('select-promo-discount-type');
+      const inputPromoVal = document.getElementById('input-promo-discount-value');
+      const autoBadge = document.getElementById('discount-auto-convert-badge');
+      const autoText = document.getElementById('discount-auto-convert-text');
+
+      function updateDiscountAutoConvert() {
+        const dType = selectPromoType ? selectPromoType.value : (primaryState.discount_type || 'percent');
+        const rawVal = inputPromoVal ? inputPromoVal.value : primaryState.discount_value;
+        const dVal = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
+        const box = document.getElementById('discount-auto-convert-box');
+
+        let basePrice = 0;
+        if (materialsState.length > 0 && materialsState[0].price > 0) {
+          basePrice = materialsState[0].price;
+        } else if (primaryState.price > 0) {
+          basePrice = primaryState.price;
         }
-        updateMonthlyDiscountAutoConvert();
-        updateProductCardLivePreview();
-        saveDraftToStorage();
-      };
-    }
 
-    if (selectMonthlyPromoType) {
-      selectMonthlyPromoType.onchange = e => {
-        primaryState.monthly_discount_type = e.target.value || 'percent';
-        updateMonthlyDiscountAutoConvert();
-        saveDraftToStorage();
-      };
-    }
-
-    if (inputMonthlyPromoVal) {
-      inputMonthlyPromoVal.oninput = e => {
-        const raw = e.target.value;
-        primaryState.monthly_discount_value = (raw !== '' && raw !== null && raw !== undefined) ? (parseFloat(raw) || 0) : '';
-        updateMonthlyDiscountAutoConvert();
-        saveDraftToStorage();
-      };
-    }
-
-    // Inisialisasi awal helper promo bulanan
-    updateMonthlyDiscountAutoConvert();
-
-    const togglePromoDaily = document.getElementById('toggle-promo-daily');
-    const promoDailyInputsBox = document.getElementById('promo-daily-inputs-box');
-    if (togglePromoDaily) {
-      togglePromoDaily.onchange = e => {
-        primaryState.has_daily_promo = e.target.checked;
-        primaryState.has_monthly_discount = e.target.checked;
-        if (promoDailyInputsBox) {
-          promoDailyInputsBox.classList.toggle('hidden', !e.target.checked);
-          promoDailyInputsBox.classList.toggle('block', e.target.checked);
+        if (dVal <= 0 || basePrice <= 0) {
+          if (box) {
+            box.classList.add('hidden');
+            box.classList.remove('flex');
+          }
+          return;
         }
+
+        if (box) {
+          box.classList.remove('hidden');
+          box.classList.add('flex');
+        }
+
+        if (dType === 'percent') {
+          const nomPotongan = Math.round(basePrice * (dVal / 100));
+          if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan Rp ${nomPotongan.toLocaleString('id-ID')} dari harga dasar ${formatIDR(basePrice)}.`;
+          if (autoBadge) autoBadge.textContent = `${Math.min(100, Math.round(dVal))}%`;
+        } else {
+          const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
+          if (autoText) autoText.textContent = `Potongan Rp ${dVal.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar ${formatIDR(basePrice)}.`;
+          if (autoBadge) autoBadge.textContent = `${pct}%`;
+        }
+      }
+
+      function updatePromoDailyLive() {
+        const rawVal = inputPromoVal?.value;
+        const val = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : '';
+        const type = selectPromoType?.value || 'percent';
+        primaryState.discount_value = val;
+        primaryState.discount_type = type;
         updateDiscountAutoConvert();
         updateProductCardLivePreview();
         saveDraftToStorage();
-      };
-    }
-
-    const promoLabelInp = document.getElementById('input-promo-label');
-    if (promoLabelInp) {
-      promoLabelInp.oninput = e => {
-        primaryState.monthly_promo_label = e.target.value || 'Promo Spesial';
-        updateProductCardLivePreview();
-        saveDraftToStorage();
-      };
-    }
-
-    const selectPromoType = document.getElementById('select-promo-discount-type');
-    const inputPromoVal = document.getElementById('input-promo-discount-value');
-    const autoBadge = document.getElementById('discount-auto-convert-badge');
-    const autoText = document.getElementById('discount-auto-convert-text');
-
-    function updateDiscountAutoConvert() {
-      const dType = selectPromoType ? selectPromoType.value : (primaryState.discount_type || 'percent');
-      const rawVal = inputPromoVal ? inputPromoVal.value : primaryState.discount_value;
-      const dVal = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : 0;
-      const box = document.getElementById('discount-auto-convert-box');
-
-      let basePrice = 0;
-      if (materialsState.length > 0 && materialsState[0].price > 0) {
-        basePrice = materialsState[0].price;
-      } else if (primaryState.price > 0) {
-        basePrice = primaryState.price;
       }
 
-      if (dVal <= 0 || basePrice <= 0) {
-        if (box) {
-          box.classList.add('hidden');
-          box.classList.remove('flex');
-        }
-        return;
-      }
+      if (selectPromoType) selectPromoType.onchange = updatePromoDailyLive;
+      if (inputPromoVal) inputPromoVal.oninput = updatePromoDailyLive;
 
-      if (box) {
-        box.classList.remove('hidden');
-        box.classList.add('flex');
-      }
-
-      if (dType === 'percent') {
-        const nomPotongan = Math.round(basePrice * (dVal / 100));
-        if (autoText) autoText.textContent = `Diskon ${dVal}% setara potongan Rp ${nomPotongan.toLocaleString('id-ID')} dari harga dasar ${formatIDR(basePrice)}.`;
-        if (autoBadge) autoBadge.textContent = `${Math.min(100, Math.round(dVal))}%`;
-      } else {
-        const pct = basePrice > 0 ? Math.min(100, Math.round((dVal / basePrice) * 100)) : 0;
-        if (autoText) autoText.textContent = `Potongan Rp ${dVal.toLocaleString('id-ID')} setara sekitar ${pct}% dari harga dasar ${formatIDR(basePrice)}.`;
-        if (autoBadge) autoBadge.textContent = `${pct}%`;
-      }
-    }
-
-    function updatePromoDailyLive() {
-      const rawVal = inputPromoVal?.value;
-      const val = (rawVal !== '' && rawVal !== null && rawVal !== undefined) ? (parseFloat(rawVal) || 0) : '';
-      const type = selectPromoType?.value || 'percent';
-      primaryState.discount_value = val;
-      primaryState.discount_type = type;
+      // Inisialisasi awal kalkulasi konversi diskon
       updateDiscountAutoConvert();
-      updateProductCardLivePreview();
-      saveDraftToStorage();
+
+      // Card 5: AI Description
+      const btnAiGen = document.getElementById('btn-ai-generate-desc');
+      const aiBox = document.getElementById('ai-description-preview-box');
+      const aiText = document.getElementById('ai-description-preview-text');
+      const btnAiApply = document.getElementById('btn-ai-desc-apply');
+      const btnAiCancel = document.getElementById('btn-ai-desc-cancel');
+      const descInput = document.getElementById('input-prod-desc');
+
+      if (btnAiGen) {
+        btnAiGen.onclick = async () => {
+          const name = primaryState.name || 'Produk Unggulan';
+          const cat = (DB.getCategories && primaryState.category_id) ? (DB.getCategories().find(c => String(c.id) === String(primaryState.category_id))?.name || 'Katalog') : 'Katalog';
+          const generated = `Dapatkan ${name} kualitas terbaik dari kategori ${cat}. Dikerjakan dengan bahan premium dan standar presisi tinggi untuk menjamin kepuasan Anda. Cocok untuk kebutuhan usaha maupun personal.\n\nKeunggulan:\n- Kualitas produk terbaik dan tahan lama\n- Layanan pengerjaan rapi dan terpercaya\n- Garansi kepuasan pelanggan 100%`;
+          if (aiText) aiText.textContent = generated;
+          if (aiBox) aiBox.classList.remove('hidden');
+        };
+      }
+
+      if (btnAiApply) {
+        btnAiApply.onclick = () => {
+          if (descInput && aiText) {
+            descInput.value = aiText.textContent;
+            primaryState.description = descInput.value;
+          }
+          if (aiBox) aiBox.classList.add('hidden');
+        };
+      }
+
+      if (btnAiCancel) {
+        btnAiCancel.onclick = () => {
+          if (aiBox) aiBox.classList.add('hidden');
+        };
+      }
+
+      // Card 6: Komisi Afiliasi Events
+      bindAffiliateCommissionEvents();
+
+      // Inisialisasi Custom Popover Dropdown Bersih (Shadcn Select Kompak) untuk seluruh input Step 2
+      if (typeof bindCleanDatalistPopovers === 'function') {
+        bindCleanDatalistPopovers(document.getElementById('step-pane-2') || document);
+      }
     }
-
-    if (selectPromoType) selectPromoType.onchange = updatePromoDailyLive;
-    if (inputPromoVal) inputPromoVal.oninput = updatePromoDailyLive;
-
-    // Inisialisasi awal kalkulasi konversi diskon
-    updateDiscountAutoConvert();
-
-    // Card 5: AI Description
-    const btnAiGen = document.getElementById('btn-ai-generate-desc');
-    const aiBox = document.getElementById('ai-description-preview-box');
-    const aiText = document.getElementById('ai-description-preview-text');
-    const btnAiApply = document.getElementById('btn-ai-desc-apply');
-    const btnAiCancel = document.getElementById('btn-ai-desc-cancel');
-    const descInput = document.getElementById('input-prod-desc');
-
-    if (btnAiGen) {
-      btnAiGen.onclick = async () => {
-        const name = primaryState.name || 'Produk Unggulan';
-        const cat = (DB.getCategories && primaryState.category_id) ? (DB.getCategories().find(c => String(c.id) === String(primaryState.category_id))?.name || 'Katalog') : 'Katalog';
-        const generated = `Dapatkan ${name} kualitas terbaik dari kategori ${cat}. Dikerjakan dengan bahan premium dan standar presisi tinggi untuk menjamin kepuasan Anda. Cocok untuk kebutuhan usaha maupun personal.\n\nKeunggulan:\n- Kualitas produk terbaik dan tahan lama\n- Layanan pengerjaan rapi dan terpercaya\n- Garansi kepuasan pelanggan 100%`;
-        if (aiText) aiText.textContent = generated;
-        if (aiBox) aiBox.classList.remove('hidden');
-      };
-    }
-
-    if (btnAiApply) {
-      btnAiApply.onclick = () => {
-        if (descInput && aiText) {
-          descInput.value = aiText.textContent;
-          primaryState.description = descInput.value;
-        }
-        if (aiBox) aiBox.classList.add('hidden');
-      };
-    }
-
-    if (btnAiCancel) {
-      btnAiCancel.onclick = () => {
-        if (aiBox) aiBox.classList.add('hidden');
-      };
-    }
-
-    // Card 6: Komisi Afiliasi Events
-    bindAffiliateCommissionEvents();
-
-    // Inisialisasi Custom Popover Dropdown Bersih (Shadcn Select Kompak) untuk seluruh input Step 2
-    if (typeof bindCleanDatalistPopovers === 'function') {
-      bindCleanDatalistPopovers(document.getElementById('step-pane-2') || document);
-    }
-  }
 
 
     const btnToggleSidebar = document.getElementById('btn-toggle-preview-sidebar');
@@ -22378,7 +23953,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const sidebar = document.getElementById('desktop-preview-sidebar');
     const wizardCol = document.getElementById('wizard-form-col');
 
-    updateSubnavPreviewButtonState = function(isOpen) {
+    updateSubnavPreviewButtonState = function (isOpen) {
       const btn = document.getElementById('btn-subnav-toggle-preview');
       const btnExpand = document.getElementById('btn-expand-preview-sidebar');
       const subnavFixed = document.getElementById('step2-subnav-fixed');
@@ -22434,7 +24009,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     };
 
-    setSidebarState = function(isOpen) {
+    setSidebarState = function (isOpen) {
       if (!primaryState.is_active && isOpen) return;
       isLivePreviewOpen = isOpen;
       const btnExpand = document.getElementById('btn-expand-preview-sidebar');
@@ -22587,7 +24162,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const mobileBackdrop = document.getElementById('mobile-preview-backdrop');
     const mobileSheet = document.getElementById('mobile-preview-sheet');
 
-    openMobilePreview = function() {
+    openMobilePreview = function () {
       if (!primaryState.is_active) return;
       // Aturan Saling Tutup: Jika Sidebar Menu Toko sedang terbuka di layar kecil/mobile, otomatis tutup
       const sidebarEl = document.getElementById('admin-main-sidebar');
@@ -22614,7 +24189,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobileSheet) mobileSheet.classList.remove('translate-y-full');
     };
 
-    closeMobilePreview = function() {
+    closeMobilePreview = function () {
       if (mobileSheet) mobileSheet.classList.add('translate-y-full');
       if (mobileBackdrop) mobileBackdrop.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
@@ -22786,7 +24361,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-        // -------------------------------------------------------------
+    // -------------------------------------------------------------
     // Step 1: Navigasi & Event Binding Input Step 1
     // -------------------------------------------------------------
     const btnStep1Cancel = document.getElementById('btn-step-1-cancel');
@@ -23166,7 +24741,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     updateStep1SequentialGatingDOM();
 
 
-        // -------------------------------------------------------------
+    // -------------------------------------------------------------
     // Tombol: Terapkan HPP Sama Rata ke Semua Varian & Live Margins
     // -------------------------------------------------------------
     function bindMaterialInputsMarginLive() {
@@ -23393,60 +24968,60 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // Helper: Tanggal & Waktu Lokal untuk Pengaturan Periode Maksimal Order
-  function getTodayDateString() {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+    function getTodayDateString() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
-  function formatDateDisplay(dateStr) {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    function formatDateDisplay(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      return dateStr;
     }
-    return dateStr;
-  }
 
-  function addDaysToDate(dateStr, days) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
-    d.setDate(d.getDate() + days);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+    function addDaysToDate(dateStr, days) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      d.setDate(d.getDate() + days);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
-  // Kondisi Gerbang (Gating): Cek kelengkapan seluruh data wajib di Step 1
-  function isStep1Complete() {
-    // 1. Jenis Produk / Layanan (Fisik atau Non Fisik)
-    if (!primaryState.product_type || (primaryState.product_type !== 'physical' && primaryState.product_type !== 'non_physical')) {
-      return false;
+    // Kondisi Gerbang (Gating): Cek kelengkapan seluruh data wajib di Step 1
+    function isStep1Complete() {
+      // 1. Jenis Produk / Layanan (Fisik atau Non Fisik)
+      if (!primaryState.product_type || (primaryState.product_type !== 'physical' && primaryState.product_type !== 'non_physical')) {
+        return false;
+      }
+      // 2. Model Kartu (Wajib jika toko aktif)
+      if (primaryState.is_active && !primaryState.card_variant) {
+        return false;
+      }
+      // 3. Foto Produk (Minimal 1 foto sebagai cover)
+      if (!primaryState.images || primaryState.images.length === 0) {
+        if (!primaryState.image_url) return false;
+      }
+      // 4. Nama Produk
+      if (!primaryState.name || primaryState.name.trim() === '') {
+        return false;
+      }
+      // 5. Kategori Utama Etalase
+      if (!primaryState.category_id || String(primaryState.category_id).trim() === '') {
+        return false;
+      }
+      return true;
     }
-    // 2. Model Kartu (Wajib jika toko aktif)
-    if (primaryState.is_active && !primaryState.card_variant) {
-      return false;
-    }
-    // 3. Foto Produk (Minimal 1 foto sebagai cover)
-    if (!primaryState.images || primaryState.images.length === 0) {
-      if (!primaryState.image_url) return false;
-    }
-    // 4. Nama Produk
-    if (!primaryState.name || primaryState.name.trim() === '') {
-      return false;
-    }
-    // 5. Kategori Utama Etalase
-    if (!primaryState.category_id || String(primaryState.category_id).trim() === '') {
-      return false;
-    }
-    return true;
-  }
 
-  // Helper: Penentuan Otomatis Model Kartu Berdasarkan Kategori Produk
+    // Helper: Penentuan Otomatis Model Kartu Berdasarkan Kategori Produk
     function getSuggestedCardVariantForCategory(categoryId) {
       if (!categoryId) return 'A';
       const categories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
@@ -24237,7 +25812,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-// btnToggleBadgeVis removed
+    // btnToggleBadgeVis removed
 
     // Toggle Active & Storefront Visibility Integration
     const toggleIsActive = document.getElementById('toggle-is-active-form');
@@ -24417,7 +25992,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       strip.innerHTML = `
         ${(primaryState.images || []).map((img, i) => `
           <div class="w-14 h-14 rounded-md border border-slate-200 overflow-hidden shrink-0 relative bg-slate-50">
-            <img src="${img}" alt="Cover ${i+1}" class="w-full h-full object-cover" />
+            <img src="${img}" alt="Cover ${i + 1}" class="w-full h-full object-cover" />
             ${i === 0 ? '<span class="absolute bottom-0 inset-x-0 bg-emerald-600 text-[8px] text-white font-bold text-center py-0.5">Cover</span>' : ''}
           </div>
         `).join('')}
@@ -24492,11 +26067,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       // 0a. Tab Subnavbar Step 2 (Scroll Smooth ke Seksi Kartu Terkait & Aktifkan Tab)
       const navTab = e.target.closest('.step2-nav-tab') ||
-                     e.target.closest('.step2-subnav-link') ||
-                     e.target.closest('#step2-subnav-links button') ||
-                     e.target.closest('#step2-subnav-links a') ||
-                     e.target.closest('[data-step2-target]') ||
-                     e.target.closest('#step2-subnav-fixed [data-target]');
+        e.target.closest('.step2-subnav-link') ||
+        e.target.closest('#step2-subnav-links button') ||
+        e.target.closest('#step2-subnav-links a') ||
+        e.target.closest('[data-step2-target]') ||
+        e.target.closest('#step2-subnav-fixed [data-target]');
       if (navTab) {
         e.preventDefault();
         e.stopPropagation();
@@ -24743,6 +26318,50 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Inisialisasi Custom Popover Dropdown Bersih (Gaya Callout Ramping) untuk seluruh input Step 1, Step 2, & Preview
     if (typeof bindCleanDatalistPopovers === 'function') {
       bindCleanDatalistPopovers(document);
+    }
+  }
+
+  function syncSizeGuideStateFromDOM() {
+    const thead = document.getElementById('size-guide-thead');
+    const tbody = document.getElementById('size-guide-tbody');
+    const toggleEnable = document.getElementById('toggle-size-guide-enable');
+    const typeRad = document.querySelector('input[name="size_guide_type"]:checked');
+
+    if (thead && tbody && !toggleEnable) return;
+
+    primaryState.size_guide = primaryState.size_guide || {
+      enabled: false,
+      type: '',
+      template: 'pakaian',
+      columns: [...defaultSizeGuideTemplates.pakaian.columns],
+      rows: defaultSizeGuideTemplates.pakaian.rows.map(r => [...r]),
+      image_url: '',
+      linked_variation: null
+    };
+
+    if (toggleEnable) {
+      primaryState.size_guide.enabled = toggleEnable.checked;
+    }
+    if (typeRad) {
+      primaryState.size_guide.type = typeRad.value;
+    }
+    const selectLinkedVar = document.getElementById('select-size-guide-linked-variation');
+    if (selectLinkedVar) {
+      primaryState.size_guide.linked_variation = selectLinkedVar.value || null;
+    }
+
+    if (thead) {
+      const colInputs = thead.querySelectorAll('.size-col-header-input');
+      const cols = Array.from(colInputs).map((inp, idx) => inp.value || `Kolom ${idx + 1}`);
+      if (cols.length > 0) primaryState.size_guide.columns = cols;
+    }
+    if (tbody) {
+      const rowEls = tbody.querySelectorAll('tr');
+      const rows = Array.from(rowEls).map(tr => {
+        const cellInputs = tr.querySelectorAll('.size-cell-input');
+        return Array.from(cellInputs).map(inp => inp.value);
+      });
+      if (rows.length > 0) primaryState.size_guide.rows = rows;
     }
   }
 
@@ -25199,7 +26818,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           local_district_free: Boolean(primaryState.shipping_config.local_district_free),
           local_district_fee: primaryState.shipping_config.local_district_fee ?? ''
         }));
-      } catch (err) {}
+      } catch (err) { }
     }
 
     // Step 2 Card 6: Lainnya (Footer model 3, condition, sku, barcode)
@@ -25261,6 +26880,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (togglePo) primaryState.is_preorder = togglePo.checked;
     const poDaysInp = document.getElementById('input-preorder-days');
     if (poDaysInp) primaryState.preorder_days = parseInt(poDaysInp.value) || 7;
+
+    // Panduan Ukuran
+    const toggleGuide = document.getElementById('toggle-size-guide-enable');
+    if (toggleGuide) {
+      syncSizeGuideStateFromDOM();
+      primaryState.size_guide = primaryState.size_guide || {
+        enabled: false,
+        type: '',
+        template: 'pakaian',
+        columns: [...defaultSizeGuideTemplates.pakaian.columns],
+        rows: defaultSizeGuideTemplates.pakaian.rows.map(r => [...r]),
+        image_url: ''
+      };
+      primaryState.size_guide.enabled = toggleGuide.checked;
+      const typeRad = document.querySelector('input[name="size_guide_type"]:checked');
+      if (typeRad) primaryState.size_guide.type = typeRad.value;
+    }
 
     // Step 2 Card 6: Komisi Afiliasi DOM sync
     const toggleAffEl = document.getElementById('toggle-affiliate-commission');
@@ -25444,10 +27080,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const cVal = parseFloat(cRaw);
       if (cRaw === '' || isNaN(cVal) || cVal < 0) {
         addError('Modal/HPP produk wajib diisi.', singleCostEl);
-        validateSingleCost(true);
+        if (typeof validateSingleCost === 'function') validateSingleCost(true);
       } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
         addError('Hpp melebihi Harga Jual produk.', singleCostEl);
-        validateSingleCost(true);
+        if (typeof validateSingleCost === 'function') validateSingleCost(true);
       }
       if (!primaryState.is_unlimited_stock) {
         const sVal = firstMat?.stock;
@@ -25646,15 +27282,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
           // Kolom Variasi 2-4 pada List Variasi Produk kini merupakan ringkasan ketersediaan hanya-baca.
 
-        // Validasi DAG Keterkaitan Variasi (Task 02E)
-        if (hasV2Deps && typeof VariationEngine !== 'undefined') {
-          const dagRes = VariationEngine.validateDependencyDAG(getRuntimeProductAdapter());
-          if (!dagRes.isValid && Array.isArray(dagRes.errors)) {
-            dagRes.errors.forEach(errMsg => {
-              addError(errMsg, document.getElementById('section-skip-rules') || document.getElementById('combination-matrix-section'));
-            });
+          // Validasi DAG Keterkaitan Variasi (Task 02E)
+          if (hasV2Deps && typeof VariationEngine !== 'undefined') {
+            const dagRes = VariationEngine.validateDependencyDAG(getRuntimeProductAdapter());
+            if (!dagRes.isValid && Array.isArray(dagRes.errors)) {
+              dagRes.errors.forEach(errMsg => {
+                addError(errMsg, document.getElementById('section-skip-rules') || document.getElementById('combination-matrix-section'));
+              });
+            }
           }
-        }
 
           // Harga Grosir
           if (primaryState.has_wholesale && isMatWholesaleActive(mat)) {
@@ -25879,6 +27515,62 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
+    // Validasi Panduan Ukuran:
+    if (primaryState.size_guide && primaryState.size_guide.enabled) {
+      // Syarat Produk Tanpa Variasi: Wajib mengisi Harga Jual yang valid (> 0)
+      if (!primaryState.has_variants) {
+        const singlePriceInp = document.getElementById('input-single-price') || document.getElementById('input-base-price') || document.getElementById('input-prod-price') || document.getElementById('input-product-price');
+        const pVal = parseFloat(singlePriceInp ? singlePriceInp.value.trim() : (primaryState.price ?? materialsState[0]?.price));
+        if (isNaN(pVal) || pVal <= 0) {
+          if (singlePriceInp) {
+            singlePriceInp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          }
+          addError('Isi Harga Jual terlebih dahulu.', singlePriceInp || document.getElementById('card-step2-sales'));
+        }
+      }
+
+      const activeSizeTiers = (typeof getActiveVariationTiersForSizeGuide === 'function')
+        ? getActiveVariationTiersForSizeGuide()
+        : [];
+      if (activeSizeTiers.length >= 2) {
+        let linked = primaryState.size_guide.linked_variation;
+        if (linked === 'main') linked = 'tier2';
+        else if (linked === 'extra_1') linked = 'tier3';
+        else if (linked === 'extra_2') linked = 'tier4';
+        const isLinkedValid = Boolean(linked && activeSizeTiers.some(t => t.key === linked));
+        if (!isLinkedValid) {
+          const selectEl = document.getElementById('select-size-guide-linked-variation');
+          const triggerEl = document.getElementById('custom-select-size-guide-linked-variation');
+          const errEl = document.getElementById('size-guide-linked-variation-error');
+          if (errEl) {
+            errEl.textContent = 'Pilih variasi yang dikaitkan dengan Tabel Ukuran.';
+            errEl.classList.remove('hidden');
+          }
+          if (triggerEl) {
+            triggerEl.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          } else if (selectEl) {
+            selectEl.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          }
+          addError('Pilih variasi yang dikaitkan dengan Tabel Ukuran.', triggerEl || selectEl || document.getElementById('section-size-guide-wrapper') || document.getElementById('size-guide-variation-link-group'));
+        }
+      }
+
+      // Validasi Tipe Panduan Ukuran: Wajib dipilih (tidak boleh kosong)
+      const guideType = (primaryState.size_guide.type || '').trim();
+      if (!guideType) {
+        const typeWrapper = document.getElementById('size-guide-type-selection-wrapper');
+        const typeErr = document.getElementById('size-guide-type-error');
+        if (typeErr) {
+          typeErr.textContent = 'Pilih tipe panduan ukuran (Tabel Data atau Upload Gambar).';
+          typeErr.classList.remove('hidden');
+        }
+        addError('Pilih tipe panduan ukuran (Tabel Data atau Upload Gambar).', typeWrapper || document.getElementById('section-size-guide-wrapper'));
+      } else if (guideType === 'image' && !primaryState.size_guide.image_url) {
+        const imgDropzone = document.getElementById('size-guide-image-dropzone');
+        addError('Unggah foto bagan panduan ukuran terlebih dahulu.', imgDropzone || document.getElementById('section-size-guide-wrapper'));
+      }
+    }
+
     errors.firstInvalidElement = firstInvalidEl;
     return errors;
   }
@@ -25919,7 +27611,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           targetScrollEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TABLE' && el.tagName !== 'TR') {
             setTimeout(() => {
-              try { el.focus({ preventScroll: true }); } catch (err) {}
+              try { el.focus({ preventScroll: true }); } catch (err) { }
             }, 250);
           }
           // Visual highlight ring sementara (3 detik)
@@ -26158,8 +27850,26 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     openProductSpecDrawer,
     closeProductSpecDrawer,
     buildProductSpecDrawerHtml,
+    openProductSizeGuideDrawer,
+    closeProductSizeGuideDrawer,
+    buildProductSizeGuideDrawerHtml,
+    renderProductSizeGuideContentHtml,
+    refreshSizeGuideVariationLinkDropdown,
+    bindCustomSizeGuideVariationSelect,
+    getActiveVariationTiersForSizeGuide,
+    getEffectiveLinkedVariation,
+    renderSizeGuideSectionHtml,
+    renderSizeGuideVariationLinkMarkup,
+    renderDrawerVariationGroup,
     formatPriceHtmlWithSmallRp,
-    formatPriceRangeHtmlWithSmallRp
+    formatPriceRangeHtmlWithSmallRp,
+    renderSandboxDimensionModalMarkup,
+    bindSandboxDimensionModalEvents,
+    openSandboxDimensionModal,
+    closeSandboxDimensionModal,
+    applySandboxDimensionModal,
+    getSandboxPxlState: () => sandboxPxlState,
+    bindSizeGuideEvents
   };
 })();
 
@@ -26169,6 +27879,23 @@ window.formatPriceRangeHtmlWithSmallRp = ProductForm.formatPriceRangeHtmlWithSma
 window.openProductSpecDrawer = ProductForm.openProductSpecDrawer;
 window.closeProductSpecDrawer = ProductForm.closeProductSpecDrawer;
 window.buildProductSpecDrawerHtml = ProductForm.buildProductSpecDrawerHtml;
+window.openProductSizeGuideDrawer = ProductForm.openProductSizeGuideDrawer;
+window.closeProductSizeGuideDrawer = ProductForm.closeProductSizeGuideDrawer;
+window.buildProductSizeGuideDrawerHtml = ProductForm.buildProductSizeGuideDrawerHtml;
+window.renderProductSizeGuideContentHtml = ProductForm.renderProductSizeGuideContentHtml;
+window.refreshSizeGuideVariationLinkDropdown = ProductForm.refreshSizeGuideVariationLinkDropdown;
+window.bindCustomSizeGuideVariationSelect = ProductForm.bindCustomSizeGuideVariationSelect;
+window.bindSizeGuideEvents = ProductForm.bindSizeGuideEvents;
+window.getActiveVariationTiersForSizeGuide = ProductForm.getActiveVariationTiersForSizeGuide;
+window.getEffectiveLinkedVariation = ProductForm.getEffectiveLinkedVariation;
+window.renderSizeGuideSectionHtml = ProductForm.renderSizeGuideSectionHtml;
+window.renderSizeGuideVariationLinkMarkup = ProductForm.renderSizeGuideVariationLinkMarkup;
+window.renderSandboxDimensionModalMarkup = ProductForm.renderSandboxDimensionModalMarkup;
+window.bindSandboxDimensionModalEvents = ProductForm.bindSandboxDimensionModalEvents;
+window.openSandboxDimensionModal = ProductForm.openSandboxDimensionModal;
+window.closeSandboxDimensionModal = ProductForm.closeSandboxDimensionModal;
+window.applySandboxDimensionModal = ProductForm.applySandboxDimensionModal;
+window.getSandboxPxlState = ProductForm.getSandboxPxlState;
 window.goToStep = ProductForm.goToStep;
 window.validateSinglePrice = ProductForm.validateSinglePrice;
 window.scrollToStep2Card = ProductForm.scrollToStep2Card;

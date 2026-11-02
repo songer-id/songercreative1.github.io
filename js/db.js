@@ -447,17 +447,17 @@ const DB = (() => {
         const list = JSON.parse(data);
         if (Array.isArray(list) && list.length > 0) return list;
       }
-    } catch (e) {}
+    } catch (e) { }
     try {
       localStorage.setItem(REGISTRY_KEY, JSON.stringify(DEFAULT_TENANTS));
-    } catch (e) {}
+    } catch (e) { }
     return [...DEFAULT_TENANTS];
   }
 
   function saveTenantsRegistry(list) {
     try {
       localStorage.setItem(REGISTRY_KEY, JSON.stringify(list));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function getTenantKey(table) {
@@ -1715,8 +1715,8 @@ const DB = (() => {
 
     if (slugOrId && typeof slugOrId === 'string' && slugOrId.trim() !== '') {
       const q = slugOrId.trim().toLowerCase();
-      found = tenants.find(t => 
-        t.store_slug.toLowerCase() === q || 
+      found = tenants.find(t =>
+        t.store_slug.toLowerCase() === q ||
         t.tenant_id.toLowerCase() === q
       );
     }
@@ -1746,7 +1746,7 @@ const DB = (() => {
     currentTenant = found;
     try {
       localStorage.setItem(CURRENT_TENANT_KEY, currentTenant.store_slug);
-    } catch (e) {}
+    } catch (e) { }
 
     ensureTenantInitialized(currentTenant);
     return currentTenant;
@@ -2415,7 +2415,7 @@ const DB = (() => {
                 break;
               }
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         // 2. JIKA data null, bukan array, ATAU panjangnya 0 (products.length === 0):
@@ -2498,8 +2498,8 @@ const DB = (() => {
         // Terapkan filter jika ada
         if (targetFilters.search && targetFilters.search.trim() !== '') {
           const q = targetFilters.search.toLowerCase().trim();
-          list = list.filter(p => 
-            (p.name && p.name.toLowerCase().includes(q)) || 
+          list = list.filter(p =>
+            (p.name && p.name.toLowerCase().includes(q)) ||
             (p.category_name && p.category_name.toLowerCase().includes(q))
           );
         }
@@ -2571,8 +2571,8 @@ const DB = (() => {
         rating = Math.round((sum / approvedRevs.length) * 10) / 10;
       }
 
-      const images = Array.isArray(product.images) && product.images.length > 0 
-        ? product.images 
+      const images = Array.isArray(product.images) && product.images.length > 0
+        ? product.images
         : (product.image_url ? [product.image_url] : []);
 
       const enriched = {
@@ -2619,8 +2619,8 @@ const DB = (() => {
       const newId = generateUUID();
       const now = new Date().toISOString();
 
-      const images = Array.isArray(productData.images) && productData.images.length > 0 
-        ? productData.images 
+      const images = Array.isArray(productData.images) && productData.images.length > 0
+        ? productData.images
         : (productData.image_url ? [productData.image_url] : []);
 
       const newProduct = {
@@ -2729,6 +2729,7 @@ const DB = (() => {
           text_color: productData.footer_2_text_color || null
         },
         custom_specs: Array.isArray(productData.custom_specs) ? productData.custom_specs : [],
+        size_guide: productData.size_guide || null,
         brand: productData.brand ? productData.brand.trim() : '',
         product_origin: productData.product_origin ? productData.product_origin.trim() : '',
         warranty_unit: productData.warranty_unit || 'Tidak Ada Garansi',
@@ -2836,8 +2837,8 @@ const DB = (() => {
       if (index === -1) throw new Error('Produk tidak ditemukan!');
 
       const now = new Date().toISOString();
-      const images = Array.isArray(productData.images) && productData.images.length > 0 
-        ? productData.images 
+      const images = Array.isArray(productData.images) && productData.images.length > 0
+        ? productData.images
         : (productData.image_url ? [productData.image_url] : (products[index].images || []));
 
       const updatedProduct = {
@@ -2946,6 +2947,7 @@ const DB = (() => {
           text_color: products[index].footer_2_text_color || null
         }),
         custom_specs: Array.isArray(productData.custom_specs) ? productData.custom_specs : (products[index].custom_specs || []),
+        size_guide: productData.size_guide !== undefined ? productData.size_guide : (products[index].size_guide || null),
         brand: productData.brand !== undefined ? productData.brand.trim() : (products[index].brand || ''),
         product_origin: productData.product_origin !== undefined ? productData.product_origin.trim() : (products[index].product_origin || ''),
         warranty_unit: productData.warranty_unit !== undefined ? productData.warranty_unit : (products[index].warranty_unit || 'Tidak Ada Garansi'),
@@ -3154,7 +3156,7 @@ const DB = (() => {
           try {
             if (hasStoredPromos) pList = JSON.parse(localStorage.getItem('pos_promotions')) || [];
             if (hasStoredSponsors) sList = JSON.parse(localStorage.getItem('pos_sponsors')) || [];
-          } catch (e) {}
+          } catch (e) { }
           promos = {
             ...DEFAULT_PROMOS,
             promo_list: pList,
@@ -3183,7 +3185,7 @@ const DB = (() => {
           if (ss !== null) {
             promos.sponsor_list = JSON.parse(ss);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
       if (!Array.isArray(promos.sponsor_ads)) {
         promos.sponsor_ads = [...DEFAULT_PROMOS.sponsor_ads];
@@ -3209,12 +3211,12 @@ const DB = (() => {
       if (Array.isArray(updated.promo_list)) {
         try {
           localStorage.setItem('pos_promotions', JSON.stringify(updated.promo_list));
-        } catch (e) {}
+        } catch (e) { }
       }
       if (Array.isArray(updated.sponsor_list)) {
         try {
           localStorage.setItem('pos_sponsors', JSON.stringify(updated.sponsor_list));
-        } catch (e) {}
+        } catch (e) { }
       }
       return updated;
     },
@@ -3264,7 +3266,7 @@ const DB = (() => {
       try {
         localStorage.removeItem('pos_promotions');
         localStorage.removeItem('pos_sponsors');
-      } catch (e) {}
+      } catch (e) { }
       return DEFAULT_PROMOS;
     },
 
@@ -3276,7 +3278,7 @@ const DB = (() => {
         if (raw !== null) {
           list = JSON.parse(raw);
         }
-      } catch (e) {}
+      } catch (e) { }
 
       if (!Array.isArray(list)) {
         const promos = this.getPromos();
@@ -3297,14 +3299,14 @@ const DB = (() => {
 
     getSponsorList() {
       const promos = this.getPromos();
-      
+
       let storedList = null;
       try {
         const raw = localStorage.getItem('pos_sponsors');
         if (raw !== null) {
           storedList = JSON.parse(raw);
         }
-      } catch (e) {}
+      } catch (e) { }
 
       if (Array.isArray(storedList)) {
         promos.sponsor_list = storedList;
@@ -3632,7 +3634,7 @@ const DB = (() => {
           const allPromoList = Array.isArray(promos.promo_list) ? promos.promo_list : [];
           // Normalisasi kecocokan ID: String(lid) === String(p.id)
           const linkedPromos = allPromoList.filter(p => sponsor.linked_promo_ids.some(lid => String(lid) === String(p.id)));
-          
+
           if (linkedPromos.length === 0) {
             // Seluruh promo yang ditautkan telah dihapus/tidak ditemukan
             return false;
@@ -4204,7 +4206,7 @@ const DB = (() => {
     },
 
     // --- 6. REKOMENDASI PRODUK & PRODUK SERUPA (BUYER LOGIC) ---
-    
+
     getSimilarProducts(productId, limit = 8) {
       const allActive = this.getAllProducts({ status: 'active' });
       const current = allActive.find(p => p.id === productId);
@@ -4219,9 +4221,9 @@ const DB = (() => {
 
       // 2. Jika kurang, tambahkan dari kategori utama yang sama
       if (similar.length < limit && current.category_id) {
-        const inSameCat = allActive.filter(p => 
-          p.id !== productId && 
-          p.category_id === current.category_id && 
+        const inSameCat = allActive.filter(p =>
+          p.id !== productId &&
+          p.category_id === current.category_id &&
           !similar.some(s => s.id === p.id)
         );
         similar = [...similar, ...inSameCat];
@@ -4661,7 +4663,7 @@ const DB = (() => {
       const orderCounter = this.getNextOrderCounter();
       const generatedInvoice = orderData.source === 'Kasir POS' ? `POS-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(orderCounter).padStart(3, '0')}` : `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(orderCounter).padStart(3, '0')}`;
       const invoiceId = orderData.invoice_id || orderData.invoice_number || generatedInvoice;
-      
+
       const newOrder = {
         id: orderData.id || generateUUID(),
         tenant_id: tid,
@@ -4734,7 +4736,7 @@ const DB = (() => {
       // Total Pesanan Masuk (Web + Kasir POS)
       let webOrdersMonth = currentMonthOrders.filter(o => (o.source || o.channel || '').toLowerCase().includes('web') || (o.source || o.channel || '').toLowerCase().includes('wa')).length;
       let posOrdersMonth = currentMonthOrders.filter(o => (o.source || o.channel || '').toLowerCase().includes('pos') || (o.source || o.channel || '').toLowerCase().includes('kasir')).length;
-      
+
       if (webOrdersMonth === 0 && posOrdersMonth === 0) {
         webOrdersMonth = orders.filter(o => (o.source || o.channel || '').toLowerCase().includes('web') || (o.source || o.channel || '').toLowerCase().includes('wa')).length;
         posOrdersMonth = orders.filter(o => (o.source || o.channel || '').toLowerCase().includes('pos') || (o.source || o.channel || '').toLowerCase().includes('kasir')).length;
@@ -4933,8 +4935,8 @@ const DB = (() => {
     authenticateAdmin(storeIdentifier, username, password) {
       const tenants = getTenantsRegistry();
       const q = (storeIdentifier || '').toLowerCase().trim();
-      const tenant = tenants.find(t => 
-        t.store_slug.toLowerCase() === q || 
+      const tenant = tenants.find(t =>
+        t.store_slug.toLowerCase() === q ||
         t.tenant_id.toLowerCase() === q ||
         t.store_name.toLowerCase() === q
       );
@@ -4968,8 +4970,8 @@ const DB = (() => {
       let customers = this.getCustomers(tid);
       const email = (customerData.email || '').trim().toLowerCase();
       const phone = (customerData.phone || '').trim();
-      const existingIdx = customers.findIndex(c => 
-        (email && (c.email || '').toLowerCase() === email) || 
+      const existingIdx = customers.findIndex(c =>
+        (email && (c.email || '').toLowerCase() === email) ||
         (phone && (c.phone || '').trim() === phone)
       );
 
@@ -5057,7 +5059,7 @@ const DB = (() => {
       const completed = orders.filter(o => {
         const s = (o.status || '').toUpperCase();
         const match = (phone && (o.customer_phone || '').replace(/\D/g, '') === phone) ||
-                      (email && (o.customer_email || '').toLowerCase() === email);
+          (email && (o.customer_email || '').toLowerCase() === email);
         return match && (s === 'COMPLETED' || s === 'PAID' || s === 'SELESAI');
       });
       const totalSpent = completed.reduce((sum, o) => sum + (o.total || 0), 0);

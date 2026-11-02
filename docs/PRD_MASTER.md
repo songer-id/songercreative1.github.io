@@ -833,6 +833,101 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
       - Menjaga kompatibilitas mundur: produk lama dengan data grosir yang sudah aktif tetap aktif (fallback ke `true` jika data tier terisi).
       - Menjaga konfigurasi baru agar tidak otomatis memilih mode atau mengisi angka default.
       - Perhitungan harga Uji Coba Admin menghormati status aktif per baris tanpa mengubah rumus harga yang ada.
+    - **Penyempurnaan Modal Harga Grosir, Switch Mobile, dan Pratinjau Produk (Tugas 1)**:
+      - Menghapus teks tambahan `Untuk opsi: [Nama Opsi]` (`#wholesale-modal-subtitle`) di bawah judul utama modal Pengaturan Harga Grosir.
+      - Menyederhanakan dan merapikan teks switch per-variasi menjadi `Aktifkan harga grosir untuk [Nama Opsi]` dengan nama opsi dinamis dari Variasi 1.
+      - Menata ulang layout switch pada mobile dengan `flex items-center gap-2.5 w-full`, switch container `shrink-0`, dan label teks `break-words flex-1 min-w-0` agar tidak bertumpuk, terpotong, atau keluar batas modal pada layar sempit.
+      - Menghilangkan label informasi potongan harga grosir amber (`Potongan Rp .../Pcs Minimal ...Pcs pesanan`) dari tampilan Pratinjau Detail Produk (Mini PDP) pada Admin, sembari mempertahankan seluruh aturan, perhitungan harga grosir, diskon promo, stok, dan simulasi Uji Coba tanpa mengubah halaman detail produk pembeli.
+    - **Fitur Panduan Ukuran Produk (Pakaian, Celana, Sepatu) (Tugas 2 & Revisi)**:
+      - Mengadopsi gaya tabel bersih (*clean flat, compact, mobile-first*) mengikuti styling List Variasi Produk (`#combination-matrix-section`) dengan warna tema dinamis, header rapi, tanpa elemen kapsul, kartu bertumpuk, atau ikon dekoratif tabel.
+      - Posisikan seluruh bagian Panduan Ukuran tepat berada di bawah komponen **Input Ukuran (P x L)** (`#card-custom-dimension-pxl`).
+      - Menyediakan 3 Template Cepat kategori:
+        - **Pakaian**: Ukuran, Panjang, Lebar Dada, Bahu, Rekomendasi Berat, Rekomendasi Tinggi.
+        - **Celana**: Ukuran, Panjang Celana, Lingkar Pinggang, Lingkar Pinggul, Lingkar Paha.
+        - **Sepatu**: Ukuran EU, Ukuran US, Ukuran UK, Panjang Kaki (cm).
+      - Menggunakan mekanisme **Input/Pilih** pada judul kolom terintegrasi sistem *clean datalist* dengan saran kontekstual sesuai template aktif; pengguna dapat mengetik judul bebas maupun memilih saran, serta tetap dapat diedit kembali.
+      - Ikon hapus kolom menggunakan ikon tempat sampah konsisten UI Admin (`bi-trash3-fill`) ringkas tanpa teks tambahan.
+      - Header kolom paling kanan hanya menampilkan tombol tambah kolom baru (`+`) yang terpusat dan rapi tanpa teks "Aksi".
+      - Aksi hapus baris menggunakan tombol ikon Delete (`bi-trash3-fill`) ringkas dengan tooltip "Hapus Baris", menggantikan teks "Hapus" agar konsisten penuh dengan ikon hapus kolom.
+      - Proteksi penimpaan data menggunakan modal konfirmasi internal yang bersih dan profesional (`#modal-size-guide-template-confirm`), tanpa `window.confirm()` bawaan browser ("This page says"). Tombol Batal mempertahankan seluruh data dan template, serta tidak menampilkan modal jika tidak ada data yang berisiko hilang.
+      - Mendukung switch aktif/nonaktif dan pilihan tipe representasi (Tabel Data atau Upload Gambar).
+      - Persistensi data `size_guide` terintegrasi pada `primaryState`, `js/db.js` (`createProduct` dan `updateProduct`), dan dipulihkan kembali saat edit produk di `loadProductForEdit`. Menjamin kompatibilitas mundur penuh untuk produk lama tanpa mengganggu harga, HPP, stok, variasi, atau grosir.
+    - **Integrasi Panduan Ukuran dengan Variasi dan Detail Produk Uji Coba (Tugas 3 & Revisi 3B)**:
+      - **Keterkaitan dengan Variasi & Komponen Dropdown Kustom Input/Pilih**:
+        - Tanpa variasi aktif: tidak menampilkan pengaturan pengaitan.
+        - 1 variasi aktif: otomatis dikaitkan dengan variasi tersebut (`tier1`), tanpa dropdown.
+        - 2–4 variasi aktif: menggunakan komponen dropdown kustom bergaya **Input/Pilih** Admin (bukan `<select>` native), bersifat pilihan saja tanpa input teks manual, dengan label dinamis seller dan placeholder *"Pilih variasi"*. Seller wajib memilih sendiri satu variasi aktif (tidak ada default otomatis).
+        - Validasi penyimpanan: jika Panduan Ukuran aktif dan ada 2–4 variasi, seller dicegah menyimpan produk sebelum memilih variasi dengan pesan validasi *"Pilih variasi yang dikaitkan dengan Tabel Ukuran."*.
+        - Menyimpan keterkaitan menggunakan identitas internal variasi (`tier1`, `tier2`, `tier3`, `tier4`), bukan nama label.
+        - Mode edit & proteksi referensi aman: mempertahankan pilihan tersimpan jika variasi masih valid. Jika variasi terkait dinonaktifkan/dihapus, pilihan dikosongkan dan meminta seller memilih ulang. Produk lama tanpa Panduan Ukuran tidak terpengaruh.
+        - Arsitektur tabel tunggal: konfigurasi dan data tabel panduan ukuran tetap tunggal dan terpadu.
+      - **Akses & Perilaku Pembukaan Tabel Ukuran pada Detail Produk**:
+        - *Detail Produk Utama*: Membuka tabel/gambar ukuran secara **inline expand/collapse** langsung di dalam kartu produk tepat di atas baris Spesifikasi (bukan modal/drawer). Klik kembali untuk menutup (toggle).
+        - *Drawer Variasi*: Membuka bottom sheet/drawer Tabel Ukuran terpisah (`z-50`), tanpa mereset pilihan variasi pengguna saat drawer ditutup (`e.stopPropagation()` mencegah salah klik).
+        - Selalu menampilkan akses *"Tabel Ukuran"* mandiri tepat di atas baris *"Spesifikasi"* saat fitur aktif, baik produk memiliki variasi maupun tidak.
+        - *Akses Tambahan pada Header Chip Variasi*: Hanya ditampilkan setelah pengguna memilih opsi variasi yang valid (tidak tampil saat header masih berstatus *"Tersedia (X) [Nama Variasi]"*).
+        - Jika dinonaktifkan, seluruh akses *"Tabel Ukuran"* disembunyikan.
+      - **Penyempurnaan Tampilan Tabel Ukuran (Clean Flat, Compact & Warna Brand)**:
+        - Ukuran teks nilai sel diperkecil konsisten (`text-[10px]`) dan nyaman dibaca di mobile/desktop.
+        - Warna teks nilai seluruh sel mengikuti warna tema/brand dinamis seller (`color: var(--color-primary)`).
+        - Seluruh kolom dan sel rata tengah (`text-center`).
+        - Menghilangkan `border-radius` tabel (`rounded-none`).
+        - Latar header menggunakan warna tema ber-opacity rendah (`var(--color-primary-subtle)`), dengan teks header `--color-primary` ber-opacity penuh.
+        - Garis pemisah halus (`divide-y divide-slate-100`, `border-slate-200`) dan scroll horizontal ringkas (`overflow-x-auto scrollbar-thin`).
+      - **Posisi Akses pada Variasi**:
+        - *Mode chip langsung*: teks *"Tabel Ukuran"* di sebelah kanan judul variasi dengan `justify-between` hanya setelah opsi dipilih.
+        - *Mode daftar/accordion/drawer*: teks *"Tabel Ukuran"* di bawah pilihan opsi variasi terkait, rata kiri (`text-left`).
+        - *Mode dropdown/select*: teks *"Tabel Ukuran"* ditempatkan pada area grup variasi terkait di bawah trigger select, terlihat jelas dan dapat diklik tanpa mengganggu pembukaan dropdown popover.
+      - **Konsistensi Tipografi Detail Produk Utama**:
+        - Teks *"Tabel Ukuran"* dan *"Spesifikasi"* pada baris Detail Produk disamakan secara konsisten: ukuran font sama (`text-xs`), ketebalan `font-medium` (500), warna (`text-slate-700`), tinggi baris (`leading-normal`), dan perataan vertikal sejajar.
+        - Judul grup variasi pada tampilan daftar/drawer diperkecil dan diringankan menjadi `text-[11px] font-medium text-slate-600`.
+    - **Penyempurnaan Layout Panduan Ukuran & Urutan Pengaturan (Revisi Tugas 4A)**:
+      - **Penyelarasan Layout Header Panduan Ukuran**:
+        - Menghilangkan container border, background abu-abu (`bg-slate-50`), dan bentuk kartu nested pada switch header Panduan Ukuran.
+        - Mengadopsi struktur visual yang selaras penuh dengan kartu **Input Ukuran (P x L)** tepat di atasnya: judul (`text-sm font-bold text-slate-900`) dan deskripsi (`text-xs text-slate-500`) rata kiri, toggle switch di sebelah kanan dengan pemisah garis halus (`border-t border-slate-100`).
+        - Desain bersih, ringkas, dan mobile-first.
+      - **Urutan Pengaturan & Wajib Pilih Variasi Terlebih Dahulu**:
+        - Jika Panduan Ukuran aktif dan ada 2–4 variasi aktif: seller wajib memilih **Kaitkan dengan Variasi \*** terlebih dahulu sebelum dapat memilih Tipe Panduan Ukuran.
+        - Jika variasi belum dipilih lalu seller mengklik opsi **Tipe Panduan Ukuran** (baik label maupun radio), sistem mencegah pemilihan tipe apa pun, mempertahankan kedua radio tetap unselected, memberikan pesan petunjuk singkat *"Pilih variasi terlebih dahulu."*, memfokuskan dan menggulir ke trigger dropdown, serta membuka popover daftar pilihan variasi secara otomatis.
+        - Setelah variasi dipilih, seller dapat langsung memilih **Tabel Data** atau **Upload Gambar**.
+      - **Tanpa Tipe Default untuk Konfigurasi Baru**:
+        - Saat konfigurasi Panduan Ukuran baru dibuat atau diaktifkan pertama kali, kedua tipe tidak terpilih (`type: ''`).
+        - Tabel tidak ditampilkan sebelum seller secara sadar memilih **Tabel Data**. Jika memilih **Upload Gambar**, dropzone upload foto bagan yang ditampilkan.
+        - Jika produk tanpa variasi atau hanya memiliki 1 variasi aktif, seller dapat langsung memilih tipe (untuk 1 variasi, pengaitan tetap otomatis).
+        - Mode edit produk lama tetap mempertahankan tipe, variasi terkait, tabel kolom/baris, maupun foto bagan yang tersimpan.
+        - Berpindah antar tipe tidak menghapus data tabel atau gambar yang telah diisi sebelumnya.
+      - **Validasi Simpan Lengkap**:
+        - Memastikan proses simpan hanya meloloskan konfigurasi Panduan Ukuran aktif yang lengkap: wajib memilih variasi terkait (jika 2–4 variasi), wajib memilih tipe (Tabel Data / Upload Gambar), dan wajib mengunggah foto bagan jika tipe Upload Gambar dipilih.
+    - **Modal Input Ukuran (P x L) pada Simulasi Hitung Harga (Tugas 4B)**:
+      - **Kontrol Pemicu Ringkas & Modal Internal**: Menggantikan dua input langsung Panjang (P) dan Lebar (L) pada panel Simulasi Hitung Harga dengan satu tombol pemicu ringkas (`#btn-open-sandbox-dim-modal`).
+      - Menampilkan teks ringkasan ukuran yang diterapkan secara tebal (misalnya `120 × 80 cm` atau placeholder *"Masukkan Ukuran (P x L)"* saat belum diisi), dilengkapi ikon pensil edit.
+      - **Modal Responsif & Mobile-First (`#modal-sandbox-dim-input`)**:
+        - Tata letak responsif: 1 kolom vertikal bertumpuk pada mobile (`grid-cols-1`) dan 2 kolom seimbang pada desktop (`sm:grid-cols-2`).
+        - Label satuan dinamis mengikuti unit dimensi produk (`cm`, `m`, `mm`, `inci`).
+        - Tombol aksi: **Batal** (`#btn-cancel-sandbox-dim-modal`) dan **Terapkan** (`#btn-apply-sandbox-dim-modal`).
+        - Tombol Batal, tombol silang header (`x`), klik di luar modal (backdrop), atau tombol Escape menutup modal tanpa mengubah nilai state sebelumnya.
+        - Membuka modal kembali memuat nilai terakhir yang berhasil diterapkan.
+        - Validasi ketat angka positif: nilai P dan L harus valid dan lebih besar dari 0 (`> 0`). Menampilkan pesan error *"Masukkan angka Panjang (P) dan Lebar (L) yang valid (lebih besar dari 0)."* dan border merah jika tidak valid.
+      - **Pertahankan Perhitungan Harga Real-Time**:
+        - Mempertahankan integrasi penuh dengan `sandboxPxlState.simLength`, `sandboxPxlState.simWidth`, serta elemen hidden inputs `#sandbox-input-dim-p` dan `#sandbox-input-dim-l`.
+        - Memanggil fungsi kalkulasi `updateSandboxCalculation()` secara otomatis setelah ukuran baru diterapkan.
+        - Tidak mengubah rumus perhitungan, pemilihan opsi komponen utama, variasi tambahan, harga, HPP, kelipatan, maupun kartu konfigurasi ukuran utama produk.
+    - **Penyempurnaan Modal Simulasi, Konsistensi Switch, dan Syarat Panduan Ukuran (Revisi Tugas 4D)**:
+      - **Perbaikan Modal Input Ukuran (P x L) — Simulasi Hitung Harga**:
+        - Memperbaiki pemicu pembukaan modal `#modal-sandbox-dim-input` melalui event delegation global pada `document` dan binding langsung elemen. Tombol `#btn-open-sandbox-dim-modal` dijamin 100% responsif membuka modal bahkan setelah kartu variasi atau sub-panel di-render ulang secara dinamis.
+        - Memastikan modal memiliki z-index tinggi (`z-[100]` / `style="z-index: 9999;"`) agar tampil di atas seluruh lapisan antarmuka baik pada mobile maupun desktop.
+        - Nilai masukan Panjang (P) dan Lebar (L) yang diterapkan langsung memperbarui ringkasan tombol pemicu, hidden inputs, dan perhitungan simulasi harga real-time tanpa duplikasi event listener.
+        - Tombol Batal, tombol silang header, backdrop klik, atau tombol Escape menutup modal tanpa mengubah nilai state sebelumnya, serta membuka kembali modal menampilkan nilai terakhir yang diterapkan.
+      - **Penyelarasan Konsistensi Switch Antara Input Ukuran (P x L) dan Panduan Ukuran**:
+        - Menjadikan switch **Input Ukuran (P x L)** (`#toggle-custom-dimension`) sebagai acuan visual standar yang identik: struktur switch, ukuran track (`w-11 h-6`), rounded pill, thumb bundar putih (`after:h-5 after:w-5 after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:transition-all`), warna track OFF (`bg-slate-200`) dan ON (`peer-checked:bg-[var(--color-primary)]`).
+        - Menghapus class legacy `.toggle-switch-input` dari switch Panduan Ukuran agar styling dan perilaku transisi murni Tailwind CSS dan selaras sempurna.
+        - Menjaga keselarasan header: judul dan deskripsi rata kiri, switch rata kanan dengan pemisah garis halus (`border-t border-slate-100 pt-3`), tanpa container border atau kartu bertumpuk.
+      - **Syarat Aktivasi Panduan Ukuran untuk Produk Tanpa Variasi**:
+        - Produk tanpa variasi (`!has_variants`) diwajibkan memiliki **Harga Jual** valid (`price > 0`) sebelum switch Panduan Ukuran dapat diaktifkan.
+        - Jika Harga Jual kosong, nol, atau tidak valid saat switch Panduan Ukuran diklik: sistem membatalkan pengaktifan toggle (`checked = false`), mengarahkan layar (*smooth scroll*) ke input Harga Jual (`#input-single-price`), memberikan indikator fokus dan *ring-highlight* merah selama 3 detik, serta menampilkan pesan petunjuk singkat *"Isi Harga Jual terlebih dahulu."*.
+        - Setelah Harga Jual valid, seller dapat mengaktifkan Panduan Ukuran dengan lancar.
+        - Jika Harga Jual kemudian dihapus atau menjadi tidak valid, proses simpan produk (`validateForm()`) memblokir penyimpanan dengan error *"Isi Harga Jual terlebih dahulu."* tanpa menghapus data konfigurasi Panduan Ukuran yang sudah dibuat.
+        - Untuk produk dengan variasi, aturan yang telah berlaku tetap dipertahankan penuh (1 variasi otomatis terkait, 2–4 variasi wajib memilih pengaitan).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
