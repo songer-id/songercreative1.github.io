@@ -1688,19 +1688,61 @@ input::-webkit-calendar-picker-indicator {
     display: none !important;
   }
 
-  /* Mobile Live Preview Overlay & Sheet (Z-index Stack: Backdrop 90, Sheet 95, Scoped Modal 100) */
-  #mobile-preview-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    background-color: rgba(15, 23, 42, 0.72) !important;
-    backdrop-filter: blur(2px) !important;
+  /* Saat mobile preview aktif, naikkan stacking context viewport di atas topbar header (z-40) */
+  #admin-main-viewport.mobile-preview-active,
+  #admin-main-viewport:has(#mobile-preview-backdrop:not(.hidden)) {
     z-index: 90 !important;
   }
 
+  /* Mobile Live Preview Overlay & Sheet (Z-index Stack: Backdrop 90, Sheet 95, Scoped Modal 100) */
+  #mobile-preview-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    min-height: -webkit-fill-available !important;
+    background-color: rgba(15, 23, 42, 0.72) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+    z-index: 90 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   #mobile-preview-sheet {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    inset-x: 0 !important;
+    max-height: 88dvh !important;
+    max-height: min(88vh, 88dvh) !important;
     z-index: 95 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overscroll-behavior: contain !important;
+  }
+
+  #mobile-preview-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Step 1 Mobile Live Preview: Latar area pratinjau mengikuti warna Body tema aktif */
+  #view-product-form[data-step="1"] #mobile-preview-sheet,
+  #view-product-form[data-step="1"] #mobile-preview-body,
+  #product-form-wrapper[data-step="1"] #mobile-preview-sheet,
+  #product-form-wrapper[data-step="1"] #mobile-preview-body {
+    background-color: var(--color-body-bg, #f8fafc);
   }
 
   #preview-scoped-modal-root-mob {
@@ -3401,18 +3443,33 @@ button:focus-visible {
   background-color: #94a3b8;
 }
 
-/* Tabel Panduan Ukuran Compact Mobile */
-#size-guide-matrix-table .size-col-header-input {
-  font-size: 11px;
+/* Tabel Panduan Ukuran */
+#size-guide-matrix-table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
 }
-@media (min-width: 640px) {
-  #size-guide-matrix-table .size-col-header-input {
-    font-size: 12px;
-  }
+
+#size-guide-matrix-table th,
+#size-guide-matrix-table td {
+  box-sizing: border-box;
 }
+
+#size-guide-matrix-table .size-col-header-input,
+#size-guide-matrix-table .size-cell-input {
+  font-size: 0.75rem !important;
+  line-height: 1.25rem !important;
+}
+
 #size-guide-matrix-table .clean-datalist-input-box > .btn-clear-datalist,
 #size-guide-matrix-table .clean-datalist-input-box > .clean-datalist-arrow {
-  right: 0.25rem !important;
-  width: 1rem !important;
-  height: 1rem !important;
+  right: 0.35rem !important;
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+}
+
+#size-guide-matrix-table .btn-del-size-col,
+#size-guide-matrix-table .btn-del-size-row,
+#size-guide-matrix-table .btn-add-size-col {
+  touch-action: manipulation;
 }

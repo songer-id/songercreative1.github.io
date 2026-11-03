@@ -2289,18 +2289,7 @@ const ProductForm = (() => {
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
 
     container.innerHTML = `
-      <div class="w-full max-w-none ${currentStep === 2 ? 'space-y-0' : 'space-y-5 sm:space-y-6'} pb-8 sm:pb-12" id="product-form-wrapper">
-
-        <!-- Header Top Bar (Hanya tampil di Step 1) -->
-        <div id="product-form-top-bar" class="${currentStep === 2 ? 'hidden' : 'flex'} items-center justify-between border-b border-slate-200 pb-3 gap-3">
-          <div class="flex items-center gap-2 text-sm text-slate-500">
-            <button type="button" id="btn-back-to-list" class="hover:text-[var(--color-primary)] transition flex items-center gap-1 font-medium cursor-pointer">
-              <i data-lucide="arrow-left" class="w-4 h-4"></i> Daftar Produk
-            </button>
-            <span>/</span>
-            <span class="text-slate-800 font-semibold">${formMode === 'edit' ? 'Edit Produk' : 'Tambah Produk Baru'}</span>
-          </div>
-        </div>
+      <div class="w-full max-w-none space-y-0 pb-8 sm:pb-12" id="product-form-wrapper" data-step="${currentStep}">
 
         <!-- FORM MAIN CONTAINER WITH RIGHT PADDING WHEN PREVIEW SIDEBAR IS OPEN -->
         <div class="w-full relative">
@@ -2835,8 +2824,8 @@ const ProductForm = (() => {
 
         <!-- MOBILE BOTTOM SHEET / DRAWER -->
         <div id="mobile-preview-backdrop" class="lg:hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[90] hidden transition-opacity"></div>
-        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[88vh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
-          <div class="p-2.5 px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/95 gap-2">
+        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] ${currentStep === 1 ? '' : 'bg-white'} rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[88dvh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+          <div class="p-2.5 px-3 border-b border-slate-200 flex items-center justify-between shrink-0 bg-slate-50/95 gap-2">
             <div id="mobile-preview-header-content" class="w-full max-w-[210px]">
               ${getPreviewHeaderHtml(currentStep, true)}
             </div>
@@ -2844,7 +2833,7 @@ const ProductForm = (() => {
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div id="mobile-preview-body" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col items-center transition-colors" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+          <div id="mobile-preview-body" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col items-center transition-colors" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); ${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
             <!-- Checkbox Simulasi Diskon Mobile -->
             <label class="w-full max-w-[260px] flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none py-1 transition-colors">
               <input type="checkbox" id="cfg-simulate-countdown-preview-mob" class="w-4 h-4 rounded cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1" style="accent-color: var(--color-primary);" />
@@ -8155,13 +8144,19 @@ const ProductForm = (() => {
       if (deskBody) deskBody.style.backgroundColor = themeBodyColor;
       if (mobBody) mobBody.style.backgroundColor = themeBodyColor;
       if (deskSidebar) deskSidebar.style.backgroundColor = themeBodyColor;
-      if (mobSheet) mobSheet.style.backgroundColor = themeBodyColor;
+      if (mobSheet) {
+        mobSheet.style.backgroundColor = themeBodyColor;
+        mobSheet.classList.remove('bg-white');
+      }
     } else {
       // Step 2: Isolasi total, kembalikan ke background bawaan (bg-white)
       if (deskBody) deskBody.style.backgroundColor = '';
       if (mobBody) mobBody.style.backgroundColor = '';
       if (deskSidebar) deskSidebar.style.backgroundColor = '';
-      if (mobSheet) mobSheet.style.backgroundColor = '';
+      if (mobSheet) {
+        mobSheet.style.backgroundColor = '';
+        mobSheet.classList.add('bg-white');
+      }
     }
 
     [outerWrapDesk, outerWrapMob].forEach(wrap => {
@@ -11567,16 +11562,72 @@ const ProductForm = (() => {
     }
   };
 
+  function getSizeGuideColWidthClass(colName = '', colIdx = 0) {
+    const name = String(colName || '').trim();
+    const lower = name.toLowerCase();
+
+    // Rekomendasi, Lingkar, Panjang Celana / Kaki, atau judul panjang (>= 12 karakter)
+    if (name.length >= 12 || lower.includes('rekomendasi') || lower.includes('lingkar') || lower.includes('panjang celana') || lower.includes('panjang kaki')) {
+      return 'min-w-[220px] sm:min-w-[240px]';
+    }
+
+    // Kolom pertama 'Ukuran' jika pendek
+    if (colIdx === 0 && name.length <= 6) {
+      return 'min-w-[130px] sm:min-w-[140px]';
+    }
+
+    // Kolom standar (Panjang, Lebar Dada, Bahu, Ukuran EU/US/UK, dsb)
+    return 'min-w-[160px] sm:min-w-[175px]';
+  }
+
+  function removeSizeGuideWidthClasses(el) {
+    if (!el || !el.classList) return;
+    const classesToRemove = [];
+    el.classList.forEach(cls => {
+      if (cls.startsWith('min-w-') || cls.startsWith('sm:min-w-')) {
+        classesToRemove.push(cls);
+      }
+    });
+    classesToRemove.forEach(cls => el.classList.remove(cls));
+  }
+
+  function updateSizeGuideColWidthClasses() {
+    const table = document.getElementById('size-guide-matrix-table');
+    if (!table) return;
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    if (!thead) return;
+    const ths = thead.querySelectorAll('th[data-col-idx]');
+    ths.forEach((th) => {
+      const cIdx = parseInt(th.getAttribute('data-col-idx'), 10);
+      if (isNaN(cIdx)) return;
+      const input = th.querySelector('.size-col-header-input');
+      const val = input ? input.value : '';
+      const newCls = getSizeGuideColWidthClass(val, cIdx);
+
+      removeSizeGuideWidthClasses(th);
+      newCls.split(' ').filter(Boolean).forEach(c => th.classList.add(c));
+
+      if (tbody) {
+        const tds = tbody.querySelectorAll(`tr > td:nth-child(${cIdx + 1})`);
+        tds.forEach(td => {
+          removeSizeGuideWidthClasses(td);
+          newCls.split(' ').filter(Boolean).forEach(c => td.classList.add(c));
+        });
+      }
+    });
+  }
+
   function renderSizeGuideTheadHtml(columns = []) {
     return `
       <tr>
         ${columns.map((col, cIdx) => `
-          <th class="p-1 sm:p-2 text-center min-w-[96px] sm:min-w-[120px]" data-col-idx="${cIdx}">
-            <div class="flex items-center justify-center gap-1 w-full">
+          <th class="p-1.5 sm:p-2 text-center ${getSizeGuideColWidthClass(col, cIdx)}" data-col-idx="${cIdx}">
+            <div class="flex items-center justify-between gap-1.5 w-full">
               <div class="relative flex-1 min-w-0 clean-datalist-wrapper">
                 <input
                   type="text"
-                  class="size-col-header-input clean-datalist-input w-full h-7 sm:h-8 pl-1.5 pr-6 sm:pl-2 sm:pr-7 py-1 text-center font-bold text-[11px] sm:text-xs text-slate-800 bg-white border border-slate-300 hover:border-slate-400 focus:border-[var(--color-primary)] rounded outline-none shadow-2xs transition"
+                  class="size-col-header-input clean-datalist-input w-full h-8 px-2 pr-7 text-center font-bold text-xs text-slate-800 bg-white border border-slate-300 hover:border-slate-400 focus:border-[var(--color-primary)] rounded-md outline-none shadow-2xs transition"
                   value="${escapeHtml(col)}"
                   placeholder="Kolom"
                   data-col-idx="${cIdx}"
@@ -11586,19 +11637,19 @@ const ProductForm = (() => {
                 />
               </div>
               ${columns.length > 2 ? `
-                <button type="button" class="btn-del-size-col w-6 h-6 sm:w-7 sm:h-7 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 inline-flex items-center justify-center cursor-pointer transition shrink-0" data-col-idx="${cIdx}" title="Hapus Kolom">
-                  <i class="bi bi-trash3-fill text-[11px] sm:text-xs pointer-events-none"></i>
+                <button type="button" class="btn-del-size-col w-7 h-7 sm:w-8 sm:h-8 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 inline-flex items-center justify-center cursor-pointer transition shrink-0" data-col-idx="${cIdx}" title="Hapus Kolom">
+                  <i class="bi bi-trash3-fill text-xs pointer-events-none"></i>
                 </button>
               ` : ''}
             </div>
           </th>
         `).join('')}
-        <th class="p-1 sm:p-2 text-center w-8 sm:w-10 whitespace-nowrap">
+        <th class="p-1.5 sm:p-2 text-center w-10 sm:w-11 min-w-[40px] sm:min-w-[44px] whitespace-nowrap">
           <div class="flex items-center justify-center">
             <button
               type="button"
               id="btn-add-size-col-header"
-              class="btn-add-size-col w-6 h-6 sm:w-7 sm:h-7 rounded bg-[var(--color-primary)] text-white hover:opacity-90 inline-flex items-center justify-center text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+              class="btn-add-size-col w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-[var(--color-primary)] text-white hover:opacity-90 inline-flex items-center justify-center text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
               title="Tambah Kolom"
             >
               <i class="bi bi-plus text-sm sm:text-base leading-none pointer-events-none"></i>
@@ -11612,11 +11663,11 @@ const ProductForm = (() => {
   function renderSizeGuideTbodyHtml(columns = [], rows = []) {
     return rows.map((row, rIdx) => `
       <tr class="hover:bg-slate-50 transition border-b border-slate-200" data-row-idx="${rIdx}">
-        ${columns.map((_, cIdx) => `
-          <td class="p-1 sm:p-2 align-middle text-center min-w-[96px] sm:min-w-[120px]">
+        ${columns.map((col, cIdx) => `
+          <td class="p-1.5 sm:p-2 align-middle text-center ${getSizeGuideColWidthClass(col, cIdx)}">
             <input
               type="text"
-              class="size-cell-input w-full h-7 sm:h-8 px-1.5 sm:px-2 py-1 rounded border border-slate-300 text-[11px] sm:text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs transition"
+              class="size-cell-input w-full h-8 px-2 py-1 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs transition"
               data-row-idx="${rIdx}"
               data-col-idx="${cIdx}"
               value="${escapeHtml((Array.isArray(row) ? row[cIdx] : '') || '')}"
@@ -11624,14 +11675,14 @@ const ProductForm = (() => {
             />
           </td>
         `).join('')}
-        <td class="p-1 sm:p-2 align-middle text-center w-8 sm:w-10">
+        <td class="p-1.5 sm:p-2 align-middle text-center w-10 sm:w-11 min-w-[40px] sm:min-w-[44px]">
           <button
             type="button"
-            class="btn-del-size-row w-6 h-6 sm:w-7 sm:h-7 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer shrink-0"
+            class="btn-del-size-row w-7 h-7 sm:w-8 sm:h-8 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer shrink-0"
             data-row-idx="${rIdx}"
             title="Hapus Baris"
           >
-            <i class="bi bi-trash3-fill text-[11px] sm:text-xs pointer-events-none"></i>
+            <i class="bi bi-trash3-fill text-xs pointer-events-none"></i>
           </button>
         </td>
       </tr>
@@ -12353,6 +12404,7 @@ const ProductForm = (() => {
 
       thead.onchange = () => {
         if (typeof syncSizeGuideStateFromDOM === 'function') syncSizeGuideStateFromDOM();
+        if (typeof updateSizeGuideColWidthClasses === 'function') updateSizeGuideColWidthClasses();
         if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
       };
     }
@@ -19586,27 +19638,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   function updateStepVisibility() {
     const p1 = document.getElementById('step-pane-1');
     const p2 = document.getElementById('step-pane-2');
-    const topBar = document.getElementById('product-form-top-bar');
     const wrapper = document.getElementById('product-form-wrapper');
     const wizardCol = document.getElementById('wizard-form-col');
 
-    if (topBar) {
-      if (currentStep === 2) {
-        topBar.classList.add('hidden');
-        topBar.classList.remove('flex');
-      } else {
-        topBar.classList.remove('hidden');
-        topBar.classList.add('flex');
-      }
-    }
-
     if (wrapper) {
-      if (currentStep === 2) {
-        wrapper.classList.remove('space-y-5', 'sm:space-y-6');
-        wrapper.classList.add('space-y-0');
-      } else {
-        wrapper.classList.add('space-y-5', 'sm:space-y-6');
-        wrapper.classList.remove('space-y-0');
+      if (typeof wrapper.setAttribute === 'function') {
+        wrapper.setAttribute('data-step', String(currentStep));
       }
     }
 
@@ -24976,10 +25013,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
       document.body.classList.add('overflow-hidden');
       const vp = document.getElementById('admin-main-viewport');
-      if (vp) vp.classList.add('overflow-hidden');
+      if (vp) {
+        vp.classList.add('overflow-hidden');
+        vp.classList.add('mobile-preview-active');
+      }
 
       if (mobileBackdrop) mobileBackdrop.classList.remove('hidden');
-      if (mobileSheet) mobileSheet.classList.remove('translate-y-full');
+      if (mobileSheet) {
+        mobileSheet.classList.remove('translate-y-full');
+        if (currentStep === 1) {
+          const themeBodyColor = getThemeBodyColor();
+          mobileSheet.style.backgroundColor = themeBodyColor;
+          mobileSheet.classList.remove('bg-white');
+          const mobBodyEl = document.getElementById('mobile-preview-body');
+          if (mobBodyEl) mobBodyEl.style.backgroundColor = themeBodyColor;
+        }
+      }
     };
 
     closeMobilePreview = function () {
@@ -24987,7 +25036,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobileBackdrop) mobileBackdrop.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
       const vp = document.getElementById('admin-main-viewport');
-      if (vp) vp.classList.remove('overflow-hidden');
+      if (vp) {
+        vp.classList.remove('overflow-hidden');
+        vp.classList.remove('mobile-preview-active');
+      }
       if (btnFabLivePreview && primaryState.is_active) {
         btnFabLivePreview.classList.remove('hidden');
       }
@@ -24996,7 +25048,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         btnSubnav.classList.remove('hidden');
         btnSubnav.style.display = '';
       }
-    }
+    };
 
     if (btnFabLivePreview) btnFabLivePreview.addEventListener('click', openMobilePreview);
     if (btnCloseMobilePreview) btnCloseMobilePreview.addEventListener('click', closeMobilePreview);
@@ -25013,7 +25065,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
-    // Expose closeMobilePreview globally for other modules (admin-app.js)
+    // Expose openMobilePreview & closeMobilePreview globally for other modules (admin-app.js)
+    ProductForm.openMobilePreview = openMobilePreview;
     ProductForm.closeMobilePreview = closeMobilePreview;
 
     // -------------------------------------------------------------
@@ -28612,6 +28665,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     getPreviewHeaderHtml,
     getPreviewStep1Tab: () => previewStep1Tab,
     setPreviewStep1Tab: (t) => { previewStep1Tab = t; },
+    openMobilePreview: () => { if (typeof openMobilePreview === 'function') openMobilePreview(); },
+    closeMobilePreview: () => { if (typeof closeMobilePreview === 'function') closeMobilePreview(); },
     getThemeBodyColor,
     captureCardDesignSnapshot,
     handleCancelCardDesign,
