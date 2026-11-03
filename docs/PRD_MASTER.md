@@ -928,6 +928,91 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
         - Setelah Harga Jual valid, seller dapat mengaktifkan Panduan Ukuran dengan lancar.
         - Jika Harga Jual kemudian dihapus atau menjadi tidak valid, proses simpan produk (`validateForm()`) memblokir penyimpanan dengan error *"Isi Harga Jual terlebih dahulu."* tanpa menghapus data konfigurasi Panduan Ukuran yang sudah dibuat.
         - Untuk produk dengan variasi, aturan yang telah berlaku tetap dipertahankan penuh (1 variasi otomatis terkait, 2–4 variasi wajib memilih pengaitan).
+    - **Revisi Layout Admin — Simulasi Harga dan Panduan Ukuran**:
+      - **Modal Lengkap Simulasi Hitung Harga (`#modal-sandbox-pxl-simulator`)**:
+        - Memindahkan seluruh panel kalkulator Simulasi Hitung Harga dari tampilan inline accordion ke dalam popup modal internal (`#modal-sandbox-pxl-simulator`).
+        - Tombol pemicu `#btn-toggle-sandbox-simulator` membuka modal yang memuat kalkulator lengkap: pemilihan opsi komponen utama (`#sandbox-select-main-option`), input dimensi langsung Panjang (P) dan Lebar (L) (`#sandbox-input-dim-p` & `#sandbox-input-dim-l`), variasi tambahan (`#sandbox-finishing-options-list`), dan rincian kalkulasi harga real-time (`#sandbox-calc-results-breakdown`).
+        - Nilai simulasi dipertahankan di state saat modal ditutup (melalui tombol silang header, tombol Tutup footer, klik backdrop, maupun Escape) dan dimuat kembali saat dibuka ulang.
+        - Modal di-attach langsung ke viewport body guna mengeliminasi batasan *containing block* dari transisi `#wizard-form-col` dan *overflow scrolling* container utama `#admin-main-viewport`.
+      - **Penataan Scrollbar Modal Panduan Aturan Ukuran Variasi (`#modal-help-dimension-rule`)**:
+        - Menata ulang layout modal menjadi `flex flex-col max-h-[85vh] rounded-2xl overflow-hidden` sehingga header judul dan tombol tutup tetap terkunci (fixed) di atas, footer tombol Mengerti di bawah, dan body modal menggulir mandiri di dalam kontainer.
+        - Menambahkan scrollbar ramping dengan styling terisolasi (`custom-modal-scrollbar`) yang rapi di dalam sudut kurva `rounded-2xl`, menghilangkan tumpang-tindih scrollbar ke border luar dan mencegah scroll horizontal.
+      - **Kompaksi Tabel Panduan Ukuran pada Tampilan Mobile (`#size-guide-matrix-table`)**:
+        - Menyesuaikan tipografi dan spasi tabel secara lokal pada mobile (`min-w-[96px] sm:min-w-[120px]`, `h-7 sm:h-8`, `text-[11px] sm:text-xs`, padding `p-1 sm:p-2`) agar proporsional dan nyaman tanpa mengurangi area sentuh.
+        - Menyelaraskan tombol hapus kolom (`.btn-del-size-col`) pada ruang sejajar tersendiri dan memberikan padding kanan memadai (`pr-6 sm:pr-7`) pada input header kolom sehingga teks judul kolom tidak lagi bertumpuk/terpotong oleh kontrol hapus (X) atau panah pilihan.
+        - Mengunci scroll horizontal di dalam wadah tabel (`overflow-x-auto`) sehingga halaman luar tidak ikut melebar atau menciut.
+      - **Penyeragaman Dropdown Komponen Utama Ukuran & Satuan Ukuran Bergaya Input/Pilih Kustom**:
+        - Menggantikan tampilan `<select>` bawaan browser pada **Komponen Utama Ukuran** (`#select-dimension-main-component`) dan **Satuan Ukuran *** (`#select-dimension-unit`) dengan komponen dropdown kustom bergaya Input/Pilih yang mengacu pada pola `#custom-select-size-guide-linked-variation`.
+        - Bersifat murni *selection-only* (hanya memilih opsi daftar, tanpa input teks manual atau pencarian) dengan label terpilih, panah chevron interaktif, dan popover daftar opsi dengan ikon centang aktif.
+        - Mempertahankan elemen `<select>` tersembunyi untuk menjaga kompatibilitas penuh terhadap *event change*, sinkronisasi label satuan luas, konversi satuan, pengosongan aturan tidak kompatibel, serta validasi form.
+      - **Penyeragaman Gaya Switch/Toggle dan Penghapusan Ikon Dekoratif**:
+        - Menghapus ikon dekoratif di samping judul/pemicu:
+          - Menghapus kotak ikon tanda tanya dekoratif (`bi-question-lg`) di samping judul modal `#modal-help-dimension-rule` ("Panduan Aturan Ukuran Variasi") dengan tetap mempertahankan judul bersih dan tombol tutup fungsional (`.btn-close-help-rule`).
+          - Menghapus ikon kalkulator dekoratif (`bi-calculator`) pada tombol pemicu `#btn-toggle-sandbox-simulator` ("Simulasi Hitung Harga") dan kotak ikon dekoratif pada header popup modal `#modal-sandbox-pxl-simulator`, dengan tetap mempertahankan teks tombol, judul, subjudul, dan tombol tutup fungsional (`.btn-close-sandbox-simulator`).
+        - Menstandarkan seluruh switch/toggle ON/OFF di form produk Admin (termasuk *Input Ukuran (P x L)*, *Pengiriman*, *Promo Bulanan*, *Promo Harian*, *Sistem COD*, *Pre-Order (PO)*, *Tampilkan di Etalase Toko*, *Label Khusus*, *Batas Minimal Pesanan (Harga & HPP)*, *Komisi Afiliasi*, dan *Harga Grosir*) mengikuti acuan visual switch **Panduan Ukuran** (`#toggle-size-guide-enable`):
+          - Dimensi track konsisten `w-11 h-6` (44px × 24px) dengan lekukan penuh (`rounded-full`).
+          - Warna status OFF konsisten abu-abu terang `bg-slate-200` (`#e2e8f0`).
+          - Warna status ON dinamis mengacu tema brand toko `peer-checked:bg-[var(--color-primary)]` tanpa hardcode warna.
+          - Dimensi thumb 20px × 20px (`after:h-5 after:w-5`) dengan posisi rapi `top-[2px] left-[2px]`, warna putih ber-border `border-slate-300`, transisi halus (`after:transition-all`), dan bergeser penuh saat aktif (`peer-checked:after:translate-x-full peer-checked:after:border-white`).
+          - Menghilangkan class legasi (`toggle-switch-input`, `toggle-switch-track`) dan menyelaraskan CSS override di `css/admin.css` agar 100% sinkron dengan utility class Tailwind.
+      - **Revisi Layout Atribut & Keterangan Spesifikasi Tambahan (`SC-ADMIN-LAYOUT-SPEC-01`)**:
+        - Menghapus ikon dekoratif `bi-card-checklist` di samping judul `"Atribut & Keterangan Spesifikasi Tambahan"`, menyisakan teks judul bersih dan counter baris.
+        - Menyempurnakan tombol tambah baris spesifikasi (`#btn-add-spec-row`): menyajikan satu ikon plus (`bi-plus-lg`) diikuti teks `"Tambah Baris Spesifikasi"` (menghapus karakter literal `+` ganda pada teks).
+        - Menampilkan header kolom `"Judul"`, `"Keterangan"`, dan `"Aksi"` (`#custom-specs-thead`) secara kondisional hanya ketika minimal terdapat 1 baris spesifikasi:
+          - Pada kondisi awal kosong: header kolom tersembunyi (`hidden`), tombol tambah baris tetap tampil dan aktif.
+          - Saat baris pertama ditambahkan: header kolom muncul bersamaan dengan baris baru.
+          - Saat baris terakhir dihapus: header kolom otomatis tersembunyi kembali.
+          - Saat mengedit produk yang telah memiliki baris spesifikasi: header kolom dan isi baris langsung tampil.
+          - Penentuan visibilitas mengacu langsung pada aliran data/rendering baris tanpa state duplikat.
+          - Kolom `"Aksi"` dipertahankan rata tengah (`text-center`) tepat di atas tombol kontrol hapus per-baris.
+      - **Preview Floating Action Button & Pembatalan Bilah Aksi Bawah (`SC-ADMIN-LAYOUT-NAV-02-R1`)**:
+        - **Pembatalan Bilah Aksi Bawah Sticky/Fixed**:
+          - Sesuai arahan pemilik, bilah aksi lekat bawah (*bottom-fixed action bar*) dibatalkan.
+          - Tombol aksi navigasi Step 1 (**Batal** `#btn-step-1-cancel` & **Lanjutkan** `#btn-step-1-next`) dan Step 2 (**Kembali** `#btn-step-2-prev`, **Simpan Draf** `#btn-save-draft`, & **Simpan Produk** `#btn-submit-product`) dikembalikan ke aliran dokumen normal (*normal document flow*) di ujung bawah kartu formulir masing-masing.
+          - Seluruh dekorasi, pembungkus bilah lekat/fixed, dan padding kompensasi (`pb-20 sm:pb-24`) dihapus bersih, mengembalikan padding natural pembungkus form (`pb-8 sm:pb-12`).
+          - Seluruh ID tombol, urutan tombol, penanganan event, validasi berurutan (*sequential gating*), status loading/disabled, dan penyimpanan data produk dipertahankan 100%.
+        - **Retensi Preview Floating Action Button (FAB)**:
+          - **Desktop Step 1 (`#btn-expand-preview-sidebar`)**: Tetap mempertahankan FAB horizontal bulat melayang (`rounded-full shadow-xl fixed right-6 bottom-6 z-25`) di kanan bawah memuat ikon mata (`bi-eye`) dan teks "Pratinjau". Offset bawah disesuaikan menjadi `bottom-6` (`1.5rem`) karena bilah aksi lekat telah ditiadakan.
+          - **Mobile (Step 1 & Step 2) (`#btn-fab-live-preview`)**: Mempertahankan tampilan rounded pill, posisi tengah horizontal (`left-1/2 -translate-x-1/2`), dan mengembalikan jarak vertikal normal `bottom-4` (`1rem`).
+          - Mempertahankan tombol Pratinjau Step 2 (`#btn-subnav-toggle-preview`) pada subnavbar lekat desktop dan aturan penutupan otomatis saat panel samping dibuka.
+          - Seluruh FAB tetap berada di bawah hierarki overlay drawer sheet (`z-95`) dan popup modal dialog (`z-100`).
+      - **Penyelarasan Layout Panel Pratinjau Step 1–2 (`SC-ADMIN-PREVIEW-LAYOUT-03`)**:
+        - **Header Step 1**: Mengganti ikon mata dan teks judul "Preview / Kartu Produk" dengan tab tersegmen teks kompak `[Pratinjau]` (`#btn-step1-tab-preview` / `#btn-step1-tab-preview-mob`) dan `[Desain Kartu]` (`#btn-step1-tab-design` / `#btn-step1-tab-design-mob`).
+          - Kondisi default memilih `Pratinjau`: menampilkan baris simulasi diskon dan kartu produk live; menyembunyikan kontrol editor desain.
+          - Memilih `Desain Kartu`: mempertahankan baris simulasi diskon dan kartu produk live yang sama di bagian atas, serta menampilkan panel kontrol kustomisasi desain kartu yang sudah ada di bagian bawah.
+          - State tab Step 1 (`previewStep1Tab`) dipisahkan secara independen dari state simulasi uji coba Step 2 (`previewTestState`). Pergantian tab murni mengubah presentasi visibilitas tanpa mereset konfigurasi kartu (`card_config`) atau memicu preset default.
+          - Menghapus judul dekoratif repetitif "Desain Kartu" beserta ikon palet di dalam editor saat tab aktif.
+        - **Header Step 2**: Mempertahankan tab `[Pratinjau]` (`#btn-preview-mode-passive` / `#btn-preview-mode-passive-mob`) dan `[Uji Coba]` (`#btn-preview-mode-test` / `#btn-preview-mode-test-mob`) beserta subjudul `"Detail Produk"` dan kotak peringatan validasi (`#preview-test-mode-alert`). Menghapus ikon mata dan ikon petir dari tombol header untuk menjaga konsistensi teks kompak dengan Step 1.
+        - **Baris Simulasi Diskon (Kedua Step & Layar)**: Menyederhanakan menjadi baris kompak bersih `[checkbox] Simulasi Diskon` (`#cfg-simulate-countdown-preview` / `#cfg-simulate-countdown-preview-mob`), menghapus ikon petir dekoratif, teks literal "ON", serta wrapper border/latar tebal. Menerapkan `accent-color: var(--color-primary)` dan indikator fokus keyboard `focus-visible`.
+        - **Pembersihan Sekitar Pratinjau**: Menghapus border putus-putus (`border-dashed`) dan kotak abu-abu di sekeliling kontainer kartu pratinjau desktop, menjaga tampilan bersih datar tanpa kotak dekoratif bersarang.
+        - **Pembeda Visual Kartu Produk Step 1 (`SC-ADMIN-PREVIEW-LAYOUT-03-R1`)**:
+          - Memberikan pembungkus area kartu (`#preview-card-outer-wrapper` desktop dan `#preview-card-outer-wrapper-mob` mobile) dengan latar abu-abu netral sangat muda token proyek (`bg-slate-100/70`) dan sudut membulat halus (`rounded-xl`).
+          - Menerapkan padding 12px (`p-3`) dan lebar maksimum outer wrapper `max-w-[284px]` di sekeliling kontainer kartu (`max-w-[260px]`), sehingga keempat tepi kartu produk putih terlihat kontras dan tegas terhadap latar drawer/sidebar tanpa mempersempit dimensi kartu asli.
+          - Berlaku konsisten di Step 1 pada tab `[Pratinjau]` maupun tab `[Desain Kartu]`, baik pada sidebar desktop maupun drawer mobile.
+          - Terisolasi hanya di belakang kartu: header, checkbox simulasi diskon, dan panel editor tidak menerima latar abu-abu tersebut.
+          - Terisolasi dari Step 2: Pada Step 2 (Mini PDP), kelas latar dan padding otomatis dilepas (reset ke `max-w-[260px]`) sehingga layout Mini PDP tetap utuh tanpa modifikasi.
+        - **Kustomisasi & Pemulihan Desain Kartu Step 1 (`SC-ADMIN-CARD-DESIGN-04`)**:
+          - **Latar Pratinjau Mengikuti Tema Body**: Menghapus padding `p-3/12px` dan pembatas lebar `284px` pada pembungkus kartu Step 1 (`#preview-card-outer-wrapper` desktop dan `#preview-card-outer-wrapper-mob` mobile). Mengganti latar abu-abu statis dengan warna Body dinamis dari tema aktif via `getThemeBodyColor()` (mengacu pada `settings.body_bg_color || '#f8fafc'` dari `DB.getSettings()` dan `--color-body-bg`). Latar diterapkan secara terisolasi hanya di belakang kartu Step 1 (tab Pratinjau & Desain Kartu); Step 2 (Mini PDP) tetap terisolasi tanpa latar.
+          - **Tombol Batal dan Pemulihan Desain**:
+            - Menambahkan tombol sekunder `[Batal]` (`#btn-cancel-card-design` desktop dan `#btn-cancel-card-design-mob` mobile) berdampingan dengan `[Simpan Perubahan]` pada panel kustomisasi desain kartu.
+            - Mengelola state snapshot terisolasi (`cardDesignSnapshot`) dengan kunci sesi spesifik per-produk dan per-model (`${currentEditingId || 'new'}__${primaryState.card_variant}`).
+            - Mengambil snapshot mendalam konfigurasi awal (`card_config`, `use_default_card_design`, footer bertingkat `custom_footer_1`/`custom_footer_2`, flat footer, dan countdown) sebelum perubahan pertama terjadi.
+            - Menekan `[Batal]` memulihkan seluruh pengaturan desain, input editor, status Default/Ubah Kartu, dan preview kartu secara instan tanpa menulis/menghapus database preset, tanpa mengubah data formulir produk, dan tanpa menutup drawer.
+            - Setelah `[Simpan Perubahan]` berhasil, snapshot diperbarui menjadi baseline awal untuk pengeditan berikutnya; jika simpan gagal, snapshot tetap dipertahankan.
+            - Perpindahan tab `Pratinjau`/`Desain Kartu`, tutup/buka drawer, atau rerender formulir tidak menimpa snapshot awal.
+        - **Penyempurnaan Penetrasi Warna Latar Preview Step 1 (`SC-ADMIN-PREVIEW-BACKGROUND-04-R1`)**:
+          - **Penerapan Luas ke Seluruh Area Konten Preview**: Warna Body tema toko aktif (`getThemeBodyColor()`) diterapkan langsung pada elemen kontainer scrollable body (`#desktop-preview-body` pada desktop dan `#mobile-preview-body` pada mobile bottom sheet) serta kontainer luar sidebar/drawer (`#desktop-preview-sidebar` dan `#mobile-preview-sheet`), mengatasi masalah implementasi sebelumnya di mana pewarnaan hanya terbatas pada wrapper selebar kartu (`max-w-[260px]`) sehingga terhalang/tertutup seluruhnya oleh kartu produk.
+          - **Transparansi Wrapper Selebar Kartu**: Latar belakang inline pada `#preview-card-outer-wrapper` dan `#preview-card-outer-wrapper-mob` dikosongkan/ditransparansikan sehingga mewarisi langsung warna latar kanvas body tanpa menimbulkan kotak/border ganda.
+          - **Pertahankan Latar Internal Kartu**: Desain internal kartu produk (`cfg.bg_color`) tetap putih murni (`#ffffff`) sesuai konfigurasi seller, berkontras jelas terhadap latar kanvas toko yang dinamis.
+          - **Isolasi Penuh Step 2**: Saat berpindah ke Step 2 (Mini PDP), seluruh penimpaan warna latar inline (`style.backgroundColor = ''`) dibersihkan kembali ke nilai default stylesheet (`bg-white`), mempertahankan area mockup detail produk tetap putih bersih tanpa modifikasi.
+          - **Preservasi Fungsionalitas Penuh**: Tab Pratinjau/Desain Kartu, tombol Batal/Simpan, rollback snapshot, validasi, dan sinkronisasi realtime preview kartu berfungsi normal 100%.
+        - **Pembersihan Layout & Penyelarasan Garis Pemisah Form–Preview (`SC-ADMIN-LAYOUT-CLEANUP-05`)**:
+          - **Pembersihan Breadcrumb**: Menghapus seluruh baris breadcrumb `#product-form-top-bar` ("Daftar Produk / Tambah Produk Baru" beserta ikon panah kembali), padding, margin berlebih, dan garis divider `border-b` yang sebelumnya memotong/menabrak kanvas layout.
+          - **Penyelarasan Garis Vertikal Form–Preview Desktop**: Garis pemisah vertikal form–preview desktop (`border-l border-slate-200` pada `#desktop-preview-sidebar`) kini kontinu dan menyatu utuh dari batas atas area kerja (`top: 4rem`, persis di bawah navbar admin) hingga batas bawah layar tanpa celah atau garis ganda.
+          - **Header Preview & Divider Horizontal**: Header preview berada persis di atas body preview dengan satu divider horizontal tipis (`border-b border-slate-200`) yang seragam baik pada sidebar desktop maupun drawer mobile, tanpa memaksakan garis melintasi form.
+          - **Kompensasi Padding Responsif**: Menyesuaikan padding atas `#step-pane-1` secara bersih (`1.25rem` pada desktop/tablet dan `0.75rem` pada mobile) sehingga kartu pertama form memiliki jarak yang seimbang dari batas atas workspace tanpa ruang kosong sisa breadcrumb.
+          - **Preservasi Fungsionalitas Navigasi**: Tombol Batal pada form (`#btn-step-1-cancel`) tetap terhubung normal ke handler navigasi `handleFormCancel()`. Seluruh fitur preview (Body color tema, Step 2 isolation, Desain Kartu CTA) dipertahankan 100%.
+        - *Status Verifikasi*: Pengujian sintaks dan logika event/render lulus pengujian Node.js terarah (100% PASS). Verifikasi visual rendering/scrolling langsung di perangkat/browser dicatat sebagai status tertunda menunggu tinjauan visual pemilik (*pending owner visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

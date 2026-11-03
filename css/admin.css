@@ -882,8 +882,8 @@ input[type="radio"]:active {
     margin: 0 !important;
   }
 
-  #product-form-top-bar {
-    padding: 1.25rem 1.5rem 0.75rem 1.5rem !important;
+  #step-pane-1 {
+    padding-top: 1.25rem !important;
   }
 
   #step-pane-1,
@@ -903,8 +903,8 @@ input[type="radio"]:active {
     margin: 0 !important;
   }
 
-  #product-form-top-bar {
-    padding: 1.5rem 1.5rem 0.75rem 1.5rem !important;
+  #step-pane-1 {
+    padding-top: 1.25rem !important;
   }
 
   #step-pane-1,
@@ -1182,13 +1182,14 @@ label:has(#toggle-shipping-enabled)>div,
 label:has(#toggle-is-cod)>div,
 label:has(#toggle-cod-enabled)>div,
 label:has(#input-cod-enabled)>div,
-label:has(#toggle-custom-dimension)>div {
+label:has(#toggle-custom-dimension)>div,
+label:has(#toggle-size-guide-enable)>div {
   width: 44px !important;
   height: 24px !important;
   min-width: 44px !important;
   min-height: 24px !important;
   border-radius: 9999px !important;
-  background-color: #cbd5e1 !important;
+  background-color: #e2e8f0 !important;
   position: relative !important;
   display: inline-block !important;
   cursor: pointer !important;
@@ -1200,17 +1201,19 @@ label:has(#toggle-shipping-enabled)>div::after,
 label:has(#toggle-is-cod)>div::after,
 label:has(#toggle-cod-enabled)>div::after,
 label:has(#input-cod-enabled)>div::after,
-label:has(#toggle-custom-dimension)>div::after {
+label:has(#toggle-custom-dimension)>div::after,
+label:has(#toggle-size-guide-enable)>div::after {
   content: '' !important;
   position: absolute !important;
-  top: 3px !important;
-  left: 3px !important;
-  width: 18px !important;
-  height: 18px !important;
+  top: 2px !important;
+  left: 2px !important;
+  width: 20px !important;
+  height: 20px !important;
   background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
   border-radius: 9999px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: none !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease !important;
 }
 
 /* Checked State (Brand Theme / var(--color-primary)) */
@@ -1219,6 +1222,7 @@ input#toggle-is-cod:checked~div,
 input#toggle-cod-enabled:checked~div,
 input#input-cod-enabled:checked~div,
 input#toggle-custom-dimension:checked~div,
+input#toggle-size-guide-enable:checked~div,
 .toggle-switch-input:checked~.toggle-switch-track {
   background-color: var(--color-primary) !important;
 }
@@ -1228,8 +1232,10 @@ input#toggle-is-cod:checked~div::after,
 input#toggle-cod-enabled:checked~div::after,
 input#input-cod-enabled:checked~div::after,
 input#toggle-custom-dimension:checked~div::after,
+input#toggle-size-guide-enable:checked~div::after,
 .toggle-switch-input:checked~.toggle-switch-track::after {
   transform: translateX(20px) !important;
+  border-color: #ffffff !important;
 }
 
 input.toggle-same-price:checked~div,
@@ -2191,10 +2197,8 @@ input::-webkit-calendar-picker-indicator {
   }
 
   /* Padding horizontal tipis (px-1.5 / px-2) khusus untuk konten step pane agar kartu lapang maksimal */
-  #product-form-top-bar {
-    padding: 0.75rem 0.375rem 0.5rem 0.375rem !important;
-    /* px-1.5 */
-    width: 100% !important;
+  #step-pane-1 {
+    padding-top: 0.75rem !important;
   }
 
   #step-pane-1,
@@ -2203,7 +2207,6 @@ input::-webkit-calendar-picker-indicator {
     /* px-1.5 tipis */
     padding-right: 0.375rem !important;
     /* px-1.5 tipis */
-    padding-top: 0 !important;
     padding-bottom: 2rem !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2490,9 +2493,7 @@ input::-webkit-calendar-picker-indicator {
 #btn-quick-add-category-step2:hover,
 #btn-quick-add-category:hover,
 #view-product-form #btn-quick-add-category-step2:hover,
-#view-product-form #btn-quick-add-category:hover,
-#btn-back-to-list:hover,
-#view-product-form #btn-back-to-list:hover {
+#view-product-form #btn-quick-add-category:hover {
   color: var(--color-primary-hover) !important;
 }
 
@@ -2517,17 +2518,11 @@ input::-webkit-calendar-picker-indicator {
   background-color: var(--color-primary) !important;
 }
 
-/* Kotak "Simulasikan Diskon ON" di Panel Pratinjau Kanan */
-#desktop-preview-sidebar label:has(#cfg-simulate-countdown-preview:checked),
-#mobile-preview-sheet label:has(#cfg-simulate-countdown-preview-mob:checked) {
-  border-color: var(--color-primary) !important;
-  background-color: var(--color-primary-subtle) !important;
-  color: var(--color-primary-hover) !important;
-}
-
-#desktop-preview-sidebar label:has(#cfg-simulate-countdown-preview):hover,
-#mobile-preview-sheet label:has(#cfg-simulate-countdown-preview-mob):hover {
-  background-color: var(--color-primary-subtle) !important;
+/* Baris Simulasi Diskon di Panel Pratinjau */
+#cfg-simulate-countdown-preview:focus-visible,
+#cfg-simulate-countdown-preview-mob:focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
 }
 
 #cfg-simulate-countdown-preview,
@@ -3331,6 +3326,17 @@ button:focus-visible {
 }
 
 /* ==========================================================================
+   SC-ADMIN-LAYOUT-NAV-02-R1: Desktop Step 1 Preview FAB (Horizontal di Kanan Bawah)
+   ========================================================================== */
+#btn-expand-preview-sidebar {
+  bottom: 1.5rem !important;
+  right: 1.5rem !important;
+  top: auto !important;
+  transform: none !important;
+  z-index: 25 !important;
+}
+
+/* ==========================================================================
    DRAWER PRATINJAU UJI COBA: ZERO BORDER, RADIUS, OUTLINE, & BOX-SHADOW (100% CLEAN)
    ========================================================================== */
 #admin-main-viewport .mini-pdp-drawer-sheet .dim-input-box,
@@ -3368,4 +3374,45 @@ button:focus-visible {
   outline-style: none !important;
   box-shadow: none !important;
   --tw-ring-shadow: 0 0 #0000 !important;
+}
+/* ==========================================================================
+   REVISI LAYOUT: SCROLLBAR MODAL BANTUAN & SIMULASI & TABEL UKURAN COMPACT
+   ========================================================================== */
+#modal-help-dimension-rule .custom-modal-scrollbar,
+#modal-sandbox-pxl-simulator .custom-modal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+#modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar,
+#modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+#modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar-track,
+#modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+#modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar-thumb,
+#modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+#modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar-thumb:hover,
+#modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Tabel Panduan Ukuran Compact Mobile */
+#size-guide-matrix-table .size-col-header-input {
+  font-size: 11px;
+}
+@media (min-width: 640px) {
+  #size-guide-matrix-table .size-col-header-input {
+    font-size: 12px;
+  }
+}
+#size-guide-matrix-table .clean-datalist-input-box > .btn-clear-datalist,
+#size-guide-matrix-table .clean-datalist-input-box > .clean-datalist-arrow {
+  right: 0.25rem !important;
+  width: 1rem !important;
+  height: 1rem !important;
 }
