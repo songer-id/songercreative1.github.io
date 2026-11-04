@@ -1127,6 +1127,24 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Mengalir secara alami dalam satu kontainer scroll sidebar/drawer utama (`overflow-y-auto`) tanpa nesting scrollbar ataupun manipulasi sticky positioning.
           - Menyelaraskan lebar kartu, Simulasi Diskon, dan accordion section pada `max-w-[260px] mx-auto` dengan warna latar Body tema aktif.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), zero stray character assert, sequential layout verification, dan simulated tab visibility test (`scratch/test_card_editor_08_r1.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Pengelompokan Tools Desain Kartu Berdasarkan Objek & Penyesuaian Tipografi (`SC-ADMIN-CARD-EDITOR-GROUPING-09A`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Tab Desain Kartu pada sidebar desktop, tablet, dan drawer mobile.
+        - **Teks Penyimpanan Preset**:
+          - Memperbarui teks checkbox penyimpanan preset dari *"Gunakan Tema Sebagai Default [Nama Kartu]"* menjadi *"Gunakan Sebagai Default ([Nama Kartu])"*, contoh: `Gunakan Sebagai Default (Kartu Klasik)`, `Gunakan Sebagai Default (Kartu Minimalis)`, dan `Gunakan Sebagai Default (Kartu Detail)`.
+          - Label dinamis tersinkronisasi otomatis saat model kartu diubah pada formulir utama, saat inisialisasi, dan saat beralih tab.
+        - **Standardisasi Tipografi (Font-Weight Normal)**:
+          - Menerapkan aturan CSS khusus editor (`css/admin.css`) dengan selector terisolasi (`#card-customization-section` & `#card-customization-section-mob`) untuk menegakkan `font-weight: 400 !important;` pada seluruh judul accordion, label, nilai token, teks bantuan, input, dan tombol panel tools editor.
+          - Mengganti utility class tebal (`font-bold`, `font-semibold`, `font-medium`) menjadi `font-normal` pada seluruh template panel editor tanpa mempengaruhi tipografi kartu preview maupun bagian formulir lainnya.
+        - **Restrukturisasi Susunan Accordion Berdasarkan 5 Objek**:
+          - **1. Bingkai Kartu (`frame`)**: Warna latar belakang (`cfg-bg-color`), warna border (`cfg-border-color`), dan radius sudut kartu (`cfg-border-radius`). Terbuka secara default pada awal sesi (`frame: true`).
+          - **2. Teks & Informasi (`text-info`)**: Warna judul (`cfg-title-color`), warna harga (`cfg-price-color`), warna tombol beli (`cfg-btn-color`), serta kontrol visibilitas Rating (`cfg-show-rating`) dan Terjual (`cfg-show-sales`).
+          - **3. Label Khusus (`badge`)**: Kontrol visibilitas Label Khusus (`cfg-show-badge`). Otomatis disembunyikan sepenuhnya jika Model B (Minimalis) aktif.
+          - **4. Promo & Diskon (`promo`)**: Kontrol visibilitas Harga Coret (`cfg-show-strike`), Diskon Foto (`cfg-show-discount-badge`), Ikon Tiket (`cfg-show-ticket-icon`), serta seluruh kontrol Countdown (toggle Aktifkan Countdown, warna latar, warna teks, warna ikon, warna border, dan radius countdown).
+          - **5. Footer Kartu (`footer`)**: Pengaturan teks, warna latar, dan warna teks untuk Strip 1 dan Strip 2. Otomatis ditampilkan hanya jika Model C (Detail) aktif, dan disembunyikan untuk Model A & B.
+          - Mempertahankan multi-expandable state antar-rerender sesi, memindahkan kontrol yang sudah ada tanpa menduplikasi ID/event listener, dan mempertahankan kontrol toggle eye/eye-slash.
+        - **Alur & Tata Letak Panel**:
+          - Urutan tampilan tetap terjaga: Simulasi Diskon $\rightarrow$ Live Preview Kartu $\rightarrow$ Accordion Tools $\rightarrow$ Pinned Actions Footer (Gunakan Desain Bawaan, Checkbox Default, Batal, Simpan).
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), assert structural unit test (`scratch/test_card_editor_grouping_09a.js`), dan runtime dynamic DOM mock (`scratch/test_runtime_grouping_09a.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

@@ -3481,3 +3481,23 @@ button:focus-visible {
 #size-guide-matrix-table .btn-add-size-col {
   touch-action: manipulation;
 }
+
+/* Scoped Typography for Card Customization Section (Task SC-ADMIN-CARD-EDITOR-GROUPING-09A) */
+#card-customization-section,
+#card-customization-section button,
+#card-customization-section label,
+#card-customization-section input,
+#card-customization-section select,
+#card-customization-section span,
+#card-customization-section p,
+#card-customization-section .card-accordion-trigger,
+#card-customization-section-mob,
+#card-customization-section-mob button,
+#card-customization-section-mob label,
+#card-customization-section-mob input,
+#card-customization-section-mob select,
+#card-customization-section-mob span,
+#card-customization-section-mob p,
+#card-customization-section-mob .card-accordion-trigger {
+  font-weight: 400 !important;
+}
