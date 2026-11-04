@@ -348,6 +348,7 @@ const ProductForm = (() => {
     specific_options_map: {}, // { [matId]: { main: [optIds], extra_1: [optIds], extra_2: [optIds] } }
     variation_dependencies: null,
     show_badge: true,
+    sales_count: 0,
     order_category: 'Ctk', // Default operasional internal kasir
     category_id: '',     // Kategori Utama Etalase (default '' wajib dipilih seller!)
     sub_category_id: '', // Sub-Kategori Etalase
@@ -1428,6 +1429,7 @@ const ProductForm = (() => {
       show_shipping_for_non_physical: false,
       has_layer_3: false,
       show_badge: true,
+      sales_count: 0,
       order_category: 'Ctk',
       category_id: '', // Default '' (kosong, seller wajib memilih sendiri!)
       sub_category_id: '',
@@ -1872,6 +1874,7 @@ const ProductForm = (() => {
       show_shipping_for_non_physical: prod.show_shipping_for_non_physical || false,
       has_layer_3: false,
       show_badge: prod.card_variant === 'B' ? false : (prod.show_badge !== undefined ? prod.show_badge : true),
+      sales_count: (prod.sales_count !== undefined && prod.sales_count !== null && !isNaN(parseInt(prod.sales_count))) ? parseInt(prod.sales_count, 10) : 0,
       order_category: prod.order_category || 'Ctk',
       category_id: prod.category_id || null,
       sub_category_id: prod.sub_category_id || null,
@@ -2744,6 +2747,7 @@ const ProductForm = (() => {
                           <i id="cfg-show-sales-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
+                      <p id="cfg-metric-model-b-notice" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-[11px] text-slate-500 font-normal px-2 pt-1 pb-0.5">Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual.</p>
                     </div>
                   </div>
                 </div>
@@ -3127,6 +3131,7 @@ const ProductForm = (() => {
                           <i id="cfg-show-sales-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
+                      <p id="cfg-metric-model-b-notice-mob" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-[11px] text-slate-500 font-normal px-2 pt-1 pb-0.5">Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual.</p>
                     </div>
                   </div>
                 </div>
@@ -3498,6 +3503,18 @@ const ProductForm = (() => {
     return `<span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${minVal.toLocaleString('id-ID')}</span><span class="font-normal mx-1">-</span><span class="text-[0.72em] font-medium mr-[1px]">Rp</span><span class="font-semibold">${maxVal.toLocaleString('id-ID')}</span>`;
   }
 
+  function formatSalesCount(count, compact = false) {
+    const num = parseInt(count, 10) || 0;
+    const labelSuffix = compact ? 'ter' : 'terjual';
+    if (num < 1000) {
+      return `${num} ${labelSuffix}`;
+    }
+    const k = Math.floor(num / 1000);
+    const isExact = (num % 1000 === 0);
+    const valPrefix = isExact ? `${k}RB` : `${k}RB+`;
+    return `${valPrefix} ${labelSuffix}`;
+  }
+
   function updateDesignChoiceButtonsState() {
     const btnUseDef = document.getElementById('btn-card-use-default');
     const btnCustom = document.getElementById('btn-card-custom-design');
@@ -3590,6 +3607,17 @@ const ProductForm = (() => {
     if (badgeContainerMob) {
       if (isModelB) badgeContainerMob.classList.remove('hidden');
       else badgeContainerMob.classList.remove('hidden');
+    }
+
+    const noticeBDesk = document.getElementById('cfg-metric-model-b-notice');
+    const noticeBMob = document.getElementById('cfg-metric-model-b-notice-mob');
+    if (noticeBDesk) {
+      if (isModelB) noticeBDesk.classList.remove('hidden');
+      else noticeBDesk.classList.add('hidden');
+    }
+    if (noticeBMob) {
+      if (isModelB) noticeBMob.classList.remove('hidden');
+      else noticeBMob.classList.add('hidden');
     }
 
     updateSaveAsDefaultLabels();
@@ -3689,6 +3717,7 @@ const ProductForm = (() => {
       price_color: getVal('cfg-price-color', 'cfg-price-color-mob', defThemeColor),
       btn_color: getVal('cfg-btn-color', 'cfg-btn-color-mob', defThemeColor),
       show_rating: getChk('cfg-show-rating', 'cfg-show-rating-mob'),
+      show_sales: getChk('cfg-show-sales', 'cfg-show-sales-mob'),
       show_sales_count: getChk('cfg-show-sales', 'cfg-show-sales-mob'),
       show_strikethrough_price: getChk('cfg-show-strike', 'cfg-show-strike-mob'),
       show_discount_badge: getChk('cfg-show-discount-badge', 'cfg-show-discount-badge-mob'),
@@ -8702,6 +8731,18 @@ const ProductForm = (() => {
     const safePrice = (!isCustomDesignActive || !rawPrice || rawPrice.toLowerCase() === '#000000') ? defCardThemeColor : rawPrice;
     const safeBtn = (!isCustomDesignActive || !rawBtn || rawBtn.toLowerCase() === '#000000') ? defCardThemeColor : rawBtn;
 
+    const showRatingChecked = document.getElementById('cfg-show-rating')
+      ? document.getElementById('cfg-show-rating').checked
+      : (document.getElementById('cfg-show-rating-mob')
+          ? document.getElementById('cfg-show-rating-mob').checked
+          : (primaryState.card_config ? primaryState.card_config.show_rating !== false : true));
+
+    const showSalesChecked = document.getElementById('cfg-show-sales')
+      ? document.getElementById('cfg-show-sales').checked
+      : (document.getElementById('cfg-show-sales-mob')
+          ? document.getElementById('cfg-show-sales-mob').checked
+          : (primaryState.card_config ? (primaryState.card_config.show_sales !== false && primaryState.card_config.show_sales_count !== false) : true));
+
     const cfg = {
       bg_color: safeBg,
       border_color: safeBorder,
@@ -8709,8 +8750,9 @@ const ProductForm = (() => {
       title_color: safeTitle,
       price_color: safePrice,
       btn_color: safeBtn,
-      show_rating: document.getElementById('cfg-show-rating')?.checked !== false,
-      show_sales: document.getElementById('cfg-show-sales')?.checked !== false,
+      show_rating: showRatingChecked,
+      show_sales: showSalesChecked,
+      show_sales_count: showSalesChecked,
       show_strike: document.getElementById('cfg-show-strike')?.checked !== false,
       show_discount_badge: document.getElementById('cfg-show-discount-badge')?.checked !== false,
       show_ticket_icon: document.getElementById('cfg-show-ticket-icon')?.checked !== false,
@@ -8720,6 +8762,9 @@ const ProductForm = (() => {
     const cardStyle = `background-color: ${cfg.bg_color}; border-color: ${cfg.border_color}; border-radius: ${cfg.border_radius};`;
     const titleStyle = `color: ${cfg.title_color};`;
     const priceStyle = `color: ${cfg.price_color};`;
+    const salesCount = (primaryState.sales_count !== undefined && primaryState.sales_count !== null && !isNaN(parseInt(primaryState.sales_count)))
+      ? parseInt(primaryState.sales_count, 10)
+      : 0;
 
     // Discount Badge Custom Styles (pada foto produk)
     const discBadgeRadius = document.getElementById('cfg-discount-badge-radius')?.value || '8px';
@@ -8795,16 +8840,16 @@ const ProductForm = (() => {
 
       let selectedMetricHtml = '';
       if (!isExtremePrice) {
-        if (cfg.show_rating) {
+        if (cfg.show_sales) {
+          selectedMetricHtml = `
+            <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap text-right shrink-0">
+              ${formatSalesCount(salesCount, isNarrowPriceRow)}
+            </span>
+          `;
+        } else if (cfg.show_rating) {
           selectedMetricHtml = `
             <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5 shrink-0 whitespace-nowrap">
               ★ 4.9
-            </span>
-          `;
-        } else if (cfg.show_sales) {
-          selectedMetricHtml = `
-            <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap text-right shrink-0">
-              ${isNarrowPriceRow ? '1RB+ ter' : '1RB+ terjual'}
             </span>
           `;
         }
@@ -8896,10 +8941,10 @@ const ProductForm = (() => {
               ${cfg.show_sales ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                    1RB+ terjual
+                    ${formatSalesCount(salesCount, false)}
                   </span>
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                    1RB+ terjual
+                    ${formatSalesCount(salesCount, false)}
                   </span>
                 </div>
               ` : ''}
@@ -8981,10 +9026,10 @@ const ProductForm = (() => {
               ${cfg.show_sales ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                    1RB+ terjual
+                    ${formatSalesCount(salesCount, false)}
                   </span>
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                    ${(effHasDiscount && cfg.show_ticket_icon && (effFinalPrice >= 1000000 || origStrikePrice >= 1000000)) ? '1RB+ ter' : '1RB+ terjual'}
+                    ${formatSalesCount(salesCount, Boolean(effHasDiscount && cfg.show_ticket_icon && (effFinalPrice >= 1000000 || origStrikePrice >= 1000000)))}
                   </span>
                 </div>
               ` : ''}
@@ -9322,7 +9367,7 @@ const ProductForm = (() => {
                       </span>
                     ` : ''}
                   </div>
-                  <span class="text-[11px] text-slate-500 font-normal whitespace-nowrap shrink-0">1RB+ terjual</span>
+                  <span class="text-[11px] text-slate-500 font-normal whitespace-nowrap shrink-0">${formatSalesCount(salesCount, false)}</span>
                 </div>
 
                 <!-- URUTAN 2: Judul / Nama Produk -->
@@ -29100,11 +29145,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     toggleCardAccordion,
     syncCardAccordionDOM,
     syncEyeToggleIcons,
-    handleApplyDefaultCardDesign
+    handleApplyDefaultCardDesign,
+    formatSalesCount
   };
 })();
 
 window.ProductForm = ProductForm;
+window.formatSalesCount = ProductForm.formatSalesCount;
 window.handleApplyDefaultCardDesign = ProductForm.handleApplyDefaultCardDesign;
 window.toggleCardAccordion = ProductForm.toggleCardAccordion;
 window.syncCardAccordionDOM = ProductForm.syncCardAccordionDOM;

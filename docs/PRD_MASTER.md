@@ -1145,6 +1145,25 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
         - **Alur & Tata Letak Panel**:
           - Urutan tampilan tetap terjaga: Simulasi Diskon $\rightarrow$ Live Preview Kartu $\rightarrow$ Accordion Tools $\rightarrow$ Pinned Actions Footer (Gunakan Desain Bawaan, Checkbox Default, Batal, Simpan).
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), assert structural unit test (`scratch/test_card_editor_grouping_09a.js`), dan runtime dynamic DOM mock (`scratch/test_runtime_grouping_09a.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Perbaikan Visibilitas & Nilai Sah Informasi Terjual pada Pratinjau Kartu Produk (`SC-ADMIN-CARD-EDITOR-09A-R1`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Pratinjau dan Desain Kartu pada desktop, tablet, dan drawer mobile.
+        - **Penyelarasan Alur Kontrol Terjual (Pipeline & Normalisasi State)**:
+          - Menambahkan pelacakan `sales_count` yang sah pada `primaryState` saat inisialisasi awal formulir (`sales_count: 0`), saat reset draf (`resetFormState`), dan saat memuat produk yang diedit (`editProduct` membaca nilai aktual `prod.sales_count`).
+          - Menghapus penggunaan string tiruan (*dummy hardcoded*) seperti `"1RB+ terjual"` / `"1RB+ ter"` pada seluruh renderer pratinjau kartu live (`updateProductCardLivePreview`) dan Mini PDP Step 2.
+          - Mengimplementasikan helper formater `formatSalesCount(count, compact)` yang konsisten dengan etalase pembeli (`buyer-store.js`).
+          - Menjamin bahwa saat kontrol Terjual aktif dan jumlah penjualan produk bernilai 0, sistem menampilkan `"0 terjual"` secara jelas tanpa tersembunyi oleh evaluasi *truthy/falsy* (`if (salesCount)`).
+          - Jika kontrol Terjual dinonaktifkan, informasi penjualan disembunyikan sepenuhnya dari kartu.
+        - **Harmonisasi Pembacaan Input & Sinkronisasi Properti**:
+          - Menyelaraskan pembacaan state kartu di `getCardConfigFromDOM` untuk menyimpan properti `show_sales` dan `show_sales_count` secara bersamaan guna menjamin kompatibilitas backward dan integrasi basis data.
+          - Menyatukan pembacaan status checkbox kontrol visibilitas di `updateProductCardLivePreview` agar memeriksa kedua varian elemen (desktop `#cfg-show-sales` dan mobile `#cfg-show-sales-mob`) serta fallback ke `primaryState.card_config`.
+          - Memastikan penegakan status ikon mata (`bi-eye` hijau) saat aktif dan mata tercoret (`bi-eye-slash` abu-abu) saat nonaktif melalui `syncEyeToggleIcons` di setiap pemuatan konfigurasi (`loadCardConfigInputs`), perubahan model kartu, dan eksekusi Batal/Simpan.
+        - **Penegakan Aturan Model Kartu & Transparansi Wireframe**:
+          - **Model A (Kartu Klasik) & Model C (Kartu Detail)**: Mendukung penampilan Rating dan Terjual secara mandiri maupun bersamaan di baris masing-masing.
+          - **Model B (Kartu Minimalis)**: Mempertahankan batas wireframe layout 1 slot metrik di samping harga; menegakkan mekanisme *mutual exclusivity* (memilih salah satu antara Rating atau Terjual) secara reaktif pada desktop dan mobile, serta menambahkan teks panduan transparan di panel editor: *"Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual."*.
+        - **Reaktivitas Antar-Tab & Tindakan Batal / Simpan**:
+          - Perubahan kontrol Terjual langsung tampak seketika pada kartu pratinjau baik di tab *Pratinjau* maupun tab *Desain Kartu*.
+          - Tombol **Batal** memulihkan snapshot konfigurasi awal dengan benar (termasuk status Terjual dan ikonnya), sedangkan tombol **Simpan** mempertahankan pilihan konfigurasi dan menyimpannya sebagai preset default bila dipilih.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), unit test logic (`scratch/test_card_editor_09a_r1.js`), dan runtime simulation mock (`scratch/test_runtime_09a_r1.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
