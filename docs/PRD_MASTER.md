@@ -1062,6 +1062,30 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Keselarasan vertikal antara header `<th>` dan sel baris data `<td>` tetap terjaga 100% pada seluruh indeks kolom.
           - Scroll horizontal tetap terisolasi di dalam wrapper tabel (`.overflow-x-auto`).
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), aturan CSS, dan simulasi penataan kolom/keselarasan template (`scratch/test_size_guide_mobile_r2.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Penyempurnaan Modal Peringatan Antarkonteks & Konfirmasi Simulasi Pembelian Preview (`SC-ADMIN-PREVIEW-CONFIRMATION-07`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Pratinjau (Step 1 dan Step 2 Uji Coba) pada mobile drawer, tablet, dan desktop sidebar.
+        - **Pembersihan Peringatan Antarkonteks (Context Cleanup)**:
+          - Memastikan peringatan validasi input Uji Coba (`#preview-scoped-modal-root`, `#preview-scoped-modal-root-mob`, `#preview-test-mode-alert`, `#preview-test-mode-alert-mob`) dibersihkan secara otomatis (`hidePreviewTestModeAlert()`) saat pengguna meninggalkan konteks Uji Coba:
+            - Berpindah langkah (Step 1 $\leftrightarrow$ Step 2 via `goToStep(step)`).
+            - Kembali ke tab pasif *[Pratinjau]* (`#btn-preview-mode-passive` / `#btn-preview-mode-passive-mob`).
+            - Menutup panel pratinjau (menutup bottom sheet mobile via `closeMobilePreview()` atau menciutkan sidebar desktop via `setSidebarState(false)`).
+          - Pratinjau Step 1 yang pasif tidak lagi menampilkan dialog peringatan sisa Uji Coba sehingga pengguna tidak perlu menekan tombol "OK / Mengerti" terlebih dahulu saat kembali ke Step 1.
+          - Isolasi pembersihan scoped murni pada kontainer pratinjau tanpa merusak modal global atau komponen aplikasi lainnya.
+        - **Konfirmasi Simulasi Sederhana (Beli Sekarang & Masukkan Keranjang)**:
+          - Menghapus ketergantungan form checkout kompleks (kalkulasi PxL, rincian biaya, alamat, kurir, form pembayaran, dan dummy order creation) pada preview.
+          - Menerapkan popup konfirmasi simulasi sederhana yang bersih dan profesional:
+            - **Beli Sekarang**:
+              - Judul: *"Simulasi Pembelian"*
+              - Pesan: *"Contoh aksi Beli Sekarang berhasil. Tidak ada pesanan yang dibuat."*
+              - Tombol: *"Tutup"*
+            - **Masukkan Keranjang**:
+              - Judul: *"Simulasi Keranjang"*
+              - Pesan: *"Contoh aksi Masukkan Keranjang berhasil. Keranjang pembeli tidak berubah."*
+              - Tombol: *"Tutup"*
+          - Menghilangkan pemanggilan `closeShopeeCheckoutDrawer()` sebelum modal konfirmasi muncul, sehingga modal simulasi tampil tepat di atas drawer yang sedang aktif (`z-50` desktop / `z-[100]` mobile terhadap drawer `z-30`).
+          - Saat tombol *"Tutup"* atau backdrop modal diklik, modal tertutup tanpa menutup form drawer ataupun mereset pilihan variasi, kuantitas, atau input ukuran seller.
+          - Menghubungkan tombol `Beli Sekarang` (`.btn-preview-buy-now`) dan `Masukkan Keranjang` (`.btn-preview-add-cart`) pada bottom bar Mini PDP agar langsung memunculkan konfirmasi simulasi jika data sudah valid atau membuka drawer jika memerlukan pemilihan variasi/ukuran.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), assert rule unit test (`scratch/test_preview_confirmation_07.js`), dan dynamic DOM mock validation (`scratch/test_runtime_preview_07.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

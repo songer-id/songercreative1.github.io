@@ -4427,6 +4427,11 @@ const ProductForm = (() => {
         root.className = 'absolute inset-0 z-[100] hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs';
       }
     });
+
+    ['preview-test-mode-alert', 'preview-test-mode-alert-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
   }
 
   function getPreviewHeaderHtml(step, isMobile = false) {
@@ -4514,6 +4519,7 @@ const ProductForm = (() => {
     if (currentStep === 1) {
       previewTestState.sidebarTab = 'preview';
       isPreviewTestMode = false;
+      hidePreviewTestModeAlert();
     }
 
     if (deskHeader) {
@@ -4562,6 +4568,7 @@ const ProductForm = (() => {
       if (btn) {
         btn.onclick = (e) => {
           e.preventDefault();
+          hidePreviewTestModeAlert();
           previewTestState.sidebarTab = 'preview';
           isPreviewTestMode = false;
           previewTestState.isDrawerOpen = false;
@@ -4659,12 +4666,12 @@ const ProductForm = (() => {
       root.querySelectorAll('.btn-close-sim-modal').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
-          root.classList.add('hidden');
+          roots.forEach(r => r.classList.add('hidden'));
         };
       });
 
       root.onclick = (e) => {
-        if (e.target === root) root.classList.add('hidden');
+        if (e.target === root) roots.forEach(r => r.classList.add('hidden'));
       };
 
       if (config.onMounted) {
@@ -4673,89 +4680,32 @@ const ProductForm = (() => {
     });
   }
 
+  function showBuySimulationConfirmModal() {
+    showPreviewTestModal({
+      type: 'buy',
+      title: 'Simulasi Pembelian',
+      message: 'Contoh aksi Beli Sekarang berhasil. Tidak ada pesanan yang dibuat.'
+    });
+  }
+
+  function showCartSimulationConfirmModal() {
+    showPreviewTestModal({
+      type: 'cart',
+      title: 'Simulasi Keranjang',
+      message: 'Contoh aksi Masukkan Keranjang berhasil. Keranjang pembeli tidak berubah.'
+    });
+  }
+
   function getShippingSimulationSummaryHtml() {
     return '';
   }
 
   function addSingleProductToCartDirect() {
-    const prodName = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
-    const curQ = 1;
-    if (typeof App !== 'undefined' && App.showToast) {
-      App.showToast('Berhasil dimasukkan ke keranjang', 'success');
-    }
-    showPreviewTestModal({
-      type: 'cart',
-      title: 'Berhasil dimasukkan ke keranjang',
-      message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
-      bodyHtml: `
-        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
-          <div class="font-bold text-slate-900 truncate">${escapeHtml(prodName)}</div>
-          ${primaryState.has_custom_dimension && isCustomDimensionValid() ? `
-            <div class="text-[11px] text-slate-600 flex justify-between">
-              <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
-              <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
-            </div>
-          ` : ''}
-          <div class="text-[11px] text-slate-600 flex justify-between">
-            <span>Kuantitas:</span>
-            <span class="font-bold text-slate-800">${curQ} pcs</span>
-          </div>
-        </div>
-      `
-    });
+    showCartSimulationConfirmModal();
   }
 
   function addVariantProductToCartDirect() {
-    const prodName = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
-    const curQ = Math.max(1, parseInt(primaryState.min_order) || 1);
-    const chosenVars = [];
-    const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
-    const m = validMaterials.find(item => item.id === previewTestState.selectedTier1Id);
-    if (m) chosenVars.push(m.name.trim());
-    if (primaryState.has_variation_2) {
-      const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
-      const f = validV2.find((item, idx) => (item.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
-      if (f && f.name) chosenVars.push(f.name.trim());
-    }
-    if (primaryState.has_variation_3) {
-      const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '');
-      const f = validV3.find((item, idx) => (item.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
-      if (f && f.name) chosenVars.push(f.name.trim());
-    }
-    if (primaryState.has_variation_4) {
-      const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '');
-      const f = validV4.find((item, idx) => (item.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
-      if (f && f.name) chosenVars.push(f.name.trim());
-    }
-    const variantText = chosenVars.length > 0 ? chosenVars.join(' - ') : 'Standar';
-
-    if (typeof App !== 'undefined' && App.showToast) {
-      App.showToast('Berhasil dimasukkan ke keranjang', 'success');
-    }
-    showPreviewTestModal({
-      type: 'cart',
-      title: 'Berhasil dimasukkan ke keranjang',
-      message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
-      bodyHtml: `
-        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
-          <div class="font-bold text-slate-900 truncate">${escapeHtml(prodName)}</div>
-          <div class="text-[11px] text-slate-600 flex justify-between">
-            <span>Pilihan Varian:</span>
-            <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
-          </div>
-          ${primaryState.has_custom_dimension && isCustomDimensionValid() ? `
-            <div class="text-[11px] text-slate-600 flex justify-between">
-              <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
-              <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)}</span>
-            </div>
-          ` : ''}
-          <div class="text-[11px] text-slate-600 flex justify-between">
-            <span>Kuantitas:</span>
-            <span class="font-bold text-slate-800">${curQ} pcs</span>
-          </div>
-        </div>
-      `
-    });
+    showCartSimulationConfirmModal();
   }
 
   function calculateCustomDimensionPricingForDrawer(pVal, lVal) {
@@ -7265,11 +7215,11 @@ const ProductForm = (() => {
 
           if (!hasVariations) {
             // KASUS A.1: Produk TANPA variasi -> LANGSUNG VALID TANPA MEMBUKA DRAWER
-            addSingleProductToCartDirect();
+            showCartSimulationConfirmModal();
           } else {
             // KASUS B.1: Produk MEMILIKI Variasi
             if (checkAllVariationsSelected()) {
-              addVariantProductToCartDirect();
+              showCartSimulationConfirmModal();
             } else {
               openShopeeCheckoutDrawer('cart');
             }
@@ -7277,7 +7227,7 @@ const ProductForm = (() => {
         };
       });
 
-      // 8. Tombol Beli Sekarang - Sesuai Aturan Alur Keputusan Kasus A & B (WAJIB MUNCULKAN DRAWER)
+      // 8. Tombol Beli Sekarang - Sesuai Aturan Alur Keputusan Kasus A & B
       container.querySelectorAll('.btn-preview-buy-now').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
@@ -7288,7 +7238,24 @@ const ProductForm = (() => {
           }
           hidePreviewTestModeAlert();
 
-          openShopeeCheckoutDrawer('buy');
+          const hasVariations = Boolean(primaryState.has_variants && (materialsState || []).some(m => m && m.name && m.name.trim() !== ''));
+
+          if (primaryState.has_custom_dimension && !isCustomDimensionValid()) {
+            openShopeeCheckoutDrawer('buy');
+            return;
+          }
+
+          if (!hasVariations) {
+            // KASUS A.1: Produk TANPA variasi -> LANGSUNG VALID
+            showBuySimulationConfirmModal();
+          } else {
+            // KASUS B.1: Produk MEMILIKI Variasi
+            if (checkAllVariationsSelected()) {
+              showBuySimulationConfirmModal();
+            } else {
+              openShopeeCheckoutDrawer('buy');
+            }
+          }
         };
       });
 
@@ -7892,142 +7859,10 @@ const ProductForm = (() => {
               return;
             }
 
-            // Hitung harga final
-            const dimPricing = calculateCustomDimensionPricingForDrawer(previewTestState.dimLength, previewTestState.dimWidth);
-            let finalGrandTotal = 0;
-
-            if (primaryState.has_custom_dimension && dimPricing.isValid) {
-              const effUnitPrice = dimPricing.unitPrice;
-              let unitPriceAfterDiscount = effUnitPrice;
-              if (effHasDiscount) {
-                if (hasDiscount && discPercent > 0) {
-                  unitPriceAfterDiscount = Math.round(effUnitPrice * (1 - (discPercent / 100)));
-                } else {
-                  unitPriceAfterDiscount = Math.round(effUnitPrice * 0.5);
-                }
-              }
-              const wsInfo = getPreviewWholesaleDiscount(curQ, unitPriceAfterDiscount, currentRule?.wholesale_tiers);
-              let finalUnitPrice = unitPriceAfterDiscount;
-              if (wsInfo.hasDiscount) {
-                finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wsInfo.discountPerPcs);
-              }
-              finalGrandTotal = finalUnitPrice * curQ;
-            } else {
-              let exTotal = 0;
-              if (primaryState.has_extra_service && (finishingsState.extra_3 || []).length > 0) {
-                (finishingsState.extra_3 || []).forEach((ex, idx) => {
-                  if (ex.is_default_none) return;
-                  const exId = ex.id || `ex_${idx}`;
-                  const xt = String(ex.extra_type || '').toLowerCase();
-                  const pr = parseFloat(ex.price) || 0;
-                  if (xt === 'qty') {
-                    const q = parseInt((previewTestState.extrasQty && previewTestState.extrasQty[exId] !== undefined) ? previewTestState.extrasQty[exId] : (previewTestState.extraQty?.[exId] || 0)) || 0;
-                    exTotal += pr * q;
-                  } else if (previewTestState.selectedExtras?.[exId] || xt === 'direct' || xt === 'langsung proses') {
-                    exTotal += pr;
-                  }
-                });
-              }
-              finalGrandTotal = (finalUnitPrice * curQ) + exTotal;
-            }
-
-            closeShopeeCheckoutDrawer();
-
-            const name = primaryState.name ? primaryState.name.trim() : 'Nama Produk';
-            const chosenVariants = [];
-            if (selectedMat && selectedMat.name) chosenVariants.push(selectedMat.name.trim());
-            if (primaryState.has_variation_2 && validV2.length > 0) {
-              const f = validV2.find((item, idx) => (item.id || `v2_${idx}`) === previewTestState.selectedTier2Id);
-              if (f && f.name) chosenVariants.push(f.name.trim());
-            }
-            if (primaryState.has_variation_3 && validV3.length > 0) {
-              const f = validV3.find((item, idx) => (item.id || `v3_${idx}`) === previewTestState.selectedTier3Id);
-              if (f && f.name) chosenVariants.push(f.name.trim());
-            }
-            if (primaryState.has_variation_4 && validV4.length > 0) {
-              const f = validV4.find((item, idx) => (item.id || `v4_${idx}`) === previewTestState.selectedTier4Id);
-              if (f && f.name) chosenVariants.push(f.name.trim());
-            }
-            let variantText = chosenVariants.length > 0 ? chosenVariants.join(' - ') : 'Standar';
-            if (primaryState.has_custom_dimension && dimPricing.isValid) {
-              const dimLabel = getCustomDimensionLabel();
-              variantText += ` (${dimLabel}: ${previewTestState.dimLength} x ${previewTestState.dimWidth} ${dimPricing.displayUnit || ''})`;
-            }
-
-            function formatAreaLocal(num) {
-              if (!num || isNaN(num)) return '0';
-              const fixed = Number(num).toFixed(2);
-              return fixed.endsWith('.00') ? String(parseInt(num, 10)) : fixed.replace(/\.?0+$/, '');
-            }
-
             if (actionType === 'buy') {
-              if (typeof App !== 'undefined' && App.showToast) {
-                App.showToast('Order Berhasil', 'success');
-              }
-              showPreviewTestModal({
-                type: 'buy',
-                title: 'Order Berhasil',
-                message: 'Simulasi checkout langsung pembeli berhasil diselesaikan!',
-                bodyHtml: `
-                  <div class="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-left text-xs space-y-2">
-                    <div class="font-extrabold text-slate-900 truncate">${escapeHtml(name)}</div>
-                    <div class="text-[11px] text-slate-600 flex justify-between">
-                      <span>Varian:</span>
-                      <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
-                    </div>
-                    ${primaryState.has_custom_dimension && dimPricing.isValid ? `
-                      <div class="text-[11px] text-slate-600 flex justify-between">
-                        <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
-                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)} ${dimPricing.displayUnit || ''} (${formatAreaLocal(dimPricing.unitAreaEff)} ${dimPricing.areaUnitLabel}${dimPricing.isPriceRounded ? ` • min. ${formatAreaLocal(dimPricing.chargedUnitAreaPrice)} ${dimPricing.areaUnitLabel}` : ''})</span>
-                      </div>
-                    ` : ''}
-                    <div class="text-[11px] text-slate-600 flex justify-between">
-                      <span>Jumlah:</span>
-                      <span class="font-bold text-slate-800">${curQ} pcs</span>
-                    </div>
-                    <div class="text-[11px] text-slate-600 flex justify-between border-t border-emerald-200/60 pt-1">
-                      <span>Total Pembayaran:</span>
-                      <span class="font-black text-emerald-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
-                    </div>
-                    <div class="text-[10px] text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg flex items-center gap-1 font-semibold">
-                      <i class="bi bi-shield-check text-emerald-700"></i>
-                      <span>Kalkulasi ukuran (P × L) dan batas minimal presisi 100%</span>
-                    </div>
-                  </div>
-                `
-              });
+              showBuySimulationConfirmModal();
             } else {
-              if (typeof App !== 'undefined' && App.showToast) {
-                App.showToast('Berhasil dimasukkan ke keranjang', 'success');
-              }
-              showPreviewTestModal({
-                type: 'cart',
-                title: 'Berhasil dimasukkan ke keranjang',
-                message: 'Simulasi penambahan ke keranjang belanja berhasil diverifikasi.',
-                bodyHtml: `
-                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5">
-                    <div class="font-bold text-slate-900 truncate">${escapeHtml(name)}</div>
-                    <div class="text-[11px] text-slate-600 flex justify-between">
-                      <span>Pilihan Varian:</span>
-                      <span class="font-semibold text-slate-800 text-right">${escapeHtml(variantText)}</span>
-                    </div>
-                    ${primaryState.has_custom_dimension && dimPricing.isValid ? `
-                      <div class="text-[11px] text-slate-600 flex justify-between">
-                        <span>Ukuran (${escapeHtml(getCustomDimensionLabel())}):</span>
-                        <span class="font-bold text-slate-800">${escapeHtml(previewTestState.dimLength)} x ${escapeHtml(previewTestState.dimWidth)} ${dimPricing.displayUnit || ''} (${formatAreaLocal(dimPricing.unitAreaEff)} ${dimPricing.areaUnitLabel}${dimPricing.isPriceRounded ? ` • min. ${formatAreaLocal(dimPricing.chargedUnitAreaPrice)} ${dimPricing.areaUnitLabel}` : ''})</span>
-                      </div>
-                    ` : ''}
-                    <div class="text-[11px] text-slate-600 flex justify-between">
-                      <span>Kuantitas:</span>
-                      <span class="font-bold text-slate-800">${curQ} pcs</span>
-                    </div>
-                    <div class="text-[11px] text-slate-600 flex justify-between border-t border-slate-200 pt-1">
-                      <span>Total Pembayaran:</span>
-                      <span class="font-black text-slate-800">Rp${Math.round(finalGrandTotal).toLocaleString('id-ID')}</span>
-                    </div>
-                  </div>
-                `
-              });
+              showCartSimulationConfirmModal();
             }
           };
         });
@@ -19694,6 +19529,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       previewTestState.sidebarTab = 'preview';
       isPreviewTestMode = false;
       previewTestState.isDrawerOpen = false;
+      hidePreviewTestModeAlert();
     }
     updatePreviewSidebarHeader();
     if (typeof updateSubnavPreviewButtonState === 'function') {
@@ -19804,8 +19640,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     hideWizardErrorBanner();
+    hidePreviewTestModeAlert();
     currentStep = step;
-    if (step === 2) {
+    if (step === 1) {
+      isPreviewTestMode = false;
+      previewTestState.sidebarTab = 'preview';
+      previewTestState.isDrawerOpen = false;
+    } else if (step === 2) {
       isPreviewTestMode = false;
       previewTestState.sidebarTab = 'preview';
       previewTestState.isDrawerOpen = false;
@@ -24857,6 +24698,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           wizardCol.classList.add('lg:pr-[300px]', 'xl:pr-[340px]');
         }
       } else {
+        if (typeof hidePreviewTestModeAlert === 'function') {
+          hidePreviewTestModeAlert();
+        }
         if (sidebar) {
           sidebar.classList.remove('translate-x-0');
           sidebar.classList.add('translate-x-full');
@@ -24962,7 +24806,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (btn) {
         btn.onclick = (e) => {
           e.preventDefault();
+          if (typeof hidePreviewTestModeAlert === 'function') {
+            hidePreviewTestModeAlert();
+          }
           previewTestState.sidebarTab = 'preview';
+          isPreviewTestMode = false;
+          previewTestState.isDrawerOpen = false;
           syncPreviewModeHeaderButtons();
           updateProductCardLivePreview();
         };
@@ -25032,6 +24881,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     };
 
     closeMobilePreview = function () {
+      if (typeof hidePreviewTestModeAlert === 'function') {
+        hidePreviewTestModeAlert();
+      }
       if (mobileSheet) mobileSheet.classList.add('translate-y-full');
       if (mobileBackdrop) mobileBackdrop.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
