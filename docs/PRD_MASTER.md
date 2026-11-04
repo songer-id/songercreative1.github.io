@@ -1086,6 +1086,32 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Saat tombol *"Tutup"* atau backdrop modal diklik, modal tertutup tanpa menutup form drawer ataupun mereset pilihan variasi, kuantitas, atau input ukuran seller.
           - Menghubungkan tombol `Beli Sekarang` (`.btn-preview-buy-now`) dan `Masukkan Keranjang` (`.btn-preview-add-cart`) pada bottom bar Mini PDP agar langsung memunculkan konfirmasi simulasi jika data sudah valid atau membuka drawer jika memerlukan pemilihan variasi/ukuran.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), assert rule unit test (`scratch/test_preview_confirmation_07.js`), dan dynamic DOM mock validation (`scratch/test_runtime_preview_07.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Penataan Accordion Editor Desain Kartu & Peningkatan Kontrol Eye/Eye-Slash (`SC-ADMIN-CARD-EDITOR-ACCORDION-08`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Tab Desain Kartu pada sidebar desktop, tablet, dan drawer mobile.
+        - **Tab Desain Kartu Langsung Membuka Tools**:
+          - Tab *Pratinjau* menampilkan kartu produk besar dan kontrol Simulasi Diskon.
+          - Tab *Desain Kartu* langsung menampilkan antarmuka editor kartu produk dalam bentuk accordion, tanpa menampilkan tab sekunder tambahan `[Default]` / `[Ubah Kartu]`.
+          - Kartu produk besar (`#preview-card-outer-wrapper` / `-mob`) dan baris Simulasi Diskon disembunyikan pada tab Desain Kartu dengan kelas `hidden`, tanpa menghapus elemen DOM ataupun state memori kartu produk.
+          - Perpindahan antartab murni mengubah visibilitas tampilan tanpa mereset konfigurasi desain, tanpa autosave, dan tanpa otomatis mengubah status desain menjadi kustom.
+          - Setiap perubahan pada editor tetap memperbarui render pratinjau kartu di memori/DOM secara seketika.
+        - **Pengelompokan Kontrol Editor dalam 4 Grup Accordion Multi-Expandable**:
+          - **Kelompok 1 (Warna & Bentuk)**: Pengaturan token warna latar belakang, border, judul, harga, tombol beli, serta pilihan radius sudut kartu. Terbuka secara default pada awal sesi (`colors: true`).
+          - **Kelompok 2 (Elemen Kartu)**: Pengaturan visibilitas elemen Rating, Terjual, Harga Coret, Diskon Foto, Ikon Tiket, dan Label Khusus (Label Khusus otomatis tersembunyi khusus untuk Model B / Minimalis).
+          - **Kelompok 3 (Footer Kartu)**: Pengaturan teks, warna latar, dan warna teks untuk Strip 1 (Atas) dan Strip 2 (Bawah). Grup accordion ini otomatis ditampilkan hanya jika Model C (Kartu Detail) dipilih, dan disembunyikan jika Model A atau Model B aktif.
+          - **Kelompok 4 (Countdown)**: Pengaturan toggle Aktifkan Countdown, token warna latar, teks, ikon, border, serta radius sudut countdown.
+          - Sifat accordion multi-expandable memungkinkan seller membuka beberapa kelompok sekaligus tanpa saling menutup; status buka/tutup dipertahankan selama sesi aktif (`cardAccordionState`) dan sepenuhnya aksesibel via keyboard (`aria-expanded`, `role="region"`, indikator chevron rotasi 180°).
+        - **Transformasi Checkbox Elemen Kartu Menjadi Eye / Eye-Slash**:
+          - Kontrol tampil/sembunyi elemen (Rating, Terjual, Harga Coret, Diskon Foto, Ikon Tiket, Label Khusus, dan Aktifkan Countdown) disajikan dalam bentuk ikon Mata (`bi-eye`) saat aktif/ditampilkan dan Mata Tercoret (`bi-eye-slash`) saat nonaktif/disembunyikan.
+          - Checkbox semantik HTML (`<input type="checkbox">`) beserta ID asli (`cfg-show-rating`, dll.) dan penanganan event dipertahankan sepenuhnya demi kompatibilitas aksesibilitas dan alur kode.
+          - Sinkronisasi ikon (`syncEyeToggleIcons()`) berjalan otomatis pada inisialisasi awal, saat diedit, saat Batal ditekan, dan saat menerapkan Desain Bawaan.
+          - Checkbox *"Gunakan Tema Sebagai Default"* tetap dipertahankan sebagai checkbox standar.
+        - **Tombol "Gunakan Desain Bawaan", Batal, dan Simpan Perubahan (Pinned Footer)**:
+          - Menghadirkan tombol sekunder *"Gunakan Desain Bawaan"* (`#btn-apply-default-card-design` / `-mob`) yang memuat preset default model kartu aktif dari pengaturan tema dengan perlindungan snapshot baseline sesi yang dapat dibatalkan.
+          - Mengelompokkan tombol *"Gunakan Desain Bawaan"*, checkbox *"Gunakan Tema Sebagai Default"*, tombol `[Batal]`, dan tombol `[Simpan Perubahan]` dalam area footer yang disematkan (*pinned footer section*) di bawah accordion agar selalu terlihat jelas dan mudah diakses.
+          - Tombol `[Batal]` mengembalikan konfigurasi desain ke baseline sesi/simpan terakhir, memperbarui seluruh nilai input dan status ikon mata di DOM, serta mempertahankan seller tetap berada pada editor (`previewStep1Tab = 'design'`).
+          - Tombol `[Simpan Perubahan]` memvalidasi dan menyimpan konfigurasi desain ke `primaryState.card_config` (serta ke pengaturan preset tema jika checkbox default dicentang) dan memperbarui baseline snapshot sesi.
+          - Saat seller mengubah nilai apa pun pada editor, status desain secara otomatis ditandai sebagai kustom (`primaryState.use_default_card_design = false`) agar tersimpan secara presisi.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), assert rule unit test (`scratch/test_card_editor_accordion_08.js`), dan runtime integration test (`scratch/test_runtime_accordion_08.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

@@ -2639,174 +2639,320 @@ const ProductForm = (() => {
               </div>
             </div>
 
-            <!-- Visual Customization Controls: [Default] dan [Ubah Kartu] (Step 1 Only) -->
+            <!-- Visual Customization Controls: Accordion Editor (Step 1 Only) -->
             <div id="card-customization-section" class="hidden p-3.5 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-3">
-              <div class="inline-flex p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold w-full">
-                <button type="button" id="tab-card-design-default" class="flex-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition cursor-pointer bg-white text-emerald-800 shadow-2xs">
-                  Default
-                </button>
-                <button type="button" id="tab-card-design-custom" class="flex-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition cursor-pointer text-slate-600 hover:text-slate-900">
-                  Ubah Kartu
-                </button>
-              </div>
-
-              <!-- Customization Panel (Default Sembunyi, Tampil jika Ubah Kartu Aktif) -->
-              <div id="panel-card-custom-content" class="hidden space-y-3.5 pt-1">
-                <!-- Color Tokens -->
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Belakang</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-bg-color" value="#ffffff" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-bg-text" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Border</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-border-color" value="#e2e8f0" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-border-text" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Judul</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-title-color" value="#0f172a" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-title-text" value="#0f172a" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Harga</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-price-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-price-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tombol Beli</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-btn-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-btn-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Radius Sudut</label>
-                    <select id="cfg-border-radius" class="w-full px-1.5 py-1 text-[11px] border border-slate-200 rounded outline-none bg-white">
-                      <option value="0px">0px (Kotak)</option>
-                      <option value="8px">8px (Kecil)</option>
-                      <option value="16px">16px (Sedang)</option>
-                      <option value="24px">24px (Besar)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Feature Toggles -->
-                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-[11px]">
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-rating" class="w-3.5 h-3.5 text-emerald-600 rounded" /> <span><i class="bi bi-star-fill text-amber-400 text-[10px] mr-1"></i>Rating</span>
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-sales" class="w-3.5 h-3.5 text-emerald-600 rounded" /> Terjual
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-strike" class="w-3.5 h-3.5 text-emerald-600 rounded" /> Harga Coret
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-discount-badge" class="w-3.5 h-3.5 text-emerald-600 rounded" /> Diskon Foto
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-ticket-icon" class="w-3.5 h-3.5 text-emerald-600 rounded" /> Ikon Tiket
-                  </label>
-                  <label id="cfg-badge-container-desk" class="${primaryState.card_variant === 'B' ? 'hidden' : 'flex'} items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-badge" class="w-3.5 h-3.5 text-emerald-600 rounded" /> Label Khusus
-                  </label>
-                </div>
-
-                <!-- Footer Kartu Detail Styling (Tampil jika Kartu Detail Aktif di Desktop Sidebar) -->
-                <div id="cfg-panel-footer-model3" class="${primaryState.card_variant === 'C' ? '' : 'hidden'} pt-2.5 border-t border-slate-100 space-y-2.5">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
-                      <i data-lucide="layers" class="w-3 h-3 text-emerald-600"></i>
-                      Footer Dua Strip (Kartu Detail)
+              <!-- Accordion Groups Container -->
+              <div class="space-y-2">
+                <!-- Kelompok 1: Warna & Bentuk -->
+                <div id="accordion-group-colors" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                  <button type="button" id="btn-accordion-colors" aria-expanded="true" aria-controls="accordion-body-colors" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="colors">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-palette text-emerald-600"></i>
+                      <span>Warna &amp; Bentuk</span>
                     </span>
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono">Kartu Detail</span>
+                    <i id="accordion-icon-colors" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 rotate-180"></i>
+                  </button>
+                  <div id="accordion-body-colors" class="p-3 border-t border-slate-100 space-y-2.5" role="region" aria-labelledby="btn-accordion-colors">
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-bg-color" value="#ffffff" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-bg-text" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Border</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-border-color" value="#e2e8f0" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-border-text" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Judul</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-title-color" value="#0f172a" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-title-text" value="#0f172a" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Harga</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-price-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-price-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tombol Beli</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-btn-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-btn-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Radius Sudut</label>
+                        <select id="cfg-border-radius" class="w-full px-1.5 py-1 text-[11px] border border-slate-200 rounded outline-none bg-white">
+                          <option value="0px">0px (Kotak)</option>
+                          <option value="8px">8px (Kecil)</option>
+                          <option value="16px">16px (Sedang)</option>
+                          <option value="24px">24px (Besar)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                  <!-- Strip 1 -->
-                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                    <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
-                    </div>
-                    <div>
-                      <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
-                      <div class="relative w-full clean-datalist-wrapper">
-                        <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 1</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
-                        </div>
-                      </div>
+                </div>
+
+                <!-- Kelompok 2: Elemen Kartu -->
+                <div id="accordion-group-elements" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                  <button type="button" id="btn-accordion-elements" aria-expanded="false" aria-controls="accordion-body-elements" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="elements">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-card-checklist text-emerald-600"></i>
+                      <span>Elemen Kartu</span>
+                    </span>
+                    <i id="accordion-icon-elements" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+                  </button>
+                  <div id="accordion-body-elements" class="hidden p-2.5 border-t border-slate-100 divide-y divide-slate-100" role="region" aria-labelledby="btn-accordion-elements">
+                    <!-- Rating -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
+                        <span>Rating</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-rating" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-rating-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-rating-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Terjual -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
+                        <span>Terjual</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-sales" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-sales-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-sales-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Harga Coret -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-tag text-slate-400 text-[11px]"></i>
+                        <span>Harga Coret</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-strike" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-strike-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-strike-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Diskon Foto -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-percent text-slate-400 text-[11px]"></i>
+                        <span>Diskon Foto</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-discount-badge" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-discount-badge-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-discount-badge-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Ikon Tiket -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-ticket-perforated text-slate-400 text-[11px]"></i>
+                        <span>Ikon Tiket</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-ticket-icon" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-ticket-icon-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-ticket-icon-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Label Khusus (Hanya Model A & C) -->
+                    <div id="cfg-badge-container-desk" class="${primaryState.card_variant === 'B' ? 'hidden' : ''}">
+                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                        <span class="flex items-center gap-1.5">
+                          <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
+                          <span>Label Khusus</span>
+                        </span>
+                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                          <input type="checkbox" id="cfg-show-badge" class="sr-only peer cfg-eye-toggle" />
+                          <i id="cfg-show-badge-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                          <i id="cfg-show-badge-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                        </span>
+                      </label>
                     </div>
                   </div>
-                  <!-- Strip 2 -->
-                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                    <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
-                    </div>
-                    <div>
-                      <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
-                      <div class="relative w-full clean-datalist-wrapper">
-                        <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                </div>
+
+                <!-- Kelompok 3: Footer Kartu (Hanya Model C) -->
+                <div id="accordion-group-footer" class="border border-slate-200 rounded-lg overflow-hidden bg-white ${primaryState.card_variant === 'C' ? '' : 'hidden'}">
+                  <button type="button" id="btn-accordion-footer" aria-expanded="false" aria-controls="accordion-body-footer" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="footer">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-layers text-emerald-600"></i>
+                      <span>Footer Dua Strip</span>
+                      <span class="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-mono ml-1">Detail</span>
+                    </span>
+                    <i id="accordion-icon-footer" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+                  </button>
+                  <div id="accordion-body-footer" class="hidden p-3 border-t border-slate-100 space-y-2.5" role="region" aria-labelledby="btn-accordion-footer">
+                    <!-- Strip 1 -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
+                        <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
                       </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
                       <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
+                        <div class="relative w-full clean-datalist-wrapper">
+                          <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
                         </div>
                       </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 1</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Strip 2 -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
+                        <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
+                      </div>
                       <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 2</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-2-text-hex-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
+                        <div class="relative w-full clean-datalist-wrapper">
+                          <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 2</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-2-text-hex-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Save as Default Options & Button -->
-                <div class="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
-                  <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
-                    <input type="checkbox" id="cfg-save-as-default-toggle" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-desk">Gunakan Tema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
-                  </label>
-                  <div class="flex items-center gap-2 w-full">
-                    <button type="button" id="btn-cancel-card-design" class="w-1/3 py-2 px-2.5 border border-slate-300 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer active:scale-98" title="Batalkan perubahan desain ke kondisi awal sesi">
-                      <span>Batal</span>
-                    </button>
-                    <button type="button" id="btn-save-card-design" class="btn-primary-brand flex-1 py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98">
-                      <i class="bi bi-check-lg"></i>
-                      <span>Simpan Perubahan</span>
-                    </button>
+                <!-- Kelompok 4: Countdown -->
+                <div id="accordion-group-countdown" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                  <button type="button" id="btn-accordion-countdown" aria-expanded="false" aria-controls="accordion-body-countdown" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="countdown">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-stopwatch text-emerald-600"></i>
+                      <span>Countdown Diskon</span>
+                    </span>
+                    <i id="accordion-icon-countdown" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+                  </button>
+                  <div id="accordion-body-countdown" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-countdown">
+                    <!-- Aktifkan Countdown -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium border border-slate-100">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-alarm text-slate-400 text-[11px]"></i>
+                        <span>Aktifkan Countdown</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-enable-countdown" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-enable-countdown-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-enable-countdown-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+
+                    <!-- Styling Countdown Tokens -->
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-bg-color" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-bg-hex" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-text-color" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-text-hex" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Ikon</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-icon-color" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-icon-hex" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Border</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-border-color" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-border-hex" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Radius Sudut</label>
+                        <select id="cfg-countdown-radius" class="w-full px-1.5 py-1 text-[11px] border border-slate-200 rounded outline-none bg-white">
+                          <option value="0px">0px (Kotak)</option>
+                          <option value="4px">4px (Kecil)</option>
+                          <option value="8px">8px (Sedang)</option>
+                          <option value="12px">12px (Besar)</option>
+                          <option value="9999px">9999px (Pill / Bulat)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              <!-- Pinned Footer Section (Di Bawah Accordion) -->
+              <div class="pt-2.5 border-t border-slate-100 flex flex-col gap-2">
+                <!-- Tombol Gunakan Desain Bawaan -->
+                <button type="button" id="btn-apply-default-card-design" class="w-full py-1.5 px-3 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98" title="Terapkan konfigurasi desain bawaan untuk model kartu ini">
+                  <i class="bi bi-arrow-counterclockwise text-slate-500"></i>
+                  <span>Gunakan Desain Bawaan</span>
+                </button>
+
+                <!-- Checkbox Gunakan Tema Sebagai Default -->
+                <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
+                  <input type="checkbox" id="cfg-save-as-default-toggle" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
+                  <span id="label-save-as-default-desk">Gunakan Tema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
+                </label>
+
+                <!-- Tombol Batal & Simpan Perubahan -->
+                <div class="flex items-center gap-2 w-full pt-0.5">
+                  <button type="button" id="btn-cancel-card-design" class="w-1/3 py-2 px-2.5 border border-slate-300 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer active:scale-98" title="Batalkan perubahan desain ke kondisi awal sesi">
+                    <span>Batal</span>
+                  </button>
+                  <button type="button" id="btn-save-card-design" class="btn-primary-brand flex-1 py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98">
+                    <i class="bi bi-check-lg"></i>
+                    <span>Simpan Perubahan</span>
+                  </button>
+                </div>
+              </div>
+            </div>>
           </div>
 
 
@@ -2853,180 +2999,320 @@ const ProductForm = (() => {
               </div>
             </div>
 
-            <!-- Panel Kustomisasi Desain Mobile: [Default] dan [Ubah Kartu] (Step 1 Only) -->
+            <!-- Panel Kustomisasi Desain Mobile: Accordion Editor (Step 1 Only) -->
             <div id="card-customization-section-mob" class="hidden w-full max-w-[260px] p-3.5 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-3">
-              <div class="inline-flex p-0.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold w-full">
-                <button type="button" id="tab-card-design-default-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition cursor-pointer bg-white text-emerald-800 shadow-2xs">
-                  Default
-                </button>
-                <button type="button" id="tab-card-design-custom-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition cursor-pointer text-slate-600 hover:text-slate-900">
-                  Ubah Kartu
-                </button>
-              </div>
-
-              <!-- Panel Kustomisasi Mobile (Default Sembunyi, Tampil jika Ubah Kartu Aktif) -->
-              <div id="panel-card-custom-content-mob" class="hidden space-y-3.5 pt-1">
-                <!-- Color Tokens Mobile -->
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Belakang</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-bg-color-mob" value="#ffffff" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-bg-text-mob" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Border</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-border-color-mob" value="#e2e8f0" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-border-text-mob" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Judul</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-title-color-mob" value="#0f172a" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-title-text-mob" value="#0f172a" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Harga</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-price-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-price-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tombol Beli</label>
-                    <div class="flex items-center gap-1.5">
-                      <input type="color" id="cfg-btn-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                      <input type="text" id="cfg-btn-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Radius Sudut</label>
-                    <select id="cfg-border-radius-mob" class="w-full px-1.5 py-1 text-[11px] border border-slate-200 rounded outline-none bg-white">
-                      <option value="0px">0px (Kotak)</option>
-                      <option value="8px">8px (Kecil)</option>
-                      <option value="16px">16px (Sedang)</option>
-                      <option value="24px">24px (Besar)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Feature Toggles Mobile -->
-                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-[11px]">
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-rating-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
-                    <span><i class="bi bi-star-fill text-amber-400 text-[10px] mr-1"></i>Rating</span>
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-sales-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
-                    <span>Terjual</span>
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-strike-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
-                    <span>Harga Coret</span>
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-discount-badge-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
-                    <span>Diskon Foto</span>
-                  </label>
-                  <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-ticket-icon-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
-                    <span>Ikon Tiket</span>
-                  </label>
-                  <label id="cfg-badge-container-mob" class="${primaryState.card_variant === 'B' ? 'hidden' : 'flex'} items-center gap-1.5 font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" id="cfg-show-badge-mob" class="w-3.5 h-3.5 text-emerald-600 rounded" />
-                    <span>Label Khusus</span>
-                  </label>
-                </div>
-
-                <!-- Footer Kartu Detail Styling Mobile (Tampil jika Kartu Detail Aktif) -->
-                <div id="cfg-panel-footer-model3-mob" class="${primaryState.card_variant === 'C' ? '' : 'hidden'} pt-2.5 border-t border-slate-200 space-y-2.5">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
-                      <i data-lucide="layers" class="w-3 h-3 text-emerald-600"></i>
-                      Footer Dua Strip (Kartu Detail)
+              <!-- Accordion Groups Container Mobile -->
+              <div class="space-y-2">
+                <!-- Kelompok 1: Warna & Bentuk Mobile -->
+                <div id="accordion-group-colors-mob" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                  <button type="button" id="btn-accordion-colors-mob" aria-expanded="true" aria-controls="accordion-body-colors-mob" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="colors">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-palette text-emerald-600"></i>
+                      <span>Warna &amp; Bentuk</span>
                     </span>
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono">Kartu Detail</span>
+                    <i id="accordion-icon-colors-mob" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 rotate-180"></i>
+                  </button>
+                  <div id="accordion-body-colors-mob" class="p-3 border-t border-slate-100 space-y-2.5" role="region" aria-labelledby="btn-accordion-colors-mob">
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-bg-color-mob" value="#ffffff" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-bg-text-mob" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Border</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-border-color-mob" value="#e2e8f0" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-border-text-mob" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Judul</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-title-color-mob" value="#0f172a" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-title-text-mob" value="#0f172a" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Harga</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-price-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-price-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tombol Beli</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-btn-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-btn-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Radius Sudut</label>
+                        <select id="cfg-border-radius-mob" class="w-full px-1.5 py-1 text-[11px] border border-slate-200 rounded outline-none bg-white">
+                          <option value="0px">0px (Kotak)</option>
+                          <option value="8px">8px (Kecil)</option>
+                          <option value="16px">16px (Sedang)</option>
+                          <option value="24px">24px (Besar)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                  <!-- Strip 1 -->
-                  <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
-                    <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
-                    </div>
-                    <div>
-                      <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
-                      <div class="relative w-full clean-datalist-wrapper">
-                        <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-bg-color-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-bg-hex-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 1</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-text-color-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-text-hex-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
-                        </div>
-                      </div>
+                </div>
+
+                <!-- Kelompok 2: Elemen Kartu Mobile -->
+                <div id="accordion-group-elements-mob" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                  <button type="button" id="btn-accordion-elements-mob" aria-expanded="false" aria-controls="accordion-body-elements-mob" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="elements">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-card-checklist text-emerald-600"></i>
+                      <span>Elemen Kartu</span>
+                    </span>
+                    <i id="accordion-icon-elements-mob" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+                  </button>
+                  <div id="accordion-body-elements-mob" class="hidden p-2.5 border-t border-slate-100 divide-y divide-slate-100" role="region" aria-labelledby="btn-accordion-elements-mob">
+                    <!-- Rating -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
+                        <span>Rating</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-rating-mob" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-rating-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-rating-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Terjual -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
+                        <span>Terjual</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-sales-mob" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-sales-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-sales-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Harga Coret -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-tag text-slate-400 text-[11px]"></i>
+                        <span>Harga Coret</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-strike-mob" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-strike-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-strike-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Diskon Foto -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-percent text-slate-400 text-[11px]"></i>
+                        <span>Diskon Foto</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-discount-badge-mob" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-discount-badge-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-discount-badge-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Ikon Tiket -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-ticket-perforated text-slate-400 text-[11px]"></i>
+                        <span>Ikon Tiket</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-show-ticket-icon-mob" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-show-ticket-icon-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-show-ticket-icon-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+                    <!-- Label Khusus (Hanya Model A & C) -->
+                    <div id="cfg-badge-container-mob" class="${primaryState.card_variant === 'B' ? 'hidden' : ''}">
+                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium">
+                        <span class="flex items-center gap-1.5">
+                          <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
+                          <span>Label Khusus</span>
+                        </span>
+                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                          <input type="checkbox" id="cfg-show-badge-mob" class="sr-only peer cfg-eye-toggle" />
+                          <i id="cfg-show-badge-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                          <i id="cfg-show-badge-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                        </span>
+                      </label>
                     </div>
                   </div>
-                  <!-- Strip 2 -->
-                  <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
-                    <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
-                      <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
-                    </div>
-                    <div>
-                      <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
-                      <div class="relative w-full clean-datalist-wrapper">
-                        <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                </div>
+
+                <!-- Kelompok 3: Footer Kartu Mobile (Hanya Model C) -->
+                <div id="accordion-group-footer-mob" class="border border-slate-200 rounded-lg overflow-hidden bg-white ${primaryState.card_variant === 'C' ? '' : 'hidden'}">
+                  <button type="button" id="btn-accordion-footer-mob" aria-expanded="false" aria-controls="accordion-body-footer-mob" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="footer">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-layers text-emerald-600"></i>
+                      <span>Footer Dua Strip</span>
+                      <span class="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-mono ml-1">Detail</span>
+                    </span>
+                    <i id="accordion-icon-footer-mob" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+                  </button>
+                  <div id="accordion-body-footer-mob" class="hidden p-3 border-t border-slate-100 space-y-2.5" role="region" aria-labelledby="btn-accordion-footer-mob">
+                    <!-- Strip 1 -->
+                    <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
+                      <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
+                        <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
                       </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
                       <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-2-bg-color-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-2-bg-hex-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
+                        <div class="relative w-full clean-datalist-wrapper">
+                          <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
                         </div>
                       </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-bg-color-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-bg-hex-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 1</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-text-color-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-text-hex-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Strip 2 -->
+                    <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
+                      <div class="text-[10px] font-bold text-slate-700 flex items-center gap-1">
+                        <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
+                      </div>
                       <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 2</label>
-                        <div class="flex items-center gap-1.5">
-                          <input type="color" id="cfg-footer-2-text-color-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" id="cfg-footer-2-text-hex-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
+                        <div class="relative w-full clean-datalist-wrapper">
+                          <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-medium" />
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-2-bg-color-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-2-bg-hex-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks 2</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-2-text-color-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-2-text-hex-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono border border-slate-200 rounded bg-white" />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Save Default Options & Button Mobile -->
-                <div class="pt-3 border-t border-slate-200 flex flex-col gap-2.5">
-                  <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
-                    <input type="checkbox" id="cfg-save-as-default-toggle-mob" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
-                    <span id="label-save-as-default-mob">Gunakan Tema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
-                  </label>
-                  <div class="flex items-center gap-2 w-full">
-                    <button type="button" id="btn-cancel-card-design-mob" class="w-1/3 py-2 px-2.5 border border-slate-300 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer active:scale-98" title="Batalkan perubahan desain ke kondisi awal sesi">
-                      <span>Batal</span>
-                    </button>
-                    <button type="button" id="btn-save-card-design-mob" class="btn-primary-brand flex-1 py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98">
-                      <i class="bi bi-check-lg"></i>
-                      <span>Simpan Perubahan</span>
-                    </button>
+                <!-- Kelompok 4: Countdown Mobile -->
+                <div id="accordion-group-countdown-mob" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                  <button type="button" id="btn-accordion-countdown-mob" aria-expanded="false" aria-controls="accordion-body-countdown-mob" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="countdown">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <i class="bi bi-stopwatch text-emerald-600"></i>
+                      <span>Countdown Diskon</span>
+                    </span>
+                    <i id="accordion-icon-countdown-mob" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+                  </button>
+                  <div id="accordion-body-countdown-mob" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-countdown-mob">
+                    <!-- Aktifkan Countdown -->
+                    <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-medium border border-slate-100">
+                      <span class="flex items-center gap-1.5">
+                        <i class="bi bi-alarm text-slate-400 text-[11px]"></i>
+                        <span>Aktifkan Countdown</span>
+                      </span>
+                      <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                        <input type="checkbox" id="cfg-enable-countdown-mob" class="sr-only peer cfg-eye-toggle" />
+                        <i id="cfg-enable-countdown-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                        <i id="cfg-enable-countdown-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                      </span>
+                    </label>
+
+                    <!-- Styling Countdown Tokens -->
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-bg-color-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-bg-hex-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-text-color-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-text-hex-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Ikon</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-icon-color-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-icon-hex-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Warna Border</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-countdown-border-color-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-countdown-border-hex-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Radius Sudut</label>
+                        <select id="cfg-countdown-radius-mob" class="w-full px-1.5 py-1 text-[11px] border border-slate-200 rounded outline-none bg-white">
+                          <option value="0px">0px (Kotak)</option>
+                          <option value="4px">4px (Kecil)</option>
+                          <option value="8px">8px (Sedang)</option>
+                          <option value="12px">12px (Besar)</option>
+                          <option value="9999px">9999px (Pill / Bulat)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              <!-- Pinned Footer Section Mobile (Di Bawah Accordion) -->
+              <div class="pt-2.5 border-t border-slate-100 flex flex-col gap-2">
+                <!-- Tombol Gunakan Desain Bawaan Mobile -->
+                <button type="button" id="btn-apply-default-card-design-mob" class="w-full py-1.5 px-3 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98" title="Terapkan konfigurasi desain bawaan untuk model kartu ini">
+                  <i class="bi bi-arrow-counterclockwise text-slate-500"></i>
+                  <span>Gunakan Desain Bawaan</span>
+                </button>
+
+                <!-- Checkbox Gunakan Tema Sebagai Default Mobile -->
+                <label class="flex items-center gap-2 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
+                  <input type="checkbox" id="cfg-save-as-default-toggle-mob" class="w-3.5 h-3.5 text-emerald-600 rounded cursor-pointer" />
+                  <span id="label-save-as-default-mob">Gunakan Tema Sebagai Default ${primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik')}</span>
+                </label>
+
+                <!-- Tombol Batal & Simpan Perubahan Mobile -->
+                <div class="flex items-center gap-2 w-full pt-0.5">
+                  <button type="button" id="btn-cancel-card-design-mob" class="w-1/3 py-2 px-2.5 border border-slate-300 rounded-md bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer active:scale-98" title="Batalkan perubahan desain ke kondisi awal sesi">
+                    <span>Batal</span>
+                  </button>
+                  <button type="button" id="btn-save-card-design-mob" class="btn-primary-brand flex-1 py-2 px-3 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98">
+                    <i class="bi bi-check-lg"></i>
+                    <span>Simpan Perubahan</span>
+                  </button>
+                </div>
+              </div>
+            </div>>
           </div>
 
 
@@ -3176,6 +3462,136 @@ const ProductForm = (() => {
     if (btnCustomMob) btnCustomMob.className = !isDef ? defClass : nonDefClass;
   }
 
+  // --- ACCORDION STATE & HELPERS FOR CARD DESIGN EDITOR (STEP 1) ---
+  let cardAccordionState = {
+    colors: true,
+    elements: false,
+    footer: false,
+    countdown: false
+  };
+
+  function toggleCardAccordion(groupKey) {
+    if (cardAccordionState[groupKey] !== undefined) {
+      cardAccordionState[groupKey] = !cardAccordionState[groupKey];
+      syncCardAccordionDOM();
+    }
+  }
+
+  function syncCardAccordionDOM() {
+    const groups = ['colors', 'elements', 'footer', 'countdown'];
+    groups.forEach(key => {
+      const isOpen = Boolean(cardAccordionState[key]);
+      const btnDesk = document.getElementById(`btn-accordion-${key}`);
+      const bodyDesk = document.getElementById(`accordion-body-${key}`);
+      const iconDesk = document.getElementById(`accordion-icon-${key}`);
+      const btnMob = document.getElementById(`btn-accordion-${key}-mob`);
+      const bodyMob = document.getElementById(`accordion-body-${key}-mob`);
+      const iconMob = document.getElementById(`accordion-icon-${key}-mob`);
+
+      [btnDesk, btnMob].forEach(b => {
+        if (b) b.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+      [bodyDesk, bodyMob].forEach(body => {
+        if (body) {
+          if (isOpen) body.classList.remove('hidden');
+          else body.classList.add('hidden');
+        }
+      });
+      [iconDesk, iconMob].forEach(icon => {
+        if (icon) {
+          if (isOpen) icon.classList.add('rotate-180');
+          else icon.classList.remove('rotate-180');
+        }
+      });
+    });
+
+    const isModelC = primaryState.card_variant === 'C';
+    const groupFooterDesk = document.getElementById('accordion-group-footer');
+    const groupFooterMob = document.getElementById('accordion-group-footer-mob');
+    if (groupFooterDesk) {
+      if (isModelC) groupFooterDesk.classList.remove('hidden');
+      else groupFooterDesk.classList.add('hidden');
+    }
+    if (groupFooterMob) {
+      if (isModelC) groupFooterMob.classList.remove('hidden');
+      else groupFooterMob.classList.add('hidden');
+    }
+
+    const isModelB = primaryState.card_variant === 'B';
+    const badgeContainerDesk = document.getElementById('cfg-badge-container-desk');
+    const badgeContainerMob = document.getElementById('cfg-badge-container-mob');
+    if (badgeContainerDesk) {
+      if (isModelB) badgeContainerDesk.classList.add('hidden');
+      else badgeContainerDesk.classList.remove('hidden');
+    }
+    if (badgeContainerMob) {
+      if (isModelB) badgeContainerMob.classList.remove('hidden');
+      else badgeContainerMob.classList.remove('hidden');
+    }
+
+    updateSaveAsDefaultLabels();
+  }
+
+  function syncEyeToggleIcons() {
+    const toggleIds = [
+      'cfg-show-rating',
+      'cfg-show-sales',
+      'cfg-show-strike',
+      'cfg-show-discount-badge',
+      'cfg-show-ticket-icon',
+      'cfg-show-badge',
+      'cfg-enable-countdown'
+    ];
+
+    toggleIds.forEach(baseId => {
+      ['', '-mob'].forEach(suffix => {
+        const chk = document.getElementById(baseId + suffix);
+        if (!chk) return;
+        const isChecked = Boolean(chk.checked);
+        const iconOn = document.getElementById(`${baseId}${suffix}-icon-on`);
+        const iconOff = document.getElementById(`${baseId}${suffix}-icon-off`);
+        if (iconOn && iconOff) {
+          if (isChecked) {
+            iconOn.classList.remove('hidden');
+            iconOff.classList.add('hidden');
+          } else {
+            iconOn.classList.add('hidden');
+            iconOff.classList.remove('hidden');
+          }
+        }
+      });
+    });
+  }
+
+  function updateSaveAsDefaultLabels() {
+    const modelName = primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik');
+    const deskLbl = document.getElementById('label-save-as-default-desk');
+    const mobLbl = document.getElementById('label-save-as-default-mob');
+    if (deskLbl) deskLbl.textContent = `Gunakan Tema Sebagai Default ${modelName}`;
+    if (mobLbl) mobLbl.textContent = `Gunakan Tema Sebagai Default ${modelName}`;
+  }
+
+  function markCardDesignAsCustom() {
+    captureCardDesignSnapshot();
+    primaryState.use_default_card_design = false;
+    saveCardConfigInputs();
+    syncEyeToggleIcons();
+    updateProductCardLivePreview();
+  }
+
+  function handleApplyDefaultCardDesign() {
+    captureCardDesignSnapshot();
+    const variant = primaryState.card_variant || 'A';
+    primaryState.use_default_card_design = true;
+    loadCardConfigInputs(variant, true);
+    saveCardConfigInputs();
+    syncEyeToggleIcons();
+    updateProductCardLivePreview();
+    if (typeof App !== 'undefined' && App.showToast) {
+      App.showToast('Desain bawaan diterapkan.', 'info');
+    }
+  }
+
   function getCardConfigFromDOM() {
     const badgeMain = document.getElementById('cfg-show-badge');
     const badgeMob = document.getElementById('cfg-show-badge-mob');
@@ -3184,8 +3600,6 @@ const ProductForm = (() => {
     if (badgeMain) showBadgeVal = badgeMain.checked;
     else if (badgeMob) showBadgeVal = badgeMob.checked;
     else if (badgeBlokA) showBadgeVal = badgeBlokA.checked;
-
-    const enableCountdownVal = document.getElementById('cfg-enable-countdown')?.checked !== false;
 
     const getVal = (id1, id2, fallback) => {
       const el1 = document.getElementById(id1);
@@ -3226,12 +3640,12 @@ const ProductForm = (() => {
       badge_text_color: document.getElementById('cfg-badge-text-color')?.value || defThemeColor,
       badge_bg_color: document.getElementById('cfg-badge-bg-color')?.value || '#ecfdf5',
       badge_border_color: document.getElementById('cfg-badge-border-color')?.value || '#a7f3d0',
-      enable_countdown: enableCountdownVal,
-      countdown_radius: document.getElementById('cfg-countdown-radius')?.value || '9999px',
-      countdown_bg_color: document.getElementById('cfg-countdown-bg-color')?.value || defThemeColor,
-      countdown_text_color: document.getElementById('cfg-countdown-text-color')?.value || '#ffffff',
-      countdown_icon_color: document.getElementById('cfg-countdown-icon-color')?.value || '#ffffff',
-      countdown_border_color: document.getElementById('cfg-countdown-border-color')?.value || defThemeColor
+      enable_countdown: getChk('cfg-enable-countdown', 'cfg-enable-countdown-mob'),
+      countdown_radius: getVal('cfg-countdown-radius', 'cfg-countdown-radius-mob', '9999px'),
+      countdown_bg_color: getVal('cfg-countdown-bg-color', 'cfg-countdown-bg-color-mob', defThemeColor),
+      countdown_text_color: getVal('cfg-countdown-text-color', 'cfg-countdown-text-color-mob', '#ffffff'),
+      countdown_icon_color: getVal('cfg-countdown-icon-color', 'cfg-countdown-icon-color-mob', '#ffffff'),
+      countdown_border_color: getVal('cfg-countdown-border-color', 'cfg-countdown-border-color-mob', defThemeColor)
     };
   }
 
@@ -3250,10 +3664,14 @@ const ProductForm = (() => {
     const setVal = (id, val) => {
       const el = document.getElementById(id);
       if (el) el.value = val || '';
+      const elMob = document.getElementById(id + '-mob');
+      if (elMob) elMob.value = val || '';
     };
     const setChk = (id, val) => {
       const el = document.getElementById(id);
       if (el) el.checked = val === true;
+      const elMob = document.getElementById(id + '-mob');
+      if (elMob) elMob.checked = val === true;
     };
 
     setVal('cfg-bg-color', cfg.bg_color || '#ffffff');
@@ -3324,22 +3742,49 @@ const ProductForm = (() => {
     // Footer 1 styling tokens (khusus Versi C)
     const fBg = primaryState.footer_bg_color || cfg.footer_bg_color || defThemeColor;
     const fTxt = primaryState.footer_text_color || cfg.footer_text_color || '#ffffff';
-    setVal('cfg-footer-bg-color', fBg);
-    setVal('cfg-footer-bg-hex', fBg);
-    setVal('cfg-footer-text-color', fTxt);
-    setVal('cfg-footer-text-hex', fTxt);
+    ['cfg-footer-bg-color', 'cfg-footer-bg-color-side', 'cfg-footer-bg-color-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = fBg;
+    });
+    ['cfg-footer-bg-hex', 'cfg-footer-bg-hex-side', 'cfg-footer-bg-hex-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = fBg;
+    });
+    ['cfg-footer-text-color', 'cfg-footer-text-color-side', 'cfg-footer-text-color-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = fTxt;
+    });
+    ['cfg-footer-text-hex', 'cfg-footer-text-hex-side', 'cfg-footer-text-hex-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = fTxt;
+    });
 
     // Footer 2 styling tokens (khusus Versi C)
     const f2Bg = primaryState.footer_2_bg_color || cfg.footer_2_bg_color || defThemeColor;
     const f2Txt = primaryState.footer_2_text_color || cfg.footer_2_text_color || '#ffffff';
-    setVal('cfg-footer-2-bg-color', f2Bg);
-    setVal('cfg-footer-2-bg-hex', f2Bg);
-    setVal('cfg-footer-2-text-color', f2Txt);
-    setVal('cfg-footer-2-text-hex', f2Txt);
+    ['cfg-footer-2-bg-color', 'cfg-footer-2-bg-color-side', 'cfg-footer-2-bg-color-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = f2Bg;
+    });
+    ['cfg-footer-2-bg-hex', 'cfg-footer-2-bg-hex-side', 'cfg-footer-2-bg-hex-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = f2Bg;
+    });
+    ['cfg-footer-2-text-color', 'cfg-footer-2-text-color-side', 'cfg-footer-2-text-color-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = f2Txt;
+    });
+    ['cfg-footer-2-text-hex', 'cfg-footer-2-text-hex-side', 'cfg-footer-2-text-hex-mob'].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = f2Txt;
+    });
 
     setChk('cfg-save-as-default-toggle', false);
+    setChk('cfg-save-as-default-toggle-mob', false);
     updateDesignChoiceButtonsState();
     captureCardDesignSnapshot();
+    syncEyeToggleIcons();
+    syncCardAccordionDOM();
   }
 
   function saveCardConfigInputs(forceSaveAsDefault = false) {
@@ -3368,68 +3813,18 @@ const ProductForm = (() => {
   }
 
   function updateCardCustomizationTabVisuals(isCustomMode) {
-    const tabDefDesk = document.getElementById('tab-card-design-default');
-    const tabCustDesk = document.getElementById('tab-card-design-custom');
-    const panelCustDesk = document.getElementById('panel-card-custom-content');
-    const tabDefMob = document.getElementById('tab-card-design-default-mob');
-    const tabCustMob = document.getElementById('tab-card-design-custom-mob');
-    const panelCustMob = document.getElementById('panel-card-custom-content-mob');
-    const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
-    const saveDefToggleMob = document.getElementById('cfg-save-as-default-toggle-mob');
-
-    const modelName = primaryState.card_variant === 'B' ? 'Kartu Minimalis' : (primaryState.card_variant === 'C' ? 'Kartu Detail' : 'Kartu Klasik');
-    if (isCustomMode) {
-      panelCustDesk?.classList.remove('hidden');
-      panelCustMob?.classList.remove('hidden');
-
-      tabCustDesk?.classList.remove('text-slate-600');
-      tabCustDesk?.classList.add('bg-white', 'text-emerald-800', 'shadow-2xs');
-      tabDefDesk?.classList.remove('bg-white', 'text-emerald-800', 'shadow-2xs');
-      tabDefDesk?.classList.add('text-slate-600');
-
-      tabCustMob?.classList.remove('text-slate-600');
-      tabCustMob?.classList.add('bg-slate-100', 'text-emerald-800', 'shadow-2xs');
-      tabDefMob?.classList.remove('bg-slate-100', 'text-emerald-800', 'shadow-2xs');
-      tabDefMob?.classList.add('text-slate-600');
-
-      if (saveDefToggle) saveDefToggle.checked = false;
-      if (saveDefToggleMob) saveDefToggleMob.checked = false;
-
-      const deskLbl = document.getElementById('label-save-as-default-desk');
-      const mobLbl = document.getElementById('label-save-as-default-mob');
-      if (deskLbl) deskLbl.textContent = `Gunakan Tema Sebagai Default ${modelName}`;
-      if (mobLbl) mobLbl.textContent = `Gunakan Tema Sebagai Default ${modelName}`;
-    } else {
-      panelCustDesk?.classList.add('hidden');
-      panelCustMob?.classList.add('hidden');
-
-      tabDefDesk?.classList.remove('text-slate-600');
-      tabDefDesk?.classList.add('bg-white', 'text-emerald-800', 'shadow-2xs');
-      tabCustDesk?.classList.remove('bg-white', 'text-emerald-800', 'shadow-2xs');
-      tabCustDesk?.classList.add('text-slate-600');
-
-      tabDefMob?.classList.remove('text-slate-600');
-      tabDefMob?.classList.add('bg-slate-100', 'text-emerald-800', 'shadow-2xs');
-      tabCustMob?.classList.remove('bg-slate-100', 'text-emerald-800', 'shadow-2xs');
-      tabCustMob?.classList.add('text-slate-600');
-
-      if (saveDefToggle) saveDefToggle.checked = false;
-      if (saveDefToggleMob) saveDefToggleMob.checked = false;
-    }
+    updateSaveAsDefaultLabels();
+    syncEyeToggleIcons();
+    syncCardAccordionDOM();
   }
 
   function setCardCustomizationView(isCustomMode) {
-    captureCardDesignSnapshot();
-    updateCardCustomizationTabVisuals(isCustomMode);
     if (isCustomMode) {
       primaryState.use_default_card_design = false;
       saveCardConfigInputs();
       updateProductCardLivePreview();
     } else {
-      primaryState.use_default_card_design = true;
-      loadCardConfigInputs(primaryState.card_variant || 'A', true);
-      saveCardConfigInputs();
-      updateProductCardLivePreview();
+      handleApplyDefaultCardDesign();
     }
   }
 
@@ -3447,7 +3842,7 @@ const ProductForm = (() => {
       if (saveDefToggle) saveDefToggle.checked = false;
       if (saveDefToggleMob) saveDefToggleMob.checked = false;
 
-      // Simpan berhasil -> hasil simpan menjadi nilai awal untuk pengeditan berikutnya
+      // Simpan berhasil -> hasil simpan menjadi nilai baseline untuk pengeditan berikutnya
       captureCardDesignSnapshot(true);
 
       if (typeof App !== 'undefined' && App.showToast) {
@@ -3509,10 +3904,10 @@ const ProductForm = (() => {
       primaryState.countdown_border_color = cardDesignSnapshot.countdown_border_color;
       primaryState.enable_countdown = cardDesignSnapshot.enable_countdown;
 
-      // 2. Pulihkan input editor & tampilan tab Default vs Ubah Kartu
+      // 2. Pulihkan input editor
       const isDef = primaryState.use_default_card_design !== false;
       loadCardConfigInputs(primaryState.card_variant || 'A', isDef);
-      updateCardCustomizationTabVisuals(!isDef);
+      previewStep1Tab = 'design';
 
       // Pulihkan input footer 1 & 2 di DOM
       const f1Text = primaryState.card_footer_text || '';
@@ -3565,11 +3960,28 @@ const ProductForm = (() => {
       [cfgF2Text, cfgF2TextHex, cfgF2TextSide, cfgF2TextHexSide, cfgF2TextMob, cfgF2TextHexMob].forEach(x => { if (x) x.value = f2TextCol; });
       if (selF2Icon && primaryState.footer_2_badge_icon) selF2Icon.value = primaryState.footer_2_badge_icon;
 
+      // Pulihkan input countdown di DOM
+      const cRadius = primaryState.countdown_radius || '9999px';
+      const cBg = primaryState.countdown_bg_color || getThemeBodyColor();
+      const cTxt = primaryState.countdown_text_color || '#ffffff';
+      const cIco = primaryState.countdown_icon_color || '#ffffff';
+      const cBrd = primaryState.countdown_border_color || getThemeBodyColor();
+      const cEnable = primaryState.enable_countdown !== false;
+
+      [document.getElementById('cfg-countdown-radius'), document.getElementById('cfg-countdown-radius-mob')].forEach(x => { if (x) x.value = cRadius; });
+      [document.getElementById('cfg-countdown-bg-color'), document.getElementById('cfg-countdown-bg-hex'), document.getElementById('cfg-countdown-bg-color-mob'), document.getElementById('cfg-countdown-bg-hex-mob')].forEach(x => { if (x) x.value = cBg; });
+      [document.getElementById('cfg-countdown-text-color'), document.getElementById('cfg-countdown-text-hex'), document.getElementById('cfg-countdown-text-color-mob'), document.getElementById('cfg-countdown-text-hex-mob')].forEach(x => { if (x) x.value = cTxt; });
+      [document.getElementById('cfg-countdown-icon-color'), document.getElementById('cfg-countdown-icon-hex'), document.getElementById('cfg-countdown-icon-color-mob'), document.getElementById('cfg-countdown-icon-hex-mob')].forEach(x => { if (x) x.value = cIco; });
+      [document.getElementById('cfg-countdown-border-color'), document.getElementById('cfg-countdown-border-hex'), document.getElementById('cfg-countdown-border-color-mob'), document.getElementById('cfg-countdown-border-hex-mob')].forEach(x => { if (x) x.value = cBrd; });
+      [document.getElementById('cfg-enable-countdown'), document.getElementById('cfg-enable-countdown-mob')].forEach(x => { if (x) x.checked = cEnable; });
+
       const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
       const saveDefToggleMob = document.getElementById('cfg-save-as-default-toggle-mob');
       if (saveDefToggle) saveDefToggle.checked = false;
       if (saveDefToggleMob) saveDefToggleMob.checked = false;
 
+      syncEyeToggleIcons();
+      syncCardAccordionDOM();
       saveCardConfigInputs();
       updateProductCardLivePreview();
 
@@ -3581,7 +3993,7 @@ const ProductForm = (() => {
     }
   }
 
-  // --- HELPER OTOMASI KAPASITAS BARIS LABEL PINTAR (2 vs 3 Label) ---
+    // --- HELPER OTOMASI KAPASITAS BARIS LABEL PINTAR (2 vs 3 Label) ---
   function getSmartVisibleBadges(productName, labelsArray) {
     const validLabels = (Array.isArray(labelsArray) ? labelsArray : [])
       .map(l => String(l || '').trim())
@@ -8013,6 +8425,8 @@ const ProductForm = (() => {
       if (simDiscountMob) simDiscountMob.classList.add('hidden');
       if (customSectionDesk) customSectionDesk.classList.add('hidden');
       if (customSectionMob) customSectionMob.classList.add('hidden');
+      if (outerWrapDesk) outerWrapDesk.classList.add('hidden');
+      if (outerWrapMob) outerWrapMob.classList.add('hidden');
 
       const placeholderHtml = `
         <div class="p-8 rounded-lg border border-slate-200 bg-slate-50/70 text-center space-y-2 my-4">
@@ -8028,10 +8442,33 @@ const ProductForm = (() => {
       return;
     }
 
-    if (simDiscountDesk) simDiscountDesk.classList.remove('hidden');
-    if (simDiscountMob) simDiscountMob.classList.remove('hidden');
-    if (customSectionDesk) customSectionDesk.classList.remove('hidden');
-    if (customSectionMob) customSectionMob.classList.remove('hidden');
+    if (currentStep === 1) {
+      if (previewStep1Tab === 'design') {
+        if (outerWrapDesk) outerWrapDesk.classList.add('hidden');
+        if (outerWrapMob) outerWrapMob.classList.add('hidden');
+        if (simDiscountDesk) simDiscountDesk.classList.add('hidden');
+        if (simDiscountMob) simDiscountMob.classList.add('hidden');
+        if (customSectionDesk) customSectionDesk.classList.remove('hidden');
+        if (customSectionMob) customSectionMob.classList.remove('hidden');
+      } else {
+        if (outerWrapDesk) outerWrapDesk.classList.remove('hidden');
+        if (outerWrapMob) outerWrapMob.classList.remove('hidden');
+        if (simDiscountDesk) simDiscountDesk.classList.remove('hidden');
+        if (simDiscountMob) simDiscountMob.classList.remove('hidden');
+        if (customSectionDesk) customSectionDesk.classList.add('hidden');
+        if (customSectionMob) customSectionMob.classList.add('hidden');
+      }
+    } else {
+      if (outerWrapDesk) outerWrapDesk.classList.add('hidden');
+      if (outerWrapMob) outerWrapMob.classList.add('hidden');
+      if (simDiscountDesk) simDiscountDesk.classList.add('hidden');
+      if (simDiscountMob) simDiscountMob.classList.add('hidden');
+      if (customSectionDesk) customSectionDesk.classList.add('hidden');
+      if (customSectionMob) customSectionMob.classList.add('hidden');
+    }
+
+    syncCardAccordionDOM();
+    syncEyeToggleIcons();
 
     // 1. Baca data langsung dari form DOM
     const nameInput = (currentStep === 2 ? document.getElementById('step2-input-name') : null) || document.getElementById('input-prod-name');
@@ -8147,18 +8584,7 @@ const ProductForm = (() => {
       mobileTitle.innerHTML = currentStep === 2 ? 'Preview<br>Detail Produk' : 'Preview<br>Kartu Produk';
     }
 
-    // Toggle Customization Section (Hanya tampil saat di Step 1 pada tab Desain Kartu)
-    const cardCustomizationSection = document.getElementById('card-customization-section');
-    const cardCustomizationSectionMob = document.getElementById('card-customization-section-mob');
-    const showDesignSection = Boolean(currentStep === 1 && previewStep1Tab === 'design' && variant);
-    if (cardCustomizationSection) {
-      if (showDesignSection) cardCustomizationSection.classList.remove('hidden');
-      else cardCustomizationSection.classList.add('hidden');
-    }
-    if (cardCustomizationSectionMob) {
-      if (showDesignSection) cardCustomizationSectionMob.classList.remove('hidden');
-      else cardCustomizationSectionMob.classList.add('hidden');
-    }
+    // Customization Section visibility managed centrally at top of updateProductCardLivePreview
 
     // 5. Gambar produk & placeholder visual default <i class="bi bi-box-seam"></i>
     const hasPhoto = Boolean((primaryState.images && primaryState.images.length > 0) || primaryState.image_url);
@@ -8250,11 +8676,11 @@ const ProductForm = (() => {
     const badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
 
     // Countdown Badge Custom Styles
-    const countdownRadius = document.getElementById('cfg-countdown-radius')?.value || primaryState.countdown_radius || '9999px';
-    const countdownBgColor = document.getElementById('cfg-countdown-bg-color')?.value || primaryState.countdown_bg_color || defCardThemeColor;
-    const countdownTextColor = document.getElementById('cfg-countdown-text-color')?.value || primaryState.countdown_text_color || '#ffffff';
-    const countdownIconColor = document.getElementById('cfg-countdown-icon-color')?.value || primaryState.countdown_icon_color || '#ffffff';
-    const countdownBorderColor = document.getElementById('cfg-countdown-border-color')?.value || primaryState.countdown_border_color || defCardThemeColor;
+    const countdownRadius = document.getElementById('cfg-countdown-radius')?.value || document.getElementById('cfg-countdown-radius-mob')?.value || primaryState.countdown_radius || '9999px';
+    const countdownBgColor = document.getElementById('cfg-countdown-bg-color')?.value || document.getElementById('cfg-countdown-bg-color-mob')?.value || primaryState.countdown_bg_color || defCardThemeColor;
+    const countdownTextColor = document.getElementById('cfg-countdown-text-color')?.value || document.getElementById('cfg-countdown-text-color-mob')?.value || primaryState.countdown_text_color || '#ffffff';
+    const countdownIconColor = document.getElementById('cfg-countdown-icon-color')?.value || document.getElementById('cfg-countdown-icon-color-mob')?.value || primaryState.countdown_icon_color || '#ffffff';
+    const countdownBorderColor = document.getElementById('cfg-countdown-border-color')?.value || document.getElementById('cfg-countdown-border-color-mob')?.value || primaryState.countdown_border_color || defCardThemeColor;
     const countdownStyle = `background-color: ${countdownBgColor}; color: ${countdownTextColor}; border: 1px solid ${countdownBorderColor}; border-radius: ${countdownRadius};`;
 
     // Footer 1 Custom Styles (Khusus Card C)
@@ -25921,8 +26347,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const mobRadius = document.getElementById('cfg-border-radius-mob');
             if (mobRadius) mobRadius.value = e.target.value;
           }
-          saveCardConfigInputs();
-          updateProductCardLivePreview();
+          markCardDesignAsCustom();
         });
       }
 
@@ -25948,8 +26373,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const deskRadius = document.getElementById('cfg-border-radius');
             if (deskRadius) deskRadius.value = e.target.value;
           }
-          saveCardConfigInputs();
-          updateProductCardLivePreview();
+          markCardDesignAsCustom();
         });
       }
     });
@@ -25979,8 +26403,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const bA = document.getElementById('cfg-show-badge-blok-a');
             if (bA) bA.checked = e.target.checked;
           }
-          saveCardConfigInputs();
-          updateProductCardLivePreview();
+          markCardDesignAsCustom();
         });
       }
 
@@ -26004,8 +26427,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const bA = document.getElementById('cfg-show-badge-blok-a');
             if (bA) bA.checked = e.target.checked;
           }
-          saveCardConfigInputs();
-          updateProductCardLivePreview();
+          markCardDesignAsCustom();
         });
       }
     });
@@ -26017,8 +26439,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const bMob = document.getElementById('cfg-show-badge-mob');
         if (bMain) bMain.checked = e.target.checked;
         if (bMob) bMob.checked = e.target.checked;
-        saveCardConfigInputs();
-        updateProductCardLivePreview();
+        markCardDesignAsCustom();
       });
     }
 
@@ -26038,20 +26459,101 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-    // Card Customization Design Panel: [Default] dan [Ubah Kartu] (Desktop & Mobile Sync)
-    const tabDefDesk = document.getElementById('tab-card-design-default');
-    const tabCustDesk = document.getElementById('tab-card-design-custom');
-    const panelCustDesk = document.getElementById('panel-card-custom-content');
-    const tabDefMob = document.getElementById('tab-card-design-default-mob');
-    const tabCustMob = document.getElementById('tab-card-design-custom-mob');
-    const panelCustMob = document.getElementById('panel-card-custom-content-mob');
+    // Card Accordion Trigger click listeners (Desktop & Mobile)
+    document.querySelectorAll('.card-accordion-trigger').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const group = btn.getAttribute('data-group');
+        if (group) {
+          toggleCardAccordion(group);
+        }
+      });
+    });
+
+    // Gunakan Desain Bawaan Buttons (Desktop & Mobile)
+    const btnApplyDefDesk = document.getElementById('btn-apply-default-card-design');
+    const btnApplyDefMob = document.getElementById('btn-apply-default-card-design-mob');
+    if (btnApplyDefDesk) btnApplyDefDesk.addEventListener('click', handleApplyDefaultCardDesign);
+    if (btnApplyDefMob) btnApplyDefMob.addEventListener('click', handleApplyDefaultCardDesign);
+
+    // Countdown Inputs (Desktop & Mobile Sync)
+    const cdEnable = document.getElementById('cfg-enable-countdown');
+    const cdEnableMob = document.getElementById('cfg-enable-countdown-mob');
+    if (cdEnable) {
+      cdEnable.addEventListener('change', (e) => {
+        if (cdEnableMob) cdEnableMob.checked = e.target.checked;
+        markCardDesignAsCustom();
+      });
+    }
+    if (cdEnableMob) {
+      cdEnableMob.addEventListener('change', (e) => {
+        if (cdEnable) cdEnable.checked = e.target.checked;
+        markCardDesignAsCustom();
+      });
+    }
+
+    const cdTokens = ['bg', 'text', 'icon', 'border'].flatMap(prefix => [`cfg-countdown-${prefix}-color`, `cfg-countdown-${prefix}-hex`]);
+    cdTokens.push('cfg-countdown-radius');
+
+    cdTokens.forEach(id => {
+      const el = document.getElementById(id);
+      const elMob = document.getElementById(`${id}-mob`);
+
+      if (el) {
+        el.addEventListener('input', (e) => {
+          if (id.endsWith('-color')) {
+            const hexId = id.replace('-color', '-hex');
+            const hexEl = document.getElementById(hexId);
+            if (hexEl) hexEl.value = e.target.value;
+            const mobColor = document.getElementById(`${id}-mob`);
+            if (mobColor) mobColor.value = e.target.value;
+            const mobHex = document.getElementById(`${hexId}-mob`);
+            if (mobHex) mobHex.value = e.target.value;
+          } else if (id.endsWith('-hex')) {
+            const colorId = id.replace('-hex', '-color');
+            const colorEl = document.getElementById(colorId);
+            if (colorEl) colorEl.value = e.target.value;
+            const mobHex = document.getElementById(`${id}-mob`);
+            if (mobHex) mobHex.value = e.target.value;
+            const mobColor = document.getElementById(`${colorId}-mob`);
+            if (mobColor) mobColor.value = e.target.value;
+          } else if (id === 'cfg-countdown-radius') {
+            const mobRadius = document.getElementById('cfg-countdown-radius-mob');
+            if (mobRadius) mobRadius.value = e.target.value;
+          }
+          markCardDesignAsCustom();
+        });
+      }
+
+      if (elMob) {
+        elMob.addEventListener('input', (e) => {
+          if (id.endsWith('-color')) {
+            const hexId = id.replace('-color', '-hex');
+            const mobHex = document.getElementById(`${hexId}-mob`);
+            if (mobHex) mobHex.value = e.target.value;
+            const deskColor = document.getElementById(id);
+            if (deskColor) deskColor.value = e.target.value;
+            const deskHex = document.getElementById(hexId);
+            if (deskHex) deskHex.value = e.target.value;
+          } else if (id.endsWith('-hex')) {
+            const colorId = id.replace('-hex', '-color');
+            const mobColor = document.getElementById(`${colorId}-mob`);
+            if (mobColor) mobColor.value = e.target.value;
+            const deskHex = document.getElementById(id);
+            if (deskHex) deskHex.value = e.target.value;
+            const deskColor = document.getElementById(colorId);
+            if (deskColor) deskColor.value = e.target.value;
+          } else if (id === 'cfg-countdown-radius') {
+            const deskRadius = document.getElementById('cfg-countdown-radius');
+            if (deskRadius) deskRadius.value = e.target.value;
+          }
+          markCardDesignAsCustom();
+        });
+      }
+    });
+
     const btnSaveCardDesk = document.getElementById('btn-save-card-design');
     const btnSaveCardMob = document.getElementById('btn-save-card-design-mob');
-
-    if (tabDefDesk) tabDefDesk.addEventListener('click', () => setCardCustomizationView(false));
-    if (tabCustDesk) tabCustDesk.addEventListener('click', () => setCardCustomizationView(true));
-    if (tabDefMob) tabDefMob.addEventListener('click', () => setCardCustomizationView(false));
-    if (tabCustMob) tabCustMob.addEventListener('click', () => setCardCustomizationView(true));
 
     // Save as Default Toggle (Desktop & Mobile Sync)
     const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
@@ -28525,11 +29027,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     handleSaveCardDesign,
     setCardCustomizationView,
     loadCardConfigInputs,
-    getCardDesignSnapshot: () => cardDesignSnapshot
+    getCardDesignSnapshot: () => cardDesignSnapshot,
+    getCardAccordionState: () => cardAccordionState,
+    toggleCardAccordion,
+    syncCardAccordionDOM,
+    syncEyeToggleIcons,
+    handleApplyDefaultCardDesign
   };
 })();
 
 window.ProductForm = ProductForm;
+window.handleApplyDefaultCardDesign = ProductForm.handleApplyDefaultCardDesign;
+window.toggleCardAccordion = ProductForm.toggleCardAccordion;
+window.syncCardAccordionDOM = ProductForm.syncCardAccordionDOM;
+window.syncEyeToggleIcons = ProductForm.syncEyeToggleIcons;
 window.getThemeBodyColor = ProductForm.getThemeBodyColor;
 window.handleCancelCardDesign = ProductForm.handleCancelCardDesign;
 window.handleSaveCardDesign = ProductForm.handleSaveCardDesign;
