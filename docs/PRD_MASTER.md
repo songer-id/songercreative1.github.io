@@ -1112,6 +1112,21 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Tombol `[Simpan Perubahan]` memvalidasi dan menyimpan konfigurasi desain ke `primaryState.card_config` (serta ke pengaturan preset tema jika checkbox default dicentang) dan memperbarui baseline snapshot sesi.
           - Saat seller mengubah nilai apa pun pada editor, status desain secara otomatis ditandai sebagai kustom (`primaryState.use_default_card_design = false`) agar tersimpan secara presisi.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), assert rule unit test (`scratch/test_card_editor_accordion_08.js`), dan runtime integration test (`scratch/test_runtime_accordion_08.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Penyempurnaan Live Preview Tab Desain Kartu & Pembersihan Tanda Kurung Siku (`SC-ADMIN-CARD-EDITOR-08-R1`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Pratinjau dan Desain Kartu pada sidebar desktop, tablet, dan drawer mobile.
+        - **Pembersihan Karakter ">" Liar (Stray Character Cleanup)**:
+          - Menghapus karakter sisa `>` pada tag penutup template desktop dan mobile di `js/product-form.js` (`</div>>` $\rightarrow$ `</div>`).
+          - Memastikan tombol navigasi penutup sidebar ("»" / `chevrons-right`) dan ikon dropdown chevron accordion (`bi-chevron-down`) tetap utuh tanpa menyembunyikan elemen menggunakan CSS hack atau melakukan penggantian string global.
+        - **Pemulihan Live Preview pada Tab Desain Kartu**:
+          - Mengembalikan tampilan kartu produk aktif dan kontrol Simulasi Diskon di atas panel accordion editor pada tab *Desain Kartu*.
+          - Memastikan urutan layout yang harmonis dan konsisten pada desktop maupun mobile:
+            * Tab *Pratinjau*: Simulasi Diskon $\rightarrow$ Kartu Produk.
+            * Tab *Desain Kartu*: Simulasi Diskon $\rightarrow$ Kartu Produk $\rightarrow$ Accordion Editor (Warna & Bentuk, Elemen Kartu, Footer Model C, Countdown) $\rightarrow$ Pinned Footer Action (Gunakan Desain Bawaan, Default Checkbox, Batal, Simpan).
+          - Menggunakan elemen kartu produk dan kontrol Simulasi Diskon yang sama (`#preview-card-outer-wrapper` dan `#preview-card-outer-wrapper-mob`) tanpa duplikasi HTML atau handler ID baru.
+          - Perubahan nilai token atau toggle apa pun pada accordion tools langsung merender kartu secara seketika (*live reactive preview*) di atasnya tanpa perlu berpindah tab.
+          - Mengalir secara alami dalam satu kontainer scroll sidebar/drawer utama (`overflow-y-auto`) tanpa nesting scrollbar ataupun manipulasi sticky positioning.
+          - Menyelaraskan lebar kartu, Simulasi Diskon, dan accordion section pada `max-w-[260px] mx-auto` dengan warna latar Body tema aktif.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), zero stray character assert, sequential layout verification, dan simulated tab visibility test (`scratch/test_card_editor_08_r1.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

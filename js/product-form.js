@@ -2625,22 +2625,20 @@ const ProductForm = (() => {
             </label>
 
             <!-- Card Live Box Container -->
-            <div class="flex justify-center w-full">
-              <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] flex justify-center transition-colors">
-                <div id="product-card-preview-container" class="w-full max-w-[260px] relative overflow-hidden">
-                  <div id="card-live-preview-box">
-                    <!-- Rendered dynamically -->
-                  </div>
-                  <!-- Scoped Preview Simulation Modal (Scoped inside Desktop Preview Container) -->
-                  <div id="preview-scoped-modal-root" class="absolute inset-0 z-50 hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs">
-                    <!-- Rendered dynamically -->
-                  </div>
+            <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] mx-auto flex justify-center transition-colors">
+              <div id="product-card-preview-container" class="w-full max-w-[260px] relative overflow-hidden">
+                <div id="card-live-preview-box">
+                  <!-- Rendered dynamically -->
+                </div>
+                <!-- Scoped Preview Simulation Modal (Scoped inside Desktop Preview Container) -->
+                <div id="preview-scoped-modal-root" class="absolute inset-0 z-50 hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs">
+                  <!-- Rendered dynamically -->
                 </div>
               </div>
             </div>
 
             <!-- Visual Customization Controls: Accordion Editor (Step 1 Only) -->
-            <div id="card-customization-section" class="hidden p-3.5 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-3">
+            <div id="card-customization-section" class="hidden w-full max-w-[260px] mx-auto p-3.5 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-3">
               <!-- Accordion Groups Container -->
               <div class="space-y-2">
                 <!-- Kelompok 1: Warna & Bentuk -->
@@ -2952,7 +2950,7 @@ const ProductForm = (() => {
                   </button>
                 </div>
               </div>
-            </div>>
+            </div>
           </div>
 
 
@@ -3312,7 +3310,7 @@ const ProductForm = (() => {
                   </button>
                 </div>
               </div>
-            </div>>
+            </div>
           </div>
 
 
@@ -8443,18 +8441,15 @@ const ProductForm = (() => {
     }
 
     if (currentStep === 1) {
+      if (outerWrapDesk) outerWrapDesk.classList.remove('hidden');
+      if (outerWrapMob) outerWrapMob.classList.remove('hidden');
+      if (simDiscountDesk) simDiscountDesk.classList.remove('hidden');
+      if (simDiscountMob) simDiscountMob.classList.remove('hidden');
+
       if (previewStep1Tab === 'design') {
-        if (outerWrapDesk) outerWrapDesk.classList.add('hidden');
-        if (outerWrapMob) outerWrapMob.classList.add('hidden');
-        if (simDiscountDesk) simDiscountDesk.classList.add('hidden');
-        if (simDiscountMob) simDiscountMob.classList.add('hidden');
         if (customSectionDesk) customSectionDesk.classList.remove('hidden');
         if (customSectionMob) customSectionMob.classList.remove('hidden');
       } else {
-        if (outerWrapDesk) outerWrapDesk.classList.remove('hidden');
-        if (outerWrapMob) outerWrapMob.classList.remove('hidden');
-        if (simDiscountDesk) simDiscountDesk.classList.remove('hidden');
-        if (simDiscountMob) simDiscountMob.classList.remove('hidden');
         if (customSectionDesk) customSectionDesk.classList.add('hidden');
         if (customSectionMob) customSectionMob.classList.add('hidden');
       }
