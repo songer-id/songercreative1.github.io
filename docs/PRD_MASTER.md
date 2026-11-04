@@ -1044,6 +1044,24 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
         - **Preservasi Fungsionalitas Penuh**:
           - Seluruh nilai data sel, template bawaan (*Pakaian, Celana, Sepatu*), penambahan baris/kolom, batasan minimum kolom (minimal 2), konfirmasi penggantian template jika sel terisi data pengguna, validasi prasyarat harga jual produk tunggal, serta persistensi penyimpanan draf/state tetap berfungsi normal 100%. Komponen accordion dan ikon mata/mata-coret tidak disentuh sama sekali.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengujian CSS, dan simulasi penataan kolom/keselarasan template (`scratch/test_size_guide_layout_r1.js`) serta suite regresi lulus 100% PASS.
+      - **Pemadatan & Penyesuaian Font Tabel Panduan Ukuran Mobile (`SC-ADMIN-SIZE-GUIDE-MOBILE-R2`)**:
+        - **Cakupan & Batasan**: Khusus tata letak tabel Panduan Ukuran (`#size-guide-matrix-table`) pada layar mobile (<640px). Data tabel, template, batasan jumlah, validasi, event handling, penyimpanan draf, Saran Ukuran Cepat, serta editor/preview kartu produk tidak diubah.
+        - **Tipografi Mobile Terpadat (11px)**:
+          - Pada layar `<640px`, judul header (`.size-col-header-input`) dan isi sel data (`.size-cell-input`) menggunakan font `11px` (`text-[11px]`, `line-height: 1.125rem !important;`).
+          - Pada layar tablet/desktop ($\ge 640\text{px}$), ukuran font tetap dipertahankan pada `0.75rem` (`12px` / `sm:text-xs`, `line-height: 1.25rem !important;`).
+        - **Pengurangan Lebar Minimum Kolom Mobile Secara Proporsional**:
+          - Kolom pertama ringkas ("Ukuran", $\le 6$ karakter): disesuaikan menjadi `min-w-[120px] sm:min-w-[140px]`.
+          - Kolom standar ("Panjang", "Lebar Dada", "Bahu", "Ukuran EU/US/UK", dsb.): disesuaikan menjadi `min-w-[144px] sm:min-w-[175px]`.
+          - Kolom judul panjang & rekomendasi ("Rekomendasi Berat", "Rekomendasi Tinggi", "Panjang Celana", "Lingkar Pinggang", dsb., atau $\ge 12$ karakter): disesuaikan menjadi `min-w-[192px] sm:min-w-[240px]`.
+          - Kolom tombol aksi baris: disesuaikan menjadi `w-9 sm:w-11 min-w-[36px] sm:min-w-[44px]`.
+          - Tampilan tablet dan desktop tetap dipertahankan persis seperti implementasi sebelumnya (`sm:min-w-[140px]`, `sm:min-w-[175px]`, `sm:min-w-[240px]`, `sm:min-w-[44px]`).
+        - **Keterbacaan Penuh & Pemisahan Kontrol Tetap Terjamin**:
+          - Seluruh judul bawaan, khususnya kedua kolom rekomendasi ("Rekomendasi Berat" dan "Rekomendasi Tinggi"), tetap terbaca utuh tanpa elipsis/singkatan dengan margin positif terhadap pembatas input.
+          - Teks tidak menumpuk dengan ikon silang pengosong input (`.btn-clear-datalist` di `right: 0.35rem`, lebar `1.125rem` di dalam area padding kanan aman `pr-7` / `28px`).
+          - Tombol hapus kolom (`.btn-del-size-col`) tetap mempertahankan slot mandiri di luar pembungkus input dengan area sentuh nyaman (`w-7 h-7 sm:w-8 sm:h-8`).
+          - Keselarasan vertikal antara header `<th>` dan sel baris data `<td>` tetap terjaga 100% pada seluruh indeks kolom.
+          - Scroll horizontal tetap terisolasi di dalam wrapper tabel (`.overflow-x-auto`).
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), aturan CSS, dan simulasi penataan kolom/keselarasan template (`scratch/test_size_guide_mobile_r2.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

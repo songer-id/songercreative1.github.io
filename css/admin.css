@@ -3457,8 +3457,16 @@ button:focus-visible {
 
 #size-guide-matrix-table .size-col-header-input,
 #size-guide-matrix-table .size-cell-input {
-  font-size: 0.75rem !important;
-  line-height: 1.25rem !important;
+  font-size: 11px !important;
+  line-height: 1.125rem !important;
+}
+
+@media (min-width: 640px) {
+  #size-guide-matrix-table .size-col-header-input,
+  #size-guide-matrix-table .size-cell-input {
+    font-size: 0.75rem !important;
+    line-height: 1.25rem !important;
+  }
 }
 
 #size-guide-matrix-table .clean-datalist-input-box > .btn-clear-datalist,

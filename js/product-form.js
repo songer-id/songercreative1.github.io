@@ -11568,16 +11568,16 @@ const ProductForm = (() => {
 
     // Rekomendasi, Lingkar, Panjang Celana / Kaki, atau judul panjang (>= 12 karakter)
     if (name.length >= 12 || lower.includes('rekomendasi') || lower.includes('lingkar') || lower.includes('panjang celana') || lower.includes('panjang kaki')) {
-      return 'min-w-[220px] sm:min-w-[240px]';
+      return 'min-w-[192px] sm:min-w-[240px]';
     }
 
     // Kolom pertama 'Ukuran' jika pendek
     if (colIdx === 0 && name.length <= 6) {
-      return 'min-w-[130px] sm:min-w-[140px]';
+      return 'min-w-[120px] sm:min-w-[140px]';
     }
 
     // Kolom standar (Panjang, Lebar Dada, Bahu, Ukuran EU/US/UK, dsb)
-    return 'min-w-[160px] sm:min-w-[175px]';
+    return 'min-w-[144px] sm:min-w-[175px]';
   }
 
   function removeSizeGuideWidthClasses(el) {
@@ -11622,12 +11622,12 @@ const ProductForm = (() => {
     return `
       <tr>
         ${columns.map((col, cIdx) => `
-          <th class="p-1.5 sm:p-2 text-center ${getSizeGuideColWidthClass(col, cIdx)}" data-col-idx="${cIdx}">
-            <div class="flex items-center justify-between gap-1.5 w-full">
+          <th class="p-1 sm:p-2 text-center ${getSizeGuideColWidthClass(col, cIdx)}" data-col-idx="${cIdx}">
+            <div class="flex items-center justify-between gap-1 sm:gap-1.5 w-full">
               <div class="relative flex-1 min-w-0 clean-datalist-wrapper">
                 <input
                   type="text"
-                  class="size-col-header-input clean-datalist-input w-full h-8 px-2 pr-7 text-center font-bold text-xs text-slate-800 bg-white border border-slate-300 hover:border-slate-400 focus:border-[var(--color-primary)] rounded-md outline-none shadow-2xs transition"
+                  class="size-col-header-input clean-datalist-input w-full h-8 px-2 pr-7 text-center font-bold text-[11px] sm:text-xs text-slate-800 bg-white border border-slate-300 hover:border-slate-400 focus:border-[var(--color-primary)] rounded-md outline-none shadow-2xs transition"
                   value="${escapeHtml(col)}"
                   placeholder="Kolom"
                   data-col-idx="${cIdx}"
@@ -11644,7 +11644,7 @@ const ProductForm = (() => {
             </div>
           </th>
         `).join('')}
-        <th class="p-1.5 sm:p-2 text-center w-10 sm:w-11 min-w-[40px] sm:min-w-[44px] whitespace-nowrap">
+        <th class="p-1 sm:p-2 text-center w-9 sm:w-11 min-w-[36px] sm:min-w-[44px] whitespace-nowrap">
           <div class="flex items-center justify-center">
             <button
               type="button"
@@ -11664,10 +11664,10 @@ const ProductForm = (() => {
     return rows.map((row, rIdx) => `
       <tr class="hover:bg-slate-50 transition border-b border-slate-200" data-row-idx="${rIdx}">
         ${columns.map((col, cIdx) => `
-          <td class="p-1.5 sm:p-2 align-middle text-center ${getSizeGuideColWidthClass(col, cIdx)}">
+          <td class="p-1 sm:p-2 align-middle text-center ${getSizeGuideColWidthClass(col, cIdx)}">
             <input
               type="text"
-              class="size-cell-input w-full h-8 px-2 py-1 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs transition"
+              class="size-cell-input w-full h-8 px-2 py-1 rounded-md border border-slate-300 text-[11px] sm:text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs transition"
               data-row-idx="${rIdx}"
               data-col-idx="${cIdx}"
               value="${escapeHtml((Array.isArray(row) ? row[cIdx] : '') || '')}"
@@ -11675,7 +11675,7 @@ const ProductForm = (() => {
             />
           </td>
         `).join('')}
-        <td class="p-1.5 sm:p-2 align-middle text-center w-10 sm:w-11 min-w-[40px] sm:min-w-[44px]">
+        <td class="p-1 sm:p-2 align-middle text-center w-9 sm:w-11 min-w-[36px] sm:min-w-[44px]">
           <button
             type="button"
             class="btn-del-size-row w-7 h-7 sm:w-8 sm:h-8 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 inline-flex items-center justify-center transition cursor-pointer shrink-0"
