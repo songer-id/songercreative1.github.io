@@ -3293,17 +3293,33 @@ const BuyerStore = (() => {
     const showDiscBadge = config.show_discount_badge !== false;
 
     // Discount badge styling on image
-    const discBadgeRadius = config.discount_badge_radius || '8px';
+    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 8;
+    const discBadgeRadius = `${isNaN(rawDiscRad) ? 8 : Math.max(0, Math.min(12, rawDiscRad))}px`;
     const discBadgeBg = config.discount_badge_bg_color || '#059669';
     const discBadgeText = config.discount_badge_text_color || '#ffffff';
     const discBadgeBorder = config.discount_badge_border_color || discBadgeBg;
     const discBadgeStyle = `background-color: ${discBadgeBg}; color: ${discBadgeText}; border: 1px solid ${discBadgeBorder}; border-radius: ${discBadgeRadius};`;
+    const rawDiscPos = config.discount_badge_position || 'top-right';
+    const discPosClass = (rawDiscPos === 'top-left' ? 'top-2 left-2' : rawDiscPos === 'bottom-left' ? 'bottom-2 left-2' : rawDiscPos === 'bottom-right' ? 'bottom-2 right-2' : 'top-2 right-2');
+    const strikePriceColor = config.strike_price_color || '#94a3b8';
 
-    const badgeRadius = config.badge_radius || '6px';
+    const rawBadgeRadius = config.badge_radius !== undefined && config.badge_radius !== null ? parseInt(config.badge_radius, 10) : 6;
+    const badgeRadiusNum = isNaN(rawBadgeRadius) ? 6 : Math.max(0, Math.min(12, rawBadgeRadius));
+    const badgeRadius = `${badgeRadiusNum}px`;
     const badgeTextColor = config.badge_text_color || '#047857';
     const badgeBgColor = config.badge_bg_color || '#ecfdf5';
     const badgeBorderColor = config.badge_border_color || '#a7f3d0';
-    const badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    const badgeStyleMode = config.badge_style;
+
+    let badgeStyle = '';
+    if (badgeStyleMode === 'border') {
+      badgeStyle = `color: ${badgeTextColor}; background-color: transparent; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    } else if (badgeStyleMode === 'bg') {
+      badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: none; border-radius: ${badgeRadius};`;
+    } else {
+      // Legacy compatibility
+      badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    }
 
     const customBadges = getProductCustomBadges(prod, effDiscount);
 
@@ -3330,7 +3346,7 @@ const BuyerStore = (() => {
         <a href="product.html?id=${prod.id}" class="block relative w-full aspect-square bg-slate-100 overflow-hidden cursor-pointer shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
           ${renderProductImage(prod)}
           ${(effDiscount.has_discount && showDiscBadge) ? `
-            <div class="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
+            <div class="absolute ${discPosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
               <span>- % ${effDiscount.percent}</span>
             </div>
           ` : ''}
@@ -3368,7 +3384,7 @@ const BuyerStore = (() => {
           <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
             <div class="flex flex-col justify-end min-w-0">
               ${(effDiscount.has_discount && showStrike) ? `
-                <span class="text-[10px] sm:text-[11px] line-through text-slate-400 font-normal leading-none mb-1">
+                <span class="text-[10px] sm:text-[11px] line-through font-normal leading-none mb-1" style="color: ${strikePriceColor};">
                   ${formatIDR(effDiscount.original_price)}
                 </span>
               ` : ''}
@@ -3444,11 +3460,15 @@ const BuyerStore = (() => {
     const showDiscBadge = config.show_discount_badge !== false;
 
     // Discount badge styling on image
-    const discBadgeRadius = config.discount_badge_radius || '8px';
+    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 8;
+    const discBadgeRadius = `${isNaN(rawDiscRad) ? 8 : Math.max(0, Math.min(12, rawDiscRad))}px`;
     const discBadgeBg = config.discount_badge_bg_color || '#059669';
     const discBadgeText = config.discount_badge_text_color || '#ffffff';
     const discBadgeBorder = config.discount_badge_border_color || discBadgeBg;
     const discBadgeStyle = `background-color: ${discBadgeBg}; color: ${discBadgeText}; border: 1px solid ${discBadgeBorder}; border-radius: ${discBadgeRadius};`;
+    const rawDiscPos = config.discount_badge_position || 'top-right';
+    const discPosClass = (rawDiscPos === 'top-left' ? 'top-2 left-2' : rawDiscPos === 'bottom-left' ? 'bottom-2 left-2' : rawDiscPos === 'bottom-right' ? 'bottom-2 right-2' : 'top-2 right-2');
+    const strikePriceColor = config.strike_price_color || '#94a3b8';
 
     const hasActiveDiscount = Boolean(effDiscount && effDiscount.has_discount);
     const finalPrice = hasActiveDiscount ? effDiscount.discounted_price : minPrice;
@@ -3485,7 +3505,7 @@ const BuyerStore = (() => {
         <a href="product.html?id=${prod.id}" class="block relative w-full aspect-[3/4] bg-slate-100 overflow-hidden cursor-pointer shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
           ${renderProductImage(prod)}
           ${(hasActiveDiscount && showDiscBadge) ? `
-            <div class="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
+            <div class="absolute ${discPosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
               <span>- % ${effDiscount.percent}</span>
             </div>
           ` : ''}
@@ -3509,7 +3529,7 @@ const BuyerStore = (() => {
           ` : `
             <div class="pt-1 flex flex-col justify-end mt-auto space-y-0.5">
               ${showStrike ? `
-                <span class="text-[10px] line-through text-slate-400 font-normal leading-none">
+                <span class="text-[10px] line-through font-normal leading-none" style="color: ${strikePriceColor};">
                   ${formatIDR(origPrice)}
                 </span>
               ` : ''}
@@ -3563,17 +3583,33 @@ const BuyerStore = (() => {
     const showDiscBadge = config.show_discount_badge !== false;
 
     // Discount badge styling on image
-    const discBadgeRadius = config.discount_badge_radius || '8px';
+    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 8;
+    const discBadgeRadius = `${isNaN(rawDiscRad) ? 8 : Math.max(0, Math.min(12, rawDiscRad))}px`;
     const discBadgeBg = config.discount_badge_bg_color || '#059669';
     const discBadgeText = config.discount_badge_text_color || '#ffffff';
     const discBadgeBorder = config.discount_badge_border_color || discBadgeBg;
     const discBadgeStyle = `background-color: ${discBadgeBg}; color: ${discBadgeText}; border: 1px solid ${discBadgeBorder}; border-radius: ${discBadgeRadius};`;
+    const rawDiscPos = config.discount_badge_position || 'top-right';
+    const discPosClass = (rawDiscPos === 'top-left' ? 'top-2 left-2' : rawDiscPos === 'bottom-left' ? 'bottom-2 left-2' : rawDiscPos === 'bottom-right' ? 'bottom-2 right-2' : 'top-2 right-2');
+    const strikePriceColor = config.strike_price_color || '#94a3b8';
 
-    const badgeRadius = config.badge_radius || '6px';
+    const rawBadgeRadius = config.badge_radius !== undefined && config.badge_radius !== null ? parseInt(config.badge_radius, 10) : 6;
+    const badgeRadiusNum = isNaN(rawBadgeRadius) ? 6 : Math.max(0, Math.min(12, rawBadgeRadius));
+    const badgeRadius = `${badgeRadiusNum}px`;
     const badgeTextColor = config.badge_text_color || '#047857';
     const badgeBgColor = config.badge_bg_color || '#ecfdf5';
     const badgeBorderColor = config.badge_border_color || '#a7f3d0';
-    const badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    const badgeStyleMode = config.badge_style;
+
+    let badgeStyle = '';
+    if (badgeStyleMode === 'border') {
+      badgeStyle = `color: ${badgeTextColor}; background-color: transparent; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    } else if (badgeStyleMode === 'bg') {
+      badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: none; border-radius: ${badgeRadius};`;
+    } else {
+      // Legacy compatibility
+      badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    }
 
     const customBadges = getProductCustomBadges(prod, effDiscount);
 
@@ -3604,7 +3640,7 @@ const BuyerStore = (() => {
         <a href="product.html?id=${prod.id}" class="block relative w-full aspect-[4/3] bg-slate-100 overflow-hidden cursor-pointer shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
           ${renderProductImage(prod)}
           ${(effDiscount.has_discount && showDiscBadge) ? `
-            <div class="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
+            <div class="absolute ${discPosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
               <span>- % ${effDiscount.percent}</span>
             </div>
           ` : ''}
@@ -3637,7 +3673,7 @@ const BuyerStore = (() => {
           <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
             <div class="flex flex-col justify-end min-w-0">
               ${(effDiscount.has_discount && showStrike) ? `
-                <span class="text-[10px] sm:text-[11px] line-through text-slate-400 font-normal leading-none mb-1">
+                <span class="text-[10px] sm:text-[11px] line-through font-normal leading-none mb-1" style="color: ${strikePriceColor};">
                   ${formatIDR(effDiscount.original_price)}
                 </span>
               ` : ''}

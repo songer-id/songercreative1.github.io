@@ -1183,6 +1183,54 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Memperbarui renderer kartu `renderCardVariantA`, `renderCardVariantB`, dan `renderCardVariantC` agar mengonsumsi `border_width` dan `border_radius` secara identik dengan tampilan admin.
           - Menjamin tidak ada perubahan pada Mini PDP, kalkulasi harga, transaksi, stok, maupun alur checkout pembeli.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), assert rule unit test (`scratch/test_card_frame_09b.js`), dan runtime simulation test (`scratch/test_runtime_frame_09b.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Kustomisasi Label Khusus & Penyempurnaan Layout Panel Editor (`SC-ADMIN-CARD-LABEL-CUSTOMIZATION-09C`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Tab Desain Kartu → Kelompok 3 (Label Khusus) & Layout Panel Editor pada desktop, tablet, dan drawer mobile, serta sinkronisasi renderer etalase pembeli (`js/buyer-store.js`).
+        - **Penyempurnaan Layout Panel Editor**:
+          - Menghilangkan kontainer bertumpuk: Mengubah `#card-customization-section` dan `#card-customization-section-mob` menjadi transparan (`bg-transparent border-0 shadow-none p-0`) dan menghapus pembatasan `max-w-[260px]` agar panel mengisi 100% lebar drawer sidebar (`w-full`), lebih lebar daripada kartu preview.
+          - Setiap kelompok accordion di dalam panel berdiri sebagai kartu mandiri (`rounded-lg bg-white border border-slate-200`).
+          - Menyesuaikan lebar drawer sidebar preview desktop menjadi 320px pada breakpoint `lg` (`w-[320px]`) dan 340px pada breakpoint `xl` (`xl:w-[340px]`), selaras dengan padding kanan `wizard-form-col` (`lg:pr-[320px] xl:pr-[340px]`).
+          - Kartu preview produk tetap terpusat di tengah dengan lebar terkontrol (`max-w-[260px] mx-auto`) tanpa terdistorsi atau melar.
+          - Standarisasi radius: 8px (`rounded-lg`) untuk kelompok accordion dan 6px (`rounded-md`) untuk seluruh kontrol, input, tombol, dan segmented control pada panel tools.
+        - **Pengaturan Label Khusus (Accordion Kelompok 3)**:
+          - **Radius Sudut**: Slider rentang 0–12 px (step 1) dengan label nilai aktif (`${val} px`) dan tombol pilihan cepat 0 px, 4 px, 6 px (default awal), 8 px, dan 12 px. Sinkronisasi penuh dua arah desktop ↔ mobile.
+          - **Pilihan Gaya Label (Segmented Control)**: Dua pilihan gaya: "Latar" (filled) vs "Garis Tepi" (outlined).
+            * Mode Latar: `background-color: ${badgeBgColor}; color: ${badgeTextColor}; border: none; border-radius: ${badgeRadius};`
+            * Mode Garis Tepi: `background-color: transparent; color: ${badgeTextColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`
+            * Kompatibilitas ke belakang: Konfigurasi lama tanpa atribut `badge_style` tetap mempertahankan kombinasi warna latar dan border 1px solid bawaan.
+          - **Pengaturan Warna Fleksibel**:
+            * Bidang Warna Teks, Warna Latar (ditampilkan saat mode Latar aktif), dan Warna Garis Tepi (ditampilkan saat mode Garis Tepi aktif).
+            * Sinkronisasi dua arah antara color picker dan text input HEX, serta desktop ↔ mobile.
+            * Perpindahan mode gaya tidak menghapus nilai warna pada mode lainnya.
+          - **Default Tema Dinamis & Preservasi Kustom**:
+            * Mengaitkan warna default label khusus dengan tema dan model aktif toko via `getPrimaryThemeColor()`, `hexToSubtleHex`, dan `hexToBorderHex`.
+            * Model B: palet ungu (`#6b21a8` teks, `#faf5ff` latar, `#e9d5ff` border).
+            * Model A & C: mengikuti tema toko aktif secara dinamis, menghilangkan default hijau statis universal jika tema toko berbeda.
+            * Membuka tab Desain Kartu atau berpindah kelompok accordion tidak menandai kartu sebagai kustom. Warna pilihan pengguna yang sudah dikustomisasi tetap terjaga saat beralih mode.
+        - **Integrasi Live Preview & Etalase Pembeli (`js/buyer-store.js`)**:
+          - Live preview admin langsung merespons gaya label, radius, dan warna secara reaktif pada Model A dan C (Model B menyembunyikan/mengabaikan label khusus).
+          - Renderer kartu etalase pembeli `renderCardVariantA` dan `renderCardVariantC` di `js/buyer-store.js` menerapkan logika gaya label (`badge_style`), radius sudut (`badge_radius` 0–12 px), dan warna yang identik secara visual.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), aturan statis (`scratch/test_card_label_09c.js`), dan runtime DOM simulation (`scratch/test_runtime_label_09c.js`) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Penyatuan Promo & Diskon, Reaktivitas Subpanel Custom, dan Perbaikan Live Preview (`SC-ADMIN-CARD-PROMO-CUSTOMIZATION-09C-R1`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Tab Desain Kartu → Penyatuan Accordion Label Khusus ke dalam Promo & Diskon (Kelompok 3), Reaktivitas Subpanel Kustom saat Toggle True/False, Pengaturan Label Diskon, Radius Slider Countdown, Perbaikan Live Preview Discrepancies, dan Sinkronisasi Etalase Pembeli (`js/buyer-store.js` & `js/db.js`).
+        - **Penyatuan Accordion Promo & Diskon (5 Item Berurutan)**:
+          - Menghapus accordion mandiri Label Khusus (`#accordion-group-badge` & `#accordion-group-badge-mob`) dan menyatukan seluruh fitur promo ke dalam Accordion Promo & Diskon (`#accordion-group-promo` & `#accordion-group-promo-mob`).
+          - Struktur 5 item berurutan yang rapi:
+            1. **Harga Coret**: Baris toggle mata (`#cfg-show-strike`), subpanel kustom warna harga coret (`#cfg-strike-color`, `#cfg-strike-hex`, default `#94a3b8`).
+            2. **Label Diskon** (d/h Diskon Foto): Baris toggle mata (`#cfg-show-discount-badge`), subpanel kustom mencakup slider radius sudut 0–12 px (`#cfg-discount-badge-radius`, default 8 px) dengan pilihan cepat (0, 4, 6, 8, 12 px), pilihan 4 posisi sudut foto (Kiri Atas `top-left`, Kanan Atas `top-right`, Kiri Bawah `bottom-left`, Kanan Bawah `bottom-right`), serta pemilih warna teks dan warna latar.
+            3. **Ikon Tiket**: Baris toggle mata (`#cfg-show-ticket-icon`) sederhana tanpa subpanel tambahan.
+            4. **Countdown**: Baris toggle mata (`#cfg-enable-countdown`), subpanel kustom mencakup slider radius sudut 0–12 px (`#cfg-countdown-radius`, default 6 px) dengan pilihan cepat (0, 4, 6, 8, 12 px) menggantikan elemen select lama, serta pemilih warna token countdown (latar, teks, ikon, border).
+            5. **Label Khusus**: Baris toggle mata (`#cfg-show-badge`), subpanel kustom gaya label (Latar vs Garis Tepi), slider radius 0–12 px, pilihan cepat (0, 4, 6, 8, 12 px), dan pemilih warna (teks, latar, border). Pada Model B (Kartu Minimalis), kontainer Label Khusus otomatis disembunyikan (`hidden`).
+        - **Reaktivitas Subpanel Kustom & Baris Fitur**:
+          - Helper reaktif `syncFeatureSubpanels()` memastikan ketika toggle fitur bernilai **TRUE**, subpanel pengaturan kustom langsung terbuka/tampil tepat di bawah baris fitur dan elemen tampil di preview.
+          - Ketika toggle fitur bernilai **FALSE**, subpanel kustom disembunyikan (`hidden`), namun baris fitur beserta label dan tombol mata **TETAP terlihat** sehingga pengguna selalu dapat mengaktifkannya kembali dengan mudah.
+        - **Perbaikan Discrepancies Live Preview Admin**:
+          - *Harga Coret*: Tidak lagi terblokir oleh ketiadaan diskon tersimpan saat toggle aktif; menyediakan simulasi harga pembanding realistis pada preview sehingga garis coret dan warnanya terlihat nyata.
+          - *Label Diskon*: Merender lencana persentase promo (`- % ${effDiscPercent}`) pada sudut foto yang dipilih dengan radius sudut yang diatur.
+          - *Label Khusus*: Menyediakan fallback sampel badge `['Label Khusus']` di live preview ketika input label produk masih kosong, memungkinkan pengguna langsung mendesain dan melihat preview gaya, radius, dan warnanya.
+        - **Sinkronisasi Etalase Pembeli & Database Defaults**:
+          - `js/db.js`: Menambahkan `strike_price_color: '#94a3b8'`, `discount_badge_position: 'top-right'`, dan `badge_style: 'bg'` pada default `variant_a`, `variant_b`, dan `variant_c`.
+          - `js/buyer-store.js`: Pembaruan `renderCardVariantA`, `renderCardVariantB`, dan `renderCardVariantC` untuk mengaplikasikan `strike_price_color`, posisi dinamis `discount_badge_position` (`top-2 left-2`, `top-2 right-2`, `bottom-2 left-2`, `bottom-2 right-2`), radius `discount_badge_radius`, dan `countdown_radius`.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), aturan statis (`scratch/test_card_promo_09c_r1.js`), dan runtime DOM simulation (`scratch/test_runtime_promo_09c_r1.js`) bersama seluruh suite regresi tugas sebelumnya lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

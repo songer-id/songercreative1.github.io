@@ -2305,7 +2305,7 @@ const ProductForm = (() => {
         <div class="w-full relative">
 
           <!-- WIZARD FORM COLUMN -->
-          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[300px] xl:pr-[340px]' : ''} ${currentStep === 2 ? 'space-y-0' : 'space-y-4 sm:space-y-6'} transition-all duration-300">
+          <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[340px]' : ''} ${currentStep === 2 ? 'space-y-0' : 'space-y-4 sm:space-y-6'} transition-all duration-300">
 
             <!-- ============================================== -->
             <!-- STEP 1 PANE: INFORMASI PRODUK -->
@@ -2614,7 +2614,7 @@ const ProductForm = (() => {
         </button>
 
         <!-- DESKTOP FIXED OFF-CANVAS PREVIEW SIDEBAR (DOCK KANAN SEJATI) -->
-        <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[300px] xl:w-[340px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+        <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[320px] xl:w-[340px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
 
           <!-- Sticky Header Sidebar: Step 1 ([Pratinjau] vs [Desain Kartu]) vs Step 2 ([Pratinjau] vs [Uji Coba]) -->
           <div class="p-2.5 px-3 border-b border-slate-200 bg-slate-50/95 shrink-0 flex items-center justify-between gap-2">
@@ -2648,7 +2648,7 @@ const ProductForm = (() => {
             </div>
 
             <!-- Visual Customization Controls: Accordion Editor (Step 1 Only) -->
-            <div id="card-customization-section" class="hidden w-full max-w-[260px] mx-auto p-3.5 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-3">
+            <div id="card-customization-section" class="hidden w-full bg-transparent border-0 shadow-none p-0 space-y-3">
               <!-- Accordion Groups Container -->
               <div class="space-y-2">
                 <!-- Kelompok 1: Bingkai Kartu -->
@@ -2769,33 +2769,7 @@ const ProductForm = (() => {
                   </div>
                 </div>
 
-                <!-- Kelompok 3: Label Khusus -->
-                <div id="accordion-group-badge" class="border border-slate-200 rounded-lg overflow-hidden bg-white ${primaryState.card_variant === 'B' ? 'hidden' : ''}">
-                  <button type="button" id="btn-accordion-badge" aria-expanded="false" aria-controls="accordion-body-badge" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="badge">
-                    <span class="flex items-center gap-1.5 text-xs font-normal text-slate-800">
-                      <i class="bi bi-bookmark-star text-emerald-600"></i>
-                      <span>Label Khusus</span>
-                    </span>
-                    <i id="accordion-icon-badge" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
-                  </button>
-                  <div id="accordion-body-badge" class="hidden p-2.5 border-t border-slate-100" role="region" aria-labelledby="btn-accordion-badge">
-                    <div id="cfg-badge-container-desk">
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                        <span class="flex items-center gap-1.5">
-                          <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
-                          <span>Label Khusus</span>
-                        </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-badge" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-badge-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-badge-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Kelompok 4: Promo & Diskon -->
+                <!-- Kelompok 3: Promo & Diskon -->
                 <div id="accordion-group-promo" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
                   <button type="button" id="btn-accordion-promo" aria-expanded="false" aria-controls="accordion-body-promo" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="promo">
                     <span class="flex items-center gap-1.5 text-xs font-normal text-slate-800">
@@ -2805,9 +2779,8 @@ const ProductForm = (() => {
                     <i id="accordion-icon-promo" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
                   </button>
                   <div id="accordion-body-promo" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-promo">
-                    <!-- Toggles: Harga Coret, Diskon Foto, Ikon Tiket -->
-                    <div class="divide-y divide-slate-100">
-                      <!-- Harga Coret -->
+                    <!-- 1. Harga Coret -->
+                    <div class="space-y-2 pb-2.5 border-b border-slate-100">
                       <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-tag text-slate-400 text-[11px]"></i>
@@ -2819,11 +2792,22 @@ const ProductForm = (() => {
                           <i id="cfg-show-strike-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
-                      <!-- Diskon Foto -->
+                      <!-- Panel Custom Harga Coret (Tampil jika Harga Coret TRUE) -->
+                      <div id="cfg-strike-panel-desk" class="px-2 pt-1 pb-1 space-y-1.5">
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Harga Coret</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-strike-color" value="#94a3b8" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-strike-hex" value="#94a3b8" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 2. Label Diskon (d/h Diskon Foto) -->
+                    <div class="space-y-2 pb-2.5 border-b border-slate-100">
                       <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-percent text-slate-400 text-[11px]"></i>
-                          <span>Diskon Foto</span>
+                          <span>Label Diskon</span>
                         </span>
                         <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
                           <input type="checkbox" id="cfg-show-discount-badge" class="sr-only peer cfg-eye-toggle" />
@@ -2831,7 +2815,56 @@ const ProductForm = (() => {
                           <i id="cfg-show-discount-badge-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
-                      <!-- Ikon Tiket -->
+                      <!-- Panel Custom Label Diskon (Tampil jika Label Diskon TRUE) -->
+                      <div id="cfg-discount-badge-panel-desk" class="px-2 pt-1 pb-1 space-y-2.5">
+                        <!-- Radius Sudut Label Diskon -->
+                        <div class="space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label for="cfg-discount-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <span id="cfg-discount-badge-radius-val" class="text-[11px] font-mono font-normal text-slate-700">8 px</span>
+                          </div>
+                          <input type="range" id="cfg-discount-badge-radius" min="0" max="12" step="1" value="8" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                          <div class="flex items-center gap-1 pt-0.5">
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                          </div>
+                        </div>
+                        <!-- Posisi Label Diskon (4 Sudut Foto) -->
+                        <div class="space-y-1">
+                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Posisi Label</label>
+                          <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-discount-badge-position-group">
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="top-left">Kiri Atas</button>
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-pos="top-right">Kanan Atas</button>
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-left">Kiri Bawah</button>
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-right">Kanan Bawah</button>
+                          </div>
+                          <input type="hidden" id="cfg-discount-badge-position" value="top-right" />
+                        </div>
+                        <!-- Warna Label Diskon -->
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-discount-badge-text-color" value="#ffffff" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-discount-badge-text-hex" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-discount-badge-bg-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-discount-badge-bg-hex" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 3. Ikon Tiket -->
+                    <div class="py-0.5 border-b border-slate-100">
                       <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-ticket-perforated text-slate-400 text-[11px]"></i>
@@ -2845,13 +2878,12 @@ const ProductForm = (() => {
                       </label>
                     </div>
 
-                    <!-- Countdown Controls Sub-block -->
-                    <div class="pt-2.5 border-t border-slate-100 space-y-2.5">
-                      <!-- Aktifkan Countdown -->
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal border border-slate-100">
+                    <!-- 4. Countdown -->
+                    <div class="space-y-2 pb-2.5 border-b border-slate-100">
+                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-alarm text-slate-400 text-[11px]"></i>
-                          <span>Aktifkan Countdown</span>
+                          <span>Countdown</span>
                         </span>
                         <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
                           <input type="checkbox" id="cfg-enable-countdown" class="sr-only peer cfg-eye-toggle" />
@@ -2859,46 +2891,121 @@ const ProductForm = (() => {
                           <i id="cfg-enable-countdown-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
+                      <!-- Panel Custom Countdown (Tampil jika Countdown TRUE) -->
+                      <div id="cfg-countdown-panel-desk" class="px-2 pt-1 pb-1 space-y-2.5">
+                        <!-- Radius Sudut Countdown Slider 0-12 px + Presets 0, 4, 6, 8, 12 px -->
+                        <div class="space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label for="cfg-countdown-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <span id="cfg-countdown-radius-val" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                          </div>
+                          <input type="range" id="cfg-countdown-radius" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                          <div class="flex items-center gap-1 pt-0.5">
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                          </div>
+                        </div>
+                        <!-- Warna Countdown -->
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-bg-color" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-bg-hex" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-text-color" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-text-hex" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Ikon</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-icon-color" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-icon-hex" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Border</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-border-color" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-border-hex" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                      <!-- Styling Countdown Tokens -->
-                      <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Belakang</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-bg-color" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-bg-hex" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                    <!-- 5. Label Khusus (Hanya Model A & C, disembunyikan jika Model B) -->
+                    <div id="cfg-badge-container-desk" class="${primaryState.card_variant === 'B' ? 'hidden' : ''}">
+                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                        <span class="flex items-center gap-1.5">
+                          <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
+                          <span>Label Khusus</span>
+                        </span>
+                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                          <input type="checkbox" id="cfg-show-badge" class="sr-only peer cfg-eye-toggle" />
+                          <i id="cfg-show-badge-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                          <i id="cfg-show-badge-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                        </span>
+                      </label>
+                      <!-- Panel Custom Label Khusus (Tampil jika Label Khusus TRUE) -->
+                      <div id="cfg-badge-panel-desk" class="px-2 pt-1 pb-1 space-y-3">
+                        <!-- Pilihan Gaya Label: Latar vs Garis Tepi (Segmented Control) -->
+                        <div class="space-y-1">
+                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Gaya Label</label>
+                          <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-badge-style-group">
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-style="bg">Latar</button>
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-style="border">Garis Tepi</button>
+                          </div>
+                          <input type="hidden" id="cfg-badge-style" value="bg" />
+                        </div>
+
+                        <!-- Radius Sudut Label Khusus (Slider 0-12 px + Pilihan Cepat 0, 4, 6, 8, 12 px) -->
+                        <div class="space-y-1.5 pt-0.5">
+                          <div class="flex items-center justify-between">
+                            <label for="cfg-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <span id="cfg-badge-radius-val" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                          </div>
+                          <input type="range" id="cfg-badge-radius" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                          <div class="flex items-center gap-1 pt-0.5">
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-text-color" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-text-hex" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+
+                        <!-- Pengaturan Warna Label Khusus -->
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-badge-text-color" value="${getThemeDefaultBadgeColors(primaryState.card_variant).text}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-badge-text-hex" value="${getThemeDefaultBadgeColors(primaryState.card_variant).text}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Ikon</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-icon-color" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-icon-hex" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          <div id="cfg-badge-bg-wrap">
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-badge-bg-color" value="${getThemeDefaultBadgeColors(primaryState.card_variant).bg}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-badge-bg-hex" value="${getThemeDefaultBadgeColors(primaryState.card_variant).bg}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Border</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-border-color" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-border-hex" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          <div id="cfg-badge-border-wrap" class="hidden">
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Garis Tepi</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-badge-border-color" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-badge-border-hex" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div class="col-span-2">
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Radius Sudut</label>
-                          <select id="cfg-countdown-radius" class="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-200 rounded outline-none bg-white">
-                            <option value="0px">0px (Kotak)</option>
-                            <option value="4px">4px (Kecil)</option>
-                            <option value="8px">8px (Sedang)</option>
-                            <option value="12px">12px (Besar)</option>
-                            <option value="9999px">9999px (Pill / Bulat)</option>
-                          </select>
                         </div>
                       </div>
                     </div>
@@ -3049,7 +3156,7 @@ const ProductForm = (() => {
             </div>
 
             <!-- Panel Kustomisasi Desain Mobile: Accordion Editor (Step 1 Only) -->
-            <div id="card-customization-section-mob" class="hidden w-full max-w-[260px] p-3.5 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-3">
+            <div id="card-customization-section-mob" class="hidden w-full bg-transparent border-0 shadow-none p-0 space-y-3">
               <!-- Accordion Groups Container Mobile -->
               <div class="space-y-2">
                 <!-- Kelompok 1: Bingkai Kartu Mobile -->
@@ -3170,33 +3277,7 @@ const ProductForm = (() => {
                   </div>
                 </div>
 
-                <!-- Kelompok 3: Label Khusus Mobile -->
-                <div id="accordion-group-badge-mob" class="border border-slate-200 rounded-lg overflow-hidden bg-white ${primaryState.card_variant === 'B' ? 'hidden' : ''}">
-                  <button type="button" id="btn-accordion-badge-mob" aria-expanded="false" aria-controls="accordion-body-badge-mob" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="badge">
-                    <span class="flex items-center gap-1.5 text-xs font-normal text-slate-800">
-                      <i class="bi bi-bookmark-star text-emerald-600"></i>
-                      <span>Label Khusus</span>
-                    </span>
-                    <i id="accordion-icon-badge-mob" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
-                  </button>
-                  <div id="accordion-body-badge-mob" class="hidden p-2.5 border-t border-slate-100" role="region" aria-labelledby="btn-accordion-badge-mob">
-                    <div id="cfg-badge-container-mob">
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                        <span class="flex items-center gap-1.5">
-                          <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
-                          <span>Label Khusus</span>
-                        </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-badge-mob" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-badge-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-badge-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Kelompok 4: Promo & Diskon Mobile -->
+                <!-- Kelompok 3: Promo & Diskon Mobile -->
                 <div id="accordion-group-promo-mob" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
                   <button type="button" id="btn-accordion-promo-mob" aria-expanded="false" aria-controls="accordion-body-promo-mob" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="promo">
                     <span class="flex items-center gap-1.5 text-xs font-normal text-slate-800">
@@ -3206,9 +3287,8 @@ const ProductForm = (() => {
                     <i id="accordion-icon-promo-mob" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
                   </button>
                   <div id="accordion-body-promo-mob" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-promo-mob">
-                    <!-- Toggles: Harga Coret, Diskon Foto, Ikon Tiket -->
-                    <div class="divide-y divide-slate-100">
-                      <!-- Harga Coret -->
+                    <!-- 1. Harga Coret Mobile -->
+                    <div class="space-y-2 pb-2.5 border-b border-slate-100">
                       <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-tag text-slate-400 text-[11px]"></i>
@@ -3220,11 +3300,22 @@ const ProductForm = (() => {
                           <i id="cfg-show-strike-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
-                      <!-- Diskon Foto -->
+                      <!-- Panel Custom Harga Coret Mobile (Tampil jika Harga Coret TRUE) -->
+                      <div id="cfg-strike-panel-mob" class="px-2 pt-1 pb-1 space-y-1.5">
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Harga Coret</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-strike-color-mob" value="#94a3b8" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-strike-hex-mob" value="#94a3b8" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 2. Label Diskon Mobile (d/h Diskon Foto) -->
+                    <div class="space-y-2 pb-2.5 border-b border-slate-100">
                       <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-percent text-slate-400 text-[11px]"></i>
-                          <span>Diskon Foto</span>
+                          <span>Label Diskon</span>
                         </span>
                         <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
                           <input type="checkbox" id="cfg-show-discount-badge-mob" class="sr-only peer cfg-eye-toggle" />
@@ -3232,7 +3323,56 @@ const ProductForm = (() => {
                           <i id="cfg-show-discount-badge-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
-                      <!-- Ikon Tiket -->
+                      <!-- Panel Custom Label Diskon Mobile (Tampil jika Label Diskon TRUE) -->
+                      <div id="cfg-discount-badge-panel-mob" class="px-2 pt-1 pb-1 space-y-2.5">
+                        <!-- Radius Sudut Label Diskon Mobile -->
+                        <div class="space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label for="cfg-discount-badge-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <span id="cfg-discount-badge-radius-val-mob" class="text-[11px] font-mono font-normal text-slate-700">8 px</span>
+                          </div>
+                          <input type="range" id="cfg-discount-badge-radius-mob" min="0" max="12" step="1" value="8" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                          <div class="flex items-center gap-1 pt-0.5">
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                          </div>
+                        </div>
+                        <!-- Posisi Label Diskon Mobile (4 Sudut Foto) -->
+                        <div class="space-y-1">
+                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Posisi Label</label>
+                          <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-discount-badge-position-group-mob">
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="top-left">Kiri Atas</button>
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-pos="top-right">Kanan Atas</button>
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-left">Kiri Bawah</button>
+                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-right">Kanan Bawah</button>
+                          </div>
+                          <input type="hidden" id="cfg-discount-badge-position-mob" value="top-right" />
+                        </div>
+                        <!-- Warna Label Diskon Mobile -->
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-discount-badge-text-color-mob" value="#ffffff" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-discount-badge-text-hex-mob" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-discount-badge-bg-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-discount-badge-bg-hex-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 3. Ikon Tiket Mobile -->
+                    <div class="py-0.5 border-b border-slate-100">
                       <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-ticket-perforated text-slate-400 text-[11px]"></i>
@@ -3246,13 +3386,12 @@ const ProductForm = (() => {
                       </label>
                     </div>
 
-                    <!-- Countdown Controls Sub-block -->
-                    <div class="pt-2.5 border-t border-slate-100 space-y-2.5">
-                      <!-- Aktifkan Countdown -->
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal border border-slate-100">
+                    <!-- 4. Countdown Mobile -->
+                    <div class="space-y-2 pb-2.5 border-b border-slate-100">
+                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-alarm text-slate-400 text-[11px]"></i>
-                          <span>Aktifkan Countdown</span>
+                          <span>Countdown</span>
                         </span>
                         <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
                           <input type="checkbox" id="cfg-enable-countdown-mob" class="sr-only peer cfg-eye-toggle" />
@@ -3260,46 +3399,121 @@ const ProductForm = (() => {
                           <i id="cfg-enable-countdown-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
+                      <!-- Panel Custom Countdown Mobile (Tampil jika Countdown TRUE) -->
+                      <div id="cfg-countdown-panel-mob" class="px-2 pt-1 pb-1 space-y-2.5">
+                        <!-- Radius Sudut Countdown Mobile Slider 0-12 px + Presets 0, 4, 6, 8, 12 px -->
+                        <div class="space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label for="cfg-countdown-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <span id="cfg-countdown-radius-val-mob" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                          </div>
+                          <input type="range" id="cfg-countdown-radius-mob" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                          <div class="flex items-center gap-1 pt-0.5">
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                          </div>
+                        </div>
+                        <!-- Warna Countdown Mobile -->
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-bg-color-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-bg-hex-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-text-color-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-text-hex-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Ikon</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-icon-color-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-icon-hex-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Border</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-countdown-border-color-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-countdown-border-hex-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                      <!-- Styling Countdown Tokens -->
-                      <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Belakang</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-bg-color-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-bg-hex-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                    <!-- 5. Label Khusus Mobile (Hanya Model A & C, disembunyikan jika Model B) -->
+                    <div id="cfg-badge-container-mob" class="${primaryState.card_variant === 'B' ? 'hidden' : ''}">
+                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                        <span class="flex items-center gap-1.5">
+                          <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
+                          <span>Label Khusus</span>
+                        </span>
+                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                          <input type="checkbox" id="cfg-show-badge-mob" class="sr-only peer cfg-eye-toggle" />
+                          <i id="cfg-show-badge-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                          <i id="cfg-show-badge-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                        </span>
+                      </label>
+                      <!-- Panel Custom Label Khusus Mobile (Tampil jika Label Khusus TRUE) -->
+                      <div id="cfg-badge-panel-mob" class="px-2 pt-1 pb-1 space-y-3">
+                        <!-- Pilihan Gaya Label Mobile: Latar vs Garis Tepi (Segmented Control) -->
+                        <div class="space-y-1">
+                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Gaya Label</label>
+                          <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-badge-style-group-mob">
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-style="bg">Latar</button>
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-style="border">Garis Tepi</button>
+                          </div>
+                          <input type="hidden" id="cfg-badge-style-mob" value="bg" />
+                        </div>
+
+                        <!-- Radius Sudut Label Khusus Mobile (Slider 0-12 px + Pilihan Cepat 0, 4, 6, 8, 12 px) -->
+                        <div class="space-y-1.5 pt-0.5">
+                          <div class="flex items-center justify-between">
+                            <label for="cfg-badge-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <span id="cfg-badge-radius-val-mob" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                          </div>
+                          <input type="range" id="cfg-badge-radius-mob" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                          <div class="flex items-center gap-1 pt-0.5">
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-text-color-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-text-hex-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+
+                        <!-- Pengaturan Warna Label Khusus Mobile -->
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                          <div>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-badge-text-color-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).text}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-badge-text-hex-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).text}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Ikon</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-icon-color-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-icon-hex-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          <div id="cfg-badge-bg-wrap-mob">
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-badge-bg-color-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).bg}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-badge-bg-hex-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).bg}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Border</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-countdown-border-color-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-countdown-border-hex-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          <div id="cfg-badge-border-wrap-mob" class="hidden">
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Garis Tepi</label>
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-badge-border-color-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
+                              <input type="text" id="cfg-badge-border-hex-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div class="col-span-2">
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Radius Sudut</label>
-                          <select id="cfg-countdown-radius-mob" class="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-200 rounded outline-none bg-white">
-                            <option value="0px">0px (Kotak)</option>
-                            <option value="4px">4px (Kecil)</option>
-                            <option value="8px">8px (Sedang)</option>
-                            <option value="12px">12px (Besar)</option>
-                            <option value="9999px">9999px (Pill / Bulat)</option>
-                          </select>
                         </div>
                       </div>
                     </div>
@@ -3621,17 +3835,6 @@ const ProductForm = (() => {
     }
 
     const isModelB = primaryState.card_variant === 'B';
-    const groupBadgeDesk = document.getElementById('accordion-group-badge');
-    const groupBadgeMob = document.getElementById('accordion-group-badge-mob');
-    if (groupBadgeDesk) {
-      if (isModelB) groupBadgeDesk.classList.add('hidden');
-      else groupBadgeDesk.classList.remove('hidden');
-    }
-    if (groupBadgeMob) {
-      if (isModelB) groupBadgeMob.classList.add('hidden');
-      else groupBadgeMob.classList.remove('hidden');
-    }
-
     const badgeContainerDesk = document.getElementById('cfg-badge-container-desk');
     const badgeContainerMob = document.getElementById('cfg-badge-container-mob');
     if (badgeContainerDesk) {
@@ -3701,6 +3904,7 @@ const ProductForm = (() => {
     primaryState.use_default_card_design = false;
     saveCardConfigInputs();
     syncEyeToggleIcons();
+    syncFeatureSubpanels();
     updateProductCardLivePreview();
   }
 
@@ -3711,10 +3915,117 @@ const ProductForm = (() => {
     loadCardConfigInputs(variant, true);
     saveCardConfigInputs();
     syncEyeToggleIcons();
+    syncFeatureSubpanels();
     updateProductCardLivePreview();
     if (typeof App !== 'undefined' && App.showToast) {
       App.showToast('Desain bawaan diterapkan.', 'info');
     }
+  }
+
+  function hexToSubtleHex(hex, opacity = 0.12) {
+    if (!hex || typeof hex !== 'string') return '#ecfdf5';
+    let clean = hex.replace('#', '');
+    if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+    if (clean.length !== 6) return '#ecfdf5';
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    const rBg = Math.round(r * opacity + 255 * (1 - opacity));
+    const gBg = Math.round(g * opacity + 255 * (1 - opacity));
+    const bBg = Math.round(b * opacity + 255 * (1 - opacity));
+    return `#${((1 << 24) + (rBg << 16) + (gBg << 8) + bBg).toString(16).slice(1)}`;
+  }
+
+  function hexToBorderHex(hex, opacity = 0.35) {
+    if (!hex || typeof hex !== 'string') return '#a7f3d0';
+    let clean = hex.replace('#', '');
+    if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+    if (clean.length !== 6) return '#a7f3d0';
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    const rBrd = Math.round(r * opacity + 255 * (1 - opacity));
+    const gBrd = Math.round(g * opacity + 255 * (1 - opacity));
+    const bBrd = Math.round(b * opacity + 255 * (1 - opacity));
+    return `#${((1 << 24) + (rBrd << 16) + (gBrd << 8) + bBrd).toString(16).slice(1)}`;
+  }
+
+  function getThemeDefaultBadgeColors(variantCode) {
+    if (variantCode === 'B') {
+      return {
+        text: '#6b21a8',
+        bg: '#faf5ff',
+        border: '#e9d5ff',
+        radius: '6px',
+        style: 'bg'
+      };
+    }
+    const primary = getPrimaryThemeColor();
+    const subtleBg = hexToSubtleHex(primary, 0.12);
+    const borderCol = hexToBorderHex(primary, 0.35);
+    return {
+      text: primary,
+      bg: subtleBg,
+      border: borderCol,
+      radius: '6px',
+      style: 'bg'
+    };
+  }
+
+  function parseBadgeRadius(val, defaultVal = 6) {
+    if (val === undefined || val === null || val === '') return defaultVal;
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return defaultVal;
+    return Math.max(0, Math.min(12, num));
+  }
+
+  function updateBadgeRadiusPresetButtons(val) {
+    const num = parseBadgeRadius(val, 6);
+    document.querySelectorAll('.btn-badge-radius-preset').forEach(btn => {
+      const btnVal = parseInt(btn.dataset.value, 10);
+      if (btnVal === num) {
+        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+      } else {
+        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+      }
+    });
+    const valLabelDesk = document.getElementById('cfg-badge-radius-val');
+    const valLabelMob = document.getElementById('cfg-badge-radius-val-mob');
+    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
+    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+  }
+
+  function setBadgeStyleMode(mode) {
+    const safeMode = mode === 'border' ? 'border' : 'bg';
+    const inpDesk = document.getElementById('cfg-badge-style');
+    const inpMob = document.getElementById('cfg-badge-style-mob');
+    if (inpDesk) inpDesk.value = safeMode;
+    if (inpMob) inpMob.value = safeMode;
+
+    ['', '-mob'].forEach(suffix => {
+      const group = document.getElementById(`cfg-badge-style-group${suffix}`);
+      if (group) {
+        group.querySelectorAll('.btn-badge-style').forEach(btn => {
+          const bStyle = btn.dataset.style;
+          if (bStyle === safeMode) {
+            btn.className = 'btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center';
+          } else {
+            btn.className = 'btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center';
+          }
+        });
+      }
+
+      const bgWrap = document.getElementById(`cfg-badge-bg-wrap${suffix}`);
+      const borderWrap = document.getElementById(`cfg-badge-border-wrap${suffix}`);
+      if (bgWrap) {
+        if (safeMode === 'bg') bgWrap.classList.remove('hidden');
+        else bgWrap.classList.add('hidden');
+      }
+      if (borderWrap) {
+        if (safeMode === 'border') borderWrap.classList.remove('hidden');
+        else borderWrap.classList.add('hidden');
+      }
+    });
   }
 
   function parseBorderWidth(val, defaultVal = 1) {
@@ -3763,6 +4074,137 @@ const ProductForm = (() => {
     if (valLabelMob) valLabelMob.textContent = `${num} px`;
   }
 
+  function parseDiscountBadgeRadius(val, defaultVal = 8) {
+    if (val === undefined || val === null || val === '') return defaultVal;
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return defaultVal;
+    return Math.max(0, Math.min(12, num));
+  }
+
+  function updateDiscountBadgeRadiusPresetButtons(val) {
+    const num = parseDiscountBadgeRadius(val, 8);
+    document.querySelectorAll('.btn-disc-radius-preset').forEach(btn => {
+      const btnVal = parseInt(btn.dataset.value, 10);
+      if (btnVal === num) {
+        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+      } else {
+        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+      }
+    });
+    const valLabelDesk = document.getElementById('cfg-discount-badge-radius-val');
+    const valLabelMob = document.getElementById('cfg-discount-badge-radius-val-mob');
+    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
+    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+  }
+
+  function setDiscountBadgePosition(pos) {
+    const valid = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const safePos = valid.includes(pos) ? pos : 'top-right';
+    const inpDesk = document.getElementById('cfg-discount-badge-position');
+    const inpMob = document.getElementById('cfg-discount-badge-position-mob');
+    if (inpDesk) inpDesk.value = safePos;
+    if (inpMob) inpMob.value = safePos;
+
+    ['', '-mob'].forEach(suffix => {
+      const group = document.getElementById(`cfg-discount-badge-position-group${suffix}`);
+      if (group) {
+        group.querySelectorAll('.btn-disc-pos').forEach(btn => {
+          const bPos = btn.dataset.pos;
+          if (bPos === safePos) {
+            btn.className = 'btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center';
+          } else {
+            btn.className = 'btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center';
+          }
+        });
+      }
+    });
+  }
+
+  function getDiscountBadgePositionClass(pos) {
+    if (pos === 'top-left') return 'top-2 left-2';
+    if (pos === 'bottom-left') return 'bottom-2 left-2';
+    if (pos === 'bottom-right') return 'bottom-2 right-2';
+    return 'top-2 right-2'; // default top-right
+  }
+
+  function parseCountdownRadius(val, defaultVal = 6) {
+    if (val === undefined || val === null || val === '') return defaultVal;
+    if (typeof val === 'string' && val.includes('9999')) return 12; // sanitize legacy pill
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return defaultVal;
+    return Math.max(0, Math.min(12, num));
+  }
+
+  function updateCountdownRadiusPresetButtons(val) {
+    const num = parseCountdownRadius(val, 6);
+    document.querySelectorAll('.btn-countdown-radius-preset').forEach(btn => {
+      const btnVal = parseInt(btn.dataset.value, 10);
+      if (btnVal === num) {
+        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+      } else {
+        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+      }
+    });
+    const valLabelDesk = document.getElementById('cfg-countdown-radius-val');
+    const valLabelMob = document.getElementById('cfg-countdown-radius-val-mob');
+    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
+    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+  }
+
+  function syncFeatureSubpanels() {
+    // 1. Strike price subpanel
+    const showStrike = Boolean(document.getElementById('cfg-show-strike')?.checked || document.getElementById('cfg-show-strike-mob')?.checked);
+    const strikeDesk = document.getElementById('cfg-strike-panel-desk');
+    const strikeMob = document.getElementById('cfg-strike-panel-mob');
+    if (strikeDesk) {
+      if (showStrike) strikeDesk.classList.remove('hidden');
+      else strikeDesk.classList.add('hidden');
+    }
+    if (strikeMob) {
+      if (showStrike) strikeMob.classList.remove('hidden');
+      else strikeMob.classList.add('hidden');
+    }
+
+    // 2. Discount badge subpanel
+    const showDisc = Boolean(document.getElementById('cfg-show-discount-badge')?.checked || document.getElementById('cfg-show-discount-badge-mob')?.checked);
+    const discDesk = document.getElementById('cfg-discount-badge-panel-desk');
+    const discMob = document.getElementById('cfg-discount-badge-panel-mob');
+    if (discDesk) {
+      if (showDisc) discDesk.classList.remove('hidden');
+      else discDesk.classList.add('hidden');
+    }
+    if (discMob) {
+      if (showDisc) discMob.classList.remove('hidden');
+      else discMob.classList.add('hidden');
+    }
+
+    // 3. Countdown subpanel
+    const showCd = Boolean(document.getElementById('cfg-enable-countdown')?.checked || document.getElementById('cfg-enable-countdown-mob')?.checked);
+    const cdDesk = document.getElementById('cfg-countdown-panel-desk');
+    const cdMob = document.getElementById('cfg-countdown-panel-mob');
+    if (cdDesk) {
+      if (showCd) cdDesk.classList.remove('hidden');
+      else cdDesk.classList.add('hidden');
+    }
+    if (cdMob) {
+      if (showCd) cdMob.classList.remove('hidden');
+      else cdMob.classList.add('hidden');
+    }
+
+    // 4. Special badge subpanel
+    const showBadge = Boolean(document.getElementById('cfg-show-badge')?.checked || document.getElementById('cfg-show-badge-mob')?.checked);
+    const badgeDesk = document.getElementById('cfg-badge-panel-desk');
+    const badgeMob = document.getElementById('cfg-badge-panel-mob');
+    if (badgeDesk) {
+      if (showBadge) badgeDesk.classList.remove('hidden');
+      else badgeDesk.classList.add('hidden');
+    }
+    if (badgeMob) {
+      if (showBadge) badgeMob.classList.remove('hidden');
+      else badgeMob.classList.add('hidden');
+    }
+  }
+
   function getCardConfigFromDOM() {
     const badgeMain = document.getElementById('cfg-show-badge');
     const badgeMob = document.getElementById('cfg-show-badge-mob');
@@ -3806,20 +4248,23 @@ const ProductForm = (() => {
       show_sales: getChk('cfg-show-sales', 'cfg-show-sales-mob'),
       show_sales_count: getChk('cfg-show-sales', 'cfg-show-sales-mob'),
       show_strikethrough_price: getChk('cfg-show-strike', 'cfg-show-strike-mob'),
+      strike_price_color: getVal('cfg-strike-color', 'cfg-strike-color-mob', '#94a3b8'),
       show_discount_badge: getChk('cfg-show-discount-badge', 'cfg-show-discount-badge-mob'),
+      discount_badge_radius: `${parseDiscountBadgeRadius(getVal('cfg-discount-badge-radius', 'cfg-discount-badge-radius-mob', '8'), 8)}px`,
+      discount_badge_position: getVal('cfg-discount-badge-position', 'cfg-discount-badge-position-mob', 'top-right'),
+      discount_badge_text_color: getVal('cfg-discount-badge-text-color', 'cfg-discount-badge-text-color-mob', '#ffffff'),
+      discount_badge_bg_color: getVal('cfg-discount-badge-bg-color', 'cfg-discount-badge-bg-color-mob', defThemeColor),
+      discount_badge_border_color: getVal('cfg-discount-badge-border-color', 'cfg-discount-badge-border-color-mob', defThemeColor),
       show_ticket_icon: getChk('cfg-show-ticket-icon', 'cfg-show-ticket-icon-mob'),
       show_badge: showBadgeVal,
       show_category_badge: showBadgeVal,
-      discount_badge_radius: document.getElementById('cfg-discount-badge-radius')?.value || '8px',
-      discount_badge_text_color: document.getElementById('cfg-discount-badge-text-color')?.value || '#ffffff',
-      discount_badge_bg_color: document.getElementById('cfg-discount-badge-bg-color')?.value || defThemeColor,
-      discount_badge_border_color: document.getElementById('cfg-discount-badge-border-color')?.value || defThemeColor,
-      badge_radius: document.getElementById('cfg-badge-radius')?.value || '6px',
-      badge_text_color: document.getElementById('cfg-badge-text-color')?.value || defThemeColor,
-      badge_bg_color: document.getElementById('cfg-badge-bg-color')?.value || '#ecfdf5',
-      badge_border_color: document.getElementById('cfg-badge-border-color')?.value || '#a7f3d0',
+      badge_style: getVal('cfg-badge-style', 'cfg-badge-style-mob', 'bg'),
+      badge_radius: `${parseBadgeRadius(getVal('cfg-badge-radius', 'cfg-badge-radius-mob', '6'), 6)}px`,
+      badge_text_color: getVal('cfg-badge-text-color', 'cfg-badge-text-color-mob', getThemeDefaultBadgeColors(primaryState.card_variant || 'A').text),
+      badge_bg_color: getVal('cfg-badge-bg-color', 'cfg-badge-bg-color-mob', getThemeDefaultBadgeColors(primaryState.card_variant || 'A').bg),
+      badge_border_color: getVal('cfg-badge-border-color', 'cfg-badge-border-color-mob', getThemeDefaultBadgeColors(primaryState.card_variant || 'A').border),
       enable_countdown: getChk('cfg-enable-countdown', 'cfg-enable-countdown-mob'),
-      countdown_radius: getVal('cfg-countdown-radius', 'cfg-countdown-radius-mob', '9999px'),
+      countdown_radius: `${parseCountdownRadius(getVal('cfg-countdown-radius', 'cfg-countdown-radius-mob', '6'), 6)}px`,
       countdown_bg_color: getVal('cfg-countdown-bg-color', 'cfg-countdown-bg-color-mob', defThemeColor),
       countdown_text_color: getVal('cfg-countdown-text-color', 'cfg-countdown-text-color-mob', '#ffffff'),
       countdown_icon_color: getVal('cfg-countdown-icon-color', 'cfg-countdown-icon-color-mob', '#ffffff'),
@@ -3880,14 +4325,18 @@ const ProductForm = (() => {
     setChk('cfg-show-rating', showRatingVal);
     setChk('cfg-show-sales', showSalesVal);
     setChk('cfg-show-strike', cfg.show_strikethrough_price !== false);
-    setChk('cfg-show-discount-badge', cfg.show_discount_badge !== false);
-    setChk('cfg-show-ticket-icon', cfg.show_ticket_icon !== false);
-    const showBadgeVal = cfg.show_badge !== false && cfg.show_category_badge !== false;
-    setChk('cfg-show-badge', showBadgeVal);
-    setChk('cfg-show-badge-blok-a', showBadgeVal);
+    const strikeCol = cfg.strike_price_color || '#94a3b8';
+    setVal('cfg-strike-color', strikeCol);
+    setVal('cfg-strike-hex', strikeCol);
 
-    // Discount badge styling tokens (pada foto produk)
-    setVal('cfg-discount-badge-radius', cfg.discount_badge_radius || '8px');
+    setChk('cfg-show-discount-badge', cfg.show_discount_badge !== false);
+    const discRadNum = parseDiscountBadgeRadius(cfg.discount_badge_radius, 8);
+    setVal('cfg-discount-badge-radius', discRadNum);
+    updateDiscountBadgeRadiusPresetButtons(discRadNum);
+
+    const discPos = cfg.discount_badge_position || 'top-right';
+    setDiscountBadgePosition(discPos);
+
     setVal('cfg-discount-badge-text-color', cfg.discount_badge_text_color || '#ffffff');
     setVal('cfg-discount-badge-text-hex', cfg.discount_badge_text_color || '#ffffff');
     setVal('cfg-discount-badge-bg-color', cfg.discount_badge_bg_color || defThemeColor);
@@ -3895,26 +4344,41 @@ const ProductForm = (() => {
     setVal('cfg-discount-badge-border-color', cfg.discount_badge_border_color || defThemeColor);
     setVal('cfg-discount-badge-border-hex', cfg.discount_badge_border_color || defThemeColor);
 
-    // Badge styling tokens
-    const defBadgeText = variantCode === 'B' ? '#6b21a8' : defThemeColor;
-    const defBadgeBg = variantCode === 'B' ? '#faf5ff' : '#ecfdf5';
-    const defBadgeBorder = variantCode === 'B' ? '#e9d5ff' : '#a7f3d0';
+    setChk('cfg-show-ticket-icon', cfg.show_ticket_icon !== false);
+    const showBadgeVal = cfg.show_badge !== false && cfg.show_category_badge !== false;
+    setChk('cfg-show-badge', showBadgeVal);
+    setChk('cfg-show-badge-blok-a', showBadgeVal);
 
-    setVal('cfg-badge-radius', cfg.badge_radius || '6px');
-    setVal('cfg-badge-text-color', cfg.badge_text_color || defBadgeText);
-    setVal('cfg-badge-text-hex', cfg.badge_text_color || defBadgeText);
-    setVal('cfg-badge-bg-color', cfg.badge_bg_color || defBadgeBg);
-    setVal('cfg-badge-bg-hex', cfg.badge_bg_color || defBadgeBg);
-    setVal('cfg-badge-border-color', cfg.badge_border_color || defBadgeBorder);
-    setVal('cfg-badge-border-hex', cfg.badge_border_color || defBadgeBorder);
+    // Badge styling tokens (Dynamic Theme Default)
+    const defBadgeColors = getThemeDefaultBadgeColors(variantCode);
+    const bStyle = cfg.badge_style || 'bg';
+    setBadgeStyleMode(bStyle);
+
+    const bRadiusNum = parseBadgeRadius(cfg.badge_radius, 6);
+    setVal('cfg-badge-radius', bRadiusNum);
+    updateBadgeRadiusPresetButtons(bRadiusNum);
+
+    const bText = cfg.badge_text_color || defBadgeColors.text;
+    setVal('cfg-badge-text-color', bText);
+    setVal('cfg-badge-text-hex', bText);
+
+    const bBg = cfg.badge_bg_color || defBadgeColors.bg;
+    setVal('cfg-badge-bg-color', bBg);
+    setVal('cfg-badge-bg-hex', bBg);
+
+    const bBorder = cfg.badge_border_color || defBadgeColors.border;
+    setVal('cfg-badge-border-color', bBorder);
+    setVal('cfg-badge-border-hex', bBorder);
 
     // Countdown styling tokens
-    const cRadius = primaryState.countdown_radius || cfg.countdown_radius || '9999px';
+    const cdRadNum = parseCountdownRadius(primaryState.countdown_radius || cfg.countdown_radius, 6);
+    setVal('cfg-countdown-radius', cdRadNum);
+    updateCountdownRadiusPresetButtons(cdRadNum);
+
     const cBg = primaryState.countdown_bg_color || cfg.countdown_bg_color || defThemeColor;
     const cTxt = primaryState.countdown_text_color || cfg.countdown_text_color || '#ffffff';
     const cIco = primaryState.countdown_icon_color || cfg.countdown_icon_color || '#ffffff';
     const cBrd = primaryState.countdown_border_color || cfg.countdown_border_color || defThemeColor;
-    setVal('cfg-countdown-radius', cRadius);
     setVal('cfg-countdown-bg-color', cBg);
     setVal('cfg-countdown-bg-hex', cBg);
     setVal('cfg-countdown-text-color', cTxt);
@@ -3970,6 +4434,7 @@ const ProductForm = (() => {
     updateDesignChoiceButtonsState();
     captureCardDesignSnapshot();
     syncEyeToggleIcons();
+    syncFeatureSubpanels();
     syncCardAccordionDOM();
   }
 
@@ -8728,22 +9193,29 @@ const ProductForm = (() => {
     const effHasDiscount = hasDiscount || simulateCountdown;
     const effDiscPercent = (hasDiscount && discPercent > 0) ? discPercent : 50;
 
-    // Hitung harga normal, harga coret & harga final di live preview (tanpa default semu 25.000 / 50.000)
+    // Hitung harga normal, harga coret & harga final di live preview
     let origStrikePrice = basePrice;
     let effFinalPrice = basePrice;
-    if (effHasDiscount) {
-      if (hasDiscount && discountedPrice < basePrice) {
-        origStrikePrice = basePrice;
-        effFinalPrice = discountedPrice;
+    if (hasDiscount && discountedPrice < basePrice) {
+      origStrikePrice = basePrice;
+      effFinalPrice = discountedPrice;
+    } else if (effHasDiscount) {
+      // Mode simulasi diskon 50%
+      if (basePrice > 0) {
+        origStrikePrice = basePrice * 2;
+        effFinalPrice = basePrice;
       } else {
-        // Mode simulasi diskon 50%
-        if (basePrice > 0) {
-          origStrikePrice = basePrice * 2;
-          effFinalPrice = basePrice;
-        } else {
-          origStrikePrice = 0;
-          effFinalPrice = 0;
-        }
+        origStrikePrice = 150000;
+        effFinalPrice = 75000;
+      }
+    } else if (cfg.show_strike) {
+      // Jika harga coret aktif dan tidak ada diskon promo tersimpan, sediakan harga pembanding simulasi untuk preview
+      if (basePrice > 0) {
+        origStrikePrice = Math.round(basePrice * 1.3);
+        effFinalPrice = basePrice;
+      } else {
+        origStrikePrice = 150000;
+        effFinalPrice = 115000;
       }
     }
 
@@ -8780,8 +9252,8 @@ const ProductForm = (() => {
         return `
           <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden cursor-pointer shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
             <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" style="border-top-left-radius: inherit; border-top-right-radius: inherit;" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400\\'><i class=\\'bi bi-box-seam text-4xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-semibold text-slate-400\\'>Foto Produk</span></div>';" />
-            ${(effHasDiscount && cfg.show_discount_badge) ? `
-              <div class="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
+            ${cfg.show_discount_badge ? `
+              <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
                 <span>- % ${effDiscPercent}</span>
               </div>
             ` : ''}
@@ -8792,8 +9264,8 @@ const ProductForm = (() => {
           <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden flex flex-col items-center justify-center text-slate-400 shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
             <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
             <span class="text-[10px] font-semibold text-slate-400">Foto Produk</span>
-            ${(effHasDiscount && cfg.show_discount_badge) ? `
-              <div class="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
+            ${cfg.show_discount_badge ? `
+              <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
                 <span>- % ${effDiscPercent}</span>
               </div>
             ` : ''}
@@ -8875,9 +9347,9 @@ const ProductForm = (() => {
       show_rating: showRatingChecked,
       show_sales: showSalesChecked,
       show_sales_count: showSalesChecked,
-      show_strike: document.getElementById('cfg-show-strike')?.checked !== false,
-      show_discount_badge: document.getElementById('cfg-show-discount-badge')?.checked !== false,
-      show_ticket_icon: document.getElementById('cfg-show-ticket-icon')?.checked !== false,
+      show_strike: document.getElementById('cfg-show-strike') ? document.getElementById('cfg-show-strike').checked : (primaryState.card_config ? primaryState.card_config.show_strikethrough_price !== false : true),
+      show_discount_badge: document.getElementById('cfg-show-discount-badge') ? document.getElementById('cfg-show-discount-badge').checked : (primaryState.card_config ? primaryState.card_config.show_discount_badge !== false : true),
+      show_ticket_icon: document.getElementById('cfg-show-ticket-icon') ? document.getElementById('cfg-show-ticket-icon').checked : (primaryState.card_config ? primaryState.card_config.show_ticket_icon !== false : true),
       show_badge: showBadgeChecked
     };
 
@@ -8888,22 +9360,57 @@ const ProductForm = (() => {
       ? parseInt(primaryState.sales_count, 10)
       : 0;
 
+    // Strike Price Styling
+    const strikePriceColor = document.getElementById('cfg-strike-color')?.value || primaryState.card_config?.strike_price_color || '#94a3b8';
+
     // Discount Badge Custom Styles (pada foto produk)
-    const discBadgeRadius = document.getElementById('cfg-discount-badge-radius')?.value || '8px';
-    const discBadgeTextColor = document.getElementById('cfg-discount-badge-text-color')?.value || '#ffffff';
+    const rawDiscRadius = document.getElementById('cfg-discount-badge-radius')?.value ?? primaryState.card_config?.discount_badge_radius;
+    const discBadgeRadius = `${parseDiscountBadgeRadius(rawDiscRadius, 8)}px`;
+    const discBadgePos = document.getElementById('cfg-discount-badge-position')?.value || primaryState.card_config?.discount_badge_position || 'top-right';
+    const discBadgePosClass = getDiscountBadgePositionClass(discBadgePos);
+    const discBadgeTextColor = document.getElementById('cfg-discount-badge-text-color')?.value || primaryState.card_config?.discount_badge_text_color || '#ffffff';
     const discBadgeBgColor = document.getElementById('cfg-discount-badge-bg-color')?.value || defCardThemeColor;
     const discBadgeBorderColor = document.getElementById('cfg-discount-badge-border-color')?.value || discBadgeBgColor;
     const discBadgeStyle = `background-color: ${discBadgeBgColor}; color: ${discBadgeTextColor}; border: 1px solid ${discBadgeBorderColor}; border-radius: ${discBadgeRadius};`;
 
     // Badge Custom Styles (label khusus)
-    const badgeRadius = document.getElementById('cfg-badge-radius')?.value || '6px';
-    const badgeTextColor = document.getElementById('cfg-badge-text-color')?.value || (variant === 'B' ? '#6b21a8' : defCardThemeColor);
-    const badgeBgColor = document.getElementById('cfg-badge-bg-color')?.value || (variant === 'B' ? '#faf5ff' : '#ecfdf5');
-    const badgeBorderColor = document.getElementById('cfg-badge-border-color')?.value || (variant === 'B' ? '#e9d5ff' : '#a7f3d0');
-    const badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    const defBadge = getThemeDefaultBadgeColors(variant);
+    const rawBadgeStyle = document.getElementById('cfg-badge-style')?.value ?? primaryState.card_config?.badge_style;
+    const badgeStyleMode = rawBadgeStyle || (primaryState.card_config?.badge_style || defBadge.style || 'bg');
+
+    const rawBadgeRadius = document.getElementById('cfg-badge-radius')?.value ?? document.getElementById('cfg-badge-radius-mob')?.value ?? primaryState.card_config?.badge_radius;
+    const badgeRadiusNum = parseBadgeRadius(rawBadgeRadius, 6);
+    const badgeRadius = `${badgeRadiusNum}px`;
+
+    const rawBadgeText = document.getElementById('cfg-badge-text-color')?.value;
+    const rawBadgeBg = document.getElementById('cfg-badge-bg-color')?.value;
+    const rawBadgeBorder = document.getElementById('cfg-badge-border-color')?.value;
+
+    const badgeTextColor = (isCustomMode && rawBadgeText && rawBadgeText.toLowerCase() !== '#000000')
+      ? rawBadgeText
+      : (primaryState.card_config?.badge_text_color || defBadge.text);
+
+    const badgeBgColor = (isCustomMode && rawBadgeBg && rawBadgeBg.toLowerCase() !== '#000000')
+      ? rawBadgeBg
+      : (primaryState.card_config?.badge_bg_color || defBadge.bg);
+
+    const badgeBorderColor = (isCustomMode && rawBadgeBorder && rawBadgeBorder.toLowerCase() !== '#000000')
+      ? rawBadgeBorder
+      : (primaryState.card_config?.badge_border_color || defBadge.border);
+
+    let badgeStyle = '';
+    if (badgeStyleMode === 'border') {
+      badgeStyle = `color: ${badgeTextColor}; background-color: transparent; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    } else if (badgeStyleMode === 'bg') {
+      badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: none; border-radius: ${badgeRadius};`;
+    } else {
+      // Legacy compatibility
+      badgeStyle = `color: ${badgeTextColor}; background-color: ${badgeBgColor}; border: 1px solid ${badgeBorderColor}; border-radius: ${badgeRadius};`;
+    }
 
     // Countdown Badge Custom Styles
-    const countdownRadius = document.getElementById('cfg-countdown-radius')?.value || document.getElementById('cfg-countdown-radius-mob')?.value || primaryState.countdown_radius || '9999px';
+    const rawCdRadius = document.getElementById('cfg-countdown-radius')?.value ?? document.getElementById('cfg-countdown-radius-mob')?.value ?? primaryState.countdown_radius;
+    const countdownRadius = `${parseCountdownRadius(rawCdRadius, 6)}px`;
     const countdownBgColor = document.getElementById('cfg-countdown-bg-color')?.value || document.getElementById('cfg-countdown-bg-color-mob')?.value || primaryState.countdown_bg_color || defCardThemeColor;
     const countdownTextColor = document.getElementById('cfg-countdown-text-color')?.value || document.getElementById('cfg-countdown-text-color-mob')?.value || primaryState.countdown_text_color || '#ffffff';
     const countdownIconColor = document.getElementById('cfg-countdown-icon-color')?.value || document.getElementById('cfg-countdown-icon-color-mob')?.value || primaryState.countdown_icon_color || '#ffffff';
@@ -8941,7 +9448,11 @@ const ProductForm = (() => {
     }
     primaryState.custom_labels = rawCustomLabels.slice(0, 2);
 
-    const customBadges = getSmartVisibleBadges(name, rawCustomLabels);
+    let displayBadges = rawCustomLabels;
+    if (displayBadges.length === 0 && cfg.show_badge) {
+      displayBadges = ['Label Khusus'];
+    }
+    const customBadges = getSmartVisibleBadges(name, displayBadges);
 
     const capInfoEl = document.getElementById('custom-labels-capacity-info');
     if (capInfoEl) {
@@ -8999,7 +9510,7 @@ const ProductForm = (() => {
             ` : `
               <div class="pt-1 flex flex-col justify-end mt-auto space-y-0.5">
                 ${cfg.show_strike ? `
-                  <span class="text-[10px] line-through text-slate-400 font-normal leading-none">
+                  <span class="text-[10px] line-through font-normal leading-none" style="color: ${strikePriceColor};">
                     ${formatIDR(origStrikePrice)}
                   </span>
                 ` : ''}
@@ -9049,8 +9560,8 @@ const ProductForm = (() => {
             <!-- Baris Harga: TANPA IKON TIKET pada Versi 3 -->
             <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
               <div class="flex flex-col justify-end min-w-0">
-                ${(effHasDiscount && cfg.show_strike) ? `
-                  <span class="text-[10px] sm:text-[11px] line-through text-slate-400 font-normal leading-none mb-1">
+                ${(cfg.show_strike && origStrikePrice > 0) ? `
+                  <span class="text-[10px] sm:text-[11px] line-through font-normal leading-none mb-1" style="color: ${strikePriceColor};">
                     ${formatIDR(origStrikePrice)}
                   </span>
                 ` : ''}
@@ -9131,8 +9642,8 @@ const ProductForm = (() => {
             <!-- Baris Harga: Harga Coret di Atas, Harga Final + Ikon Tiket Cek di Bawah (Hanya jika Diskon Aktif) -->
             <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
               <div class="flex flex-col justify-end min-w-0">
-                ${(effHasDiscount && cfg.show_strike) ? `
-                  <span class="text-[10px] sm:text-[11px] line-through text-slate-400 font-normal leading-none mb-1">
+                ${(cfg.show_strike && origStrikePrice > 0) ? `
+                  <span class="text-[10px] sm:text-[11px] line-through font-normal leading-none mb-1" style="color: ${strikePriceColor};">
                     ${formatIDR(origStrikePrice)}
                   </span>
                 ` : ''}
@@ -20366,10 +20877,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (inp2) inp2.value = '';
         if (badgeContainerDesk) badgeContainerDesk.classList.add('hidden');
         if (badgeContainerMob) badgeContainerMob.classList.add('hidden');
-        const grpBadgeDesk = document.getElementById('accordion-group-badge');
-        const grpBadgeMob = document.getElementById('accordion-group-badge-mob');
-        if (grpBadgeDesk) grpBadgeDesk.classList.add('hidden');
-        if (grpBadgeMob) grpBadgeMob.classList.add('hidden');
       } else {
         primaryState.show_badge = true;
         if (toggle) {
@@ -20389,10 +20896,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
         if (badgeContainerDesk) badgeContainerDesk.classList.remove('hidden');
         if (badgeContainerMob) badgeContainerMob.classList.remove('hidden');
-        const grpBadgeDeskNonB = document.getElementById('accordion-group-badge');
-        const grpBadgeMobNonB = document.getElementById('accordion-group-badge-mob');
-        if (grpBadgeDeskNonB) grpBadgeDeskNonB.classList.remove('hidden');
-        if (grpBadgeMobNonB) grpBadgeMobNonB.classList.remove('hidden');
       }
     }
 
@@ -25355,8 +25858,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           btnExpand.style.display = 'none';
         }
         if (wizardCol) {
-          wizardCol.classList.remove('lg:pr-[320px]', 'xl:pr-[360px]');
-          wizardCol.classList.add('lg:pr-[300px]', 'xl:pr-[340px]');
+          wizardCol.classList.remove('lg:pr-[300px]', 'lg:pr-[320px]', 'xl:pr-[340px]', 'xl:pr-[360px]');
+          wizardCol.classList.add('lg:pr-[320px]', 'xl:pr-[340px]');
         }
       } else {
         if (typeof hidePreviewTestModeAlert === 'function') {
@@ -26656,6 +27159,179 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     });
 
+    // Badge Radius Sliders and Presets (Desktop & Mobile Sync)
+    const badgeRadiusDesk = document.getElementById('cfg-badge-radius');
+    const badgeRadiusMob = document.getElementById('cfg-badge-radius-mob');
+
+    const handleBadgeRadiusInput = (val) => {
+      const num = parseBadgeRadius(val, 6);
+      if (badgeRadiusDesk) badgeRadiusDesk.value = num;
+      if (badgeRadiusMob) badgeRadiusMob.value = num;
+      updateBadgeRadiusPresetButtons(num);
+      markCardDesignAsCustom();
+    };
+
+    if (badgeRadiusDesk) {
+      badgeRadiusDesk.addEventListener('input', (e) => handleBadgeRadiusInput(e.target.value));
+    }
+    if (badgeRadiusMob) {
+      badgeRadiusMob.addEventListener('input', (e) => handleBadgeRadiusInput(e.target.value));
+    }
+
+    document.querySelectorAll('.btn-badge-radius-preset').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleBadgeRadiusInput(btn.dataset.value);
+      });
+    });
+
+    // Badge Style Mode Segmented Controls (Desktop & Mobile Sync)
+    document.querySelectorAll('.btn-badge-style').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mode = btn.dataset.style;
+        setBadgeStyleMode(mode);
+        markCardDesignAsCustom();
+      });
+    });
+
+    // Badge Color Sync (Desktop & Mobile, Color & Hex)
+    const badgeColorPairs = [
+      { color: 'cfg-badge-text-color', hex: 'cfg-badge-text-hex' },
+      { color: 'cfg-badge-bg-color', hex: 'cfg-badge-bg-hex' },
+      { color: 'cfg-badge-border-color', hex: 'cfg-badge-border-hex' }
+    ];
+    badgeColorPairs.forEach(pair => {
+      const deskColor = document.getElementById(pair.color);
+      const deskHex = document.getElementById(pair.hex);
+      const mobColor = document.getElementById(`${pair.color}-mob`);
+      const mobHex = document.getElementById(`${pair.hex}-mob`);
+
+      const syncAllBadgeColors = (val) => {
+        if (deskColor) deskColor.value = val;
+        if (deskHex) deskHex.value = val;
+        if (mobColor) mobColor.value = val;
+        if (mobHex) mobHex.value = val;
+        markCardDesignAsCustom();
+      };
+
+      if (deskColor) deskColor.addEventListener('input', e => syncAllBadgeColors(e.target.value));
+      if (deskHex) deskHex.addEventListener('input', e => syncAllBadgeColors(e.target.value));
+      if (mobColor) mobColor.addEventListener('input', e => syncAllBadgeColors(e.target.value));
+      if (mobHex) mobHex.addEventListener('input', e => syncAllBadgeColors(e.target.value));
+    });
+
+    // Strike Price Color Listeners (Desktop & Mobile Sync)
+    const strikeColorPairs = [
+      { color: 'cfg-strike-color', hex: 'cfg-strike-hex' }
+    ];
+    strikeColorPairs.forEach(pair => {
+      const deskColor = document.getElementById(pair.color);
+      const deskHex = document.getElementById(pair.hex);
+      const mobColor = document.getElementById(`${pair.color}-mob`);
+      const mobHex = document.getElementById(`${pair.hex}-mob`);
+
+      const syncAllStrikeColors = (val) => {
+        if (deskColor) deskColor.value = val;
+        if (deskHex) deskHex.value = val;
+        if (mobColor) mobColor.value = val;
+        if (mobHex) mobHex.value = val;
+        markCardDesignAsCustom();
+      };
+
+      if (deskColor) deskColor.addEventListener('input', e => syncAllStrikeColors(e.target.value));
+      if (deskHex) deskHex.addEventListener('input', e => syncAllStrikeColors(e.target.value));
+      if (mobColor) mobColor.addEventListener('input', e => syncAllStrikeColors(e.target.value));
+      if (mobHex) mobHex.addEventListener('input', e => syncAllStrikeColors(e.target.value));
+    });
+
+    // Discount Badge Radius Sliders and Presets (Desktop & Mobile Sync)
+    const discRadiusDesk = document.getElementById('cfg-discount-badge-radius');
+    const discRadiusMob = document.getElementById('cfg-discount-badge-radius-mob');
+
+    const handleDiscRadiusInput = (val) => {
+      const num = parseDiscountBadgeRadius(val, 8);
+      if (discRadiusDesk) discRadiusDesk.value = num;
+      if (discRadiusMob) discRadiusMob.value = num;
+      updateDiscountBadgeRadiusPresetButtons(num);
+      markCardDesignAsCustom();
+    };
+
+    if (discRadiusDesk) {
+      discRadiusDesk.addEventListener('input', (e) => handleDiscRadiusInput(e.target.value));
+    }
+    if (discRadiusMob) {
+      discRadiusMob.addEventListener('input', (e) => handleDiscRadiusInput(e.target.value));
+    }
+
+    document.querySelectorAll('.btn-disc-radius-preset').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleDiscRadiusInput(btn.dataset.value);
+      });
+    });
+
+    // Discount Badge Position Buttons (Desktop & Mobile Sync)
+    document.querySelectorAll('.btn-disc-pos').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const pos = btn.dataset.pos;
+        setDiscountBadgePosition(pos);
+        markCardDesignAsCustom();
+      });
+    });
+
+    // Discount Badge Colors (Desktop & Mobile Sync)
+    const discColorPairs = [
+      { color: 'cfg-discount-badge-text-color', hex: 'cfg-discount-badge-text-hex' },
+      { color: 'cfg-discount-badge-bg-color', hex: 'cfg-discount-badge-bg-hex' }
+    ];
+    discColorPairs.forEach(pair => {
+      const deskColor = document.getElementById(pair.color);
+      const deskHex = document.getElementById(pair.hex);
+      const mobColor = document.getElementById(`${pair.color}-mob`);
+      const mobHex = document.getElementById(`${pair.hex}-mob`);
+
+      const syncAllDiscColors = (val) => {
+        if (deskColor) deskColor.value = val;
+        if (deskHex) deskHex.value = val;
+        if (mobColor) mobColor.value = val;
+        if (mobHex) mobHex.value = val;
+        markCardDesignAsCustom();
+      };
+
+      if (deskColor) deskColor.addEventListener('input', e => syncAllDiscColors(e.target.value));
+      if (deskHex) deskHex.addEventListener('input', e => syncAllDiscColors(e.target.value));
+      if (mobColor) mobColor.addEventListener('input', e => syncAllDiscColors(e.target.value));
+      if (mobHex) mobHex.addEventListener('input', e => syncAllDiscColors(e.target.value));
+    });
+
+    // Countdown Radius Sliders and Presets (Desktop & Mobile Sync)
+    const cdRadiusDesk = document.getElementById('cfg-countdown-radius');
+    const cdRadiusMob = document.getElementById('cfg-countdown-radius-mob');
+
+    const handleCdRadiusInput = (val) => {
+      const num = parseCountdownRadius(val, 6);
+      if (cdRadiusDesk) cdRadiusDesk.value = num;
+      if (cdRadiusMob) cdRadiusMob.value = num;
+      updateCountdownRadiusPresetButtons(num);
+      markCardDesignAsCustom();
+    };
+
+    if (cdRadiusDesk) {
+      cdRadiusDesk.addEventListener('input', (e) => handleCdRadiusInput(e.target.value));
+    }
+    if (cdRadiusMob) {
+      cdRadiusMob.addEventListener('input', (e) => handleCdRadiusInput(e.target.value));
+    }
+
+    document.querySelectorAll('.btn-countdown-radius-preset').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleCdRadiusInput(btn.dataset.value);
+      });
+    });
+
     // Feature Toggles (Desktop & Mobile Sync)
     ['show-rating', 'show-sales', 'show-strike', 'show-discount-badge', 'show-ticket-icon', 'show-badge'].forEach(feat => {
       const el = document.getElementById(`cfg-${feat}`);
@@ -26760,12 +27436,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (cdEnable) {
       cdEnable.addEventListener('change', (e) => {
         if (cdEnableMob) cdEnableMob.checked = e.target.checked;
+        syncFeatureSubpanels();
         markCardDesignAsCustom();
       });
     }
     if (cdEnableMob) {
       cdEnableMob.addEventListener('change', (e) => {
         if (cdEnable) cdEnable.checked = e.target.checked;
+        syncFeatureSubpanels();
         markCardDesignAsCustom();
       });
     }
@@ -29310,6 +29988,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     toggleCardAccordion,
     syncCardAccordionDOM,
     syncEyeToggleIcons,
+    syncFeatureSubpanels,
+    parseDiscountBadgeRadius,
+    updateDiscountBadgeRadiusPresetButtons,
+    setDiscountBadgePosition,
+    getDiscountBadgePositionClass,
+    parseCountdownRadius,
+    updateCountdownRadiusPresetButtons,
     handleApplyDefaultCardDesign,
     formatSalesCount
   };
@@ -29321,6 +30006,13 @@ window.handleApplyDefaultCardDesign = ProductForm.handleApplyDefaultCardDesign;
 window.toggleCardAccordion = ProductForm.toggleCardAccordion;
 window.syncCardAccordionDOM = ProductForm.syncCardAccordionDOM;
 window.syncEyeToggleIcons = ProductForm.syncEyeToggleIcons;
+window.syncFeatureSubpanels = ProductForm.syncFeatureSubpanels;
+window.parseDiscountBadgeRadius = ProductForm.parseDiscountBadgeRadius;
+window.updateDiscountBadgeRadiusPresetButtons = ProductForm.updateDiscountBadgeRadiusPresetButtons;
+window.setDiscountBadgePosition = ProductForm.setDiscountBadgePosition;
+window.getDiscountBadgePositionClass = ProductForm.getDiscountBadgePositionClass;
+window.parseCountdownRadius = ProductForm.parseCountdownRadius;
+window.updateCountdownRadiusPresetButtons = ProductForm.updateCountdownRadiusPresetButtons;
 window.getThemeBodyColor = ProductForm.getThemeBodyColor;
 window.handleCancelCardDesign = ProductForm.handleCancelCardDesign;
 window.handleSaveCardDesign = ProductForm.handleSaveCardDesign;
