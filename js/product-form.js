@@ -1436,6 +1436,8 @@ const ProductForm = (() => {
       card_variant: '', // Default '' (kosong, seller wajib memilih sendiri!)
       card_variant_manual_override: false,
       card_variant_override: false,
+      card_config: null,
+      use_default_card_design: true,
       variation_labels: {
         label_product: 'Produk',
         label_tier_1: 'Jenis Produk',
@@ -1880,6 +1882,8 @@ const ProductForm = (() => {
       sub_category_id: prod.sub_category_id || null,
       card_variant: prod.card_variant || 'A',
       card_variant_override: prod.card_variant_override !== undefined ? prod.card_variant_override : true,
+      card_config: (prod.card_config && typeof prod.card_config === 'object') ? JSON.parse(JSON.stringify(prod.card_config)) : null,
+      use_default_card_design: prod.use_default_card_design !== undefined ? prod.use_default_card_design : (prod.card_config ? false : true),
       variation_labels: prod.variation_labels || {
         label_product: 'Produk',
         label_tier_1: 'Jenis',
@@ -3720,6 +3724,10 @@ const ProductForm = (() => {
     if (typeof bindCleanDatalistPopovers === 'function') {
       bindCleanDatalistPopovers(document.getElementById('step-pane-1') || document);
     }
+    const isDef = primaryState.use_default_card_design !== false;
+    loadCardConfigInputs(primaryState.card_variant || 'A', isDef);
+    syncEyeToggleIcons();
+    syncCardAccordionDOM();
     updateProductCardLivePreview();
   }
 
@@ -4239,9 +4247,11 @@ const ProductForm = (() => {
       return fallback;
     };
     const getChk = (id1, id2) => {
+      const isMobOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
       const el1 = document.getElementById(id1);
-      if (el1) return el1.checked !== false;
       const el2 = document.getElementById(id2);
+      if (isMobOpen && el2) return el2.checked !== false;
+      if (el1) return el1.checked !== false;
       if (el2) return el2.checked !== false;
       return true;
     };
@@ -4661,7 +4671,7 @@ const ProductForm = (() => {
     }
   }
 
-    // --- HELPER OTOMASI KAPASITAS BARIS LABEL PINTAR (2 vs 3 Label) ---
+  // --- HELPER OTOMASI KAPASITAS BARIS LABEL PINTAR (2 vs 3 Label) ---
   function getSmartVisibleBadges(productName, labelsArray) {
     const validLabels = (Array.isArray(labelsArray) ? labelsArray : [])
       .map(l => String(l || '').trim())
@@ -9087,8 +9097,8 @@ const ProductForm = (() => {
     const customSectionDesk = document.getElementById('card-customization-section');
     const customSectionMob = document.getElementById('card-customization-section-mob');
 
-    // Jika card_variant masih kosong (belum dipilih oleh seller):
-    if (!variant) {
+    // Jika card_variant masih kosong (belum dipilih oleh seller pada Step 1):
+    if (currentStep === 1 && !variant) {
       if (simDiscountDesk) simDiscountDesk.classList.add('hidden');
       if (simDiscountMob) simDiscountMob.classList.add('hidden');
       if (customSectionDesk) customSectionDesk.classList.add('hidden');
@@ -9124,8 +9134,9 @@ const ProductForm = (() => {
         if (customSectionMob) customSectionMob.classList.add('hidden');
       }
     } else {
-      if (outerWrapDesk) outerWrapDesk.classList.add('hidden');
-      if (outerWrapMob) outerWrapMob.classList.add('hidden');
+      // Step 2: Mini PDP (Detail Produk) - Kontainer pratinjau wajib tampil
+      if (outerWrapDesk) outerWrapDesk.classList.remove('hidden');
+      if (outerWrapMob) outerWrapMob.classList.remove('hidden');
       if (simDiscountDesk) simDiscountDesk.classList.add('hidden');
       if (simDiscountMob) simDiscountMob.classList.add('hidden');
       if (customSectionDesk) customSectionDesk.classList.add('hidden');
@@ -9251,17 +9262,44 @@ const ProductForm = (() => {
       ? 'border: none; border-width: 0px;'
       : `border: ${borderWidthNum}px solid ${safeBorder};`;
 
-    const showRatingChecked = document.getElementById('cfg-show-rating')
-      ? document.getElementById('cfg-show-rating').checked
-      : (document.getElementById('cfg-show-rating-mob')
-          ? document.getElementById('cfg-show-rating-mob').checked
-          : (primaryState.card_config ? primaryState.card_config.show_rating !== false : true));
+    const isMobSheetOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
+    const deskRatingEl = document.getElementById('cfg-show-rating');
+    const mobRatingEl = document.getElementById('cfg-show-rating-mob');
+    let showRatingChecked;
+    if (isMobSheetOpen && mobRatingEl) {
+      showRatingChecked = mobRatingEl.checked;
+    } else if (deskRatingEl) {
+      showRatingChecked = deskRatingEl.checked;
+    } else if (mobRatingEl) {
+      showRatingChecked = mobRatingEl.checked;
+    } else if (primaryState.card_config) {
+      showRatingChecked = primaryState.card_config.show_rating !== false;
+    } else {
+      showRatingChecked = true;
+    }
 
-    const showSalesChecked = document.getElementById('cfg-show-sales')
-      ? document.getElementById('cfg-show-sales').checked
-      : (document.getElementById('cfg-show-sales-mob')
-          ? document.getElementById('cfg-show-sales-mob').checked
-          : (primaryState.card_config ? (primaryState.card_config.show_sales !== false && primaryState.card_config.show_sales_count !== false) : true));
+    const deskSalesEl = document.getElementById('cfg-show-sales');
+    const mobSalesEl = document.getElementById('cfg-show-sales-mob');
+    let showSalesChecked;
+    if (isMobSheetOpen && mobSalesEl) {
+      showSalesChecked = mobSalesEl.checked;
+    } else if (deskSalesEl) {
+      showSalesChecked = deskSalesEl.checked;
+    } else if (mobSalesEl) {
+      showSalesChecked = mobSalesEl.checked;
+    } else if (primaryState.card_config) {
+      showSalesChecked = (primaryState.card_config.show_sales !== false && primaryState.card_config.show_sales_count !== false);
+    } else {
+      showSalesChecked = true;
+    }
+
+    if (variant === 'B' && showRatingChecked && showSalesChecked) {
+      if ((isMobSheetOpen ? mobSalesEl?.checked : deskSalesEl?.checked)) {
+        showRatingChecked = false;
+      } else {
+        showSalesChecked = false;
+      }
+    }
 
     const cfg = {
       bg_color: safeBg,
@@ -30078,4 +30116,3 @@ window.validatePrerequisitesBeforeCustomDimension = ProductForm.validatePrerequi
 window.getEffectiveRuleForOption = ProductForm.getEffectiveRuleForOption;
 window.renderDimensionRulesSectionHtml = ProductForm.renderDimensionRulesSectionHtml;
 window.syncProductFormTheme = ProductForm.syncThemeCSSVariables;
-
