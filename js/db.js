@@ -485,6 +485,7 @@ const DB = (() => {
     variant_a: {
       bg_color: '#ffffff',
       border_color: '#e2e8f0',
+      border_width: '1px',
       border_radius: '16px',
       title_color: '#0f172a',
       price_color: '#059669',
@@ -514,6 +515,7 @@ const DB = (() => {
     variant_b: {
       bg_color: '#ffffff',
       border_color: '#e9d5ff',
+      border_width: '1px',
       border_radius: '16px',
       title_color: '#0f172a',
       price_color: '#7e22ce',
@@ -543,6 +545,7 @@ const DB = (() => {
     variant_c: {
       bg_color: '#ffffff',
       border_color: '#fed7aa',
+      border_width: '1px',
       border_radius: '16px',
       title_color: '#0f172a',
       price_color: '#d97706',
@@ -1968,6 +1971,18 @@ const DB = (() => {
     },
     saveSettings(newSettings) {
       return this.updateSettings(newSettings);
+    },
+    saveCardModelPreset(variantCode, config) {
+      if (!variantCode || !config) return;
+      const key = variantCode === 'A' ? 'variant_a' : (variantCode === 'B' ? 'variant_b' : 'variant_c');
+      const sets = this.getSettings();
+      if (!sets.card_variants_config) sets.card_variants_config = {};
+      sets.card_variants_config[key] = {
+        ...(sets.card_variants_config[key] || {}),
+        ...config
+      };
+      this.saveSettings(sets);
+      return sets.card_variants_config[key];
     },
     updateSettings(newSettings) {
       const current = getTable(STORAGE_KEYS.SETTINGS) || DEFAULT_SETTINGS;
