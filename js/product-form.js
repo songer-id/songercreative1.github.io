@@ -2678,15 +2678,15 @@ const ProductForm = (() => {
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
-                          <label for="cfg-border-width" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Ketebalan Garis Tepi</label>
-                          <span id="cfg-border-width-val" class="text-[11px] font-mono font-normal text-slate-700">1 px</span>
+                          <label for="cfg-border-width" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Garis Tepi</label>
+                          <span id="cfg-border-width-val" class="text-[11px] font-mono font-normal text-slate-700" title="1 px" aria-label="Tipis (1 px)">Tipis</span>
                         </div>
                         <input type="range" id="cfg-border-width" min="0" max="3" step="1" value="1" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                         <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="1">1 px</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2">2 px</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3">3 px</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="Tanpa (0 px)" aria-label="Tanpa (0 px)">Tanpa</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
                         </div>
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
@@ -2718,14 +2718,14 @@ const ProductForm = (() => {
                   <div id="accordion-body-text-info" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-text-info">
                     <div class="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Judul</label>
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Judul Produk</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-title-color" value="#0f172a" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-title-text" value="#0f172a" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Harga</label>
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Harga Utama</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-price-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-price-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
@@ -2961,8 +2961,8 @@ const ProductForm = (() => {
                         <div class="space-y-1">
                           <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Gaya Label</label>
                           <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-badge-style-group">
-                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-style="bg">Latar</button>
-                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-style="border">Garis Tepi</button>
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-style="bg">Solid</button>
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-style="border">Outline</button>
                           </div>
                           <input type="hidden" id="cfg-badge-style" value="bg" />
                         </div>
@@ -3186,15 +3186,15 @@ const ProductForm = (() => {
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
-                          <label for="cfg-border-width-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Ketebalan Garis Tepi</label>
-                          <span id="cfg-border-width-val-mob" class="text-[11px] font-mono font-normal text-slate-700">1 px</span>
+                          <label for="cfg-border-width-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Garis Tepi</label>
+                          <span id="cfg-border-width-val-mob" class="text-[11px] font-mono font-normal text-slate-700" title="1 px" aria-label="Tipis (1 px)">Tipis</span>
                         </div>
                         <input type="range" id="cfg-border-width-mob" min="0" max="3" step="1" value="1" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                         <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="1">1 px</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2">2 px</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3">3 px</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="Tanpa (0 px)" aria-label="Tanpa (0 px)">Tanpa</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
                         </div>
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
@@ -3226,14 +3226,14 @@ const ProductForm = (() => {
                   <div id="accordion-body-text-info-mob" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-text-info-mob">
                     <div class="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Judul</label>
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Judul Produk</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-title-color-mob" value="#0f172a" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-title-text-mob" value="#0f172a" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Harga</label>
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Harga Utama</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-price-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-price-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
@@ -3469,8 +3469,8 @@ const ProductForm = (() => {
                         <div class="space-y-1">
                           <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Gaya Label</label>
                           <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-badge-style-group-mob">
-                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-style="bg">Latar</button>
-                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-style="border">Garis Tepi</button>
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-style="bg">Solid</button>
+                            <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-style="border">Outline</button>
                           </div>
                           <input type="hidden" id="cfg-badge-style-mob" value="bg" />
                         </div>
@@ -4042,6 +4042,14 @@ const ProductForm = (() => {
     return Math.max(0, Math.min(24, num));
   }
 
+  function getBorderWidthLabel(num) {
+    if (num === 0) return 'Tanpa';
+    if (num === 1) return 'Tipis';
+    if (num === 2) return 'Sedang';
+    if (num === 3) return 'Tebal';
+    return `${num} px`;
+  }
+
   function updateBorderWidthPresetButtons(val) {
     const num = parseBorderWidth(val, 1);
     document.querySelectorAll('.btn-border-width-preset').forEach(btn => {
@@ -4054,8 +4062,17 @@ const ProductForm = (() => {
     });
     const valLabelDesk = document.getElementById('cfg-border-width-val');
     const valLabelMob = document.getElementById('cfg-border-width-val-mob');
-    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
-    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+    const term = getBorderWidthLabel(num);
+    if (valLabelDesk) {
+      valLabelDesk.textContent = term;
+      valLabelDesk.title = `${num} px`;
+      valLabelDesk.setAttribute('aria-label', `${term} (${num} px)`);
+    }
+    if (valLabelMob) {
+      valLabelMob.textContent = term;
+      valLabelMob.title = `${num} px`;
+      valLabelMob.setAttribute('aria-label', `${term} (${num} px)`);
+    }
   }
 
   function updateBorderRadiusPresetButtons(val) {
@@ -9184,96 +9201,6 @@ const ProductForm = (() => {
       }
     }
 
-    // Countdown configs & simulation toggle
-    const simulateCountdown = (document.getElementById("cfg-simulate-countdown-preview")?.checked === true) || (document.getElementById("cfg-simulate-countdown-preview-mob")?.checked === true);
-    const enableCountdown = document.getElementById('cfg-enable-countdown') ? document.getElementById('cfg-enable-countdown').checked : (primaryState.enable_countdown !== false);
-
-    // Status apakah countdown aktif (aktor utama daripada label khusus)
-    const isCountdownActive = simulateCountdown || (enableCountdown && hasDiscount && !primaryState.is_promo_monthly_only);
-    const effHasDiscount = hasDiscount || simulateCountdown;
-    const effDiscPercent = (hasDiscount && discPercent > 0) ? discPercent : 50;
-
-    // Hitung harga normal, harga coret & harga final di live preview
-    let origStrikePrice = basePrice;
-    let effFinalPrice = basePrice;
-    if (hasDiscount && discountedPrice < basePrice) {
-      origStrikePrice = basePrice;
-      effFinalPrice = discountedPrice;
-    } else if (effHasDiscount) {
-      // Mode simulasi diskon 50%
-      if (basePrice > 0) {
-        origStrikePrice = basePrice * 2;
-        effFinalPrice = basePrice;
-      } else {
-        origStrikePrice = 150000;
-        effFinalPrice = 75000;
-      }
-    } else if (cfg.show_strike) {
-      // Jika harga coret aktif dan tidak ada diskon promo tersimpan, sediakan harga pembanding simulasi untuk preview
-      if (basePrice > 0) {
-        origStrikePrice = Math.round(basePrice * 1.3);
-        effFinalPrice = basePrice;
-      } else {
-        origStrikePrice = 150000;
-        effFinalPrice = 115000;
-      }
-    }
-
-    // 4. Label satuan harga berdasarkan price_type
-    const ptRadio = document.querySelector('input[name="price_type_radio"]:checked');
-    const curPt = ptRadio ? parseInt(ptRadio.value) : (primaryState.price_type || 1);
-    let unitLabel = '/ pcs';
-    if (curPt === 1) unitLabel = '/ m2';
-    else if (curPt === 2) unitLabel = '/ lbr';
-    else if (curPt === 5) unitLabel = '/ kg';
-    else if (curPt === 6) unitLabel = '/ lt';
-
-    // Dynamic Header Preview Mode & Title Sync
-    syncPreviewModeHeaderButtons();
-    const sidebarTitle = document.getElementById('sidebar-preview-title');
-    const mobileTitle = document.getElementById('mobile-preview-title');
-    if (sidebarTitle) {
-      sidebarTitle.innerHTML = currentStep === 2 ? 'Preview<br>Detail Produk' : 'Preview<br>Kartu Produk';
-    }
-    if (mobileTitle) {
-      mobileTitle.innerHTML = currentStep === 2 ? 'Preview<br>Detail Produk' : 'Preview<br>Kartu Produk';
-    }
-
-    // Customization Section visibility managed centrally at top of updateProductCardLivePreview
-
-    // 5. Gambar produk & placeholder visual default <i class="bi bi-box-seam"></i>
-    const hasPhoto = Boolean((primaryState.images && primaryState.images.length > 0) || primaryState.image_url);
-    const img = (primaryState.images && primaryState.images.length > 0)
-      ? primaryState.images[0]
-      : (primaryState.image_url || null);
-
-    const renderCardPhoto = (aspectRatioClass) => {
-      if (hasPhoto && img) {
-        return `
-          <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden cursor-pointer shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
-            <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" style="border-top-left-radius: inherit; border-top-right-radius: inherit;" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400\\'><i class=\\'bi bi-box-seam text-4xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-semibold text-slate-400\\'>Foto Produk</span></div>';" />
-            ${cfg.show_discount_badge ? `
-              <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
-                <span>- % ${effDiscPercent}</span>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      } else {
-        return `
-          <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden flex flex-col items-center justify-center text-slate-400 shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
-            <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
-            <span class="text-[10px] font-semibold text-slate-400">Foto Produk</span>
-            ${cfg.show_discount_badge ? `
-              <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
-                <span>- % ${effDiscPercent}</span>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }
-    };
-
     // 6. Config Styling & Display Toggles (Perbaiki Bug Kartu Live Preview Berwarna Hitam)
     const showBadgeInput = document.getElementById('cfg-show-badge');
     const showBadgeBlokAInput = document.getElementById('cfg-show-badge-blok-a');
@@ -9416,6 +9343,96 @@ const ProductForm = (() => {
     const countdownIconColor = document.getElementById('cfg-countdown-icon-color')?.value || document.getElementById('cfg-countdown-icon-color-mob')?.value || primaryState.countdown_icon_color || '#ffffff';
     const countdownBorderColor = document.getElementById('cfg-countdown-border-color')?.value || document.getElementById('cfg-countdown-border-color-mob')?.value || primaryState.countdown_border_color || defCardThemeColor;
     const countdownStyle = `background-color: ${countdownBgColor}; color: ${countdownTextColor}; border: 1px solid ${countdownBorderColor}; border-radius: ${countdownRadius};`;
+
+    // Countdown configs & simulation toggle
+    const simulateCountdown = (document.getElementById("cfg-simulate-countdown-preview")?.checked === true) || (document.getElementById("cfg-simulate-countdown-preview-mob")?.checked === true);
+    const enableCountdown = document.getElementById('cfg-enable-countdown') ? document.getElementById('cfg-enable-countdown').checked : (primaryState.enable_countdown !== false);
+
+    // Status apakah countdown aktif (aktor utama daripada label khusus)
+    const isCountdownActive = simulateCountdown || (enableCountdown && hasDiscount && !primaryState.is_promo_monthly_only);
+    const effHasDiscount = hasDiscount || simulateCountdown;
+    const effDiscPercent = (hasDiscount && discPercent > 0) ? discPercent : 50;
+
+    // Hitung harga normal, harga coret & harga final di live preview
+    let origStrikePrice = basePrice;
+    let effFinalPrice = basePrice;
+    if (hasDiscount && discountedPrice < basePrice) {
+      origStrikePrice = basePrice;
+      effFinalPrice = discountedPrice;
+    } else if (effHasDiscount) {
+      // Mode simulasi diskon 50%
+      if (basePrice > 0) {
+        origStrikePrice = basePrice * 2;
+        effFinalPrice = basePrice;
+      } else {
+        origStrikePrice = 150000;
+        effFinalPrice = 75000;
+      }
+    } else if (cfg.show_strike) {
+      // Jika harga coret aktif dan tidak ada diskon promo tersimpan, sediakan harga pembanding simulasi untuk preview
+      if (basePrice > 0) {
+        origStrikePrice = Math.round(basePrice * 1.3);
+        effFinalPrice = basePrice;
+      } else {
+        origStrikePrice = 150000;
+        effFinalPrice = 115000;
+      }
+    }
+
+    // 4. Label satuan harga berdasarkan price_type
+    const ptRadio = document.querySelector('input[name="price_type_radio"]:checked');
+    const curPt = ptRadio ? parseInt(ptRadio.value) : (primaryState.price_type || 1);
+    let unitLabel = '/ pcs';
+    if (curPt === 1) unitLabel = '/ m2';
+    else if (curPt === 2) unitLabel = '/ lbr';
+    else if (curPt === 5) unitLabel = '/ kg';
+    else if (curPt === 6) unitLabel = '/ lt';
+
+    // Dynamic Header Preview Mode & Title Sync
+    syncPreviewModeHeaderButtons();
+    const sidebarTitle = document.getElementById('sidebar-preview-title');
+    const mobileTitle = document.getElementById('mobile-preview-title');
+    if (sidebarTitle) {
+      sidebarTitle.innerHTML = currentStep === 2 ? 'Preview<br>Detail Produk' : 'Preview<br>Kartu Produk';
+    }
+    if (mobileTitle) {
+      mobileTitle.innerHTML = currentStep === 2 ? 'Preview<br>Detail Produk' : 'Preview<br>Kartu Produk';
+    }
+
+    // Customization Section visibility managed centrally at top of updateProductCardLivePreview
+
+    // 5. Gambar produk & placeholder visual default <i class="bi bi-box-seam"></i>
+    const hasPhoto = Boolean((primaryState.images && primaryState.images.length > 0) || primaryState.image_url);
+    const img = (primaryState.images && primaryState.images.length > 0)
+      ? primaryState.images[0]
+      : (primaryState.image_url || null);
+
+    const renderCardPhoto = (aspectRatioClass) => {
+      if (hasPhoto && img) {
+        return `
+          <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden cursor-pointer shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
+            <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" style="border-top-left-radius: inherit; border-top-right-radius: inherit;" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400\\'><i class=\\'bi bi-box-seam text-4xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-semibold text-slate-400\\'>Foto Produk</span></div>';" />
+            ${cfg.show_discount_badge ? `
+              <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
+                <span>- % ${effDiscPercent}</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      } else {
+        return `
+          <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden flex flex-col items-center justify-center text-slate-400 shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
+            <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
+            <span class="text-[10px] font-semibold text-slate-400">Foto Produk</span>
+            ${cfg.show_discount_badge ? `
+              <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
+                <span>- % ${effDiscPercent}</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+    };
 
     // Footer 1 Custom Styles (Khusus Card C)
     const footerBgColor = document.getElementById('cfg-footer-bg-color')?.value || primaryState.footer_bg_color || defCardThemeColor;

@@ -1231,6 +1231,30 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - `js/db.js`: Menambahkan `strike_price_color: '#94a3b8'`, `discount_badge_position: 'top-right'`, dan `badge_style: 'bg'` pada default `variant_a`, `variant_b`, dan `variant_c`.
           - `js/buyer-store.js`: Pembaruan `renderCardVariantA`, `renderCardVariantB`, dan `renderCardVariantC` untuk mengaplikasikan `strike_price_color`, posisi dinamis `discount_badge_position` (`top-2 left-2`, `top-2 right-2`, `bottom-2 left-2`, `bottom-2 right-2`), radius `discount_badge_radius`, dan `countdown_radius`.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), aturan statis (`scratch/test_card_promo_09c_r1.js`), dan runtime DOM simulation (`scratch/test_runtime_promo_09c_r1.js`) bersama seluruh suite regresi tugas sebelumnya lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Perbaikan Runtime ReferenceError dan Penyempurnaan Teks Editor Kartu (`SC-ADMIN-CARD-EDITOR-09C-R2`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Tab Desain Kartu (Penyelesaian akar masalah `Uncaught ReferenceError: Cannot access 'cfg' before initialization`, restrukturisasi urutan deklarasi/eksekusi konfigurasi, penyempurnaan terminologi kontrol editor pada desktop dan mobile, serta pemastian isolasi data contoh).
+        - **Perbaikan Akar Masalah Runtime TDZ**:
+          - Mengidentifikasi pemanggilan `cfg.show_strike` dan `renderCardPhoto` (yang mengakses `cfg.show_discount_badge`, `discBadgePosClass`, dan `discBadgeStyle`) yang sebelumnya dieksekusi secara sinkron sebelum blok `const cfg = { ... }` dideklarasikan pada fungsi `updateProductCardLivePreview()`.
+          - Menata ulang urutan eksekusi: Seluruh resolusi konfigurasi desain kartu produk (`safeBg`, `safeBorder`, `borderWidthNum`, `borderRadiusNum`, `safeTitle`, `safePrice`, `safeBtn`, `showRatingChecked`, `showSalesChecked`, `showBadgeChecked`, objek `cfg`, `strikePriceColor`, `discBadge...`, `badgeStyle`, dan `countdownStyle`) dipindahkan ke posisi awal sebelum evaluasi harga coret simulasi (`else if (cfg.show_strike)`) dan sebelum definisi `renderCardPhoto`.
+          - Memastikan tidak ada variabel yang diakses di dalam Temporal Dead Zone (TDZ), tanpa menggunakan workaround seperti `var` atau `try/catch`.
+        - **Penyempurnaan Teks & Terminologi Editor**:
+          - Label "Ketebalan Garis Tepi" diubah menjadi **"Garis Tepi"** pada desktop dan mobile.
+          - Pilihan cepat border diubah dari satuan piksel ke istilah tingkat ketebalan:
+            * `0 px` → **"Tanpa"** (`data-value="0"`, tooltip/aksesibilitas `title="Tanpa (0 px)" aria-label="Tanpa (0 px)"`)
+            * `1 px` → **"Tipis"** (`data-value="1"`, tooltip/aksesibilitas `title="Tipis (1 px)" aria-label="Tipis (1 px)"`)
+            * `2 px` → **"Sedang"** (`data-value="2"`, tooltip/aksesibilitas `title="Sedang (2 px)" aria-label="Sedang (2 px)"`)
+            * `3 px` → **"Tebal"** (`data-value="3"`, tooltip/aksesibilitas `title="Tebal (3 px)" aria-label="Tebal (3 px)"`)
+            * Nilai aktif pada label `#cfg-border-width-val` dan `#cfg-border-width-val-mob` menampilkan istilah aktif yang sama ("Tanpa", "Tipis", "Sedang", "Tebal") secara sinkron dua arah.
+          - Nilai konfigurasi tetap angka 0–3 tanpa mengubah struktur atau tipe data persistensi.
+          - "Warna Judul" diubah menjadi **"Judul Produk"**.
+          - "Warna Harga" diubah menjadi **"Harga Utama"** (Warna Harga Coret tetap sesuai konteks).
+          - Mode gaya Label Khusus: "Latar" diubah menjadi **"Solid"** dan "Garis Tepi" diubah menjadi **"Outline"** (`data-style="bg"` dan `data-style="border"` tetap dipertahankan).
+          - Label kontekstual lainnya ("Warna Latar", "Warna Garis Tepi", "Bingkai Kartu") tetap dipertahankan secara utuh.
+        - **Isolasi Penuh Data Contoh**:
+          - Fallback sampel lencana `['Label Khusus']` dan harga pembanding simulasi hanya berlaku untuk visualisasi preview Admin saat input masih kosong dan fitur diaktifkan.
+          - Terverifikasi tidak masuk ke dalam `primaryState.custom_labels`, payload simpan form, preset tema, maupun renderer etalase pembeli (`js/buyer-store.js`).
+          - Kontrol Simulasi Diskon tetap berfungsi mengaktifkan simulasi diskon 50% dan countdown bar pada preview.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), tes reproduksi error sebelum/sesudah perbaikan, dan uji regresi lengkap (`scratch/test_card_editor_09c_r2.js` bersama seluruh suite regresi sebelumnya) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
