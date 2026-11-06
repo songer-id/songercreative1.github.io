@@ -1269,6 +1269,38 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
             * Menegakkan mutual exclusivity Model B: Jika Terjual diaktifkan, Rating otomatis dinonaktifkan (checkbox dan ikon mata) dan teks Terjual tampil di pratinjau. Jika Rating diaktifkan, Terjual dinonaktifkan.
             * Memastikan nilai `sales_count: 0` tetap menghasilkan teks `"0 terjual"` yang valid pada Model A, B, dan C.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`) dan suite pengujian komprehensif (`scratch/test_preview_recovery_09c_r3.js` bersama seluruh suite regresi 09A-R1, 09B, 09C-R1, 09C-R2) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Penyempurnaan Kontrol Kartu Outline, Radius, Terjual, dan Ikon Tiket (`SC-ADMIN-CARD-CONTROLS-09C-R4`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 & Step 2 (Penyempurnaan UI kontrol slider menjadi pilihan tombol outline dan input angka radius dengan satuan px, penyesuaian terminologi outline, pemulihan tampilan teks Terjual bebas konflik class, sinkronisasi dan petunjuk promo ikon tiket, serta perlindungan simulasi diskon Step 2).
+        - **Penyempurnaan Outline & Warna**:
+          - Terminologi diubah: "Garis Tepi" → **"Outline"**, "Warna Border" → **"Warna Outline"**, dan pilihan border 0 px "Tanpa" → **"None"**.
+          - Slider ketebalan outline dihapus; digantikan oleh 4 tombol pilihan cepat bertingkat: **None** (0 px), **Tipis** (1 px), **Sedang** (2 px), dan **Tebal** (3 px) dengan pemetaan numerik 0–3 via input tersembunyi.
+          - Saat ketebalan outline None (0): color picker dan input HEX Warna Outline otomatis disabled (`opacity-40 cursor-not-allowed bg-slate-100`) tanpa menghapus atau me-reset nilai HEX yang tersimpan. Saat ketebalan > 0, kontrol kembali enabled dengan nilai sebelumnya.
+          - Sinkronisasi berlaku konsisten pada inisialisasi awal, klik pilihan cepat, tombol Batal, Gunakan Desain Bawaan, pergantian model kartu, dan saat membuka drawer mobile.
+        - **Penggantian Slider Radius dengan Input Angka Ringkas & Satuan "px"**:
+          - Slider pada 4 kontrol radius (Radius Kartu, Label Diskon, Countdown, dan Label Khusus) digantikan oleh input angka ringkas (`<input type="number">`) dengan satuan `px` di sebelah kanan dan tombol saran nilai yang ada.
+          - Pengguna dapat mengetik angka berapa pun di antara nilai saran sesuai batas masing-masing (Kartu: 0–24 px, Label Diskon: 0–12 px, Countdown: 0–12 px, Label Khusus: 0–12 px).
+          - Tombol saran hanya ditandai aktif jika nilai input cocok persis (`btnVal === num`).
+          - Nilai kosong sementara saat pengguna sedang mengetik tidak dipaksa menjadi 0, sehingga tidak mengganggu proses pengetikan. Validasi dan fallback nilai default (atau clamping) dilakukan saat blur/change dan sebelum simpan.
+          - Seluruh properti konfigurasi (`border_radius`, `discount_badge_radius`, `countdown_radius`, `badge_radius`) dan format nilai tersimpan dipertahankan utuh.
+        - **Label Khusus**:
+          - Label "Warna Garis Tepi" diubah menjadi **"Warna Garis"** pada desktop dan mobile.
+        - **Pemulihan Teks Terjual**:
+          - Menghapus duplikasi class yang saling meniadakan (`hidden sm:inline` dan `inline sm:hidden`) pada Model A dan Model C yang sebelumnya terblokir oleh aturan `.hidden { display: none !important; }` di `admin.css`.
+          - Menggunakan elemen span tunggal (`text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap`) sehingga teks terjual tampil stabil di semua breakpoint viewport.
+          - Penyelarasan dua arah antara properti `show_sales` dan `show_sales_count` di DOM, parser, dan live preview.
+          - Penanganan jumlah penjualan 0 tetap menampilkan `"0 terjual"` yang valid pada Model A, B, dan C.
+        - **Ikon Tiket & Petunjuk Syarat Promo**:
+          - Menegakkan keterikatan ikon tiket dengan promo diskon aktif (`effHasDiscount = hasDiscount || simulateCountdown`).
+          - Saat kontrol Ikon Tiket aktif namun syarat promo belum terpenuhi, petunjuk singkat (`#cfg-ticket-promo-hint` & `#cfg-ticket-promo-hint-mob`) tampil di bawah kontrol: *"Ikon tiket hanya muncul saat produk memiliki promo/diskon aktif atau Simulasi Diskon diaktifkan."*
+          - Saat syarat promo terpenuhi dan eye aktif, ikon tiket tiket-check tampil di samping harga pada Model A, B, dan C.
+          - Saat eye dinonaktifkan, ikon tiket dan petunjuk otomatis tersembunyi.
+        - **Perlindungan Step 2 & Simulasi Diskon**:
+          - Pratinjau Mini PDP Step 2 tetap tampil utuh dengan pembungkus terluar tidak tersembunyi.
+          - Kontrol "Simulasi Diskon" tetap dapat diakses dan diuji pada Step 2 untuk mensimulasikan harga promo pada Mini PDP, sedangkan accordion peralatan Desain Kartu Step 1 tetap tersembunyi.
+        - **Standarisasi UI & Tampilan**:
+          - Radius sudut tombol dan input angka editor distandardisasi menjadi 6 px (`rounded-[6px]`), sedangkan pembungkus kelompok fitur menggunakan 8 px (`rounded-lg`).
+          - Tipografi judul accordion, label, nilai, dan tombol menggunakan font-weight normal tanpa bold.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`) dan suite pengujian terfokus (`scratch/test_card_controls_09c_r4.js` bersama suite regresi R3) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

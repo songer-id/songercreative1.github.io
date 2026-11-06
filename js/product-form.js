@@ -2674,7 +2674,7 @@ const ProductForm = (() => {
                         </div>
                       </div>
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Border</label>
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Outline</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-border-color" value="#e2e8f0" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-border-text" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
@@ -2682,28 +2682,30 @@ const ProductForm = (() => {
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
-                          <label for="cfg-border-width" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Garis Tepi</label>
+                          <label for="cfg-border-width" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Outline</label>
                           <span id="cfg-border-width-val" class="text-[11px] font-mono font-normal text-slate-700" title="1 px" aria-label="Tipis (1 px)">Tipis</span>
                         </div>
-                        <input type="range" id="cfg-border-width" min="0" max="3" step="1" value="1" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                        <input type="hidden" id="cfg-border-width" value="1" />
                         <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="Tanpa (0 px)" aria-label="Tanpa (0 px)">Tanpa</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="None (0 px)" aria-label="None (0 px)">None</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
                         </div>
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
                           <label for="cfg-border-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                          <span id="cfg-border-radius-val" class="text-[11px] font-mono font-normal text-slate-700">16 px</span>
+                          <div class="relative flex items-center w-20">
+                            <input type="number" id="cfg-border-radius" min="0" max="24" step="1" value="16" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                          </div>
                         </div>
-                        <input type="range" id="cfg-border-radius" min="0" max="24" step="1" value="16" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                         <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="16">16 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="24">24 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="16">16 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="24">24 px</button>
                         </div>
                       </div>
                     </div>
@@ -2825,15 +2827,17 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-discount-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <span id="cfg-discount-badge-radius-val" class="text-[11px] font-mono font-normal text-slate-700">8 px</span>
+                            <div class="relative flex items-center w-20">
+                              <input type="number" id="cfg-discount-badge-radius" min="0" max="12" step="1" value="8" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                            </div>
                           </div>
-                          <input type="range" id="cfg-discount-badge-radius" min="0" max="12" step="1" value="8" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                           <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
                         <!-- Posisi Label Diskon (4 Sudut Foto) -->
@@ -2880,6 +2884,7 @@ const ProductForm = (() => {
                           <i id="cfg-show-ticket-icon-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
+                      <p id="cfg-ticket-promo-hint" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Ikon tiket hanya muncul saat produk memiliki promo/diskon aktif atau Simulasi Diskon diaktifkan.</p>
                     </div>
 
                     <!-- 4. Countdown -->
@@ -2901,15 +2906,17 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-countdown-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <span id="cfg-countdown-radius-val" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                            <div class="relative flex items-center w-20">
+                              <input type="number" id="cfg-countdown-radius" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                            </div>
                           </div>
-                          <input type="range" id="cfg-countdown-radius" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                           <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
                         <!-- Warna Countdown -->
@@ -2971,19 +2978,21 @@ const ProductForm = (() => {
                           <input type="hidden" id="cfg-badge-style" value="bg" />
                         </div>
 
-                        <!-- Radius Sudut Label Khusus (Slider 0-12 px + Pilihan Cepat 0, 4, 6, 8, 12 px) -->
+                        <!-- Radius Sudut Label Khusus (Input 0-12 px + Pilihan Cepat 0, 4, 6, 8, 12 px) -->
                         <div class="space-y-1.5 pt-0.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <span id="cfg-badge-radius-val" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                            <div class="relative flex items-center w-20">
+                              <input type="number" id="cfg-badge-radius" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                            </div>
                           </div>
-                          <input type="range" id="cfg-badge-radius" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                           <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
 
@@ -3004,7 +3013,7 @@ const ProductForm = (() => {
                             </div>
                           </div>
                           <div id="cfg-badge-border-wrap" class="hidden">
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Garis Tepi</label>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Garis</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-badge-border-color" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-badge-border-hex" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
@@ -3182,7 +3191,7 @@ const ProductForm = (() => {
                         </div>
                       </div>
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Border</label>
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Outline</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-border-color-mob" value="#e2e8f0" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-border-text-mob" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
@@ -3190,28 +3199,30 @@ const ProductForm = (() => {
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
-                          <label for="cfg-border-width-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Garis Tepi</label>
+                          <label for="cfg-border-width-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Outline</label>
                           <span id="cfg-border-width-val-mob" class="text-[11px] font-mono font-normal text-slate-700" title="1 px" aria-label="Tipis (1 px)">Tipis</span>
                         </div>
-                        <input type="range" id="cfg-border-width-mob" min="0" max="3" step="1" value="1" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
+                        <input type="hidden" id="cfg-border-width-mob" value="1" />
                         <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="Tanpa (0 px)" aria-label="Tanpa (0 px)">Tanpa</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="None (0 px)" aria-label="None (0 px)">None</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
+                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
                         </div>
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
                           <label for="cfg-border-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                          <span id="cfg-border-radius-val-mob" class="text-[11px] font-mono font-normal text-slate-700">16 px</span>
+                          <div class="relative flex items-center w-20">
+                            <input type="number" id="cfg-border-radius-mob" min="0" max="24" step="1" value="16" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                          </div>
                         </div>
-                        <input type="range" id="cfg-border-radius-mob" min="0" max="24" step="1" value="16" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                         <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="16">16 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="24">24 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="16">16 px</button>
+                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="24">24 px</button>
                         </div>
                       </div>
                     </div>
@@ -3333,15 +3344,17 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-discount-badge-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <span id="cfg-discount-badge-radius-val-mob" class="text-[11px] font-mono font-normal text-slate-700">8 px</span>
+                            <div class="relative flex items-center w-20">
+                              <input type="number" id="cfg-discount-badge-radius-mob" min="0" max="12" step="1" value="8" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                            </div>
                           </div>
-                          <input type="range" id="cfg-discount-badge-radius-mob" min="0" max="12" step="1" value="8" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                           <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
                         <!-- Posisi Label Diskon Mobile (4 Sudut Foto) -->
@@ -3388,6 +3401,7 @@ const ProductForm = (() => {
                           <i id="cfg-show-ticket-icon-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
+                      <p id="cfg-ticket-promo-hint-mob" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Ikon tiket hanya muncul saat produk memiliki promo/diskon aktif atau Simulasi Diskon diaktifkan.</p>
                     </div>
 
                     <!-- 4. Countdown Mobile -->
@@ -3409,15 +3423,17 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-countdown-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <span id="cfg-countdown-radius-val-mob" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                            <div class="relative flex items-center w-20">
+                              <input type="number" id="cfg-countdown-radius-mob" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                            </div>
                           </div>
-                          <input type="range" id="cfg-countdown-radius-mob" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                           <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
                         <!-- Warna Countdown Mobile -->
@@ -3483,15 +3499,17 @@ const ProductForm = (() => {
                         <div class="space-y-1.5 pt-0.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-badge-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <span id="cfg-badge-radius-val-mob" class="text-[11px] font-mono font-normal text-slate-700">6 px</span>
+                            <div class="relative flex items-center w-20">
+                              <input type="number" id="cfg-badge-radius-mob" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                            </div>
                           </div>
-                          <input type="range" id="cfg-badge-radius-mob" min="0" max="12" step="1" value="6" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" />
                           <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
+                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
 
@@ -3512,7 +3530,7 @@ const ProductForm = (() => {
                             </div>
                           </div>
                           <div id="cfg-badge-border-wrap-mob" class="hidden">
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Garis Tepi</label>
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Garis</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-badge-border-color-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-badge-border-hex-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
@@ -3988,19 +4006,22 @@ const ProductForm = (() => {
   }
 
   function updateBadgeRadiusPresetButtons(val) {
-    const num = parseBadgeRadius(val, 6);
+    const isValProvided = val !== undefined && val !== null && val !== '';
+    const num = isValProvided ? parseBadgeRadius(val, 6) : null;
     document.querySelectorAll('.btn-badge-radius-preset').forEach(btn => {
       const btnVal = parseInt(btn.dataset.value, 10);
-      if (btnVal === num) {
-        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+      if (num !== null && btnVal === num) {
+        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
       } else {
-        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
       }
     });
-    const valLabelDesk = document.getElementById('cfg-badge-radius-val');
-    const valLabelMob = document.getElementById('cfg-badge-radius-val-mob');
-    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
-    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+    const inpDesk = document.getElementById('cfg-badge-radius');
+    const inpMob = document.getElementById('cfg-badge-radius-mob');
+    if (num !== null) {
+      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
+      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
+    }
   }
 
   function setBadgeStyleMode(mode) {
@@ -4050,12 +4071,36 @@ const ProductForm = (() => {
     return Math.max(0, Math.min(24, num));
   }
 
+  function isMobilePreviewSheetOpen() {
+    const s = document.getElementById('mobile-preview-sheet');
+    if (!s) return false;
+    const isSmall = typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 1024;
+    return !s.classList.contains('translate-y-full') || isSmall;
+  }
+
   function getBorderWidthLabel(num) {
-    if (num === 0) return 'Tanpa';
+    if (num === 0) return 'None';
     if (num === 1) return 'Tipis';
     if (num === 2) return 'Sedang';
     if (num === 3) return 'Tebal';
     return `${num} px`;
+  }
+
+  function updateOutlineColorControlsState(bw) {
+    const isZero = parseInt(bw, 10) === 0;
+    ['cfg-border-color', 'cfg-border-text'].forEach(base => {
+      ['', '-mob'].forEach(sfx => {
+        const el = document.getElementById(base + sfx);
+        if (!el) return;
+        el.disabled = isZero;
+        if (isZero) {
+          el.classList.add('opacity-40', 'cursor-not-allowed');
+          if (base === 'cfg-border-text') el.classList.add('bg-slate-100');
+        } else {
+          el.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
+        }
+      });
+    });
   }
 
   function updateBorderWidthPresetButtons(val) {
@@ -4063,9 +4108,9 @@ const ProductForm = (() => {
     document.querySelectorAll('.btn-border-width-preset').forEach(btn => {
       const btnVal = parseInt(btn.dataset.value, 10);
       if (btnVal === num) {
-        btn.className = 'btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+        btn.className = 'btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
       } else {
-        btn.className = 'btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+        btn.className = 'btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
       }
     });
     const valLabelDesk = document.getElementById('cfg-border-width-val');
@@ -4081,22 +4126,30 @@ const ProductForm = (() => {
       valLabelMob.title = `${num} px`;
       valLabelMob.setAttribute('aria-label', `${term} (${num} px)`);
     }
+    const bwInpDesk = document.getElementById('cfg-border-width');
+    const bwInpMob = document.getElementById('cfg-border-width-mob');
+    if (bwInpDesk && bwInpDesk.value !== String(num)) bwInpDesk.value = num;
+    if (bwInpMob && bwInpMob.value !== String(num)) bwInpMob.value = num;
+    updateOutlineColorControlsState(num);
   }
 
   function updateBorderRadiusPresetButtons(val) {
-    const num = parseBorderRadius(val, 16);
+    const isValProvided = val !== undefined && val !== null && val !== '';
+    const num = isValProvided ? parseBorderRadius(val, 16) : null;
     document.querySelectorAll('.btn-border-radius-preset').forEach(btn => {
       const btnVal = parseInt(btn.dataset.value, 10);
-      if (btnVal === num) {
-        btn.className = 'btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+      if (num !== null && btnVal === num) {
+        btn.className = 'btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
       } else {
-        btn.className = 'btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+        btn.className = 'btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
       }
     });
-    const valLabelDesk = document.getElementById('cfg-border-radius-val');
-    const valLabelMob = document.getElementById('cfg-border-radius-val-mob');
-    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
-    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+    const inpDesk = document.getElementById('cfg-border-radius');
+    const inpMob = document.getElementById('cfg-border-radius-mob');
+    if (num !== null) {
+      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
+      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
+    }
   }
 
   function parseDiscountBadgeRadius(val, defaultVal = 8) {
@@ -4107,19 +4160,22 @@ const ProductForm = (() => {
   }
 
   function updateDiscountBadgeRadiusPresetButtons(val) {
-    const num = parseDiscountBadgeRadius(val, 8);
+    const isValProvided = val !== undefined && val !== null && val !== '';
+    const num = isValProvided ? parseDiscountBadgeRadius(val, 8) : null;
     document.querySelectorAll('.btn-disc-radius-preset').forEach(btn => {
       const btnVal = parseInt(btn.dataset.value, 10);
-      if (btnVal === num) {
-        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+      if (num !== null && btnVal === num) {
+        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
       } else {
-        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
       }
     });
-    const valLabelDesk = document.getElementById('cfg-discount-badge-radius-val');
-    const valLabelMob = document.getElementById('cfg-discount-badge-radius-val-mob');
-    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
-    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+    const inpDesk = document.getElementById('cfg-discount-badge-radius');
+    const inpMob = document.getElementById('cfg-discount-badge-radius-mob');
+    if (num !== null) {
+      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
+      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
+    }
   }
 
   function setDiscountBadgePosition(pos) {
@@ -4161,19 +4217,22 @@ const ProductForm = (() => {
   }
 
   function updateCountdownRadiusPresetButtons(val) {
-    const num = parseCountdownRadius(val, 6);
+    const isValProvided = val !== undefined && val !== null && val !== '';
+    const num = isValProvided ? parseCountdownRadius(val, 6) : null;
     document.querySelectorAll('.btn-countdown-radius-preset').forEach(btn => {
       const btnVal = parseInt(btn.dataset.value, 10);
-      if (btnVal === num) {
-        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+      if (num !== null && btnVal === num) {
+        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
       } else {
-        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
       }
     });
-    const valLabelDesk = document.getElementById('cfg-countdown-radius-val');
-    const valLabelMob = document.getElementById('cfg-countdown-radius-val-mob');
-    if (valLabelDesk) valLabelDesk.textContent = `${num} px`;
-    if (valLabelMob) valLabelMob.textContent = `${num} px`;
+    const inpDesk = document.getElementById('cfg-countdown-radius');
+    const inpMob = document.getElementById('cfg-countdown-radius-mob');
+    if (num !== null) {
+      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
+      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
+    }
   }
 
   function syncFeatureSubpanels() {
@@ -4345,7 +4404,12 @@ const ProductForm = (() => {
     setVal('cfg-btn-text', cfg.btn_color || defThemeColor);
 
     let showRatingVal = cfg.show_rating !== false;
-    let showSalesVal = cfg.show_sales !== false && cfg.show_sales_count !== false;
+    let showSalesVal = true;
+    if (cfg.show_sales !== undefined) {
+      showSalesVal = cfg.show_sales !== false;
+    } else if (cfg.show_sales_count !== undefined) {
+      showSalesVal = cfg.show_sales_count !== false;
+    }
     if (variantCode === 'B' && showRatingVal && showSalesVal) {
       showSalesVal = false;
     }
@@ -9134,11 +9198,11 @@ const ProductForm = (() => {
         if (customSectionMob) customSectionMob.classList.add('hidden');
       }
     } else {
-      // Step 2: Mini PDP (Detail Produk) - Kontainer pratinjau wajib tampil
+      // Step 2: Mini PDP (Detail Produk) - Kontainer pratinjau wajib tampil & simulasi diskon aktif
       if (outerWrapDesk) outerWrapDesk.classList.remove('hidden');
       if (outerWrapMob) outerWrapMob.classList.remove('hidden');
-      if (simDiscountDesk) simDiscountDesk.classList.add('hidden');
-      if (simDiscountMob) simDiscountMob.classList.add('hidden');
+      if (simDiscountDesk) simDiscountDesk.classList.remove('hidden');
+      if (simDiscountMob) simDiscountMob.classList.remove('hidden');
       if (customSectionDesk) customSectionDesk.classList.add('hidden');
       if (customSectionMob) customSectionMob.classList.add('hidden');
     }
@@ -9262,7 +9326,16 @@ const ProductForm = (() => {
       ? 'border: none; border-width: 0px;'
       : `border: ${borderWidthNum}px solid ${safeBorder};`;
 
-    const isMobSheetOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
+    const isMobSheetOpen = isMobilePreviewSheetOpen();
+    const getLiveChk = (deskId, mobId, fallback = true) => {
+      const dEl = document.getElementById(deskId);
+      const mEl = document.getElementById(mobId);
+      if (isMobSheetOpen && mEl) return mEl.checked;
+      if (dEl) return dEl.checked;
+      if (mEl) return mEl.checked;
+      return fallback;
+    };
+
     const deskRatingEl = document.getElementById('cfg-show-rating');
     const mobRatingEl = document.getElementById('cfg-show-rating-mob');
     let showRatingChecked;
@@ -9288,7 +9361,13 @@ const ProductForm = (() => {
     } else if (mobSalesEl) {
       showSalesChecked = mobSalesEl.checked;
     } else if (primaryState.card_config) {
-      showSalesChecked = (primaryState.card_config.show_sales !== false && primaryState.card_config.show_sales_count !== false);
+      if (primaryState.card_config.show_sales !== undefined) {
+        showSalesChecked = primaryState.card_config.show_sales !== false;
+      } else if (primaryState.card_config.show_sales_count !== undefined) {
+        showSalesChecked = primaryState.card_config.show_sales_count !== false;
+      } else {
+        showSalesChecked = true;
+      }
     } else {
       showSalesChecked = true;
     }
@@ -9312,9 +9391,9 @@ const ProductForm = (() => {
       show_rating: showRatingChecked,
       show_sales: showSalesChecked,
       show_sales_count: showSalesChecked,
-      show_strike: document.getElementById('cfg-show-strike') ? document.getElementById('cfg-show-strike').checked : (primaryState.card_config ? primaryState.card_config.show_strikethrough_price !== false : true),
-      show_discount_badge: document.getElementById('cfg-show-discount-badge') ? document.getElementById('cfg-show-discount-badge').checked : (primaryState.card_config ? primaryState.card_config.show_discount_badge !== false : true),
-      show_ticket_icon: document.getElementById('cfg-show-ticket-icon') ? document.getElementById('cfg-show-ticket-icon').checked : (primaryState.card_config ? primaryState.card_config.show_ticket_icon !== false : true),
+      show_strike: getLiveChk('cfg-show-strike', 'cfg-show-strike-mob', primaryState.card_config ? primaryState.card_config.show_strikethrough_price !== false : true),
+      show_discount_badge: getLiveChk('cfg-show-discount-badge', 'cfg-show-discount-badge-mob', primaryState.card_config ? primaryState.card_config.show_discount_badge !== false : true),
+      show_ticket_icon: getLiveChk('cfg-show-ticket-icon', 'cfg-show-ticket-icon-mob', primaryState.card_config ? primaryState.card_config.show_ticket_icon !== false : true),
       show_badge: showBadgeChecked
     };
 
@@ -9390,6 +9469,18 @@ const ProductForm = (() => {
     const isCountdownActive = simulateCountdown || (enableCountdown && hasDiscount && !primaryState.is_promo_monthly_only);
     const effHasDiscount = hasDiscount || simulateCountdown;
     const effDiscPercent = (hasDiscount && discPercent > 0) ? discPercent : 50;
+
+    const ticketHintDesk = document.getElementById('cfg-ticket-promo-hint');
+    const ticketHintMob = document.getElementById('cfg-ticket-promo-hint-mob');
+    const showTicketHint = Boolean(cfg.show_ticket_icon && !effHasDiscount);
+    if (ticketHintDesk) {
+      if (showTicketHint) ticketHintDesk.classList.remove('hidden');
+      else ticketHintDesk.classList.add('hidden');
+    }
+    if (ticketHintMob) {
+      if (showTicketHint) ticketHintMob.classList.remove('hidden');
+      else ticketHintMob.classList.add('hidden');
+    }
 
     // Hitung harga normal, harga coret & harga final di live preview
     let origStrikePrice = basePrice;
@@ -9612,7 +9703,7 @@ const ProductForm = (() => {
               </div>
             </div>
 
-            <!-- Baris Harga: TANPA IKON TIKET pada Versi 3 -->
+            <!-- Baris Harga -->
             <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
               <div class="flex flex-col justify-end min-w-0">
                 ${(cfg.show_strike && origStrikePrice > 0) ? `
@@ -9624,14 +9715,14 @@ const ProductForm = (() => {
                   <span class="text-xs sm:text-sm font-semibold whitespace-nowrap" style="${priceStyle}">
                     ${formatPriceHtmlWithSmallRp(effFinalPrice)}
                   </span>
+                  ${(effHasDiscount && cfg.show_ticket_icon) ? `
+                    <i data-lucide="ticket-check" class="w-3.5 h-3.5 inline shrink-0" style="color: ${cfg.price_color};"></i>
+                  ` : ''}
                 </div>
               </div>
               ${cfg.show_sales ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
-                    ${formatSalesCount(salesCount, false)}
-                  </span>
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
+                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap">
                     ${formatSalesCount(salesCount, false)}
                   </span>
                 </div>
@@ -9713,11 +9804,8 @@ const ProductForm = (() => {
               </div>
               ${cfg.show_sales ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
+                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap">
                     ${formatSalesCount(salesCount, false)}
-                  </span>
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
-                    ${formatSalesCount(salesCount, Boolean(effHasDiscount && cfg.show_ticket_icon && (effFinalPrice >= 1000000 || origStrikePrice >= 1000000)))}
                   </span>
                 </div>
               ` : ''}
@@ -27164,80 +27252,103 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
-    // Border Width & Radius Sliders and Presets (Desktop & Mobile Sync)
-    const bwSliderDesk = document.getElementById('cfg-border-width');
-    const bwSliderMob = document.getElementById('cfg-border-width-mob');
-    const brSliderDesk = document.getElementById('cfg-border-radius');
-    const brSliderMob = document.getElementById('cfg-border-radius-mob');
-
-    const handleBwInput = (val) => {
+    // Outline Presets & Hidden Inputs (Desktop & Mobile Sync)
+    const handleBwSelect = (val) => {
       const num = parseBorderWidth(val, 1);
-      if (bwSliderDesk) bwSliderDesk.value = num;
-      if (bwSliderMob) bwSliderMob.value = num;
+      const bwInpDesk = document.getElementById('cfg-border-width');
+      const bwInpMob = document.getElementById('cfg-border-width-mob');
+      if (bwInpDesk) bwInpDesk.value = num;
+      if (bwInpMob) bwInpMob.value = num;
       updateBorderWidthPresetButtons(num);
       markCardDesignAsCustom();
     };
 
-    if (bwSliderDesk) {
-      bwSliderDesk.addEventListener('input', (e) => handleBwInput(e.target.value));
-    }
-    if (bwSliderMob) {
-      bwSliderMob.addEventListener('input', (e) => handleBwInput(e.target.value));
-    }
-
-    const handleBrInput = (val) => {
-      const num = parseBorderRadius(val, 16);
-      if (brSliderDesk) brSliderDesk.value = num;
-      if (brSliderMob) brSliderMob.value = num;
-      updateBorderRadiusPresetButtons(num);
-      markCardDesignAsCustom();
-    };
-
-    if (brSliderDesk) {
-      brSliderDesk.addEventListener('input', (e) => handleBrInput(e.target.value));
-    }
-    if (brSliderMob) {
-      brSliderMob.addEventListener('input', (e) => handleBrInput(e.target.value));
-    }
-
     document.querySelectorAll('.btn-border-width-preset').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        handleBwInput(btn.dataset.value);
+        handleBwSelect(btn.dataset.value);
       });
     });
 
-    document.querySelectorAll('.btn-border-radius-preset').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        handleBrInput(btn.dataset.value);
+    // Reusable binding helper for radius number inputs and suggestion buttons
+    const bindRadiusControl = ({ deskId, mobId, presetClass, parser, defaultVal, minVal, maxVal, updater }) => {
+      const deskInp = document.getElementById(deskId);
+      const mobInp = document.getElementById(mobId);
+
+      const syncInputsOnTyping = (sourceEl, targetEl) => {
+        const raw = sourceEl.value;
+        if (targetEl && targetEl.value !== raw) targetEl.value = raw;
+        if (raw.trim() === '') {
+          // Nilai kosong sementara saat mengetik: jangan paksa jadi 0, jangan aktifkan saran
+          updater(null);
+          return;
+        }
+        const parsed = parseInt(raw, 10);
+        if (!isNaN(parsed)) {
+          updater(parsed);
+          markCardDesignAsCustom();
+        }
+      };
+
+      const validateOnBlur = (el) => {
+        const raw = el.value.trim();
+        let num;
+        if (raw === '' || isNaN(parseInt(raw, 10))) {
+          num = defaultVal;
+        } else {
+          num = Math.max(minVal, Math.min(maxVal, parseInt(raw, 10)));
+        }
+        if (deskInp) deskInp.value = num;
+        if (mobInp) mobInp.value = num;
+        updater(num);
+        markCardDesignAsCustom();
+      };
+
+      if (deskInp) {
+        deskInp.addEventListener('input', () => syncInputsOnTyping(deskInp, mobInp));
+        deskInp.addEventListener('blur', () => validateOnBlur(deskInp));
+        deskInp.addEventListener('change', () => validateOnBlur(deskInp));
+      }
+      if (mobInp) {
+        mobInp.addEventListener('input', () => syncInputsOnTyping(mobInp, deskInp));
+        mobInp.addEventListener('blur', () => validateOnBlur(mobInp));
+        mobInp.addEventListener('change', () => validateOnBlur(mobInp));
+      }
+
+      document.querySelectorAll(`.${presetClass}`).forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const num = parseInt(btn.dataset.value, 10);
+          if (deskInp) deskInp.value = num;
+          if (mobInp) mobInp.value = num;
+          updater(num);
+          markCardDesignAsCustom();
+        });
       });
-    });
-
-    // Badge Radius Sliders and Presets (Desktop & Mobile Sync)
-    const badgeRadiusDesk = document.getElementById('cfg-badge-radius');
-    const badgeRadiusMob = document.getElementById('cfg-badge-radius-mob');
-
-    const handleBadgeRadiusInput = (val) => {
-      const num = parseBadgeRadius(val, 6);
-      if (badgeRadiusDesk) badgeRadiusDesk.value = num;
-      if (badgeRadiusMob) badgeRadiusMob.value = num;
-      updateBadgeRadiusPresetButtons(num);
-      markCardDesignAsCustom();
     };
 
-    if (badgeRadiusDesk) {
-      badgeRadiusDesk.addEventListener('input', (e) => handleBadgeRadiusInput(e.target.value));
-    }
-    if (badgeRadiusMob) {
-      badgeRadiusMob.addEventListener('input', (e) => handleBadgeRadiusInput(e.target.value));
-    }
+    // 1. Radius Kartu (0-24 px, default 16)
+    bindRadiusControl({
+      deskId: 'cfg-border-radius',
+      mobId: 'cfg-border-radius-mob',
+      presetClass: 'btn-border-radius-preset',
+      parser: parseBorderRadius,
+      defaultVal: 16,
+      minVal: 0,
+      maxVal: 24,
+      updater: updateBorderRadiusPresetButtons
+    });
 
-    document.querySelectorAll('.btn-badge-radius-preset').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        handleBadgeRadiusInput(btn.dataset.value);
-      });
+    // 2. Radius Label Khusus (0-12 px, default 6)
+    bindRadiusControl({
+      deskId: 'cfg-badge-radius',
+      mobId: 'cfg-badge-radius-mob',
+      presetClass: 'btn-badge-radius-preset',
+      parser: parseBadgeRadius,
+      defaultVal: 6,
+      minVal: 0,
+      maxVal: 12,
+      updater: updateBadgeRadiusPresetButtons
     });
 
     // Badge Style Mode Segmented Controls (Desktop & Mobile Sync)
@@ -27300,30 +27411,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobHex) mobHex.addEventListener('input', e => syncAllStrikeColors(e.target.value));
     });
 
-    // Discount Badge Radius Sliders and Presets (Desktop & Mobile Sync)
-    const discRadiusDesk = document.getElementById('cfg-discount-badge-radius');
-    const discRadiusMob = document.getElementById('cfg-discount-badge-radius-mob');
-
-    const handleDiscRadiusInput = (val) => {
-      const num = parseDiscountBadgeRadius(val, 8);
-      if (discRadiusDesk) discRadiusDesk.value = num;
-      if (discRadiusMob) discRadiusMob.value = num;
-      updateDiscountBadgeRadiusPresetButtons(num);
-      markCardDesignAsCustom();
-    };
-
-    if (discRadiusDesk) {
-      discRadiusDesk.addEventListener('input', (e) => handleDiscRadiusInput(e.target.value));
-    }
-    if (discRadiusMob) {
-      discRadiusMob.addEventListener('input', (e) => handleDiscRadiusInput(e.target.value));
-    }
-
-    document.querySelectorAll('.btn-disc-radius-preset').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        handleDiscRadiusInput(btn.dataset.value);
-      });
+    // 3. Radius Label Diskon (0-12 px, default 8)
+    bindRadiusControl({
+      deskId: 'cfg-discount-badge-radius',
+      mobId: 'cfg-discount-badge-radius-mob',
+      presetClass: 'btn-disc-radius-preset',
+      parser: parseDiscountBadgeRadius,
+      defaultVal: 8,
+      minVal: 0,
+      maxVal: 12,
+      updater: updateDiscountBadgeRadiusPresetButtons
     });
 
     // Discount Badge Position Buttons (Desktop & Mobile Sync)
@@ -27361,30 +27458,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobHex) mobHex.addEventListener('input', e => syncAllDiscColors(e.target.value));
     });
 
-    // Countdown Radius Sliders and Presets (Desktop & Mobile Sync)
-    const cdRadiusDesk = document.getElementById('cfg-countdown-radius');
-    const cdRadiusMob = document.getElementById('cfg-countdown-radius-mob');
-
-    const handleCdRadiusInput = (val) => {
-      const num = parseCountdownRadius(val, 6);
-      if (cdRadiusDesk) cdRadiusDesk.value = num;
-      if (cdRadiusMob) cdRadiusMob.value = num;
-      updateCountdownRadiusPresetButtons(num);
-      markCardDesignAsCustom();
-    };
-
-    if (cdRadiusDesk) {
-      cdRadiusDesk.addEventListener('input', (e) => handleCdRadiusInput(e.target.value));
-    }
-    if (cdRadiusMob) {
-      cdRadiusMob.addEventListener('input', (e) => handleCdRadiusInput(e.target.value));
-    }
-
-    document.querySelectorAll('.btn-countdown-radius-preset').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        handleCdRadiusInput(btn.dataset.value);
-      });
+    // 4. Radius Countdown (0-12 px, default 6)
+    bindRadiusControl({
+      deskId: 'cfg-countdown-radius',
+      mobId: 'cfg-countdown-radius-mob',
+      presetClass: 'btn-countdown-radius-preset',
+      parser: parseCountdownRadius,
+      defaultVal: 6,
+      minVal: 0,
+      maxVal: 12,
+      updater: updateCountdownRadiusPresetButtons
     });
 
     // Feature Toggles (Desktop & Mobile Sync)
