@@ -3167,7 +3167,7 @@ const ProductForm = (() => {
           </div>
           <div id="mobile-preview-body" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col items-center transition-colors" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); ${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
             <!-- Checkbox Simulasi Diskon Mobile -->
-            <label class="w-full max-w-[260px] flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none py-1 transition-colors">
+            <label class="w-full max-w-[260px] flex items-center gap-2 text-xs font-normal text-slate-700 cursor-pointer select-none py-1 transition-colors">
               <input type="checkbox" id="cfg-simulate-countdown-preview-mob" class="w-4 h-4 rounded cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1" style="accent-color: var(--color-primary);" />
               <span>Simulasi Diskon</span>
             </label>
@@ -3201,14 +3201,14 @@ const ProductForm = (() => {
                   <div id="accordion-body-frame-mob" class="p-3 border-t border-slate-100 space-y-2.5" role="region" aria-labelledby="btn-accordion-frame-mob">
                     <div class="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Belakang</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-bg-color-mob" value="#ffffff" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-bg-text-mob" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Outline</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Outline</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-border-color-mob" value="#e2e8f0" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-border-text-mob" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
@@ -3216,7 +3216,7 @@ const ProductForm = (() => {
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
-                          <label for="cfg-border-width-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Outline</label>
+                          <label for="cfg-border-width-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Outline</label>
                           <span id="cfg-border-width-val-mob" class="text-[11px] font-mono font-normal text-slate-700" title="1 px" aria-label="Tipis (1 px)">Tipis</span>
                         </div>
                         <input type="hidden" id="cfg-border-width-mob" value="1" />
@@ -3229,7 +3229,7 @@ const ProductForm = (() => {
                       </div>
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
-                          <label for="cfg-border-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                          <label for="cfg-border-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
                           <div class="relative flex items-center w-20">
                             <input type="number" id="cfg-border-radius-mob" min="0" max="24" step="1" value="16" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
                             <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
@@ -3258,21 +3258,21 @@ const ProductForm = (() => {
                   <div id="accordion-body-text-info-mob" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-text-info-mob">
                     <div class="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Judul Produk</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Judul Produk</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-title-color-mob" value="#0f172a" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-title-text-mob" value="#0f172a" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div>
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Harga Utama</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Harga Utama</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-price-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-price-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                       <div class="col-span-2">
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Tombol Beli</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Tombol Beli</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-btn-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-btn-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
@@ -3334,7 +3334,7 @@ const ProductForm = (() => {
                       </label>
                       <!-- Panel Custom Harga Coret Mobile (Tampil jika Harga Coret TRUE) -->
                       <div id="cfg-strike-panel-mob" class="px-2 pt-1 pb-1 space-y-1.5">
-                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Harga Coret</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Harga Coret</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-strike-color-mob" value="#94a3b8" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-strike-hex-mob" value="#94a3b8" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
@@ -3361,7 +3361,7 @@ const ProductForm = (() => {
                         <!-- Radius Sudut Label Diskon Mobile -->
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
-                            <label for="cfg-discount-badge-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <label for="cfg-discount-badge-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
                             <div class="relative flex items-center w-20">
                               <input type="number" id="cfg-discount-badge-radius-mob" min="0" max="12" step="1" value="8" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
                               <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
@@ -3377,7 +3377,7 @@ const ProductForm = (() => {
                         </div>
                         <!-- Posisi Label Diskon Mobile (Dropdown) -->
                         <div class="space-y-1">
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Posisi Label</label>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Posisi Label</label>
                           <div class="relative" id="cfg-discount-badge-pos-container-mob">
                             <button type="button" id="btn-discount-badge-pos-mob" aria-haspopup="listbox" aria-expanded="false" class="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition cursor-pointer select-none">
                               <span id="lbl-discount-badge-pos-mob" class="font-normal text-slate-700">Kanan Atas</span>
@@ -3403,14 +3403,14 @@ const ProductForm = (() => {
                         <!-- Warna Label Diskon Mobile -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
                           <div>
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-discount-badge-text-color-mob" value="#ffffff" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-discount-badge-text-hex-mob" value="#ffffff" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                             </div>
                           </div>
                           <div>
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Latar</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-discount-badge-bg-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-discount-badge-bg-hex-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
@@ -3455,7 +3455,7 @@ const ProductForm = (() => {
                         <!-- Radius Sudut Countdown Mobile Slider 0-12 px + Presets 0, 4, 6, 8, 12 px -->
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
-                            <label for="cfg-countdown-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <label for="cfg-countdown-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
                             <div class="relative flex items-center w-20">
                               <input type="number" id="cfg-countdown-radius-mob" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
                               <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
@@ -3472,28 +3472,28 @@ const ProductForm = (() => {
                         <!-- Warna Countdown Mobile -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
                           <div>
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Belakang</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Belakang</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-countdown-bg-color-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-countdown-bg-hex-mob" value="${primaryState.countdown_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                             </div>
                           </div>
                           <div>
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-countdown-text-color-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-countdown-text-hex-mob" value="${primaryState.countdown_text_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                             </div>
                           </div>
                           <div>
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Ikon</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Ikon</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-countdown-icon-color-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-countdown-icon-hex-mob" value="${primaryState.countdown_icon_color || '#ffffff'}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                             </div>
                           </div>
                           <div>
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Border</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Border</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-countdown-border-color-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-countdown-border-hex-mob" value="${primaryState.countdown_border_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
@@ -3521,7 +3521,7 @@ const ProductForm = (() => {
                       <div id="cfg-badge-panel-mob" class="px-2 pt-1 pb-1 space-y-3">
                         <!-- Pilihan Gaya Label Mobile: Latar vs Garis Tepi (Segmented Control) -->
                         <div class="space-y-1">
-                          <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Gaya Label</label>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Gaya Label</label>
                           <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-badge-style-group-mob">
                             <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-style="bg">Solid</button>
                             <button type="button" class="btn-badge-style py-1 px-2 text-[11px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-style="border">Outline</button>
@@ -3532,7 +3532,7 @@ const ProductForm = (() => {
                         <!-- Radius Sudut Label Khusus Mobile (Slider 0-12 px + Pilihan Cepat 0, 4, 6, 8, 12 px) -->
                         <div class="space-y-1.5 pt-0.5">
                           <div class="flex items-center justify-between">
-                            <label for="cfg-badge-radius-mob" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
+                            <label for="cfg-badge-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
                             <div class="relative flex items-center w-20">
                               <input type="number" id="cfg-badge-radius-mob" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
                               <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
@@ -3550,21 +3550,21 @@ const ProductForm = (() => {
                         <!-- Pengaturan Warna Label Khusus Mobile -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
                           <div>
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-badge-text-color-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).text}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-badge-text-hex-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).text}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                             </div>
                           </div>
                           <div id="cfg-badge-bg-wrap-mob">
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Latar</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-badge-bg-color-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).bg}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-badge-bg-hex-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).bg}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                             </div>
                           </div>
                           <div id="cfg-badge-border-wrap-mob" class="hidden">
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Garis</label>
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Garis</label>
                             <div class="flex items-center gap-1.5">
                               <input type="color" id="cfg-badge-border-color-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-7 h-7 rounded-md cursor-pointer border-0 p-0" />
                               <input type="text" id="cfg-badge-border-hex-mob" value="${getThemeDefaultBadgeColors(primaryState.card_variant).border}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
@@ -3593,21 +3593,21 @@ const ProductForm = (() => {
                         <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
                       </div>
                       <div>
-                        <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Teks Footer 1</label>
                         <div class="relative w-full clean-datalist-wrapper">
                           <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
                       </div>
                       <div class="grid grid-cols-2 gap-2">
                         <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Footer 1</label>
                           <div class="flex items-center gap-1.5">
                             <input type="color" id="cfg-footer-bg-color-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
                             <input type="text" id="cfg-footer-bg-hex-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
                         <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks 1</label>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks 1</label>
                           <div class="flex items-center gap-1.5">
                             <input type="color" id="cfg-footer-text-color-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
                             <input type="text" id="cfg-footer-text-hex-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
@@ -3621,21 +3621,21 @@ const ProductForm = (() => {
                         <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
                       </div>
                       <div>
-                        <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Teks Footer 2</label>
                         <div class="relative w-full clean-datalist-wrapper">
                           <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
                       </div>
                       <div class="grid grid-cols-2 gap-2">
                         <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Footer 2</label>
                           <div class="flex items-center gap-1.5">
                             <input type="color" id="cfg-footer-2-bg-color-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
                             <input type="text" id="cfg-footer-2-bg-hex-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
                         <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks 2</label>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks 2</label>
                           <div class="flex items-center gap-1.5">
                             <input type="color" id="cfg-footer-2-text-color-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
                             <input type="text" id="cfg-footer-2-text-hex-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />

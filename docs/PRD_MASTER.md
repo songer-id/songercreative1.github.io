@@ -1336,6 +1336,44 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Tipografi kartu pratinjau etalase tetap dipertahankan sesuai desain kartu aslinya.
           - Seluruh fitur R4 (Outline None, input angka radius px, single span Terjual, dan perlindungan Step 2) tetap terjaga 100%.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian fungsional dan DOM simulation komprehensif (`scratch/test_card_promo_09c_r6.js` bersama seluruh rangkaian tes regresi sebelumnya) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Perapian Tipografi Label Editor Kartu Mobile (`SC-ADMIN-CARD-MOBILE-TYPOGRAPHY-09C-R7`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Desain Kartu pada tampilan mobile (viewport `<640px`). Merapikan seluruh label di atas input tools editor kartu mobile agar memiliki tipografi yang nyaman dibaca, proporsional, dan konsisten tanpa transformasi huruf kapital paksa (*uppercase*) maupun spasi renggang (*letter-spacing*).
+        - **Spesifikasi Tipografi Label Input Mobile**:
+          - `font-size: 11px;`
+          - `line-height: 16px;`
+          - `font-weight: 400;` (`font-normal`)
+          - `letter-spacing: normal;`
+          - `text-transform: none;` (penulisan biasa / Title Case)
+        - **Penerapan Konsisten pada Seluruh 28 Label Input Tools Mobile**:
+          - Diterapkan pada seluruh label input di dalam panel `#card-customization-section-mob`:
+            * Judul Produk, Harga Utama, Tombol Beli
+            * Latar Belakang, Warna Outline, Outline, Radius Sudut
+            * Posisi Label, Warna Teks (Diskon & Label Khusus), Warna Garis, Warna Ikon, Warna Harga Coret
+            * Teks Label Khusus, Warna Latar (Diskon & Label Khusus), Radius Diskon & Label Khusus
+            * Warna Latar Countdown, Warna Teks Countdown, Radius Countdown
+            * Teks Footer 1 & 2, Latar Footer 1 & 2, Warna Teks Footer 1 & 2
+          - Seluruh label input tools mobile dilengkapi class penanda `.card-tool-label` serta class Tailwind `text-[11px] leading-4 font-normal text-slate-500`.
+          - Label checkbox Simulasi Diskon mobile dirapikan menggunakan `font-normal` (konsisten dengan desktop).
+        - **Proteksi Scoped CSS (`css/admin.css`)**:
+          - Ditambahkan aturan scoped CSS media query:
+            ```css
+            @media (max-width: 639.98px) {
+              #card-customization-section-mob .card-tool-label {
+                font-size: 11px !important;
+                line-height: 16px !important;
+                font-weight: 400 !important;
+                letter-spacing: normal !important;
+                text-transform: none !important;
+              }
+            }
+            ```
+          - Deklarasi `!important` menjamin spesifikasi tipografi mobile tidak ditimpa oleh aturan CSS warisan atau utilitas umum lainnya.
+        - **Integritas Fitur & Non-Regresi**:
+          - Tidak mengubah logika fitur, penamaan ID/name, sinkronisasi state `primaryState.card_config`, parser konfigurasi, snapshot, maupun live preview kartu produk.
+          - Menjaga ukuran teks nilai input, nilai HEX, angka radius, opsi dropdown posisi diskon, judul accordion, baris toggle (Rating, Terjual, Ikon Tiket, Countdown), tombol preset, dan area sentuh minimal 44 px.
+          - Tampilan tablet/desktop (`>=640px`) pada `#card-customization-section` tetap mempertahankan struktur dan gaya aslinya tanpa perubahan.
+          - Tidak ada teks tebal (*semibold/bold*) pada seluruh tools editor Desain Kartu.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), pengujian unit R7 (`scratch/test_card_mobile_typography_09c_r7.js`), dan seluruh suite tes regresi R6, R4, R3 lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
