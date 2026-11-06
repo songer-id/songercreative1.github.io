@@ -2806,6 +2806,7 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-strike-hex" value="#94a3b8" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                         </div>
                       </div>
+                      <p id="cfg-strike-promo-hint" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 2. Label Diskon (d/h Diskon Foto) -->
@@ -2840,16 +2841,30 @@ const ProductForm = (() => {
                             <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
-                        <!-- Posisi Label Diskon (4 Sudut Foto) -->
+                        <!-- Posisi Label Diskon (Dropdown) -->
                         <div class="space-y-1">
                           <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Posisi Label</label>
-                          <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-discount-badge-position-group">
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="top-left">Kiri Atas</button>
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-pos="top-right">Kanan Atas</button>
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-left">Kiri Bawah</button>
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-right">Kanan Bawah</button>
+                          <div class="relative" id="cfg-discount-badge-pos-container">
+                            <button type="button" id="btn-discount-badge-pos" aria-haspopup="listbox" aria-expanded="false" class="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition cursor-pointer select-none">
+                              <span id="lbl-discount-badge-pos" class="font-normal text-slate-700">Kanan Atas</span>
+                              <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200" id="icon-discount-badge-pos-chevron"></i>
+                            </button>
+                            <div id="menu-discount-badge-pos" role="listbox" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg py-1 z-30 select-none">
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-slate-700 hover:bg-slate-50 cursor-pointer transition" data-pos="top-left">
+                                <span>Kiri Atas</span>
+                              </button>
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-emerald-700 bg-emerald-50 cursor-pointer transition" data-pos="top-right">
+                                <span>Kanan Atas</span>
+                              </button>
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-slate-700 hover:bg-slate-50 cursor-pointer transition" data-pos="bottom-left">
+                                <span>Kiri Bawah</span>
+                              </button>
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-slate-700 hover:bg-slate-50 cursor-pointer transition" data-pos="bottom-right">
+                                <span>Kanan Bawah</span>
+                              </button>
+                            </div>
+                            <input type="hidden" id="cfg-discount-badge-position" value="top-right" />
                           </div>
-                          <input type="hidden" id="cfg-discount-badge-position" value="top-right" />
                         </div>
                         <!-- Warna Label Diskon -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
@@ -2869,6 +2884,7 @@ const ProductForm = (() => {
                           </div>
                         </div>
                       </div>
+                      <p id="cfg-discount-promo-hint" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 3. Ikon Tiket -->
@@ -2884,7 +2900,7 @@ const ProductForm = (() => {
                           <i id="cfg-show-ticket-icon-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
-                      <p id="cfg-ticket-promo-hint" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Ikon tiket hanya muncul saat produk memiliki promo/diskon aktif atau Simulasi Diskon diaktifkan.</p>
+                      <p id="cfg-ticket-promo-hint" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 4. Countdown -->
@@ -2951,6 +2967,7 @@ const ProductForm = (() => {
                           </div>
                         </div>
                       </div>
+                      <p id="cfg-countdown-promo-hint" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 5. Label Khusus (Hanya Model A & C, disembunyikan jika Model B) -->
@@ -3323,6 +3340,7 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-strike-hex-mob" value="#94a3b8" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded-md bg-white" />
                         </div>
                       </div>
+                      <p id="cfg-strike-promo-hint-mob" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 2. Label Diskon Mobile (d/h Diskon Foto) -->
@@ -3357,16 +3375,30 @@ const ProductForm = (() => {
                             <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
                           </div>
                         </div>
-                        <!-- Posisi Label Diskon Mobile (4 Sudut Foto) -->
+                        <!-- Posisi Label Diskon Mobile (Dropdown) -->
                         <div class="space-y-1">
                           <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Posisi Label</label>
-                          <div class="grid grid-cols-2 p-0.5 bg-slate-100 rounded-md gap-0.5 select-none" id="cfg-discount-badge-position-group-mob">
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="top-left">Kiri Atas</button>
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md bg-white text-slate-800 shadow-2xs transition cursor-pointer text-center" data-pos="top-right">Kanan Atas</button>
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-left">Kiri Bawah</button>
-                            <button type="button" class="btn-disc-pos py-1 px-1.5 text-[10.5px] font-normal rounded-md text-slate-500 hover:text-slate-800 transition cursor-pointer text-center" data-pos="bottom-right">Kanan Bawah</button>
+                          <div class="relative" id="cfg-discount-badge-pos-container-mob">
+                            <button type="button" id="btn-discount-badge-pos-mob" aria-haspopup="listbox" aria-expanded="false" class="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition cursor-pointer select-none">
+                              <span id="lbl-discount-badge-pos-mob" class="font-normal text-slate-700">Kanan Atas</span>
+                              <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200" id="icon-discount-badge-pos-chevron-mob"></i>
+                            </button>
+                            <div id="menu-discount-badge-pos-mob" role="listbox" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg py-1 z-30 select-none">
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-slate-700 hover:bg-slate-50 cursor-pointer transition" data-pos="top-left">
+                                <span>Kiri Atas</span>
+                              </button>
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-emerald-700 bg-emerald-50 cursor-pointer transition" data-pos="top-right">
+                                <span>Kanan Atas</span>
+                              </button>
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-slate-700 hover:bg-slate-50 cursor-pointer transition" data-pos="bottom-left">
+                                <span>Kiri Bawah</span>
+                              </button>
+                              <button type="button" role="option" class="btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-slate-700 hover:bg-slate-50 cursor-pointer transition" data-pos="bottom-right">
+                                <span>Kanan Bawah</span>
+                              </button>
+                            </div>
+                            <input type="hidden" id="cfg-discount-badge-position-mob" value="top-right" />
                           </div>
-                          <input type="hidden" id="cfg-discount-badge-position-mob" value="top-right" />
                         </div>
                         <!-- Warna Label Diskon Mobile -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
@@ -3386,6 +3418,7 @@ const ProductForm = (() => {
                           </div>
                         </div>
                       </div>
+                      <p id="cfg-discount-promo-hint-mob" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 3. Ikon Tiket Mobile -->
@@ -3401,7 +3434,7 @@ const ProductForm = (() => {
                           <i id="cfg-show-ticket-icon-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
                         </span>
                       </label>
-                      <p id="cfg-ticket-promo-hint-mob" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Ikon tiket hanya muncul saat produk memiliki promo/diskon aktif atau Simulasi Diskon diaktifkan.</p>
+                      <p id="cfg-ticket-promo-hint-mob" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 4. Countdown Mobile -->
@@ -3468,6 +3501,7 @@ const ProductForm = (() => {
                           </div>
                         </div>
                       </div>
+                      <p id="cfg-countdown-promo-hint-mob" class="hidden text-[11px] text-amber-600 font-normal px-2 pt-0.5 pb-1 leading-tight">Tampil saat promo aktif atau Simulasi Diskon dinyalakan.</p>
                     </div>
 
                     <!-- 5. Label Khusus Mobile (Hanya Model A & C, disembunyikan jika Model B) -->
@@ -4178,15 +4212,43 @@ const ProductForm = (() => {
     }
   }
 
+  const DISCOUNT_BADGE_POS_LABELS = {
+    'top-left': 'Kiri Atas',
+    'top-right': 'Kanan Atas',
+    'bottom-left': 'Kiri Bawah',
+    'bottom-right': 'Kanan Bawah'
+  };
+
   function setDiscountBadgePosition(pos) {
     const valid = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
     const safePos = valid.includes(pos) ? pos : 'top-right';
+    const label = DISCOUNT_BADGE_POS_LABELS[safePos] || 'Kanan Atas';
+
     const inpDesk = document.getElementById('cfg-discount-badge-position');
     const inpMob = document.getElementById('cfg-discount-badge-position-mob');
     if (inpDesk) inpDesk.value = safePos;
     if (inpMob) inpMob.value = safePos;
 
+    const lblDesk = document.getElementById('lbl-discount-badge-pos');
+    const lblMob = document.getElementById('lbl-discount-badge-pos-mob');
+    if (lblDesk) lblDesk.textContent = label;
+    if (lblMob) lblMob.textContent = label;
+
     ['', '-mob'].forEach(suffix => {
+      const menu = document.getElementById(`menu-discount-badge-pos${suffix}`);
+      if (menu) {
+        menu.querySelectorAll('.btn-disc-pos').forEach(btn => {
+          const bPos = btn.dataset.pos;
+          const isSelected = (bPos === safePos);
+          btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+          if (isSelected) {
+            btn.className = 'btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-emerald-700 bg-emerald-50 cursor-pointer transition';
+          } else {
+            btn.className = 'btn-disc-pos w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-left text-slate-700 hover:bg-slate-50 cursor-pointer transition';
+          }
+        });
+      }
+      // Backward compatibility jika ada group lama
       const group = document.getElementById(`cfg-discount-badge-position-group${suffix}`);
       if (group) {
         group.querySelectorAll('.btn-disc-pos').forEach(btn => {
@@ -4198,6 +4260,35 @@ const ProductForm = (() => {
           }
         });
       }
+    });
+  }
+
+  function toggleDiscountBadgePosDropdown(open, suffix = '') {
+    const menu = document.getElementById(`menu-discount-badge-pos${suffix}`);
+    const btn = document.getElementById(`btn-discount-badge-pos${suffix}`);
+    const icon = document.getElementById(`icon-discount-badge-pos-chevron${suffix}`);
+    if (!menu || !btn) return;
+    const shouldOpen = (open !== undefined) ? open : menu.classList.contains('hidden');
+    if (shouldOpen) {
+      closeAllDiscountBadgePosDropdowns();
+      menu.classList.remove('hidden');
+      btn.setAttribute('aria-expanded', 'true');
+      if (icon) icon.classList.add('rotate-180');
+    } else {
+      menu.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+      if (icon) icon.classList.remove('rotate-180');
+    }
+  }
+
+  function closeAllDiscountBadgePosDropdowns() {
+    ['', '-mob'].forEach(suffix => {
+      const menu = document.getElementById(`menu-discount-badge-pos${suffix}`);
+      const btn = document.getElementById(`btn-discount-badge-pos${suffix}`);
+      const icon = document.getElementById(`icon-discount-badge-pos-chevron${suffix}`);
+      if (menu) menu.classList.add('hidden');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+      if (icon) icon.classList.remove('rotate-180');
     });
   }
 
@@ -9465,30 +9556,106 @@ const ProductForm = (() => {
     const simulateCountdown = (document.getElementById("cfg-simulate-countdown-preview")?.checked === true) || (document.getElementById("cfg-simulate-countdown-preview-mob")?.checked === true);
     const enableCountdown = document.getElementById('cfg-enable-countdown') ? document.getElementById('cfg-enable-countdown').checked : (primaryState.enable_countdown !== false);
 
-    // Status apakah countdown aktif (aktor utama daripada label khusus)
-    const isCountdownActive = simulateCountdown || (enableCountdown && hasDiscount && !primaryState.is_promo_monthly_only);
-    const effHasDiscount = hasDiscount || simulateCountdown;
-    const effDiscPercent = (hasDiscount && discPercent > 0) ? discPercent : 50;
+    // Evaluasi deadline waktu berakhir promo (wajib valid dan belum lewat)
+    const rawPromoEndDate = (document.getElementById('input-promo-end-date')?.value || primaryState.promo_end_date || '').toString().trim();
+    let isDeadlineValid = false;
+    let countdownTimeLeft = '1Jam';
+    if (rawPromoEndDate) {
+      let endDateObj = new Date(rawPromoEndDate);
+      if (!isNaN(endDateObj.getTime())) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(rawPromoEndDate)) {
+          const [y, m, d] = rawPromoEndDate.split('-').map(Number);
+          endDateObj = new Date(y, m - 1, d, 23, 59, 59, 999);
+        }
+        const diffMs = endDateObj.getTime() - Date.now();
+        if (diffMs > 0) {
+          isDeadlineValid = true;
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          if (diffDays >= 1) countdownTimeLeft = `${diffDays}Hari`;
+          else if (diffHours >= 1) countdownTimeLeft = `${diffHours}Jam`;
+          else countdownTimeLeft = `${Math.max(1, diffMinutes)}Mnt`;
+        }
+      }
+    }
 
+    const effHasDiscount = Boolean(hasDiscount || simulateCountdown);
+    const effDiscPercent = (hasDiscount && discPercent > 0) ? discPercent : 50;
+    const isCountdownActive = Boolean(simulateCountdown || (enableCountdown && hasDiscount && !primaryState.is_promo_monthly_only && isDeadlineValid));
+
+    // Update 4 Promo Hints di Editor Panel (Teks Seragam: 'Tampil saat promo aktif atau Simulasi Diskon dinyalakan.')
+    // 1. Strike Price Hint
+    const strikeHintDesk = document.getElementById('cfg-strike-promo-hint');
+    const strikeHintMob = document.getElementById('cfg-strike-promo-hint-mob');
+    const showStrikeHint = Boolean(cfg.show_strike && !effHasDiscount);
+    [strikeHintDesk, strikeHintMob].forEach(el => {
+      if (el) {
+        el.textContent = 'Tampil saat promo aktif atau Simulasi Diskon dinyalakan.';
+        if (showStrikeHint) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    });
+
+    // 2. Discount Badge Hint
+    const discHintDesk = document.getElementById('cfg-discount-promo-hint');
+    const discHintMob = document.getElementById('cfg-discount-promo-hint-mob');
+    const showDiscHint = Boolean(cfg.show_discount_badge && !effHasDiscount);
+    [discHintDesk, discHintMob].forEach(el => {
+      if (el) {
+        el.textContent = 'Tampil saat promo aktif atau Simulasi Diskon dinyalakan.';
+        if (showDiscHint) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    });
+
+    // 3. Ticket Icon Hint
     const ticketHintDesk = document.getElementById('cfg-ticket-promo-hint');
     const ticketHintMob = document.getElementById('cfg-ticket-promo-hint-mob');
     const showTicketHint = Boolean(cfg.show_ticket_icon && !effHasDiscount);
-    if (ticketHintDesk) {
-      if (showTicketHint) ticketHintDesk.classList.remove('hidden');
-      else ticketHintDesk.classList.add('hidden');
+    [ticketHintDesk, ticketHintMob].forEach(el => {
+      if (el) {
+        el.textContent = 'Tampil saat promo aktif atau Simulasi Diskon dinyalakan.';
+        if (showTicketHint) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    });
+
+    // 4. Countdown Hint
+    const cdHintDesk = document.getElementById('cfg-countdown-promo-hint');
+    const cdHintMob = document.getElementById('cfg-countdown-promo-hint-mob');
+    let cdHintText = '';
+    let showCdHint = false;
+    if (enableCountdown && !simulateCountdown) {
+      if (hasDiscount && !primaryState.is_promo_monthly_only) {
+        if (!isDeadlineValid) {
+          showCdHint = true;
+          cdHintText = 'Atur waktu berakhir promo untuk menampilkan countdown.';
+        }
+      } else {
+        showCdHint = true;
+        cdHintText = 'Tampil saat promo aktif atau Simulasi Diskon dinyalakan.';
+      }
     }
-    if (ticketHintMob) {
-      if (showTicketHint) ticketHintMob.classList.remove('hidden');
-      else ticketHintMob.classList.add('hidden');
-    }
+    [cdHintDesk, cdHintMob].forEach(el => {
+      if (el) {
+        if (showCdHint) {
+          el.textContent = cdHintText;
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      }
+    });
 
     // Hitung harga normal, harga coret & harga final di live preview
-    let origStrikePrice = basePrice;
+    // Aturan R6: Jangan membuat harga pembanding contoh hanya karena toggle aktif.
+    let origStrikePrice = 0;
     let effFinalPrice = basePrice;
     if (hasDiscount && discountedPrice < basePrice) {
       origStrikePrice = basePrice;
       effFinalPrice = discountedPrice;
-    } else if (effHasDiscount) {
+    } else if (simulateCountdown) {
       // Mode simulasi diskon 50%
       if (basePrice > 0) {
         origStrikePrice = basePrice * 2;
@@ -9497,15 +9664,9 @@ const ProductForm = (() => {
         origStrikePrice = 150000;
         effFinalPrice = 75000;
       }
-    } else if (cfg.show_strike) {
-      // Jika harga coret aktif dan tidak ada diskon promo tersimpan, sediakan harga pembanding simulasi untuk preview
-      if (basePrice > 0) {
-        origStrikePrice = Math.round(basePrice * 1.3);
-        effFinalPrice = basePrice;
-      } else {
-        origStrikePrice = 150000;
-        effFinalPrice = 115000;
-      }
+    } else {
+      origStrikePrice = 0;
+      effFinalPrice = basePrice;
     }
 
     // 4. Label satuan harga berdasarkan price_type
@@ -9541,7 +9702,7 @@ const ProductForm = (() => {
         return `
           <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden cursor-pointer shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
             <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" style="border-top-left-radius: inherit; border-top-right-radius: inherit;" alt="${escapeHtml(name)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400\\'><i class=\\'bi bi-box-seam text-4xl mb-1 text-slate-300\\'></i><span class=\\'text-[10px] font-semibold text-slate-400\\'>Foto Produk</span></div>';" />
-            ${cfg.show_discount_badge ? `
+            ${(cfg.show_discount_badge && effHasDiscount) ? `
               <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
                 <span>- % ${effDiscPercent}</span>
               </div>
@@ -9553,7 +9714,7 @@ const ProductForm = (() => {
           <div class="relative w-full ${aspectRatioClass} bg-slate-100 overflow-hidden flex flex-col items-center justify-center text-slate-400 shrink-0" style="border-top-left-radius: inherit; border-top-right-radius: inherit;">
             <i class="bi bi-box-seam text-4xl mb-1 text-slate-300"></i>
             <span class="text-[10px] font-semibold text-slate-400">Foto Produk</span>
-            ${cfg.show_discount_badge ? `
+            ${(cfg.show_discount_badge && effHasDiscount) ? `
               <div class="absolute ${discBadgePosClass} text-[10px] font-black px-2 py-0.5 shadow-md uppercase tracking-wider flex items-center justify-center z-10 leading-none" style="${discBadgeStyle}">
                 <span>- % ${effDiscPercent}</span>
               </div>
@@ -27423,14 +27584,60 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       updater: updateDiscountBadgeRadiusPresetButtons
     });
 
-    // Discount Badge Position Buttons (Desktop & Mobile Sync)
+    // Discount Badge Position Custom Dropdowns (Desktop & Mobile)
+    ['', '-mob'].forEach(suffix => {
+      const btn = document.getElementById(`btn-discount-badge-pos${suffix}`);
+      if (btn) {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleDiscountBadgePosDropdown(undefined, suffix);
+        });
+      }
+    });
+
     document.querySelectorAll('.btn-disc-pos').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const pos = btn.dataset.pos;
-        setDiscountBadgePosition(pos);
-        markCardDesignAsCustom();
+        if (pos) {
+          setDiscountBadgePosition(pos);
+          closeAllDiscountBadgePosDropdowns();
+          markCardDesignAsCustom();
+          updateProductCardLivePreview();
+        }
       });
+    });
+
+    // Close dropdowns on click outside
+    document.addEventListener('click', (e) => {
+      const cDesk = document.getElementById('cfg-discount-badge-pos-container');
+      const cMob = document.getElementById('cfg-discount-badge-pos-container-mob');
+      const inDesk = cDesk && cDesk.contains(e.target);
+      const inMob = cMob && cMob.contains(e.target);
+      if (!inDesk && !inMob) {
+        closeAllDiscountBadgePosDropdowns();
+      }
+    });
+
+    // Close dropdowns on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        ['', '-mob'].forEach(suffix => {
+          const menu = document.getElementById(`menu-discount-badge-pos${suffix}`);
+          const btn = document.getElementById(`btn-discount-badge-pos${suffix}`);
+          const icon = document.getElementById(`icon-discount-badge-pos-chevron${suffix}`);
+          if (menu && !menu.classList.contains('hidden')) {
+            menu.classList.add('hidden');
+            if (btn) {
+              btn.setAttribute('aria-expanded', 'false');
+              btn.focus();
+            }
+            if (icon) icon.classList.remove('rotate-180');
+          }
+        });
+      }
     });
 
     // Discount Badge Colors (Desktop & Mobile Sync)
@@ -27939,7 +28146,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const pStartInp = document.getElementById('input-promo-start-date');
     const pEndInp = document.getElementById('input-promo-end-date');
     if (pStartInp) pStartInp.addEventListener('change', e => { primaryState.promo_start_date = e.target.value || null; });
-    if (pEndInp) pEndInp.addEventListener('change', e => { primaryState.promo_end_date = e.target.value || null; });
+    if (pEndInp) {
+      const handleEndDateChange = (e) => {
+        primaryState.promo_end_date = e.target.value || null;
+        updateProductCardLivePreview();
+      };
+      pEndInp.addEventListener('change', handleEndDateChange);
+      pEndInp.addEventListener('input', handleEndDateChange);
+    }
 
     // Multi-image Drag & Drop
     const galleryContainer = document.getElementById('gallery-slots-container') || document.getElementById('image-gallery-container');
@@ -30131,6 +30345,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     updateDiscountBadgeRadiusPresetButtons,
     setDiscountBadgePosition,
     getDiscountBadgePositionClass,
+    toggleDiscountBadgePosDropdown,
+    closeAllDiscountBadgePosDropdowns,
     parseCountdownRadius,
     updateCountdownRadiusPresetButtons,
     handleApplyDefaultCardDesign,
@@ -30149,6 +30365,8 @@ window.parseDiscountBadgeRadius = ProductForm.parseDiscountBadgeRadius;
 window.updateDiscountBadgeRadiusPresetButtons = ProductForm.updateDiscountBadgeRadiusPresetButtons;
 window.setDiscountBadgePosition = ProductForm.setDiscountBadgePosition;
 window.getDiscountBadgePositionClass = ProductForm.getDiscountBadgePositionClass;
+window.toggleDiscountBadgePosDropdown = ProductForm.toggleDiscountBadgePosDropdown;
+window.closeAllDiscountBadgePosDropdowns = ProductForm.closeAllDiscountBadgePosDropdowns;
 window.parseCountdownRadius = ProductForm.parseCountdownRadius;
 window.updateCountdownRadiusPresetButtons = ProductForm.updateCountdownRadiusPresetButtons;
 window.getThemeBodyColor = ProductForm.getThemeBodyColor;

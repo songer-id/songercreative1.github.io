@@ -1301,6 +1301,41 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Radius sudut tombol dan input angka editor distandardisasi menjadi 6 px (`rounded-[6px]`), sedangkan pembungkus kelompok fitur menggunakan 8 px (`rounded-lg`).
           - Tipografi judul accordion, label, nilai, dan tombol menggunakan font-weight normal tanpa bold.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`) dan suite pengujian terfokus (`scratch/test_card_controls_09c_r4.js` bersama suite regresi R3) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Penyempurnaan Dropdown Posisi Label, Persingkat Petunjuk Promo, dan Standarisasi Syarat Render Promo (`SC-ADMIN-CARD-PROMO-CONTROLS-09C-R6`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Desain Kartu (desktop dan mobile). Transformasi pilihan posisi label diskon menjadi dropdown buka/tutup yang ringkas dan aksesibel, penyelarasan teks petunjuk singkat untuk 4 fitur promo (Harga Coret, Label Diskon, Ikon Tiket, Countdown), penyeragaman aturan render elemen promo pada live preview kartu tanpa harga/diskon contoh palsu, validasi batas waktu countdown promo, dan penegakan tipografi tools font-normal.
+        - **Posisi Label Diskon Menjadi Dropdown**:
+          - Menggantikan kelompok 4 tombol grid posisi label diskon dengan custom dropdown container (`relative`) yang ringkas pada desktop (`#cfg-discount-badge-pos-container`) dan mobile (`#cfg-discount-badge-pos-container-mob`).
+          - Kondisi tertutup: menampilkan posisi aktif yang terpilih (default: "Kanan Atas") bersama ikon chevron (`bi bi-chevron-down`).
+          - Kondisi terbuka: menampilkan pilihan "Kiri Atas", "Kanan Atas", "Kiri Bawah", dan "Kanan Bawah".
+          - Memilih salah satu opsi langsung memperbarui posisi label pada kartu live preview, menandai pilihan aktif (warna tema/highlight), memperbarui teks tombol trigger, menutup dropdown, dan menyinkronkan input tersembunyi (`#cfg-discount-badge-position` dan `#cfg-discount-badge-position-mob`).
+          - Dropdown menutup otomatis saat pengguna mengklik di luar area dropdown (click outside) atau menekan tombol Escape.
+          - Memiliki atribut aksesibilitas yang lengkap (`aria-haspopup="listbox"`, `aria-expanded="false"`, `role="listbox"`, `role="option"`, `aria-selected`).
+          - Nilai konfigurasi posisi (`discount_badge_position`) tetap dipertahankan utuh pada payload penyimpanan form, snapshot, dan pemulihan konfigurasi bawaan.
+        - **Penyelarasan & Persingkat Petunjuk Promo (4 Fitur)**:
+          - Teks petunjuk singkat yang seragam diterapkan untuk 4 fitur:
+            * Harga Coret (`#cfg-strike-promo-hint` & `-mob`)
+            * Label Diskon (`#cfg-discount-promo-hint` & `-mob`)
+            * Ikon Tiket (`#cfg-ticket-promo-hint` & `-mob`)
+            * Countdown (`#cfg-countdown-promo-hint` & `-mob`)
+          - Teks seragam: *"Tampil saat promo aktif atau Simulasi Diskon dinyalakan."*
+          - Petunjuk tampil hanya jika toggle fitur dalam kondisi aktif tetapi syarat promo produk belum terpenuhi. Saat toggle fitur dinonaktifkan atau syarat promo terpenuhi, petunjuk disembunyikan.
+        - **Penyeragaman Syarat Render Fitur Promo pada Kartu**:
+          - Status toggle aktif ditegakkan sebagai izin menampilkan fitur, bukan pencipta promo buatan.
+          - Saat toggle nonaktif: elemen kartu tidak tampil.
+          - Saat toggle aktif + promo nyata valid: elemen kartu tampil berdasarkan data promo nyata.
+          - Saat toggle aktif + mode Simulasi Diskon aktif: elemen kartu tampil menggunakan data simulasi 50%.
+          - Saat toggle aktif + tanpa promo nyata dan tanpa simulasi: elemen promo TIDAK tampil pada kartu produk, dan petunjuk singkat tampil di panel editor.
+          - **Harga Coret**: Menghapus pembuatan harga coret pembanding tiruan (`Math.round(basePrice * 1.3)`). Harga coret pada kartu hanya muncul jika terdapat promo nyata atau simulasi diskon aktif.
+          - **Label Diskon**: Menghapus rendering lencana diskon buatan `- % 50` saat simulasi mati. Lencana diskon pada foto hanya tampil jika ada promo nyata dengan persentase sah atau saat simulasi diskon aktif.
+          - **Countdown**: Promo nyata wajib memiliki waktu berakhir (`promo_end_date`) yang valid dan belum lewat waktu. Countdown tidak dirender jika tanggal berakhir promo kosong atau sudah kedaluwarsa, dan editor menampilkan petunjuk khusus: *"Atur waktu berakhir promo untuk menampilkan countdown."* Dalam mode Simulasi Diskon, countdown menggunakan contoh simulasi bawaan.
+          - Evaluasi ulang syarat tampil berjalan real-time saat toggle, input promo diskon, tanggal berakhir promo, atau simulasi diskon diubah.
+          - Panel pengaturan custom (warna dan radius) tetap dapat dikonfigurasi saat toggle aktif meskipun syarat promo belum aktif.
+          - Terverifikasi tidak ada data simulasi yang tersimpan ke produk, preset tema, maupun transaksi.
+        - **Tipografi & Standarisasi UI Tools**:
+          - Seluruh teks tools editor menggunakan `font-weight: 400` (`font-normal`), termasuk dropdown trigger, opsi listbox, petunjuk promo, label, dan tombol.
+          - Tipografi kartu pratinjau etalase tetap dipertahankan sesuai desain kartu aslinya.
+          - Seluruh fitur R4 (Outline None, input angka radius px, single span Terjual, dan perlindungan Step 2) tetap terjaga 100%.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian fungsional dan DOM simulation komprehensif (`scratch/test_card_promo_09c_r6.js` bersama seluruh rangkaian tes regresi sebelumnya) lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
