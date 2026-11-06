@@ -574,11 +574,11 @@ const DB = (() => {
       footer_bg_color: '#059669',
       footer_text_color: '#ffffff',
       footer_icon: 'truck',
-      footer_text: 'Proses Hanya Dalam 1Jam',
+      footer_text: '',
       footer_2_bg_color: '#047857',
       footer_2_text_color: '#ffffff',
       footer_2_icon: 'minus',
-      footer_2_text: 'Variasi Paket Tersedia/tidak tersedia',
+      footer_2_text: '',
       countdown_radius: '9999px',
       countdown_bg_color: '#059669',
       countdown_text_color: '#ffffff',
@@ -2738,13 +2738,13 @@ const DB = (() => {
         description: productData.description ? productData.description.trim() : null,
         custom_labels: Array.isArray(productData.custom_labels) ? productData.custom_labels.filter(Boolean) : (typeof productData.custom_labels === 'string' && productData.custom_labels.trim() ? productData.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : []),
         custom_footer_1: productData.custom_footer_1 || {
-          text: productData.card_footer_text ? productData.card_footer_text.trim() : 'Proses Hanya Dalam 1Jam',
+          text: productData.card_footer_text ? productData.card_footer_text.trim() : '',
           icon: productData.footer_badge_icon ? productData.footer_badge_icon.trim() : 'truck',
           bg_color: productData.footer_bg_color || null,
           text_color: productData.footer_text_color || null
         },
         custom_footer_2: productData.custom_footer_2 || {
-          text: productData.card_footer_2_text ? productData.card_footer_2_text.trim() : 'Variasi Paket Tersedia/tidak tersedia',
+          text: productData.card_footer_2_text ? productData.card_footer_2_text.trim() : '',
           icon: productData.footer_2_badge_icon ? productData.footer_2_badge_icon.trim() : 'minus',
           bg_color: productData.footer_2_bg_color || null,
           text_color: productData.footer_2_text_color || null
@@ -2759,11 +2759,11 @@ const DB = (() => {
         warranty_type: productData.warranty_type || '',
         is_preorder: Boolean(productData.is_preorder),
         preorder_days: parseInt(productData.preorder_days) || 7,
-        card_footer_text: productData.card_footer_text ? productData.card_footer_text.trim() : 'Proses Hanya Dalam 1Jam',
+        card_footer_text: productData.card_footer_text ? productData.card_footer_text.trim() : '',
         footer_badge_icon: productData.footer_badge_icon ? productData.footer_badge_icon.trim() : 'truck',
         footer_bg_color: productData.footer_bg_color || null,
         footer_text_color: productData.footer_text_color || null,
-        card_footer_2_text: productData.card_footer_2_text ? productData.card_footer_2_text.trim() : 'Variasi Paket Tersedia/tidak tersedia',
+        card_footer_2_text: productData.card_footer_2_text ? productData.card_footer_2_text.trim() : '',
         footer_2_badge_icon: productData.footer_2_badge_icon ? productData.footer_2_badge_icon.trim() : 'minus',
         footer_2_bg_color: productData.footer_2_bg_color || null,
         footer_2_text_color: productData.footer_2_text_color || null,
@@ -2773,6 +2773,7 @@ const DB = (() => {
         countdown_border_color: productData.countdown_border_color || '#059669',
         is_active: productData.is_active !== false,
         sales_count: parseInt(productData.sales_count) || 0,
+        admin_card_preview_metrics: (productData.admin_card_preview_metrics && typeof productData.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(productData.admin_card_preview_metrics)) : null,
         price: (typeof productData.price === 'number' && productData.price > 0)
           ? productData.price
           : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : 0),
@@ -2956,13 +2957,13 @@ const DB = (() => {
         description: productData.description ? productData.description.trim() : null,
         custom_labels: productData.custom_labels !== undefined ? (Array.isArray(productData.custom_labels) ? productData.custom_labels.filter(Boolean) : (typeof productData.custom_labels === 'string' && productData.custom_labels.trim() ? productData.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : [])) : (products[index].custom_labels || []),
         custom_footer_1: productData.custom_footer_1 !== undefined ? productData.custom_footer_1 : (products[index].custom_footer_1 || {
-          text: products[index].card_footer_text || 'Proses Hanya Dalam 1Jam',
+          text: products[index].card_footer_text || '',
           icon: products[index].footer_badge_icon || 'truck',
           bg_color: products[index].footer_bg_color || null,
           text_color: products[index].footer_text_color || null
         }),
         custom_footer_2: productData.custom_footer_2 !== undefined ? productData.custom_footer_2 : (products[index].custom_footer_2 || {
-          text: products[index].card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
+          text: products[index].card_footer_2_text || '',
           icon: products[index].footer_2_badge_icon || 'minus',
           bg_color: products[index].footer_2_bg_color || null,
           text_color: products[index].footer_2_text_color || null
@@ -2977,11 +2978,11 @@ const DB = (() => {
         warranty_type: productData.warranty_type !== undefined ? productData.warranty_type : (products[index].warranty_type || ''),
         is_preorder: productData.is_preorder !== undefined ? Boolean(productData.is_preorder) : Boolean(products[index].is_preorder),
         preorder_days: productData.preorder_days !== undefined ? (parseInt(productData.preorder_days) || 7) : (products[index].preorder_days || 7),
-        card_footer_text: productData.card_footer_text !== undefined ? productData.card_footer_text.trim() : (products[index].card_footer_text || 'Proses Hanya Dalam 1Jam'),
+        card_footer_text: productData.card_footer_text !== undefined ? productData.card_footer_text.trim() : (products[index].card_footer_text || ''),
         footer_badge_icon: productData.footer_badge_icon !== undefined ? productData.footer_badge_icon.trim() : (products[index].footer_badge_icon || 'truck'),
         footer_bg_color: productData.footer_bg_color !== undefined ? productData.footer_bg_color : (products[index].footer_bg_color || null),
         footer_text_color: productData.footer_text_color !== undefined ? productData.footer_text_color : (products[index].footer_text_color || null),
-        card_footer_2_text: productData.card_footer_2_text !== undefined ? productData.card_footer_2_text.trim() : (products[index].card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia'),
+        card_footer_2_text: productData.card_footer_2_text !== undefined ? productData.card_footer_2_text.trim() : (products[index].card_footer_2_text || ''),
         footer_2_badge_icon: productData.footer_2_badge_icon !== undefined ? productData.footer_2_badge_icon.trim() : (products[index].footer_2_badge_icon || 'minus'),
         footer_2_bg_color: productData.footer_2_bg_color !== undefined ? productData.footer_2_bg_color : (products[index].footer_2_bg_color || null),
         footer_2_text_color: productData.footer_2_text_color !== undefined ? productData.footer_2_text_color : (products[index].footer_2_text_color || null),
@@ -2990,7 +2991,8 @@ const DB = (() => {
         countdown_text_color: productData.countdown_text_color || products[index].countdown_text_color || '#ffffff',
         countdown_border_color: productData.countdown_border_color || products[index].countdown_border_color || '#059669',
         is_active: productData.is_active !== undefined ? productData.is_active : products[index].is_active,
-        sales_count: productData.sales_count !== undefined ? parseInt(productData.sales_count) : products[index].sales_count,
+        sales_count: (products[index] && products[index].sales_count !== undefined) ? products[index].sales_count : (parseInt(productData.sales_count) || 0),
+        admin_card_preview_metrics: productData.admin_card_preview_metrics !== undefined ? ((productData.admin_card_preview_metrics && typeof productData.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(productData.admin_card_preview_metrics)) : null) : (products[index].admin_card_preview_metrics || null),
         price: (typeof productData.price === 'number' && productData.price > 0)
           ? productData.price
           : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : (products[index].price || 0)),

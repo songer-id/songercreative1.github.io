@@ -30,6 +30,73 @@ const ProductForm = (() => {
   let cardDesignSnapshot = null;
   let cardDesignSnapshotKey = null;
 
+  const FOOTER_ICONS_CATALOG = [
+    { id: 'none', label: 'Tanpa Ikon', icon: 'ban', category: 'Umum' },
+    { id: 'truck', label: 'Pengiriman Cepat', icon: 'truck', category: 'Logistik' },
+    { id: 'clock', label: 'Jam / Waktu', icon: 'clock', category: 'Waktu' },
+    { id: 'zap', label: 'Kilat / Express', icon: 'zap', category: 'Layanan' },
+    { id: 'shield-check', label: 'Garansi / Keamanan', icon: 'shield-check', category: 'Garansi' },
+    { id: 'minus', label: 'Strip / Garis', icon: 'minus', category: 'Umum' },
+    { id: 'check-circle', label: 'Centang / Selesai', icon: 'check-circle', category: 'Status' },
+    { id: 'package', label: 'Paket / Kemasan', icon: 'package', category: 'Logistik' },
+    { id: 'calendar', label: 'Kalender / Jadwal', icon: 'calendar', category: 'Waktu' },
+    { id: 'layers', label: 'Lapisan / Varian', icon: 'layers', category: 'Produk' },
+    { id: 'settings', label: 'Pengaturan / Kustom', icon: 'settings', category: 'Teknis' },
+    { id: 'wrench', label: 'Alat / Reparasi', icon: 'wrench', category: 'Teknis' },
+    { id: 'palette', label: 'Palet / Desain', icon: 'palette', category: 'Desain' },
+    { id: 'tag', label: 'Label / Tag', icon: 'tag', category: 'Promo' },
+    { id: 'badge-percent', label: 'Diskon / Hemat', icon: 'badge-percent', category: 'Promo' },
+    { id: 'gift', label: 'Hadiah / Bonus', icon: 'gift', category: 'Promo' },
+    { id: 'map-pin', label: 'Lokasi / Toko', icon: 'map-pin', category: 'Lokasi' },
+    { id: 'leaf', label: 'Ramah Lingkungan', icon: 'leaf', category: 'Kualitas' },
+    { id: 'graduation-cap', label: 'Pendidikan / Edukasi', icon: 'graduation-cap', category: 'Layanan' },
+    { id: 'headphones', label: 'Audio / Layanan CS', icon: 'headphones', category: 'Layanan' },
+    { id: 'sparkles', label: 'Kualitas Premium', icon: 'sparkles', category: 'Kualitas' },
+    { id: 'award', label: 'Penghargaan / Terbaik', icon: 'award', category: 'Kualitas' },
+    { id: 'printer', label: 'Percetakan / Cetak', icon: 'printer', category: 'Produksi' },
+    { id: 'star', label: 'Bintang / Unggulan', icon: 'star', category: 'Kualitas' }
+  ];
+
+  function getUnicodeLength(str) {
+    return str ? [...str].length : 0;
+  }
+
+  function renderFooterIconGridHtml(currentIconId, pickerId) {
+    return FOOTER_ICONS_CATALOG.map(item => {
+      const isSel = (currentIconId === item.id) || (!currentIconId && item.id === (pickerId.includes('footer-2') ? 'minus' : 'truck'));
+      const iconInner = item.id === 'none'
+        ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
+        : `<i data-lucide="${item.icon}" class="w-4.5 h-4.5"></i>`;
+      return `
+        <button type="button" class="btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}" data-icon-id="${item.id}" data-picker="${pickerId}" title="${escapeHtml(item.label)}" role="menuitem">
+          ${iconInner}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function updateFooterCharCounter(inputEl, counterEl) {
+    if (!counterEl) return;
+    const val = inputEl ? inputEl.value : '';
+    const len = getUnicodeLength(val);
+    counterEl.textContent = `${len}/32`;
+    if (len > 32) {
+      counterEl.classList.add('text-red-600', 'font-semibold');
+      counterEl.classList.remove('text-slate-400');
+      if (inputEl) {
+        inputEl.classList.add('border-red-400', 'focus:border-red-500');
+        inputEl.classList.remove('border-slate-200');
+      }
+    } else {
+      counterEl.classList.remove('text-red-600', 'font-semibold');
+      counterEl.classList.add('text-slate-400');
+      if (inputEl) {
+        inputEl.classList.remove('border-red-400', 'focus:border-red-500');
+        inputEl.classList.add('border-slate-200');
+      }
+    }
+  }
+
   function getCurrentCardDesignKey() {
     return `${currentEditingId || 'new'}__${primaryState.card_variant || 'A'}`;
   }
@@ -58,7 +125,11 @@ const ProductForm = (() => {
       countdown_text_color: primaryState.countdown_text_color,
       countdown_icon_color: primaryState.countdown_icon_color,
       countdown_border_color: primaryState.countdown_border_color,
-      enable_countdown: primaryState.enable_countdown
+      enable_countdown: primaryState.enable_countdown,
+      admin_card_preview_metrics: primaryState.admin_card_preview_metrics ? JSON.parse(JSON.stringify(primaryState.admin_card_preview_metrics)) : {
+        rating: { source: 'auto', manual_value: null },
+        sales: { source: 'auto', manual_value: null }
+      }
     };
     cardDesignSnapshotKey = currentKey;
   }
@@ -349,6 +420,10 @@ const ProductForm = (() => {
     variation_dependencies: null,
     show_badge: true,
     sales_count: 0,
+    admin_card_preview_metrics: {
+      rating: { source: 'auto', manual_value: null },
+      sales: { source: 'auto', manual_value: null }
+    },
     order_category: 'Ctk', // Default operasional internal kasir
     category_id: '',     // Kategori Utama Etalase (default '' wajib dipilih seller!)
     sub_category_id: '', // Sub-Kategori Etalase
@@ -442,11 +517,11 @@ const ProductForm = (() => {
     images: [],
     image_aspect_ratio: '1:1',
     description: '',
-    card_footer_text: 'Proses Hanya Dalam 1Jam',
+    card_footer_text: '',
     footer_badge_icon: 'truck',
     footer_bg_color: getPrimaryThemeColor(),
     footer_text_color: '#ffffff',
-    card_footer_2_text: 'Variasi Paket Tersedia/tidak tersedia',
+    card_footer_2_text: '',
     footer_2_badge_icon: 'minus',
     footer_2_bg_color: getPrimaryThemeColor(),
     footer_2_text_color: '#ffffff',
@@ -478,13 +553,13 @@ const ProductForm = (() => {
       for (const p of sortedProds) {
         if (p.custom_footer_1 || p.custom_footer_2 || p.card_footer_text || p.footer_bg_color) {
           const f1 = p.custom_footer_1 ? { ...p.custom_footer_1 } : {
-            text: p.card_footer_text || 'Proses Hanya Dalam 1Jam',
+            text: p.card_footer_text || '',
             icon: p.footer_badge_icon || 'truck',
             bg_color: p.footer_bg_color || getPrimaryThemeColor(),
             text_color: p.footer_text_color || '#ffffff'
           };
           const f2 = p.custom_footer_2 ? { ...p.custom_footer_2 } : {
-            text: p.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
+            text: p.card_footer_2_text || '',
             icon: p.footer_2_badge_icon || 'minus',
             bg_color: p.footer_2_bg_color || getPrimaryThemeColor(),
             text_color: p.footer_2_text_color || '#ffffff'
@@ -1374,13 +1449,13 @@ const ProductForm = (() => {
 
     const inheritedFooter = getLastProductFooterConfig();
     const f1Default = inheritedFooter?.f1 || {
-      text: 'Proses Hanya Dalam 1Jam',
+      text: '',
       icon: 'truck',
       bg_color: getPrimaryThemeColor(),
       text_color: '#ffffff'
     };
     const f2Default = inheritedFooter?.f2 || {
-      text: 'Variasi Paket Tersedia/tidak tersedia',
+      text: '',
       icon: 'minus',
       bg_color: getPrimaryThemeColor(),
       text_color: '#ffffff'
@@ -1430,6 +1505,10 @@ const ProductForm = (() => {
       has_layer_3: false,
       show_badge: true,
       sales_count: 0,
+      admin_card_preview_metrics: {
+        rating: { source: 'auto', manual_value: null },
+        sales: { source: 'auto', manual_value: null }
+      },
       order_category: 'Ctk',
       category_id: '', // Default '' (kosong, seller wajib memilih sendiri!)
       sub_category_id: '',
@@ -1827,12 +1906,12 @@ const ProductForm = (() => {
     const inheritedFooter = getLastProductFooterConfig();
     const f1Prod = prod.custom_footer_1 ? { ...prod.custom_footer_1 } : (
       (prod.card_footer_text || prod.footer_bg_color) ? {
-        text: prod.card_footer_text || 'Proses Hanya Dalam 1Jam',
+        text: prod.card_footer_text || '',
         icon: prod.footer_badge_icon || 'truck',
         bg_color: prod.footer_bg_color || getPrimaryThemeColor(),
         text_color: prod.footer_text_color || '#ffffff'
       } : (inheritedFooter?.f1 || {
-        text: 'Proses Hanya Dalam 1Jam',
+        text: '',
         icon: 'truck',
         bg_color: getPrimaryThemeColor(),
         text_color: '#ffffff'
@@ -1841,12 +1920,12 @@ const ProductForm = (() => {
 
     const f2Prod = prod.custom_footer_2 ? { ...prod.custom_footer_2 } : (
       (prod.card_footer_2_text || prod.footer_2_bg_color) ? {
-        text: prod.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia',
+        text: prod.card_footer_2_text || '',
         icon: prod.footer_2_badge_icon || 'minus',
         bg_color: prod.footer_2_bg_color || getPrimaryThemeColor(),
         text_color: prod.footer_2_text_color || '#ffffff'
       } : (inheritedFooter?.f2 || {
-        text: 'Variasi Paket Tersedia/tidak tersedia',
+        text: '',
         icon: 'minus',
         bg_color: getPrimaryThemeColor(),
         text_color: '#ffffff'
@@ -1877,6 +1956,10 @@ const ProductForm = (() => {
       has_layer_3: false,
       show_badge: prod.card_variant === 'B' ? false : (prod.show_badge !== undefined ? prod.show_badge : true),
       sales_count: (prod.sales_count !== undefined && prod.sales_count !== null && !isNaN(parseInt(prod.sales_count))) ? parseInt(prod.sales_count, 10) : 0,
+      admin_card_preview_metrics: (prod.admin_card_preview_metrics && typeof prod.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(prod.admin_card_preview_metrics)) : {
+        rating: { source: 'auto', manual_value: null },
+        sales: { source: 'auto', manual_value: null }
+      },
       order_category: prod.order_category || 'Ctk',
       category_id: prod.category_id || null,
       sub_category_id: prod.sub_category_id || null,
@@ -2639,7 +2722,12 @@ const ProductForm = (() => {
             </label>
 
             <!-- Card Live Box Container -->
-            <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] mx-auto flex justify-center transition-colors">
+            <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] mx-auto flex flex-col items-center justify-center transition-colors">
+              <!-- Penanda Data Contoh Desktop (Task SC-ADMIN-CARD-METRIC-SOURCES-10) -->
+              <div id="preview-sample-data-badge" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
+                <i class="bi bi-info-circle text-[10px]"></i>
+                <span>Data contoh</span>
+              </div>
               <div id="product-card-preview-container" class="w-full max-w-[260px] relative overflow-hidden">
                 <div id="card-live-preview-box">
                   <!-- Rendered dynamically -->
@@ -2747,29 +2835,69 @@ const ProductForm = (() => {
                     </div>
                     <div class="pt-2 border-t border-slate-100 divide-y divide-slate-100">
                       <!-- Rating -->
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                        <span class="flex items-center gap-1.5">
-                          <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
-                          <span>Rating</span>
-                        </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-rating" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-rating-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-rating-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      <div class="py-1">
+                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                          <span class="flex items-center gap-1.5">
+                            <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
+                            <span>Rating</span>
+                          </span>
+                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                            <input type="checkbox" id="cfg-show-rating" class="sr-only peer cfg-eye-toggle" />
+                            <i id="cfg-show-rating-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                            <i id="cfg-show-rating-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                          </span>
+                        </label>
+                        <!-- Subpanel Sumber Rating Desktop -->
+                        <div id="cfg-rating-source-panel" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Sumber Data</label>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <button type="button" class="btn-rating-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
+                            <button type="button" class="btn-rating-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
+                          </div>
+                          <div id="cfg-rating-manual-container" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
+                            <div class="flex items-center justify-between gap-2">
+                              <label for="cfg-rating-manual-val" class="text-[10px] text-slate-600 font-normal">Rating (0–5)</label>
+                              <input type="number" id="cfg-rating-manual-val" min="0" max="5" step="0.1" placeholder="Contoh: 4.8" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
+                            <p id="cfg-rating-manual-hint" class="hidden text-[10px] text-amber-600 font-normal">Masukkan nilai rating (0–5) untuk pratinjau.</p>
+                          </div>
+                        </div>
+                      </div>
                       <!-- Terjual -->
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                        <span class="flex items-center gap-1.5">
-                          <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
-                          <span>Terjual</span>
-                        </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-sales" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-sales-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-sales-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      <div class="py-1">
+                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                          <span class="flex items-center gap-1.5">
+                            <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
+                            <span>Terjual</span>
+                          </span>
+                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                            <input type="checkbox" id="cfg-show-sales" class="sr-only peer cfg-eye-toggle" />
+                            <i id="cfg-show-sales-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                            <i id="cfg-show-sales-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                          </span>
+                        </label>
+                        <!-- Subpanel Sumber Terjual Desktop -->
+                        <div id="cfg-sales-source-panel" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Sumber Data</label>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <button type="button" class="btn-sales-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
+                            <button type="button" class="btn-sales-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
+                          </div>
+                          <div id="cfg-sales-manual-container" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
+                            <div class="flex items-center justify-between gap-2">
+                              <label for="cfg-sales-manual-val" class="text-[10px] text-slate-600 font-normal">Jumlah Terjual</label>
+                              <input type="number" id="cfg-sales-manual-val" min="0" step="1" placeholder="Contoh: 150" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
+                            <p id="cfg-sales-manual-hint" class="hidden text-[10px] text-amber-600 font-normal">Masukkan angka terjual (≥ 0) untuk pratinjau.</p>
+                          </div>
+                        </div>
+                      </div>
                       <p id="cfg-metric-model-b-notice" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-[11px] text-slate-500 font-normal px-2 pt-1 pb-0.5">Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual.</p>
                     </div>
                   </div>
@@ -3059,12 +3187,36 @@ const ProductForm = (() => {
                         <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
                       </div>
                       <div>
-                        <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Teks Footer 1</label>
+                        <div class="flex items-center justify-between mb-0.5">
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Teks Footer 1</label>
+                          <span id="footer-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
+                        </div>
                         <div class="relative w-full clean-datalist-wrapper">
-                          <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                          <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Tersedia berbagai Variasi" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
                       </div>
-                      <div class="grid grid-cols-2 gap-2">
+                      <div class="grid grid-cols-3 gap-2">
+                        <!-- Ikon Footer 1 -->
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
+                          <div class="relative" id="container-footer-icon-picker-side">
+                            <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
+                              <span id="preview-footer-icon-side" class="flex items-center justify-center shrink-0">
+                                ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                              </span>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                            </button>
+                            <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                                <span>Pilih Ikon</span>
+                                <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                              </div>
+                              <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-side">
+                                ${renderFooterIconGridHtml(primaryState.footer_badge_icon || 'truck', 'footer-1-side')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                         <div>
                           <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
                           <div class="flex items-center gap-1.5">
@@ -3087,12 +3239,36 @@ const ProductForm = (() => {
                         <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
                       </div>
                       <div>
-                        <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Teks Footer 2</label>
+                        <div class="flex items-center justify-between mb-0.5">
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Teks Footer 2</label>
+                          <span id="footer-2-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_2_text)}/32</span>
+                        </div>
                         <div class="relative w-full clean-datalist-wrapper">
-                          <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                          <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pengiriman Cepat" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
                       </div>
-                      <div class="grid grid-cols-2 gap-2">
+                      <div class="grid grid-cols-3 gap-2">
+                        <!-- Ikon Footer 2 -->
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
+                          <div class="relative" id="container-footer-2-icon-picker-side">
+                            <button type="button" id="btn-footer-2-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
+                              <span id="preview-footer-2-icon-side" class="flex items-center justify-center shrink-0">
+                                ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_2_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                              </span>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                            </button>
+                            <div id="menu-footer-2-icon-picker-side" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                                <span>Pilih Ikon</span>
+                                <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                              </div>
+                              <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-2-icon-picker-side">
+                                ${renderFooterIconGridHtml(primaryState.footer_2_badge_icon || 'minus', 'footer-2-side')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                         <div>
                           <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
                           <div class="flex items-center gap-1.5">
@@ -3173,7 +3349,12 @@ const ProductForm = (() => {
             </label>
 
             <!-- Card Preview Box -->
-            <div id="preview-card-outer-wrapper-mob" class="w-full max-w-[260px] flex justify-center transition-colors">
+            <div id="preview-card-outer-wrapper-mob" class="w-full max-w-[260px] flex flex-col items-center justify-center transition-colors">
+              <!-- Penanda Data Contoh Mobile (Task SC-ADMIN-CARD-METRIC-SOURCES-10) -->
+              <div id="preview-sample-data-badge-mob" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
+                <i class="bi bi-info-circle text-[10px]"></i>
+                <span>Data contoh</span>
+              </div>
               <div class="w-full max-w-[260px] relative overflow-hidden">
                 <div id="mobile-card-preview-container">
                   <!-- Rendered dynamically -->
@@ -3281,29 +3462,69 @@ const ProductForm = (() => {
                     </div>
                     <div class="pt-2 border-t border-slate-100 divide-y divide-slate-100">
                       <!-- Rating -->
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                        <span class="flex items-center gap-1.5">
-                          <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
-                          <span>Rating</span>
-                        </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-rating-mob" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-rating-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-rating-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      <div class="py-1">
+                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                          <span class="flex items-center gap-1.5">
+                            <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
+                            <span>Rating</span>
+                          </span>
+                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                            <input type="checkbox" id="cfg-show-rating-mob" class="sr-only peer cfg-eye-toggle" />
+                            <i id="cfg-show-rating-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                            <i id="cfg-show-rating-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                          </span>
+                        </label>
+                        <!-- Subpanel Sumber Rating Mobile -->
+                        <div id="cfg-rating-source-panel-mob" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Sumber Data</label>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <button type="button" class="btn-rating-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
+                            <button type="button" class="btn-rating-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
+                          </div>
+                          <div id="cfg-rating-manual-container-mob" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
+                            <div class="flex items-center justify-between gap-2">
+                              <label for="cfg-rating-manual-val-mob" class="card-tool-label text-[11px] leading-4 text-slate-600 font-normal">Rating (0–5)</label>
+                              <input type="number" id="cfg-rating-manual-val-mob" min="0" max="5" step="0.1" placeholder="Contoh: 4.8" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
+                            <p id="cfg-rating-manual-hint-mob" class="hidden text-[10px] text-amber-600 font-normal">Masukkan nilai rating (0–5) untuk pratinjau.</p>
+                          </div>
+                        </div>
+                      </div>
                       <!-- Terjual -->
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                        <span class="flex items-center gap-1.5">
-                          <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
-                          <span>Terjual</span>
-                        </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-sales-mob" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-sales-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-sales-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      <div class="py-1">
+                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                          <span class="flex items-center gap-1.5">
+                            <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
+                            <span>Terjual</span>
+                          </span>
+                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
+                            <input type="checkbox" id="cfg-show-sales-mob" class="sr-only peer cfg-eye-toggle" />
+                            <i id="cfg-show-sales-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
+                            <i id="cfg-show-sales-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
+                          </span>
+                        </label>
+                        <!-- Subpanel Sumber Terjual Mobile -->
+                        <div id="cfg-sales-source-panel-mob" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
+                          <div class="flex items-center justify-between">
+                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Sumber Data</label>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <button type="button" class="btn-sales-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
+                            <button type="button" class="btn-sales-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
+                          </div>
+                          <div id="cfg-sales-manual-container-mob" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
+                            <div class="flex items-center justify-between gap-2">
+                              <label for="cfg-sales-manual-val-mob" class="card-tool-label text-[11px] leading-4 text-slate-600 font-normal">Jumlah Terjual</label>
+                              <input type="number" id="cfg-sales-manual-val-mob" min="0" step="1" placeholder="Contoh: 150" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
+                            <p id="cfg-sales-manual-hint-mob" class="hidden text-[10px] text-amber-600 font-normal">Masukkan angka terjual (≥ 0) untuk pratinjau.</p>
+                          </div>
+                        </div>
+                      </div>
                       <p id="cfg-metric-model-b-notice-mob" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-[11px] text-slate-500 font-normal px-2 pt-1 pb-0.5">Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual.</p>
                     </div>
                   </div>
@@ -3593,12 +3814,36 @@ const ProductForm = (() => {
                         <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
                       </div>
                       <div>
-                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Teks Footer 1</label>
+                        <div class="flex items-center justify-between mb-0.5">
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Teks Footer 1</label>
+                          <span id="footer-text-char-count-mob" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
+                        </div>
                         <div class="relative w-full clean-datalist-wrapper">
-                          <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                          <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Tersedia berbagai Variasi" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
                       </div>
-                      <div class="grid grid-cols-2 gap-2">
+                      <div class="grid grid-cols-3 gap-2">
+                        <!-- Ikon Footer 1 -->
+                        <div>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Ikon</label>
+                          <div class="relative" id="container-footer-icon-picker-mob">
+                            <button type="button" id="btn-footer-icon-picker-mob" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
+                              <span id="preview-footer-icon-mob" class="flex items-center justify-center shrink-0">
+                                ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                              </span>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                            </button>
+                            <div id="menu-footer-icon-picker-mob" class="hidden absolute left-0 top-full mt-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                                <span>Pilih Ikon</span>
+                                <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                              </div>
+                              <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-mob">
+                                ${renderFooterIconGridHtml(primaryState.footer_badge_icon || 'truck', 'footer-1-mob')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                         <div>
                           <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Footer 1</label>
                           <div class="flex items-center gap-1.5">
@@ -3621,12 +3866,36 @@ const ProductForm = (() => {
                         <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
                       </div>
                       <div>
-                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Teks Footer 2</label>
+                        <div class="flex items-center justify-between mb-0.5">
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Teks Footer 2</label>
+                          <span id="footer-2-text-char-count-mob" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_2_text)}/32</span>
+                        </div>
                         <div class="relative w-full clean-datalist-wrapper">
-                          <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                          <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pengiriman Cepat" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
                       </div>
-                      <div class="grid grid-cols-2 gap-2">
+                      <div class="grid grid-cols-3 gap-2">
+                        <!-- Ikon Footer 2 -->
+                        <div>
+                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Ikon</label>
+                          <div class="relative" id="container-footer-2-icon-picker-mob">
+                            <button type="button" id="btn-footer-2-icon-picker-mob" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
+                              <span id="preview-footer-2-icon-mob" class="flex items-center justify-center shrink-0">
+                                ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_2_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                              </span>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                            </button>
+                            <div id="menu-footer-2-icon-picker-mob" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                                <span>Pilih Ikon</span>
+                                <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                              </div>
+                              <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-2-icon-picker-mob">
+                                ${renderFooterIconGridHtml(primaryState.footer_2_badge_icon || 'minus', 'footer-2-mob')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                         <div>
                           <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Footer 2</label>
                           <div class="flex items-center gap-1.5">
@@ -3948,6 +4217,132 @@ const ProductForm = (() => {
           }
         }
       });
+    });
+  }
+
+  function getPreviewMetricsConfig() {
+    if (!primaryState.admin_card_preview_metrics || typeof primaryState.admin_card_preview_metrics !== 'object') {
+      primaryState.admin_card_preview_metrics = {
+        rating: { source: 'auto', manual_value: null },
+        sales: { source: 'auto', manual_value: null }
+      };
+    }
+    if (!primaryState.admin_card_preview_metrics.rating) {
+      primaryState.admin_card_preview_metrics.rating = { source: 'auto', manual_value: null };
+    }
+    if (!primaryState.admin_card_preview_metrics.sales) {
+      primaryState.admin_card_preview_metrics.sales = { source: 'auto', manual_value: null };
+    }
+    return primaryState.admin_card_preview_metrics;
+  }
+
+  function setRatingSource(src) {
+    const metrics = getPreviewMetricsConfig();
+    metrics.rating.source = (src === 'manual') ? 'manual' : 'auto';
+    syncMetricSourcesDOM();
+    updateProductCardLivePreview();
+  }
+
+  function setSalesSource(src) {
+    const metrics = getPreviewMetricsConfig();
+    metrics.sales.source = (src === 'manual') ? 'manual' : 'auto';
+    syncMetricSourcesDOM();
+    updateProductCardLivePreview();
+  }
+
+  function syncMetricSourcesDOM() {
+    const metrics = getPreviewMetricsConfig();
+    const ratingSrc = metrics.rating.source || 'auto';
+    const ratingVal = metrics.rating.manual_value;
+    const salesSrc = metrics.sales.source || 'auto';
+    const salesVal = metrics.sales.manual_value;
+
+    // 1. Rating buttons & inputs
+    document.querySelectorAll('.btn-rating-src, .btn-rating-src-mob').forEach(btn => {
+      const isAuto = btn.dataset.source === 'auto';
+      if ((isAuto && ratingSrc === 'auto') || (!isAuto && ratingSrc === 'manual')) {
+        btn.className = btn.className.replace(/border-slate-200 bg-white text-slate-600 hover:bg-slate-50/g, 'border-emerald-500 bg-emerald-50 text-emerald-700');
+        if (!btn.className.includes('border-emerald-500')) {
+          btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+          btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
+        }
+      } else {
+        btn.className = btn.className.replace(/border-emerald-500 bg-emerald-50 text-emerald-700/g, 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50');
+        if (!btn.className.includes('border-slate-200')) {
+          btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
+          btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+        }
+      }
+    });
+
+    ['cfg-rating-manual-container', 'cfg-rating-manual-container-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (ratingSrc === 'manual') el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    });
+
+    ['cfg-rating-manual-val', 'cfg-rating-manual-val-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && document.activeElement !== el) {
+        el.value = (ratingVal !== null && ratingVal !== undefined && !isNaN(ratingVal)) ? ratingVal : '';
+      }
+    });
+
+    ['cfg-rating-manual-hint', 'cfg-rating-manual-hint-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (ratingSrc === 'manual' && (ratingVal === null || ratingVal === undefined || isNaN(ratingVal))) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      }
+    });
+
+    // 2. Sales buttons & inputs
+    document.querySelectorAll('.btn-sales-src, .btn-sales-src-mob').forEach(btn => {
+      const isAuto = btn.dataset.source === 'auto';
+      if ((isAuto && salesSrc === 'auto') || (!isAuto && salesSrc === 'manual')) {
+        btn.className = btn.className.replace(/border-slate-200 bg-white text-slate-600 hover:bg-slate-50/g, 'border-emerald-500 bg-emerald-50 text-emerald-700');
+        if (!btn.className.includes('border-emerald-500')) {
+          btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+          btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
+        }
+      } else {
+        btn.className = btn.className.replace(/border-emerald-500 bg-emerald-50 text-emerald-700/g, 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50');
+        if (!btn.className.includes('border-slate-200')) {
+          btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
+          btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+        }
+      }
+    });
+
+    ['cfg-sales-manual-container', 'cfg-sales-manual-container-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (salesSrc === 'manual') el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    });
+
+    ['cfg-sales-manual-val', 'cfg-sales-manual-val-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && document.activeElement !== el) {
+        el.value = (salesVal !== null && salesVal !== undefined && !isNaN(salesVal)) ? salesVal : '';
+      }
+    });
+
+    ['cfg-sales-manual-hint', 'cfg-sales-manual-hint-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (salesSrc === 'manual' && (salesVal === null || salesVal === undefined || isNaN(salesVal))) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      }
     });
   }
 
@@ -4378,6 +4773,32 @@ const ProductForm = (() => {
       if (showBadge) badgeMob.classList.remove('hidden');
       else badgeMob.classList.add('hidden');
     }
+
+    // 5. Rating source subpanel (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
+    const showRating = Boolean(document.getElementById('cfg-show-rating')?.checked || document.getElementById('cfg-show-rating-mob')?.checked);
+    const ratingDesk = document.getElementById('cfg-rating-source-panel');
+    const ratingMob = document.getElementById('cfg-rating-source-panel-mob');
+    if (ratingDesk) {
+      if (showRating) ratingDesk.classList.remove('hidden');
+      else ratingDesk.classList.add('hidden');
+    }
+    if (ratingMob) {
+      if (showRating) ratingMob.classList.remove('hidden');
+      else ratingMob.classList.add('hidden');
+    }
+
+    // 6. Sales source subpanel (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
+    const showSales = Boolean(document.getElementById('cfg-show-sales')?.checked || document.getElementById('cfg-show-sales-mob')?.checked);
+    const salesDesk = document.getElementById('cfg-sales-source-panel');
+    const salesMob = document.getElementById('cfg-sales-source-panel-mob');
+    if (salesDesk) {
+      if (showSales) salesDesk.classList.remove('hidden');
+      else salesDesk.classList.add('hidden');
+    }
+    if (salesMob) {
+      if (showSales) salesMob.classList.remove('hidden');
+      else salesMob.classList.add('hidden');
+    }
   }
 
   function getCardConfigFromDOM() {
@@ -4617,6 +5038,7 @@ const ProductForm = (() => {
     captureCardDesignSnapshot();
     syncEyeToggleIcons();
     syncFeatureSubpanels();
+    syncMetricSourcesDOM();
     syncCardAccordionDOM();
   }
 
@@ -4663,6 +5085,25 @@ const ProductForm = (() => {
 
   function handleSaveCardDesign() {
     try {
+      syncStateFromDOM();
+      const f1Len = getUnicodeLength(primaryState.card_footer_text);
+      const f2Len = getUnicodeLength(primaryState.card_footer_2_text);
+      if (primaryState.card_variant === 'C' && f1Len > 32) {
+        if (typeof App !== 'undefined' && App.showToast) {
+          App.showToast(`Teks Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`, 'error');
+        } else {
+          alert(`Teks Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`);
+        }
+        return false;
+      }
+      if (primaryState.card_variant === 'C' && f2Len > 32) {
+        if (typeof App !== 'undefined' && App.showToast) {
+          App.showToast(`Teks Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`, 'error');
+        } else {
+          alert(`Teks Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`);
+        }
+        return false;
+      }
       saveCardConfigInputs();
       const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
       const saveDefToggleMob = document.getElementById('cfg-save-as-default-toggle-mob');
@@ -4703,6 +5144,9 @@ const ProductForm = (() => {
 
       // 1. Pulihkan state primaryState dari snapshot
       primaryState.use_default_card_design = cardDesignSnapshot.use_default_card_design;
+      if (cardDesignSnapshot.admin_card_preview_metrics) {
+        primaryState.admin_card_preview_metrics = JSON.parse(JSON.stringify(cardDesignSnapshot.admin_card_preview_metrics));
+      }
       if (cardDesignSnapshot.card_config) {
         primaryState.card_config = JSON.parse(JSON.stringify(cardDesignSnapshot.card_config));
       } else {
@@ -4767,6 +5211,22 @@ const ProductForm = (() => {
       [cfgF1Bg, cfgF1BgHex, cfgF1BgSide, cfgF1BgHexSide, cfgF1BgMob, cfgF1BgHexMob].forEach(x => { if (x) x.value = f1Bg; });
       [cfgF1Text, cfgF1TextHex, cfgF1TextSide, cfgF1TextHexSide, cfgF1TextMob, cfgF1TextHexMob].forEach(x => { if (x) x.value = f1TextCol; });
       if (selF1Icon && primaryState.footer_badge_icon) selF1Icon.value = primaryState.footer_badge_icon;
+      // Update custom icon picker previews & active states
+      const f1IconVal = primaryState.footer_badge_icon || 'truck';
+      ['preview-footer-icon-side', 'preview-footer-icon-mob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = f1IconVal === 'none'
+            ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
+            : `<i data-lucide="${escapeHtml(f1IconVal)}" class="w-3.5 h-3.5"></i>`;
+        }
+      });
+      document.querySelectorAll('.btn-footer-icon-item[data-picker^="footer-1"]').forEach(btn => {
+        const isSel = btn.getAttribute('data-icon-id') === f1IconVal;
+        btn.className = `btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}`;
+      });
+      updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
+      updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
 
       const f2Text = primaryState.card_footer_2_text || '';
       const f2Bg = primaryState.footer_2_bg_color || getThemeBodyColor();
@@ -4792,6 +5252,22 @@ const ProductForm = (() => {
       [cfgF2Bg, cfgF2BgHex, cfgF2BgSide, cfgF2BgHexSide, cfgF2BgMob, cfgF2BgHexMob].forEach(x => { if (x) x.value = f2Bg; });
       [cfgF2Text, cfgF2TextHex, cfgF2TextSide, cfgF2TextHexSide, cfgF2TextMob, cfgF2TextHexMob].forEach(x => { if (x) x.value = f2TextCol; });
       if (selF2Icon && primaryState.footer_2_badge_icon) selF2Icon.value = primaryState.footer_2_badge_icon;
+      // Update custom icon picker previews & active states
+      const f2IconVal = primaryState.footer_2_badge_icon || 'minus';
+      ['preview-footer-2-icon-side', 'preview-footer-2-icon-mob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = f2IconVal === 'none'
+            ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
+            : `<i data-lucide="${escapeHtml(f2IconVal)}" class="w-3.5 h-3.5"></i>`;
+        }
+      });
+      document.querySelectorAll('.btn-footer-icon-item[data-picker^="footer-2"]').forEach(btn => {
+        const isSel = btn.getAttribute('data-icon-id') === f2IconVal;
+        btn.className = `btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}`;
+      });
+      updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
+      updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
 
       // Pulihkan input countdown di DOM
       const cRadius = primaryState.countdown_radius || '9999px';
@@ -9491,9 +9967,67 @@ const ProductForm = (() => {
     const cardStyle = `background-color: ${cfg.bg_color}; ${cardBorderStyle} border-radius: ${cfg.border_radius}; box-sizing: border-box;`;
     const titleStyle = `color: ${cfg.title_color};`;
     const priceStyle = `color: ${cfg.price_color};`;
-    const salesCount = (primaryState.sales_count !== undefined && primaryState.sales_count !== null && !isNaN(parseInt(primaryState.sales_count)))
-      ? parseInt(primaryState.sales_count, 10)
-      : 0;
+
+    // Resolusi Metrik Pratinjau Admin (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
+    const metricsConfig = (primaryState.admin_card_preview_metrics && typeof primaryState.admin_card_preview_metrics === 'object')
+      ? primaryState.admin_card_preview_metrics
+      : { rating: { source: 'auto', manual_value: null }, sales: { source: 'auto', manual_value: null } };
+    const ratingSource = metricsConfig.rating?.source || 'auto';
+    const ratingManualVal = metricsConfig.rating?.manual_value;
+    const salesSource = metricsConfig.sales?.source || 'auto';
+    const salesManualVal = metricsConfig.sales?.manual_value;
+
+    // 1. Resolusi Rating Pratinjau
+    let previewRatingText = '';
+    let hasPreviewRating = false;
+    if (cfg.show_rating) {
+      if (ratingSource === 'manual') {
+        if (ratingManualVal !== null && ratingManualVal !== undefined && !isNaN(ratingManualVal) && isFinite(ratingManualVal)) {
+          const num = Math.max(0, Math.min(5, parseFloat(ratingManualVal)));
+          previewRatingText = num.toFixed(1);
+          hasPreviewRating = true;
+        } else {
+          previewRatingText = '';
+          hasPreviewRating = false;
+        }
+      } else {
+        // Otomatis: baca data nyata terbaru dari database (jika ada) atau primaryState
+        const realRating = (typeof DB !== 'undefined' && DB.getProductById && currentEditingId)
+          ? DB.getProductById(currentEditingId)?.rating_avg
+          : (primaryState.rating_avg ?? 5.0);
+        const num = (realRating !== undefined && realRating !== null && !isNaN(parseFloat(realRating)))
+          ? parseFloat(realRating)
+          : 5.0;
+        previewRatingText = num.toFixed(1);
+        hasPreviewRating = true;
+      }
+    }
+
+    // 2. Resolusi Terjual Pratinjau
+    let previewSalesText = '';
+    let hasPreviewSales = false;
+    const realSalesCount = (typeof DB !== 'undefined' && DB.getProductById && currentEditingId)
+      ? (DB.getProductById(currentEditingId)?.sales_count ?? (primaryState.sales_count !== undefined && primaryState.sales_count !== null && !isNaN(parseInt(primaryState.sales_count)) ? parseInt(primaryState.sales_count, 10) : 0))
+      : ((primaryState.sales_count !== undefined && primaryState.sales_count !== null && !isNaN(parseInt(primaryState.sales_count))) ? parseInt(primaryState.sales_count, 10) : 0);
+
+    let effSalesNumber = realSalesCount;
+    if (cfg.show_sales) {
+      if (salesSource === 'manual') {
+        if (salesManualVal !== null && salesManualVal !== undefined && !isNaN(salesManualVal) && isFinite(salesManualVal) && salesManualVal >= 0) {
+          effSalesNumber = Math.floor(salesManualVal);
+          previewSalesText = formatSalesCount(effSalesNumber, false);
+          hasPreviewSales = true;
+        } else {
+          previewSalesText = '';
+          hasPreviewSales = false;
+        }
+      } else {
+        effSalesNumber = realSalesCount;
+        previewSalesText = formatSalesCount(effSalesNumber, false);
+        hasPreviewSales = true;
+      }
+    }
+    const salesCount = effSalesNumber;
 
     // Strike Price Styling
     const strikePriceColor = document.getElementById('cfg-strike-color')?.value || primaryState.card_config?.strike_price_color || '#94a3b8';
@@ -9725,20 +10259,18 @@ const ProductForm = (() => {
     };
 
     // Footer 1 Custom Styles (Khusus Card C)
-    const footerBgColor = document.getElementById('cfg-footer-bg-color')?.value || primaryState.footer_bg_color || defCardThemeColor;
-    const footerTextColor = document.getElementById('cfg-footer-text-color')?.value || primaryState.footer_text_color || '#ffffff';
-    const footerTextInput = document.getElementById('input-card-footer-text');
-    const footerText = (footerTextInput?.value || primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam').trim() || 'Proses Hanya Dalam 1Jam';
-    const footerIconSelect = document.getElementById('select-card-footer-icon');
-    const footerIcon = (footerIconSelect?.value || primaryState.footer_badge_icon || 'truck').trim() || 'truck';
+    const footerBgColor = document.getElementById('cfg-footer-bg-color-side')?.value || document.getElementById('cfg-footer-bg-color')?.value || primaryState.footer_bg_color || defCardThemeColor;
+    const footerTextColor = document.getElementById('cfg-footer-text-color-side')?.value || document.getElementById('cfg-footer-text-color')?.value || primaryState.footer_text_color || '#ffffff';
+    const footerTextInput = document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text');
+    const footerText = (footerTextInput ? footerTextInput.value : (primaryState.card_footer_text || '')).trim();
+    const footerIcon = (primaryState.footer_badge_icon || 'truck').trim();
 
     // Footer 2 Custom Styles (Khusus Card C)
-    const footer2BgColor = document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || defCardThemeColor;
-    const footer2TextColor = document.getElementById('cfg-footer-2-text-color')?.value || primaryState.footer_2_text_color || '#ffffff';
-    const footer2TextInput = document.getElementById('input-card-footer-2-text');
-    const footer2Text = (footer2TextInput?.value || primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia').trim() || 'Variasi Paket Tersedia/tidak tersedia';
-    const footer2IconSelect = document.getElementById('select-card-footer-2-icon');
-    const footer2Icon = (footer2IconSelect?.value || primaryState.footer_2_badge_icon || 'minus').trim() || 'minus';
+    const footer2BgColor = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || defCardThemeColor;
+    const footer2TextColor = document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.footer_2_text_color || '#ffffff';
+    const footer2TextInput = document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text');
+    const footer2Text = (footer2TextInput ? footer2TextInput.value : (primaryState.card_footer_2_text || '')).trim();
+    const footer2Icon = (primaryState.footer_2_badge_icon || 'minus').trim();
 
     // Ambil maksimal 2 label kustom dari input DOM atau state
     const label1Input = document.getElementById('input-custom-label-1');
@@ -9780,16 +10312,16 @@ const ProductForm = (() => {
 
       let selectedMetricHtml = '';
       if (!isExtremePrice) {
-        if (cfg.show_sales) {
+        if (cfg.show_sales && hasPreviewSales) {
           selectedMetricHtml = `
             <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap text-right shrink-0">
-              ${formatSalesCount(salesCount, isNarrowPriceRow)}
+              ${formatSalesCount(effSalesNumber, isNarrowPriceRow)}
             </span>
           `;
-        } else if (cfg.show_rating) {
+        } else if (cfg.show_rating && hasPreviewRating) {
           selectedMetricHtml = `
             <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5 shrink-0 whitespace-nowrap">
-              ★ 4.9
+              ★ ${previewRatingText}
             </span>
           `;
         }
@@ -9853,8 +10385,8 @@ const ProductForm = (() => {
 
               <!-- Rating Bintang (+ Label Khusus hanya saat diskon off) -->
               <div class="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                ${cfg.show_rating ? `
-                  <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5"><i class="bi bi-star-fill text-amber-400 text-[10px]"></i> 4.9</span>
+                ${(cfg.show_rating && hasPreviewRating) ? `
+                  <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5"><i class="bi bi-star-fill text-amber-400 text-[10px]"></i> ${previewRatingText}</span>
                 ` : ''}
                 ${(!isCountdownActive && cfg.show_badge) ? customBadges.map(b => `
                   <span class="inline-flex items-center text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 leading-none" style="${badgeStyle}">
@@ -9881,10 +10413,10 @@ const ProductForm = (() => {
                   ` : ''}
                 </div>
               </div>
-              ${cfg.show_sales ? `
+              ${(cfg.show_sales && hasPreviewSales) ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                    ${formatSalesCount(salesCount, false)}
+                    ${previewSalesText}
                   </span>
                 </div>
               ` : ''}
@@ -9892,26 +10424,32 @@ const ProductForm = (() => {
           </div>
 
           <!-- Dua Baris Strip Footer Horizontal di Bagian Bawah Kartu -->
-          <div class="w-full shrink-0 mt-auto flex flex-col">
-            <!-- Footer 1 (Atas): Jaminan Kecepatan / Garansi -->
-            <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 border-b border-black/10" style="background-color: ${footerBgColor}; color: ${footerTextColor};">
-              <i data-lucide="${escapeHtml(footerIcon)}" class="w-3.5 h-3.5 shrink-0"></i>
-              <span class="truncate">${escapeHtml(footerText)}</span>
-            </div>
+          ${(Boolean(footerText) || isCountdownActive || Boolean(footer2Text)) ? `
+            <div class="w-full shrink-0 mt-auto flex flex-col">
+              <!-- Footer 1 (Atas): Jaminan Kecepatan / Garansi -->
+              ${Boolean(footerText) ? `
+                <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${(isCountdownActive || Boolean(footer2Text)) ? 'border-b border-black/10' : 'rounded-b-2xl'}" style="background-color: ${footerBgColor}; color: ${footerTextColor};">
+                  ${(footerIcon && footerIcon !== 'none') ? `<i data-lucide="${escapeHtml(footerIcon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
+                  <span class="truncate">${escapeHtml(footerText)}</span>
+                </div>
+              ` : ''}
 
-            <!-- Footer 2 (Bawah): Otomatis Jadi Countdown saat Diskon Aktif, atau Info Paket saat Diskon Off -->
-            ${isCountdownActive ? `
-              <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${countdownBgColor}; color: ${countdownTextColor};">
-                <i data-lucide="ticket-percent" class="w-3.5 h-3.5 shrink-0" style="color: ${countdownIconColor};"></i>
-                <span class="truncate">% Diskon Rp1,700RB berakhir Dalam 1Jam</span>
-              </div>
-            ` : `
-              <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${footer2BgColor}; color: ${footer2TextColor};">
-                <i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>
-                <span class="truncate">${escapeHtml(footer2Text)}</span>
-              </div>
-            `}
-          </div>
+              <!-- Footer 2 (Bawah): Otomatis Jadi Countdown saat Diskon Aktif, atau Info Paket saat Diskon Off -->
+              ${(isCountdownActive || Boolean(footer2Text)) ? (
+                isCountdownActive ? `
+                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${countdownBgColor}; color: ${countdownTextColor};">
+                    <i data-lucide="ticket-percent" class="w-3.5 h-3.5 shrink-0" style="color: ${countdownIconColor};"></i>
+                    <span class="truncate">% Diskon Rp1,700RB berakhir Dalam 1Jam</span>
+                  </div>
+                ` : `
+                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${footer2BgColor}; color: ${footer2TextColor};">
+                    ${(footer2Icon && footer2Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
+                    <span class="truncate">${escapeHtml(footer2Text)}</span>
+                  </div>
+                `
+              ) : ''}
+            </div>
+          ` : ''}
         </div>
       `;
     } else {
@@ -9930,8 +10468,8 @@ const ProductForm = (() => {
 
               <!-- Rating Bintang + Countdown (Jika Aktif) atau Label Khusus (Jika Nonaktif) -->
               <div class="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                ${cfg.show_rating ? `
-                  <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5"><i class="bi bi-star-fill text-amber-400 text-[10px]"></i> 4.9</span>
+                ${(cfg.show_rating && hasPreviewRating) ? `
+                  <span class="text-amber-500 font-bold text-[10px] sm:text-[11px] flex items-center gap-0.5"><i class="bi bi-star-fill text-amber-400 text-[10px]"></i> ${previewRatingText}</span>
                 ` : ''}
                 ${isCountdownActive ? `
                   <span class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 leading-none shrink-0 shadow-2xs" style="${countdownStyle}">
@@ -9963,10 +10501,10 @@ const ProductForm = (() => {
                   ` : ''}
                 </div>
               </div>
-              ${cfg.show_sales ? `
+              ${(cfg.show_sales && hasPreviewSales) ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
                   <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                    ${formatSalesCount(salesCount, false)}
+                    ${previewSalesText}
                   </span>
                 </div>
               ` : ''}
@@ -10511,6 +11049,33 @@ const ProductForm = (() => {
       requestAnimationFrame(restoreAllScrolls);
       return;
     }
+
+    // Evaluasi Penanda "Data contoh" di Area Pratinjau Admin (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
+    let isSampleDataActive = false;
+    if (variant === 'B') {
+      if (cfg.show_sales && hasPreviewSales) {
+        isSampleDataActive = (salesSource === 'manual');
+      } else if (cfg.show_rating && hasPreviewRating) {
+        isSampleDataActive = (ratingSource === 'manual');
+      }
+    } else {
+      if (cfg.show_rating && hasPreviewRating && ratingSource === 'manual') {
+        isSampleDataActive = true;
+      }
+      if (cfg.show_sales && hasPreviewSales && salesSource === 'manual') {
+        isSampleDataActive = true;
+      }
+    }
+
+    [
+      document.getElementById('preview-sample-data-badge'),
+      document.getElementById('preview-sample-data-badge-mob')
+    ].forEach(badge => {
+      if (badge) {
+        if (isSampleDataActive) badge.classList.remove('hidden');
+        else badge.classList.add('hidden');
+      }
+    });
 
     previewContainer.innerHTML = cardHtml;
     const mobilePreviewBox = document.getElementById('mobile-card-preview-container');
@@ -27548,6 +28113,154 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobHex) mobHex.addEventListener('input', e => syncAllBadgeColors(e.target.value));
     });
 
+    // Rating & Sales Metric Source Listeners (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
+    document.querySelectorAll('.btn-rating-src').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setRatingSource(btn.dataset.source);
+      });
+    });
+    document.querySelectorAll('.btn-rating-src-mob').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setRatingSource(btn.dataset.source);
+      });
+    });
+
+    document.querySelectorAll('.btn-sales-src').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setSalesSource(btn.dataset.source);
+      });
+    });
+    document.querySelectorAll('.btn-sales-src-mob').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setSalesSource(btn.dataset.source);
+      });
+    });
+
+    // Rating Manual Value Input (Desktop & Mobile Sync)
+    const syncRatingManualInput = (sourceEl, otherId) => {
+      const raw = sourceEl.value;
+      const otherEl = document.getElementById(otherId);
+      if (otherEl && otherEl.value !== raw) otherEl.value = raw;
+      const metrics = getPreviewMetricsConfig();
+      if (raw.trim() === '') {
+        metrics.rating.manual_value = null;
+      } else {
+        const num = parseFloat(raw);
+        if (!isNaN(num) && isFinite(num) && num >= 0 && num <= 5) {
+          metrics.rating.manual_value = parseFloat(num.toFixed(1));
+        }
+      }
+      ['cfg-rating-manual-hint', 'cfg-rating-manual-hint-mob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (metrics.rating.manual_value === null) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+      updateProductCardLivePreview();
+    };
+
+    const validateRatingManualInput = (el, otherId) => {
+      const raw = el.value.trim();
+      const metrics = getPreviewMetricsConfig();
+      if (raw === '') {
+        metrics.rating.manual_value = null;
+        el.value = '';
+        const otherEl = document.getElementById(otherId);
+        if (otherEl) otherEl.value = '';
+      } else {
+        let num = parseFloat(raw);
+        if (isNaN(num) || !isFinite(num) || num < 0) {
+          num = 0;
+        } else if (num > 5) {
+          num = 5;
+        }
+        num = parseFloat(num.toFixed(1));
+        metrics.rating.manual_value = num;
+        el.value = num;
+        const otherEl = document.getElementById(otherId);
+        if (otherEl) otherEl.value = num;
+      }
+      syncMetricSourcesDOM();
+      updateProductCardLivePreview();
+    };
+
+    const ratingInpDesk = document.getElementById('cfg-rating-manual-val');
+    const ratingInpMob = document.getElementById('cfg-rating-manual-val-mob');
+    if (ratingInpDesk) {
+      ratingInpDesk.addEventListener('input', () => syncRatingManualInput(ratingInpDesk, 'cfg-rating-manual-val-mob'));
+      ratingInpDesk.addEventListener('blur', () => validateRatingManualInput(ratingInpDesk, 'cfg-rating-manual-val-mob'));
+      ratingInpDesk.addEventListener('change', () => validateRatingManualInput(ratingInpDesk, 'cfg-rating-manual-val-mob'));
+    }
+    if (ratingInpMob) {
+      ratingInpMob.addEventListener('input', () => syncRatingManualInput(ratingInpMob, 'cfg-rating-manual-val'));
+      ratingInpMob.addEventListener('blur', () => validateRatingManualInput(ratingInpMob, 'cfg-rating-manual-val'));
+      ratingInpMob.addEventListener('change', () => validateRatingManualInput(ratingInpMob, 'cfg-rating-manual-val'));
+    }
+
+    // Sales Manual Value Input (Desktop & Mobile Sync)
+    const syncSalesManualInput = (sourceEl, otherId) => {
+      const raw = sourceEl.value;
+      const otherEl = document.getElementById(otherId);
+      if (otherEl && otherEl.value !== raw) otherEl.value = raw;
+      const metrics = getPreviewMetricsConfig();
+      if (raw.trim() === '') {
+        metrics.sales.manual_value = null;
+      } else {
+        const num = parseInt(raw, 10);
+        if (!isNaN(num) && isFinite(num) && num >= 0) {
+          metrics.sales.manual_value = num;
+        }
+      }
+      ['cfg-sales-manual-hint', 'cfg-sales-manual-hint-mob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (metrics.sales.manual_value === null) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+      });
+      updateProductCardLivePreview();
+    };
+
+    const validateSalesManualInput = (el, otherId) => {
+      const raw = el.value.trim();
+      const metrics = getPreviewMetricsConfig();
+      if (raw === '') {
+        metrics.sales.manual_value = null;
+        el.value = '';
+        const otherEl = document.getElementById(otherId);
+        if (otherEl) otherEl.value = '';
+      } else {
+        let num = parseInt(raw, 10);
+        if (isNaN(num) || !isFinite(num) || num < 0) {
+          num = 0;
+        }
+        metrics.sales.manual_value = num;
+        el.value = num;
+        const otherEl = document.getElementById(otherId);
+        if (otherEl) otherEl.value = num;
+      }
+      syncMetricSourcesDOM();
+      updateProductCardLivePreview();
+    };
+
+    const salesInpDesk = document.getElementById('cfg-sales-manual-val');
+    const salesInpMob = document.getElementById('cfg-sales-manual-val-mob');
+    if (salesInpDesk) {
+      salesInpDesk.addEventListener('input', () => syncSalesManualInput(salesInpDesk, 'cfg-sales-manual-val-mob'));
+      salesInpDesk.addEventListener('blur', () => validateSalesManualInput(salesInpDesk, 'cfg-sales-manual-val-mob'));
+      salesInpDesk.addEventListener('change', () => validateSalesManualInput(salesInpDesk, 'cfg-sales-manual-val-mob'));
+    }
+    if (salesInpMob) {
+      salesInpMob.addEventListener('input', () => syncSalesManualInput(salesInpMob, 'cfg-sales-manual-val'));
+      salesInpMob.addEventListener('blur', () => validateSalesManualInput(salesInpMob, 'cfg-sales-manual-val'));
+      salesInpMob.addEventListener('change', () => validateSalesManualInput(salesInpMob, 'cfg-sales-manual-val'));
+    }
+
     // Strike Price Color Listeners (Desktop & Mobile Sync)
     const strikeColorPairs = [
       { color: 'cfg-strike-color', hex: 'cfg-strike-hex' }
@@ -27943,8 +28656,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.footer_text_color = val;
     };
     const syncF1Str = (val) => {
-      [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(x => { if (x) x.value = val; });
+      [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(x => { if (x && x.value !== val) x.value = val; });
       primaryState.card_footer_text = val;
+      if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
+      primaryState.custom_footer_1.text = val;
+      updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
+      updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
     };
 
     [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(el => {
@@ -27982,6 +28699,152 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
+    // Helper: Select Footer Icon
+    function selectFooterIcon(stripNumber, iconId) {
+      const validIcon = FOOTER_ICONS_CATALOG.find(c => c.id === iconId) ? iconId : (stripNumber === 1 ? 'truck' : 'minus');
+      if (stripNumber === 1) {
+        primaryState.footer_badge_icon = validIcon;
+        if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
+        primaryState.custom_footer_1.icon = validIcon;
+
+        // Update previews desktop & mobile
+        ['preview-footer-icon-side', 'preview-footer-icon-mob'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.innerHTML = validIcon === 'none'
+              ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
+              : `<i data-lucide="${escapeHtml(validIcon)}" class="w-3.5 h-3.5"></i>`;
+          }
+        });
+
+        // Update active highlight in grids
+        document.querySelectorAll('.btn-footer-icon-item[data-picker^="footer-1"]').forEach(btn => {
+          const isSel = btn.getAttribute('data-icon-id') === validIcon;
+          btn.className = `btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}`;
+        });
+
+        const mSide = document.getElementById('menu-footer-icon-picker-side');
+        const mMob = document.getElementById('menu-footer-icon-picker-mob');
+        if (mSide) mSide.classList.add('hidden');
+        if (mMob) mMob.classList.add('hidden');
+      } else {
+        primaryState.footer_2_badge_icon = validIcon;
+        if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
+        primaryState.custom_footer_2.icon = validIcon;
+
+        // Update previews desktop & mobile
+        ['preview-footer-2-icon-side', 'preview-footer-2-icon-mob'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.innerHTML = validIcon === 'none'
+              ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
+              : `<i data-lucide="${escapeHtml(validIcon)}" class="w-3.5 h-3.5"></i>`;
+          }
+        });
+
+        // Update active highlight in grids
+        document.querySelectorAll('.btn-footer-icon-item[data-picker^="footer-2"]').forEach(btn => {
+          const isSel = btn.getAttribute('data-icon-id') === validIcon;
+          btn.className = `btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}`;
+        });
+
+        const mSide = document.getElementById('menu-footer-2-icon-picker-side');
+        const mMob = document.getElementById('menu-footer-2-icon-picker-mob');
+        if (mSide) mSide.classList.add('hidden');
+        if (mMob) mMob.classList.add('hidden');
+      }
+
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+
+      markCardDesignAsCustom();
+      syncStateFromDOM();
+      updateProductCardLivePreview();
+    }
+
+    // Toggle dropdown menus
+    function setupFooterIconToggle(btnId, menuId) {
+      const btn = document.getElementById(btnId);
+      const menu = document.getElementById(menuId);
+      if (btn && menu) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isClosed = menu.classList.contains('hidden');
+          // Close others
+          ['menu-footer-icon-picker-side', 'menu-footer-icon-picker-mob', 'menu-footer-2-icon-picker-side', 'menu-footer-2-icon-picker-mob'].forEach(mId => {
+            if (mId !== menuId) {
+              const other = document.getElementById(mId);
+              if (other) other.classList.add('hidden');
+            }
+          });
+          if (isClosed) {
+            menu.classList.remove('hidden');
+            btn.setAttribute('aria-expanded', 'true');
+            if (window.lucide && typeof lucide.createIcons === 'function') {
+              lucide.createIcons();
+            }
+          } else {
+            menu.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+    }
+
+    setupFooterIconToggle('btn-footer-icon-picker-side', 'menu-footer-icon-picker-side');
+    setupFooterIconToggle('btn-footer-icon-picker-mob', 'menu-footer-icon-picker-mob');
+    setupFooterIconToggle('btn-footer-2-icon-picker-side', 'menu-footer-2-icon-picker-side');
+    setupFooterIconToggle('btn-footer-2-icon-picker-mob', 'menu-footer-2-icon-picker-mob');
+
+    // Click icon items
+    document.querySelectorAll('.btn-footer-icon-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pId = btn.getAttribute('data-picker');
+        const iconId = btn.getAttribute('data-icon-id');
+        if (pId && pId.includes('footer-2')) {
+          selectFooterIcon(2, iconId);
+        } else {
+          selectFooterIcon(1, iconId);
+        }
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      const pickers = [
+        { c: '#container-footer-icon-picker-side', m: '#menu-footer-icon-picker-side' },
+        { c: '#container-footer-icon-picker-mob', m: '#menu-footer-icon-picker-mob' },
+        { c: '#container-footer-2-icon-picker-side', m: '#menu-footer-2-icon-picker-side' },
+        { c: '#container-footer-2-icon-picker-mob', m: '#menu-footer-2-icon-picker-mob' }
+      ];
+      pickers.forEach(({ c, m }) => {
+        if (!e.target.closest(c)) {
+          const menuEl = document.querySelector(m);
+          if (menuEl && !menuEl.classList.contains('hidden')) {
+            menuEl.classList.add('hidden');
+          }
+        }
+      });
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        ['menu-footer-icon-picker-side', 'menu-footer-icon-picker-mob', 'menu-footer-2-icon-picker-side', 'menu-footer-2-icon-picker-mob'].forEach(mId => {
+          const m = document.getElementById(mId);
+          if (m && !m.classList.contains('hidden')) m.classList.add('hidden');
+        });
+      }
+    });
+
+    // Initial Char Counters update
+    updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
+    updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
+    updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
+    updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
+
     // Footer 2 Inputs (Sinkronisasi Step 1, Desktop Sidebar & Mobile Drawer)
     const inpF2Text = document.getElementById('input-card-footer-2-text');
     const inpF2TextSide = document.getElementById('input-card-footer-2-text-side');
@@ -28011,8 +28874,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.footer_2_text_color = val;
     };
     const syncF2Str = (val) => {
-      [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(x => { if (x) x.value = val; });
+      [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(x => { if (x && x.value !== val) x.value = val; });
       primaryState.card_footer_2_text = val;
+      if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
+      primaryState.custom_footer_2.text = val;
+      updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
+      updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
     };
 
     [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(el => {
@@ -29448,6 +30315,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (!firstInvalidEl && el) firstInvalidEl = el;
     }
 
+    if (!draftMode && primaryState.card_variant === 'C') {
+      const f1Len = getUnicodeLength(primaryState.card_footer_text);
+      const f2Len = getUnicodeLength(primaryState.card_footer_2_text);
+      if (f1Len > 32) {
+        addError(`Teks Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text'));
+      }
+      if (f2Len > 32) {
+        addError(`Teks Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text'));
+      }
+    }
+
     // Jika Simpan Draf: hanya wajibkan Nama Produk
     if (draftMode) {
       if (!primaryState.name || primaryState.name.trim().length < 5) {
@@ -30138,15 +31016,31 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // Sync Footer Colors & Texts for Card Variant C
-    const footer1Val = (document.getElementById('input-card-footer-text')?.value || primaryState.custom_footer_1?.text || primaryState.card_footer_text || 'Proses Hanya Dalam 1Jam').trim();
-    const footer1IconVal = document.getElementById('select-card-footer-icon')?.value || primaryState.custom_footer_1?.icon || primaryState.footer_badge_icon || 'truck';
-    const footer1BgVal = document.getElementById('cfg-footer-bg-color')?.value || primaryState.custom_footer_1?.bg_color || primaryState.footer_bg_color || getPrimaryThemeColor();
-    const footer1TextColVal = document.getElementById('cfg-footer-text-color')?.value || primaryState.custom_footer_1?.text_color || primaryState.footer_text_color || '#ffffff';
+    const footer1Val = (
+      document.getElementById('input-card-footer-text-side')?.value !== undefined
+        ? document.getElementById('input-card-footer-text-side').value
+        : (document.getElementById('input-card-footer-text')?.value !== undefined
+          ? document.getElementById('input-card-footer-text').value
+          : (primaryState.custom_footer_1?.text !== undefined
+            ? primaryState.custom_footer_1.text
+            : (primaryState.card_footer_text || '')))
+    ).trim();
+    const footer1IconVal = (primaryState.footer_badge_icon || primaryState.custom_footer_1?.icon || 'truck').trim();
+    const footer1BgVal = document.getElementById('cfg-footer-bg-color-side')?.value || document.getElementById('cfg-footer-bg-color')?.value || primaryState.custom_footer_1?.bg_color || primaryState.footer_bg_color || getPrimaryThemeColor();
+    const footer1TextColVal = document.getElementById('cfg-footer-text-color-side')?.value || document.getElementById('cfg-footer-text-color')?.value || primaryState.custom_footer_1?.text_color || primaryState.footer_text_color || '#ffffff';
 
-    const footer2Val = (document.getElementById('input-card-footer-2-text')?.value || primaryState.custom_footer_2?.text || primaryState.card_footer_2_text || 'Variasi Paket Tersedia/tidak tersedia').trim();
-    const footer2IconVal = document.getElementById('select-card-footer-2-icon')?.value || primaryState.custom_footer_2?.icon || primaryState.footer_2_badge_icon || 'minus';
-    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || getPrimaryThemeColor();
-    const footer2TextColVal = document.getElementById('cfg-footer-2-text-color')?.value || primaryState.custom_footer_2?.text_color || primaryState.footer_2_text_color || '#ffffff';
+    const footer2Val = (
+      document.getElementById('input-card-footer-2-text-side')?.value !== undefined
+        ? document.getElementById('input-card-footer-2-text-side').value
+        : (document.getElementById('input-card-footer-2-text')?.value !== undefined
+          ? document.getElementById('input-card-footer-2-text').value
+          : (primaryState.custom_footer_2?.text !== undefined
+            ? primaryState.custom_footer_2.text
+            : (primaryState.card_footer_2_text || '')))
+    ).trim();
+    const footer2IconVal = (primaryState.footer_2_badge_icon || primaryState.custom_footer_2?.icon || 'minus').trim();
+    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || getPrimaryThemeColor();
+    const footer2TextColVal = document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.custom_footer_2?.text_color || primaryState.footer_2_text_color || '#ffffff';
 
     primaryState.custom_footer_1 = {
       text: footer1Val,

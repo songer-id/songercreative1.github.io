@@ -1374,6 +1374,79 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Tampilan tablet/desktop (`>=640px`) pada `#card-customization-section` tetap mempertahankan struktur dan gaya aslinya tanpa perubahan.
           - Tidak ada teks tebal (*semibold/bold*) pada seluruh tools editor Desain Kartu.
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), pengujian unit R7 (`scratch/test_card_mobile_typography_09c_r7.js`), dan seluruh suite tes regresi R6, R4, R3 lulus 100% PASS. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Pilihan Sumber Metrik Otomatis / Manual Pratinjau Admin (`SC-ADMIN-CARD-METRIC-SOURCES-10`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Desain Kartu (desktop dan mobile) pada kelompok "Teks & Informasi". Menambahkan pilihan sumber "Otomatis" / "Manual" secara independen untuk Rating dan Terjual pada kartu pratinjau Admin Step 1 sebagai data contoh pratinjau tanpa mengubah perilaku, perhitungan, atau penyimpanan data ulasan dan transaksi nyata.
+        - **Pemisahan Data yang Ketat**:
+          - Sumber dan nilai manual disimpan dalam objek metadata pratinjau tersendiri per produk:
+            ```javascript
+            admin_card_preview_metrics: {
+              rating: { source: "auto", manual_value: null },
+              sales:  { source: "auto", manual_value: null }
+            }
+            ```
+          - Disimpan di luar `card_config` dan preset tema toko (`card_variants_config`).
+          - Nilai manual murni data contoh untuk pratinjau Admin; tidak pernah disalin ke ulasan nyata, `rating_avg`, `review_count`, `sales_count`, `show_sales_count`, transaksi, statistik, atau agregasi.
+          - Metadata tidak dikonsumsi oleh kartu etalase pembeli (`buyer-store.js`) maupun Mini PDP Step 2.
+        - **UI Teks & Informasi (Desktop & Mobile)**:
+          - Eye toggle Rating dan Terjual dipertahankan untuk mengontrol visibilitas.
+          - Di bawah masing-masing fitur yang aktif, terdapat subpanel Sumber Data:
+            * Label: "Sumber Data" (pada mobile mengikuti tipografi R7: 11px, line-height 16px, font-normal).
+            * Tombol pilihan segmented: "Otomatis" / "Manual" (default untuk produk lama maupun baru: Otomatis).
+            * Saat Manual dipilih:
+              - Rating: input angka 0–5 (step 0.1).
+              - Terjual: input bilangan bulat nonnegatif (step 1).
+              - Keterangan resmi: *"Data contoh untuk pratinjau Admin."*
+          - Rating dan Terjual memiliki pilihan sumber independen (misal Rating Otomatis dan Terjual Manual).
+          - Mematikan eye toggle tidak menghapus sumber atau nilai manual yang tersimpan.
+          - Aturan eksklusivitas metrik tunggal pada Kartu Minimalis (Model B) tetap ditegakkan.
+        - **Perilaku Peralihan & Formatter**:
+          - Otomatis → Manual: memakai nilai manual terakhir yang dimasukkan untuk produk tersebut.
+          - Manual → Otomatis: membaca data statistik nyata terbaru melalui jalur database yang tersedia.
+          - Jika nilai manual belum diisi: tidak mengisi otomatis angka 5 atau angka penjualan contoh palsu, dan menampilkan petunjuk pengisian di bawah input tools. Nilai 0 yang sengaja dimasukkan tetap dianggap sah.
+          - Input manual Terjual menerima angka mentah dan diformat menggunakan formatter resmi yang sama (`formatSalesCount`).
+        - **Penanda Pratinjau Admin "Data contoh"**:
+          - Saat metrik manual terlihat pada kartu, penanda kecil "Data contoh" (`#preview-sample-data-badge` dan `#preview-sample-data-badge-mob`) otomatis tampil di area pembungkus pratinjau Admin di luar desain kartu yang disimpan, dan tetap terlihat pada kedua tab Step 1 (Pratinjau dan Desain Kartu).
+        - **Snapshot Batal, Simpan, & Integrasi DB**:
+          - Snapshot Batal memulihkan metadata pratinjau ke baseline sesi/simpan terakhir secara terpisah dari preset desain.
+          - Tombol "Gunakan Desain Bawaan" hanya mengubah desain, tanpa menyentuh metadata pratinjau ini.
+          - "Gunakan Sebagai Default" tidak menyertakan sumber maupun angka manual ke preset tema toko.
+          - `DB.createProduct` dan `DB.updateProduct` mempreservasi `admin_card_preview_metrics` tanpa menimpa data penjualan/ulasan nyata.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian unit terfokus (`scratch/test_card_metric_sources_10.js`) bersama seluruh suite regresi (R7, R6, R4, R3) lulus 100% PASS. Mode Git: NO COMMIT / NO PUSH sesuai instruksi. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Penyempurnaan Dua Baris Footer Kartu Detail / Model C (`TASK: SC-ADMIN-DETAIL-CARD-FOOTER-11`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Desain Kartu (desktop dan mobile) pada accordion kelompok "Footer Kartu". Merapikan pengaturan dua baris footer horizontal (Strip 1 dan Strip 2) pada Kartu Detail (Model C) tanpa mengubah perilaku data rating, ulasan, atau transaksi nyata.
+        - **Akar Masalah Pemilih Ikon yang Hilang**:
+          - Pemilih ikon footer sebelumnya (`#select-card-footer-icon` dan `#select-card-footer-2-icon`) berada di blok form legacy (`#section-card-footer-config`) di luar accordion.
+          - Saat restrukturisasi editor kartu berbasis accordion pada Task 08/09, hanya input teks dan color picker yang dipindahkan ke `#accordion-group-footer` dan `#accordion-group-footer-mob`, sedangkan pemilih ikon tertinggal di bagian form lama yang tersembunyi.
+          - Solusi: Memulihkan dan memodernisasi kontrol pemilih ikon ke dalam grid 3-kolom ringkas (Ikon, Latar, Teks/Ikon) di kedua panel desktop dan mobile tanpa merusak form legacy.
+        - **Batas Karakter & Penghitung Real-Time**:
+          - Batas maksimal 32 karakter diberlakukan untuk teks Strip 1 (`footer_text`) dan Strip 2 (`footer_2_text`).
+          - Menghitung panjang karakter berdasarkan code point Unicode (mendukung emoji, simbol, dan multilang).
+          - Penghitung real-time format `X/32` di samping label input (`#footer-text-char-count-side`, `-mob`, `#footer-2-text-char-count-side`, `-mob`).
+          - Memberikan peringatan visual saat mendekati batas (>=28 karakter: oranye) dan saat mencapai batas (>=32 karakter: merah tebal).
+          - Mencegah pengetikan melebihi 32 karakter via atribut `maxlength="32"`, event listener `input`, serta validasi saat simpan desain kartu (`handleSaveCardDesign`) dan simpan produk (`validateForm`).
+        - **Placeholder & Aturan Default Tanpa Teks Sampel Hardcoded**:
+          - Nilai default footer teks pada produk baru diinisialisasi sebagai string kosong `""` (bukan teks sampel hardcoded).
+          - Input teks menggunakan placeholder pemandu:
+            * Strip 1: `placeholder="Tersedia berbagai Variasi"`
+            * Strip 2: `placeholder="Pengiriman Cepat"`
+          - Seluruh pembacaan konfigurasi di `js/db.js`, `js/product-form.js`, dan `js/buyer-store.js` dibersihkan dari fallback teks hardcoded lama (`'Proses Hanya Dalam 1Jam'` dan `'Variasi Paket Tersedia/tidak tersedia'`).
+        - **Katalog 24 Ikon Kurasi Lucide**:
+          - Katalog terpusat `FOOTER_ICONS_CATALOG` berisi 24 ikon relevan: `none` ("Tanpa Ikon" / ban), `truck`, `clock`, `zap`, `shield-check`, `minus`, `check-circle`, `package`, `calendar`, `layers`, `settings`, `wrench`, `palette`, `tag`, `badge-percent`, `gift`, `map-pin`, `leaf`, `graduation-cap`, `headphones`, `sparkles`, `award`, `printer`, `star`.
+          - Kompatibilitas mundur penuh: Mendukung pemetaan ID legacy (`truck`, `clock`, `zap`, `shield-check`, `minus`, `check-circle`, `package`, `calendar`, `none`).
+          - Tampilan dropdown compact 6 kolom (mobile: 4 kolom) dengan ukuran ikon grid seragam 18×18 px dan preview strip kartu 14×14 px.
+          - Dilengkapi state aktif, navigasi keyboard (Enter/Space, Escape), ARIA attributes (`aria-expanded`, `aria-haspopup="listbox"`, `role="listbox"`, `role="option"`, `aria-selected`), dan penutupan otomatis saat klik di luar area atau tombol Escape.
+          - Opsi "Tanpa Ikon" (`none`) tidak merender tag `<i>` maupun spacing ikon ekstra pada kartu.
+        - **Render Kondisional Independen & Kelengkungan Sudut (Border-Radius)**:
+          - Jika teks strip kosong `""`, strip tersebut tidak dirender sama sekali (baik pada live preview Admin maupun etalase pembeli `buyer-store.js`).
+          - Jika kedua strip kosong (dan countdown timer tidak aktif), pembungkus luar footer kartu tidak dirender sama sekali, mencegah strip kosong atau celah kosong di bawah kartu.
+          - Penyesuaian kelengkungan sudut bawah (`rounded-b-2xl`):
+            * Jika Strip 1 dan Strip 2 sama-sama aktif: Strip 1 memiliki pemisah bawah `border-b border-black/10`, dan Strip 2 memiliki kelengkungan bawah `rounded-b-2xl`.
+            * Jika hanya Strip 1 yang aktif: Strip 1 otomatis mendapatkan kelengkungan bawah `rounded-b-2xl` tanpa border bawah.
+            * Jika hanya Strip 2 yang aktif: Strip 2 mendapatkan kelengkungan bawah `rounded-b-2xl`.
+        - **Integrasi Snapshot Batal & DB Persistence**:
+          - Pembatalan desain kartu (`handleCancelCardDesign`) memulihkan pratinjau tombol pemilih ikon dan penghitung karakter ke kondisi baseline snapshot.
+          - Konfigurasi disimpan dan dimuat secara bersih di `js/db.js` (`addProduct`, `updateProduct`, preset tema toko).
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian unit terfokus 9 test suites (`scratch/test_detail_card_footer_11.js`) bersama seluruh suite regresi (Task 10, R7, R6, R4, R3) lulus 100% PASS. Mode Git: STRICTLY NO STAGING / NO COMMIT / NO PUSH sesuai instruksi. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
