@@ -1493,6 +1493,39 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           * Latar Footer 2 diselesaikan dengan hirarki: `warna kustom produk` (`custom_footer_2.bg_color` / `footer_2_bg_color`) → `default desain tema aktif` (`config.footer_2_bg_color`) → `brand secondary` (`settings.secondary_color` / `--color-secondary`, default `#f59e0b`).
           * Diimplementasikan secara konsisten pada live preview admin (`updateProductCardLivePreview`) dan etalase pembeli (`buyer-store.js` `renderCardModelC`).
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian unit terfokus (`scratch/test_footer_product_labels_12b.js`) bersama seluruh suite regresi (12A, 11, 10, R7, R6, R4, R3) lulus 100% PASS (8 test suites).
+      - **Penyelarasan Input/Pilih & Contoh Tampilan Footer Pratinjau Admin Step 1 (`TASK: SC-ADMIN-FOOTER-COMBOBOX-PREVIEW-12C`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Desain Kartu (desktop `#card-customization-section` dan mobile `#card-customization-section-mob`) pada Model C (Kartu Detail).
+        - **Penyelarasan Komponen Input/Pilih Label Footer**:
+          * Menyamakan struktur dan perilaku komponen Input/Pilih label footer dengan komponen referensi label variasi `#input-var-label-tier1`: menggunakan wrapper `.clean-datalist-input-box`, panah dropdown terlihat `.clean-datalist-arrow` (`▼`), popover daftar saran `.clean-datalist-popover`, dan tombol pembersih `.btn-clear-datalist` (`bi-x`).
+          * Memungkinkan pengetikan teks bebas (`input.clean-datalist-input`), klik panah dropdown untuk membuka popover saran, pemilihan opsi otomatis mengisi input, memperbarui live preview, dan memperbarui penghitung karakter.
+          * Menjamin sinkronisasi dua arah otomatis antara panel sidebar desktop dan drawer mobile melalui `syncF1Str` dan `syncF2Str`, didukung helper `_syncDatalistControls()` untuk visibilitas tombol panah dan clear.
+          * Mengambil opsi saran langsung dari storage riwayat `DB.getFooterTextsHistory()`, dilengkapi fallback 7 saran berkualitas tinggi jika storage belum memiliki riwayat.
+          * Mempertahankan placeholder bersih saat input kosong:
+            - Label Footer 1: `placeholder="Tersedia berbagai Variasi"`
+            - Label Footer 2: `placeholder="Pengiriman Cepat"`
+            - Penghitung karakter awal: `0/32`.
+          * Menghapus input teks mengosongkan nilai input secara bersih dan menampilkan placeholder tanpa menyuntikkan teks contoh ke dalam input.
+          * Menegakkan batas maksimal 32 karakter grapheme cluster terlihat (`Intl.Segmenter`) baik saat pengetikan maupun saat pemilihan opsi dari popover saran.
+        - **Contoh Tampilan Footer pada Live Preview Admin Step 1 & Badge Keterangan**:
+          * Untuk tujuan demonstrasi desain di Admin Step 1 (baik tab Pratinjau maupun Desain Kartu, desktop dan mobile), Kartu Detail / Model C selalu menampilkan dua baris strip footer:
+            - Jika Label Footer 1 terisi pengguna $\rightarrow$ tampilkan teks pengguna.
+            - Jika Label Footer 1 kosong $\rightarrow$ tampilkan teks contoh demonstrasi: `"Tersedia berbagai Variasi"`.
+            - Jika Label Footer 2 terisi pengguna $\rightarrow$ tampilkan teks pengguna.
+            - Jika Label Footer 2 kosong $\rightarrow$ tampilkan teks contoh demonstrasi: `"Pengiriman Cepat"`.
+          * Pemberitahuan Luar Kartu:
+            - Ditambahkan badge keterangan di luar kartu: `#preview-footer-sample-badge` (desktop) dan `#preview-footer-sample-badge-mob` (mobile) dengan teks `"Footer kosong ditampilkan sebagai contoh."`.
+            - Tampil jika salah satu atau kedua footer menggunakan teks contoh demonstrasi.
+            - Otomatis tersembunyi jika kedua label footer telah diisi oleh teks pengguna sendiri.
+            - Beroperasi secara independen tanpa mengganggu badge data contoh metrik rating/terjual dari Task 10 (`#preview-sample-badge`).
+        - **Isolasi Total Data Contoh**:
+          * Teks contoh demonstrasi footer hanya hidup secara lokal saat perenderan preview Step 1 kartu.
+          * Tidak pernah disuntikkan ke `primaryState.card_footer_text`, `primaryState.card_footer_2_text`, `primaryState.custom_footer_1`, `primaryState.custom_footer_2`, konfigurasi kartu `card_config`, input DOM, preset desain toko, snapshot pembatalan, draft, atau payload simpan produk.
+          * Aturan validasi simpan final produk tetap mewajibkan Label Footer 1 diisi pengguna asli (tidak lolos validasi hanya karena preview menampilkan contoh). Simpan Draf tetap diizinkan.
+        - **Perilaku Etalase Toko Pembeli (`buyer-store.js`) Tetap Berbeda**:
+          * Halaman pembeli hanya merender strip label footer yang benar-benar tersimpan oleh penjual.
+          * Jika Footer 2 kosong, strip footer kedua tidak dirender sama sekali dan tidak menyisakan ruang/divider kosong.
+          * Badge keterangan contoh demonstrasi tidak pernah muncul di etalase pembeli.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian unit terfokus (`scratch/test_footer_combobox_preview_12c.js`) bersama seluruh suite regresi (12B, 12A, 11, 10, R7, R6, R4, R3) lulus 100% PASS (9 test suites). Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
