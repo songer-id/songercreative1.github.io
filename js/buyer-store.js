@@ -3631,7 +3631,8 @@ const BuyerStore = (() => {
     const f2Obj = prod.custom_footer_2 || {};
     const footer2Text = (f2Obj.text !== undefined ? f2Obj.text : (prod.card_footer_2_text !== undefined ? prod.card_footer_2_text : (config.footer_2_text || ''))).trim();
     const footer2Icon = f2Obj.icon || prod.footer_2_badge_icon || config.footer_2_icon || 'minus';
-    const footer2Bg = f2Obj.bg_color || prod.footer_2_bg_color || config.footer_2_bg_color || '#047857';
+    const defaultSecondary = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings()?.secondary_color || '#f59e0b') : '#f59e0b';
+    const footer2Bg = f2Obj.bg_color || prod.footer_2_bg_color || config.footer_2_bg_color || defaultSecondary;
     const footer2TextColor = f2Obj.text_color || prod.footer_2_text_color || config.footer_2_text_color || '#ffffff';
 
     const hasFooter1 = Boolean(footer1Text);

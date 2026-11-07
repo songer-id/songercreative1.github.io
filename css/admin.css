@@ -2356,10 +2356,10 @@ input::-webkit-calendar-picker-indicator {
   }
 
   /* Label Field Input */
-  #view-product-form label:not(.cursor-pointer):not(.relative):not(.sr-only),
+  #view-product-form label:not(.cursor-pointer):not(.relative):not(.sr-only):not(.card-tool-label):not(.card-custom-label),
   .step2-section-card label:not(.cursor-pointer):not(.relative):not(.sr-only),
-  .step1-section-card label:not(.cursor-pointer):not(.relative):not(.sr-only),
-  #view-product-form .input-field-label {
+  .step1-section-card label:not(.cursor-pointer):not(.relative):not(.sr-only):not(.card-tool-label):not(.card-custom-label),
+  #view-product-form .input-field-label:not(.card-tool-label):not(.card-custom-label) {
     font-size: 0.75rem !important;
     /* 12px */
     font-weight: 600 !important;
@@ -3492,28 +3492,57 @@ button:focus-visible {
   max-width: 100% !important;
   width: 100% !important;
 }
-/* Scoped Typography for Card Customization Section (Task SC-ADMIN-CARD-EDITOR-GROUPING-09A) */
+/* Scoped Typography for Card Customization Section (Task SC-ADMIN-CARD-TOOLS-UI-12A) */
+#view-product-form #card-customization-section,
+#view-product-form #card-customization-section *,
+#view-product-form #card-customization-section label,
+#view-product-form #card-customization-section button,
+#view-product-form #card-customization-section input,
+#view-product-form #card-customization-section select,
+#view-product-form #card-customization-section span,
+#view-product-form #card-customization-section p,
+#view-product-form #card-customization-section div,
+#view-product-form #card-customization-section .card-accordion-trigger,
+#view-product-form #card-customization-section .card-tool-label,
 #card-customization-section,
+#card-customization-section *,
 #card-customization-section button,
 #card-customization-section label,
 #card-customization-section input,
 #card-customization-section select,
 #card-customization-section span,
 #card-customization-section p,
+#card-customization-section div,
 #card-customization-section .card-accordion-trigger,
+#card-customization-section .card-tool-label,
+#view-product-form #card-customization-section-mob,
+#view-product-form #card-customization-section-mob *,
+#view-product-form #card-customization-section-mob label,
+#view-product-form #card-customization-section-mob button,
+#view-product-form #card-customization-section-mob input,
+#view-product-form #card-customization-section-mob select,
+#view-product-form #card-customization-section-mob span,
+#view-product-form #card-customization-section-mob p,
+#view-product-form #card-customization-section-mob div,
+#view-product-form #card-customization-section-mob .card-accordion-trigger,
+#view-product-form #card-customization-section-mob .card-tool-label,
 #card-customization-section-mob,
+#card-customization-section-mob *,
 #card-customization-section-mob button,
 #card-customization-section-mob label,
 #card-customization-section-mob input,
 #card-customization-section-mob select,
 #card-customization-section-mob span,
 #card-customization-section-mob p,
-#card-customization-section-mob .card-accordion-trigger {
+#card-customization-section-mob div,
+#card-customization-section-mob .card-accordion-trigger,
+#card-customization-section-mob .card-tool-label {
   font-weight: 400 !important;
 }
 
-/* Scoped Mobile Input Tools Typography for Card Customization Section (Task SC-ADMIN-CARD-MOBILE-TYPOGRAPHY-09C-R7) */
+/* Scoped Mobile Input Tools Typography for Card Customization Section (Task SC-ADMIN-CARD-TOOLS-UI-12A) */
 @media (max-width: 639.98px) {
+  #view-product-form #card-customization-section-mob .card-tool-label,
   #card-customization-section-mob .card-tool-label {
     font-size: 11px !important;
     line-height: 16px !important;

@@ -1447,6 +1447,52 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           - Pembatalan desain kartu (`handleCancelCardDesign`) memulihkan pratinjau tombol pemilih ikon dan penghitung karakter ke kondisi baseline snapshot.
           - Konfigurasi disimpan dan dimuat secara bersih di `js/db.js` (`addProduct`, `updateProduct`, preset tema toko).
         - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian unit terfokus 9 test suites (`scratch/test_detail_card_footer_11.js`) bersama seluruh suite regresi (Task 10, R7, R6, R4, R3) lulus 100% PASS. Mode Git: STRICTLY NO STAGING / NO COMMIT / NO PUSH sesuai instruksi. Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Perapian Tampilan & Tipografi Tools Desain Kartu Mobile & Penamaan Footer (`TASK: SC-ADMIN-CARD-TOOLS-UI-12A`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Desain Kartu (desktop `#card-customization-section` dan mobile `#card-customization-section-mob`). Memperbaiki tampilan visual, layout kontrol, dan tipografi tools tanpa mengubah aturan penyimpanan, snapshot, default label, atau metrik produk nyata.
+        - **Akar Masalah Label Tools Masih Tampil Tebal (Bold)**:
+          - Ditemukan aturan global di `css/admin.css` baris 2358: `#view-product-form label:not(.cursor-pointer):not(.relative):not(.sr-only)` dengan `font-weight: 600 !important;` pada media query `@media (max-width: 640px)`.
+          - Aturan tersebut memiliki spesifisitas CSS `(1, 3, 1) !important` yang mengalahkan aturan `.card-tool-label` dengan spesifisitas `(1, 1, 0) !important`, sehingga label tools kartu (Judul Produk, Harga Utama, Outline, dll.) dipaksa tampil tebal (semibold 600) di perangkat mobile.
+          - Solusi: Menambahkan pengecualian `:not(.card-tool-label):not(.card-custom-label)` pada selector baris 2358, serta menambahkan isolasi tipografi berkekuatan tinggi `(2, 0, 0)`: `#view-product-form #card-customization-section *` dan `#view-product-form #card-customization-section-mob *` dengan `font-weight: 400 !important;` (tetap mempertahankan `font-mono` untuk angka HEX).
+          - Menghapus penambahan kelas `font-semibold` pada penghitung karakter footer error di `updateFooterCharCounter` dan menormalkan popover header ikon menjadi `font-normal`.
+        - **Restrukturisasi & Penamaan Strip Footer Kartu Detail (Model C)**:
+          - Mengubah label kontrol:
+            * "Teks Footer 1" → "Label Footer 1 *" (dengan tanda bintang wajib).
+            * "Teks Footer 2" → "Label Footer 2 (Opsional)".
+            * Di dalam masing-masing grup strip, label warna disederhanakan menjadi "Warna Latar" dan "Warna Teks" (tanpa pengulangan angka seperti "Warna Latar 1/2").
+          - Mempertahankan integritas atribut `for` dan `id` yang berpasangan secara valid tanpa duplikasi ID di DOM.
+        - **Tata Letak & Kepadatan Kontrol Mobile (Viewport 320px–640px)**:
+          - Tombol pemilih ikon diperkecil menjadi 52 px di mobile (`w-[52px] h-7 px-1.5`) dan 56 px di desktop (`w-14 h-7 px-1.5`) dengan area sentuh nyaman, hanya menampilkan ikon aktif dan panah chevron kecil.
+          - Tata letak baris kontrol warna menggunakan grid 3 kolom: `grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)]` (desktop: `56px`), di mana dua kolom warna berbagi sisa ruang secara merata dengan `min-w-0` pada kontainer dan input teks HEX untuk mencegah *overflow*.
+          - Fallback viewport sempit (<350px): Menggunakan kelas responsif `max-[350px]:grid-cols-2` dan `max-[350px]:col-span-2`, memindahkan kedua kontrol warna ke baris baru secara proporsional.
+          - Popover daftar ikon memiliki lebar independen (`w-56 max-w-[calc(100vw-3rem)]`) sehingga tidak terpotong atau terikat lebar tombol pemilih, dengan grid ikon 6 kolom (18×18 px) yang nyaman disentuh.
+          - Satuan "px" pada kontrol radius (Radius Kartu, Label Khusus, Label Diskon, Countdown) diubah menjadi elemen flex sibling sejajar (`flex items-center gap-1.5`), dengan input angka `w-14 text-center`, sehingga tombol spinner angka bawaan browser (up/down) terlihat sepenuhnya tanpa tertutupi teks.
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta rangkaian pengujian unit terfokus (`scratch/test_card_tools_ui_12a.js`, `test_detail_card_footer_11.js`, `test_card_mobile_typography_09c_r7.js`, `test_card_metric_sources_10.js`, `test_card_promo_09c_r6.js`, `test_card_controls_09c_r4.js`, `test_preview_recovery_09c_r3.js`) lulus 100% PASS. Mode Git: STRICTLY NO STAGING / NO COMMIT / NO PUSH (ditangguhkan hingga Fase 12B selesai). Hasil visual akhir dicatat berstatus menunggu pemeriksaan visual pengguna (*pending user visual inspection*).
+      - **Aturan Label Footer Per Produk, Input/Pilih Riwayat Saran, & Pemisahan Konten dari Default Desain (`TASK: SC-ADMIN-FOOTER-PRODUCT-LABELS-12B`)**:
+        - **Cakupan & Fokus**: Admin → Tambah/Edit Produk → Step 1 → Desain Kartu (desktop dan mobile) pada Model C (Kartu Detail). Mengatur bahwa isi teks label footer merupakan konten spesifik produk (bukan bagian preset default desain), menambahkan combobox saran riwayat tersimpan, batas 32 grapheme cluster konsisten, resolusi warna latar sekunder (secondary brand), dan validasi inline.
+        - **Aturan Konten Label Footer Model C / Kartu Detail**:
+          * `Label Footer 1`: Wajib diisi untuk menyimpan produk final (`publish` / `active`). Whitespace saja dianggap kosong (`.trim() === ''`).
+          * `Label Footer 2`: Bersifat opsional. Jika kosong, tidak merender strip, ikon, divider, atau ruang kosong, namun konfigurasi warna dan ikon tetap disimpan agar siap pakai jika teks diisi kemudian.
+          * Batas panjang maksimal 32 karakter grapheme cluster terlihat (`Intl.Segmenter` / Unicode grapheme), tidak memotong emoji gabungan (ZWJ sequences). Tepat 32 karakter tetap valid.
+          * Model A dan Model B tidak terkena kewajiban pengisian ini.
+          * Simpan Draf (`isDraft: true`) tetap diizinkan menyimpan produk dengan label footer yang belum lengkap.
+          * Tidak menampilkan alert/modal validasi saat mengetik atau membuka editor. Validasi editor kartu (`handleSaveCardDesign`) menampilkan pesan kesalahan inline dekat input (`#error-card-footer-text-side`, `-mob`, `#error-card-footer-2-text-side`, `-mob`).
+          * Pengecualian Produk Legacy: Perubahan produk lama yang tidak terkait footer tidak diblokir oleh data legacy yang tidak disentuh (`formMode === 'edit'` && `!isFooterTouched` && `!initialCardFooterText`). Data legacy tidak pernah dipotong atau dibersihkan secara diam-diam.
+        - **Combobox Input / Pilih & Riwayat Saran**:
+          * Menggunakan integrasi `clean-datalist` yang mendukung input teks bebas, memilih riwayat saran yang pernah berhasil disimpan, navigasi keyboard (ArrowDown, ArrowUp, Enter, Escape), klik di luar, dan atribut ARIA.
+          * Pemilihan saran otomatis mengisi input, memperbarui live preview, dan memperbarui penghitung karakter tanpa menyimpan produk secara otomatis.
+          * Riwayat saran disimpan ke storage berskala tenant (`STORAGE_KEYS.FOOTER_TEXTS_HISTORY`) hanya setelah penyimpanan berhasil (`handleSaveCardDesign` atau `submitForm`), bukan pada setiap ketikan atau saat pembatalan (Batal).
+          * Placeholder (`"Tersedia berbagai Variasi"`, `"Pengiriman Cepat"`) dan string kosong/tidak valid/melebihi 32 karakter secara ketat dilarang masuk ke riwayat saran.
+          * Deduplikasi riwayat berbasis case-insensitive dengan mempertahankan penulisan huruf kapital/kecil terbaru pengguna, serta dibatasi maksimal 30 saran terbaru.
+        - **Pemisahan Default Desain dari Konten Produk**:
+          * Konten teks Label Footer 1 dan 2 (`card_footer_text`, `card_footer_2_text`) serta metadata metrik pratinjau manual (`admin_card_preview_metrics`) dikeluarkan secara tegas dari preset "Gunakan Sebagai Default" / `saveCardModelPreset`.
+          * Preset visual hanya menyimpan pengaturan desain tema: warna strip, ikon strip, dan visibilitas metrik.
+          * Menerapkan desain bawaan ("Gunakan Desain Bawaan" / `handleApplyDefaultCardDesign`) tidak menghapus teks label produk aktif maupun metadata manual.
+          * Produk baru tidak mewarisi teks produk terakhir atau preset lama; teks selalu diawali string kosong `""`.
+          * Tindakan Batal (`handleCancelCardDesign`) memulihkan seluruh label, ikon, warna, dan snapshot baseline tanpa menambah riwayat saran serta menyembunyikan pesan kesalahan inline.
+        - **Resolusi Latar Footer 2 Berbasis Brand Secondary**:
+          * Latar Footer 2 diselesaikan dengan hirarki: `warna kustom produk` (`custom_footer_2.bg_color` / `footer_2_bg_color`) → `default desain tema aktif` (`config.footer_2_bg_color`) → `brand secondary` (`settings.secondary_color` / `--color-secondary`, default `#f59e0b`).
+          * Diimplementasikan secara konsisten pada live preview admin (`updateProductCardLivePreview`) dan etalase pembeli (`buyer-store.js` `renderCardModelC`).
+        - *Status Verifikasi*: Pengujian sintaks JavaScript (`node --check`), pengecekan whitespace (`git diff --check`), serta pengujian unit terfokus (`scratch/test_footer_product_labels_12b.js`) bersama seluruh suite regresi (12A, 11, 10, R7, R6, R4, R3) lulus 100% PASS (8 test suites).
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

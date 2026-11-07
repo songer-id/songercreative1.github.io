@@ -575,7 +575,7 @@ const DB = (() => {
       footer_text_color: '#ffffff',
       footer_icon: 'truck',
       footer_text: '',
-      footer_2_bg_color: '#047857',
+      footer_2_bg_color: '#f59e0b',
       footer_2_text_color: '#ffffff',
       footer_2_icon: 'minus',
       footer_2_text: '',
@@ -1983,9 +1983,18 @@ const DB = (() => {
       const key = variantCode === 'A' ? 'variant_a' : (variantCode === 'B' ? 'variant_b' : 'variant_c');
       const sets = this.getSettings();
       if (!sets.card_variants_config) sets.card_variants_config = {};
+
+      // Pisahkan konten produk dan metrik manual dari preset visual tema
+      const cleanConfig = { ...config };
+      Object.keys(cleanConfig).forEach(k => {
+        if (k.startsWith('admin_') || k.includes('metric') || k.includes('footer_text') || k.includes('card_footer_')) {
+          delete cleanConfig[k];
+        }
+      });
+
       sets.card_variants_config[key] = {
         ...(sets.card_variants_config[key] || {}),
-        ...config
+        ...cleanConfig
       };
       this.saveSettings(sets);
       return sets.card_variants_config[key];
@@ -2043,30 +2052,74 @@ const DB = (() => {
     },
 
     getFooterTextsHistory() {
-      const stored = getTable('footer_texts_history') || [];
-      const prods = getTable(STORAGE_KEYS.PRODUCTS) || [];
-      const fromProds = prods.map(p => (p.card_footer_text || '').trim()).filter(Boolean);
-
-      const defaults = [
-        'Proses Hanya Dalam 1 Jam',
-        'Selesai Dalam 2 Jam',
-        'Garansi Presisi & Rapi',
-        'Siap Kirim Hari Ini',
-        'Kualitas HD & Tahan Lama',
-        'Proses Cepat & Garansi Presisi'
+      const history = getTable(STORAGE_KEYS.FOOTER_TEXTS_HISTORY) || [];
+      const products = getTable(STORAGE_KEYS.PRODUCTS) || [];
+      const fromProds = [];
+      const placeholders = [
+        'tersedia berbagai variasi',
+        'pengiriman cepat',
+        'proses hanya dalam 1jam',
+        'proses hanya dalam 1 jam',
+        'variasi paket tersedia/tidak tersedia'
       ];
-
-      return Array.from(new Set([...defaults, ...stored, ...fromProds])).filter(Boolean);
+      products.forEach(p => {
+        ['card_footer_text', 'card_footer_2_text'].forEach(key => {
+          const t = p && p[key];
+          if (t && typeof t === 'string') {
+            const trimmed = t.trim();
+            if (trimmed && !placeholders.includes(trimmed.toLowerCase())) {
+              fromProds.push(trimmed);
+            }
+          }
+        });
+      });
+      const defaults = [
+        'Proses Cepat & Garansi Presisi',
+        'Siap Kirim Seluruh Indonesia',
+        'Gratis Konsultasi Desain',
+        'Bahan Premium Tahan Cuaca',
+        'Garansi Uang Kembali Jika Cacat',
+        'Pengerjaan 1 Hari Jadi',
+        'Bisa Custom Ukuran & Desain'
+      ];
+      const combined = [...history, ...fromProds, ...defaults];
+      const seen = new Set();
+      const result = [];
+      for (const item of combined) {
+        if (!item || typeof item !== 'string') continue;
+        const trimmed = item.trim();
+        if (!trimmed) continue;
+        const lower = trimmed.toLowerCase();
+        if (placeholders.includes(lower)) continue;
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          result.push(trimmed);
+        }
+      }
+      return result.slice(0, 30);
     },
 
     saveFooterTextToHistory(text) {
-      if (!text || !text.trim()) return;
-      const clean = text.trim();
-      const current = getTable('footer_texts_history') || [];
-      if (!current.includes(clean)) {
-        current.push(clean);
-        setTable('footer_texts_history', current);
+      if (!text || typeof text !== 'string') return;
+      const val = text.trim();
+      if (!val) return;
+      const placeholders = [
+        'tersedia berbagai variasi',
+        'pengiriman cepat',
+        'proses hanya dalam 1jam',
+        'proses hanya dalam 1 jam',
+        'variasi paket tersedia/tidak tersedia'
+      ];
+      if (placeholders.includes(val.toLowerCase())) return;
+      const len = [...val].length;
+      if (len > 32) return;
+      const list = getTable(STORAGE_KEYS.FOOTER_TEXTS_HISTORY) || [];
+      const existingIdx = list.findIndex(item => (typeof item === 'string' ? item : '').trim().toLowerCase() === val.toLowerCase());
+      if (existingIdx !== -1) {
+        list.splice(existingIdx, 1);
       }
+      list.unshift(val);
+      setTable(STORAGE_KEYS.FOOTER_TEXTS_HISTORY, list.slice(0, 30));
     },
 
     // --- 1. CATEGORIES CRUD (Kategori Utama Dinamis) ---

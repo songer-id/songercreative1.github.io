@@ -58,7 +58,14 @@ const ProductForm = (() => {
   ];
 
   function getUnicodeLength(str) {
-    return str ? [...str].length : 0;
+    if (!str) return 0;
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      try {
+        const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+        return [...segmenter.segment(str)].length;
+      } catch (_) { }
+    }
+    return [...str].length;
   }
 
   function renderFooterIconGridHtml(currentIconId, pickerId) {
@@ -81,7 +88,7 @@ const ProductForm = (() => {
     const len = getUnicodeLength(val);
     counterEl.textContent = `${len}/32`;
     if (len > 32) {
-      counterEl.classList.add('text-red-600', 'font-semibold');
+      counterEl.classList.add('text-red-600');
       counterEl.classList.remove('text-slate-400');
       if (inputEl) {
         inputEl.classList.add('border-red-400', 'focus:border-red-500');
@@ -269,6 +276,24 @@ const ProductForm = (() => {
       if (rootColor) return rootColor;
     } catch (_) { }
     return '#33b589';
+  }
+
+  /**
+   * Mengambil warna tema sekunder aktif dari settings / :root CSS (--color-secondary)
+   */
+  function getSecondaryThemeColor() {
+    try {
+      if (typeof DB !== 'undefined' && DB.getSettings) {
+        const s = DB.getSettings();
+        if (s && s.secondary_color) {
+          syncThemeCSSVariables();
+          return s.secondary_color;
+        }
+      }
+      const rootColor = getComputedStyle(document.documentElement).getPropertyValue('--color-secondary').trim();
+      if (rootColor) return rootColor;
+    } catch (_) { }
+    return '#f59e0b';
   }
 
 
@@ -523,7 +548,7 @@ const ProductForm = (() => {
     footer_text_color: '#ffffff',
     card_footer_2_text: '',
     footer_2_badge_icon: 'minus',
-    footer_2_bg_color: getPrimaryThemeColor(),
+    footer_2_bg_color: getSecondaryThemeColor(),
     footer_2_text_color: '#ffffff',
     enable_countdown: true,
     countdown_bg_color: getPrimaryThemeColor(),
@@ -532,6 +557,8 @@ const ProductForm = (() => {
     is_active: true
   };
 
+  let initialCardFooterText = '';
+  let isFooterTouched = false;
   let materialsState = [];
   let finishingsState = {
     main: [],
@@ -552,16 +579,16 @@ const ProductForm = (() => {
       });
       for (const p of sortedProds) {
         if (p.custom_footer_1 || p.custom_footer_2 || p.card_footer_text || p.footer_bg_color) {
-          const f1 = p.custom_footer_1 ? { ...p.custom_footer_1 } : {
-            text: p.card_footer_text || '',
+          const f1 = p.custom_footer_1 ? { ...p.custom_footer_1, text: '' } : {
+            text: '',
             icon: p.footer_badge_icon || 'truck',
             bg_color: p.footer_bg_color || getPrimaryThemeColor(),
             text_color: p.footer_text_color || '#ffffff'
           };
-          const f2 = p.custom_footer_2 ? { ...p.custom_footer_2 } : {
-            text: p.card_footer_2_text || '',
+          const f2 = p.custom_footer_2 ? { ...p.custom_footer_2, text: '' } : {
+            text: '',
             icon: p.footer_2_badge_icon || 'minus',
-            bg_color: p.footer_2_bg_color || getPrimaryThemeColor(),
+            bg_color: p.footer_2_bg_color || getSecondaryThemeColor(),
             text_color: p.footer_2_text_color || '#ffffff'
           };
           return { f1, f2 };
@@ -623,17 +650,6 @@ const ProductForm = (() => {
         } catch (_) { }
       }
     } else if (listId === 'footer-texts-history-list') {
-      const defaultFooters = [
-        'Proses Hanya Dalam 1Jam',
-        'Variasi Paket Tersedia/tidak tersedia',
-        'Proses Cepat & Garansi Kualitas',
-        'Siap Kirim Seluruh Indonesia',
-        'Bahan Premium Berkualitas',
-        'Garansi 100% Produk Original'
-      ];
-      defaultFooters.forEach(f => {
-        if (!options.includes(f)) options.push(f);
-      });
       if (typeof DB !== 'undefined' && typeof DB.getFooterTextsHistory === 'function') {
         try {
           const history = DB.getFooterTextsHistory();
@@ -644,6 +660,17 @@ const ProductForm = (() => {
             });
           }
         } catch (_) { }
+      }
+      if (!options || options.length === 0) {
+        options = [
+          'Proses Cepat & Garansi Presisi',
+          'Siap Kirim Seluruh Indonesia',
+          'Gratis Konsultasi Desain',
+          'Bahan Premium Tahan Cuaca',
+          'Garansi Uang Kembali Jika Cacat',
+          'Pengerjaan 1 Hari Jadi',
+          'Bisa Custom Ukuran & Desain'
+        ];
       }
     } else if (listId === 'datalist-stock-unlimited') {
       options = ['Unlimited'];
@@ -1447,17 +1474,18 @@ const ProductForm = (() => {
     const defaultSubId = allSubs.length > 0 ? allSubs[0].id : null;
     const initialCardVariant = getSuggestedCardVariantForCategory(defaultCatId);
 
-    const inheritedFooter = getLastProductFooterConfig();
-    const f1Default = inheritedFooter?.f1 || {
+    initialCardFooterText = '';
+    isFooterTouched = true;
+    const f1Default = {
       text: '',
       icon: 'truck',
       bg_color: getPrimaryThemeColor(),
       text_color: '#ffffff'
     };
-    const f2Default = inheritedFooter?.f2 || {
+    const f2Default = {
       text: '',
       icon: 'minus',
-      bg_color: getPrimaryThemeColor(),
+      bg_color: getSecondaryThemeColor(),
       text_color: '#ffffff'
     };
 
@@ -1903,34 +1931,21 @@ const ProductForm = (() => {
       ? [...prod.images]
       : (prod.image_url ? [prod.image_url] : []);
 
-    const inheritedFooter = getLastProductFooterConfig();
-    const f1Prod = prod.custom_footer_1 ? { ...prod.custom_footer_1 } : (
-      (prod.card_footer_text || prod.footer_bg_color) ? {
-        text: prod.card_footer_text || '',
-        icon: prod.footer_badge_icon || 'truck',
-        bg_color: prod.footer_bg_color || getPrimaryThemeColor(),
-        text_color: prod.footer_text_color || '#ffffff'
-      } : (inheritedFooter?.f1 || {
-        text: '',
-        icon: 'truck',
-        bg_color: getPrimaryThemeColor(),
-        text_color: '#ffffff'
-      })
-    );
+    initialCardFooterText = (prod.card_footer_text || prod.custom_footer_1?.text || '').trim();
+    isFooterTouched = false;
+    const f1Prod = prod.custom_footer_1 ? { ...prod.custom_footer_1 } : {
+      text: prod.card_footer_text || '',
+      icon: prod.footer_badge_icon || 'truck',
+      bg_color: prod.footer_bg_color || getPrimaryThemeColor(),
+      text_color: prod.footer_text_color || '#ffffff'
+    };
 
-    const f2Prod = prod.custom_footer_2 ? { ...prod.custom_footer_2 } : (
-      (prod.card_footer_2_text || prod.footer_2_bg_color) ? {
-        text: prod.card_footer_2_text || '',
-        icon: prod.footer_2_badge_icon || 'minus',
-        bg_color: prod.footer_2_bg_color || getPrimaryThemeColor(),
-        text_color: prod.footer_2_text_color || '#ffffff'
-      } : (inheritedFooter?.f2 || {
-        text: '',
-        icon: 'minus',
-        bg_color: getPrimaryThemeColor(),
-        text_color: '#ffffff'
-      })
-    );
+    const f2Prod = prod.custom_footer_2 ? { ...prod.custom_footer_2 } : {
+      text: prod.card_footer_2_text || '',
+      icon: prod.footer_2_badge_icon || 'minus',
+      bg_color: prod.footer_2_bg_color || getSecondaryThemeColor(),
+      text_color: prod.footer_2_text_color || '#ffffff'
+    };
 
     const parsedWarranty = parseWarrantyPeriod(prod.warranty_period || prod.warranty_unit);
     const wUnit = prod.warranty_unit || parsedWarranty.unit;
@@ -2784,9 +2799,9 @@ const ProductForm = (() => {
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
                           <label for="cfg-border-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                          <div class="relative flex items-center w-20">
-                            <input type="number" id="cfg-border-radius" min="0" max="24" step="1" value="16" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                          <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-border-radius" min="0" max="24" step="1" value="16" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
                           </div>
                         </div>
                         <div class="flex items-center gap-1 pt-0.5">
@@ -2956,10 +2971,10 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-discount-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <div class="relative flex items-center w-20">
-                              <input type="number" id="cfg-discount-badge-radius" min="0" max="12" step="1" value="8" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
-                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-discount-badge-radius" min="0" max="12" step="1" value="8" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
+                          </div>
                           </div>
                           <div class="flex items-center gap-1 pt-0.5">
                             <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
@@ -3050,10 +3065,10 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-countdown-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <div class="relative flex items-center w-20">
-                              <input type="number" id="cfg-countdown-radius" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
-                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-countdown-radius" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
+                          </div>
                           </div>
                           <div class="flex items-center gap-1 pt-0.5">
                             <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
@@ -3127,10 +3142,10 @@ const ProductForm = (() => {
                         <div class="space-y-1.5 pt-0.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <div class="relative flex items-center w-20">
-                              <input type="number" id="cfg-badge-radius" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
-                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-badge-radius" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
+                          </div>
                           </div>
                           <div class="flex items-center gap-1 pt-0.5">
                             <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
@@ -3188,26 +3203,27 @@ const ProductForm = (() => {
                       </div>
                       <div>
                         <div class="flex items-center justify-between mb-0.5">
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Teks Footer 1</label>
+                          <label for="input-card-footer-text-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Label Footer 1 *</label>
                           <span id="footer-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
                         </div>
                         <div class="relative w-full clean-datalist-wrapper">
                           <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Tersedia berbagai Variasi" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
+                        <div id="error-card-footer-text-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg">Label Footer 1 wajib diisi.</span></div>
                       </div>
-                      <div class="grid grid-cols-3 gap-2">
+                      <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] gap-2">
                         <!-- Ikon Footer 1 -->
                         <div>
                           <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
                           <div class="relative" id="container-footer-icon-picker-side">
-                            <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
+                            <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
                               <span id="preview-footer-icon-side" class="flex items-center justify-center shrink-0">
                                 ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                               </span>
-                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
                             </button>
-                            <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
-                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                            <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
                                 <span>Pilih Ikon</span>
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
@@ -3217,22 +3233,23 @@ const ProductForm = (() => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
-                        <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks 1</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
                       </div>
                     </div>
+
                     <!-- Strip 2 -->
                     <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                       <div class="text-[10px] font-normal text-slate-700 flex items-center gap-1">
@@ -3240,26 +3257,27 @@ const ProductForm = (() => {
                       </div>
                       <div>
                         <div class="flex items-center justify-between mb-0.5">
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Teks Footer 2</label>
+                          <label for="input-card-footer-2-text-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Label Footer 2 (Opsional)</label>
                           <span id="footer-2-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_2_text)}/32</span>
                         </div>
                         <div class="relative w-full clean-datalist-wrapper">
                           <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pengiriman Cepat" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
+                        <div id="error-card-footer-2-text-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                       </div>
-                      <div class="grid grid-cols-3 gap-2">
+                      <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] gap-2">
                         <!-- Ikon Footer 2 -->
                         <div>
                           <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
                           <div class="relative" id="container-footer-2-icon-picker-side">
-                            <button type="button" id="btn-footer-2-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
+                            <button type="button" id="btn-footer-2-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
                               <span id="preview-footer-2-icon-side" class="flex items-center justify-center shrink-0">
                                 ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_2_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                               </span>
-                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
                             </button>
-                            <div id="menu-footer-2-icon-picker-side" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
-                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                            <div id="menu-footer-2-icon-picker-side" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
                                 <span>Pilih Ikon</span>
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
@@ -3269,18 +3287,18 @@ const ProductForm = (() => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-2-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || getSecondaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getSecondaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
-                        <div>
-                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks 2</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-2-text-hex-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-2-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-2-text-hex-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
                       </div>
@@ -3411,9 +3429,9 @@ const ProductForm = (() => {
                       <div class="col-span-2 space-y-1.5 pt-1">
                         <div class="flex items-center justify-between">
                           <label for="cfg-border-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                          <div class="relative flex items-center w-20">
-                            <input type="number" id="cfg-border-radius-mob" min="0" max="24" step="1" value="16" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
+                          <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-border-radius-mob" min="0" max="24" step="1" value="16" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
                           </div>
                         </div>
                         <div class="flex items-center gap-1 pt-0.5">
@@ -3583,10 +3601,10 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-discount-badge-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                            <div class="relative flex items-center w-20">
-                              <input type="number" id="cfg-discount-badge-radius-mob" min="0" max="12" step="1" value="8" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
-                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-discount-badge-radius-mob" min="0" max="12" step="1" value="8" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
+                          </div>
                           </div>
                           <div class="flex items-center gap-1 pt-0.5">
                             <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
@@ -3677,10 +3695,10 @@ const ProductForm = (() => {
                         <div class="space-y-1.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-countdown-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                            <div class="relative flex items-center w-20">
-                              <input type="number" id="cfg-countdown-radius-mob" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
-                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-countdown-radius-mob" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
+                          </div>
                           </div>
                           <div class="flex items-center gap-1 pt-0.5">
                             <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
@@ -3754,10 +3772,10 @@ const ProductForm = (() => {
                         <div class="space-y-1.5 pt-0.5">
                           <div class="flex items-center justify-between">
                             <label for="cfg-badge-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                            <div class="relative flex items-center w-20">
-                              <input type="number" id="cfg-badge-radius-mob" min="0" max="12" step="1" value="6" class="w-full pl-2 pr-6 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              <span class="absolute right-2 text-[10px] font-normal text-slate-400 pointer-events-none select-none">px</span>
-                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                            <input type="number" id="cfg-badge-radius-mob" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
+                          </div>
                           </div>
                           <div class="flex items-center gap-1 pt-0.5">
                             <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
@@ -3815,26 +3833,27 @@ const ProductForm = (() => {
                       </div>
                       <div>
                         <div class="flex items-center justify-between mb-0.5">
-                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Teks Footer 1</label>
+                          <label for="input-card-footer-text-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Label Footer 1 *</label>
                           <span id="footer-text-char-count-mob" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
                         </div>
                         <div class="relative w-full clean-datalist-wrapper">
                           <input type="text" id="input-card-footer-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Tersedia berbagai Variasi" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
+                        <div id="error-card-footer-text-mob" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg">Label Footer 1 wajib diisi.</span></div>
                       </div>
-                      <div class="grid grid-cols-3 gap-2">
+                      <div class="grid grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-2 gap-2">
                         <!-- Ikon Footer 1 -->
-                        <div>
+                        <div class="max-[350px]:col-span-2 max-[350px]:w-[52px]">
                           <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Ikon</label>
                           <div class="relative" id="container-footer-icon-picker-mob">
-                            <button type="button" id="btn-footer-icon-picker-mob" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
+                            <button type="button" id="btn-footer-icon-picker-mob" aria-haspopup="true" aria-expanded="false" class="w-[52px] h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
                               <span id="preview-footer-icon-mob" class="flex items-center justify-center shrink-0">
                                 ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                               </span>
-                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
                             </button>
-                            <div id="menu-footer-icon-picker-mob" class="hidden absolute left-0 top-full mt-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
-                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                            <div id="menu-footer-icon-picker-mob" class="hidden absolute left-0 top-full mt-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
                                 <span>Pilih Ikon</span>
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
@@ -3844,22 +3863,23 @@ const ProductForm = (() => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Footer 1</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-bg-color-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-bg-hex-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-bg-hex-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Latar</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-bg-color-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-bg-hex-mob" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
-                        <div>
-                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks 1</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-text-color-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-text-hex-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-text-hex-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-text-color-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-text-hex-mob" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
                       </div>
                     </div>
+
                     <!-- Strip 2 -->
                     <div class="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
                       <div class="text-[10px] font-normal text-slate-700 flex items-center gap-1">
@@ -3867,26 +3887,27 @@ const ProductForm = (() => {
                       </div>
                       <div>
                         <div class="flex items-center justify-between mb-0.5">
-                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Teks Footer 2</label>
+                          <label for="input-card-footer-2-text-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Label Footer 2 (Opsional)</label>
                           <span id="footer-2-text-char-count-mob" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_2_text)}/32</span>
                         </div>
                         <div class="relative w-full clean-datalist-wrapper">
                           <input type="text" id="input-card-footer-2-text-mob" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pengiriman Cepat" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                         </div>
+                        <div id="error-card-footer-2-text-mob" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                       </div>
-                      <div class="grid grid-cols-3 gap-2">
+                      <div class="grid grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-2 gap-2">
                         <!-- Ikon Footer 2 -->
-                        <div>
+                        <div class="max-[350px]:col-span-2 max-[350px]:w-[52px]">
                           <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Ikon</label>
                           <div class="relative" id="container-footer-2-icon-picker-mob">
-                            <button type="button" id="btn-footer-2-icon-picker-mob" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
+                            <button type="button" id="btn-footer-2-icon-picker-mob" aria-haspopup="true" aria-expanded="false" class="w-[52px] h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
                               <span id="preview-footer-2-icon-mob" class="flex items-center justify-center shrink-0">
                                 ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_2_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                               </span>
-                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
                             </button>
-                            <div id="menu-footer-2-icon-picker-mob" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
-                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                            <div id="menu-footer-2-icon-picker-mob" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
                                 <span>Pilih Ikon</span>
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
@@ -3896,18 +3917,18 @@ const ProductForm = (() => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Latar Footer 2</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-2-bg-color-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-2-bg-hex-mob" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-2-bg-hex-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Latar</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-2-bg-color-mob" value="${primaryState.footer_2_bg_color || getSecondaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-2-bg-hex-mob" value="${primaryState.footer_2_bg_color || getSecondaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
-                        <div>
-                          <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks 2</label>
-                          <div class="flex items-center gap-1.5">
-                            <input type="color" id="cfg-footer-2-text-color-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
-                            <input type="text" id="cfg-footer-2-text-hex-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        <div class="min-w-0">
+                          <label for="cfg-footer-2-text-hex-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Teks</label>
+                          <div class="flex items-center gap-1.5 min-w-0">
+                            <input type="color" id="cfg-footer-2-text-color-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                            <input type="text" id="cfg-footer-2-text-hex-mob" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                           </div>
                         </div>
                       </div>
@@ -4016,15 +4037,15 @@ const ProductForm = (() => {
           </div>
         </div>
 
-        <!-- Native HTML5 Datalist untuk Teks Footer Model C (Persis Gambar 2) -->
+        <!-- Native HTML5 Datalist untuk Teks Footer Model C -->
         <datalist id="footer-texts-history-list">
-          <option value="Proses Hanya Dalam 1Jam"></option>
-          <option value="Variasi Paket Tersedia"></option>
-          <option value="Garansi Kualitas 100%"></option>
-          <option value="Bisa Cetak Satuan"></option>
-          <option value="Kirim Cepat Hari Ini"></option>
-          <option value="Desain Custom Tersedia"></option>
-          <option value="Siap Pakai & Praktis"></option>
+          <option value="Proses Cepat & Garansi Presisi"></option>
+          <option value="Siap Kirim Seluruh Indonesia"></option>
+          <option value="Gratis Konsultasi Desain"></option>
+          <option value="Bahan Premium Tahan Cuaca"></option>
+          <option value="Garansi Uang Kembali Jika Cacat"></option>
+          <option value="Pengerjaan 1 Hari Jadi"></option>
+          <option value="Bisa Custom Ukuran & Desain"></option>
         </datalist>
 
         <datalist id="datalist-order-multiple-options">
@@ -5013,7 +5034,7 @@ const ProductForm = (() => {
     });
 
     // Footer 2 styling tokens (khusus Versi C)
-    const f2Bg = primaryState.footer_2_bg_color || cfg.footer_2_bg_color || defThemeColor;
+    const f2Bg = primaryState.footer_2_bg_color || cfg.footer_2_bg_color || getSecondaryThemeColor();
     const f2Txt = primaryState.footer_2_text_color || cfg.footer_2_text_color || '#ffffff';
     ['cfg-footer-2-bg-color', 'cfg-footer-2-bg-color-side', 'cfg-footer-2-bg-color-mob'].forEach(i => {
       const el = document.getElementById(i);
@@ -5086,24 +5107,72 @@ const ProductForm = (() => {
   function handleSaveCardDesign() {
     try {
       syncStateFromDOM();
+      const f1Val = (primaryState.card_footer_text || '').trim();
+      const f2Val = (primaryState.card_footer_2_text || '').trim();
       const f1Len = getUnicodeLength(primaryState.card_footer_text);
       const f2Len = getUnicodeLength(primaryState.card_footer_2_text);
-      if (primaryState.card_variant === 'C' && f1Len > 32) {
-        if (typeof App !== 'undefined' && App.showToast) {
-          App.showToast(`Teks Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`, 'error');
-        } else {
-          alert(`Teks Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`);
+
+      if (primaryState.card_variant === 'C') {
+        let hasErr = false;
+        if (!f1Val) {
+          ['error-card-footer-text-side', 'error-card-footer-text-mob'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+              const msgEl = el.querySelector('.error-msg') || el;
+              msgEl.textContent = 'Label Footer 1 wajib diisi.';
+              el.classList.remove('hidden');
+            }
+          });
+          [document.getElementById('input-card-footer-text-side'), document.getElementById('input-card-footer-text-mob')].forEach(inp => {
+            if (inp) inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          });
+          hasErr = true;
+        } else if (f1Len > 32) {
+          ['error-card-footer-text-side', 'error-card-footer-text-mob'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+              const msgEl = el.querySelector('.error-msg') || el;
+              msgEl.textContent = `Label Footer 1 melebihi batas 32 karakter (${f1Len}/32).`;
+              el.classList.remove('hidden');
+            }
+          });
+          [document.getElementById('input-card-footer-text-side'), document.getElementById('input-card-footer-text-mob')].forEach(inp => {
+            if (inp) inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          });
+          hasErr = true;
         }
-        return false;
-      }
-      if (primaryState.card_variant === 'C' && f2Len > 32) {
-        if (typeof App !== 'undefined' && App.showToast) {
-          App.showToast(`Teks Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`, 'error');
-        } else {
-          alert(`Teks Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`);
+
+        if (f2Len > 32) {
+          ['error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+              const msgEl = el.querySelector('.error-msg') || el;
+              msgEl.textContent = `Label Footer 2 melebihi batas 32 karakter (${f2Len}/32).`;
+              el.classList.remove('hidden');
+            }
+          });
+          [document.getElementById('input-card-footer-2-text-side'), document.getElementById('input-card-footer-2-text-mob')].forEach(inp => {
+            if (inp) inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+          });
+          hasErr = true;
         }
-        return false;
+
+        if (hasErr) {
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Harap periksa kesalahan input footer terlebih dahulu.', 'error');
+          }
+          return false;
+        }
       }
+
+      // Sembunyikan inline error jika valid
+      ['error-card-footer-text-side', 'error-card-footer-text-mob', 'error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
+      });
+      ['input-card-footer-text-side', 'input-card-footer-text-mob', 'input-card-footer-2-text-side', 'input-card-footer-2-text-mob'].forEach(id => {
+        document.getElementById(id)?.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+      });
+
       saveCardConfigInputs();
       const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
       const saveDefToggleMob = document.getElementById('cfg-save-as-default-toggle-mob');
@@ -5116,6 +5185,17 @@ const ProductForm = (() => {
       if (saveDefToggle) saveDefToggle.checked = false;
       if (saveDefToggleMob) saveDefToggleMob.checked = false;
 
+      // Simpan teks manual yang valid ke riwayat saran dropdown setelah penyimpanan berhasil
+      if (primaryState.card_variant === 'C') {
+        if (f1Val && typeof DB !== 'undefined' && DB.saveFooterTextToHistory) {
+          DB.saveFooterTextToHistory(f1Val);
+        }
+        if (f2Val && typeof DB !== 'undefined' && DB.saveFooterTextToHistory) {
+          DB.saveFooterTextToHistory(f2Val);
+        }
+      }
+
+      isFooterTouched = true;
       // Simpan berhasil -> hasil simpan menjadi nilai baseline untuk pengeditan berikutnya
       captureCardDesignSnapshot(true);
 
@@ -5268,6 +5348,14 @@ const ProductForm = (() => {
       });
       updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
       updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
+
+      // Sembunyikan inline error saat Batal
+      ['error-card-footer-text-side', 'error-card-footer-text-mob', 'error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
+      });
+      ['input-card-footer-text-side', 'input-card-footer-text-mob', 'input-card-footer-2-text-side', 'input-card-footer-2-text-mob'].forEach(id => {
+        document.getElementById(id)?.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+      });
 
       // Pulihkan input countdown di DOM
       const cRadius = primaryState.countdown_radius || '9999px';
@@ -10266,7 +10354,7 @@ const ProductForm = (() => {
     const footerIcon = (primaryState.footer_badge_icon || 'truck').trim();
 
     // Footer 2 Custom Styles (Khusus Card C)
-    const footer2BgColor = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || defCardThemeColor;
+    const footer2BgColor = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || (cfg && cfg.footer_2_bg_color) || getSecondaryThemeColor();
     const footer2TextColor = document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.footer_2_text_color || '#ffffff';
     const footer2TextInput = document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text');
     const footer2Text = (footer2TextInput ? footer2TextInput.value : (primaryState.card_footer_2_text || '')).trim();
@@ -28660,8 +28748,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.card_footer_text = val;
       if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
       primaryState.custom_footer_1.text = val;
+      isFooterTouched = true;
       updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
       updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
+      if (val.trim() && getUnicodeLength(val) <= 32) {
+        ['error-card-footer-text-side', 'error-card-footer-text-mob'].forEach(id => {
+          document.getElementById(id)?.classList.add('hidden');
+        });
+        [inpF1TextSide, inpF1TextMob].forEach(inp => {
+          if (inp) inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+        });
+      }
     };
 
     [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(el => {
@@ -28878,8 +28975,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.card_footer_2_text = val;
       if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
       primaryState.custom_footer_2.text = val;
+      isFooterTouched = true;
       updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
       updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
+      if (getUnicodeLength(val) <= 32) {
+        ['error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
+          document.getElementById(id)?.classList.add('hidden');
+        });
+        [inpF2TextSide, inpF2TextMob].forEach(inp => {
+          if (inp) inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+        });
+      }
     };
 
     [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(el => {
@@ -30316,13 +30422,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     if (!draftMode && primaryState.card_variant === 'C') {
+      const f1Val = (primaryState.card_footer_text || '').trim();
+      const f2Val = (primaryState.card_footer_2_text || '').trim();
       const f1Len = getUnicodeLength(primaryState.card_footer_text);
       const f2Len = getUnicodeLength(primaryState.card_footer_2_text);
       if (f1Len > 32) {
-        addError(`Teks Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text'));
+        addError(`Label Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob') || document.getElementById('input-card-footer-text'));
       }
       if (f2Len > 32) {
-        addError(`Teks Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text'));
+        addError(`Label Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text-mob') || document.getElementById('input-card-footer-2-text'));
+      }
+
+      // Validasi Footer 1 wajib diisi untuk simpan produk final
+      if (!f1Val) {
+        const isUntouchedLegacy = (formMode === 'edit' && !isFooterTouched && !initialCardFooterText);
+        if (!isUntouchedLegacy) {
+          addError('Label Footer 1 wajib diisi untuk Model Kartu Detail.', document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob') || document.getElementById('input-card-footer-text'));
+        }
       }
     }
 
@@ -31039,7 +31155,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             : (primaryState.card_footer_2_text || '')))
     ).trim();
     const footer2IconVal = (primaryState.footer_2_badge_icon || primaryState.custom_footer_2?.icon || 'minus').trim();
-    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || getPrimaryThemeColor();
+    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || getSecondaryThemeColor();
     const footer2TextColVal = document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.custom_footer_2?.text_color || primaryState.footer_2_text_color || '#ffffff';
 
     primaryState.custom_footer_1 = {
