@@ -664,6 +664,16 @@ const ProductForm = (() => {
           }
         } catch (_) { }
       }
+    } else if (listId === 'datalist-rating-manual-options') {
+      return ['5.0', '4.9', '4.8', '4.7'];
+    } else if (listId === 'datalist-sales-manual-options') {
+      return [
+        { value: '50', label: '50' },
+        { value: '100', label: '100' },
+        { value: '500', label: '500' },
+        { value: '1001', label: '1RB+' },
+        { value: '10001', label: '10RB+' }
+      ];
     } else if (listId === 'footer-texts-history-list') {
       if (typeof DB !== 'undefined' && typeof DB.getFooterTextsHistory === 'function') {
         try {
@@ -1049,44 +1059,51 @@ const ProductForm = (() => {
         // Khusus input single-option (Max. Order 'Tanpa Batas' / Stok 'Unlimited'), jangan pernah filter saran saat user mengetik angka!
         if (!isSingleOption && !isExplicitOpen && filterText.trim()) {
           const q = filterText.toLowerCase().trim();
-          const exactMatch = options.some(opt => opt.toLowerCase() === q);
+          const exactMatch = options.some(opt => {
+            const v = (typeof opt === 'object' && opt !== null ? (opt.value || opt.label || '') : String(opt || '')).toLowerCase();
+            return v === q;
+          });
           if (exactMatch) {
             filtered = options;
           } else {
-            filtered = options.filter(opt => opt.toLowerCase().includes(q));
+            filtered = options.filter(opt => {
+              const v = (typeof opt === 'object' && opt !== null ? ((opt.value || '') + ' ' + (opt.label || '')) : String(opt || '')).toLowerCase();
+              return v.includes(q);
+            });
           }
         }
 
         if (filtered.length === 0) {
-          popover.innerHTML = '<div class="px-3 py-2 text-[11px] text-slate-400 italic text-center select-none">Tidak ada saran yang cocok</div>';
-          popover.classList.remove('hidden');
+          closePopover();
           return;
         }
 
         popover.innerHTML = filtered.map(opt => {
-          const optLower = opt.toLowerCase();
+          const optVal = typeof opt === 'object' && opt !== null ? String(opt.value || '') : String(opt || '');
+          const optLabel = typeof opt === 'object' && opt !== null ? String(opt.label || opt.value || '') : String(opt || '');
+          const optLower = optVal.toLowerCase();
           const isSelected = currentValLower === optLower || (input.classList.contains('combo-max-order-input') && optLower === 'tanpa batas' && input.placeholder === 'Tanpa Batas');
           const isUsedElsewhere = !isSelected && usedValues.has(optLower);
 
           if (isUsedElsewhere) {
             return `
-              <div class="clean-datalist-item is-disabled-used w-full text-left px-3 py-1.5 text-xs text-slate-300 select-none" data-value="${escapeSafeHtml(opt)}">
-                <span>${escapeSafeHtml(opt)}</span>
+              <div class="clean-datalist-item is-disabled-used w-full text-left px-3 py-1.5 text-xs text-slate-300 select-none" data-value="${escapeSafeHtml(optVal)}">
+                <span>${escapeSafeHtml(optLabel)}</span>
               </div>
             `;
           }
 
           if (isSingleOption) {
             return `
-              <div class="clean-datalist-item px-2.5 py-1.5 text-xs text-center text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-center font-medium ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(opt)}">
-                <span>${escapeSafeHtml(opt)}</span>
+              <div class="clean-datalist-item px-2.5 py-1.5 text-xs text-center text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-center font-medium ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(optVal)}">
+                <span>${escapeSafeHtml(optLabel)}</span>
               </div>
             `;
           }
 
           return `
-            <div class="clean-datalist-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(opt)}">
-              <span>${escapeSafeHtml(opt)}</span>
+            <div class="clean-datalist-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}" data-value="${escapeSafeHtml(optVal)}">
+              <span>${escapeSafeHtml(optLabel)}</span>
               ${isSelected ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
             </div>
           `;
@@ -2751,11 +2768,6 @@ const ProductForm = (() => {
 
             <!-- Card Live Box Container -->
             <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] mx-auto flex flex-col items-center justify-center transition-colors">
-              <!-- Penanda Data Contoh Desktop (Task SC-ADMIN-CARD-METRIC-SOURCES-10) -->
-              <div id="preview-sample-data-badge" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
-                <i class="bi bi-info-circle text-[10px]"></i>
-                <span>Data contoh</span>
-              </div>
               <!-- Penanda Footer Contoh Desktop (Task SC-ADMIN-FOOTER-COMBOBOX-PREVIEW-12C) -->
               <div id="preview-footer-sample-badge" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
                 <i class="bi bi-info-circle text-[10px]"></i>
@@ -2892,9 +2904,10 @@ const ProductForm = (() => {
                           <div id="cfg-rating-manual-container" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
                             <div class="flex items-center justify-between gap-2">
                               <label for="cfg-rating-manual-val" class="text-[10px] text-slate-600 font-normal">Rating (0–5)</label>
-                              <input type="number" id="cfg-rating-manual-val" min="0" max="5" step="0.1" placeholder="Contoh: 4.8" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <div class="relative w-32 clean-datalist-wrapper">
+                                <input type="text" id="cfg-rating-manual-val" list="datalist-rating-manual-options" data-datalist-id="datalist-rating-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              </div>
                             </div>
-                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
                             <p id="cfg-rating-manual-hint" class="hidden text-[10px] text-amber-600 font-normal">Masukkan nilai rating (0–5) untuk pratinjau.</p>
                           </div>
                         </div>
@@ -2924,9 +2937,10 @@ const ProductForm = (() => {
                           <div id="cfg-sales-manual-container" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
                             <div class="flex items-center justify-between gap-2">
                               <label for="cfg-sales-manual-val" class="text-[10px] text-slate-600 font-normal">Jumlah Terjual</label>
-                              <input type="number" id="cfg-sales-manual-val" min="0" step="1" placeholder="Contoh: 150" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <div class="relative w-36 clean-datalist-wrapper">
+                                <input type="text" id="cfg-sales-manual-val" list="datalist-sales-manual-options" data-datalist-id="datalist-sales-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              </div>
                             </div>
-                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
                             <p id="cfg-sales-manual-hint" class="hidden text-[10px] text-amber-600 font-normal">Masukkan angka terjual (≥ 0) untuk pratinjau.</p>
                           </div>
                         </div>
@@ -3386,11 +3400,6 @@ const ProductForm = (() => {
 
             <!-- Card Preview Box -->
             <div id="preview-card-outer-wrapper-mob" class="w-full max-w-[260px] flex flex-col items-center justify-center transition-colors">
-              <!-- Penanda Data Contoh Mobile (Task SC-ADMIN-CARD-METRIC-SOURCES-10) -->
-              <div id="preview-sample-data-badge-mob" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
-                <i class="bi bi-info-circle text-[10px]"></i>
-                <span>Data contoh</span>
-              </div>
               <!-- Penanda Footer Contoh Mobile (Task SC-ADMIN-FOOTER-COMBOBOX-PREVIEW-12C) -->
               <div id="preview-footer-sample-badge-mob" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
                 <i class="bi bi-info-circle text-[10px]"></i>
@@ -3527,9 +3536,10 @@ const ProductForm = (() => {
                           <div id="cfg-rating-manual-container-mob" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
                             <div class="flex items-center justify-between gap-2">
                               <label for="cfg-rating-manual-val-mob" class="card-tool-label text-[11px] leading-4 text-slate-600 font-normal">Rating (0–5)</label>
-                              <input type="number" id="cfg-rating-manual-val-mob" min="0" max="5" step="0.1" placeholder="Contoh: 4.8" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <div class="relative w-32 clean-datalist-wrapper">
+                                <input type="text" id="cfg-rating-manual-val-mob" list="datalist-rating-manual-options" data-datalist-id="datalist-rating-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              </div>
                             </div>
-                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
                             <p id="cfg-rating-manual-hint-mob" class="hidden text-[10px] text-amber-600 font-normal">Masukkan nilai rating (0–5) untuk pratinjau.</p>
                           </div>
                         </div>
@@ -3559,9 +3569,10 @@ const ProductForm = (() => {
                           <div id="cfg-sales-manual-container-mob" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
                             <div class="flex items-center justify-between gap-2">
                               <label for="cfg-sales-manual-val-mob" class="card-tool-label text-[11px] leading-4 text-slate-600 font-normal">Jumlah Terjual</label>
-                              <input type="number" id="cfg-sales-manual-val-mob" min="0" step="1" placeholder="Contoh: 150" class="w-24 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-right focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              <div class="relative w-36 clean-datalist-wrapper">
+                                <input type="text" id="cfg-sales-manual-val-mob" list="datalist-sales-manual-options" data-datalist-id="datalist-sales-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                              </div>
                             </div>
-                            <p class="text-[10px] text-slate-400 font-normal">Data contoh untuk pratinjau Admin.</p>
                             <p id="cfg-sales-manual-hint-mob" class="hidden text-[10px] text-amber-600 font-normal">Masukkan angka terjual (≥ 0) untuk pratinjau.</p>
                           </div>
                         </div>
@@ -4331,6 +4342,7 @@ const ProductForm = (() => {
       const el = document.getElementById(id);
       if (el && document.activeElement !== el) {
         el.value = (ratingVal !== null && ratingVal !== undefined && !isNaN(ratingVal)) ? ratingVal : '';
+        if (typeof el._syncDatalistControls === 'function') el._syncDatalistControls();
       }
     });
 
@@ -4375,6 +4387,7 @@ const ProductForm = (() => {
       const el = document.getElementById(id);
       if (el && document.activeElement !== el) {
         el.value = (salesVal !== null && salesVal !== undefined && !isNaN(salesVal)) ? salesVal : '';
+        if (typeof el._syncDatalistControls === 'function') el._syncDatalistControls();
       }
     });
 
@@ -11198,32 +11211,6 @@ const ProductForm = (() => {
       return;
     }
 
-    // Evaluasi Penanda "Data contoh" di Area Pratinjau Admin (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
-    let isSampleDataActive = false;
-    if (variant === 'B') {
-      if (cfg.show_sales && hasPreviewSales) {
-        isSampleDataActive = (salesSource === 'manual');
-      } else if (cfg.show_rating && hasPreviewRating) {
-        isSampleDataActive = (ratingSource === 'manual');
-      }
-    } else {
-      if (cfg.show_rating && hasPreviewRating && ratingSource === 'manual') {
-        isSampleDataActive = true;
-      }
-      if (cfg.show_sales && hasPreviewSales && salesSource === 'manual') {
-        isSampleDataActive = true;
-      }
-    }
-
-    [
-      document.getElementById('preview-sample-data-badge'),
-      document.getElementById('preview-sample-data-badge-mob')
-    ].forEach(badge => {
-      if (badge) {
-        if (isSampleDataActive) badge.classList.remove('hidden');
-        else badge.classList.add('hidden');
-      }
-    });
 
     [
       document.getElementById('preview-footer-sample-badge'),
@@ -28302,12 +28289,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const syncRatingManualInput = (sourceEl, otherId) => {
       const raw = sourceEl.value;
       const otherEl = document.getElementById(otherId);
-      if (otherEl && otherEl.value !== raw) otherEl.value = raw;
+      if (otherEl && otherEl.value !== raw) {
+        otherEl.value = raw;
+        if (typeof otherEl._syncDatalistControls === 'function') otherEl._syncDatalistControls();
+      }
+      if (typeof sourceEl._syncDatalistControls === 'function') sourceEl._syncDatalistControls();
       const metrics = getPreviewMetricsConfig();
       if (raw.trim() === '') {
         metrics.rating.manual_value = null;
       } else {
-        const num = parseFloat(raw);
+        const norm = raw.replace(',', '.').trim();
+        const num = parseFloat(norm);
         if (!isNaN(num) && isFinite(num) && num >= 0 && num <= 5) {
           metrics.rating.manual_value = parseFloat(num.toFixed(1));
         }
@@ -28329,9 +28321,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         metrics.rating.manual_value = null;
         el.value = '';
         const otherEl = document.getElementById(otherId);
-        if (otherEl) otherEl.value = '';
+        if (otherEl) {
+          otherEl.value = '';
+          if (typeof otherEl._syncDatalistControls === 'function') otherEl._syncDatalistControls();
+        }
       } else {
-        let num = parseFloat(raw);
+        const norm = raw.replace(',', '.').trim();
+        let num = parseFloat(norm);
         if (isNaN(num) || !isFinite(num) || num < 0) {
           num = 0;
         } else if (num > 5) {
@@ -28341,8 +28337,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         metrics.rating.manual_value = num;
         el.value = num;
         const otherEl = document.getElementById(otherId);
-        if (otherEl) otherEl.value = num;
+        if (otherEl) {
+          otherEl.value = num;
+          if (typeof otherEl._syncDatalistControls === 'function') otherEl._syncDatalistControls();
+        }
       }
+      if (typeof el._syncDatalistControls === 'function') el._syncDatalistControls();
       syncMetricSourcesDOM();
       updateProductCardLivePreview();
     };
@@ -28364,12 +28364,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const syncSalesManualInput = (sourceEl, otherId) => {
       const raw = sourceEl.value;
       const otherEl = document.getElementById(otherId);
-      if (otherEl && otherEl.value !== raw) otherEl.value = raw;
+      if (otherEl && otherEl.value !== raw) {
+        otherEl.value = raw;
+        if (typeof otherEl._syncDatalistControls === 'function') otherEl._syncDatalistControls();
+      }
+      if (typeof sourceEl._syncDatalistControls === 'function') sourceEl._syncDatalistControls();
       const metrics = getPreviewMetricsConfig();
       if (raw.trim() === '') {
         metrics.sales.manual_value = null;
       } else {
-        const num = parseInt(raw, 10);
+        const cleanDigits = raw.replace(/[.,]/g, '').trim();
+        const num = parseInt(cleanDigits, 10);
         if (!isNaN(num) && isFinite(num) && num >= 0) {
           metrics.sales.manual_value = num;
         }
@@ -28391,17 +28396,25 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         metrics.sales.manual_value = null;
         el.value = '';
         const otherEl = document.getElementById(otherId);
-        if (otherEl) otherEl.value = '';
+        if (otherEl) {
+          otherEl.value = '';
+          if (typeof otherEl._syncDatalistControls === 'function') otherEl._syncDatalistControls();
+        }
       } else {
-        let num = parseInt(raw, 10);
+        const cleanDigits = raw.replace(/[.,]/g, '').trim();
+        let num = parseInt(cleanDigits, 10);
         if (isNaN(num) || !isFinite(num) || num < 0) {
           num = 0;
         }
         metrics.sales.manual_value = num;
         el.value = num;
         const otherEl = document.getElementById(otherId);
-        if (otherEl) otherEl.value = num;
+        if (otherEl) {
+          otherEl.value = num;
+          if (typeof otherEl._syncDatalistControls === 'function') otherEl._syncDatalistControls();
+        }
       }
+      if (typeof el._syncDatalistControls === 'function') el._syncDatalistControls();
       syncMetricSourcesDOM();
       updateProductCardLivePreview();
     };

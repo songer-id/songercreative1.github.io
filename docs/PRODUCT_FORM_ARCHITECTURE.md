@@ -1,4 +1,10 @@
 # DOKUMENTASI TEKNIS & ARSITEKTUR FORMULIR PRODUK
+> [!NOTE]
+> **DOKUMEN INI TELAH DIPERBARUI & DIINTEGRASIKAN KE DOKUMEN MASTER BARU:**
+> Seluruh arsitektur, kamus variabel (134 properti), kamus fungsi, alur Step 1 & Step 2, audit duplikasi, serta integrasi menyeluruh telah dimutakhirkan secara lengkap pada dokumen:
+> 👉 [**`docs/PRD_PRODUCT_MASTER.md`**](file:///d:/pos-songer-creative/docs/PRD_PRODUCT_MASTER.md) (**PRODUCT MASTER — PRD & TECHNICAL DOCUMENTATION SONGER CREATIVE**).
+> Silakan gunakan dokumen master tersebut sebagai Single Source of Truth (SSOT) terkini.
+
 **Sistem**: Songer Creative Admin Panel & POS Kasir Multi-Tenant  
 **File Acuan Utama**: `js/product-form.js`, `admin.html`, `js/db.js`, `js/pricing-calculator.js`  
 **Versi Arsitektur**: v3.0 (Shopee-Style Photo Grid, Silent Canvas Compressor, AI Description Engine & Card Model Auto-Sync)

@@ -1393,8 +1393,8 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
             * Label: "Sumber Data" (pada mobile mengikuti tipografi R7: 11px, line-height 16px, font-normal).
             * Tombol pilihan segmented: "Otomatis" / "Manual" (default untuk produk lama maupun baru: Otomatis).
             * Saat Manual dipilih:
-              - Rating: input angka 0–5 (step 0.1).
-              - Terjual: input bilangan bulat nonnegatif (step 1).
+              - Rating: Menggunakan komponen Input/Pilih (Combobox) dengan saran angka profesional (`5.0`, `4.9`, `4.8`, `4.7`) serta mendukung ketik bebas manual (rentang 0–5, normalisasi koma otomatis).
+              - Terjual: Menggunakan komponen Input/Pilih (Combobox) dengan saran angka bertahap (`50`, `100`, `500`, `1000` / `1RB+`, `10000` / `10RB+`) serta mendukung ketik bebas manual (angka nonnegatif ≥ 0, normalisasi pemisah ribuan otomatis). Pemilihan opsi saran otomatis mengisi nilai numerik ke input dan menyinkronkan live preview tanpa mengubah struktur/tipe data konfigurasi sebelumnya.
               - Keterangan resmi: *"Data contoh untuk pratinjau Admin."*
           - Rating dan Terjual memiliki pilihan sumber independen (misal Rating Otomatis dan Terjual Manual).
           - Mematikan eye toggle tidak menghapus sumber atau nilai manual yang tersimpan.
