@@ -1,9 +1,9 @@
 # PRODUCT MASTER — PRD & TECHNICAL DOCUMENTATION SONGER CREATIVE
-**Single Source of Truth (SSOT) & Technical Architecture Compass: Modul Produk Terpadu**  
-**Dokumen Acuan**: `docs/PRD_PRODUCT_MASTER.md`  
-**Sistem**: Songer Creative Admin Panel, Buyer Store, POS Kasir, dan Ekosistem Multi-Tenant  
-**Status Audit**: Selesai Diverifikasi Berdasarkan Kode Aktual (Code Freeze / Audit Only)  
-**Terakhir Diperbarui**: 08 November 2026 (WIB)  
+**Single Source of Truth (SSOT) & Technical Architecture Compass: Modul Produk Terpadu**
+**Dokumen Acuan**: `docs/PRD_PRODUCT_MASTER.md`
+**Sistem**: Songer Creative Admin Panel, Buyer Store, POS Kasir, dan Ekosistem Multi-Tenant
+**Status Audit**: Selesai Diverifikasi Berdasarkan Kode Aktual (Code Freeze / Audit Only)
+**Terakhir Diperbarui**: 08 November 2026 (WIB)
 **File Acuan Utama**: `js/product-form.js`, `js/db.js`, `admin.html`, `js/admin-app.js`, `js/buyer-store.js`, `js/pdp.js`, `js/pricing-calculator.js`, `js/category-manager.js`, `js/promo-manager.js`, `js/utils.js`, `prisma/schema.prisma`
 
 ---
@@ -15,7 +15,20 @@
 
 ---
 
+> [!NOTE]
+> ### DOKUMEN LAMPIRAN TEKNIS ARSITEKTUR LENGKAP (MASTER APPENDICES)
+> Untuk pendalaman detail teknis tingkat kode, telah disusun 5 dokumen lampiran spesifik yang saling terhubung:
+> 1. **[PRD_PRODUCT_MASTER_DATA_DICTIONARY.md](PRD_PRODUCT_MASTER_DATA_DICTIONARY.md)**: Kamus Data Lengkap 134 properti deklarasi awal, ~40 properti dinamis runtime, 10 objek bersarang, state variasi (`materialsState`, `finishingsState`), state transien, dan matriks redundansi alias.
+> 2. **[PRD_PRODUCT_MASTER_FUNCTION_CATALOG.md](PRD_PRODUCT_MASTER_FUNCTION_CATALOG.md)**: Katalog Lengkap 447 fungsi `product-form.js`, 120 metode `db.js`, 3 metode inti `pricing-calculator.js`, signature parameter, return values, callers/callees, side effects, bukti baris kloning fungsi internal dan lintas modul, serta sequence call graphs.
+> 3. **[PRD_PRODUCT_MASTER_UI_DOM_MAP.md](PRD_PRODUCT_MASTER_UI_DOM_MAP.md)**: Peta Arsitektur UI & DOM 832 selector ID, komponen Step 1 & 7 kartu Step 2, drawer mobile, modal sandbox PxL, popover combobox saran, container error, serta analisis kritis siklus hidup penghancuran & rekonstruksi `#step-pane-2.innerHTML = ''`.
+> 4. **[PRD_PRODUCT_MASTER_INTEGRATION_CONTRACTS.md](PRD_PRODUCT_MASTER_INTEGRATION_CONTRACTS.md)**: Kontrak Integrasi 14 Modul Konsumen Data Produk (Admin Panel, Daftar Produk, Storefront, PDP, Kasir POS, Pricing Engine, Dashboard, Afiliasi, Promo, Gudang/Stok, CRM Pelanggan, Review Moderasi, DB Engine, dan Prisma ORM Multi-Tenant).
+> 5. **[PRD_PRODUCT_MASTER_ARCHITECTURE_GAPS.md](PRD_PRODUCT_MASTER_ARCHITECTURE_GAPS.md)**: Analisis Gap Arsitektur AS-IS vs TO-BE, bukti empiris nomor baris duplikasi kode, celah alur inventaris (ketiadaan auto-decrement stok pada order/POS), dan roadmap standardisasi 5 fase.
+
+---
+
+
 ## DAFTAR ISI
+0. [DOKUMEN LAMPIRAN TEKNIS ARSITEKTUR LENGKAP](#dokumen-lampiran-teknis-arsitektur-lengkap-master-appendices)
 1. [1. TUJUAN DAN RUANG LINGKUP](#1-tujuan-dan-ruang-lingkup)
 2. [2. ARSITEKTUR SISTEM PRODUK](#2-arsitektur-sistem-produk)
 3. [3. ALUR LENGKAP STEP 1 (IDENTITAS & KARAKTER PRODUK)](#3-alur-lengkap-step-1-identitas--karakter-produk)
@@ -195,19 +208,19 @@ graph TD
     Start([Buka Form Step 1]) --> Step1_1[Pilih Jenis Produk / Layanan: Fisik vs Non Fisik]
     Step1_1 -- Belum Dipilih --> Gate1_Lock[Placeholder Terkunci: step1-gated-placeholder Aktif]
     Step1_1 -- Terpilih: physical / non_physical --> Step1_2[Buka Kontainer: step1-unlocked-fields]
-    
+
     Step1_2 --> Step1_3[Pilihan: Tampilkan di Etalase Toko ON / OFF]
     Step1_3 -- Toggle ON (is_active: true) --> Step1_4[Wajib Memilih Model Kartu Produk: A, B, atau C]
     Step1_3 -- Toggle OFF (is_active: false) --> BypassCard[Bypass Pemilihan Model Kartu]
-    
+
     Step1_4 -- Belum Dipilih --> Gate2_Lock[Placeholder Terkunci: step1-cardmodel-gated-placeholder Aktif]
     Step1_4 -- Model Terpilih (A / B / C) --> Step1_5[Buka Kontainer: step1-cardmodel-unlocked-fields]
     BypassCard --> Step1_5
-    
+
     Step1_5 --> Step1_6[Upload Foto Produk: Minimal 1 Cover Image]
     Step1_5 --> Step1_7[Input Nama Produk: 5 s/d 150 Karakter]
     Step1_5 --> Step1_8[Konfigurasi Label Khusus 1 & 2: Datalist Combobox]
-    
+
     Step1_6 & Step1_7 & Step1_8 --> S1_Next{Klik Tombol 'Lanjut ke Step 2'}
     S1_Next -- Ada Error Validasi --> ShowS1Errors[Tampilkan form-error-banner & Highlight Ring Merah]
     S1_Next -- Validasi Lolos --> GoStep2[Pindah ke Step 2 via goToStep(2)]
