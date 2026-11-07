@@ -2830,9 +2830,13 @@ const DB = (() => {
         price: (typeof productData.price === 'number' && productData.price > 0)
           ? productData.price
           : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : 0),
-        cost_price: (typeof productData.cost_price === 'number' && productData.cost_price > 0)
+        cost_price: (typeof productData.cost_price === 'number' && !isNaN(productData.cost_price) && productData.cost_price >= 0)
           ? productData.cost_price
-          : (materialsList[0] && materialsList[0].cost_price ? (parseFloat(materialsList[0].cost_price) || 0) : Math.round(((typeof productData.price === 'number' && productData.price > 0) ? productData.price : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : 0)) * 0.6)),
+          : (materialsList[0] && materialsList[0].cost_price !== undefined && materialsList[0].cost_price !== null && String(materialsList[0].cost_price).trim() !== '' && !isNaN(parseFloat(materialsList[0].cost_price)) && parseFloat(materialsList[0].cost_price) >= 0
+              ? parseFloat(materialsList[0].cost_price)
+              : (productData.cost_price !== undefined && productData.cost_price !== null && String(productData.cost_price).trim() !== '' && !isNaN(parseFloat(productData.cost_price)) && parseFloat(productData.cost_price) >= 0
+                  ? parseFloat(productData.cost_price)
+                  : 0)),
         rating_avg: 5.0,
         review_count: 0,
         created_at: now,
@@ -2841,9 +2845,9 @@ const DB = (() => {
 
       const newMaterials = materialsList.map(m => {
         const mPrice = parseFloat(m.price) || 0;
-        const mCost = (m.cost_price !== undefined && m.cost_price !== null && m.cost_price !== '' && parseFloat(m.cost_price) > 0)
+        const mCost = (m.cost_price !== undefined && m.cost_price !== null && String(m.cost_price).trim() !== '' && !isNaN(parseFloat(m.cost_price)) && parseFloat(m.cost_price) >= 0)
           ? parseFloat(m.cost_price)
-          : Math.round(mPrice * 0.6);
+          : 0;
         return {
           id: m.id || generateUUID(),
           product_id: newId,
@@ -2864,9 +2868,9 @@ const DB = (() => {
 
       const newFinishings = finishingsList.map(f => {
         const fPrice = parseFloat(f.price) || 0;
-        const fCost = (f.cost_price !== undefined && f.cost_price !== null && f.cost_price !== '' && parseFloat(f.cost_price) > 0)
+        const fCost = (f.cost_price !== undefined && f.cost_price !== null && String(f.cost_price).trim() !== '' && !isNaN(parseFloat(f.cost_price)) && parseFloat(f.cost_price) >= 0)
           ? parseFloat(f.cost_price)
-          : Math.round(fPrice * 0.5);
+          : 0;
         return {
           id: f.id || generateUUID(),
           product_id: newId,
@@ -3049,9 +3053,15 @@ const DB = (() => {
         price: (typeof productData.price === 'number' && productData.price > 0)
           ? productData.price
           : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : (products[index].price || 0)),
-        cost_price: (typeof productData.cost_price === 'number' && productData.cost_price > 0)
+        cost_price: (typeof productData.cost_price === 'number' && !isNaN(productData.cost_price) && productData.cost_price >= 0)
           ? productData.cost_price
-          : (materialsList[0] && materialsList[0].cost_price ? (parseFloat(materialsList[0].cost_price) || 0) : (products[index].cost_price || Math.round(((typeof productData.price === 'number' && productData.price > 0) ? productData.price : (materialsList[0] ? (parseFloat(materialsList[0].price) || 0) : (products[index].price || 0))) * 0.6))),
+          : (materialsList[0] && materialsList[0].cost_price !== undefined && materialsList[0].cost_price !== null && String(materialsList[0].cost_price).trim() !== '' && !isNaN(parseFloat(materialsList[0].cost_price)) && parseFloat(materialsList[0].cost_price) >= 0
+              ? parseFloat(materialsList[0].cost_price)
+              : ((products[index].cost_price !== undefined && products[index].cost_price !== null && !isNaN(parseFloat(products[index].cost_price)) && parseFloat(products[index].cost_price) >= 0)
+                  ? parseFloat(products[index].cost_price)
+                  : (productData.cost_price !== undefined && productData.cost_price !== null && String(productData.cost_price).trim() !== '' && !isNaN(parseFloat(productData.cost_price)) && parseFloat(productData.cost_price) >= 0
+                      ? parseFloat(productData.cost_price)
+                      : 0))),
         updated_at: now
       };
 
@@ -3060,9 +3070,9 @@ const DB = (() => {
 
       const newMaterials = materialsList.map(m => {
         const mPrice = parseFloat(m.price) || 0;
-        const mCost = (m.cost_price !== undefined && m.cost_price !== null && m.cost_price !== '' && parseFloat(m.cost_price) > 0)
+        const mCost = (m.cost_price !== undefined && m.cost_price !== null && String(m.cost_price).trim() !== '' && !isNaN(parseFloat(m.cost_price)) && parseFloat(m.cost_price) >= 0)
           ? parseFloat(m.cost_price)
-          : Math.round(mPrice * 0.6);
+          : 0;
         return {
           id: m.id || generateUUID(),
           product_id: id,
@@ -3083,9 +3093,9 @@ const DB = (() => {
 
       const newFinishings = finishingsList.map(f => {
         const fPrice = parseFloat(f.price) || 0;
-        const fCost = (f.cost_price !== undefined && f.cost_price !== null && f.cost_price !== '' && parseFloat(f.cost_price) > 0)
+        const fCost = (f.cost_price !== undefined && f.cost_price !== null && String(f.cost_price).trim() !== '' && !isNaN(parseFloat(f.cost_price)) && parseFloat(f.cost_price) >= 0)
           ? parseFloat(f.cost_price)
-          : Math.round(fPrice * 0.5);
+          : 0;
         return {
           id: f.id || generateUUID(),
           product_id: id,

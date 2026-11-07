@@ -2142,7 +2142,7 @@ const ProductForm = (() => {
 
     materialsState = (prod.materials && prod.materials.length > 0)
       ? JSON.parse(JSON.stringify(prod.materials))
-      : [{ id: DB.generateUUID(), name: 'Produk Standar', price: prod.price || 0, cost_price: prod.cost_price || 0, step_multiplier: 1 }];
+      : [{ id: DB.generateUUID(), name: 'Produk Standar', price: prod.price || 0, cost_price: (prod.cost_price !== undefined && prod.cost_price !== null && prod.cost_price !== '' && !isNaN(parseFloat(prod.cost_price))) ? parseFloat(prod.cost_price) : '', step_multiplier: 1 }];
 
     if (Array.isArray(materialsState)) {
       materialsState.forEach(m => {
@@ -20608,7 +20608,7 @@ const ProductForm = (() => {
         inp.classList.remove('text-red-600', 'font-bold');
         inp.classList.add('text-slate-700');
         if (isBlur) {
-          setError('Wajib diisi');
+          setError('HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.');
           return false;
         }
         return false;
@@ -20618,7 +20618,7 @@ const ProductForm = (() => {
         inp.classList.remove('text-red-600', 'font-bold');
         inp.classList.add('text-slate-700');
         if (isBlur) {
-          setError('Wajib diisi');
+          setError('HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.');
           return false;
         }
         return false;
@@ -21309,7 +21309,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         const cRaw = (m.cost_price !== undefined && m.cost_price !== null) ? String(m.cost_price).trim() : '';
         const cNum = parseFloat(cRaw);
-        if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+        if (cRaw === '' || isNaN(cNum) || cNum < 0) {
+          addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.`, costInp || rowEl);
+        } else if (pNum > 0 && cNum > pNum) {
           addError(`Variasi 1 (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
         }
 
@@ -21387,7 +21389,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         const cRaw = (f.cost_price !== undefined && f.cost_price !== null) ? String(f.cost_price).trim() : '';
         const cNum = parseFloat(cRaw);
-        if (pNum > 0 && cRaw !== '' && !isNaN(cNum) && cNum > pNum) {
+        if (cRaw === '' || isNaN(cNum) || cNum < 0) {
+          addError(`${label} (Opsi ${nameVal || idx + 1}): HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.`, costInp || rowEl);
+        } else if (pNum > 0 && cNum > pNum) {
           addError(`${label} (Opsi ${nameVal || idx + 1}): Modal/HPP melebihi Harga Jual.`, costInp || rowEl);
         }
 
@@ -22816,13 +22820,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           singleCost.classList.remove('text-red-600', 'font-bold');
           singleCost.classList.add('text-slate-900');
           if (isBlur) {
-            if (singleCostErr) { singleCostErr.textContent = 'Wajib diisi'; singleCostErr.classList.remove('hidden'); }
+            if (singleCostErr) { singleCostErr.textContent = 'HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.'; singleCostErr.classList.remove('hidden'); }
             singleCost.classList.remove('border-slate-300');
             singleCost.classList.add('border-red-500');
             return false;
           }
           if (singleCostErr && !singleCostErr.classList.contains('hidden')) {
-            singleCostErr.textContent = 'Wajib diisi';
+            singleCostErr.textContent = 'HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.';
             singleCost.classList.remove('border-slate-300');
             singleCost.classList.add('border-red-500');
           }
@@ -22833,13 +22837,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           singleCost.classList.remove('text-red-600', 'font-bold');
           singleCost.classList.add('text-slate-900');
           if (isBlur) {
-            if (singleCostErr) { singleCostErr.textContent = 'Wajib diisi'; singleCostErr.classList.remove('hidden'); }
+            if (singleCostErr) { singleCostErr.textContent = 'HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.'; singleCostErr.classList.remove('hidden'); }
             singleCost.classList.remove('border-slate-300');
             singleCost.classList.add('border-red-500');
             return false;
           }
           if (singleCostErr && !singleCostErr.classList.contains('hidden')) {
-            singleCostErr.textContent = 'Wajib diisi';
+            singleCostErr.textContent = 'HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.';
             singleCost.classList.remove('border-slate-300');
             singleCost.classList.add('border-red-500');
           }
@@ -23861,7 +23865,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                 item.price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
                 item._prev_price = item.price;
               } else if (field === 'cost_price') {
-                item.cost_price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                const cVal = e.target.value.trim();
+                item.cost_price = cVal === '' ? '' : (isNaN(parseFloat(cVal)) ? NaN : parseFloat(cVal));
                 item._prev_cost_price = item.cost_price;
               } else if (field === 'stock') {
                 item.stock = (e.target.value === '' || e.target.value === 'Unlimited' || e.target.value === 'Tanpa Batas') ? null : (parseInt(e.target.value) || 0);
@@ -24270,7 +24275,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                 item.price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
                 item._prev_price = item.price;
               } else if (field === 'cost_price') {
-                item.cost_price = e.target.value === '' ? '' : (parseFloat(e.target.value) || 0);
+                const cVal = e.target.value.trim();
+                item.cost_price = cVal === '' ? '' : (isNaN(parseFloat(cVal)) ? NaN : parseFloat(cVal));
                 item._prev_cost_price = item.cost_price;
               } else if (field === 'stock') {
                 item.stock = (e.target.value === '' || e.target.value === 'Unlimited' || e.target.value === 'Tanpa Batas') ? null : (parseInt(e.target.value) || 0);
@@ -29995,10 +30001,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
     if (singleCostInp && materialsState.length > 0) {
       const scVal = singleCostInp.value.trim();
-      materialsState[0].cost_price = scVal === '' ? '' : (parseFloat(scVal) || 0);
+      const scParsed = (scVal === '' || isNaN(parseFloat(scVal))) ? (scVal === '' ? '' : NaN) : parseFloat(scVal);
+      materialsState[0].cost_price = scParsed;
       if (!primaryState.has_variants) {
         primaryState._savedNonVariantCostPrice = scVal;
-        primaryState.cost_price = scVal === '' ? null : (parseFloat(scVal) || 0);
+        primaryState.cost_price = (scVal === '' || isNaN(parseFloat(scVal))) ? null : parseFloat(scVal);
         primaryState.normal_cost_price = primaryState.cost_price;
       }
     }
@@ -30109,7 +30116,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (nameInp && nameInp.value !== undefined) item.name = nameInp.value;
         if (descInp && descInp.value !== undefined) item.description = descInp.value;
         if (priceInp && priceInp.value !== undefined) item.price = priceInp.value === '' ? '' : (parseFloat(priceInp.value) || 0);
-        if (costInp && costInp.value !== undefined) item.cost_price = costInp.value === '' ? '' : (parseFloat(costInp.value) || 0);
+        if (costInp && costInp.value !== undefined) {
+          const cVal = costInp.value.trim();
+          item.cost_price = cVal === '' ? '' : (isNaN(parseFloat(cVal)) ? NaN : parseFloat(cVal));
+        }
         if (stockInp && stockInp.value !== undefined) item.stock = (stockInp.value === '' || stockInp.value === 'Unlimited' || stockInp.value === 'Tanpa Batas') ? null : (parseInt(stockInp.value) || 0);
         if (stepInp && stepInp.value !== undefined) item.step_multiplier = Math.max(1, parseInt(stepInp.value) || 1);
       }
@@ -30140,7 +30150,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (nameInp && nameInp.value !== undefined) item.name = nameInp.value;
           if (descInp && descInp.value !== undefined) item.description = descInp.value;
           if (priceInp && priceInp.value !== undefined) item.price = priceInp.value === '' ? '' : (parseFloat(priceInp.value) || 0);
-          if (costInp && costInp.value !== undefined) item.cost_price = costInp.value === '' ? '' : (parseFloat(costInp.value) || 0);
+          if (costInp && costInp.value !== undefined) {
+          const cVal = costInp.value.trim();
+          item.cost_price = cVal === '' ? '' : (isNaN(parseFloat(cVal)) ? NaN : parseFloat(cVal));
+        }
           if (stockInp && stockInp.value !== undefined) item.stock = (stockInp.value === '' || stockInp.value === 'Unlimited' || stockInp.value === 'Tanpa Batas') ? null : (parseInt(stockInp.value) || 0);
           if (parentSel) item.parent_id = parentSel.value || '';
           if (extraTypeSel) item.extra_type = extraTypeSel.value || '';
@@ -30587,7 +30600,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // 2. Validasi Step 2: Informasi Penjualan
-    if (primaryState.pricing_model === 'normal' && !primaryState.has_variants) {
+    if (!primaryState.has_variants) {
       const firstMat = materialsState[0];
       const singlePriceEl = document.getElementById('input-single-price');
       const singleCostEl = document.getElementById('input-single-cost');
@@ -30607,7 +30620,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const cRaw = (singleCostEl && singleCostEl.value.trim() !== '') ? singleCostEl.value.trim() : ((firstMat?.cost_price !== undefined && firstMat?.cost_price !== null) ? String(firstMat.cost_price).trim() : '');
       const cVal = parseFloat(cRaw);
       if (cRaw === '' || isNaN(cVal) || cVal < 0) {
-        addError('Modal/HPP produk wajib diisi.', singleCostEl);
+        addError('HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.', singleCostEl);
         if (typeof validateSingleCost === 'function') validateSingleCost(true);
       } else if (!isNaN(pVal) && pVal > 0 && cVal > pVal) {
         addError('Hpp melebihi Harga Jual produk.', singleCostEl);
@@ -30687,7 +30700,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
           const cNum = parseFloat(cRaw);
           if (cRaw === '' || isNaN(cNum) || cNum < 0) {
-            addError(`Variasi 1 (Opsi ${m.name || idx + 1}): Modal/HPP wajib diisi.`, costInp || rowEl);
+            addError(`Variasi 1 (Opsi ${m.name || idx + 1}): HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.`, costInp || rowEl);
           } else if (!isNaN(pNum) && pNum > 0 && cNum > pNum) {
             addError(`Variasi 1 (Opsi ${m.name || idx + 1}): Hpp melebihi Harga Jual.`, costInp || rowEl);
           }
@@ -30774,7 +30787,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
           const cNum = parseFloat(cRaw);
           if (cRaw === '' || isNaN(cNum) || cNum < 0) {
-            addError(`${label} (Opsi ${f.name || idx + 1}): Modal/HPP wajib diisi.`, costInp || rowEl);
+            addError(`${label} (Opsi ${f.name || idx + 1}): HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0.`, costInp || rowEl);
           } else if (!isNaN(pNum) && pNum > 0 && cNum > pNum) {
             addError(`${label} (Opsi ${f.name || idx + 1}): Hpp melebihi Harga Jual.`, costInp || rowEl);
           }
@@ -31191,24 +31204,30 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     const allFinishings = [
-      ...(primaryState.has_variation_2 ? (finishingsState.main || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'main' })) : []),
-      ...(primaryState.has_variation_3 ? (finishingsState.extra_1 || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'extra_1' })) : []),
-      ...(primaryState.has_variation_4 ? (finishingsState.extra_2 || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'extra_2' })) : []),
-      ...(primaryState.has_extra_service ? (finishingsState.extra_3 || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'extra_3' })) : [])
+      ...(primaryState.has_variation_2 ? (finishingsState.main || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'main', cost_price: (f.cost_price !== undefined && f.cost_price !== null && String(f.cost_price).trim() !== '' && !isNaN(parseFloat(f.cost_price))) ? parseFloat(f.cost_price) : 0 })) : []),
+      ...(primaryState.has_variation_3 ? (finishingsState.extra_1 || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'extra_1', cost_price: (f.cost_price !== undefined && f.cost_price !== null && String(f.cost_price).trim() !== '' && !isNaN(parseFloat(f.cost_price))) ? parseFloat(f.cost_price) : 0 })) : []),
+      ...(primaryState.has_variation_4 ? (finishingsState.extra_2 || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'extra_2', cost_price: (f.cost_price !== undefined && f.cost_price !== null && String(f.cost_price).trim() !== '' && !isNaN(parseFloat(f.cost_price))) ? parseFloat(f.cost_price) : 0 })) : []),
+      ...(primaryState.has_extra_service ? (finishingsState.extra_3 || []).filter(f => f.name && f.name.trim() !== '').map((f, idx) => ({ ...f, name: f.name.trim(), tier: 'extra_3', cost_price: (f.cost_price !== undefined && f.cost_price !== null && String(f.cost_price).trim() !== '' && !isNaN(parseFloat(f.cost_price))) ? parseFloat(f.cost_price) : 0 })) : [])
     ];
 
     let validMaterials = [];
     if (primaryState.has_variants) {
       validMaterials = materialsState.filter(m => m.name && m.name.trim() !== '').map((m, idx) => ({
         ...m,
-        name: m.name.trim()
+        name: m.name.trim(),
+        cost_price: (m.cost_price !== undefined && m.cost_price !== null && String(m.cost_price).trim() !== '' && !isNaN(parseFloat(m.cost_price))) ? parseFloat(m.cost_price) : 0
       }));
     } else {
+      const rawSinglePrice = document.getElementById('input-single-price')?.value ?? materialsState[0]?.price;
+      const parsedSinglePrice = (rawSinglePrice !== undefined && rawSinglePrice !== null && String(rawSinglePrice).trim() !== '' && !isNaN(parseFloat(rawSinglePrice))) ? parseFloat(rawSinglePrice) : 0;
+      const rawSingleCost = document.getElementById('input-single-cost')?.value ?? materialsState[0]?.cost_price;
+      const parsedSingleCost = (rawSingleCost !== undefined && rawSingleCost !== null && String(rawSingleCost).trim() !== '' && !isNaN(parseFloat(rawSingleCost))) ? parseFloat(rawSingleCost) : 0;
+
       validMaterials = [{
         id: (materialsState[0] && materialsState[0].id) ? materialsState[0].id : DB.generateUUID(),
         name: primaryState.name || 'Produk Standar',
-        price: parseFloat(document.getElementById('input-single-price')?.value ?? (materialsState[0]?.price || 0)) || 0,
-        cost_price: parseFloat(document.getElementById('input-single-cost')?.value ?? (materialsState[0]?.cost_price || 0)) || 0,
+        price: parsedSinglePrice,
+        cost_price: parsedSingleCost,
         step_multiplier: 1
       }];
       primaryState.price = validMaterials[0].price;

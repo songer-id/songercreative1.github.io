@@ -758,10 +758,13 @@ Fungsi `validateForm(isDraft = false)` (`js/product-form.js` baris 30504) menera
    - `Jenis Produk`: Wajib bernilai `'physical'` atau `'non_physical'`.
    - `Model Kartu`: Wajib dipilih jika `is_active === true`.
    - `Foto Produk`: Wajib minimal 1 foto sampul jika `is_active === true`.
-3. **Aturan Harga & Modal HPP**:
-   - Mode Tanpa Variasi: Harga Jual (`#input-single-price`) wajib diisi angka $> 0$. Biaya Modal HPP (`#input-single-cost`) wajib diisi angka $\ge 0$.
-   - **Aturan Proteksi Margin**: Harga Jual tidak boleh lebih rendah dari Biaya Modal HPP (`price >= cost_price`).
-   - Mode Dengan Variasi: Minimal 1 baris opsi pada Variasi 1 wajib memiliki nama, harga $> 0$, dan biaya modal $\ge 0$.
+3. **Aturan Harga & Modal HPP (Standarisasi SSOT)**:
+   - **Kewajiban Pengisian (Mandatory)**: Seluruh komponen yang memiliki input HPP/Modal (Produk Tunggal `#input-single-cost`, Variasi 1 `materialsState`, Variasi 2–4 & Extras `finishingsState`) **wajib diisi**. Input kosong (`""`), spasi kosong, `null`, `undefined`, atau `NaN` ditolak saat validasi.
+   - **Pesan Validasi Standar**: Jika HPP kosong atau tidak valid, sistem menampilkan pesan seragam: `"HPP/Modal wajib diisi. Jika tidak ada biaya, masukkan 0."`.
+   - **Legalitas Angka 0**: Angka `0` adalah nilai modal yang sah (misalnya produk jasa, digital, atau barang tanpa modal produksi) dan **bukan** dianggap kosong. Nilai `0` disimpan secara eksplisit sebagai `0` ke database dan **dilarang keras** diubah menjadi estimasi fallback otomatis (seperti 50% atau 60% harga jual).
+   - **Mode Edit**: Saat memuat produk untuk diedit, jika modal tersimpan `0`, input memuat `"0"`. Jika data lama belum pernah memiliki modal (`null`/`undefined`/`""`), input ditampilkan kosong agar pengguna mengisinya secara sadar sebelum menyimpan.
+   - **Aturan Proteksi Margin**: Harga Jual tidak boleh lebih rendah dari Biaya Modal HPP (`price >= cost_price`). Jika melanggar, ditolak dengan pesan: `"Modal/HPP melebihi Harga Jual."` / `"Hpp melebihi Harga Jual."`.
+   - **Eliminasi Fallback Database**: Fungsi penyimpanan `DB.createProduct()` dan `DB.updateProduct()` di `js/db.js` telah distandarisasi untuk menerima dan mempertahankan angka `0` tanpa mengonversinya ke persentase default $60\%$ (materials) maupun $50\%$ (finishings).
 4. **Aturan Khusus Model C (Kartu Detail)**:
    - `Label Footer 1`: **Wajib diisi** untuk simpan final. Maksimal 32 karakter grapheme. Whitespace saja dianggap kosong.
    - `Label Footer 2`: Opsional. Maksimal 32 karakter grapheme.
