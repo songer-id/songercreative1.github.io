@@ -667,7 +667,6 @@ const DB = (() => {
     hero_mobile_ratio: '16:5', // '16:5' (Mobile 3.2:1) & Desktop 9:2 (4.5:1)
     hero_container_radius: '16px', // 0px - 32px (0px, 8px, 16px, 24px, 32px)
     hero_container_shadow: 'sm', // none | sm | md | lg | xl
-    hero_title_color: '#0f172a',
     hero_desc_color: '#475569',
     hero_image_radius: '12px', // 0px - 24px
     hero_image_shadow: 'sm', // none | sm | md | lg
@@ -687,7 +686,6 @@ const DB = (() => {
     hero_headline: 'Cetak Banner, Desain & Souvenir Harga Instan',
     hero_subheadline: 'Katalog terpadu dengan kalkulator instan: spesifikasi kustom meteran, jasa desain original, hingga souvenir retail siap kirim ke seluruh Indonesia.',
     hero_cta_text: 'Lihat Semua Katalog',
-    hero_cta1_link: '#katalog-section',
     hero_banner_image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
     hero_banners: [
       'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
@@ -3137,68 +3135,6 @@ const DB = (() => {
       return this.createProduct(productData, materialsList, finishingsList);
     },
 
-    getCustomLabelsHistory() {
-      const custom = getTable(STORAGE_KEYS.CUSTOM_LABELS_HISTORY) || [];
-      const products = getTable(STORAGE_KEYS.PRODUCTS) || [];
-      const fromProds = [];
-      products.forEach(p => {
-        if (Array.isArray(p.custom_labels)) {
-          p.custom_labels.forEach(lbl => {
-            if (lbl && typeof lbl === 'string' && lbl.trim()) fromProds.push(lbl.trim());
-          });
-        } else if (typeof p.custom_labels === 'string' && p.custom_labels.trim()) {
-          p.custom_labels.split(',').forEach(lbl => {
-            if (lbl && lbl.trim()) fromProds.push(lbl.trim());
-          });
-        }
-      });
-      const defaults = ['Best Seller', 'Produk Populer', 'Desain Custom', 'Promo Terbatas', 'Termurah', 'Premium Quality', 'Pengerjaan Cepat', 'Garansi 100%'];
-      const all = Array.from(new Set([...custom, ...fromProds, ...defaults]));
-      return all.filter(Boolean);
-    },
-
-    saveCustomLabelToHistory(label) {
-      if (!label || typeof label !== 'string' || !label.trim()) return;
-      const val = label.trim();
-      const list = getTable(STORAGE_KEYS.CUSTOM_LABELS_HISTORY) || [];
-      if (!list.includes(val)) {
-        list.unshift(val);
-        setTable(STORAGE_KEYS.CUSTOM_LABELS_HISTORY, list.slice(0, 50));
-      }
-    },
-
-    getFooterTextsHistory() {
-      const history = getTable(STORAGE_KEYS.FOOTER_TEXTS_HISTORY) || [];
-      const products = getTable(STORAGE_KEYS.PRODUCTS) || [];
-      const fromProds = [];
-      products.forEach(p => {
-        if (p.card_footer_text && typeof p.card_footer_text === 'string' && p.card_footer_text.trim()) {
-          fromProds.push(p.card_footer_text.trim());
-        }
-      });
-      const defaults = [
-        'Proses Cepat & Garansi Presisi',
-        'Siap Kirim Seluruh Indonesia',
-        'Gratis Konsultasi Desain',
-        'Bahan Premium Tahan Cuaca',
-        'Garansi Uang Kembali Jika Cacat',
-        'Pengerjaan 1 Hari Jadi',
-        'Bisa Custom Ukuran & Desain'
-      ];
-      const all = Array.from(new Set([...history, ...fromProds, ...defaults]));
-      return all.filter(Boolean);
-    },
-
-    saveFooterTextToHistory(text) {
-      if (!text || typeof text !== 'string' || !text.trim()) return;
-      const val = text.trim();
-      const list = getTable(STORAGE_KEYS.FOOTER_TEXTS_HISTORY) || [];
-      if (!list.includes(val)) {
-        list.unshift(val);
-        setTable(STORAGE_KEYS.FOOTER_TEXTS_HISTORY, list.slice(0, 50));
-      }
-    },
-
     toggleActive(id, newStatus) {
       let products = getTable(STORAGE_KEYS.PRODUCTS) || [];
       const index = products.findIndex(p => p.id === id);
@@ -5093,10 +5029,6 @@ const DB = (() => {
       customers = customers.filter(c => c.id !== customerId);
       setTable(`pos_customers_${tid}`, customers);
       return true;
-    },
-
-    generateUUID() {
-      return generateUUID();
     },
 
     getActiveCustomer(tenantId = null) {
