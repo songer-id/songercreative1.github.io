@@ -1,0 +1,36 @@
+const fs = require('fs');
+const d = new Date();
+const opt = { 
+  timeZone: 'Asia/Jakarta', 
+  weekday: 'long', 
+  year: 'numeric', 
+  month: 'long', 
+  day: 'numeric', 
+  hour: '2-digit', 
+  minute: '2-digit', 
+  hour12: false 
+};
+const parts = new Intl.DateTimeFormat('id-ID', opt).formatToParts(d);
+const p = {};
+parts.forEach(x => p[x.type] = x.value);
+
+const commitSubject = `Update [${p.weekday}, ${p.day} ${p.month} ${p.year} ${p.hour}:${p.minute} WIB]: Perapian Label Editor Kartu Mobile`;
+const commitBody = `
+- Menetapkan tipografi label input tools editor kartu mobile (<640px) pada #card-customization-section-mob:
+  * font-size: 11px
+  * line-height: 16px
+  * font-weight: 400
+  * letter-spacing: normal
+  * text-transform: none (tanpa uppercase)
+  * Menggunakan penulisan Title Case / penulisan biasa
+- Menerapkan konsisten pada seluruh 28 label input tools mobile dan menambahkan class penanda card-tool-label.
+- Menambahkan scoped CSS media query @media (max-width: 639.98px) di css/admin.css dengan deklarasi !important.
+- Merapikan label checkbox Simulasi Diskon mobile menjadi font-normal (konsisten dengan desktop).
+- Menjaga ukuran teks nilai input, HEX, angka radius, opsi dropdown, judul accordion, baris toggle, tombol, area sentuh, tampilan desktop (>=640px), kartu live preview, warna tema, logika R4/R6, dan preview Step 2.
+- Pengujian sintaks dan unit/regresi R7, R6, R4, R3 lulus 100% PASS. Hasil visual akhir berstatus menunggu pemeriksaan visual pengguna.
+`.trim();
+
+const fullMessage = `${commitSubject}\n\n${commitBody}\n`;
+fs.writeFileSync('scratch/commit_msg_09c_r7.txt', fullMessage, 'utf8');
+console.log('Prepared commit message:\n' + fullMessage);
+

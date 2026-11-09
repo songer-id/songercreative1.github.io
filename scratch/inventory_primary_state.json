@@ -1,0 +1,940 @@
+[
+  {
+    "key": "custom_specs",
+    "defaultValue": "[]",
+    "totalUsages": 11,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "size_guide",
+    "defaultValue": "null",
+    "totalUsages": 87,
+    "writesCount": 8,
+    "savedInDb": true
+  },
+  {
+    "key": "name",
+    "defaultValue": "''",
+    "totalUsages": 36,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "brand",
+    "defaultValue": "''",
+    "totalUsages": 9,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "product_origin",
+    "defaultValue": "''",
+    "totalUsages": 8,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "warranty_unit",
+    "defaultValue": "'Tidak Ada Garansi'",
+    "totalUsages": 15,
+    "writesCount": 6,
+    "savedInDb": true
+  },
+  {
+    "key": "warranty_duration",
+    "defaultValue": "''",
+    "totalUsages": 5,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "warranty_period",
+    "defaultValue": "'Tidak Ada Garansi'",
+    "totalUsages": 7,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "warranty_type",
+    "defaultValue": "''",
+    "totalUsages": 10,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "is_preorder",
+    "defaultValue": "false",
+    "totalUsages": 6,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "preorder_days",
+    "defaultValue": "7",
+    "totalUsages": 7,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "product_type",
+    "defaultValue": "'', // 'physical' | 'non_physical' - default '' pada create (wajib dipilih seller!)",
+    "totalUsages": 30,
+    "writesCount": 10,
+    "savedInDb": true
+  },
+  {
+    "key": "status",
+    "defaultValue": "'published', // 'published' | 'draft'",
+    "totalUsages": 2,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "is_active",
+    "defaultValue": "true, // Tampilkan di Etalase Toko (default ON)",
+    "totalUsages": 29,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "has_shipping",
+    "defaultValue": "true",
+    "totalUsages": 24,
+    "writesCount": 7,
+    "savedInDb": false
+  },
+  {
+    "key": "show_shipping_for_non_physical",
+    "defaultValue": "false",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "has_layer_2",
+    "defaultValue": "false",
+    "totalUsages": 5,
+    "writesCount": 5,
+    "savedInDb": false
+  },
+  {
+    "key": "has_layer_3",
+    "defaultValue": "false",
+    "totalUsages": 6,
+    "writesCount": 6,
+    "savedInDb": false
+  },
+  {
+    "key": "has_layer_4",
+    "defaultValue": "false",
+    "totalUsages": 5,
+    "writesCount": 5,
+    "savedInDb": false
+  },
+  {
+    "key": "has_layer_5",
+    "defaultValue": "false",
+    "totalUsages": 3,
+    "writesCount": 3,
+    "savedInDb": false
+  },
+  {
+    "key": "has_variation_2",
+    "defaultValue": "false",
+    "totalUsages": 51,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "has_variation_3",
+    "defaultValue": "false",
+    "totalUsages": 43,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "has_variation_4",
+    "defaultValue": "false",
+    "totalUsages": 35,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "has_extra_service",
+    "defaultValue": "false",
+    "totalUsages": 26,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "has_custom_dimension",
+    "defaultValue": "false",
+    "totalUsages": 27,
+    "writesCount": 9,
+    "savedInDb": true
+  },
+  {
+    "key": "custom_dimension_label",
+    "defaultValue": "''",
+    "totalUsages": 10,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "dimension_main_component",
+    "defaultValue": "''",
+    "totalUsages": 14,
+    "writesCount": 7,
+    "savedInDb": true
+  },
+  {
+    "key": "dimension_unit",
+    "defaultValue": "''",
+    "totalUsages": 24,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "custom_dimension_unit",
+    "defaultValue": "''",
+    "totalUsages": 22,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "dim_min_one_price",
+    "defaultValue": "false",
+    "totalUsages": 9,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "min_area_threshold",
+    "defaultValue": "null",
+    "totalUsages": 21,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "min_area_charge_value",
+    "defaultValue": "null",
+    "totalUsages": 21,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "dim_min_one_cost",
+    "defaultValue": "false",
+    "totalUsages": 7,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "min_hpp_threshold",
+    "defaultValue": "null",
+    "totalUsages": 13,
+    "writesCount": 4,
+    "savedInDb": false
+  },
+  {
+    "key": "min_hpp_charge_value",
+    "defaultValue": "null",
+    "totalUsages": 13,
+    "writesCount": 4,
+    "savedInDb": false
+  },
+  {
+    "key": "dimension_rules",
+    "defaultValue": "[]",
+    "totalUsages": 22,
+    "writesCount": 5,
+    "savedInDb": false
+  },
+  {
+    "key": "variation_scopes",
+    "defaultValue": "{",
+    "totalUsages": 30,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "main",
+    "defaultValue": "'umum'",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "extra_1",
+    "defaultValue": "'umum'",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "extra_2",
+    "defaultValue": "'umum'",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "extra_3",
+    "defaultValue": "'umum'",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "scope_main",
+    "defaultValue": "'umum'",
+    "totalUsages": 3,
+    "writesCount": 2,
+    "savedInDb": false
+  },
+  {
+    "key": "scope_extra_1",
+    "defaultValue": "'umum'",
+    "totalUsages": 3,
+    "writesCount": 2,
+    "savedInDb": false
+  },
+  {
+    "key": "scope_extra_2",
+    "defaultValue": "'umum'",
+    "totalUsages": 3,
+    "writesCount": 2,
+    "savedInDb": false
+  },
+  {
+    "key": "scope_extra_3",
+    "defaultValue": "'umum'",
+    "totalUsages": 1,
+    "writesCount": 1,
+    "savedInDb": false
+  },
+  {
+    "key": "wholesale_mode",
+    "defaultValue": "'normal', // 'normal' | 'tiered'",
+    "totalUsages": 11,
+    "writesCount": 6,
+    "savedInDb": true
+  },
+  {
+    "key": "same_price_tiers",
+    "defaultValue": "{ tier1: false, main: false, extra_1: false, extra_2: false, extra_3: false }",
+    "totalUsages": 49,
+    "writesCount": 3,
+    "savedInDb": false
+  },
+  {
+    "key": "same_cost_tiers",
+    "defaultValue": "{ tier1: false, main: false, extra_1: false, extra_2: false, extra_3: false }",
+    "totalUsages": 49,
+    "writesCount": 3,
+    "savedInDb": false
+  },
+  {
+    "key": "stock_mode_tiers",
+    "defaultValue": "{ tier1: '', main: '', extra_1: '', extra_2: '', extra_3: '' }",
+    "totalUsages": 63,
+    "writesCount": 3,
+    "savedInDb": false
+  },
+  {
+    "key": "specific_options_map",
+    "defaultValue": "{}, // { [matId]: { main: [optIds], extra_1: [optIds], extra_2: [optIds] } }",
+    "totalUsages": 14,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "variation_dependencies",
+    "defaultValue": "null",
+    "totalUsages": 48,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "show_badge",
+    "defaultValue": "true",
+    "totalUsages": 14,
+    "writesCount": 10,
+    "savedInDb": true
+  },
+  {
+    "key": "sales_count",
+    "defaultValue": "0",
+    "totalUsages": 8,
+    "writesCount": 0,
+    "savedInDb": true
+  },
+  {
+    "key": "admin_card_preview_metrics",
+    "defaultValue": "{",
+    "totalUsages": 14,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "rating",
+    "defaultValue": "{ source: 'auto', manual_value: null }",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "sales",
+    "defaultValue": "{ source: 'auto', manual_value: null }",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "order_category",
+    "defaultValue": "'Ctk', // Default operasional internal kasir",
+    "totalUsages": 1,
+    "writesCount": 0,
+    "savedInDb": true
+  },
+  {
+    "key": "category_id",
+    "defaultValue": "'',     // Kategori Utama Etalase (default '' wajib dipilih seller!)",
+    "totalUsages": 35,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "sub_category_id",
+    "defaultValue": "'', // Sub-Kategori Etalase",
+    "totalUsages": 10,
+    "writesCount": 7,
+    "savedInDb": true
+  },
+  {
+    "key": "card_variant",
+    "defaultValue": "'',    // 'A' | 'B' | 'C' (default '' wajib dipilih seller!)",
+    "totalUsages": 91,
+    "writesCount": 50,
+    "savedInDb": true
+  },
+  {
+    "key": "price_type",
+    "defaultValue": "2,       // 1-7 (disinkronkan dengan pricing_model)",
+    "totalUsages": 9,
+    "writesCount": 8,
+    "savedInDb": true
+  },
+  {
+    "key": "variation_labels",
+    "defaultValue": "{",
+    "totalUsages": 55,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "label_product",
+    "defaultValue": "'Produk'",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "label_tier_1",
+    "defaultValue": "''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "label_tier_2",
+    "defaultValue": "''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "label_extra_1",
+    "defaultValue": "''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "label_extra_2",
+    "defaultValue": "''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "label_extra_3",
+    "defaultValue": "''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "pricing_model",
+    "defaultValue": "'normal', // 'normal' | 'size' | 'weight' | 'volume'",
+    "totalUsages": 12,
+    "writesCount": 10,
+    "savedInDb": true
+  },
+  {
+    "key": "has_variants",
+    "defaultValue": "false,     // Variasi Produk pada jenis Normal (false = produk tunggal)",
+    "totalUsages": 68,
+    "writesCount": 4,
+    "savedInDb": true
+  },
+  {
+    "key": "_savedNonVariantPrice",
+    "defaultValue": "'',     // Memori terisolasi Harga Jual mode Tanpa Variasi",
+    "totalUsages": 9,
+    "writesCount": 6,
+    "savedInDb": false
+  },
+  {
+    "key": "_savedNonVariantCostPrice",
+    "defaultValue": "'', // Memori terisolasi Biaya Modal mode Tanpa Variasi",
+    "totalUsages": 9,
+    "writesCount": 6,
+    "savedInDb": false
+  },
+  {
+    "key": "size_pricing_type",
+    "defaultValue": "'custom', // 'custom' | 'fixed'",
+    "totalUsages": 2,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "size_unit",
+    "defaultValue": "'Cm',         // 'M' | 'Dm' | 'Cm' | 'Mm'",
+    "totalUsages": 1,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "fixed_size_value",
+    "defaultValue": "'S'",
+    "totalUsages": 1,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "weight_unit",
+    "defaultValue": "'Kg',       // 'Kg' | 'gram' | 'ons' | 'ton'",
+    "totalUsages": 1,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "volume_unit",
+    "defaultValue": "'Liter',    // 'Liter' | 'ml' | 'galon' | 'drum' | 'cc'",
+    "totalUsages": 1,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "stock",
+    "defaultValue": "null",
+    "totalUsages": 38,
+    "writesCount": 9,
+    "savedInDb": true
+  },
+  {
+    "key": "is_unlimited_stock",
+    "defaultValue": "false",
+    "totalUsages": 24,
+    "writesCount": 8,
+    "savedInDb": true
+  },
+  {
+    "key": "min_order",
+    "defaultValue": "1",
+    "totalUsages": 11,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "max_order",
+    "defaultValue": "null",
+    "totalUsages": 22,
+    "writesCount": 17,
+    "savedInDb": true
+  },
+  {
+    "key": "max_order_type",
+    "defaultValue": "'unlimited', // 'unlimited' | 'per_order' | 'per_period'",
+    "totalUsages": 21,
+    "writesCount": 20,
+    "savedInDb": true
+  },
+  {
+    "key": "max_order_qty",
+    "defaultValue": "null",
+    "totalUsages": 22,
+    "writesCount": 12,
+    "savedInDb": true
+  },
+  {
+    "key": "max_order_period",
+    "defaultValue": "{",
+    "totalUsages": 14,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "start_date",
+    "defaultValue": "''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "max_qty",
+    "defaultValue": "10",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "days",
+    "defaultValue": "7",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "period_type",
+    "defaultValue": "'non_recurring', // 'non_recurring' | 'recurring'",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "end_date",
+    "defaultValue": "''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "has_wholesale",
+    "defaultValue": "false",
+    "totalUsages": 22,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "wholesale_tiers",
+    "defaultValue": "[],     // [{ id, min_qty, max_qty, price }]",
+    "totalUsages": 32,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "has_order_multiple",
+    "defaultValue": "false",
+    "totalUsages": 16,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "order_multiple_type",
+    "defaultValue": "'all', // 'all' | 'per_variant'",
+    "totalUsages": 2,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "order_multiple_value",
+    "defaultValue": "1",
+    "totalUsages": 10,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "order_multiples_by_variant",
+    "defaultValue": "{}, // { [variantId]: 50 }",
+    "totalUsages": 36,
+    "writesCount": 8,
+    "savedInDb": true
+  },
+  {
+    "key": "has_affiliate_commission",
+    "defaultValue": "false",
+    "totalUsages": 9,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_commission_mode",
+    "defaultValue": "'single', // 'single' | 'tiered'",
+    "totalUsages": 7,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_commission_type",
+    "defaultValue": "'single', // alias backward compatibility",
+    "totalUsages": 3,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_commission_unit",
+    "defaultValue": "'percentage', // 'percentage' | 'fixed'",
+    "totalUsages": 9,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_commission_value",
+    "defaultValue": "''",
+    "totalUsages": 9,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_min_qty",
+    "defaultValue": "''",
+    "totalUsages": 12,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_effective_unit_commission",
+    "defaultValue": "0",
+    "totalUsages": 5,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_commission_tier_unit",
+    "defaultValue": "'percentage', // 'percentage' | 'fixed'",
+    "totalUsages": 9,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_commission_tiers",
+    "defaultValue": "[",
+    "totalUsages": 50,
+    "writesCount": 8,
+    "savedInDb": true
+  },
+  {
+    "key": "affiliate_min_order_amount",
+    "defaultValue": "''",
+    "totalUsages": 9,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "auto_monthly_promo",
+    "defaultValue": "false, // Toggle Auto Promo Bulanan",
+    "totalUsages": 5,
+    "writesCount": 2,
+    "savedInDb": false
+  },
+  {
+    "key": "monthly_discount_type",
+    "defaultValue": "'percent', // [%] Persen | [IDR] Potongan Rp",
+    "totalUsages": 6,
+    "writesCount": 5,
+    "savedInDb": false
+  },
+  {
+    "key": "monthly_discount_value",
+    "defaultValue": "'', // Nilai diskon bulanan",
+    "totalUsages": 10,
+    "writesCount": 4,
+    "savedInDb": false
+  },
+  {
+    "key": "has_daily_promo",
+    "defaultValue": "false, // Toggle Promo Harian",
+    "totalUsages": 6,
+    "writesCount": 2,
+    "savedInDb": false
+  },
+  {
+    "key": "has_monthly_discount",
+    "defaultValue": "false, // Alias has_daily_promo untuk kompatibilitas sistem & POS",
+    "totalUsages": 4,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "include_in_monthly_promo",
+    "defaultValue": "false, // Alias auto_monthly_promo",
+    "totalUsages": 2,
+    "writesCount": 2,
+    "savedInDb": false
+  },
+  {
+    "key": "promo_display_mode",
+    "defaultValue": "'daily', // Mode standar: 'daily' (Promo Harian)",
+    "totalUsages": 1,
+    "writesCount": 1,
+    "savedInDb": false
+  },
+  {
+    "key": "discount_type",
+    "defaultValue": "'percent', // Bentuk diskon harian: [%] Persen | [IDR] Potongan Rp",
+    "totalUsages": 9,
+    "writesCount": 7,
+    "savedInDb": true
+  },
+  {
+    "key": "discount_value",
+    "defaultValue": "'', // Nilai diskon harian",
+    "totalUsages": 16,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "monthly_promo_label",
+    "defaultValue": "'Promo Spesial', // Label teks promo harian",
+    "totalUsages": 3,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "promo_start_date",
+    "defaultValue": "null",
+    "totalUsages": 2,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "promo_end_date",
+    "defaultValue": "null",
+    "totalUsages": 3,
+    "writesCount": 2,
+    "savedInDb": true
+  },
+  {
+    "key": "has_custom_labels",
+    "defaultValue": "false",
+    "totalUsages": 8,
+    "writesCount": 5,
+    "savedInDb": true
+  },
+  {
+    "key": "custom_labels",
+    "defaultValue": "[]",
+    "totalUsages": 29,
+    "writesCount": 6,
+    "savedInDb": true
+  },
+  {
+    "key": "custom_dimension_suggestions",
+    "defaultValue": "[]",
+    "totalUsages": 20,
+    "writesCount": 3,
+    "savedInDb": true
+  },
+  {
+    "key": "shipping_config",
+    "defaultValue": "(function () {",
+    "totalUsages": 62,
+    "writesCount": 10,
+    "savedInDb": true
+  },
+  {
+    "key": "is_cod",
+    "defaultValue": "false",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "cod_local",
+    "defaultValue": "true,      // COD Kurir Toko (Desa / Kecamatan)",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "cod_expedition",
+    "defaultValue": "true, // COD Ekspedisi Reguler",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "couriers",
+    "defaultValue": "['pickup', 'local_store', 'reguler']",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "local_village_free",
+    "defaultValue": "defLocal ? Boolean(defLocal.local_village_free) : true",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "local_village_fee",
+    "defaultValue": "defLocal ? (defLocal.local_village_fee ?? '') : ''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "local_district_free",
+    "defaultValue": "defLocal ? Boolean(defLocal.local_district_free) : false",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "local_district_fee",
+    "defaultValue": "defLocal ? (defLocal.local_district_fee ?? '') : ''",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "weight",
+    "defaultValue": "'',           // Kosong (wajib diisi manual oleh penjual!)",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "weight_unit",
+    "defaultValue": "'gram'",
+    "totalUsages": 1,
+    "writesCount": 1,
+    "savedInDb": true
+  },
+  {
+    "key": "length",
+    "defaultValue": "'',           // Kosong (opsional)",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "width",
+    "defaultValue": "'',            // Kosong (opsional)",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  },
+  {
+    "key": "height",
+    "defaultValue": "''            // Kosong (opsional)",
+    "totalUsages": 0,
+    "writesCount": 0,
+    "savedInDb": false
+  }
+]

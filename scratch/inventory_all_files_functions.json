@@ -1,0 +1,4355 @@
+{
+  "js/product-form.js": [
+    {
+      "name": "ProductForm",
+      "params": "(",
+      "line": 11
+    },
+    {
+      "name": "getUnicodeLength",
+      "params": "str",
+      "line": 60
+    },
+    {
+      "name": "truncateTo32Graphemes",
+      "params": "str",
+      "line": 71
+    },
+    {
+      "name": "renderFooterIconGridHtml",
+      "params": "currentIconId, pickerId",
+      "line": 86
+    },
+    {
+      "name": "updateFooterCharCounter",
+      "params": "inputEl, counterEl",
+      "line": 100
+    },
+    {
+      "name": "getCurrentCardDesignKey",
+      "params": "",
+      "line": 122
+    },
+    {
+      "name": "captureCardDesignSnapshot",
+      "params": "force = false",
+      "line": 126
+    },
+    {
+      "name": "getStoreDefaultLocalShipping",
+      "params": "",
+      "line": 178
+    },
+    {
+      "name": "syncThemeCSSVariables",
+      "params": "",
+      "line": 193
+    },
+    {
+      "name": "calcHover",
+      "params": "hex, percent = -15",
+      "line": 198
+    },
+    {
+      "name": "toSubtle",
+      "params": "hex, alpha = 0.12",
+      "line": 213
+    },
+    {
+      "name": "getThemeBodyColor",
+      "params": "",
+      "line": 259
+    },
+    {
+      "name": "getPrimaryThemeColor",
+      "params": "",
+      "line": 277
+    },
+    {
+      "name": "getSecondaryThemeColor",
+      "params": "",
+      "line": 299
+    },
+    {
+      "name": "parseWarrantyPeriod",
+      "params": "rawPeriod",
+      "line": 316
+    },
+    {
+      "name": "computeWarrantyPeriod",
+      "params": "unit, duration",
+      "line": 337
+    },
+    {
+      "name": "clampTooltipToViewport",
+      "params": "tipEl",
+      "line": 348
+    },
+    {
+      "name": "handleTooltipTrigger",
+      "params": "e",
+      "line": 376
+    },
+    {
+      "name": "getLastProductFooterConfig",
+      "params": "",
+      "line": 585
+    },
+    {
+      "name": "escapeSafeHtml",
+      "params": "str",
+      "line": 618
+    },
+    {
+      "name": "getOptionsForDatalist",
+      "params": "listId",
+      "line": 639
+    },
+    {
+      "name": "isProductSessionTitleInput",
+      "params": "el",
+      "line": 716
+    },
+    {
+      "name": "getUsedSessionTitleValues",
+      "params": "currentInput",
+      "line": 728
+    },
+    {
+      "name": "isSpecTitleInput",
+      "params": "el",
+      "line": 745
+    },
+    {
+      "name": "getUsedSpecTitleValues",
+      "params": "currentInput",
+      "line": 750
+    },
+    {
+      "name": "isCustomLabelInput",
+      "params": "el",
+      "line": 764
+    },
+    {
+      "name": "getUsedCustomLabelValues",
+      "params": "currentInput",
+      "line": 769
+    },
+    {
+      "name": "closeAllCleanDatalistPopovers",
+      "params": "exceptPopover = null",
+      "line": 782
+    },
+    {
+      "name": "handleScrollOutside",
+      "params": "e",
+      "line": 797
+    },
+    {
+      "name": "bindCleanDatalistPopovers",
+      "params": "scope = document",
+      "line": 823
+    },
+    {
+      "name": "syncClearAndArrowVisibility",
+      "params": "",
+      "line": 935
+    },
+    {
+      "name": "closePopover",
+      "params": "",
+      "line": 987
+    },
+    {
+      "name": "positionPopover",
+      "params": "",
+      "line": 993
+    },
+    {
+      "name": "openMenu",
+      "params": "",
+      "line": 1025
+    },
+    {
+      "name": "renderItems",
+      "params": "filterText = '', isExplicitOpen = false",
+      "line": 1043
+    },
+    {
+      "name": "getTodayDateString",
+      "params": "",
+      "line": 1419
+    },
+    {
+      "name": "formatDateDisplay",
+      "params": "dateStr",
+      "line": 1427
+    },
+    {
+      "name": "addDaysToDate",
+      "params": "dateStr, days",
+      "line": 1436
+    },
+    {
+      "name": "isStep1Complete",
+      "params": "",
+      "line": 1448
+    },
+    {
+      "name": "getSuggestedCardVariantForCategory",
+      "params": "categoryId",
+      "line": 1473
+    },
+    {
+      "name": "resetFormState",
+      "params": "",
+      "line": 1497
+    },
+    {
+      "name": "getNormalizedProductStateSnapshot",
+      "params": "",
+      "line": 1755
+    },
+    {
+      "name": "hasEditProductChanged",
+      "params": "",
+      "line": 1793
+    },
+    {
+      "name": "hasAnyNewProductData",
+      "params": "",
+      "line": 1800
+    },
+    {
+      "name": "showCancelConfirmationModal",
+      "params": "mode, targetMenu",
+      "line": 1815
+    },
+    {
+      "name": "handleFormCancel",
+      "params": "",
+      "line": 1889
+    },
+    {
+      "name": "loadProductForEdit",
+      "params": "idOrProduct",
+      "line": 1924
+    },
+    {
+      "name": "saveDraftToStorage",
+      "params": "",
+      "line": 2295
+    },
+    {
+      "name": "loadDraftFromStorage",
+      "params": "",
+      "line": 2311
+    },
+    {
+      "name": "clearDraftStorage",
+      "params": "",
+      "line": 2380
+    },
+    {
+      "name": "hasStoredDraft",
+      "params": "",
+      "line": 2386
+    },
+    {
+      "name": "renderFormErrorBannerHtml",
+      "params": "",
+      "line": 2406
+    },
+    {
+      "name": "renderForm",
+      "params": "",
+      "line": 2422
+    },
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 4110
+    },
+    {
+      "name": "formatPriceHtmlWithSmallRp",
+      "params": "num",
+      "line": 4118
+    },
+    {
+      "name": "formatPriceRangeHtmlWithSmallRp",
+      "params": "minNum, maxNum",
+      "line": 4126
+    },
+    {
+      "name": "formatSalesCount",
+      "params": "count, compact = false",
+      "line": 4138
+    },
+    {
+      "name": "updateDesignChoiceButtonsState",
+      "params": "",
+      "line": 4150
+    },
+    {
+      "name": "toggleCardAccordion",
+      "params": "groupKey",
+      "line": 4174
+    },
+    {
+      "name": "syncCardAccordionDOM",
+      "params": "",
+      "line": 4181
+    },
+    {
+      "name": "syncEyeToggleIcons",
+      "params": "",
+      "line": 4247
+    },
+    {
+      "name": "getPreviewMetricsConfig",
+      "params": "",
+      "line": 4278
+    },
+    {
+      "name": "setRatingSource",
+      "params": "src",
+      "line": 4294
+    },
+    {
+      "name": "setSalesSource",
+      "params": "src",
+      "line": 4301
+    },
+    {
+      "name": "syncMetricSourcesDOM",
+      "params": "",
+      "line": 4308
+    },
+    {
+      "name": "updateSaveAsDefaultLabels",
+      "params": "",
+      "line": 4406
+    },
+    {
+      "name": "markCardDesignAsCustom",
+      "params": "",
+      "line": 4414
+    },
+    {
+      "name": "handleApplyDefaultCardDesign",
+      "params": "",
+      "line": 4423
+    },
+    {
+      "name": "hexToSubtleHex",
+      "params": "hex, opacity = 0.12",
+      "line": 4437
+    },
+    {
+      "name": "hexToBorderHex",
+      "params": "hex, opacity = 0.35",
+      "line": 4451
+    },
+    {
+      "name": "getThemeDefaultBadgeColors",
+      "params": "variantCode",
+      "line": 4465
+    },
+    {
+      "name": "parseBadgeRadius",
+      "params": "val, defaultVal = 6",
+      "line": 4487
+    },
+    {
+      "name": "updateBadgeRadiusPresetButtons",
+      "params": "val",
+      "line": 4494
+    },
+    {
+      "name": "setBadgeStyleMode",
+      "params": "mode",
+      "line": 4513
+    },
+    {
+      "name": "parseBorderWidth",
+      "params": "val, defaultVal = 1",
+      "line": 4546
+    },
+    {
+      "name": "parseBorderRadius",
+      "params": "val, defaultVal = 16",
+      "line": 4553
+    },
+    {
+      "name": "isMobilePreviewSheetOpen",
+      "params": "",
+      "line": 4560
+    },
+    {
+      "name": "getBorderWidthLabel",
+      "params": "num",
+      "line": 4567
+    },
+    {
+      "name": "updateOutlineColorControlsState",
+      "params": "bw",
+      "line": 4575
+    },
+    {
+      "name": "updateBorderWidthPresetButtons",
+      "params": "val",
+      "line": 4592
+    },
+    {
+      "name": "updateBorderRadiusPresetButtons",
+      "params": "val",
+      "line": 4622
+    },
+    {
+      "name": "parseDiscountBadgeRadius",
+      "params": "val, defaultVal = 8",
+      "line": 4641
+    },
+    {
+      "name": "updateDiscountBadgeRadiusPresetButtons",
+      "params": "val",
+      "line": 4648
+    },
+    {
+      "name": "setDiscountBadgePosition",
+      "params": "pos",
+      "line": 4674
+    },
+    {
+      "name": "toggleDiscountBadgePosDropdown",
+      "params": "open, suffix = ''",
+      "line": 4718
+    },
+    {
+      "name": "closeAllDiscountBadgePosDropdowns",
+      "params": "",
+      "line": 4736
+    },
+    {
+      "name": "getDiscountBadgePositionClass",
+      "params": "pos",
+      "line": 4747
+    },
+    {
+      "name": "parseCountdownRadius",
+      "params": "val, defaultVal = 6",
+      "line": 4754
+    },
+    {
+      "name": "updateCountdownRadiusPresetButtons",
+      "params": "val",
+      "line": 4762
+    },
+    {
+      "name": "syncFeatureSubpanels",
+      "params": "",
+      "line": 4781
+    },
+    {
+      "name": "getCardConfigFromDOM",
+      "params": "",
+      "line": 4861
+    },
+    {
+      "name": "getVal",
+      "params": "id1, id2, fallback",
+      "line": 4870
+    },
+    {
+      "name": "getChk",
+      "params": "id1, id2",
+      "line": 4877
+    },
+    {
+      "name": "loadCardConfigInputs",
+      "params": "variantCode, forceDefault = false",
+      "line": 4930
+    },
+    {
+      "name": "setVal",
+      "params": "id, val",
+      "line": 4943
+    },
+    {
+      "name": "setChk",
+      "params": "id, val",
+      "line": 4949
+    },
+    {
+      "name": "saveCardConfigInputs",
+      "params": "forceSaveAsDefault = false",
+      "line": 5102
+    },
+    {
+      "name": "updateCardCustomizationTabVisuals",
+      "params": "isCustomMode",
+      "line": 5127
+    },
+    {
+      "name": "setCardCustomizationView",
+      "params": "isCustomMode",
+      "line": 5133
+    },
+    {
+      "name": "handleSaveCardDesign",
+      "params": "",
+      "line": 5143
+    },
+    {
+      "name": "handleCancelCardDesign",
+      "params": "",
+      "line": 5252
+    },
+    {
+      "name": "getSmartVisibleBadges",
+      "params": "productName, labelsArray",
+      "line": 5440
+    },
+    {
+      "name": "getCustomLabelsCapacityMessage",
+      "params": "productName, labelsArray",
+      "line": 5465
+    },
+    {
+      "name": "isPlaceholderOrEmptyVariationTitle",
+      "params": "val, defaultLabel",
+      "line": 5488
+    },
+    {
+      "name": "getVariationGroupTitleInfo",
+      "params": "tierKey",
+      "line": 5496
+    },
+    {
+      "name": "getVariationLabel",
+      "params": "tierKey, fallback",
+      "line": 5536
+    },
+    {
+      "name": "formatVariationReactiveHeader",
+      "params": "groupLabel, optionCount, selectedOptionName",
+      "line": 5541
+    },
+    {
+      "name": "getCustomDimensionLabel",
+      "params": "",
+      "line": 5567
+    },
+    {
+      "name": "isCustomDimensionValid",
+      "params": "",
+      "line": 5577
+    },
+    {
+      "name": "ensureExtraServiceNoneAtBottom",
+      "params": "",
+      "line": 5584
+    },
+    {
+      "name": "getPreviewStockDisplay",
+      "params": "selectedMat, validMaterials",
+      "line": 5630
+    },
+    {
+      "name": "focusAndHighlightValidationTarget",
+      "params": "targetEl",
+      "line": 5660
+    },
+    {
+      "name": "canActivateTestMode",
+      "params": "",
+      "line": 5693
+    },
+    {
+      "name": "checkAllVariationsSelected",
+      "params": "",
+      "line": 6032
+    },
+    {
+      "name": "isMatWholesaleActive",
+      "params": "mat",
+      "line": 6059
+    },
+    {
+      "name": "getPreviewWholesaleDiscount",
+      "params": "qty, unitPrice, customTiers = null",
+      "line": 6077
+    },
+    {
+      "name": "validatePreviewVariantSelection",
+      "params": "",
+      "line": 6138
+    },
+    {
+      "name": "showPreviewTestModeAlert",
+      "params": "checkOrMessage",
+      "line": 6197
+    },
+    {
+      "name": "hidePreviewTestModeAlert",
+      "params": "",
+      "line": 6270
+    },
+    {
+      "name": "getPreviewHeaderHtml",
+      "params": "step, isMobile = false",
+      "line": 6292
+    },
+    {
+      "name": "updatePreviewSidebarHeader",
+      "params": "",
+      "line": 6370
+    },
+    {
+      "name": "bindStep1HeaderButtons",
+      "params": "",
+      "line": 6394
+    },
+    {
+      "name": "bindPreviewModeHeaderButtons",
+      "params": "",
+      "line": 6429
+    },
+    {
+      "name": "syncPreviewModeHeaderButtons",
+      "params": "",
+      "line": 6465
+    },
+    {
+      "name": "showPreviewTestModal",
+      "params": "config",
+      "line": 6469
+    },
+    {
+      "name": "showBuySimulationConfirmModal",
+      "params": "",
+      "line": 6547
+    },
+    {
+      "name": "showCartSimulationConfirmModal",
+      "params": "",
+      "line": 6555
+    },
+    {
+      "name": "getShippingSimulationSummaryHtml",
+      "params": "",
+      "line": 6563
+    },
+    {
+      "name": "addSingleProductToCartDirect",
+      "params": "",
+      "line": 6567
+    },
+    {
+      "name": "addVariantProductToCartDirect",
+      "params": "",
+      "line": 6571
+    },
+    {
+      "name": "calculateCustomDimensionPricingForDrawer",
+      "params": "pVal, lVal",
+      "line": 6575
+    },
+    {
+      "name": "formatAreaNum",
+      "params": "num",
+      "line": 6776
+    },
+    {
+      "name": "getDrawerMinimalDimensionNoteText",
+      "params": "",
+      "line": 6809
+    },
+    {
+      "name": "formatCleanNum",
+      "params": "val",
+      "line": 6846
+    },
+    {
+      "name": "getRuntimeProductAdapter",
+      "params": "",
+      "line": 6861
+    },
+    {
+      "name": "getAllowedVariationOptions",
+      "params": "matId, tierKey",
+      "line": 6869
+    },
+    {
+      "name": "validateAndAdjustSpecificVariations",
+      "params": "changedTier = 'tier1'",
+      "line": 6922
+    },
+    {
+      "name": "resolveActiveCombinationRule",
+      "params": "tier1Arg, tier2Arg, tier3Arg, tier4Arg",
+      "line": 6986
+    },
+    {
+      "name": "updateShopeeDrawerVariationOptionsAvailability",
+      "params": "container",
+      "line": 7104
+    },
+    {
+      "name": "renderDrawerVariationGroup",
+      "params": "group, mode, groupIndex",
+      "line": 7209
+    },
+    {
+      "name": "buildDrawerSelectedOptionsDescriptionsHtml",
+      "params": "",
+      "line": 7322
+    },
+    {
+      "name": "updateDrawerSelectedOptionsDescriptions",
+      "params": "",
+      "line": 7362
+    },
+    {
+      "name": "buildShopeeDrawerOrderNotice",
+      "params": "rule, curQty",
+      "line": 7378
+    },
+    {
+      "name": "renderShopeeDrawerOrderNoticeHtml",
+      "params": "rule, curQty, accentColor",
+      "line": 7425
+    },
+    {
+      "name": "updateShopeeDrawerOrderNotice",
+      "params": "rule, curQty, accentColor",
+      "line": 7440
+    },
+    {
+      "name": "updateShopeeDrawerSubmitButtonState",
+      "params": "rule, curQty",
+      "line": 7458
+    },
+    {
+      "name": "buildShopeeDrawerHtml",
+      "params": "actionType",
+      "line": 7481
+    },
+    {
+      "name": "closeShopeeCheckoutDrawer",
+      "params": "",
+      "line": 8070
+    },
+    {
+      "name": "buildProductSpecDrawerHtml",
+      "params": "",
+      "line": 8093
+    },
+    {
+      "name": "openProductSpecDrawer",
+      "params": "",
+      "line": 8268
+    },
+    {
+      "name": "closeProductSpecDrawer",
+      "params": "",
+      "line": 8319
+    },
+    {
+      "name": "renderProductSizeGuideContentHtml",
+      "params": "",
+      "line": 8349
+    },
+    {
+      "name": "buildProductSizeGuideDrawerHtml",
+      "params": "",
+      "line": 8407
+    },
+    {
+      "name": "openProductSizeGuideDrawer",
+      "params": "",
+      "line": 8431
+    },
+    {
+      "name": "closeProductSizeGuideDrawer",
+      "params": "",
+      "line": 8482
+    },
+    {
+      "name": "openShopeeCheckoutDrawer",
+      "params": "actionType",
+      "line": 8512
+    },
+    {
+      "name": "updateDrawerQtyButtonsState",
+      "params": "",
+      "line": 8546
+    },
+    {
+      "name": "updateShopeeDrawerLivePricing",
+      "params": "",
+      "line": 8576
+    },
+    {
+      "name": "bindMiniPdpInteractiveEvents",
+      "params": "",
+      "line": 8831
+    },
+    {
+      "name": "getContextSummary",
+      "params": "",
+      "line": 8957
+    },
+    {
+      "name": "autoAdvanceAccordion",
+      "params": "nextTier",
+      "line": 9223
+    },
+    {
+      "name": "onDocClickCloseSelects",
+      "params": "e",
+      "line": 9289
+    },
+    {
+      "name": "getExtraQty",
+      "params": "id",
+      "line": 9511
+    },
+    {
+      "name": "setExtraQty",
+      "params": "id, val",
+      "line": 9517
+    },
+    {
+      "name": "updateProductCardLivePreview",
+      "params": "",
+      "line": 9737
+    },
+    {
+      "name": "restoreAllScrolls",
+      "params": "",
+      "line": 9787
+    },
+    {
+      "name": "getLiveChk",
+      "params": "deskId, mobId, fallback = true",
+      "line": 10040
+    },
+    {
+      "name": "renderCardPhoto",
+      "params": "aspectRatioClass",
+      "line": 10377
+    },
+    {
+      "name": "getActiveCardRatioInfo",
+      "params": "",
+      "line": 11236
+    },
+    {
+      "name": "renderOptionProfitInfo",
+      "params": "price, cost, optionName = ''",
+      "line": 11248
+    },
+    {
+      "name": "updateRowProfitInfo",
+      "params": "row",
+      "line": 11278
+    },
+    {
+      "name": "getVariationTierDisplayName",
+      "params": "tierKey",
+      "line": 11298
+    },
+    {
+      "name": "getTierOptionsForProduct",
+      "params": "tierKey",
+      "line": 11306
+    },
+    {
+      "name": "getEarlierTiersFor",
+      "params": "tierKey",
+      "line": 11313
+    },
+    {
+      "name": "getLaterTiersFor",
+      "params": "parentTierKey",
+      "line": 11331
+    },
+    {
+      "name": "getOptionDependencySummary",
+      "params": "tier, optionId",
+      "line": 11349
+    },
+    {
+      "name": "isOptionComplete",
+      "params": "optOrRow, tier",
+      "line": 11400
+    },
+    {
+      "name": "getOptionDependencyStatus",
+      "params": "tier, optionId",
+      "line": 11458
+    },
+    {
+      "name": "renderOptionDependencyButton",
+      "params": "tier, optionId",
+      "line": 11483
+    },
+    {
+      "name": "updateRowOptionGear",
+      "params": "row, tier, optionId",
+      "line": 11526
+    },
+    {
+      "name": "updateOptionDependencyIndicatorButton",
+      "params": "tier, optionId",
+      "line": 11556
+    },
+    {
+      "name": "cleanUpDependencyReferences",
+      "params": "deletedId",
+      "line": 11563
+    },
+    {
+      "name": "openOptionDependencyModal",
+      "params": "tier, optionId",
+      "line": 11585
+    },
+    {
+      "name": "applyDepCardVisualState",
+      "params": "cardEl, isSelected",
+      "line": 11631
+    },
+    {
+      "name": "setDepModalMode",
+      "params": "mode",
+      "line": 11640
+    },
+    {
+      "name": "updateDepModalDescriptions",
+      "params": "",
+      "line": 11669
+    },
+    {
+      "name": "renderOptionDependencyModalContent",
+      "params": "",
+      "line": 11697
+    },
+    {
+      "name": "renderDepModalTriggersCheckboxes",
+      "params": "",
+      "line": 11723
+    },
+    {
+      "name": "handleSaveOptionDependency",
+      "params": "",
+      "line": 11759
+    },
+    {
+      "name": "closeOptionDependencyModal",
+      "params": "",
+      "line": 11798
+    },
+    {
+      "name": "renderOptionDependencyModalMarkup",
+      "params": "",
+      "line": 11804
+    },
+    {
+      "name": "renderSkipParentTierOptions",
+      "params": "",
+      "line": 11896
+    },
+    {
+      "name": "renderSkipTargetTierOptions",
+      "params": "parentTierKey",
+      "line": 11910
+    },
+    {
+      "name": "renderSkipTriggerOptions",
+      "params": "parentTierKey",
+      "line": 11918
+    },
+    {
+      "name": "renderSkipRulesRows",
+      "params": "",
+      "line": 11926
+    },
+    {
+      "name": "renderSkipRulesSectionMarkup",
+      "params": "",
+      "line": 11974
+    },
+    {
+      "name": "bindOptionDependencyModalEvents",
+      "params": "",
+      "line": 11980
+    },
+    {
+      "name": "bindSkipRulesSectionEvents",
+      "params": "",
+      "line": 12064
+    },
+    {
+      "name": "bindSkipRulesDeleteButtons",
+      "params": "",
+      "line": 12161
+    },
+    {
+      "name": "refreshSkipRulesList",
+      "params": "",
+      "line": 12174
+    },
+    {
+      "name": "renderGalleryThumbnails",
+      "params": "",
+      "line": 12188
+    },
+    {
+      "name": "renderPriceTypeOptions",
+      "params": "selectedId",
+      "line": 12280
+    },
+    {
+      "name": "getPriceTypeHint",
+      "params": "ptId",
+      "line": 12301
+    },
+    {
+      "name": "calculateMarginBadge",
+      "params": "price, cost",
+      "line": 12314
+    },
+    {
+      "name": "getMissingLabelsForCard",
+      "params": "cardIndex",
+      "line": 12336
+    },
+    {
+      "name": "renderFlashbackCard",
+      "params": "cardTitle, cardIcon, missingLabels, cardId",
+      "line": 12351
+    },
+    {
+      "name": "getProductReferencePrice",
+      "params": "",
+      "line": 12366
+    },
+    {
+      "name": "getProductStockInfo",
+      "params": "",
+      "line": 12387
+    },
+    {
+      "name": "checkAffiliateStockAndPriceWarnings",
+      "params": "",
+      "line": 12461
+    },
+    {
+      "name": "updateTierMinQtyChaining",
+      "params": "fromIdx = 0",
+      "line": 12551
+    },
+    {
+      "name": "syncAffiliateTiersFromDOM",
+      "params": "",
+      "line": 12580
+    },
+    {
+      "name": "getAffiliateSingleHelperInfo",
+      "params": "",
+      "line": 12620
+    },
+    {
+      "name": "updateAffiliateSingleHelper",
+      "params": "",
+      "line": 12676
+    },
+    {
+      "name": "setAffiliateCommissionEnabled",
+      "params": "enabled",
+      "line": 12694
+    },
+    {
+      "name": "setAffiliateCommissionMode",
+      "params": "mode",
+      "line": 12717
+    },
+    {
+      "name": "renderAffiliateCommissionSection",
+      "params": "",
+      "line": 12764
+    },
+    {
+      "name": "renderAffiliateTiersTableBody",
+      "params": "",
+      "line": 12967
+    },
+    {
+      "name": "bindAffiliateTierTableEvents",
+      "params": "",
+      "line": 13033
+    },
+    {
+      "name": "addAffiliateTierRow",
+      "params": "",
+      "line": 13142
+    },
+    {
+      "name": "bindAffiliateCommissionEvents",
+      "params": "",
+      "line": 13225
+    },
+    {
+      "name": "renderShippingLocationNotice",
+      "params": "",
+      "line": 13350
+    },
+    {
+      "name": "renderCustomSpecsTableHtml",
+      "params": "",
+      "line": 13382
+    },
+    {
+      "name": "renderSingleSpecRowHtml",
+      "params": "spec = { title: '', value: '' }, index = 0",
+      "line": 13432
+    },
+    {
+      "name": "bindCustomSpecsEvents",
+      "params": "",
+      "line": 13471
+    },
+    {
+      "name": "updateSpecsUIState",
+      "params": "",
+      "line": 13477
+    },
+    {
+      "name": "getSizeGuideColWidthClass",
+      "params": "colName = '', colIdx = 0",
+      "line": 13578
+    },
+    {
+      "name": "removeSizeGuideWidthClasses",
+      "params": "el",
+      "line": 13596
+    },
+    {
+      "name": "updateSizeGuideColWidthClasses",
+      "params": "",
+      "line": 13607
+    },
+    {
+      "name": "renderSizeGuideTheadHtml",
+      "params": "columns = []",
+      "line": 13634
+    },
+    {
+      "name": "renderSizeGuideTbodyHtml",
+      "params": "columns = [], rows = []",
+      "line": 13676
+    },
+    {
+      "name": "getActiveVariationTiersForSizeGuide",
+      "params": "",
+      "line": 13705
+    },
+    {
+      "name": "getEffectiveLinkedVariation",
+      "params": "",
+      "line": 13739
+    },
+    {
+      "name": "renderSizeGuideVariationLinkMarkup",
+      "params": "guide",
+      "line": 13760
+    },
+    {
+      "name": "bindCustomSizeGuideVariationSelect",
+      "params": "",
+      "line": 13832
+    },
+    {
+      "name": "togglePopover",
+      "params": "open",
+      "line": 13842
+    },
+    {
+      "name": "clickOutsideHandler",
+      "params": "e",
+      "line": 13873
+    },
+    {
+      "name": "refreshSizeGuideVariationLinkDropdown",
+      "params": "",
+      "line": 13935
+    },
+    {
+      "name": "bindSizeGuideEvents",
+      "params": "",
+      "line": 13957
+    },
+    {
+      "name": "syncTemplateButtonStyles",
+      "params": "activeKey",
+      "line": 13971
+    },
+    {
+      "name": "renderSizeGuideTableContent",
+      "params": "",
+      "line": 13982
+    },
+    {
+      "name": "showSizeGuideTemplateConfirmModal",
+      "params": "targetKey, onConfirm",
+      "line": 14001
+    },
+    {
+      "name": "closeModal",
+      "params": "",
+      "line": 14037
+    },
+    {
+      "name": "handleTypeSelectAttempt",
+      "params": "e",
+      "line": 14159
+    },
+    {
+      "name": "applyTemplate",
+      "params": "",
+      "line": 14299
+    },
+    {
+      "name": "handleAddColumn",
+      "params": "",
+      "line": 14319
+    },
+    {
+      "name": "bindSizeGuideImageRemoveEvent",
+      "params": "",
+      "line": 14458
+    },
+    {
+      "name": "renderSizeGuideSectionHtml",
+      "params": "",
+      "line": 14481
+    },
+    {
+      "name": "renderStep2Content",
+      "params": "",
+      "line": 14594
+    },
+    {
+      "name": "getCustomLabelRecommendations",
+      "params": "",
+      "line": 15765
+    },
+    {
+      "name": "getVariationLabelRecommendations",
+      "params": "tier",
+      "line": 15777
+    },
+    {
+      "name": "getActiveVariationLabelInputs",
+      "params": "",
+      "line": 15800
+    },
+    {
+      "name": "refreshVariationTitleDuplicateErrors",
+      "params": "",
+      "line": 15836
+    },
+    {
+      "name": "initAffiliateGlobalListeners",
+      "params": "",
+      "line": 15891
+    },
+    {
+      "name": "formatNumberLocal",
+      "params": "num",
+      "line": 15985
+    },
+    {
+      "name": "getDimensionMainComponentChoices",
+      "params": "",
+      "line": 15990
+    },
+    {
+      "name": "renderDimensionSuggestionChipsHtml",
+      "params": "",
+      "line": 16044
+    },
+    {
+      "name": "getDimensionMainComponentOptionsHtml",
+      "params": "",
+      "line": 16061
+    },
+    {
+      "name": "getSandboxMainComponentOptionsList",
+      "params": "",
+      "line": 16074
+    },
+    {
+      "name": "getSandboxMainComponentOptionsHtml",
+      "params": "",
+      "line": 16133
+    },
+    {
+      "name": "getTierDisplayName",
+      "params": "tierKey",
+      "line": 16150
+    },
+    {
+      "name": "getAvailableRuleTierChoices",
+      "params": "currentRuleId = null",
+      "line": 16159
+    },
+    {
+      "name": "isTierAvailable",
+      "params": "tierKey",
+      "line": 16166
+    },
+    {
+      "name": "getValidOptionsForTier",
+      "params": "tierKey",
+      "line": 16213
+    },
+    {
+      "name": "getEffectiveRuleForOption",
+      "params": "tierKey, optionObj",
+      "line": 16225
+    },
+    {
+      "name": "getSandboxFinishingOptionsList",
+      "params": "",
+      "line": 16278
+    },
+    {
+      "name": "getSandboxFinishingCheckboxesHtml",
+      "params": "",
+      "line": 16322
+    },
+    {
+      "name": "renderOptionDimCalcControl",
+      "params": "arg1, arg2, idx",
+      "line": 16422
+    },
+    {
+      "name": "getDimensionAreaUnitLabel",
+      "params": "unit",
+      "line": 16496
+    },
+    {
+      "name": "getDefaultMinAreaThreshold",
+      "params": "unit",
+      "line": 16503
+    },
+    {
+      "name": "checkDimensionUnitSelected",
+      "params": "",
+      "line": 16509
+    },
+    {
+      "name": "renderSandboxCalculationResultsHtml",
+      "params": "",
+      "line": 16536
+    },
+    {
+      "name": "updateSandboxCalculation",
+      "params": "",
+      "line": 16876
+    },
+    {
+      "name": "getRuleSummaryBadgeHtml",
+      "params": "calcMode, dimAddSide, dimAddVal, dimUnit",
+      "line": 16883
+    },
+    {
+      "name": "renderDimensionRuleModalsHtml",
+      "params": "dimUnit",
+      "line": 16912
+    },
+    {
+      "name": "updateModalDetailVisibility",
+      "params": "calcMode",
+      "line": 17109
+    },
+    {
+      "name": "openOptionDimensionRuleModal",
+      "params": "ruleId, optId, optName, isAll = false",
+      "line": 17121
+    },
+    {
+      "name": "renderSingleDimensionRuleCardHtml",
+      "params": "rule, idx, availableTiers, dimUnit",
+      "line": 17187
+    },
+    {
+      "name": "renderDimensionRulesSectionHtml",
+      "params": "",
+      "line": 17337
+    },
+    {
+      "name": "bindSandboxCheckboxes",
+      "params": "",
+      "line": 17399
+    },
+    {
+      "name": "refreshDimensionRulesDOM",
+      "params": "",
+      "line": 17423
+    },
+    {
+      "name": "refreshSandboxFinishingList",
+      "params": "",
+      "line": 17432
+    },
+    {
+      "name": "bindDimensionRulesEvents",
+      "params": "",
+      "line": 17441
+    },
+    {
+      "name": "renderSandboxSimulatorModalMarkup",
+      "params": "",
+      "line": 17654
+    },
+    {
+      "name": "openSandboxSimulatorModal",
+      "params": "",
+      "line": 17749
+    },
+    {
+      "name": "closeSandboxSimulatorModal",
+      "params": "",
+      "line": 17789
+    },
+    {
+      "name": "bindSandboxSimulatorModalEvents",
+      "params": "",
+      "line": 17797
+    },
+    {
+      "name": "renderSandboxDimensionModalMarkup",
+      "params": "",
+      "line": 17845
+    },
+    {
+      "name": "openSandboxDimensionModal",
+      "params": "",
+      "line": 17936
+    },
+    {
+      "name": "closeSandboxDimensionModal",
+      "params": "",
+      "line": 17982
+    },
+    {
+      "name": "applySandboxDimensionModal",
+      "params": "",
+      "line": 17997
+    },
+    {
+      "name": "bindSandboxDimensionModalEvents",
+      "params": "",
+      "line": 18052
+    },
+    {
+      "name": "handleKey",
+      "params": "e",
+      "line": 18087
+    },
+    {
+      "name": "renderCustomDimensionMainComponentDropdownHtml",
+      "params": "",
+      "line": 18150
+    },
+    {
+      "name": "renderCustomDimensionUnitDropdownHtml",
+      "params": "dimUnit",
+      "line": 18216
+    },
+    {
+      "name": "bindCustomDimensionDropdowns",
+      "params": "",
+      "line": 18283
+    },
+    {
+      "name": "toggleMain",
+      "params": "open",
+      "line": 18292
+    },
+    {
+      "name": "toggleUnit",
+      "params": "open",
+      "line": 18369
+    },
+    {
+      "name": "clickOutsideHandler",
+      "params": "e",
+      "line": 18444
+    },
+    {
+      "name": "refreshCustomDimensionMainComponentChoices",
+      "params": "",
+      "line": 18464
+    },
+    {
+      "name": "renderCustomDimensionCard",
+      "params": "",
+      "line": 18505
+    },
+    {
+      "name": "renderPricingModelSection",
+      "params": "",
+      "line": 18804
+    },
+    {
+      "name": "renderVariationCard",
+      "params": "tier, tierNum, title, placeholderLabel, labelKey, tooltipText",
+      "line": 18808
+    },
+    {
+      "name": "renderExtraServiceCard",
+      "params": "",
+      "line": 18901
+    },
+    {
+      "name": "renderHierarchicalVariationsSection",
+      "params": "",
+      "line": 18995
+    },
+    {
+      "name": "renderMaxOrderSection",
+      "params": "",
+      "line": 19194
+    },
+    {
+      "name": "closeMatrixAvailabilityPopover",
+      "params": "",
+      "line": 19339
+    },
+    {
+      "name": "computeMatrixTierAvailability",
+      "params": "mat, tierKey",
+      "line": 19346
+    },
+    {
+      "name": "showMatrixAvailabilityPopover",
+      "params": "triggerEl, matId, tierKey",
+      "line": 19536
+    },
+    {
+      "name": "getPOptName",
+      "params": "id",
+      "line": 19605
+    },
+    {
+      "name": "handleOutsideClick",
+      "params": "e",
+      "line": 19697
+    },
+    {
+      "name": "handleKeydown",
+      "params": "e",
+      "line": 19703
+    },
+    {
+      "name": "closePopover",
+      "params": "",
+      "line": 19710
+    },
+    {
+      "name": "renderCombinationMatrixTable",
+      "params": "",
+      "line": 19731
+    },
+    {
+      "name": "renderMatrixTierCell",
+      "params": "matItem, tier",
+      "line": 19767
+    },
+    {
+      "name": "renderWholesaleCell",
+      "params": "",
+      "line": 19782
+    },
+    {
+      "name": "renderMultipleCell",
+      "params": "",
+      "line": 19819
+    },
+    {
+      "name": "renderWholesaleModalMarkup",
+      "params": "",
+      "line": 19973
+    },
+    {
+      "name": "renderOrderMultipleModalMarkup",
+      "params": "",
+      "line": 20021
+    },
+    {
+      "name": "renderSpecificOptionsModalMarkup",
+      "params": "",
+      "line": 20058
+    },
+    {
+      "name": "renderWholesaleTable",
+      "params": "",
+      "line": 20114
+    },
+    {
+      "name": "renderOrderMultipleSection",
+      "params": "",
+      "line": 20255
+    },
+    {
+      "name": "checkOptionNameDuplicate",
+      "params": "tier, nameVal, currentIdx",
+      "line": 20368
+    },
+    {
+      "name": "refreshOptionDuplicateErrors",
+      "params": "tier",
+      "line": 20393
+    },
+    {
+      "name": "validateOptionField",
+      "params": "inp, isBlur = false",
+      "line": 20452
+    },
+    {
+      "name": "setError",
+      "params": "msg",
+      "line": 20463
+    },
+    {
+      "name": "validateVariationGroupLabels",
+      "params": "",
+      "line": 20672
+    },
+    {
+      "name": "renderMaterialsRows",
+      "params": "isKombStep",
+      "line": 20678
+    },
+    {
+      "name": "renderFinishingRows",
+      "params": "tier",
+      "line": 20799
+    },
+    {
+      "name": "compressProductImage",
+      "params": "file, maxWidth = 1200, maxHeight = 1200, quality = 0.8",
+      "line": 21073
+    },
+    {
+      "name": "generateAIDescription",
+      "params": "context",
+      "line": 21134
+    },
+    {
+      "name": "showWizardErrorBanner",
+      "params": "errors",
+      "line": 21178
+    },
+    {
+      "name": "hideWizardErrorBanner",
+      "params": "",
+      "line": 21189
+    },
+    {
+      "name": "validatePrerequisitesBeforeCustomDimension",
+      "params": "",
+      "line": 21193
+    },
+    {
+      "name": "addError",
+      "params": "msg, el",
+      "line": 21197
+    },
+    {
+      "name": "validateSinglePrice",
+      "params": "value, isBlur = false",
+      "line": 21427
+    },
+    {
+      "name": "centerActiveSubnavTab",
+      "params": "tabEl",
+      "line": 21487
+    },
+    {
+      "name": "setActiveStep2NavTab",
+      "params": "targetId, shouldCenter = true",
+      "line": 21507
+    },
+    {
+      "name": "scrollToStep2Card",
+      "params": "targetId",
+      "line": 21525
+    },
+    {
+      "name": "handleStep2ScrollSpy",
+      "params": "",
+      "line": 21560
+    },
+    {
+      "name": "initStep2SubnavObserver",
+      "params": "",
+      "line": 21612
+    },
+    {
+      "name": "updateStepVisibility",
+      "params": "",
+      "line": 21640
+    },
+    {
+      "name": "handleProductNameValidation",
+      "params": "val, isStep1 = true",
+      "line": 21710
+    },
+    {
+      "name": "goToStep",
+      "params": "step",
+      "line": 21736
+    },
+    {
+      "name": "addS1Error",
+      "params": "msg, el",
+      "line": 21755
+    },
+    {
+      "name": "bindFormEvents",
+      "params": "",
+      "line": 21846
+    },
+    {
+      "name": "syncCustomLabelsUIForVariant",
+      "params": "variantCode",
+      "line": 21849
+    },
+    {
+      "name": "updateStep1DynamicDescriptions",
+      "params": "",
+      "line": 21906
+    },
+    {
+      "name": "updateStep1SequentialGatingDOM",
+      "params": "",
+      "line": 21933
+    },
+    {
+      "name": "resetCustomDimensionToOff",
+      "params": "",
+      "line": 22027
+    },
+    {
+      "name": "syncWarrantyInputsUI",
+      "params": "",
+      "line": 22537
+    },
+    {
+      "name": "handleStep2BackAction",
+      "params": "e",
+      "line": 22619
+    },
+    {
+      "name": "validateSingleCost",
+      "params": "isBlur = false",
+      "line": 22812
+    },
+    {
+      "name": "updateSingleMargin",
+      "params": "",
+      "line": 22871
+    },
+    {
+      "name": "syncStockStateAndClearBtn",
+      "params": "val",
+      "line": 22902
+    },
+    {
+      "name": "validateSingleStock",
+      "params": "isBlur = false",
+      "line": 22932
+    },
+    {
+      "name": "handleVariationLabelInput",
+      "params": "inp, val",
+      "line": 22999
+    },
+    {
+      "name": "updateSandboxCalculation",
+      "params": "",
+      "line": 23185
+    },
+    {
+      "name": "refreshDimSuggestionState",
+      "params": "",
+      "line": 23424
+    },
+    {
+      "name": "bindRemoveDimSuggestionChips",
+      "params": "",
+      "line": 23447
+    },
+    {
+      "name": "bindKetentuanTambahan",
+      "params": "",
+      "line": 23629
+    },
+    {
+      "name": "bindMaterialRowEvents",
+      "params": "",
+      "line": 23756
+    },
+    {
+      "name": "bindFinishingTierRows",
+      "params": "tier",
+      "line": 24102
+    },
+    {
+      "name": "refreshCombinationMatrixTable",
+      "params": "",
+      "line": 24633
+    },
+    {
+      "name": "bindCombinationMatrixEvents",
+      "params": "",
+      "line": 24647
+    },
+    {
+      "name": "handleComboMax",
+      "params": "e",
+      "line": 24699
+    },
+    {
+      "name": "handleOpen",
+      "params": "",
+      "line": 24781
+    },
+    {
+      "name": "handleMultipleInput",
+      "params": "e",
+      "line": 24810
+    },
+    {
+      "name": "openWholesaleModal",
+      "params": "matId, matName",
+      "line": 24906
+    },
+    {
+      "name": "syncWholesaleModeRadioStyles",
+      "params": "modal",
+      "line": 24994
+    },
+    {
+      "name": "renderWholesaleTableForMat",
+      "params": "mat",
+      "line": 25011
+    },
+    {
+      "name": "checkTierConflicts",
+      "params": "modal",
+      "line": 25178
+    },
+    {
+      "name": "bindWholesaleModalInputs",
+      "params": "modal, mat",
+      "line": 25250
+    },
+    {
+      "name": "updateNormalFormulaNote",
+      "params": "",
+      "line": 25257
+    },
+    {
+      "name": "bindTierDeleteAndAutoMin",
+      "params": "modal",
+      "line": 25329
+    },
+    {
+      "name": "openOrderMultipleModal",
+      "params": "matId, matName",
+      "line": 25615
+    },
+    {
+      "name": "syncMultipleRadioStyles",
+      "params": "modal",
+      "line": 25659
+    },
+    {
+      "name": "renderMultipleBody",
+      "params": "type, currentVal",
+      "line": 25676
+    },
+    {
+      "name": "openSpecificOptionsModal",
+      "params": "tier, matId, matName",
+      "line": 25766
+    },
+    {
+      "name": "updateBulletAndCount",
+      "params": "",
+      "line": 25840
+    },
+    {
+      "name": "syncSpecificScopeRadioStyles",
+      "params": "modal",
+      "line": 25887
+    },
+    {
+      "name": "handleNormalMaxInput",
+      "params": "e",
+      "line": 26004
+    },
+    {
+      "name": "bindInlineWholesaleEvents",
+      "params": "",
+      "line": 26061
+    },
+    {
+      "name": "syncNormalWholesale",
+      "params": "",
+      "line": 26082
+    },
+    {
+      "name": "bindInlineMultipleEvents",
+      "params": "",
+      "line": 26178
+    },
+    {
+      "name": "handleSingleMultiple",
+      "params": "e",
+      "line": 26184
+    },
+    {
+      "name": "activateWholesale",
+      "params": "",
+      "line": 26225
+    },
+    {
+      "name": "deactivateWholesale",
+      "params": "",
+      "line": 26260
+    },
+    {
+      "name": "activateOrderMultiple",
+      "params": "",
+      "line": 26293
+    },
+    {
+      "name": "deactivateOrderMultiple",
+      "params": "",
+      "line": 26311
+    },
+    {
+      "name": "updateVolumetricWeightCalculation",
+      "params": "",
+      "line": 26481
+    },
+    {
+      "name": "updateMonthlyDiscountAutoConvert",
+      "params": "",
+      "line": 26587
+    },
+    {
+      "name": "updateDiscountAutoConvert",
+      "params": "",
+      "line": 26690
+    },
+    {
+      "name": "updatePromoDailyLive",
+      "params": "",
+      "line": 26727
+    },
+    {
+      "name": "updateStorefrontVisibility",
+      "params": "isActive",
+      "line": 26893
+    },
+    {
+      "name": "openQuickCatModal",
+      "params": "",
+      "line": 27119
+    },
+    {
+      "name": "closeQuickCatModal",
+      "params": "",
+      "line": 27133
+    },
+    {
+      "name": "updateQuickLabelChipsLockState",
+      "params": "",
+      "line": 27326
+    },
+    {
+      "name": "updateCustomLabelsLockState",
+      "params": "",
+      "line": 27358
+    },
+    {
+      "name": "handleCustomLabelChange",
+      "params": "",
+      "line": 27522
+    },
+    {
+      "name": "handleFabScroll",
+      "params": "",
+      "line": 27588
+    },
+    {
+      "name": "bindMaterialInputsMarginLive",
+      "params": "",
+      "line": 27612
+    },
+    {
+      "name": "updateRowBadge",
+      "params": "",
+      "line": 27618
+    },
+    {
+      "name": "updateTitleRecommendationBadge",
+      "params": "variantCode",
+      "line": 27670
+    },
+    {
+      "name": "getTodayDateString",
+      "params": "",
+      "line": 27836
+    },
+    {
+      "name": "formatDateDisplay",
+      "params": "dateStr",
+      "line": 27844
+    },
+    {
+      "name": "addDaysToDate",
+      "params": "dateStr, days",
+      "line": 27853
+    },
+    {
+      "name": "isStep1Complete",
+      "params": "",
+      "line": 27865
+    },
+    {
+      "name": "getSuggestedCardVariantForCategory",
+      "params": "categoryId",
+      "line": 27890
+    },
+    {
+      "name": "applyCardVariant",
+      "params": "variantCode, isManual = false",
+      "line": 27914
+    },
+    {
+      "name": "handleBwSelect",
+      "params": "val",
+      "line": 28127
+    },
+    {
+      "name": "bindRadiusControl",
+      "params": "{ deskId, mobId, presetClass, parser, defaultVal, minVal, maxVal, updater }",
+      "line": 28145
+    },
+    {
+      "name": "syncInputsOnTyping",
+      "params": "sourceEl, targetEl",
+      "line": 28149
+    },
+    {
+      "name": "validateOnBlur",
+      "params": "el",
+      "line": 28164
+    },
+    {
+      "name": "syncAllBadgeColors",
+      "params": "val",
+      "line": 28247
+    },
+    {
+      "name": "syncRatingManualInput",
+      "params": "sourceEl, otherId",
+      "line": 28289
+    },
+    {
+      "name": "validateRatingManualInput",
+      "params": "el, otherId",
+      "line": 28317
+    },
+    {
+      "name": "syncSalesManualInput",
+      "params": "sourceEl, otherId",
+      "line": 28364
+    },
+    {
+      "name": "validateSalesManualInput",
+      "params": "el, otherId",
+      "line": 28392
+    },
+    {
+      "name": "syncAllStrikeColors",
+      "params": "val",
+      "line": 28445
+    },
+    {
+      "name": "syncAllDiscColors",
+      "params": "val",
+      "line": 28538
+    },
+    {
+      "name": "syncF1Bg",
+      "params": "val",
+      "line": 28821
+    },
+    {
+      "name": "syncF1TextCol",
+      "params": "val",
+      "line": 28825
+    },
+    {
+      "name": "syncF1Str",
+      "params": "val",
+      "line": 28829
+    },
+    {
+      "name": "handleF1Input",
+      "params": "e",
+      "line": 28853
+    },
+    {
+      "name": "selectFooterIcon",
+      "params": "stripNumber, iconId",
+      "line": 28887
+    },
+    {
+      "name": "setupFooterIconToggle",
+      "params": "btnId, menuId",
+      "line": 28951
+    },
+    {
+      "name": "syncF2Bg",
+      "params": "val",
+      "line": 29052
+    },
+    {
+      "name": "syncF2TextCol",
+      "params": "val",
+      "line": 29056
+    },
+    {
+      "name": "syncF2Str",
+      "params": "val",
+      "line": 29060
+    },
+    {
+      "name": "handleF2Input",
+      "params": "e",
+      "line": 29084
+    },
+    {
+      "name": "handleEndDateChange",
+      "params": "e",
+      "line": 29214
+    },
+    {
+      "name": "setPhotoAspectRatio",
+      "params": "ratio, isManual = false",
+      "line": 29342
+    },
+    {
+      "name": "handleImageFilesSelected",
+      "params": "files",
+      "line": 29364
+    },
+    {
+      "name": "bindGalleryButtons",
+      "params": "",
+      "line": 29431
+    },
+    {
+      "name": "refreshStep2GalleryDOM",
+      "params": "",
+      "line": 29492
+    },
+    {
+      "name": "refreshGalleryDOM",
+      "params": "",
+      "line": 29529
+    },
+    {
+      "name": "syncSizeGuideStateFromDOM",
+      "params": "",
+      "line": 29831
+    },
+    {
+      "name": "syncStateFromDOM",
+      "params": "",
+      "line": 29875
+    },
+    {
+      "name": "validateForm",
+      "params": "isDraft = false",
+      "line": 30504
+    },
+    {
+      "name": "addError",
+      "params": "msg, el",
+      "line": 30510
+    },
+    {
+      "name": "handleFormSubmit",
+      "params": "isDraft = false",
+      "line": 31106
+    },
+    {
+      "name": "doScrollAndHighlight",
+      "params": "el",
+      "line": 31137
+    },
+    {
+      "name": "escapeHtml",
+      "params": "str",
+      "line": 31323
+    },
+    {
+      "name": "init",
+      "params": "",
+      "line": 31337
+    },
+    {
+      "name": "initCreate",
+      "params": "",
+      "line": 31345
+    },
+    {
+      "name": "initEdit",
+      "params": "idOrProduct",
+      "line": 31353
+    },
+    {
+      "name": "resetDraft",
+      "params": "",
+      "line": 31362
+    }
+  ],
+  "js/db.js": [
+    {
+      "name": "DB",
+      "params": "(",
+      "line": 419
+    },
+    {
+      "name": "getTenantsRegistry",
+      "params": "",
+      "line": 443
+    },
+    {
+      "name": "saveTenantsRegistry",
+      "params": "list",
+      "line": 457
+    },
+    {
+      "name": "getTenantKey",
+      "params": "table",
+      "line": 463
+    },
+    {
+      "name": "generateUUID",
+      "params": "",
+      "line": 1101
+    },
+    {
+      "name": "getInitialSeeds",
+      "params": "",
+      "line": 1111
+    },
+    {
+      "name": "getTable",
+      "params": "key",
+      "line": 1683
+    },
+    {
+      "name": "setTable",
+      "params": "key, data",
+      "line": 1702
+    },
+    {
+      "name": "resolveTenant",
+      "params": "slugOrId = null",
+      "line": 1721
+    },
+    {
+      "name": "forceResetDemoData",
+      "params": "tenantId = null",
+      "line": 1764
+    },
+    {
+      "name": "ensureTenantInitialized",
+      "params": "tenant",
+      "line": 1813
+    },
+    {
+      "name": "init",
+      "params": "",
+      "line": 1885
+    },
+    {
+      "name": "forceResetDemoData",
+      "params": "tenantId = null",
+      "line": 1905
+    },
+    {
+      "name": "reset",
+      "params": "tenantId = null",
+      "line": 1910
+    },
+    {
+      "name": "getSettings",
+      "params": "",
+      "line": 1915
+    },
+    {
+      "name": "saveSettings",
+      "params": "newSettings",
+      "line": 1978
+    },
+    {
+      "name": "saveCardModelPreset",
+      "params": "variantCode, config",
+      "line": 1981
+    },
+    {
+      "name": "updateSettings",
+      "params": "newSettings",
+      "line": 2002
+    },
+    {
+      "name": "resetSettings",
+      "params": "",
+      "line": 2018
+    },
+    {
+      "name": "getCustomLabelsHistory",
+      "params": "",
+      "line": 2024
+    },
+    {
+      "name": "saveCustomLabelToHistory",
+      "params": "label",
+      "line": 2044
+    },
+    {
+      "name": "getFooterTextsHistory",
+      "params": "",
+      "line": 2054
+    },
+    {
+      "name": "saveFooterTextToHistory",
+      "params": "text",
+      "line": 2102
+    },
+    {
+      "name": "getCategories",
+      "params": "",
+      "line": 2126
+    },
+    {
+      "name": "getCategoryById",
+      "params": "id",
+      "line": 2144
+    },
+    {
+      "name": "saveCategories",
+      "params": "categories",
+      "line": 2154
+    },
+    {
+      "name": "createCategory",
+      "params": "data",
+      "line": 2162
+    },
+    {
+      "name": "updateCategory",
+      "params": "id, data",
+      "line": 2182
+    },
+    {
+      "name": "getCategoryImpact",
+      "params": "id",
+      "line": 2202
+    },
+    {
+      "name": "deleteCategory",
+      "params": "id, cascadeDeleteProducts = true",
+      "line": 2220
+    },
+    {
+      "name": "getSubCategories",
+      "params": "categoryId = null",
+      "line": 2258
+    },
+    {
+      "name": "getSubCategoryById",
+      "params": "id",
+      "line": 2279
+    },
+    {
+      "name": "createSubCategory",
+      "params": "data",
+      "line": 2284
+    },
+    {
+      "name": "updateSubCategory",
+      "params": "id, data",
+      "line": 2301
+    },
+    {
+      "name": "getSubCategoryImpact",
+      "params": "id",
+      "line": 2318
+    },
+    {
+      "name": "deleteSubCategory",
+      "params": "id, cascadeDeleteProducts = true",
+      "line": 2332
+    },
+    {
+      "name": "getOrderLabelSettings",
+      "params": "",
+      "line": 2366
+    },
+    {
+      "name": "updateOrderLabelSettings",
+      "params": "updates",
+      "line": 2382
+    },
+    {
+      "name": "addCustomOrderLabel",
+      "params": "label",
+      "line": 2403
+    },
+    {
+      "name": "removeCustomOrderLabel",
+      "params": "label",
+      "line": 2414
+    },
+    {
+      "name": "formatInvoiceNumber",
+      "params": "labelOrCode = null, number = null",
+      "line": 2425
+    },
+    {
+      "name": "getOrderCategoryMeta",
+      "params": "code",
+      "line": 2442
+    },
+    {
+      "name": "getProducts",
+      "params": "tenantIdOrFilters = {}, filters = {}",
+      "line": 2461
+    },
+    {
+      "name": "getActiveProducts",
+      "params": "tenantId = null",
+      "line": 2616
+    },
+    {
+      "name": "getAllProducts",
+      "params": "filters = {}",
+      "line": 2621
+    },
+    {
+      "name": "getProductById",
+      "params": "id",
+      "line": 2625
+    },
+    {
+      "name": "createProduct",
+      "params": "productData, materialsList = [], finishingsList = []",
+      "line": 2685
+    },
+    {
+      "name": "updateProduct",
+      "params": "id, productData, materialsList = [], finishingsList = []",
+      "line": 2903
+    },
+    {
+      "name": "saveProduct",
+      "params": "productData, materialsList = [], finishingsList = []",
+      "line": 3123
+    },
+    {
+      "name": "getCustomLabelsHistory",
+      "params": "",
+      "line": 3130
+    },
+    {
+      "name": "saveCustomLabelToHistory",
+      "params": "label",
+      "line": 3150
+    },
+    {
+      "name": "getFooterTextsHistory",
+      "params": "",
+      "line": 3160
+    },
+    {
+      "name": "saveFooterTextToHistory",
+      "params": "text",
+      "line": 3182
+    },
+    {
+      "name": "toggleActive",
+      "params": "id, newStatus",
+      "line": 3192
+    },
+    {
+      "name": "deleteProduct",
+      "params": "id",
+      "line": 3203
+    },
+    {
+      "name": "getPromos",
+      "params": "",
+      "line": 3223
+    },
+    {
+      "name": "updatePromos",
+      "params": "newPromos",
+      "line": 3283
+    },
+    {
+      "name": "savePromotions",
+      "params": "promoList",
+      "line": 3300
+    },
+    {
+      "name": "savePromo",
+      "params": "promoData",
+      "line": 3313
+    },
+    {
+      "name": "saveSponsors",
+      "params": "sponsorList",
+      "line": 3326
+    },
+    {
+      "name": "resetPromos",
+      "params": "",
+      "line": 3340
+    },
+    {
+      "name": "getPromoList",
+      "params": "",
+      "line": 3349
+    },
+    {
+      "name": "getPromotions",
+      "params": "",
+      "line": 3372
+    },
+    {
+      "name": "getSponsorList",
+      "params": "",
+      "line": 3376
+    },
+    {
+      "name": "getSponsors",
+      "params": "",
+      "line": 3485
+    },
+    {
+      "name": "getSponsorById",
+      "params": "id",
+      "line": 3489
+    },
+    {
+      "name": "addSponsor",
+      "params": "sponsorData",
+      "line": 3494
+    },
+    {
+      "name": "sanitizeSlides",
+      "params": "slides",
+      "line": 3499
+    },
+    {
+      "name": "updateSponsor",
+      "params": "id, updateData",
+      "line": 3567
+    },
+    {
+      "name": "deleteSponsor",
+      "params": "id",
+      "line": 3629
+    },
+    {
+      "name": "syncLegacySponsors",
+      "params": "promos, list",
+      "line": 3639
+    },
+    {
+      "name": "cleanOrphanedPromoLinks",
+      "params": "promos",
+      "line": 3672
+    },
+    {
+      "name": "isTwinDateToday",
+      "params": "",
+      "line": 3784
+    },
+    {
+      "name": "isTwinDateActive",
+      "params": "",
+      "line": 3791
+    },
+    {
+      "name": "resolvePromoCollision",
+      "params": "promos",
+      "line": 3808
+    },
+    {
+      "name": "getProductEffectiveDiscount",
+      "params": "prod",
+      "line": 3894
+    },
+    {
+      "name": "getProductCountdownInfo",
+      "params": "prod, effDiscount",
+      "line": 4054
+    },
+    {
+      "name": "getMaxActiveDiscountPercent",
+      "params": "",
+      "line": 4132
+    },
+    {
+      "name": "getVouchers",
+      "params": "",
+      "line": 4147
+    },
+    {
+      "name": "saveVouchers",
+      "params": "vouchers",
+      "line": 4151
+    },
+    {
+      "name": "addVoucher",
+      "params": "data",
+      "line": 4156
+    },
+    {
+      "name": "updateVoucher",
+      "params": "id, data",
+      "line": 4181
+    },
+    {
+      "name": "deleteVoucher",
+      "params": "id",
+      "line": 4208
+    },
+    {
+      "name": "getVoucherByCode",
+      "params": "code",
+      "line": 4215
+    },
+    {
+      "name": "validateVoucher",
+      "params": "code, cartItems, cartTotal",
+      "line": 4223
+    },
+    {
+      "name": "getSimilarProducts",
+      "params": "productId, limit = 8",
+      "line": 4286
+    },
+    {
+      "name": "getTopSellingRecommendations",
+      "params": "excludeProductId = null",
+      "line": 4317
+    },
+    {
+      "name": "maskCustomerName",
+      "params": "name",
+      "line": 4340
+    },
+    {
+      "name": "getReviews",
+      "params": "productId = null, approvedOnly = false",
+      "line": 4348
+    },
+    {
+      "name": "addReview",
+      "params": "data",
+      "line": 4368
+    },
+    {
+      "name": "createReview",
+      "params": "data",
+      "line": 4372
+    },
+    {
+      "name": "updateReviewStatus",
+      "params": "id, status",
+      "line": 4397
+    },
+    {
+      "name": "toggleReviewApproval",
+      "params": "id, isApproved",
+      "line": 4409
+    },
+    {
+      "name": "deleteReview",
+      "params": "id",
+      "line": 4413
+    },
+    {
+      "name": "replyReview",
+      "params": "id, replyText",
+      "line": 4420
+    },
+    {
+      "name": "getTopSellerProductIdsByCategory",
+      "params": "",
+      "line": 4433
+    },
+    {
+      "name": "getOrders",
+      "params": "",
+      "line": 4460
+    },
+    {
+      "name": "getOrderById",
+      "params": "id",
+      "line": 4731
+    },
+    {
+      "name": "saveOrder",
+      "params": "orderData",
+      "line": 4736
+    },
+    {
+      "name": "updateOrderStatus",
+      "params": "orderId, newStatus",
+      "line": 4759
+    },
+    {
+      "name": "deleteOrder",
+      "params": "orderId",
+      "line": 4771
+    },
+    {
+      "name": "getNextOrderCounter",
+      "params": "",
+      "line": 4778
+    },
+    {
+      "name": "getDashboardMetrics",
+      "params": "",
+      "line": 4783
+    },
+    {
+      "name": "getTenants",
+      "params": "",
+      "line": 4951
+    },
+    {
+      "name": "getCurrentTenant",
+      "params": "",
+      "line": 4955
+    },
+    {
+      "name": "resolveTenant",
+      "params": "slugOrId",
+      "line": 4962
+    },
+    {
+      "name": "generateUniqueStoreSlug",
+      "params": "storeName",
+      "line": 4966
+    },
+    {
+      "name": "createTenant",
+      "params": "{ store_name, admin_username = 'admin', admin_password = 'admin123', store_tagline }",
+      "line": 4983
+    },
+    {
+      "name": "authenticateAdmin",
+      "params": "storeIdentifier, username, password",
+      "line": 5011
+    },
+    {
+      "name": "getCustomers",
+      "params": "tenantId = null",
+      "line": 5039
+    },
+    {
+      "name": "saveCustomer",
+      "params": "tenantId, customerData",
+      "line": 5044
+    },
+    {
+      "name": "deleteCustomer",
+      "params": "tenantId, customerId",
+      "line": 5080
+    },
+    {
+      "name": "generateUUID",
+      "params": "",
+      "line": 5088
+    },
+    {
+      "name": "getActiveCustomer",
+      "params": "tenantId = null",
+      "line": 5092
+    },
+    {
+      "name": "setActiveCustomer",
+      "params": "tenantId, customerData",
+      "line": 5097
+    },
+    {
+      "name": "clearActiveCustomer",
+      "params": "tenantId = null",
+      "line": 5103
+    },
+    {
+      "name": "isCustomerPointsActive",
+      "params": "customer = null",
+      "line": 5110
+    },
+    {
+      "name": "getCustomerPoints",
+      "params": "customer = null",
+      "line": 5127
+    },
+    {
+      "name": "autoCompressImage",
+      "params": "file, maxWidth = 1200, maxHeight = 1200, quality = 0.8",
+      "line": 5146
+    },
+    {
+      "name": "autoCompressImage",
+      "params": "file, maxWidth = 1200, maxHeight = 1200, quality = 0.8",
+      "line": 5157
+    }
+  ],
+  "js/pricing-calculator.js": [
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 49
+    },
+    {
+      "name": "calculateBilledArea",
+      "params": "lengthCm, widthCm, minAreaM2 = 1.0",
+      "line": 66
+    },
+    {
+      "name": "calculateProductPrice",
+      "params": "product, options = {}",
+      "line": 85
+    }
+  ],
+  "js/utils.js": [
+    {
+      "name": "formatIDR",
+      "params": "number",
+      "line": 60
+    },
+    {
+      "name": "formatPriceHtmlWithSmallRp",
+      "params": "number",
+      "line": 76
+    },
+    {
+      "name": "formatPriceRangeHtmlWithSmallRp",
+      "params": "minNum, maxNum",
+      "line": 92
+    },
+    {
+      "name": "escapeHtml",
+      "params": "str",
+      "line": 109
+    },
+    {
+      "name": "hexToRgba",
+      "params": "hex, alpha = 1",
+      "line": 129
+    },
+    {
+      "name": "generateSlug",
+      "params": "text",
+      "line": 154
+    },
+    {
+      "name": "formatDateID",
+      "params": "dateInput, includeTime = false",
+      "line": 172
+    },
+    {
+      "name": "adjustColorBrightness",
+      "params": "hex, percent = -15",
+      "line": 202
+    },
+    {
+      "name": "formatDynamicSellerLocation",
+      "params": "sellerLocation, buyerLocation",
+      "line": 229
+    },
+    {
+      "name": "getVal",
+      "params": "obj, ...keys",
+      "line": 234
+    },
+    {
+      "name": "norm",
+      "params": "str",
+      "line": 262
+    }
+  ],
+  "js/admin-app.js": [
+    {
+      "name": "AdminApp",
+      "params": "(",
+      "line": 8
+    },
+    {
+      "name": "shouldShowNavArrows",
+      "params": "sliderType, showArrowsToggle",
+      "line": 31
+    },
+    {
+      "name": "checkFeatureAccess",
+      "params": "featureKey",
+      "line": 39
+    },
+    {
+      "name": "init",
+      "params": "",
+      "line": 53
+    },
+    {
+      "name": "showLoginScreen",
+      "params": "",
+      "line": 81
+    },
+    {
+      "name": "hideLoginScreen",
+      "params": "",
+      "line": 88
+    },
+    {
+      "name": "bindLoginEvents",
+      "params": "",
+      "line": 95
+    },
+    {
+      "name": "logout",
+      "params": "",
+      "line": 153
+    },
+    {
+      "name": "formatStoreNameWithLineBreak",
+      "params": "name",
+      "line": 166
+    },
+    {
+      "name": "updateBrandLogoAndTitle",
+      "params": "logoUrl, storeName",
+      "line": 187
+    },
+    {
+      "name": "applyAspectRules",
+      "params": "nw, nh",
+      "line": 197
+    },
+    {
+      "name": "syncHeaderAndTheme",
+      "params": "",
+      "line": 252
+    },
+    {
+      "name": "applyBrandTheme",
+      "params": "settings",
+      "line": 329
+    },
+    {
+      "name": "adjustColorBrightness",
+      "params": "hex, percent",
+      "line": 357
+    },
+    {
+      "name": "hexToRgba",
+      "params": "hex, alpha = 0.12",
+      "line": 372
+    },
+    {
+      "name": "bindEvents",
+      "params": "",
+      "line": 390
+    },
+    {
+      "name": "openMobileSidebar",
+      "params": "",
+      "line": 419
+    },
+    {
+      "name": "closeMobileSidebar",
+      "params": "",
+      "line": 437
+    },
+    {
+      "name": "toggleSidebar",
+      "params": "",
+      "line": 442
+    },
+    {
+      "name": "collapseDesktopSidebar",
+      "params": "",
+      "line": 454
+    },
+    {
+      "name": "expandDesktopSidebar",
+      "params": "",
+      "line": 459
+    },
+    {
+      "name": "handleNavClick",
+      "params": "viewName",
+      "line": 545
+    },
+    {
+      "name": "navigate",
+      "params": "viewName, param = null",
+      "line": 646
+    },
+    {
+      "name": "renderAccountView",
+      "params": "",
+      "line": 793
+    },
+    {
+      "name": "updateSidebarNavActive",
+      "params": "viewName",
+      "line": 930
+    },
+    {
+      "name": "renderPOSCashier",
+      "params": "",
+      "line": 1152
+    },
+    {
+      "name": "bindPosEvents",
+      "params": "",
+      "line": 1392
+    },
+    {
+      "name": "renderPosProductsGrid",
+      "params": "",
+      "line": 1596
+    },
+    {
+      "name": "formatProductDisplayPrice",
+      "params": "prod",
+      "line": 1686
+    },
+    {
+      "name": "addFixedItemToCart",
+      "params": "prod",
+      "line": 1703
+    },
+    {
+      "name": "openPosCalculator",
+      "params": "prod",
+      "line": 1756
+    },
+    {
+      "name": "closePosCalculator",
+      "params": "",
+      "line": 1848
+    },
+    {
+      "name": "recalculateModalPreview",
+      "params": "",
+      "line": 1854
+    },
+    {
+      "name": "handleConfirmPosCalculator",
+      "params": "",
+      "line": 1902
+    },
+    {
+      "name": "renderPosCartItems",
+      "params": "",
+      "line": 1989
+    },
+    {
+      "name": "calculateSubtotal",
+      "params": "",
+      "line": 2078
+    },
+    {
+      "name": "calculateGrandTotal",
+      "params": "",
+      "line": 2082
+    },
+    {
+      "name": "updatePosFinancialSummary",
+      "params": "",
+      "line": 2087
+    },
+    {
+      "name": "applyVoucherCode",
+      "params": "code",
+      "line": 2126
+    },
+    {
+      "name": "handleProcessOrderAndPreviewReceipt",
+      "params": "",
+      "line": 2162
+    },
+    {
+      "name": "renderThermalReceiptText",
+      "params": "data",
+      "line": 2232
+    },
+    {
+      "name": "padCenter",
+      "params": "str, len",
+      "line": 2240
+    },
+    {
+      "name": "padRow",
+      "params": "left, right, len",
+      "line": 2248
+    },
+    {
+      "name": "handleCompleteReceiptWithoutPrint",
+      "params": "",
+      "line": 2302
+    },
+    {
+      "name": "executeThermalPrint",
+      "params": "",
+      "line": 2341
+    },
+    {
+      "name": "closeReceiptModal",
+      "params": "",
+      "line": 2387
+    },
+    {
+      "name": "renderSettingsView",
+      "params": "",
+      "line": 2396
+    },
+    {
+      "name": "openTenantManagerModal",
+      "params": "",
+      "line": 2591
+    },
+    {
+      "name": "closeTenantManagerModal",
+      "params": "",
+      "line": 2635
+    },
+    {
+      "name": "handleCreateNewTenant",
+      "params": "",
+      "line": 2640
+    },
+    {
+      "name": "showToast",
+      "params": "message, type = 'success'",
+      "line": 2669
+    },
+    {
+      "name": "renderDashboardView",
+      "params": "",
+      "line": 2702
+    },
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 2707
+    },
+    {
+      "name": "renderOrderTableRow",
+      "params": "ord",
+      "line": 2984
+    },
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 2988
+    },
+    {
+      "name": "bindOrderTableActionButtons",
+      "params": "container",
+      "line": 3083
+    },
+    {
+      "name": "renderOrdersView",
+      "params": "",
+      "line": 3125
+    },
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 3130
+    },
+    {
+      "name": "openOrderDetailModal",
+      "params": "orderId",
+      "line": 3272
+    },
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 3289
+    },
+    {
+      "name": "closeOrderDetailModal",
+      "params": "",
+      "line": 3382
+    },
+    {
+      "name": "handleSaveOrderDetailStatus",
+      "params": "",
+      "line": 3388
+    },
+    {
+      "name": "handlePrintOrderDetailReceipt",
+      "params": "",
+      "line": 3403
+    },
+    {
+      "name": "printOrderReceipt",
+      "params": "orderId",
+      "line": 3410
+    },
+    {
+      "name": "renderThemeBrandingView",
+      "params": "",
+      "line": 3450
+    },
+    {
+      "name": "getActiveBannersList",
+      "params": "",
+      "line": 4825
+    },
+    {
+      "name": "renderHeroBannerThumbs",
+      "params": "",
+      "line": 4830
+    },
+    {
+      "name": "initHeroBannerUploader",
+      "params": "",
+      "line": 4872
+    },
+    {
+      "name": "setHeroPreviewWidth",
+      "params": "widthPx",
+      "line": 4997
+    },
+    {
+      "name": "initHeroPreviewDragHandle",
+      "params": "",
+      "line": 5019
+    },
+    {
+      "name": "onPointerDown",
+      "params": "e",
+      "line": 5028
+    },
+    {
+      "name": "onPointerMove",
+      "params": "e",
+      "line": 5036
+    },
+    {
+      "name": "onPointerUp",
+      "params": "",
+      "line": 5044
+    },
+    {
+      "name": "syncHeroFormVisibility",
+      "params": "",
+      "line": 5060
+    },
+    {
+      "name": "updateStorefrontLivePreview",
+      "params": "",
+      "line": 5258
+    },
+    {
+      "name": "renderPreviewCatNav",
+      "params": "mode, isDesktop",
+      "line": 5495
+    },
+    {
+      "name": "renderPreviewProductCards",
+      "params": "version",
+      "line": 5614
+    },
+    {
+      "name": "goToSlide",
+      "params": "targetIndex, direction = 1",
+      "line": 5736
+    },
+    {
+      "name": "handleDragStart",
+      "params": "x, y",
+      "line": 5874
+    },
+    {
+      "name": "handleDragMove",
+      "params": "x, y, e",
+      "line": 5887
+    },
+    {
+      "name": "handleDragEnd",
+      "params": "",
+      "line": 5913
+    },
+    {
+      "name": "startTimer",
+      "params": "",
+      "line": 6002
+    },
+    {
+      "name": "bindColorPair",
+      "params": "pickerId, hexId",
+      "line": 6140
+    },
+    {
+      "name": "bindRadiusControl",
+      "params": "sliderId, numberId, presetClass",
+      "line": 6182
+    },
+    {
+      "name": "updateActivePreset",
+      "params": "val",
+      "line": 6187
+    },
+    {
+      "name": "handleFileUpload",
+      "params": "fileInput, targetUrlInput, previewImg, maxKb = 500",
+      "line": 6443
+    },
+    {
+      "name": "autoSaveHeaderBrandingSettings",
+      "params": "showToastNotify = true",
+      "line": 6483
+    },
+    {
+      "name": "escapeHtml",
+      "params": "text",
+      "line": 6830
+    },
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 6843
+    },
+    {
+      "name": "generateUUID",
+      "params": "",
+      "line": 6850
+    }
+  ],
+  "js/buyer-store.js": [
+    {
+      "name": "BuyerStore",
+      "params": "(",
+      "line": 18
+    },
+    {
+      "name": "formatIDR",
+      "params": "num",
+      "line": 34
+    },
+    {
+      "name": "saveCart",
+      "params": "",
+      "line": 42
+    },
+    {
+      "name": "renderNavIconHtml",
+      "params": "iconKey, extraClass = '', styleAttr = ''",
+      "line": 53
+    },
+    {
+      "name": "shouldShowNavArrows",
+      "params": "sliderType, showArrowsToggle",
+      "line": 72
+    },
+    {
+      "name": "getActiveCustomerName",
+      "params": "",
+      "line": 84
+    },
+    {
+      "name": "getTopGreetingText",
+      "params": "settings",
+      "line": 119
+    },
+    {
+      "name": "updateTopGreetingBar",
+      "params": "settings",
+      "line": 152
+    },
+    {
+      "name": "applyNavbarElementColors",
+      "params": "settings",
+      "line": 209
+    },
+    {
+      "name": "highlightProductCard",
+      "params": "prodId",
+      "line": 384
+    },
+    {
+      "name": "renderSearchSuggestionsHtml",
+      "params": "query, matched",
+      "line": 405
+    },
+    {
+      "name": "handleSelectSearchProduct",
+      "params": "prodId",
+      "line": 446
+    },
+    {
+      "name": "handleEnterSearchQuery",
+      "params": "queryText, inputEl, suggestionsBoxEl",
+      "line": 486
+    },
+    {
+      "name": "handleSearchAutocompleteInput",
+      "params": "inputEl, suggestionsBoxEl",
+      "line": 550
+    },
+    {
+      "name": "initMobileSearchOverlay",
+      "params": "",
+      "line": 585
+    },
+    {
+      "name": "getSanitizedCanonicalUrl",
+      "params": "extraParams = {}",
+      "line": 649
+    },
+    {
+      "name": "inferBusinessSchemaType",
+      "params": "settings, products = []",
+      "line": 688
+    },
+    {
+      "name": "testText",
+      "params": "str",
+      "line": 712
+    },
+    {
+      "name": "buildBreadcrumbListSchema",
+      "params": "baseUrl, activeCategory = null, activeProduct = null",
+      "line": 764
+    },
+    {
+      "name": "renderStoreSchemaGraph",
+      "params": "activeProduct = null",
+      "line": 805
+    },
+    {
+      "name": "setProductMetaSEO",
+      "params": "product",
+      "line": 948
+    },
+    {
+      "name": "restoreStorefrontSEO",
+      "params": "",
+      "line": 1014
+    },
+    {
+      "name": "openProductDetailModal",
+      "params": "productOrId",
+      "line": 1065
+    },
+    {
+      "name": "closeProductDetailModal",
+      "params": "",
+      "line": 1142
+    },
+    {
+      "name": "initProductDetailModalEvents",
+      "params": "",
+      "line": 1151
+    },
+    {
+      "name": "initStorefrontSEO",
+      "params": "",
+      "line": 1174
+    },
+    {
+      "name": "updateNavbarLoginUI",
+      "params": "",
+      "line": 1197
+    },
+    {
+      "name": "prefillCustomerIntoCart",
+      "params": "customer",
+      "line": 1260
+    },
+    {
+      "name": "initNavbarLogin",
+      "params": "",
+      "line": 1273
+    },
+    {
+      "name": "syncModalState",
+      "params": "forceEditMode = false",
+      "line": 1290
+    },
+    {
+      "name": "openAuthModal",
+      "params": "editMode = false",
+      "line": 1354
+    },
+    {
+      "name": "closeAuthModal",
+      "params": "",
+      "line": 1360
+    },
+    {
+      "name": "initNavbarNotifications",
+      "params": "",
+      "line": 1479
+    },
+    {
+      "name": "getSeenNotifOrderIds",
+      "params": "",
+      "line": 1487
+    },
+    {
+      "name": "markNotifOrdersAsSeen",
+      "params": "orderIds",
+      "line": 1497
+    },
+    {
+      "name": "updateNotifDropdownPosition",
+      "params": "",
+      "line": 1508
+    },
+    {
+      "name": "refreshNotificationList",
+      "params": "markSeenNow = false",
+      "line": 1523
+    },
+    {
+      "name": "applyHeaderBranding",
+      "params": "settings",
+      "line": 1705
+    },
+    {
+      "name": "syncHeaderHeight",
+      "params": "",
+      "line": 1833
+    },
+    {
+      "name": "init",
+      "params": "",
+      "line": 1847
+    },
+    {
+      "name": "renderHeroCtaButtonsHtml",
+      "params": "settings, storeName",
+      "line": 1916
+    },
+    {
+      "name": "generateHeroSectionHtml",
+      "params": "settings",
+      "line": 1984
+    },
+    {
+      "name": "renderSectionDividerHtml",
+      "params": "settings = {}",
+      "line": 2223
+    },
+    {
+      "name": "renderFeaturedProductsSectionHtml",
+      "params": "settings = {}, products = [], cardVariantsConfig = {}",
+      "line": 2239
+    },
+    {
+      "name": "renderSponsorSectionHtml",
+      "params": "settings = {}",
+      "line": 2305
+    },
+    {
+      "name": "renderPromoCardSectionHtml",
+      "params": "settings = {}",
+      "line": 2360
+    },
+    {
+      "name": "renderStaticBannerSectionHtml",
+      "params": "settings = {}",
+      "line": 2407
+    },
+    {
+      "name": "renderStorefront",
+      "params": "",
+      "line": 2426
+    },
+    {
+      "name": "renderStoreCatIcon",
+      "params": "iconName, sizeClass, color",
+      "line": 2485
+    },
+    {
+      "name": "renderCategoryNavIconImage",
+      "params": "isDesktopView",
+      "line": 2507
+    },
+    {
+      "name": "renderCategoryNavPillsText",
+      "params": "isDesktopView",
+      "line": 2620
+    },
+    {
+      "name": "renderCategoryNavDropdown",
+      "params": "isDesktopView",
+      "line": 2665
+    },
+    {
+      "name": "renderCategoryNavByMode",
+      "params": "mode, isDesktopView",
+      "line": 2725
+    },
+    {
+      "name": "renderProductGridWithBanners",
+      "params": "products, cardVariantsConfig = {}",
+      "line": 2868
+    },
+    {
+      "name": "getEarliestTimestamp",
+      "params": "item",
+      "line": 2913
+    },
+    {
+      "name": "buildSponsorGenerators",
+      "params": "sponsorsList",
+      "line": 2958
+    },
+    {
+      "name": "createBannerProvider",
+      "params": "promoListGens, sponsorListGens, startType",
+      "line": 2991
+    },
+    {
+      "name": "peekNext",
+      "params": "",
+      "line": 2997
+    },
+    {
+      "name": "getNext",
+      "params": "",
+      "line": 3029
+    },
+    {
+      "name": "buildViewportSchedule",
+      "params": "cols, provider, totalProds",
+      "line": 3074
+    },
+    {
+      "name": "formatSalesCount",
+      "params": "count, compact = false",
+      "line": 3199
+    },
+    {
+      "name": "getSmartVisibleBadges",
+      "params": "productName, labelsArray",
+      "line": 3212
+    },
+    {
+      "name": "getProductCustomBadges",
+      "params": "prod, effDiscount",
+      "line": 3237
+    },
+    {
+      "name": "renderCardVariantA",
+      "params": "prod, rawConfig = {}",
+      "line": 3273
+    },
+    {
+      "name": "renderCardVariantB",
+      "params": "prod, rawConfig = {}",
+      "line": 3423
+    },
+    {
+      "name": "renderCardVariantC",
+      "params": "prod, rawConfig = {}",
+      "line": 3564
+    },
+    {
+      "name": "renderPromoCardVariation1",
+      "params": "promoOrPromos, config = {}",
+      "line": 3741
+    },
+    {
+      "name": "renderPromoCardVariation2",
+      "params": "promoOrPromos, config = {}",
+      "line": 3898
+    },
+    {
+      "name": "renderSponsorAdCard",
+      "params": "ad = {}, config = {}",
+      "line": 4088
+    },
+    {
+      "name": "renderSponsorCarouselCard",
+      "params": "carousel = {}, config = {}",
+      "line": 4153
+    },
+    {
+      "name": "renderSlideCtaButton",
+      "params": "slide, defaultUrl",
+      "line": 4268
+    },
+    {
+      "name": "renderSponsorDoubleWidthCard",
+      "params": "sponsor = {}, config = {}",
+      "line": 4290
+    },
+    {
+      "name": "renderSponsorInternalProductsCard",
+      "params": "promos, config = {}",
+      "line": 4444
+    },
+    {
+      "name": "renderMiniGrid",
+      "params": "batchList",
+      "line": 4490
+    },
+    {
+      "name": "renderSponsorCardVariation1",
+      "params": "ad, config = {}",
+      "line": 4557
+    },
+    {
+      "name": "renderSponsorCardVariation2",
+      "params": "ad, config = {}",
+      "line": 4560
+    },
+    {
+      "name": "renderProductImage",
+      "params": "prod",
+      "line": 4564
+    },
+    {
+      "name": "getProductStartingPrice",
+      "params": "prod",
+      "line": 4576
+    },
+    {
+      "name": "getPriceUnitLabel",
+      "params": "priceType",
+      "line": 4583
+    },
+    {
+      "name": "handleSmartAddToCart",
+      "params": "productId",
+      "line": 4597
+    },
+    {
+      "name": "startCountdownTimer",
+      "params": "",
+      "line": 4647
+    },
+    {
+      "name": "update",
+      "params": "",
+      "line": 4650
+    },
+    {
+      "name": "updateCartBadge",
+      "params": "",
+      "line": 4718
+    },
+    {
+      "name": "openCartDrawer",
+      "params": "",
+      "line": 4735
+    },
+    {
+      "name": "closeCartDrawer",
+      "params": "",
+      "line": 4754
+    },
+    {
+      "name": "renderCartDrawerContent",
+      "params": "",
+      "line": 4759
+    },
+    {
+      "name": "checkoutWhatsAppCart",
+      "params": "",
+      "line": 4880
+    },
+    {
+      "name": "bindStoreEvents",
+      "params": "",
+      "line": 5010
+    },
+    {
+      "name": "updateSmartScrollArrows",
+      "params": "trackEl, prevBtn, nextBtn",
+      "line": 5201
+    },
+    {
+      "name": "initCategorySmartScroll",
+      "params": "",
+      "line": 5233
+    },
+    {
+      "name": "update",
+      "params": "",
+      "line": 5240
+    },
+    {
+      "name": "updateSponsorArrowBoundaries",
+      "params": "currentIdx, total, prevBtn, nextBtn",
+      "line": 5257
+    },
+    {
+      "name": "initNavbarSearchAutocomplete",
+      "params": "",
+      "line": 5276
+    },
+    {
+      "name": "hideSearchDropdown",
+      "params": "",
+      "line": 5284
+    },
+    {
+      "name": "initGoogleAuth",
+      "params": "",
+      "line": 5341
+    },
+    {
+      "name": "refreshAuthUI",
+      "params": "",
+      "line": 5354
+    },
+    {
+      "name": "initHeroSlider",
+      "params": "",
+      "line": 5482
+    },
+    {
+      "name": "goToSlide",
+      "params": "targetIndex, direction = 1",
+      "line": 5507
+    },
+    {
+      "name": "handleDragStart",
+      "params": "x, y",
+      "line": 5655
+    },
+    {
+      "name": "handleDragMove",
+      "params": "x, y, e",
+      "line": 5672
+    },
+    {
+      "name": "handleDragEnd",
+      "params": "",
+      "line": 5702
+    },
+    {
+      "name": "startTimer",
+      "params": "",
+      "line": 5826
+    },
+    {
+      "name": "initStoreSponsorCarousels",
+      "params": "",
+      "line": 5840
+    },
+    {
+      "name": "updateArrows",
+      "params": "",
+      "line": 5861
+    },
+    {
+      "name": "goToSlide",
+      "params": "idx",
+      "line": 5865
+    },
+    {
+      "name": "startAuto",
+      "params": "",
+      "line": 5891
+    },
+    {
+      "name": "stopAuto",
+      "params": "",
+      "line": 5898
+    },
+    {
+      "name": "initStoreInternalSponsorCards",
+      "params": "",
+      "line": 5971
+    },
+    {
+      "name": "updateArrows",
+      "params": "",
+      "line": 5994
+    },
+    {
+      "name": "goToBatch",
+      "params": "newIdx, direction",
+      "line": 5998
+    },
+    {
+      "name": "startAuto",
+      "params": "",
+      "line": 6033
+    },
+    {
+      "name": "stopAuto",
+      "params": "",
+      "line": 6042
+    },
+    {
+      "name": "renderSocialIconsList",
+      "params": "settings = {}",
+      "line": 6119
+    },
+    {
+      "name": "renderStoreFooterHtml",
+      "params": "settings = {}",
+      "line": 6181
+    },
+    {
+      "name": "updateStoreFooter",
+      "params": "customSettings = null",
+      "line": 6346
+    },
+    {
+      "name": "checkSellerSession",
+      "params": "",
+      "line": 6356
+    },
+    {
+      "name": "showToast",
+      "params": "message, type = 'success'",
+      "line": 6372
+    },
+    {
+      "name": "copyTextToClipboard",
+      "params": "text",
+      "line": 6408
+    },
+    {
+      "name": "fallbackCopyText",
+      "params": "text",
+      "line": 6415
+    },
+    {
+      "name": "initFloatingVoucher",
+      "params": "",
+      "line": 6436
+    },
+    {
+      "name": "renderVouchers",
+      "params": "",
+      "line": 6458
+    },
+    {
+      "name": "openDrawer",
+      "params": "",
+      "line": 6585
+    },
+    {
+      "name": "closeDrawer",
+      "params": "",
+      "line": 6599
+    },
+    {
+      "name": "minimizeWidget",
+      "params": "e",
+      "line": 6609
+    },
+    {
+      "name": "expandWidget",
+      "params": "e",
+      "line": 6617
+    },
+    {
+      "name": "escapeHtml",
+      "params": "str",
+      "line": 6657
+    }
+  ],
+  "js/pdp.js": [
+    {
+      "name": "init",
+      "params": "",
+      "line": 36
+    },
+    {
+      "name": "showNotFound",
+      "params": "",
+      "line": 96
+    },
+    {
+      "name": "loadCartFromStorage",
+      "params": "",
+      "line": 104
+    },
+    {
+      "name": "saveCartToStorage",
+      "params": "",
+      "line": 114
+    },
+    {
+      "name": "applyHeaderBranding",
+      "params": "settings",
+      "line": 121
+    },
+    {
+      "name": "applyStoreBranding",
+      "params": "",
+      "line": 185
+    },
+    {
+      "name": "hexToRgba",
+      "params": "hex, alpha = 0.12",
+      "line": 224
+    },
+    {
+      "name": "renderProductHeader",
+      "params": "",
+      "line": 243
+    },
+    {
+      "name": "renderGallery",
+      "params": "",
+      "line": 305
+    },
+    {
+      "name": "renderConfigurator",
+      "params": "",
+      "line": 386
+    },
+    {
+      "name": "updateFinishingAllowedState",
+      "params": "",
+      "line": 388
+    },
+    {
+      "name": "recalculatePrice",
+      "params": "",
+      "line": 834
+    },
+    {
+      "name": "renderTabs",
+      "params": "",
+      "line": 970
+    },
+    {
+      "name": "renderReviews",
+      "params": "",
+      "line": 1123
+    },
+    {
+      "name": "renderSimilarProducts",
+      "params": "",
+      "line": 1188
+    },
+    {
+      "name": "renderBestSeller",
+      "params": "",
+      "line": 1246
+    },
+    {
+      "name": "bindPDPEvents",
+      "params": "",
+      "line": 1267
+    },
+    {
+      "name": "addItemToCart",
+      "params": "",
+      "line": 1398
+    },
+    {
+      "name": "updateCartBadge",
+      "params": "",
+      "line": 1451
+    },
+    {
+      "name": "openCartDrawer",
+      "params": "",
+      "line": 1460
+    },
+    {
+      "name": "closeCartDrawer",
+      "params": "",
+      "line": 1516
+    },
+    {
+      "name": "directWhatsAppCheckout",
+      "params": "",
+      "line": 1522
+    },
+    {
+      "name": "checkoutWhatsAppCart",
+      "params": "",
+      "line": 1611
+    },
+    {
+      "name": "showToast",
+      "params": "message, type = 'success'",
+      "line": 1677
+    },
+    {
+      "name": "escapeHtml",
+      "params": "str",
+      "line": 1700
+    }
+  ],
+  "js/category-manager.js": [
+    {
+      "name": "CategoryManager",
+      "params": "(",
+      "line": 6
+    },
+    {
+      "name": "init",
+      "params": "",
+      "line": 10
+    },
+    {
+      "name": "render",
+      "params": "",
+      "line": 15
+    },
+    {
+      "name": "renderQfIconPickerHtml",
+      "params": "fieldId, currentIcon, defaultIcon, themeColorClass = 'text-emerald-600'",
+      "line": 257
+    },
+    {
+      "name": "renderQuickFilterCustomizer",
+      "params": "categories",
+      "line": 287
+    },
+    {
+      "name": "renderQuickSettingBar",
+      "params": "",
+      "line": 571
+    },
+    {
+      "name": "renderCategoryCard",
+      "params": "cat",
+      "line": 686
+    },
+    {
+      "name": "renderOrderLabelConfig",
+      "params": "",
+      "line": 772
+    },
+    {
+      "name": "renderIconGrid",
+      "params": "selectedId = 'layers'",
+      "line": 897
+    },
+    {
+      "name": "updateSelectedIconPreview",
+      "params": "iconId",
+      "line": 922
+    },
+    {
+      "name": "syncCategoryModalFields",
+      "params": "",
+      "line": 932
+    },
+    {
+      "name": "updateQuickFilterLivePreview",
+      "params": "",
+      "line": 942
+    },
+    {
+      "name": "initQfIconDropdowns",
+      "params": "",
+      "line": 1070
+    },
+    {
+      "name": "renderOptions",
+      "params": "filterText = ''",
+      "line": 1081
+    },
+    {
+      "name": "bindEvents",
+      "params": "",
+      "line": 1182
+    },
+    {
+      "name": "bindQfColorPair",
+      "params": "pickerId, hexId",
+      "line": 1184
+    },
+    {
+      "name": "escapeHtml",
+      "params": "str",
+      "line": 1649
+    }
+  ],
+  "js/promo-manager.js": [
+    {
+      "name": "PromoManager",
+      "params": "(",
+      "line": 6
+    },
+    {
+      "name": "clearSponsorPreviewTimer",
+      "params": "",
+      "line": 25
+    },
+    {
+      "name": "renderUnifiedUploaderHtml",
+      "params": "{ id, images = [], isMulti = false, placeholder = '' }",
+      "line": 35
+    },
+    {
+      "name": "initUnifiedUploader",
+      "params": "{ id, initialImages = [], isMulti = false, onChange }",
+      "line": 70
+    },
+    {
+      "name": "toastWarning",
+      "params": "msg",
+      "line": 80
+    },
+    {
+      "name": "renderThumbs",
+      "params": "",
+      "line": 92
+    },
+    {
+      "name": "processFiles",
+      "params": "files",
+      "line": 153
+    },
+    {
+      "name": "handleAddUrl",
+      "params": "",
+      "line": 193
+    },
+    {
+      "name": "startAdminCarouselRotation",
+      "params": "slidesCount, interval = 3500, animType = 'slide'",
+      "line": 232
+    },
+    {
+      "name": "renderCarouselSlideRows",
+      "params": "slides",
+      "line": 268
+    },
+    {
+      "name": "init",
+      "params": "initialTab = null",
+      "line": 740
+    },
+    {
+      "name": "render",
+      "params": "",
+      "line": 758
+    },
+    {
+      "name": "renderTabContent",
+      "params": "promos, vouchers, categories, products",
+      "line": 854
+    },
+    {
+      "name": "renderPromoTokoTab",
+      "params": "promos, categories, products",
+      "line": 871
+    },
+    {
+      "name": "updatePromoCardLivePreview",
+      "params": "",
+      "line": 1588
+    },
+    {
+      "name": "renderVouchersTab",
+      "params": "vouchers, categories, products",
+      "line": 1825
+    },
+    {
+      "name": "showSponsorValidationModal",
+      "params": "{ type, title, message, productCount, onConfirm }",
+      "line": 2007
+    },
+    {
+      "name": "renderSponsorsTab",
+      "params": "promos",
+      "line": 2064
+    },
+    {
+      "name": "renderSponsorForm",
+      "params": "promos",
+      "line": 2244
+    },
+    {
+      "name": "updateSponsorPreviews",
+      "params": "",
+      "line": 3016
+    },
+    {
+      "name": "updateDoubleSlide",
+      "params": "targetIdx",
+      "line": 3135
+    },
+    {
+      "name": "renderMiniGrid",
+      "params": "batchList",
+      "line": 3297
+    },
+    {
+      "name": "bindEvents",
+      "params": "",
+      "line": 3429
+    },
+    {
+      "name": "updateQuota",
+      "params": "",
+      "line": 3509
+    },
+    {
+      "name": "updateQuota",
+      "params": "",
+      "line": 3879
+    },
+    {
+      "name": "handleCreateVoucher",
+      "params": "",
+      "line": 4244
+    },
+    {
+      "name": "saveAllConfigurations",
+      "params": "e",
+      "line": 4297
+    },
+    {
+      "name": "escapeHtml",
+      "params": "str",
+      "line": 4593
+    }
+  ]
+}

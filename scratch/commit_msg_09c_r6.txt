@@ -1,0 +1,12 @@
+feat(admin-card): implement promo controls dropdown, unified hints and render rules (09C-R6)
+
+- Transform discount badge position 4-button group into compact custom dropdown (desktop & mobile)
+- Add uniform promo hint "Tampil saat promo aktif atau Simulasi Diskon dinyalakan." for Strike, Discount, Ticket, and Countdown
+- Standardize promo card rendering rules without artificial strike price or mock 50% discount badge when promo/sim is off
+- Add promo deadline validation and specific hint "Atur waktu berakhir promo untuk menampilkan countdown."
+- Enforce font-normal (font-weight: 400) on editor tools and controls
+- Update docs/PRD_MASTER.md tracking 09C-R6 specifications
+
+WIB: 2026-11-07 02:37
+TASK: SC-ADMIN-CARD-PROMO-CONTROLS-09C-R6
+

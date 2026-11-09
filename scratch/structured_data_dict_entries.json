@@ -1,0 +1,1208 @@
+[
+  {
+    "no": 1,
+    "key": "custom_specs",
+    "type": "Array",
+    "defaultVal": "[]",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 2,
+    "key": "size_guide",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 3,
+    "key": "name",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 4,
+    "key": "brand",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 5,
+    "key": "product_origin",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 6,
+    "key": "warranty_unit",
+    "type": "String",
+    "defaultVal": "'Tidak Ada Garansi'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 7,
+    "key": "warranty_duration",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 8,
+    "key": "warranty_period",
+    "type": "String",
+    "defaultVal": "'Tidak Ada Garansi'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 9,
+    "key": "warranty_type",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 10,
+    "key": "is_preorder",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 11,
+    "key": "preorder_days",
+    "type": "Number",
+    "defaultVal": "7",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 12,
+    "key": "product_type",
+    "type": "String",
+    "defaultVal": "'', // 'physical' | 'non_physical' - default ''...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 13,
+    "key": "status",
+    "type": "String",
+    "defaultVal": "'published', // 'published' | 'draft'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 14,
+    "key": "is_active",
+    "type": "String",
+    "defaultVal": "true, // Tampilkan di Etalase Toko (default ON)",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 15,
+    "key": "has_shipping",
+    "type": "Boolean",
+    "defaultVal": "true",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 16,
+    "key": "show_shipping_for_non_physical",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 17,
+    "key": "has_layer_2",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Flag layer warisan arsitektur terdahulu. Selalu disinkronkan secara redundan dengan flag has_variation_*.",
+    "classification": "Legacy / Redundant (Mirror of has_variation_*)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 18,
+    "key": "has_layer_3",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Flag layer warisan arsitektur terdahulu. Selalu disinkronkan secara redundan dengan flag has_variation_*.",
+    "classification": "Legacy / Redundant (Mirror of has_variation_*)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 19,
+    "key": "has_layer_4",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Flag layer warisan arsitektur terdahulu. Selalu disinkronkan secara redundan dengan flag has_variation_*.",
+    "classification": "Legacy / Redundant (Mirror of has_variation_*)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 20,
+    "key": "has_layer_5",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Flag layer warisan arsitektur terdahulu. Selalu disinkronkan secara redundan dengan flag has_variation_*.",
+    "classification": "Legacy / Redundant (Mirror of has_variation_*)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 21,
+    "key": "has_variation_2",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 22,
+    "key": "has_variation_3",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 23,
+    "key": "has_variation_4",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 24,
+    "key": "has_extra_service",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 25,
+    "key": "has_custom_dimension",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 26,
+    "key": "custom_dimension_label",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 27,
+    "key": "dimension_main_component",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 28,
+    "key": "dimension_unit",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 29,
+    "key": "custom_dimension_unit",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 30,
+    "key": "dim_min_one_price",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 31,
+    "key": "min_area_threshold",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 32,
+    "key": "min_area_charge_value",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 33,
+    "key": "dim_min_one_cost",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 34,
+    "key": "min_hpp_threshold",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 35,
+    "key": "min_hpp_charge_value",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 36,
+    "key": "dimension_rules",
+    "type": "Array",
+    "defaultVal": "[]",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 37,
+    "key": "variation_scopes",
+    "type": "Object",
+    "defaultVal": "{",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 38,
+    "key": "main",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 39,
+    "key": "extra_1",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 40,
+    "key": "extra_2",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 41,
+    "key": "extra_3",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 42,
+    "key": "scope_main",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti flat redundan yang menyimpan nilai cakupan variasi yang sama dengan objek variation_scopes.",
+    "classification": "Redundant (Duplikat variation_scopes)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 43,
+    "key": "scope_extra_1",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti flat redundan yang menyimpan nilai cakupan variasi yang sama dengan objek variation_scopes.",
+    "classification": "Redundant (Duplikat variation_scopes)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 44,
+    "key": "scope_extra_2",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti flat redundan yang menyimpan nilai cakupan variasi yang sama dengan objek variation_scopes.",
+    "classification": "Redundant (Duplikat variation_scopes)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 45,
+    "key": "scope_extra_3",
+    "type": "String",
+    "defaultVal": "'umum'",
+    "desc": "Properti flat redundan yang menyimpan nilai cakupan variasi yang sama dengan objek variation_scopes.",
+    "classification": "Redundant (Duplikat variation_scopes)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 46,
+    "key": "wholesale_mode",
+    "type": "String",
+    "defaultVal": "'normal', // 'normal' | 'tiered'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 47,
+    "key": "same_price_tiers",
+    "type": "Object",
+    "defaultVal": "{ tier1: false, main: false, extra_1: false, ex...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 48,
+    "key": "same_cost_tiers",
+    "type": "Object",
+    "defaultVal": "{ tier1: false, main: false, extra_1: false, ex...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 49,
+    "key": "stock_mode_tiers",
+    "type": "Object",
+    "defaultVal": "{ tier1: '', main: '', extra_1: '', extra_2: ''...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 50,
+    "key": "specific_options_map",
+    "type": "Object",
+    "defaultVal": "{}, // { [matId]: { main: [optIds], extra_1: [o...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 51,
+    "key": "variation_dependencies",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 52,
+    "key": "show_badge",
+    "type": "Boolean",
+    "defaultVal": "true",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 53,
+    "key": "sales_count",
+    "type": "Number",
+    "defaultVal": "0",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 54,
+    "key": "admin_card_preview_metrics",
+    "type": "Object",
+    "defaultVal": "{",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 55,
+    "key": "rating",
+    "type": "Object",
+    "defaultVal": "{ source: 'auto', manual_value: null }",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 56,
+    "key": "sales",
+    "type": "Object",
+    "defaultVal": "{ source: 'auto', manual_value: null }",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 57,
+    "key": "order_category",
+    "type": "String",
+    "defaultVal": "'Ctk', // Default operasional internal kasir",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 58,
+    "key": "category_id",
+    "type": "String",
+    "defaultVal": "'',     // Kategori Utama Etalase (default '' w...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 59,
+    "key": "sub_category_id",
+    "type": "String",
+    "defaultVal": "'', // Sub-Kategori Etalase",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 60,
+    "key": "card_variant",
+    "type": "String",
+    "defaultVal": "'',    // 'A' | 'B' | 'C' (default '' wajib dip...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 61,
+    "key": "price_type",
+    "type": "String",
+    "defaultVal": "2,       // 1-7 (disinkronkan dengan pricing_mo...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 62,
+    "key": "variation_labels",
+    "type": "Object",
+    "defaultVal": "{",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 63,
+    "key": "label_product",
+    "type": "String",
+    "defaultVal": "'Produk'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 64,
+    "key": "label_tier_1",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 65,
+    "key": "label_tier_2",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 66,
+    "key": "label_extra_1",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 67,
+    "key": "label_extra_2",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 68,
+    "key": "label_extra_3",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 69,
+    "key": "pricing_model",
+    "type": "String",
+    "defaultVal": "'normal', // 'normal' | 'size' | 'weight' | 'vo...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 70,
+    "key": "has_variants",
+    "type": "String",
+    "defaultVal": "false,     // Variasi Produk pada jenis Normal ...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 71,
+    "key": "_savedNonVariantPrice",
+    "type": "String",
+    "defaultVal": "'',     // Memori terisolasi Harga Jual mode Ta...",
+    "desc": "Penyimpan sementara nilai harga jual/modal saat berganti-ganti antara mode tanpa variasi dan dengan variasi.",
+    "classification": "UI Memory (In-Memory Only)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 72,
+    "key": "_savedNonVariantCostPrice",
+    "type": "String",
+    "defaultVal": "'', // Memori terisolasi Biaya Modal mode Tanpa...",
+    "desc": "Penyimpan sementara nilai harga jual/modal saat berganti-ganti antara mode tanpa variasi dan dengan variasi.",
+    "classification": "UI Memory (In-Memory Only)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 73,
+    "key": "size_pricing_type",
+    "type": "String",
+    "defaultVal": "'custom', // 'custom' | 'fixed'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 74,
+    "key": "size_unit",
+    "type": "String",
+    "defaultVal": "'Cm',         // 'M' | 'Dm' | 'Cm' | 'Mm'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 75,
+    "key": "fixed_size_value",
+    "type": "String",
+    "defaultVal": "'S'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 76,
+    "key": "weight_unit",
+    "type": "String",
+    "defaultVal": "'Kg',       // 'Kg' | 'gram' | 'ons' | 'ton'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 77,
+    "key": "volume_unit",
+    "type": "String",
+    "defaultVal": "'Liter',    // 'Liter' | 'ml' | 'galon' | 'drum...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 78,
+    "key": "stock",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 79,
+    "key": "is_unlimited_stock",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 80,
+    "key": "min_order",
+    "type": "Number",
+    "defaultVal": "1",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 81,
+    "key": "max_order",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 82,
+    "key": "max_order_type",
+    "type": "String",
+    "defaultVal": "'unlimited', // 'unlimited' | 'per_order' | 'pe...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 83,
+    "key": "max_order_qty",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 84,
+    "key": "max_order_period",
+    "type": "Object",
+    "defaultVal": "{",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 85,
+    "key": "start_date",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 86,
+    "key": "max_qty",
+    "type": "Number",
+    "defaultVal": "10",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 87,
+    "key": "days",
+    "type": "Number",
+    "defaultVal": "7",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 88,
+    "key": "period_type",
+    "type": "String",
+    "defaultVal": "'non_recurring', // 'non_recurring' | 'recurring'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 89,
+    "key": "end_date",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 90,
+    "key": "has_wholesale",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 91,
+    "key": "wholesale_tiers",
+    "type": "Array",
+    "defaultVal": "[],     // [{ id, min_qty, max_qty, price }]",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 92,
+    "key": "has_order_multiple",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 93,
+    "key": "order_multiple_type",
+    "type": "String",
+    "defaultVal": "'all', // 'all' | 'per_variant'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 94,
+    "key": "order_multiple_value",
+    "type": "Number",
+    "defaultVal": "1",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 95,
+    "key": "order_multiples_by_variant",
+    "type": "Object",
+    "defaultVal": "{}, // { [variantId]: 50 }",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 96,
+    "key": "has_affiliate_commission",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 97,
+    "key": "affiliate_commission_mode",
+    "type": "String",
+    "defaultVal": "'single', // 'single' | 'tiered'",
+    "desc": "Mode perhitungan komisi afiliasi ('single' atau 'tiered'). affiliate_commission_type adalah alias legacy.",
+    "classification": "Alias Ganda (Kompatibilitas)",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 98,
+    "key": "affiliate_commission_type",
+    "type": "String",
+    "defaultVal": "'single', // alias backward compatibility",
+    "desc": "Mode perhitungan komisi afiliasi ('single' atau 'tiered'). affiliate_commission_type adalah alias legacy.",
+    "classification": "Alias Ganda (Kompatibilitas)",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 99,
+    "key": "affiliate_commission_unit",
+    "type": "String",
+    "defaultVal": "'percentage', // 'percentage' | 'fixed'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 100,
+    "key": "affiliate_commission_value",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 101,
+    "key": "affiliate_min_qty",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 102,
+    "key": "affiliate_effective_unit_commission",
+    "type": "Number",
+    "defaultVal": "0",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 103,
+    "key": "affiliate_commission_tier_unit",
+    "type": "String",
+    "defaultVal": "'percentage', // 'percentage' | 'fixed'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 104,
+    "key": "affiliate_commission_tiers",
+    "type": "Array",
+    "defaultVal": "[",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 105,
+    "key": "affiliate_min_order_amount",
+    "type": "String",
+    "defaultVal": "''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 106,
+    "key": "auto_monthly_promo",
+    "type": "String",
+    "defaultVal": "false, // Toggle Auto Promo Bulanan",
+    "desc": "Toggle partisipasi produk dalam promo bulanan toko. auto_monthly_promo digunakan di UI, include_in_monthly_promo adalah alias kompatibilitas.",
+    "classification": "Alias Ganda (Kompatibilitas)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 107,
+    "key": "monthly_discount_type",
+    "type": "String",
+    "defaultVal": "'percent', // [%] Persen | [IDR] Potongan Rp",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 108,
+    "key": "monthly_discount_value",
+    "type": "String",
+    "defaultVal": "'', // Nilai diskon bulanan",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 109,
+    "key": "has_daily_promo",
+    "type": "String",
+    "defaultVal": "false, // Toggle Promo Harian",
+    "desc": "Toggle promo harian produk. has_daily_promo digunakan di UI, sedangkan has_monthly_discount disimpan di database/POS.",
+    "classification": "Alias Ganda (Kompatibilitas)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 110,
+    "key": "has_monthly_discount",
+    "type": "String",
+    "defaultVal": "false, // Alias has_daily_promo untuk kompatibi...",
+    "desc": "Toggle promo harian produk. has_daily_promo digunakan di UI, sedangkan has_monthly_discount disimpan di database/POS.",
+    "classification": "Alias Ganda (Kompatibilitas)",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 111,
+    "key": "include_in_monthly_promo",
+    "type": "String",
+    "defaultVal": "false, // Alias auto_monthly_promo",
+    "desc": "Toggle partisipasi produk dalam promo bulanan toko. auto_monthly_promo digunakan di UI, include_in_monthly_promo adalah alias kompatibilitas.",
+    "classification": "Alias Ganda (Kompatibilitas)",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 112,
+    "key": "promo_display_mode",
+    "type": "String",
+    "defaultVal": "'daily', // Mode standar: 'daily' (Promo Harian)",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 113,
+    "key": "discount_type",
+    "type": "String",
+    "defaultVal": "'percent', // Bentuk diskon harian: [%] Persen ...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 114,
+    "key": "discount_value",
+    "type": "String",
+    "defaultVal": "'', // Nilai diskon harian",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 115,
+    "key": "monthly_promo_label",
+    "type": "String",
+    "defaultVal": "'Promo Spesial', // Label teks promo harian",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 116,
+    "key": "promo_start_date",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 117,
+    "key": "promo_end_date",
+    "type": "Nullable",
+    "defaultVal": "null",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 118,
+    "key": "has_custom_labels",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 119,
+    "key": "custom_labels",
+    "type": "Array",
+    "defaultVal": "[]",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 120,
+    "key": "custom_dimension_suggestions",
+    "type": "Array",
+    "defaultVal": "[]",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 121,
+    "key": "shipping_config",
+    "type": "Object",
+    "defaultVal": "(function () {",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 122,
+    "key": "is_cod",
+    "type": "Boolean",
+    "defaultVal": "false",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 123,
+    "key": "cod_local",
+    "type": "String",
+    "defaultVal": "true,      // COD Kurir Toko (Desa / Kecamatan)",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 124,
+    "key": "cod_expedition",
+    "type": "String",
+    "defaultVal": "true, // COD Ekspedisi Reguler",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 125,
+    "key": "couriers",
+    "type": "Array",
+    "defaultVal": "['pickup', 'local_store', 'reguler']",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 126,
+    "key": "local_village_free",
+    "type": "String",
+    "defaultVal": "defLocal ? Boolean(defLocal.local_village_free)...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 127,
+    "key": "local_village_fee",
+    "type": "String",
+    "defaultVal": "defLocal ? (defLocal.local_village_fee ?? '') : ''",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 128,
+    "key": "local_district_free",
+    "type": "String",
+    "defaultVal": "defLocal ? Boolean(defLocal.local_district_free...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 129,
+    "key": "local_district_fee",
+    "type": "String",
+    "defaultVal": "defLocal ? (defLocal.local_district_fee ?? '') ...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 130,
+    "key": "weight",
+    "type": "String",
+    "defaultVal": "'',           // Kosong (wajib diisi manual ole...",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 131,
+    "key": "weight_unit",
+    "type": "String",
+    "defaultVal": "'gram'",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Tabel `products`"
+  },
+  {
+    "no": 132,
+    "key": "length",
+    "type": "String",
+    "defaultVal": "'',           // Kosong (opsional)",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 133,
+    "key": "width",
+    "type": "String",
+    "defaultVal": "'',            // Kosong (opsional)",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  },
+  {
+    "no": 134,
+    "key": "height",
+    "type": "String",
+    "defaultVal": "''            // Kosong (opsional)",
+    "desc": "Properti konfigurasi produk untuk kebutuhan data bisnis dan operasional.",
+    "classification": "Active",
+    "saved": "Hanya di State / Sub-objek"
+  }
+]

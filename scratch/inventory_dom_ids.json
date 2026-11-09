@@ -1,0 +1,5827 @@
+[
+  {
+    "id": "cancel-modal-title",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cancel-modal-desc",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-cancel-modal-no",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-cancel-modal-yes",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "form-error-banner",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "form-error-list",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "product-form-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "wizard-form-col",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "step-pane-1",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "section-step1-input1-type",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "product-type-selector-group",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "product-type-dynamic-desc",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step1-gated-placeholder",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step1-unlocked-fields",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "section-step1-input2-etalase",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "toggle-is-active-form",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "section-step1-input3-cardmodel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "card-model-selector-group",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "card-model-dynamic-desc",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step1-cardmodel-gated-placeholder",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step1-cardmodel-unlocked-fields",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "section-step1-input4-photo",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "gallery-ratio-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "file-size-error-banner",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "file-size-error-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-prod-images-hidden",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "inAdminHtml": true,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "input-prod-image",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 9,
+    "events": []
+  },
+  {
+    "id": "gallery-slots-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "section-step1-input5-name",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "name-char-count",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-prod-name",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 14,
+    "events": []
+  },
+  {
+    "id": "name-min-length-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "section-step1-input6-labels",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "label-custom-disabled-notice",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "toggle-enable-custom-labels",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "container-custom-labels-inputs",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "custom-labels-preset-group",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "grid-custom-labels-inputs",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wrapper-custom-label-1",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "char-count-label-1",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-custom-label-1",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 10,
+    "events": []
+  },
+  {
+    "id": "custom-labels-history-list",
+    "source": "product-form.js",
+    "occurrences": 3,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "error-custom-label-1",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "wrapper-custom-label-2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "warn-label-2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-custom-label-2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 10,
+    "events": []
+  },
+  {
+    "id": "error-custom-label-2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "custom-labels-capacity-info",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-step-1-cancel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-step-1-next",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step-pane-2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "btn-expand-preview-sidebar",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "desktop-preview-sidebar",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "desktop-preview-header-content",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-toggle-preview-sidebar",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "desktop-preview-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-simulate-countdown-preview",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "preview-card-outer-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "preview-footer-sample-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "product-card-preview-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "card-live-preview-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "preview-scoped-modal-root",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "card-customization-section",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "accordion-group-frame",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-frame",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-frame",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-frame",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-bg-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-bg-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-border-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-border-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-border-width-val",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-border-width",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "cfg-border-radius",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "accordion-group-text-info",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-text-info",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-text-info",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-text-info",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-title-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-title-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-price-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-price-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-btn-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-btn-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-rating",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "cfg-show-rating-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-rating-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-source-panel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-manual-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-manual-val",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "datalist-rating-manual-options",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-manual-hint",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-sales",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "cfg-show-sales-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-sales-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-source-panel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-manual-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-manual-val",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "datalist-sales-manual-options",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-manual-hint",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-metric-model-b-notice",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "accordion-group-promo",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-promo",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-promo",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-promo",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-strike",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-strike-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-strike-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-panel-desk",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-promo-hint",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-discount-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-discount-badge-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-discount-badge-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-panel-desk",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-radius",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-pos-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-discount-badge-pos",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "lbl-discount-badge-pos",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "icon-discount-badge-pos-chevron",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "menu-discount-badge-pos",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-position",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-text-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-text-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-bg-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-bg-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-promo-hint",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-ticket-icon",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-ticket-icon-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-ticket-icon-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-ticket-promo-hint",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-enable-countdown",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "cfg-enable-countdown-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-enable-countdown-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-panel-desk",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-radius",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-bg-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-bg-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-text-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-text-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-icon-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-icon-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-border-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-border-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-promo-hint",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-container-desk",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-show-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "cfg-show-badge-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-badge-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-panel-desk",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-style-group",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-style",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-radius",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-text-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-text-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-bg-wrap",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-bg-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-bg-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-border-wrap",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-border-color",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-border-hex",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-group-footer",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-footer",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-footer",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-footer",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "footer-text-char-count-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-card-footer-text-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 11,
+    "events": []
+  },
+  {
+    "id": "footer-texts-history-list",
+    "source": "product-form.js",
+    "occurrences": 7,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "error-card-footer-text-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "container-footer-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-footer-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "preview-footer-icon-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "menu-footer-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "grid-footer-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-bg-color-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-bg-hex-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-text-color-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-text-hex-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "footer-2-text-char-count-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-card-footer-2-text-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 9,
+    "events": []
+  },
+  {
+    "id": "error-card-footer-2-text-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "container-footer-2-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-footer-2-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "preview-footer-2-icon-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "menu-footer-2-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "grid-footer-2-icon-picker-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-bg-color-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-bg-hex-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-text-color-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-text-hex-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-apply-default-card-design",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-save-as-default-toggle",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "label-save-as-default-desk",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-cancel-card-design",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-save-card-design",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-fab-live-preview",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "mobile-preview-backdrop",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "mobile-preview-sheet",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "mobile-preview-header-content",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-close-mobile-preview",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "mobile-preview-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-simulate-countdown-preview-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "preview-card-outer-wrapper-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "preview-footer-sample-badge-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "mobile-card-preview-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "preview-scoped-modal-root-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "card-customization-section-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "accordion-group-frame-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-frame-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-frame-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-frame-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-bg-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-bg-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-border-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-border-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-border-width-val-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-border-width-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "cfg-border-radius-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "accordion-group-text-info-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-text-info-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-text-info-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-text-info-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-title-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-title-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-price-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-price-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-btn-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-btn-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-rating-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-show-rating-mob-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-rating-mob-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-source-panel-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-manual-container-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-manual-val-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-rating-manual-hint-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-sales-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "cfg-show-sales-mob-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-sales-mob-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-source-panel-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-manual-container-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-manual-val-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-sales-manual-hint-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-metric-model-b-notice-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "accordion-group-promo-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-promo-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-promo-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-promo-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-strike-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-strike-mob-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-strike-mob-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-panel-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-strike-promo-hint-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-discount-badge-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-discount-badge-mob-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-discount-badge-mob-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-panel-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-radius-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-pos-container-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-discount-badge-pos-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "lbl-discount-badge-pos-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "icon-discount-badge-pos-chevron-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "menu-discount-badge-pos-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-position-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-text-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-text-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-bg-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-badge-bg-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-discount-promo-hint-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-show-ticket-icon-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-ticket-icon-mob-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-ticket-icon-mob-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-ticket-promo-hint-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-enable-countdown-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "cfg-enable-countdown-mob-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-enable-countdown-mob-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-panel-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-radius-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-bg-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-bg-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-text-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-text-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-icon-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-icon-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-border-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-border-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-countdown-promo-hint-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-container-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-show-badge-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "cfg-show-badge-mob-icon-on",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-show-badge-mob-icon-off",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-panel-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-style-group-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-style-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-radius-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-text-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-text-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-bg-wrap-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-bg-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-bg-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-border-wrap-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-border-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-badge-border-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-group-footer-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-accordion-footer-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-icon-footer-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "accordion-body-footer-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "footer-text-char-count-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-card-footer-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 8,
+    "events": []
+  },
+  {
+    "id": "error-card-footer-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "container-footer-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-footer-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "preview-footer-icon-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "menu-footer-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "grid-footer-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-bg-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-bg-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-text-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-text-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "footer-2-text-char-count-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-card-footer-2-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 6,
+    "events": []
+  },
+  {
+    "id": "error-card-footer-2-text-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "container-footer-2-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-footer-2-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "preview-footer-2-icon-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "menu-footer-2-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "grid-footer-2-icon-picker-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-bg-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-bg-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-text-color-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "cfg-footer-2-text-hex-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-apply-default-card-design-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "cfg-save-as-default-toggle-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "label-save-as-default-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-cancel-card-design-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-save-card-design-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-quick-add-category",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "quick-cat-modal-title",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-quick-cat",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "quick-cat-parent-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "select-quick-cat-parent",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "label-quick-cat-name",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-quick-cat-name",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "quick-cat-error-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-cancel-quick-cat",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-save-quick-cat",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "datalist-order-multiple-options",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-step1-tab-preview-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-step1-tab-design-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-step1-tab-preview",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-step1-tab-design",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-preview-mode-passive-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-preview-mode-test-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "preview-test-mode-alert-mob",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-preview-mode-passive",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-preview-mode-test",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "preview-test-mode-alert",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "shopee-drawer-order-notice",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "drawer-custom-dimension-section",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-shopee-dim-p",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-shopee-dim-l",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "drawer-dim-live-summary",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "drawer-selected-options-descriptions",
+    "source": "product-form.js",
+    "occurrences": 3,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-shopee-qty-minus",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-preview-test-qty",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-shopee-qty-plus",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-shopee-drawer-confirm",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-spec-drawer",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-size-guide-drawer",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-copy-wa-sim",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-option-dependency",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "dep-modal-title",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-close-dep-modal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "lbl-dep-mode-umum",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "lbl-dep-mode-spesifik",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "dep-mode-desc",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "dep-specific-settings-panel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "dep-parent-tier-select",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-dep-select-all",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-dep-deselect-all",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "dep-triggers-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "dep-trigger-error-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "btn-dep-cancel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-dep-save",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "skip-rules-empty-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "table-skip-rules",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-slot-add-photo",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "section-product-affiliate-commission",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-tooltip-affiliate",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "tooltip-popover-affiliate",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "toggle-affiliate-commission",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "affiliate-commission-config-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "affiliate-mode-single",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "select-affiliate-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-affiliate-single-value",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "btn-tooltip-min-qty",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "tooltip-popover-min-qty",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-affiliate-min-qty",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "affiliate-single-helper-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "affiliate-single-helper-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "affiliate-single-helper-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "affiliate-single-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "affiliate-mode-tiered",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "select-affiliate-tier-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "affiliate-tiers-table-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 14,
+    "events": []
+  },
+  {
+    "id": "btn-add-affiliate-tier",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "affiliate-tiered-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-tooltip-min-order",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "tooltip-popover-min-order",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-affiliate-min-order",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "custom-specs-counter",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "custom-specs-table",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "custom-specs-thead",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "custom-specs-tbody",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-add-spec-row",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "datalist-spec-titles",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-size-col-titles",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-add-size-col-header",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "size-guide-variation-link-group",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "size-guide-linked-variation-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "custom-select-size-guide-linked-variation",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "selected-size-guide-variation-label",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "size-guide-variation-chevron",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "select-size-guide-linked-variation",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "size-guide-variation-popover",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "size-guide-linked-variation-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "btn-size-tpl-cancel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-size-tpl-proceed",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "size-guide-image-preview",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-remove-size-guide-img",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "card-size-guide-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "toggle-size-guide-enable",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "size-guide-content-panel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "size-guide-type-selection-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "lbl-size-guide-type-table",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "lbl-size-guide-type-image",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "size-guide-type-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "size-guide-table-panel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "size-guide-matrix-table",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "size-guide-thead",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "size-guide-tbody",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-add-size-row",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "size-guide-image-panel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-size-guide-image",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "size-guide-image-dropzone",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "step2-subnav-fixed",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "step2-subnav-links",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-subnav-toggle-preview",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "step2-content-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "step2-cards-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "card-step2-info",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "step2-name-char-count",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step2-input-name",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "step2-name-min-length-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "btn-quick-add-category-step2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "select-step2-cat",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "select-step2-sub-cat",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "step2-gallery-ratio-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step2-photo-count",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "step2-gallery-strip",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-step2-upload-more",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "card-step2-sales",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "select-pricing-model",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "pricing-model-interactive-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 8,
+    "events": []
+  },
+  {
+    "id": "single-product-purchase-settings",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "single-product-stock-section",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-stock-qty",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 9,
+    "events": []
+  },
+  {
+    "id": "single-stock-error-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-min-order",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-normal-max-order",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "section-wholesale",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wholesale-action-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-toggle-wholesale",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "wholesale-active-header",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-close-wholesale",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "wholesale-table-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "inline-wholesale-body",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "section-order-multiple",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "order-multiple-action-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-toggle-order-multiple",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "order-multiple-active-header",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-close-order-multiple",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "order-multiple-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "card-step2-shipping",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "toggle-shipping-enabled",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "shipping-disabled-banner",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "shipping-config-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-package-weight",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "select-package-weight-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "package-weight-error-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-dim-length",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-dim-width",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-dim-height",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "volumetric-weight-info",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "toggle-is-cod",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "local-delivery-rates-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "village-rate-input-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-local-village-fee",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "district-rate-input-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-local-district-fee",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "chk-save-local-shipping-default",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "card-step2-promo",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "toggle-promo-monthly",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "promo-monthly-inputs-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "select-monthly-promo-type",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-monthly-promo-value",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "monthly-discount-auto-convert-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "monthly-discount-auto-convert-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "monthly-discount-auto-convert-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "toggle-promo-daily",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "promo-daily-inputs-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-promo-label",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "select-promo-discount-type",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-promo-discount-value",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "discount-auto-convert-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "discount-auto-convert-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "discount-auto-convert-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "card-step2-description",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-ai-generate-desc",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-ai-desc-text",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-prod-desc",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "ai-description-preview-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "ai-description-preview-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-ai-desc-cancel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-ai-desc-apply",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "card-step2-specs",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "select-prod-condition",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-prod-sku",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-prod-barcode",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-product-brand",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-product-origin",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "select-warranty-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "container-warranty-duration",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-warranty-duration",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "container-warranty-type",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "select-warranty-type",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "toggle-is-preorder",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "container-preorder-days",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-preorder-days",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "card-step2-others",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 12,
+    "events": []
+  },
+  {
+    "id": "section-card-footer-config",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-card-footer-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 8,
+    "events": []
+  },
+  {
+    "id": "select-card-footer-icon",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-card-footer-2-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "select-card-footer-2-icon",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "step2-footer-actions",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-step-2-prev",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-save-draft",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-submit-product",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "btn-submit-spinner",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-submit-icon",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-submit-text",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "datalist-stock-unlimited",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-max-order-unlimited",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-order-multiple-options-step2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-variation-labels",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-dimension-labels",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-extra-service-labels",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-product-brands",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "datalist-product-origins",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-help-dimension-rule",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-option-dimension-rule",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "modal-option-rule-title",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-rule-active-rule-id",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-rule-active-opt-id",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-rule-active-opt-name",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-rule-active-is-all",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-select-calc-mode",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "modal-container-flat",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-container-area",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-container-side-length",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-select-side-len",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-container-add-dim",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-input-dim-add-val",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-select-add-side",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-save-option-rule-modal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-add-dimension-rule",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-help-dimension-rule",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "dimension-rules-section",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "dimension-rules-list",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-sandbox-pxl-simulator",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "sandbox-pxl-calculator-panel",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sandbox-select-main-option",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "sandbox-input-dim-p",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "sandbox-input-dim-l",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "sandbox-finishing-options-list",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 7,
+    "events": []
+  },
+  {
+    "id": "sandbox-calc-results-breakdown",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "modal-sandbox-dim-input",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 6,
+    "events": []
+  },
+  {
+    "id": "modal-sandbox-input-p",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "modal-sandbox-input-l",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "modal-sandbox-dim-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "btn-cancel-sandbox-dim-modal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-apply-sandbox-dim-modal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "group-dimension-main-component",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wrapper-dimension-main-component",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "custom-select-dimension-main-component",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "selected-dimension-main-component-label",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "dimension-main-component-chevron",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "select-dimension-main-component",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "dimension-main-component-popover",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "group-dimension-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wrapper-dimension-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "custom-select-dimension-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "selected-dimension-unit-label",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "dimension-unit-chevron",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "select-dimension-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 8,
+    "events": []
+  },
+  {
+    "id": "dimension-unit-popover",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "custom-dimension-unit-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 6,
+    "events": []
+  },
+  {
+    "id": "card-custom-dimension-pxl",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "toggle-custom-dimension",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "custom-dimension-config-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "input-custom-dimension-label",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 8,
+    "events": []
+  },
+  {
+    "id": "custom-dimension-label-error",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "suggest-dim-count",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-suggest-dim-p",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-suggest-dim-l",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "suggest-dim-unit",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-add-dimension-suggestion",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "dimension-suggestions-list",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "chk-min-one-unit-price",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 6,
+    "events": []
+  },
+  {
+    "id": "container-min-price-inputs",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "min-price-custom-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-min-price-threshold",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "input-min-price-charge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "chk-min-one-unit-hpp",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "container-min-hpp-inputs",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "min-hpp-custom-box",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-min-hpp-threshold",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "input-min-hpp-charge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "dimension-rules-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-toggle-sandbox-simulator",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "custom-dim-no-variant-warning",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 5,
+    "events": []
+  },
+  {
+    "id": "section-size-guide-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "card-extra-service",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "input-var-label-extra3",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "btn-close-extra-service",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "finishings-extra_3-rows-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "hierarchical-variations-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-trigger-variasi-2",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-trigger-variasi-3",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "btn-trigger-variasi-4",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "extra-service-section",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-trigger-extra-service",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-enable-variants",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "input-single-price",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 18,
+    "events": []
+  },
+  {
+    "id": "single-price-error-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-single-cost",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 6,
+    "events": []
+  },
+  {
+    "id": "single-cost-error-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "single-margin-badge",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "extra-service-section-normal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-trigger-extra-service-normal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-max-order-qty",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "input-period-start-date",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-period-max-qty",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "input-period-days",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "recurring-end-date-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "select-period-end-date",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "combination-matrix-section",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 11,
+    "events": []
+  },
+  {
+    "id": "combo-image-rule-warning",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "chk-combo-header-wholesale",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "chk-combo-header-order-multiple",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "combo-matrix-table-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-config",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 4,
+    "events": []
+  },
+  {
+    "id": "wholesale-modal-title",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-switch-enable",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-switch-label",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-content-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "lbl-wholesale-normal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "lbl-wholesale-tiered",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-save-wholesale-modal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-order-multiple-config",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "multiple-modal-title",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "multiple-modal-subtitle",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "lbl-multiple-umum",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "lbl-multiple-spesifik",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-order-multiple-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-save-multiple-modal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-specific-options",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "specific-modal-title",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "specific-modal-subtitle",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "lbl-scope-umum",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "lbl-scope-spesifik",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "specific-umum-info-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "specific-umum-list-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "specific-checklist-wrapper",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-specific-toggle-all",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "specific-selected-count",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "specific-options-checklist-container",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "btn-apply-specific-modal",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-normal-min",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "chk-wholesale-no-max",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-normal-max",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-wholesale-normal-discount",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wholesale-normal-note",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "tiered-wholesale-table-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-add-wholesale-tier",
+    "source": "product-form.js",
+    "occurrences": 2,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wholesale-tiered-note",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-order-multiple-single",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 3,
+    "events": []
+  },
+  {
+    "id": "err-order-multiple-single",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "variant-multiples-table-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-add-variant-multiple-row",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wholesale-tiers-table-body",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "wholesale-tiered-conflict-msg",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "input-variant-multiple-val",
+    "source": "product-form.js",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "app-favicon",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-login-screen",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "form-admin-login",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "login-store-id",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "login-username",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "login-password",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "login-error-msg",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "login-error-text",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-submit-login",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-autofill-demo",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-mobile-backdrop",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "admin-main-sidebar",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "sidebar-brand-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-logo-box",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-logo-img",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-brand-text",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-store-title",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-badge-seller-center",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-sidebar",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-sidebar-hamburger",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "admin-nav-dashboard",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-theme-branding",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-orders",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-pos",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-customers",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "nav-group-toko",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-group-toko-btn",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-group-toko-icon",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "submenu-toko",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-products",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-add-product",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-categories",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-account",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "nav-group-settings",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-group-settings-btn",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-group-settings-icon",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "submenu-settings",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-settings-theme",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-settings-print",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "nav-group-marketing",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-group-marketing-btn",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-group-marketing-icon",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "submenu-marketing",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-promos",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-vouchers",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-sponsors",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-nav-reviews",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-store-name",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-tenant-slug",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-main-topbar",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-sidebar-hamburger-mobile",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 1,
+    "events": []
+  },
+  {
+    "id": "admin-header-store-info-box",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "header-store-name",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "topbar-quick-search",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-topbar-notifications",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "sidebar-badge-orders",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "profile-dropdown-wrapper",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-profile-dropdown",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "header-profile-avatar",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "header-profile-email",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "header-profile-chevron",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "profile-floating-menu",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "profile-dropdown-store-name",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "profile-dropdown-store-id",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-dropdown-profile-link",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-view-live-store",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-admin-logout",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "admin-main-viewport",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 9,
+    "events": []
+  },
+  {
+    "id": "view-dashboard",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "dashboard-view-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-orders",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "orders-view-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-product-list",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "list-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-pos-cashier",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-cashier-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-customers",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "customer-manager-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-product-form",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "form-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 2,
+    "events": []
+  },
+  {
+    "id": "view-category-manager",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "category-manager-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-promo-manager",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "promo-manager-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-review-manager",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "review-manager-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-theme-branding",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "theme-branding-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-account",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "account-view-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "view-settings",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "settings-view-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-pos-calculator",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-modal-title",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-pos-calc",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-dimensions-area",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-length",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-width",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-area-label",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-material",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-finishing",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-qty",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "pos-calc-total-preview",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-cancel-pos-calc",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-confirm-pos-calc",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-thermal-receipt",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-receipt-modal",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "thermal-receipt-preview-content",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-receipt-done",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-print-receipt-action",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-order-detail",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "order-detail-title",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "order-detail-invoice-id",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-order-detail",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "order-detail-body",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-order-detail-bottom",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-order-detail-print-receipt",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-order-detail-save-status",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "modal-tenant-manager",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-close-tenant-modal",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "tenant-list-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "new-store-name-input",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "btn-create-tenant-action",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "thermal-print-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  },
+  {
+    "id": "toast-container",
+    "source": "admin.html",
+    "occurrences": 1,
+    "gebiCalls": 0,
+    "events": []
+  }
+]

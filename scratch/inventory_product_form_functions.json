@@ -1,0 +1,2660 @@
+[
+  {
+    "name": "ProductForm",
+    "params": "(",
+    "line": 11,
+    "code": "const ProductForm = (() => {"
+  },
+  {
+    "name": "getUnicodeLength",
+    "params": "str",
+    "line": 60,
+    "code": "function getUnicodeLength(str) {"
+  },
+  {
+    "name": "truncateTo32Graphemes",
+    "params": "str",
+    "line": 71,
+    "code": "function truncateTo32Graphemes(str) {"
+  },
+  {
+    "name": "renderFooterIconGridHtml",
+    "params": "currentIconId, pickerId",
+    "line": 86,
+    "code": "function renderFooterIconGridHtml(currentIconId, pickerId) {"
+  },
+  {
+    "name": "updateFooterCharCounter",
+    "params": "inputEl, counterEl",
+    "line": 100,
+    "code": "function updateFooterCharCounter(inputEl, counterEl) {"
+  },
+  {
+    "name": "getCurrentCardDesignKey",
+    "params": "",
+    "line": 122,
+    "code": "function getCurrentCardDesignKey() {"
+  },
+  {
+    "name": "captureCardDesignSnapshot",
+    "params": "force = false",
+    "line": 126,
+    "code": "function captureCardDesignSnapshot(force = false) {"
+  },
+  {
+    "name": "getStoreDefaultLocalShipping",
+    "params": "",
+    "line": 178,
+    "code": "function getStoreDefaultLocalShipping() {"
+  },
+  {
+    "name": "syncThemeCSSVariables",
+    "params": "",
+    "line": 193,
+    "code": "function syncThemeCSSVariables() {"
+  },
+  {
+    "name": "calcHover",
+    "params": "hex, percent = -15",
+    "line": 198,
+    "code": "const calcHover = (hex, percent = -15) => {"
+  },
+  {
+    "name": "toSubtle",
+    "params": "hex, alpha = 0.12",
+    "line": 213,
+    "code": "const toSubtle = (hex, alpha = 0.12) => {"
+  },
+  {
+    "name": "getThemeBodyColor",
+    "params": "",
+    "line": 259,
+    "code": "function getThemeBodyColor() {"
+  },
+  {
+    "name": "getPrimaryThemeColor",
+    "params": "",
+    "line": 277,
+    "code": "function getPrimaryThemeColor() {"
+  },
+  {
+    "name": "getSecondaryThemeColor",
+    "params": "",
+    "line": 299,
+    "code": "function getSecondaryThemeColor() {"
+  },
+  {
+    "name": "parseWarrantyPeriod",
+    "params": "rawPeriod",
+    "line": 316,
+    "code": "function parseWarrantyPeriod(rawPeriod) {"
+  },
+  {
+    "name": "computeWarrantyPeriod",
+    "params": "unit, duration",
+    "line": 337,
+    "code": "function computeWarrantyPeriod(unit, duration) {"
+  },
+  {
+    "name": "clampTooltipToViewport",
+    "params": "tipEl",
+    "line": 348,
+    "code": "function clampTooltipToViewport(tipEl) {"
+  },
+  {
+    "name": "handleTooltipTrigger",
+    "params": "e",
+    "line": 376,
+    "code": "const handleTooltipTrigger = (e) => {"
+  },
+  {
+    "name": "getLastProductFooterConfig",
+    "params": "",
+    "line": 585,
+    "code": "function getLastProductFooterConfig() {"
+  },
+  {
+    "name": "escapeSafeHtml",
+    "params": "str",
+    "line": 618,
+    "code": "function escapeSafeHtml(str) {"
+  },
+  {
+    "name": "getOptionsForDatalist",
+    "params": "listId",
+    "line": 639,
+    "code": "function getOptionsForDatalist(listId) {"
+  },
+  {
+    "name": "isProductSessionTitleInput",
+    "params": "el",
+    "line": 716,
+    "code": "function isProductSessionTitleInput(el) {"
+  },
+  {
+    "name": "getUsedSessionTitleValues",
+    "params": "currentInput",
+    "line": 728,
+    "code": "function getUsedSessionTitleValues(currentInput) {"
+  },
+  {
+    "name": "isSpecTitleInput",
+    "params": "el",
+    "line": 745,
+    "code": "function isSpecTitleInput(el) {"
+  },
+  {
+    "name": "getUsedSpecTitleValues",
+    "params": "currentInput",
+    "line": 750,
+    "code": "function getUsedSpecTitleValues(currentInput) {"
+  },
+  {
+    "name": "isCustomLabelInput",
+    "params": "el",
+    "line": 764,
+    "code": "function isCustomLabelInput(el) {"
+  },
+  {
+    "name": "getUsedCustomLabelValues",
+    "params": "currentInput",
+    "line": 769,
+    "code": "function getUsedCustomLabelValues(currentInput) {"
+  },
+  {
+    "name": "closeAllCleanDatalistPopovers",
+    "params": "exceptPopover = null",
+    "line": 782,
+    "code": "function closeAllCleanDatalistPopovers(exceptPopover = null) {"
+  },
+  {
+    "name": "handleScrollOutside",
+    "params": "e",
+    "line": 797,
+    "code": "const handleScrollOutside = (e) => {"
+  },
+  {
+    "name": "bindCleanDatalistPopovers",
+    "params": "scope = document",
+    "line": 823,
+    "code": "function bindCleanDatalistPopovers(scope = document) {"
+  },
+  {
+    "name": "syncClearAndArrowVisibility",
+    "params": "",
+    "line": 935,
+    "code": "function syncClearAndArrowVisibility() {"
+  },
+  {
+    "name": "closePopover",
+    "params": "",
+    "line": 987,
+    "code": "function closePopover() {"
+  },
+  {
+    "name": "positionPopover",
+    "params": "",
+    "line": 993,
+    "code": "function positionPopover() {"
+  },
+  {
+    "name": "openMenu",
+    "params": "",
+    "line": 1025,
+    "code": "function openMenu() {"
+  },
+  {
+    "name": "renderItems",
+    "params": "filterText = '', isExplicitOpen = false",
+    "line": 1043,
+    "code": "function renderItems(filterText = '', isExplicitOpen = false) {"
+  },
+  {
+    "name": "getTodayDateString",
+    "params": "",
+    "line": 1419,
+    "code": "function getTodayDateString() {"
+  },
+  {
+    "name": "formatDateDisplay",
+    "params": "dateStr",
+    "line": 1427,
+    "code": "function formatDateDisplay(dateStr) {"
+  },
+  {
+    "name": "addDaysToDate",
+    "params": "dateStr, days",
+    "line": 1436,
+    "code": "function addDaysToDate(dateStr, days) {"
+  },
+  {
+    "name": "isStep1Complete",
+    "params": "",
+    "line": 1448,
+    "code": "function isStep1Complete() {"
+  },
+  {
+    "name": "getSuggestedCardVariantForCategory",
+    "params": "categoryId",
+    "line": 1473,
+    "code": "function getSuggestedCardVariantForCategory(categoryId) {"
+  },
+  {
+    "name": "resetFormState",
+    "params": "",
+    "line": 1497,
+    "code": "function resetFormState() {"
+  },
+  {
+    "name": "getNormalizedProductStateSnapshot",
+    "params": "",
+    "line": 1755,
+    "code": "function getNormalizedProductStateSnapshot() {"
+  },
+  {
+    "name": "hasEditProductChanged",
+    "params": "",
+    "line": 1793,
+    "code": "function hasEditProductChanged() {"
+  },
+  {
+    "name": "hasAnyNewProductData",
+    "params": "",
+    "line": 1800,
+    "code": "function hasAnyNewProductData() {"
+  },
+  {
+    "name": "showCancelConfirmationModal",
+    "params": "mode, targetMenu",
+    "line": 1815,
+    "code": "function showCancelConfirmationModal(mode, targetMenu) {"
+  },
+  {
+    "name": "handleFormCancel",
+    "params": "",
+    "line": 1889,
+    "code": "function handleFormCancel() {"
+  },
+  {
+    "name": "loadProductForEdit",
+    "params": "idOrProduct",
+    "line": 1924,
+    "code": "function loadProductForEdit(idOrProduct) {"
+  },
+  {
+    "name": "saveDraftToStorage",
+    "params": "",
+    "line": 2295,
+    "code": "function saveDraftToStorage() {"
+  },
+  {
+    "name": "loadDraftFromStorage",
+    "params": "",
+    "line": 2311,
+    "code": "function loadDraftFromStorage() {"
+  },
+  {
+    "name": "clearDraftStorage",
+    "params": "",
+    "line": 2380,
+    "code": "function clearDraftStorage() {"
+  },
+  {
+    "name": "hasStoredDraft",
+    "params": "",
+    "line": 2386,
+    "code": "function hasStoredDraft() {"
+  },
+  {
+    "name": "renderFormErrorBannerHtml",
+    "params": "",
+    "line": 2406,
+    "code": "function renderFormErrorBannerHtml() {"
+  },
+  {
+    "name": "renderForm",
+    "params": "",
+    "line": 2422,
+    "code": "function renderForm() {"
+  },
+  {
+    "name": "formatIDR",
+    "params": "num",
+    "line": 4110,
+    "code": "function formatIDR(num) {"
+  },
+  {
+    "name": "formatPriceHtmlWithSmallRp",
+    "params": "num",
+    "line": 4118,
+    "code": "function formatPriceHtmlWithSmallRp(num) {"
+  },
+  {
+    "name": "formatPriceRangeHtmlWithSmallRp",
+    "params": "minNum, maxNum",
+    "line": 4126,
+    "code": "function formatPriceRangeHtmlWithSmallRp(minNum, maxNum) {"
+  },
+  {
+    "name": "formatSalesCount",
+    "params": "count, compact = false",
+    "line": 4138,
+    "code": "function formatSalesCount(count, compact = false) {"
+  },
+  {
+    "name": "updateDesignChoiceButtonsState",
+    "params": "",
+    "line": 4150,
+    "code": "function updateDesignChoiceButtonsState() {"
+  },
+  {
+    "name": "toggleCardAccordion",
+    "params": "groupKey",
+    "line": 4174,
+    "code": "function toggleCardAccordion(groupKey) {"
+  },
+  {
+    "name": "syncCardAccordionDOM",
+    "params": "",
+    "line": 4181,
+    "code": "function syncCardAccordionDOM() {"
+  },
+  {
+    "name": "syncEyeToggleIcons",
+    "params": "",
+    "line": 4247,
+    "code": "function syncEyeToggleIcons() {"
+  },
+  {
+    "name": "getPreviewMetricsConfig",
+    "params": "",
+    "line": 4278,
+    "code": "function getPreviewMetricsConfig() {"
+  },
+  {
+    "name": "setRatingSource",
+    "params": "src",
+    "line": 4294,
+    "code": "function setRatingSource(src) {"
+  },
+  {
+    "name": "setSalesSource",
+    "params": "src",
+    "line": 4301,
+    "code": "function setSalesSource(src) {"
+  },
+  {
+    "name": "syncMetricSourcesDOM",
+    "params": "",
+    "line": 4308,
+    "code": "function syncMetricSourcesDOM() {"
+  },
+  {
+    "name": "updateSaveAsDefaultLabels",
+    "params": "",
+    "line": 4406,
+    "code": "function updateSaveAsDefaultLabels() {"
+  },
+  {
+    "name": "markCardDesignAsCustom",
+    "params": "",
+    "line": 4414,
+    "code": "function markCardDesignAsCustom() {"
+  },
+  {
+    "name": "handleApplyDefaultCardDesign",
+    "params": "",
+    "line": 4423,
+    "code": "function handleApplyDefaultCardDesign() {"
+  },
+  {
+    "name": "hexToSubtleHex",
+    "params": "hex, opacity = 0.12",
+    "line": 4437,
+    "code": "function hexToSubtleHex(hex, opacity = 0.12) {"
+  },
+  {
+    "name": "hexToBorderHex",
+    "params": "hex, opacity = 0.35",
+    "line": 4451,
+    "code": "function hexToBorderHex(hex, opacity = 0.35) {"
+  },
+  {
+    "name": "getThemeDefaultBadgeColors",
+    "params": "variantCode",
+    "line": 4465,
+    "code": "function getThemeDefaultBadgeColors(variantCode) {"
+  },
+  {
+    "name": "parseBadgeRadius",
+    "params": "val, defaultVal = 6",
+    "line": 4487,
+    "code": "function parseBadgeRadius(val, defaultVal = 6) {"
+  },
+  {
+    "name": "updateBadgeRadiusPresetButtons",
+    "params": "val",
+    "line": 4494,
+    "code": "function updateBadgeRadiusPresetButtons(val) {"
+  },
+  {
+    "name": "setBadgeStyleMode",
+    "params": "mode",
+    "line": 4513,
+    "code": "function setBadgeStyleMode(mode) {"
+  },
+  {
+    "name": "parseBorderWidth",
+    "params": "val, defaultVal = 1",
+    "line": 4546,
+    "code": "function parseBorderWidth(val, defaultVal = 1) {"
+  },
+  {
+    "name": "parseBorderRadius",
+    "params": "val, defaultVal = 16",
+    "line": 4553,
+    "code": "function parseBorderRadius(val, defaultVal = 16) {"
+  },
+  {
+    "name": "isMobilePreviewSheetOpen",
+    "params": "",
+    "line": 4560,
+    "code": "function isMobilePreviewSheetOpen() {"
+  },
+  {
+    "name": "getBorderWidthLabel",
+    "params": "num",
+    "line": 4567,
+    "code": "function getBorderWidthLabel(num) {"
+  },
+  {
+    "name": "updateOutlineColorControlsState",
+    "params": "bw",
+    "line": 4575,
+    "code": "function updateOutlineColorControlsState(bw) {"
+  },
+  {
+    "name": "updateBorderWidthPresetButtons",
+    "params": "val",
+    "line": 4592,
+    "code": "function updateBorderWidthPresetButtons(val) {"
+  },
+  {
+    "name": "updateBorderRadiusPresetButtons",
+    "params": "val",
+    "line": 4622,
+    "code": "function updateBorderRadiusPresetButtons(val) {"
+  },
+  {
+    "name": "parseDiscountBadgeRadius",
+    "params": "val, defaultVal = 8",
+    "line": 4641,
+    "code": "function parseDiscountBadgeRadius(val, defaultVal = 8) {"
+  },
+  {
+    "name": "updateDiscountBadgeRadiusPresetButtons",
+    "params": "val",
+    "line": 4648,
+    "code": "function updateDiscountBadgeRadiusPresetButtons(val) {"
+  },
+  {
+    "name": "setDiscountBadgePosition",
+    "params": "pos",
+    "line": 4674,
+    "code": "function setDiscountBadgePosition(pos) {"
+  },
+  {
+    "name": "toggleDiscountBadgePosDropdown",
+    "params": "open, suffix = ''",
+    "line": 4718,
+    "code": "function toggleDiscountBadgePosDropdown(open, suffix = '') {"
+  },
+  {
+    "name": "closeAllDiscountBadgePosDropdowns",
+    "params": "",
+    "line": 4736,
+    "code": "function closeAllDiscountBadgePosDropdowns() {"
+  },
+  {
+    "name": "getDiscountBadgePositionClass",
+    "params": "pos",
+    "line": 4747,
+    "code": "function getDiscountBadgePositionClass(pos) {"
+  },
+  {
+    "name": "parseCountdownRadius",
+    "params": "val, defaultVal = 6",
+    "line": 4754,
+    "code": "function parseCountdownRadius(val, defaultVal = 6) {"
+  },
+  {
+    "name": "updateCountdownRadiusPresetButtons",
+    "params": "val",
+    "line": 4762,
+    "code": "function updateCountdownRadiusPresetButtons(val) {"
+  },
+  {
+    "name": "syncFeatureSubpanels",
+    "params": "",
+    "line": 4781,
+    "code": "function syncFeatureSubpanels() {"
+  },
+  {
+    "name": "getCardConfigFromDOM",
+    "params": "",
+    "line": 4861,
+    "code": "function getCardConfigFromDOM() {"
+  },
+  {
+    "name": "getVal",
+    "params": "id1, id2, fallback",
+    "line": 4870,
+    "code": "const getVal = (id1, id2, fallback) => {"
+  },
+  {
+    "name": "getChk",
+    "params": "id1, id2",
+    "line": 4877,
+    "code": "const getChk = (id1, id2) => {"
+  },
+  {
+    "name": "loadCardConfigInputs",
+    "params": "variantCode, forceDefault = false",
+    "line": 4930,
+    "code": "function loadCardConfigInputs(variantCode, forceDefault = false) {"
+  },
+  {
+    "name": "setVal",
+    "params": "id, val",
+    "line": 4943,
+    "code": "const setVal = (id, val) => {"
+  },
+  {
+    "name": "setChk",
+    "params": "id, val",
+    "line": 4949,
+    "code": "const setChk = (id, val) => {"
+  },
+  {
+    "name": "saveCardConfigInputs",
+    "params": "forceSaveAsDefault = false",
+    "line": 5102,
+    "code": "function saveCardConfigInputs(forceSaveAsDefault = false) {"
+  },
+  {
+    "name": "updateCardCustomizationTabVisuals",
+    "params": "isCustomMode",
+    "line": 5127,
+    "code": "function updateCardCustomizationTabVisuals(isCustomMode) {"
+  },
+  {
+    "name": "setCardCustomizationView",
+    "params": "isCustomMode",
+    "line": 5133,
+    "code": "function setCardCustomizationView(isCustomMode) {"
+  },
+  {
+    "name": "handleSaveCardDesign",
+    "params": "",
+    "line": 5143,
+    "code": "function handleSaveCardDesign() {"
+  },
+  {
+    "name": "handleCancelCardDesign",
+    "params": "",
+    "line": 5252,
+    "code": "function handleCancelCardDesign() {"
+  },
+  {
+    "name": "getSmartVisibleBadges",
+    "params": "productName, labelsArray",
+    "line": 5440,
+    "code": "function getSmartVisibleBadges(productName, labelsArray) {"
+  },
+  {
+    "name": "getCustomLabelsCapacityMessage",
+    "params": "productName, labelsArray",
+    "line": 5465,
+    "code": "function getCustomLabelsCapacityMessage(productName, labelsArray) {"
+  },
+  {
+    "name": "isPlaceholderOrEmptyVariationTitle",
+    "params": "val, defaultLabel",
+    "line": 5488,
+    "code": "function isPlaceholderOrEmptyVariationTitle(val, defaultLabel) {"
+  },
+  {
+    "name": "getVariationGroupTitleInfo",
+    "params": "tierKey",
+    "line": 5496,
+    "code": "function getVariationGroupTitleInfo(tierKey) {"
+  },
+  {
+    "name": "getVariationLabel",
+    "params": "tierKey, fallback",
+    "line": 5536,
+    "code": "function getVariationLabel(tierKey, fallback) {"
+  },
+  {
+    "name": "formatVariationReactiveHeader",
+    "params": "groupLabel, optionCount, selectedOptionName",
+    "line": 5541,
+    "code": "function formatVariationReactiveHeader(groupLabel, optionCount, selectedOptionName) {"
+  },
+  {
+    "name": "getCustomDimensionLabel",
+    "params": "",
+    "line": 5567,
+    "code": "function getCustomDimensionLabel() {"
+  },
+  {
+    "name": "isCustomDimensionValid",
+    "params": "",
+    "line": 5577,
+    "code": "function isCustomDimensionValid() {"
+  },
+  {
+    "name": "ensureExtraServiceNoneAtBottom",
+    "params": "",
+    "line": 5584,
+    "code": "function ensureExtraServiceNoneAtBottom() {"
+  },
+  {
+    "name": "getPreviewStockDisplay",
+    "params": "selectedMat, validMaterials",
+    "line": 5630,
+    "code": "function getPreviewStockDisplay(selectedMat, validMaterials) {"
+  },
+  {
+    "name": "focusAndHighlightValidationTarget",
+    "params": "targetEl",
+    "line": 5660,
+    "code": "function focusAndHighlightValidationTarget(targetEl) {"
+  },
+  {
+    "name": "canActivateTestMode",
+    "params": "",
+    "line": 5693,
+    "code": "function canActivateTestMode() {"
+  },
+  {
+    "name": "checkAllVariationsSelected",
+    "params": "",
+    "line": 6032,
+    "code": "function checkAllVariationsSelected() {"
+  },
+  {
+    "name": "isMatWholesaleActive",
+    "params": "mat",
+    "line": 6059,
+    "code": "function isMatWholesaleActive(mat) {"
+  },
+  {
+    "name": "getPreviewWholesaleDiscount",
+    "params": "qty, unitPrice, customTiers = null",
+    "line": 6077,
+    "code": "function getPreviewWholesaleDiscount(qty, unitPrice, customTiers = null) {"
+  },
+  {
+    "name": "validatePreviewVariantSelection",
+    "params": "",
+    "line": 6138,
+    "code": "function validatePreviewVariantSelection() {"
+  },
+  {
+    "name": "showPreviewTestModeAlert",
+    "params": "checkOrMessage",
+    "line": 6197,
+    "code": "function showPreviewTestModeAlert(checkOrMessage) {"
+  },
+  {
+    "name": "hidePreviewTestModeAlert",
+    "params": "",
+    "line": 6270,
+    "code": "function hidePreviewTestModeAlert() {"
+  },
+  {
+    "name": "getPreviewHeaderHtml",
+    "params": "step, isMobile = false",
+    "line": 6292,
+    "code": "function getPreviewHeaderHtml(step, isMobile = false) {"
+  },
+  {
+    "name": "updatePreviewSidebarHeader",
+    "params": "",
+    "line": 6370,
+    "code": "function updatePreviewSidebarHeader() {"
+  },
+  {
+    "name": "bindStep1HeaderButtons",
+    "params": "",
+    "line": 6394,
+    "code": "function bindStep1HeaderButtons() {"
+  },
+  {
+    "name": "bindPreviewModeHeaderButtons",
+    "params": "",
+    "line": 6429,
+    "code": "function bindPreviewModeHeaderButtons() {"
+  },
+  {
+    "name": "syncPreviewModeHeaderButtons",
+    "params": "",
+    "line": 6465,
+    "code": "function syncPreviewModeHeaderButtons() {"
+  },
+  {
+    "name": "showPreviewTestModal",
+    "params": "config",
+    "line": 6469,
+    "code": "function showPreviewTestModal(config) {"
+  },
+  {
+    "name": "showBuySimulationConfirmModal",
+    "params": "",
+    "line": 6547,
+    "code": "function showBuySimulationConfirmModal() {"
+  },
+  {
+    "name": "showCartSimulationConfirmModal",
+    "params": "",
+    "line": 6555,
+    "code": "function showCartSimulationConfirmModal() {"
+  },
+  {
+    "name": "getShippingSimulationSummaryHtml",
+    "params": "",
+    "line": 6563,
+    "code": "function getShippingSimulationSummaryHtml() {"
+  },
+  {
+    "name": "addSingleProductToCartDirect",
+    "params": "",
+    "line": 6567,
+    "code": "function addSingleProductToCartDirect() {"
+  },
+  {
+    "name": "addVariantProductToCartDirect",
+    "params": "",
+    "line": 6571,
+    "code": "function addVariantProductToCartDirect() {"
+  },
+  {
+    "name": "calculateCustomDimensionPricingForDrawer",
+    "params": "pVal, lVal",
+    "line": 6575,
+    "code": "function calculateCustomDimensionPricingForDrawer(pVal, lVal) {"
+  },
+  {
+    "name": "formatAreaNum",
+    "params": "num",
+    "line": 6776,
+    "code": "function formatAreaNum(num) {"
+  },
+  {
+    "name": "getDrawerMinimalDimensionNoteText",
+    "params": "",
+    "line": 6809,
+    "code": "function getDrawerMinimalDimensionNoteText() {"
+  },
+  {
+    "name": "formatCleanNum",
+    "params": "val",
+    "line": 6846,
+    "code": "function formatCleanNum(val) {"
+  },
+  {
+    "name": "getRuntimeProductAdapter",
+    "params": "",
+    "line": 6861,
+    "code": "function getRuntimeProductAdapter() {"
+  },
+  {
+    "name": "getAllowedVariationOptions",
+    "params": "matId, tierKey",
+    "line": 6869,
+    "code": "function getAllowedVariationOptions(matId, tierKey) {"
+  },
+  {
+    "name": "validateAndAdjustSpecificVariations",
+    "params": "changedTier = 'tier1'",
+    "line": 6922,
+    "code": "function validateAndAdjustSpecificVariations(changedTier = 'tier1') {"
+  },
+  {
+    "name": "resolveActiveCombinationRule",
+    "params": "tier1Arg, tier2Arg, tier3Arg, tier4Arg",
+    "line": 6986,
+    "code": "function resolveActiveCombinationRule(tier1Arg, tier2Arg, tier3Arg, tier4Arg) {"
+  },
+  {
+    "name": "updateShopeeDrawerVariationOptionsAvailability",
+    "params": "container",
+    "line": 7104,
+    "code": "function updateShopeeDrawerVariationOptionsAvailability(container) {"
+  },
+  {
+    "name": "renderDrawerVariationGroup",
+    "params": "group, mode, groupIndex",
+    "line": 7209,
+    "code": "function renderDrawerVariationGroup(group, mode, groupIndex) {"
+  },
+  {
+    "name": "buildDrawerSelectedOptionsDescriptionsHtml",
+    "params": "",
+    "line": 7322,
+    "code": "function buildDrawerSelectedOptionsDescriptionsHtml() {"
+  },
+  {
+    "name": "updateDrawerSelectedOptionsDescriptions",
+    "params": "",
+    "line": 7362,
+    "code": "function updateDrawerSelectedOptionsDescriptions() {"
+  },
+  {
+    "name": "buildShopeeDrawerOrderNotice",
+    "params": "rule, curQty",
+    "line": 7378,
+    "code": "function buildShopeeDrawerOrderNotice(rule, curQty) {"
+  },
+  {
+    "name": "renderShopeeDrawerOrderNoticeHtml",
+    "params": "rule, curQty, accentColor",
+    "line": 7425,
+    "code": "function renderShopeeDrawerOrderNoticeHtml(rule, curQty, accentColor) {"
+  },
+  {
+    "name": "updateShopeeDrawerOrderNotice",
+    "params": "rule, curQty, accentColor",
+    "line": 7440,
+    "code": "function updateShopeeDrawerOrderNotice(rule, curQty, accentColor) {"
+  },
+  {
+    "name": "updateShopeeDrawerSubmitButtonState",
+    "params": "rule, curQty",
+    "line": 7458,
+    "code": "function updateShopeeDrawerSubmitButtonState(rule, curQty) {"
+  },
+  {
+    "name": "buildShopeeDrawerHtml",
+    "params": "actionType",
+    "line": 7481,
+    "code": "function buildShopeeDrawerHtml(actionType) {"
+  },
+  {
+    "name": "closeShopeeCheckoutDrawer",
+    "params": "",
+    "line": 8070,
+    "code": "function closeShopeeCheckoutDrawer() {"
+  },
+  {
+    "name": "buildProductSpecDrawerHtml",
+    "params": "",
+    "line": 8093,
+    "code": "function buildProductSpecDrawerHtml() {"
+  },
+  {
+    "name": "openProductSpecDrawer",
+    "params": "",
+    "line": 8268,
+    "code": "function openProductSpecDrawer() {"
+  },
+  {
+    "name": "closeProductSpecDrawer",
+    "params": "",
+    "line": 8319,
+    "code": "function closeProductSpecDrawer() {"
+  },
+  {
+    "name": "renderProductSizeGuideContentHtml",
+    "params": "",
+    "line": 8349,
+    "code": "function renderProductSizeGuideContentHtml() {"
+  },
+  {
+    "name": "buildProductSizeGuideDrawerHtml",
+    "params": "",
+    "line": 8407,
+    "code": "function buildProductSizeGuideDrawerHtml() {"
+  },
+  {
+    "name": "openProductSizeGuideDrawer",
+    "params": "",
+    "line": 8431,
+    "code": "function openProductSizeGuideDrawer() {"
+  },
+  {
+    "name": "closeProductSizeGuideDrawer",
+    "params": "",
+    "line": 8482,
+    "code": "function closeProductSizeGuideDrawer() {"
+  },
+  {
+    "name": "openShopeeCheckoutDrawer",
+    "params": "actionType",
+    "line": 8512,
+    "code": "function openShopeeCheckoutDrawer(actionType) {"
+  },
+  {
+    "name": "updateDrawerQtyButtonsState",
+    "params": "",
+    "line": 8546,
+    "code": "function updateDrawerQtyButtonsState() {"
+  },
+  {
+    "name": "updateShopeeDrawerLivePricing",
+    "params": "",
+    "line": 8576,
+    "code": "function updateShopeeDrawerLivePricing() {"
+  },
+  {
+    "name": "bindMiniPdpInteractiveEvents",
+    "params": "",
+    "line": 8831,
+    "code": "function bindMiniPdpInteractiveEvents() {"
+  },
+  {
+    "name": "getContextSummary",
+    "params": "",
+    "line": 8957,
+    "code": "const getContextSummary = () => {"
+  },
+  {
+    "name": "autoAdvanceAccordion",
+    "params": "nextTier",
+    "line": 9223,
+    "code": "const autoAdvanceAccordion = (nextTier) => {"
+  },
+  {
+    "name": "onDocClickCloseSelects",
+    "params": "e",
+    "line": 9289,
+    "code": "const onDocClickCloseSelects = (e) => {"
+  },
+  {
+    "name": "getExtraQty",
+    "params": "id",
+    "line": 9511,
+    "code": "function getExtraQty(id) {"
+  },
+  {
+    "name": "setExtraQty",
+    "params": "id, val",
+    "line": 9517,
+    "code": "function setExtraQty(id, val) {"
+  },
+  {
+    "name": "updateProductCardLivePreview",
+    "params": "",
+    "line": 9737,
+    "code": "function updateProductCardLivePreview() {"
+  },
+  {
+    "name": "restoreAllScrolls",
+    "params": "",
+    "line": 9787,
+    "code": "const restoreAllScrolls = () => {"
+  },
+  {
+    "name": "getLiveChk",
+    "params": "deskId, mobId, fallback = true",
+    "line": 10040,
+    "code": "const getLiveChk = (deskId, mobId, fallback = true) => {"
+  },
+  {
+    "name": "renderCardPhoto",
+    "params": "aspectRatioClass",
+    "line": 10377,
+    "code": "const renderCardPhoto = (aspectRatioClass) => {"
+  },
+  {
+    "name": "getActiveCardRatioInfo",
+    "params": "",
+    "line": 11236,
+    "code": "function getActiveCardRatioInfo() {"
+  },
+  {
+    "name": "renderOptionProfitInfo",
+    "params": "price, cost, optionName = ''",
+    "line": 11248,
+    "code": "function renderOptionProfitInfo(price, cost, optionName = '') {"
+  },
+  {
+    "name": "updateRowProfitInfo",
+    "params": "row",
+    "line": 11278,
+    "code": "function updateRowProfitInfo(row) {"
+  },
+  {
+    "name": "getVariationTierDisplayName",
+    "params": "tierKey",
+    "line": 11298,
+    "code": "function getVariationTierDisplayName(tierKey) {"
+  },
+  {
+    "name": "getTierOptionsForProduct",
+    "params": "tierKey",
+    "line": 11306,
+    "code": "function getTierOptionsForProduct(tierKey) {"
+  },
+  {
+    "name": "getEarlierTiersFor",
+    "params": "tierKey",
+    "line": 11313,
+    "code": "function getEarlierTiersFor(tierKey) {"
+  },
+  {
+    "name": "getLaterTiersFor",
+    "params": "parentTierKey",
+    "line": 11331,
+    "code": "function getLaterTiersFor(parentTierKey) {"
+  },
+  {
+    "name": "getOptionDependencySummary",
+    "params": "tier, optionId",
+    "line": 11349,
+    "code": "function getOptionDependencySummary(tier, optionId) {"
+  },
+  {
+    "name": "isOptionComplete",
+    "params": "optOrRow, tier",
+    "line": 11400,
+    "code": "function isOptionComplete(optOrRow, tier) {"
+  },
+  {
+    "name": "getOptionDependencyStatus",
+    "params": "tier, optionId",
+    "line": 11458,
+    "code": "function getOptionDependencyStatus(tier, optionId) {"
+  },
+  {
+    "name": "renderOptionDependencyButton",
+    "params": "tier, optionId",
+    "line": 11483,
+    "code": "function renderOptionDependencyButton(tier, optionId) {"
+  },
+  {
+    "name": "updateRowOptionGear",
+    "params": "row, tier, optionId",
+    "line": 11526,
+    "code": "function updateRowOptionGear(row, tier, optionId) {"
+  },
+  {
+    "name": "updateOptionDependencyIndicatorButton",
+    "params": "tier, optionId",
+    "line": 11556,
+    "code": "function updateOptionDependencyIndicatorButton(tier, optionId) {"
+  },
+  {
+    "name": "cleanUpDependencyReferences",
+    "params": "deletedId",
+    "line": 11563,
+    "code": "function cleanUpDependencyReferences(deletedId) {"
+  },
+  {
+    "name": "openOptionDependencyModal",
+    "params": "tier, optionId",
+    "line": 11585,
+    "code": "function openOptionDependencyModal(tier, optionId) {"
+  },
+  {
+    "name": "applyDepCardVisualState",
+    "params": "cardEl, isSelected",
+    "line": 11631,
+    "code": "function applyDepCardVisualState(cardEl, isSelected) {"
+  },
+  {
+    "name": "setDepModalMode",
+    "params": "mode",
+    "line": 11640,
+    "code": "function setDepModalMode(mode) {"
+  },
+  {
+    "name": "updateDepModalDescriptions",
+    "params": "",
+    "line": 11669,
+    "code": "function updateDepModalDescriptions() {"
+  },
+  {
+    "name": "renderOptionDependencyModalContent",
+    "params": "",
+    "line": 11697,
+    "code": "function renderOptionDependencyModalContent() {"
+  },
+  {
+    "name": "renderDepModalTriggersCheckboxes",
+    "params": "",
+    "line": 11723,
+    "code": "function renderDepModalTriggersCheckboxes() {"
+  },
+  {
+    "name": "handleSaveOptionDependency",
+    "params": "",
+    "line": 11759,
+    "code": "function handleSaveOptionDependency() {"
+  },
+  {
+    "name": "closeOptionDependencyModal",
+    "params": "",
+    "line": 11798,
+    "code": "function closeOptionDependencyModal() {"
+  },
+  {
+    "name": "renderOptionDependencyModalMarkup",
+    "params": "",
+    "line": 11804,
+    "code": "function renderOptionDependencyModalMarkup() {"
+  },
+  {
+    "name": "renderSkipParentTierOptions",
+    "params": "",
+    "line": 11896,
+    "code": "function renderSkipParentTierOptions() {"
+  },
+  {
+    "name": "renderSkipTargetTierOptions",
+    "params": "parentTierKey",
+    "line": 11910,
+    "code": "function renderSkipTargetTierOptions(parentTierKey) {"
+  },
+  {
+    "name": "renderSkipTriggerOptions",
+    "params": "parentTierKey",
+    "line": 11918,
+    "code": "function renderSkipTriggerOptions(parentTierKey) {"
+  },
+  {
+    "name": "renderSkipRulesRows",
+    "params": "",
+    "line": 11926,
+    "code": "function renderSkipRulesRows() {"
+  },
+  {
+    "name": "renderSkipRulesSectionMarkup",
+    "params": "",
+    "line": 11974,
+    "code": "function renderSkipRulesSectionMarkup() {"
+  },
+  {
+    "name": "bindOptionDependencyModalEvents",
+    "params": "",
+    "line": 11980,
+    "code": "function bindOptionDependencyModalEvents() {"
+  },
+  {
+    "name": "bindSkipRulesSectionEvents",
+    "params": "",
+    "line": 12064,
+    "code": "function bindSkipRulesSectionEvents() {"
+  },
+  {
+    "name": "bindSkipRulesDeleteButtons",
+    "params": "",
+    "line": 12161,
+    "code": "function bindSkipRulesDeleteButtons() {"
+  },
+  {
+    "name": "refreshSkipRulesList",
+    "params": "",
+    "line": 12174,
+    "code": "function refreshSkipRulesList() {"
+  },
+  {
+    "name": "renderGalleryThumbnails",
+    "params": "",
+    "line": 12188,
+    "code": "function renderGalleryThumbnails() {"
+  },
+  {
+    "name": "renderPriceTypeOptions",
+    "params": "selectedId",
+    "line": 12280,
+    "code": "function renderPriceTypeOptions(selectedId) {"
+  },
+  {
+    "name": "getPriceTypeHint",
+    "params": "ptId",
+    "line": 12301,
+    "code": "function getPriceTypeHint(ptId) {"
+  },
+  {
+    "name": "calculateMarginBadge",
+    "params": "price, cost",
+    "line": 12314,
+    "code": "function calculateMarginBadge(price, cost) {"
+  },
+  {
+    "name": "getMissingLabelsForCard",
+    "params": "cardIndex",
+    "line": 12336,
+    "code": "function getMissingLabelsForCard(cardIndex) {"
+  },
+  {
+    "name": "renderFlashbackCard",
+    "params": "cardTitle, cardIcon, missingLabels, cardId",
+    "line": 12351,
+    "code": "function renderFlashbackCard(cardTitle, cardIcon, missingLabels, cardId) {"
+  },
+  {
+    "name": "getProductReferencePrice",
+    "params": "",
+    "line": 12366,
+    "code": "function getProductReferencePrice() {"
+  },
+  {
+    "name": "getProductStockInfo",
+    "params": "",
+    "line": 12387,
+    "code": "function getProductStockInfo() {"
+  },
+  {
+    "name": "checkAffiliateStockAndPriceWarnings",
+    "params": "",
+    "line": 12461,
+    "code": "function checkAffiliateStockAndPriceWarnings() {"
+  },
+  {
+    "name": "updateTierMinQtyChaining",
+    "params": "fromIdx = 0",
+    "line": 12551,
+    "code": "function updateTierMinQtyChaining(fromIdx = 0) {"
+  },
+  {
+    "name": "syncAffiliateTiersFromDOM",
+    "params": "",
+    "line": 12580,
+    "code": "function syncAffiliateTiersFromDOM() {"
+  },
+  {
+    "name": "getAffiliateSingleHelperInfo",
+    "params": "",
+    "line": 12620,
+    "code": "function getAffiliateSingleHelperInfo() {"
+  },
+  {
+    "name": "updateAffiliateSingleHelper",
+    "params": "",
+    "line": 12676,
+    "code": "function updateAffiliateSingleHelper() {"
+  },
+  {
+    "name": "setAffiliateCommissionEnabled",
+    "params": "enabled",
+    "line": 12694,
+    "code": "function setAffiliateCommissionEnabled(enabled) {"
+  },
+  {
+    "name": "setAffiliateCommissionMode",
+    "params": "mode",
+    "line": 12717,
+    "code": "function setAffiliateCommissionMode(mode) {"
+  },
+  {
+    "name": "renderAffiliateCommissionSection",
+    "params": "",
+    "line": 12764,
+    "code": "function renderAffiliateCommissionSection() {"
+  },
+  {
+    "name": "renderAffiliateTiersTableBody",
+    "params": "",
+    "line": 12967,
+    "code": "function renderAffiliateTiersTableBody() {"
+  },
+  {
+    "name": "bindAffiliateTierTableEvents",
+    "params": "",
+    "line": 13033,
+    "code": "function bindAffiliateTierTableEvents() {"
+  },
+  {
+    "name": "addAffiliateTierRow",
+    "params": "",
+    "line": 13142,
+    "code": "function addAffiliateTierRow() {"
+  },
+  {
+    "name": "bindAffiliateCommissionEvents",
+    "params": "",
+    "line": 13225,
+    "code": "function bindAffiliateCommissionEvents() {"
+  },
+  {
+    "name": "renderShippingLocationNotice",
+    "params": "",
+    "line": 13350,
+    "code": "function renderShippingLocationNotice() {"
+  },
+  {
+    "name": "renderCustomSpecsTableHtml",
+    "params": "",
+    "line": 13382,
+    "code": "function renderCustomSpecsTableHtml() {"
+  },
+  {
+    "name": "renderSingleSpecRowHtml",
+    "params": "spec = { title: '', value: '' }, index = 0",
+    "line": 13432,
+    "code": "function renderSingleSpecRowHtml(spec = { title: '', value: '' }, index = 0) {"
+  },
+  {
+    "name": "bindCustomSpecsEvents",
+    "params": "",
+    "line": 13471,
+    "code": "function bindCustomSpecsEvents() {"
+  },
+  {
+    "name": "updateSpecsUIState",
+    "params": "",
+    "line": 13477,
+    "code": "const updateSpecsUIState = () => {"
+  },
+  {
+    "name": "getSizeGuideColWidthClass",
+    "params": "colName = '', colIdx = 0",
+    "line": 13578,
+    "code": "function getSizeGuideColWidthClass(colName = '', colIdx = 0) {"
+  },
+  {
+    "name": "removeSizeGuideWidthClasses",
+    "params": "el",
+    "line": 13596,
+    "code": "function removeSizeGuideWidthClasses(el) {"
+  },
+  {
+    "name": "updateSizeGuideColWidthClasses",
+    "params": "",
+    "line": 13607,
+    "code": "function updateSizeGuideColWidthClasses() {"
+  },
+  {
+    "name": "renderSizeGuideTheadHtml",
+    "params": "columns = []",
+    "line": 13634,
+    "code": "function renderSizeGuideTheadHtml(columns = []) {"
+  },
+  {
+    "name": "renderSizeGuideTbodyHtml",
+    "params": "columns = [], rows = []",
+    "line": 13676,
+    "code": "function renderSizeGuideTbodyHtml(columns = [], rows = []) {"
+  },
+  {
+    "name": "getActiveVariationTiersForSizeGuide",
+    "params": "",
+    "line": 13705,
+    "code": "function getActiveVariationTiersForSizeGuide() {"
+  },
+  {
+    "name": "getEffectiveLinkedVariation",
+    "params": "",
+    "line": 13739,
+    "code": "function getEffectiveLinkedVariation() {"
+  },
+  {
+    "name": "renderSizeGuideVariationLinkMarkup",
+    "params": "guide",
+    "line": 13760,
+    "code": "function renderSizeGuideVariationLinkMarkup(guide) {"
+  },
+  {
+    "name": "bindCustomSizeGuideVariationSelect",
+    "params": "",
+    "line": 13832,
+    "code": "function bindCustomSizeGuideVariationSelect() {"
+  },
+  {
+    "name": "togglePopover",
+    "params": "open",
+    "line": 13842,
+    "code": "const togglePopover = (open) => {"
+  },
+  {
+    "name": "clickOutsideHandler",
+    "params": "e",
+    "line": 13873,
+    "code": "const clickOutsideHandler = (e) => {"
+  },
+  {
+    "name": "refreshSizeGuideVariationLinkDropdown",
+    "params": "",
+    "line": 13935,
+    "code": "function refreshSizeGuideVariationLinkDropdown() {"
+  },
+  {
+    "name": "bindSizeGuideEvents",
+    "params": "",
+    "line": 13957,
+    "code": "function bindSizeGuideEvents() {"
+  },
+  {
+    "name": "syncTemplateButtonStyles",
+    "params": "activeKey",
+    "line": 13971,
+    "code": "function syncTemplateButtonStyles(activeKey) {"
+  },
+  {
+    "name": "renderSizeGuideTableContent",
+    "params": "",
+    "line": 13982,
+    "code": "function renderSizeGuideTableContent() {"
+  },
+  {
+    "name": "showSizeGuideTemplateConfirmModal",
+    "params": "targetKey, onConfirm",
+    "line": 14001,
+    "code": "function showSizeGuideTemplateConfirmModal(targetKey, onConfirm) {"
+  },
+  {
+    "name": "closeModal",
+    "params": "",
+    "line": 14037,
+    "code": "const closeModal = () => {"
+  },
+  {
+    "name": "handleTypeSelectAttempt",
+    "params": "e",
+    "line": 14159,
+    "code": "function handleTypeSelectAttempt(e) {"
+  },
+  {
+    "name": "applyTemplate",
+    "params": "",
+    "line": 14299,
+    "code": "const applyTemplate = () => {"
+  },
+  {
+    "name": "handleAddColumn",
+    "params": "",
+    "line": 14319,
+    "code": "const handleAddColumn = () => {"
+  },
+  {
+    "name": "bindSizeGuideImageRemoveEvent",
+    "params": "",
+    "line": 14458,
+    "code": "function bindSizeGuideImageRemoveEvent() {"
+  },
+  {
+    "name": "renderSizeGuideSectionHtml",
+    "params": "",
+    "line": 14481,
+    "code": "function renderSizeGuideSectionHtml() {"
+  },
+  {
+    "name": "renderStep2Content",
+    "params": "",
+    "line": 14594,
+    "code": "function renderStep2Content() {"
+  },
+  {
+    "name": "getCustomLabelRecommendations",
+    "params": "",
+    "line": 15765,
+    "code": "function getCustomLabelRecommendations() {"
+  },
+  {
+    "name": "getVariationLabelRecommendations",
+    "params": "tier",
+    "line": 15777,
+    "code": "function getVariationLabelRecommendations(tier) {"
+  },
+  {
+    "name": "getActiveVariationLabelInputs",
+    "params": "",
+    "line": 15800,
+    "code": "function getActiveVariationLabelInputs() {"
+  },
+  {
+    "name": "refreshVariationTitleDuplicateErrors",
+    "params": "",
+    "line": 15836,
+    "code": "function refreshVariationTitleDuplicateErrors() {"
+  },
+  {
+    "name": "initAffiliateGlobalListeners",
+    "params": "",
+    "line": 15891,
+    "code": "function initAffiliateGlobalListeners() {"
+  },
+  {
+    "name": "formatNumberLocal",
+    "params": "num",
+    "line": 15985,
+    "code": "function formatNumberLocal(num) {"
+  },
+  {
+    "name": "getDimensionMainComponentChoices",
+    "params": "",
+    "line": 15990,
+    "code": "function getDimensionMainComponentChoices() {"
+  },
+  {
+    "name": "renderDimensionSuggestionChipsHtml",
+    "params": "",
+    "line": 16044,
+    "code": "function renderDimensionSuggestionChipsHtml() {"
+  },
+  {
+    "name": "getDimensionMainComponentOptionsHtml",
+    "params": "",
+    "line": 16061,
+    "code": "function getDimensionMainComponentOptionsHtml() {"
+  },
+  {
+    "name": "getSandboxMainComponentOptionsList",
+    "params": "",
+    "line": 16074,
+    "code": "function getSandboxMainComponentOptionsList() {"
+  },
+  {
+    "name": "getSandboxMainComponentOptionsHtml",
+    "params": "",
+    "line": 16133,
+    "code": "function getSandboxMainComponentOptionsHtml() {"
+  },
+  {
+    "name": "getTierDisplayName",
+    "params": "tierKey",
+    "line": 16150,
+    "code": "function getTierDisplayName(tierKey) {"
+  },
+  {
+    "name": "getAvailableRuleTierChoices",
+    "params": "currentRuleId = null",
+    "line": 16159,
+    "code": "function getAvailableRuleTierChoices(currentRuleId = null) {"
+  },
+  {
+    "name": "isTierAvailable",
+    "params": "tierKey",
+    "line": 16166,
+    "code": "const isTierAvailable = (tierKey) => {"
+  },
+  {
+    "name": "getValidOptionsForTier",
+    "params": "tierKey",
+    "line": 16213,
+    "code": "function getValidOptionsForTier(tierKey) {"
+  },
+  {
+    "name": "getEffectiveRuleForOption",
+    "params": "tierKey, optionObj",
+    "line": 16225,
+    "code": "function getEffectiveRuleForOption(tierKey, optionObj) {"
+  },
+  {
+    "name": "getSandboxFinishingOptionsList",
+    "params": "",
+    "line": 16278,
+    "code": "function getSandboxFinishingOptionsList() {"
+  },
+  {
+    "name": "getSandboxFinishingCheckboxesHtml",
+    "params": "",
+    "line": 16322,
+    "code": "function getSandboxFinishingCheckboxesHtml() {"
+  },
+  {
+    "name": "renderOptionDimCalcControl",
+    "params": "arg1, arg2, idx",
+    "line": 16422,
+    "code": "function renderOptionDimCalcControl(arg1, arg2, idx) {"
+  },
+  {
+    "name": "getDimensionAreaUnitLabel",
+    "params": "unit",
+    "line": 16496,
+    "code": "function getDimensionAreaUnitLabel(unit) {"
+  },
+  {
+    "name": "getDefaultMinAreaThreshold",
+    "params": "unit",
+    "line": 16503,
+    "code": "function getDefaultMinAreaThreshold(unit) {"
+  },
+  {
+    "name": "checkDimensionUnitSelected",
+    "params": "",
+    "line": 16509,
+    "code": "function checkDimensionUnitSelected() {"
+  },
+  {
+    "name": "renderSandboxCalculationResultsHtml",
+    "params": "",
+    "line": 16536,
+    "code": "function renderSandboxCalculationResultsHtml() {"
+  },
+  {
+    "name": "updateSandboxCalculation",
+    "params": "",
+    "line": 16876,
+    "code": "function updateSandboxCalculation() {"
+  },
+  {
+    "name": "getRuleSummaryBadgeHtml",
+    "params": "calcMode, dimAddSide, dimAddVal, dimUnit",
+    "line": 16883,
+    "code": "function getRuleSummaryBadgeHtml(calcMode, dimAddSide, dimAddVal, dimUnit) {"
+  },
+  {
+    "name": "renderDimensionRuleModalsHtml",
+    "params": "dimUnit",
+    "line": 16912,
+    "code": "function renderDimensionRuleModalsHtml(dimUnit) {"
+  },
+  {
+    "name": "updateModalDetailVisibility",
+    "params": "calcMode",
+    "line": 17109,
+    "code": "function updateModalDetailVisibility(calcMode) {"
+  },
+  {
+    "name": "openOptionDimensionRuleModal",
+    "params": "ruleId, optId, optName, isAll = false",
+    "line": 17121,
+    "code": "function openOptionDimensionRuleModal(ruleId, optId, optName, isAll = false) {"
+  },
+  {
+    "name": "renderSingleDimensionRuleCardHtml",
+    "params": "rule, idx, availableTiers, dimUnit",
+    "line": 17187,
+    "code": "function renderSingleDimensionRuleCardHtml(rule, idx, availableTiers, dimUnit) {"
+  },
+  {
+    "name": "renderDimensionRulesSectionHtml",
+    "params": "",
+    "line": 17337,
+    "code": "function renderDimensionRulesSectionHtml() {"
+  },
+  {
+    "name": "bindSandboxCheckboxes",
+    "params": "",
+    "line": 17399,
+    "code": "function bindSandboxCheckboxes() {"
+  },
+  {
+    "name": "refreshDimensionRulesDOM",
+    "params": "",
+    "line": 17423,
+    "code": "function refreshDimensionRulesDOM() {"
+  },
+  {
+    "name": "refreshSandboxFinishingList",
+    "params": "",
+    "line": 17432,
+    "code": "function refreshSandboxFinishingList() {"
+  },
+  {
+    "name": "bindDimensionRulesEvents",
+    "params": "",
+    "line": 17441,
+    "code": "function bindDimensionRulesEvents() {"
+  },
+  {
+    "name": "renderSandboxSimulatorModalMarkup",
+    "params": "",
+    "line": 17654,
+    "code": "function renderSandboxSimulatorModalMarkup() {"
+  },
+  {
+    "name": "openSandboxSimulatorModal",
+    "params": "",
+    "line": 17749,
+    "code": "function openSandboxSimulatorModal() {"
+  },
+  {
+    "name": "closeSandboxSimulatorModal",
+    "params": "",
+    "line": 17789,
+    "code": "function closeSandboxSimulatorModal() {"
+  },
+  {
+    "name": "bindSandboxSimulatorModalEvents",
+    "params": "",
+    "line": 17797,
+    "code": "function bindSandboxSimulatorModalEvents() {"
+  },
+  {
+    "name": "renderSandboxDimensionModalMarkup",
+    "params": "",
+    "line": 17845,
+    "code": "function renderSandboxDimensionModalMarkup() {"
+  },
+  {
+    "name": "openSandboxDimensionModal",
+    "params": "",
+    "line": 17936,
+    "code": "function openSandboxDimensionModal() {"
+  },
+  {
+    "name": "closeSandboxDimensionModal",
+    "params": "",
+    "line": 17982,
+    "code": "function closeSandboxDimensionModal() {"
+  },
+  {
+    "name": "applySandboxDimensionModal",
+    "params": "",
+    "line": 17997,
+    "code": "function applySandboxDimensionModal() {"
+  },
+  {
+    "name": "bindSandboxDimensionModalEvents",
+    "params": "",
+    "line": 18052,
+    "code": "function bindSandboxDimensionModalEvents() {"
+  },
+  {
+    "name": "handleKey",
+    "params": "e",
+    "line": 18087,
+    "code": "const handleKey = (e) => {"
+  },
+  {
+    "name": "renderCustomDimensionMainComponentDropdownHtml",
+    "params": "",
+    "line": 18150,
+    "code": "function renderCustomDimensionMainComponentDropdownHtml() {"
+  },
+  {
+    "name": "renderCustomDimensionUnitDropdownHtml",
+    "params": "dimUnit",
+    "line": 18216,
+    "code": "function renderCustomDimensionUnitDropdownHtml(dimUnit) {"
+  },
+  {
+    "name": "bindCustomDimensionDropdowns",
+    "params": "",
+    "line": 18283,
+    "code": "function bindCustomDimensionDropdowns() {"
+  },
+  {
+    "name": "toggleMain",
+    "params": "open",
+    "line": 18292,
+    "code": "const toggleMain = (open) => {"
+  },
+  {
+    "name": "toggleUnit",
+    "params": "open",
+    "line": 18369,
+    "code": "const toggleUnit = (open) => {"
+  },
+  {
+    "name": "clickOutsideHandler",
+    "params": "e",
+    "line": 18444,
+    "code": "const clickOutsideHandler = (e) => {"
+  },
+  {
+    "name": "refreshCustomDimensionMainComponentChoices",
+    "params": "",
+    "line": 18464,
+    "code": "function refreshCustomDimensionMainComponentChoices() {"
+  },
+  {
+    "name": "renderCustomDimensionCard",
+    "params": "",
+    "line": 18505,
+    "code": "function renderCustomDimensionCard() {"
+  },
+  {
+    "name": "renderPricingModelSection",
+    "params": "",
+    "line": 18804,
+    "code": "function renderPricingModelSection() {"
+  },
+  {
+    "name": "renderVariationCard",
+    "params": "tier, tierNum, title, placeholderLabel, labelKey, tooltipText",
+    "line": 18808,
+    "code": "function renderVariationCard(tier, tierNum, title, placeholderLabel, labelKey, tooltipText) {"
+  },
+  {
+    "name": "renderExtraServiceCard",
+    "params": "",
+    "line": 18901,
+    "code": "function renderExtraServiceCard() {"
+  },
+  {
+    "name": "renderHierarchicalVariationsSection",
+    "params": "",
+    "line": 18995,
+    "code": "function renderHierarchicalVariationsSection() {"
+  },
+  {
+    "name": "renderMaxOrderSection",
+    "params": "",
+    "line": 19194,
+    "code": "function renderMaxOrderSection() {"
+  },
+  {
+    "name": "closeMatrixAvailabilityPopover",
+    "params": "",
+    "line": 19339,
+    "code": "function closeMatrixAvailabilityPopover() {"
+  },
+  {
+    "name": "computeMatrixTierAvailability",
+    "params": "mat, tierKey",
+    "line": 19346,
+    "code": "function computeMatrixTierAvailability(mat, tierKey) {"
+  },
+  {
+    "name": "showMatrixAvailabilityPopover",
+    "params": "triggerEl, matId, tierKey",
+    "line": 19536,
+    "code": "function showMatrixAvailabilityPopover(triggerEl, matId, tierKey) {"
+  },
+  {
+    "name": "getPOptName",
+    "params": "id",
+    "line": 19605,
+    "code": "const getPOptName = (id) => {"
+  },
+  {
+    "name": "handleOutsideClick",
+    "params": "e",
+    "line": 19697,
+    "code": "const handleOutsideClick = (e) => {"
+  },
+  {
+    "name": "handleKeydown",
+    "params": "e",
+    "line": 19703,
+    "code": "const handleKeydown = (e) => {"
+  },
+  {
+    "name": "closePopover",
+    "params": "",
+    "line": 19710,
+    "code": "const closePopover = () => {"
+  },
+  {
+    "name": "renderCombinationMatrixTable",
+    "params": "",
+    "line": 19731,
+    "code": "function renderCombinationMatrixTable() {"
+  },
+  {
+    "name": "renderMatrixTierCell",
+    "params": "matItem, tier",
+    "line": 19767,
+    "code": "function renderMatrixTierCell(matItem, tier) {"
+  },
+  {
+    "name": "renderWholesaleCell",
+    "params": "",
+    "line": 19782,
+    "code": "function renderWholesaleCell() {"
+  },
+  {
+    "name": "renderMultipleCell",
+    "params": "",
+    "line": 19819,
+    "code": "function renderMultipleCell() {"
+  },
+  {
+    "name": "renderWholesaleModalMarkup",
+    "params": "",
+    "line": 19973,
+    "code": "function renderWholesaleModalMarkup() {"
+  },
+  {
+    "name": "renderOrderMultipleModalMarkup",
+    "params": "",
+    "line": 20021,
+    "code": "function renderOrderMultipleModalMarkup() {"
+  },
+  {
+    "name": "renderSpecificOptionsModalMarkup",
+    "params": "",
+    "line": 20058,
+    "code": "function renderSpecificOptionsModalMarkup() {"
+  },
+  {
+    "name": "renderWholesaleTable",
+    "params": "",
+    "line": 20114,
+    "code": "function renderWholesaleTable() {"
+  },
+  {
+    "name": "renderOrderMultipleSection",
+    "params": "",
+    "line": 20255,
+    "code": "function renderOrderMultipleSection() {"
+  },
+  {
+    "name": "checkOptionNameDuplicate",
+    "params": "tier, nameVal, currentIdx",
+    "line": 20368,
+    "code": "function checkOptionNameDuplicate(tier, nameVal, currentIdx) {"
+  },
+  {
+    "name": "refreshOptionDuplicateErrors",
+    "params": "tier",
+    "line": 20393,
+    "code": "function refreshOptionDuplicateErrors(tier) {"
+  },
+  {
+    "name": "validateOptionField",
+    "params": "inp, isBlur = false",
+    "line": 20452,
+    "code": "function validateOptionField(inp, isBlur = false) {"
+  },
+  {
+    "name": "setError",
+    "params": "msg",
+    "line": 20463,
+    "code": "function setError(msg) {"
+  },
+  {
+    "name": "validateVariationGroupLabels",
+    "params": "",
+    "line": 20672,
+    "code": "function validateVariationGroupLabels() {"
+  },
+  {
+    "name": "renderMaterialsRows",
+    "params": "isKombStep",
+    "line": 20678,
+    "code": "function renderMaterialsRows(isKombStep) {"
+  },
+  {
+    "name": "renderFinishingRows",
+    "params": "tier",
+    "line": 20799,
+    "code": "function renderFinishingRows(tier) {"
+  },
+  {
+    "name": "compressProductImage",
+    "params": "file, maxWidth = 1200, maxHeight = 1200, quality = 0.8",
+    "line": 21073,
+    "code": "async function compressProductImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) {"
+  },
+  {
+    "name": "generateAIDescription",
+    "params": "context",
+    "line": 21134,
+    "code": "async function generateAIDescription(context) {"
+  },
+  {
+    "name": "showWizardErrorBanner",
+    "params": "errors",
+    "line": 21178,
+    "code": "function showWizardErrorBanner(errors) {"
+  },
+  {
+    "name": "hideWizardErrorBanner",
+    "params": "",
+    "line": 21189,
+    "code": "function hideWizardErrorBanner() {"
+  },
+  {
+    "name": "validatePrerequisitesBeforeCustomDimension",
+    "params": "",
+    "line": 21193,
+    "code": "function validatePrerequisitesBeforeCustomDimension() {"
+  },
+  {
+    "name": "addError",
+    "params": "msg, el",
+    "line": 21197,
+    "code": "function addError(msg, el) {"
+  },
+  {
+    "name": "validateSinglePrice",
+    "params": "value, isBlur = false",
+    "line": 21427,
+    "code": "function validateSinglePrice(value, isBlur = false) {"
+  },
+  {
+    "name": "centerActiveSubnavTab",
+    "params": "tabEl",
+    "line": 21487,
+    "code": "function centerActiveSubnavTab(tabEl) {"
+  },
+  {
+    "name": "setActiveStep2NavTab",
+    "params": "targetId, shouldCenter = true",
+    "line": 21507,
+    "code": "function setActiveStep2NavTab(targetId, shouldCenter = true) {"
+  },
+  {
+    "name": "scrollToStep2Card",
+    "params": "targetId",
+    "line": 21525,
+    "code": "function scrollToStep2Card(targetId) {"
+  },
+  {
+    "name": "handleStep2ScrollSpy",
+    "params": "",
+    "line": 21560,
+    "code": "function handleStep2ScrollSpy() {"
+  },
+  {
+    "name": "initStep2SubnavObserver",
+    "params": "",
+    "line": 21612,
+    "code": "function initStep2SubnavObserver() {"
+  },
+  {
+    "name": "updateStepVisibility",
+    "params": "",
+    "line": 21640,
+    "code": "function updateStepVisibility() {"
+  },
+  {
+    "name": "handleProductNameValidation",
+    "params": "val, isStep1 = true",
+    "line": 21710,
+    "code": "function handleProductNameValidation(val, isStep1 = true) {"
+  },
+  {
+    "name": "goToStep",
+    "params": "step",
+    "line": 21736,
+    "code": "function goToStep(step) {"
+  },
+  {
+    "name": "addS1Error",
+    "params": "msg, el",
+    "line": 21755,
+    "code": "function addS1Error(msg, el) {"
+  },
+  {
+    "name": "bindFormEvents",
+    "params": "",
+    "line": 21846,
+    "code": "function bindFormEvents() {"
+  },
+  {
+    "name": "syncCustomLabelsUIForVariant",
+    "params": "variantCode",
+    "line": 21849,
+    "code": "function syncCustomLabelsUIForVariant(variantCode) {"
+  },
+  {
+    "name": "updateStep1DynamicDescriptions",
+    "params": "",
+    "line": 21906,
+    "code": "function updateStep1DynamicDescriptions() {"
+  },
+  {
+    "name": "updateStep1SequentialGatingDOM",
+    "params": "",
+    "line": 21933,
+    "code": "function updateStep1SequentialGatingDOM() {"
+  },
+  {
+    "name": "resetCustomDimensionToOff",
+    "params": "",
+    "line": 22027,
+    "code": "function resetCustomDimensionToOff() {"
+  },
+  {
+    "name": "syncWarrantyInputsUI",
+    "params": "",
+    "line": 22537,
+    "code": "function syncWarrantyInputsUI() {"
+  },
+  {
+    "name": "handleStep2BackAction",
+    "params": "e",
+    "line": 22619,
+    "code": "const handleStep2BackAction = (e) => {"
+  },
+  {
+    "name": "validateSingleCost",
+    "params": "isBlur = false",
+    "line": 22812,
+    "code": "function validateSingleCost(isBlur = false) {"
+  },
+  {
+    "name": "updateSingleMargin",
+    "params": "",
+    "line": 22871,
+    "code": "function updateSingleMargin() {"
+  },
+  {
+    "name": "syncStockStateAndClearBtn",
+    "params": "val",
+    "line": 22902,
+    "code": "function syncStockStateAndClearBtn(val) {"
+  },
+  {
+    "name": "validateSingleStock",
+    "params": "isBlur = false",
+    "line": 22932,
+    "code": "function validateSingleStock(isBlur = false) {"
+  },
+  {
+    "name": "handleVariationLabelInput",
+    "params": "inp, val",
+    "line": 22999,
+    "code": "function handleVariationLabelInput(inp, val) {"
+  },
+  {
+    "name": "updateSandboxCalculation",
+    "params": "",
+    "line": 23185,
+    "code": "function updateSandboxCalculation() {"
+  },
+  {
+    "name": "refreshDimSuggestionState",
+    "params": "",
+    "line": 23424,
+    "code": "function refreshDimSuggestionState() {"
+  },
+  {
+    "name": "bindRemoveDimSuggestionChips",
+    "params": "",
+    "line": 23447,
+    "code": "function bindRemoveDimSuggestionChips() {"
+  },
+  {
+    "name": "bindKetentuanTambahan",
+    "params": "",
+    "line": 23629,
+    "code": "function bindKetentuanTambahan() {"
+  },
+  {
+    "name": "bindMaterialRowEvents",
+    "params": "",
+    "line": 23756,
+    "code": "function bindMaterialRowEvents() {"
+  },
+  {
+    "name": "bindFinishingTierRows",
+    "params": "tier",
+    "line": 24102,
+    "code": "function bindFinishingTierRows(tier) {"
+  },
+  {
+    "name": "refreshCombinationMatrixTable",
+    "params": "",
+    "line": 24633,
+    "code": "function refreshCombinationMatrixTable() {"
+  },
+  {
+    "name": "bindCombinationMatrixEvents",
+    "params": "",
+    "line": 24647,
+    "code": "function bindCombinationMatrixEvents() {"
+  },
+  {
+    "name": "handleComboMax",
+    "params": "e",
+    "line": 24699,
+    "code": "const handleComboMax = (e) => {"
+  },
+  {
+    "name": "handleOpen",
+    "params": "",
+    "line": 24781,
+    "code": "const handleOpen = () => {"
+  },
+  {
+    "name": "handleMultipleInput",
+    "params": "e",
+    "line": 24810,
+    "code": "const handleMultipleInput = (e) => {"
+  },
+  {
+    "name": "openWholesaleModal",
+    "params": "matId, matName",
+    "line": 24906,
+    "code": "function openWholesaleModal(matId, matName) {"
+  },
+  {
+    "name": "syncWholesaleModeRadioStyles",
+    "params": "modal",
+    "line": 24994,
+    "code": "function syncWholesaleModeRadioStyles(modal) {"
+  },
+  {
+    "name": "renderWholesaleTableForMat",
+    "params": "mat",
+    "line": 25011,
+    "code": "function renderWholesaleTableForMat(mat) {"
+  },
+  {
+    "name": "checkTierConflicts",
+    "params": "modal",
+    "line": 25178,
+    "code": "function checkTierConflicts(modal) {"
+  },
+  {
+    "name": "bindWholesaleModalInputs",
+    "params": "modal, mat",
+    "line": 25250,
+    "code": "function bindWholesaleModalInputs(modal, mat) {"
+  },
+  {
+    "name": "updateNormalFormulaNote",
+    "params": "",
+    "line": 25257,
+    "code": "function updateNormalFormulaNote() {"
+  },
+  {
+    "name": "bindTierDeleteAndAutoMin",
+    "params": "modal",
+    "line": 25329,
+    "code": "function bindTierDeleteAndAutoMin(modal) {"
+  },
+  {
+    "name": "openOrderMultipleModal",
+    "params": "matId, matName",
+    "line": 25615,
+    "code": "function openOrderMultipleModal(matId, matName) {"
+  },
+  {
+    "name": "syncMultipleRadioStyles",
+    "params": "modal",
+    "line": 25659,
+    "code": "function syncMultipleRadioStyles(modal) {"
+  },
+  {
+    "name": "renderMultipleBody",
+    "params": "type, currentVal",
+    "line": 25676,
+    "code": "function renderMultipleBody(type, currentVal) {"
+  },
+  {
+    "name": "openSpecificOptionsModal",
+    "params": "tier, matId, matName",
+    "line": 25766,
+    "code": "function openSpecificOptionsModal(tier, matId, matName) {"
+  },
+  {
+    "name": "updateBulletAndCount",
+    "params": "",
+    "line": 25840,
+    "code": "const updateBulletAndCount = () => {"
+  },
+  {
+    "name": "syncSpecificScopeRadioStyles",
+    "params": "modal",
+    "line": 25887,
+    "code": "function syncSpecificScopeRadioStyles(modal) {"
+  },
+  {
+    "name": "handleNormalMaxInput",
+    "params": "e",
+    "line": 26004,
+    "code": "const handleNormalMaxInput = (e) => {"
+  },
+  {
+    "name": "bindInlineWholesaleEvents",
+    "params": "",
+    "line": 26061,
+    "code": "function bindInlineWholesaleEvents() {"
+  },
+  {
+    "name": "syncNormalWholesale",
+    "params": "",
+    "line": 26082,
+    "code": "function syncNormalWholesale() {"
+  },
+  {
+    "name": "bindInlineMultipleEvents",
+    "params": "",
+    "line": 26178,
+    "code": "function bindInlineMultipleEvents() {"
+  },
+  {
+    "name": "handleSingleMultiple",
+    "params": "e",
+    "line": 26184,
+    "code": "const handleSingleMultiple = (e) => {"
+  },
+  {
+    "name": "activateWholesale",
+    "params": "",
+    "line": 26225,
+    "code": "const activateWholesale = () => {"
+  },
+  {
+    "name": "deactivateWholesale",
+    "params": "",
+    "line": 26260,
+    "code": "const deactivateWholesale = () => {"
+  },
+  {
+    "name": "activateOrderMultiple",
+    "params": "",
+    "line": 26293,
+    "code": "const activateOrderMultiple = () => {"
+  },
+  {
+    "name": "deactivateOrderMultiple",
+    "params": "",
+    "line": 26311,
+    "code": "const deactivateOrderMultiple = () => {"
+  },
+  {
+    "name": "updateVolumetricWeightCalculation",
+    "params": "",
+    "line": 26481,
+    "code": "function updateVolumetricWeightCalculation() {"
+  },
+  {
+    "name": "updateMonthlyDiscountAutoConvert",
+    "params": "",
+    "line": 26587,
+    "code": "function updateMonthlyDiscountAutoConvert() {"
+  },
+  {
+    "name": "updateDiscountAutoConvert",
+    "params": "",
+    "line": 26690,
+    "code": "function updateDiscountAutoConvert() {"
+  },
+  {
+    "name": "updatePromoDailyLive",
+    "params": "",
+    "line": 26727,
+    "code": "function updatePromoDailyLive() {"
+  },
+  {
+    "name": "updateStorefrontVisibility",
+    "params": "isActive",
+    "line": 26893,
+    "code": "function updateStorefrontVisibility(isActive) {"
+  },
+  {
+    "name": "openQuickCatModal",
+    "params": "",
+    "line": 27119,
+    "code": "function openQuickCatModal() {"
+  },
+  {
+    "name": "closeQuickCatModal",
+    "params": "",
+    "line": 27133,
+    "code": "function closeQuickCatModal() {"
+  },
+  {
+    "name": "updateQuickLabelChipsLockState",
+    "params": "",
+    "line": 27326,
+    "code": "function updateQuickLabelChipsLockState() {"
+  },
+  {
+    "name": "updateCustomLabelsLockState",
+    "params": "",
+    "line": 27358,
+    "code": "function updateCustomLabelsLockState() {"
+  },
+  {
+    "name": "handleCustomLabelChange",
+    "params": "",
+    "line": 27522,
+    "code": "const handleCustomLabelChange = () => {"
+  },
+  {
+    "name": "handleFabScroll",
+    "params": "",
+    "line": 27588,
+    "code": "const handleFabScroll = () => {"
+  },
+  {
+    "name": "bindMaterialInputsMarginLive",
+    "params": "",
+    "line": 27612,
+    "code": "function bindMaterialInputsMarginLive() {"
+  },
+  {
+    "name": "updateRowBadge",
+    "params": "",
+    "line": 27618,
+    "code": "const updateRowBadge = () => {"
+  },
+  {
+    "name": "updateTitleRecommendationBadge",
+    "params": "variantCode",
+    "line": 27670,
+    "code": "function updateTitleRecommendationBadge(variantCode) {"
+  },
+  {
+    "name": "getTodayDateString",
+    "params": "",
+    "line": 27836,
+    "code": "function getTodayDateString() {"
+  },
+  {
+    "name": "formatDateDisplay",
+    "params": "dateStr",
+    "line": 27844,
+    "code": "function formatDateDisplay(dateStr) {"
+  },
+  {
+    "name": "addDaysToDate",
+    "params": "dateStr, days",
+    "line": 27853,
+    "code": "function addDaysToDate(dateStr, days) {"
+  },
+  {
+    "name": "isStep1Complete",
+    "params": "",
+    "line": 27865,
+    "code": "function isStep1Complete() {"
+  },
+  {
+    "name": "getSuggestedCardVariantForCategory",
+    "params": "categoryId",
+    "line": 27890,
+    "code": "function getSuggestedCardVariantForCategory(categoryId) {"
+  },
+  {
+    "name": "applyCardVariant",
+    "params": "variantCode, isManual = false",
+    "line": 27914,
+    "code": "function applyCardVariant(variantCode, isManual = false) {"
+  },
+  {
+    "name": "handleBwSelect",
+    "params": "val",
+    "line": 28127,
+    "code": "const handleBwSelect = (val) => {"
+  },
+  {
+    "name": "bindRadiusControl",
+    "params": "{ deskId, mobId, presetClass, parser, defaultVal, minVal, maxVal, updater }",
+    "line": 28145,
+    "code": "const bindRadiusControl = ({ deskId, mobId, presetClass, parser, defaultVal, minVal, maxVal, updater }) => {"
+  },
+  {
+    "name": "syncInputsOnTyping",
+    "params": "sourceEl, targetEl",
+    "line": 28149,
+    "code": "const syncInputsOnTyping = (sourceEl, targetEl) => {"
+  },
+  {
+    "name": "validateOnBlur",
+    "params": "el",
+    "line": 28164,
+    "code": "const validateOnBlur = (el) => {"
+  },
+  {
+    "name": "syncAllBadgeColors",
+    "params": "val",
+    "line": 28247,
+    "code": "const syncAllBadgeColors = (val) => {"
+  },
+  {
+    "name": "syncRatingManualInput",
+    "params": "sourceEl, otherId",
+    "line": 28289,
+    "code": "const syncRatingManualInput = (sourceEl, otherId) => {"
+  },
+  {
+    "name": "validateRatingManualInput",
+    "params": "el, otherId",
+    "line": 28317,
+    "code": "const validateRatingManualInput = (el, otherId) => {"
+  },
+  {
+    "name": "syncSalesManualInput",
+    "params": "sourceEl, otherId",
+    "line": 28364,
+    "code": "const syncSalesManualInput = (sourceEl, otherId) => {"
+  },
+  {
+    "name": "validateSalesManualInput",
+    "params": "el, otherId",
+    "line": 28392,
+    "code": "const validateSalesManualInput = (el, otherId) => {"
+  },
+  {
+    "name": "syncAllStrikeColors",
+    "params": "val",
+    "line": 28445,
+    "code": "const syncAllStrikeColors = (val) => {"
+  },
+  {
+    "name": "syncAllDiscColors",
+    "params": "val",
+    "line": 28538,
+    "code": "const syncAllDiscColors = (val) => {"
+  },
+  {
+    "name": "syncF1Bg",
+    "params": "val",
+    "line": 28821,
+    "code": "const syncF1Bg = (val) => {"
+  },
+  {
+    "name": "syncF1TextCol",
+    "params": "val",
+    "line": 28825,
+    "code": "const syncF1TextCol = (val) => {"
+  },
+  {
+    "name": "syncF1Str",
+    "params": "val",
+    "line": 28829,
+    "code": "const syncF1Str = (val) => {"
+  },
+  {
+    "name": "handleF1Input",
+    "params": "e",
+    "line": 28853,
+    "code": "const handleF1Input = e => {"
+  },
+  {
+    "name": "selectFooterIcon",
+    "params": "stripNumber, iconId",
+    "line": 28887,
+    "code": "function selectFooterIcon(stripNumber, iconId) {"
+  },
+  {
+    "name": "setupFooterIconToggle",
+    "params": "btnId, menuId",
+    "line": 28951,
+    "code": "function setupFooterIconToggle(btnId, menuId) {"
+  },
+  {
+    "name": "syncF2Bg",
+    "params": "val",
+    "line": 29052,
+    "code": "const syncF2Bg = (val) => {"
+  },
+  {
+    "name": "syncF2TextCol",
+    "params": "val",
+    "line": 29056,
+    "code": "const syncF2TextCol = (val) => {"
+  },
+  {
+    "name": "syncF2Str",
+    "params": "val",
+    "line": 29060,
+    "code": "const syncF2Str = (val) => {"
+  },
+  {
+    "name": "handleF2Input",
+    "params": "e",
+    "line": 29084,
+    "code": "const handleF2Input = e => {"
+  },
+  {
+    "name": "handleEndDateChange",
+    "params": "e",
+    "line": 29214,
+    "code": "const handleEndDateChange = (e) => {"
+  },
+  {
+    "name": "setPhotoAspectRatio",
+    "params": "ratio, isManual = false",
+    "line": 29342,
+    "code": "function setPhotoAspectRatio(ratio, isManual = false) {"
+  },
+  {
+    "name": "handleImageFilesSelected",
+    "params": "files",
+    "line": 29364,
+    "code": "async function handleImageFilesSelected(files) {"
+  },
+  {
+    "name": "bindGalleryButtons",
+    "params": "",
+    "line": 29431,
+    "code": "function bindGalleryButtons() {"
+  },
+  {
+    "name": "refreshStep2GalleryDOM",
+    "params": "",
+    "line": 29492,
+    "code": "function refreshStep2GalleryDOM() {"
+  },
+  {
+    "name": "refreshGalleryDOM",
+    "params": "",
+    "line": 29529,
+    "code": "function refreshGalleryDOM() {"
+  },
+  {
+    "name": "syncSizeGuideStateFromDOM",
+    "params": "",
+    "line": 29831,
+    "code": "function syncSizeGuideStateFromDOM() {"
+  },
+  {
+    "name": "syncStateFromDOM",
+    "params": "",
+    "line": 29875,
+    "code": "function syncStateFromDOM() {"
+  },
+  {
+    "name": "validateForm",
+    "params": "isDraft = false",
+    "line": 30504,
+    "code": "function validateForm(isDraft = false) {"
+  },
+  {
+    "name": "addError",
+    "params": "msg, el",
+    "line": 30510,
+    "code": "function addError(msg, el) {"
+  },
+  {
+    "name": "handleFormSubmit",
+    "params": "isDraft = false",
+    "line": 31106,
+    "code": "function handleFormSubmit(isDraft = false) {"
+  },
+  {
+    "name": "doScrollAndHighlight",
+    "params": "el",
+    "line": 31137,
+    "code": "const doScrollAndHighlight = (el) => {"
+  },
+  {
+    "name": "escapeHtml",
+    "params": "str",
+    "line": 31323,
+    "code": "function escapeHtml(str) {"
+  }
+]

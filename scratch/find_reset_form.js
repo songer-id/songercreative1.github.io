@@ -1,0 +1,14 @@
+const fs = require('fs');
+const pf = fs.readFileSync('js/product-form.js', 'utf8').split('\n');
+
+for (let i = 0; i < pf.length; i++) {
+  if (pf[i].includes('function resetForm(')) {
+    console.log('resetForm at line ' + (i + 1));
+    for (let j = i; j < Math.min(pf.length, i + 80); j++) {
+      if (pf[j].includes('loadCard') || pf[j].includes('applyCardVariant') || pf[j].includes('card_config') || pf[j].includes('updateProductCardLivePreview')) {
+        console.log((j + 1) + ': ' + pf[j].trim());
+      }
+    }
+  }
+}
+

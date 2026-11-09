@@ -1,0 +1,106 @@
+<div id="accordion-body-footer" class="hidden p-3 border-t border-slate-100 space-y-2.5" role="region" aria-labelledby="btn-accordion-footer">
+                    <!-- Strip 1 -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div class="text-[10px] font-normal text-slate-700 flex items-center gap-1">
+                        <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
+                      </div>
+                      <div>
+                        <div class="flex items-center justify-between mb-0.5">
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Teks Footer 1</label>
+                          <span id="footer-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
+                        </div>
+                        <div class="relative w-full clean-datalist-wrapper">
+                          <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Tersedia berbagai Variasi" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-3 gap-2">
+                        <!-- Ikon Footer 1 -->
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
+                          <div class="relative" id="container-footer-icon-picker-side">
+                            <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
+                              <span id="preview-footer-icon-side" class="flex items-center justify-center shrink-0">
+                                ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                              </span>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                            </button>
+                            <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                                <span>Pilih Ikon</span>
+                                <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                              </div>
+                              <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-side">
+                                ${renderFooterIconGridHtml(primaryState.footer_badge_icon || 'truck', 'footer-1-side')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 1</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks 1</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Strip 2 -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div class="text-[10px] font-normal text-slate-700 flex items-center gap-1">
+                        <i data-lucide="minus" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah)
+                      </div>
+                      <div>
+                        <div class="flex items-center justify-between mb-0.5">
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Teks Footer 2</label>
+                          <span id="footer-2-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_2_text)}/32</span>
+                        </div>
+                        <div class="relative w-full clean-datalist-wrapper">
+                          <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pengiriman Cepat" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-3 gap-2">
+                        <!-- Ikon Footer 2 -->
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
+                          <div class="relative" id="container-footer-2-icon-picker-side">
+                            <button type="button" id="btn-footer-2-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-full h-7 px-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
+                              <span id="preview-footer-2-icon-side" class="flex items-center justify-center shrink-0">
+                                ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_2_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                              </span>
+                              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                            </button>
+                            <div id="menu-footer-2-icon-picker-side" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div class="text-[10px] font-semibold text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                                <span>Pilih Ikon</span>
+                                <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                              </div>
+                              <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-2-icon-picker-side">
+                                ${renderFooterIconGridHtml(primaryState.footer_2_badge_icon || 'minus', 'footer-2-side')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Latar Footer 2</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getPrimaryThemeColor()}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks 2</label>
+                          <div class="flex items-center gap-1.5">
+                            <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0" />
+                            <input type="text" id="cfg-footer-2-text-hex-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
