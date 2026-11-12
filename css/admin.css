@@ -1034,6 +1034,22 @@ input[type="radio"]:active {
   box-shadow: none !important;
 }
 
+/* Standarisasi Input Pencarian Dropdown Kategori & Subkategori Step 2 (Semua Layar) */
+#view-product-form input.step2-dropdown-search-input,
+.step2-section-card input.step2-dropdown-search-input,
+#input-search-step2-cat,
+#input-search-step2-subcat {
+  min-height: 32px !important;
+  height: 32px !important;
+  font-size: 0.75rem !important;
+  padding-left: 2rem !important;
+  padding-right: 0.625rem !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+  border-radius: 0.375rem !important;
+  line-height: 1.25 !important;
+}
+
 /* Mobile FAB Live Preview position (centered at bottom) */
 #btn-fab-live-preview {
   position: fixed !important;
@@ -2397,11 +2413,11 @@ input::-webkit-calendar-picker-indicator {
   }
 
   /* Kotak Input, Select, & Placeholder */
-  #view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
+  #view-product-form input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only):not(.step2-dropdown-search-input),
   #view-product-form select,
-  .step2-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
+  .step2-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only):not(.step2-dropdown-search-input),
   .step2-section-card select,
-  .step1-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only),
+  .step1-section-card input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.sr-only):not(.step2-dropdown-search-input),
   .step1-section-card select {
     min-height: 38px !important;
     height: 38px !important;
@@ -2410,6 +2426,25 @@ input::-webkit-calendar-picker-indicator {
     padding: 0.375rem 0.625rem !important;
     border-radius: 0.5rem !important;
     /* 8px */
+  }
+
+  /* Input Pencarian Dropdown Kategori & Subkategori Step 2 (Mobile Compact & Anti-Overlap) */
+  #view-product-form input.step2-dropdown-search-input,
+  .step2-section-card input.step2-dropdown-search-input,
+  #input-search-step2-cat,
+  #input-search-step2-subcat {
+    min-height: 32px !important;
+    height: 32px !important;
+    font-size: 0.75rem !important;
+    /* 12px text-xs */
+    padding-left: 2rem !important;
+    /* 32px: ruang bersih lapang dari ikon pencarian di kiri */
+    padding-right: 0.625rem !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    border-radius: 0.375rem !important;
+    /* 6px */
+    line-height: 1.25 !important;
   }
 
   #view-product-form textarea,

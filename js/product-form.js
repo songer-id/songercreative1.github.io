@@ -15210,45 +15210,46 @@ const ProductForm = (() => {
     const hasCatSelected = Boolean(selectedCat);
 
     return `
-              <label id="lbl-step2-cat" for="btn-step2-cat-trigger" class="block text-[11px] font-semibold text-slate-700 mb-1">
-          Kategori Utama <span class="text-red-500">*</span>
-        </label>
-        <input type="hidden" id="select-step2-cat" value="${selectedCat ? escapeHtml(selectedCat.id) : ''}" />
-        <button
-          type="button"
-          id="btn-step2-cat-trigger"
-          class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[6px] border border-slate-300 bg-white text-xs transition cursor-pointer select-none text-left outline-none hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-          aria-haspopup="listbox"
-          aria-expanded="false"
-          aria-controls="menu-step2-cat"
-          title="${escapeHtml(catSelectedText)}"
-        >
-          <span id="label-step2-cat-selected" class="truncate ${hasCatSelected ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'}">
-            ${escapeHtml(catSelectedText)}
-          </span>
-          <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0 ml-2" id="chevron-step2-cat" aria-hidden="true"></i>
-        </button>
+      <label id="lbl-step2-cat" for="btn-step2-cat-trigger" class="block text-xs font-bold text-slate-800 mb-1">
+        Kategori Produk <span class="text-red-500">*</span>
+      </label>
+      <input type="hidden" id="select-step2-cat" value="${selectedCat ? escapeHtml(selectedCat.id) : ''}" />
+      <button
+        type="button"
+        id="btn-step2-cat-trigger"
+        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[6px] border border-slate-300 bg-white text-xs transition cursor-pointer select-none text-left outline-none hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-controls="menu-step2-cat"
+        title="${escapeHtml(catSelectedText)}"
+      >
+        <span id="label-step2-cat-selected" class="truncate ${hasCatSelected ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'}">
+          ${escapeHtml(catSelectedText)}
+        </span>
+        <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0 ml-2" id="chevron-step2-cat" aria-hidden="true"></i>
+      </button>
 
-        <!-- Dropdown Menu Accordion -->
-        <div
-          id="menu-step2-cat"
-          class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-[6px] shadow-lg z-30 flex flex-col overflow-hidden"
-          style="max-height: 280px;"
-          role="listbox"
-        >
-          <!-- Search Input Pin -->
-          <div class="p-2 border-b border-slate-100 bg-slate-50/80 shrink-0">
-            <div class="relative flex items-center">
-              <i class="bi bi-search absolute left-2.5 text-slate-400 text-xs pointer-events-none" aria-hidden="true"></i>
-              <input
-                type="text"
-                id="input-search-step2-cat"
-                placeholder="Cari kategori..."
-                autocomplete="off"
-                class="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-[6px] border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-700"
-              />
-            </div>
+      <!-- Dropdown Menu Accordion -->
+      <div
+        id="menu-step2-cat"
+        class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-[6px] shadow-lg z-30 flex flex-col overflow-hidden"
+        style="max-height: 280px;"
+        role="listbox"
+      >
+        <!-- Search Input Pin -->
+        <div class="p-2 border-b border-slate-100 bg-slate-50/80 shrink-0">
+          <div class="relative flex items-center">
+            <i class="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input
+              type="text"
+              id="input-search-step2-cat"
+              placeholder="Cari kategori..."
+              autocomplete="off"
+              class="step2-dropdown-search-input w-full pl-8 pr-2.5 py-1.5 text-xs rounded-[6px] border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-700"
+              style="padding-left: 2rem !important; height: 32px !important;"
+            />
           </div>
+        </div>
 
           <!-- Categories List (Scrollable) -->
           <div id="list-step2-cat-items" class="overflow-y-auto max-h-40 py-1 divide-y divide-slate-50">
@@ -15349,51 +15350,52 @@ const ProductForm = (() => {
     }
 
     return `
-              <label id="lbl-step2-subcat" for="btn-step2-subcat-trigger" class="block text-[11px] font-semibold text-slate-700 mb-1">
-          Subkategori <span class="text-red-500">*</span>
-        </label>
-        <input
-          type="hidden"
-          id="select-step2-sub-cat"
-          value="${selectedSub ? escapeHtml(selectedSub.id) : ''}"
-          data-determined="${isDetermined ? 'true' : 'false'}"
-        />
-        <button
-          type="button"
-          id="btn-step2-subcat-trigger"
-          class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[6px] border border-slate-300 bg-white text-xs transition cursor-pointer select-none text-left outline-none hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed"
-          ${!isParentSelected ? 'disabled' : ''}
-          aria-haspopup="listbox"
-          aria-expanded="false"
-          aria-controls="menu-step2-subcat"
-          title="${escapeHtml(displaySubLabel)}"
-        >
-          <span id="label-step2-subcat-selected" class="truncate ${hasValidSubDisplay ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'}">
-            ${escapeHtml(displaySubLabel)}
-          </span>
-          <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0 ml-2" id="chevron-step2-subcat" aria-hidden="true"></i>
-        </button>
+      <label id="lbl-step2-subcat" for="btn-step2-subcat-trigger" class="block text-xs font-bold text-slate-800 mb-1">
+        Subkategori <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="hidden"
+        id="select-step2-sub-cat"
+        value="${selectedSub ? escapeHtml(selectedSub.id) : ''}"
+        data-determined="${isDetermined ? 'true' : 'false'}"
+      />
+      <button
+        type="button"
+        id="btn-step2-subcat-trigger"
+        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[6px] border border-slate-300 bg-white text-xs transition cursor-pointer select-none text-left outline-none hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed"
+        ${!isParentSelected ? 'disabled' : ''}
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-controls="menu-step2-subcat"
+        title="${escapeHtml(displaySubLabel)}"
+      >
+        <span id="label-step2-subcat-selected" class="truncate ${hasValidSubDisplay ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'}">
+          ${escapeHtml(displaySubLabel)}
+        </span>
+        <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0 ml-2" id="chevron-step2-subcat" aria-hidden="true"></i>
+      </button>
 
-        <!-- Dropdown Menu Accordion -->
-        <div
-          id="menu-step2-subcat"
-          class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-[6px] shadow-lg z-30 flex flex-col overflow-hidden"
-          style="max-height: 290px;"
-          role="listbox"
-        >
-          <!-- 1. Input Pencarian Pin: Cari subkategori... -->
-          <div class="p-2 border-b border-slate-100 bg-slate-50/80 shrink-0">
-            <div class="relative flex items-center">
-              <i class="bi bi-search absolute left-2.5 text-slate-400 text-xs pointer-events-none" aria-hidden="true"></i>
-              <input
-                type="text"
-                id="input-search-step2-subcat"
-                placeholder="Cari subkategori..."
-                autocomplete="off"
-                class="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-[6px] border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-700"
-              />
-            </div>
+      <!-- Dropdown Menu Accordion -->
+      <div
+        id="menu-step2-subcat"
+        class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-[6px] shadow-lg z-30 flex flex-col overflow-hidden"
+        style="max-height: 290px;"
+        role="listbox"
+      >
+        <!-- 1. Input Pencarian Pin: Cari subkategori... -->
+        <div class="p-2 border-b border-slate-100 bg-slate-50/80 shrink-0">
+          <div class="relative flex items-center">
+            <i class="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" aria-hidden="true"></i>
+            <input
+              type="text"
+              id="input-search-step2-subcat"
+              placeholder="Cari subkategori..."
+              autocomplete="off"
+              class="step2-dropdown-search-input w-full pl-8 pr-2.5 py-1.5 text-xs rounded-[6px] border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-700"
+              style="padding-left: 2rem !important; height: 32px !important;"
+            />
           </div>
+        </div>
 
           <!-- Middle Section Scrollable: 2. Tanpa Subkategori, 3. Divider, 4. Daftar Subkategori -->
           <div class="overflow-y-auto max-h-44 py-1 flex flex-col">
@@ -15483,8 +15485,9 @@ const ProductForm = (() => {
   }
 
   function renderSubCategoryDropdownHtml() {
+    const isVisible = Boolean(primaryState.category_id);
     return `
-      <div class="relative w-full" id="wrapper-step2-subcat-dropdown">
+      <div class="relative w-full ${isVisible ? '' : 'hidden'}" id="wrapper-step2-subcat-dropdown">
         ${renderSubCategoryDropdownContent()}
       </div>
     `;
@@ -15657,16 +15660,16 @@ const ProductForm = (() => {
 
     function selectCategory(catId) {
       const prevId = primaryState.category_id;
-      primaryState.category_id = catId;
-      if (prevId !== catId) {
-        // Reset subcategory selection upon parent change
+      primaryState.category_id = catId || '';
+      if (!catId || prevId !== catId) {
+        // Reset subcategory selection upon parent change or reset
         primaryState.sub_category_id = null;
         primaryState.sub_category_determined = false;
       }
       const catInput = document.getElementById('select-step2-cat');
       if (catInput) catInput.value = catId || '';
       const subCatInput = document.getElementById('select-step2-sub-cat');
-      if (subCatInput && prevId !== catId) {
+      if (subCatInput && (!catId || prevId !== catId)) {
         subCatInput.value = '';
         subCatInput.setAttribute('data-determined', 'false');
       }
@@ -15926,10 +15929,16 @@ const ProductForm = (() => {
   function refreshCategorySubcategoryDropdowns() {
     const catWrapper = document.getElementById('wrapper-step2-cat-dropdown');
     const subWrapper = document.getElementById('wrapper-step2-subcat-dropdown');
+    const hasValidCategory = Boolean(primaryState.category_id);
     if (catWrapper) {
       catWrapper.innerHTML = renderCategoryDropdownContent();
     }
     if (subWrapper) {
+      if (hasValidCategory) {
+        subWrapper.classList.remove('hidden');
+      } else {
+        subWrapper.classList.add('hidden');
+      }
       subWrapper.innerHTML = renderSubCategoryDropdownContent();
     }
     bindCategorySubcategoryEvents();
@@ -16039,17 +16048,9 @@ const ProductForm = (() => {
           </div>
 
           <!-- Input Kategori & Sub-Kategori Produk (Hybrid Dropdown Accordion) -->
-          <div class="space-y-3 pt-1 border-t border-slate-100">
-            <div>
-              <label class="block text-xs font-bold text-slate-800">
-                Kategori Produk <span class="text-red-500">*</span>
-              </label>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              ${renderCategoryDropdownHtml()}
-              ${renderSubCategoryDropdownHtml()}
-            </div>
+          <div class="flex flex-col gap-3 pt-1 border-t border-slate-100" id="container-step2-cat-subcat">
+            ${renderCategoryDropdownHtml()}
+            ${renderSubCategoryDropdownHtml()}
           </div>
 
           ${primaryState.is_active ? `
