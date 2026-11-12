@@ -1723,6 +1723,8 @@ const ProductForm = (() => {
     return true;
   }
 
+  let activeApplyCardVariantFn = null;
+
   // Helper: Penentuan Otomatis Model Kartu Berdasarkan Kategori Produk
   function getSuggestedCardVariantForCategory(categoryId) {
     if (!categoryId) return 'A';
@@ -1825,7 +1827,8 @@ const ProductForm = (() => {
       },
       order_category: 'Ctk',
       category_id: '', // Default '' (kosong, seller wajib memilih sendiri!)
-      sub_category_id: '',
+      sub_category_id: null,
+      sub_category_determined: false,
       card_variant: '', // Default '' (kosong, seller wajib memilih sendiri!)
       card_variant_manual_override: false,
       card_variant_override: false,
@@ -2016,6 +2019,7 @@ const ProductForm = (() => {
         product_origin: primaryState.product_origin || '',
         category_id: primaryState.category_id || '',
         sub_category_id: primaryState.sub_category_id || '',
+        sub_category_determined: Boolean(primaryState.sub_category_determined),
         product_type: primaryState.product_type || 'physical',
         status: primaryState.status || 'published',
         order_category: primaryState.order_category || 'Ctk',
@@ -2242,6 +2246,28 @@ const ProductForm = (() => {
       ? String(prod.warranty_duration)
       : parsedWarranty.duration;
 
+    const editCatId = prod.category_id || '';
+    let editSubId = null;
+    let editSubDetermined = false;
+    if (editCatId) {
+      const validSubs = (typeof DB !== 'undefined' && DB.getSubCategories) ? DB.getSubCategories(editCatId) : [];
+      if (prod.sub_category_id) {
+        const foundSub = validSubs.find(s => String(s.id) === String(prod.sub_category_id));
+        if (foundSub) {
+          editSubId = prod.sub_category_id;
+          editSubDetermined = true;
+        } else {
+          // Relasi subkategori tidak valid terhadap kategori induk
+          editSubId = null;
+          editSubDetermined = false;
+        }
+      } else {
+        // sub_category_id is null / empty with valid category -> explicit Tanpa subkategori
+        editSubId = null;
+        editSubDetermined = true;
+      }
+    }
+
     primaryState = {
       name: prod.name,
       brand: prod.brand || '',
@@ -2265,8 +2291,9 @@ const ProductForm = (() => {
         sales: { source: 'auto', manual_value: null }
       },
       order_category: prod.order_category || 'Ctk',
-      category_id: prod.category_id || null,
-      sub_category_id: prod.sub_category_id || null,
+      category_id: editCatId,
+      sub_category_id: editSubId,
+      sub_category_determined: editSubDetermined,
       card_variant: prod.card_variant || 'A',
       card_variant_override: prod.card_variant_override !== undefined ? prod.card_variant_override : true,
       card_config: (prod.card_config && typeof prod.card_config === 'object') ? JSON.parse(JSON.stringify(prod.card_config)) : null,
@@ -2591,6 +2618,13 @@ const ProductForm = (() => {
       if (!hasContent) return false;
 
       Object.assign(primaryState, p);
+      if (p.sub_category_determined !== undefined) {
+        primaryState.sub_category_determined = Boolean(p.sub_category_determined);
+      } else if (p.category_id) {
+        primaryState.sub_category_determined = Boolean(p.sub_category_id);
+      } else {
+        primaryState.sub_category_determined = false;
+      }
       if (p.has_custom_labels !== undefined) {
         primaryState.has_custom_labels = Boolean(p.has_custom_labels);
       } else if (Array.isArray(p.custom_labels) && p.custom_labels.length > 0) {
@@ -15080,6 +15114,827 @@ const ProductForm = (() => {
     `;
   }
 
+  // ==========================================================================
+  // HYBRID DROPDOWN ACCORDION: KATEGORI & SUBKATEGORI PRODUK (STEP 2)
+  // ==========================================================================
+
+  let isCatSubcatDocListenerBound = false;
+  function ensureCatSubcatDocumentListeners() {
+    if (isCatSubcatDocListenerBound || typeof document === 'undefined') return;
+    isCatSubcatDocListenerBound = true;
+
+    document.addEventListener('click', (e) => {
+      const catWrapper = document.getElementById('wrapper-step2-cat-dropdown');
+      const subWrapper = document.getElementById('wrapper-step2-subcat-dropdown');
+
+      if (catWrapper && !catWrapper.contains(e.target)) {
+        const menuCat = document.getElementById('menu-step2-cat');
+        const chevCat = document.getElementById('chevron-step2-cat');
+        const btnCat = document.getElementById('btn-step2-cat-trigger');
+        if (menuCat && !menuCat.classList.contains('hidden')) {
+          menuCat.classList.add('hidden');
+          if (chevCat) chevCat.classList.remove('rotate-180');
+          if (btnCat) btnCat.setAttribute('aria-expanded', 'false');
+          // Reset add form jika tertinggal terbuka
+          const fDef = document.getElementById('footer-step2-cat-default');
+          const fForm = document.getElementById('footer-step2-cat-add-form');
+          const inp = document.getElementById('input-step2-cat-new-name');
+          const err = document.getElementById('err-step2-cat-new-name');
+          if (fDef) fDef.classList.remove('hidden');
+          if (fForm) fForm.classList.add('hidden');
+          if (inp) inp.value = '';
+          if (err) err.classList.add('hidden');
+        }
+      }
+
+      if (subWrapper && !subWrapper.contains(e.target)) {
+        const menuSub = document.getElementById('menu-step2-subcat');
+        const chevSub = document.getElementById('chevron-step2-subcat');
+        const btnSub = document.getElementById('btn-step2-subcat-trigger');
+        if (menuSub && !menuSub.classList.contains('hidden')) {
+          menuSub.classList.add('hidden');
+          if (chevSub) chevSub.classList.remove('rotate-180');
+          if (btnSub) btnSub.setAttribute('aria-expanded', 'false');
+          // Reset add form jika tertinggal terbuka
+          const fDef = document.getElementById('footer-step2-subcat-default');
+          const fForm = document.getElementById('footer-step2-subcat-add-form');
+          const inp = document.getElementById('input-step2-subcat-new-name');
+          const err = document.getElementById('err-step2-subcat-new-name');
+          if (fDef) fDef.classList.remove('hidden');
+          if (fForm) fForm.classList.add('hidden');
+          if (inp) inp.value = '';
+          if (err) err.classList.add('hidden');
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        const menuCat = document.getElementById('menu-step2-cat');
+        const menuSub = document.getElementById('menu-step2-subcat');
+        let closed = false;
+
+        if (menuCat && !menuCat.classList.contains('hidden')) {
+          menuCat.classList.add('hidden');
+          document.getElementById('chevron-step2-cat')?.classList.remove('rotate-180');
+          const btnCat = document.getElementById('btn-step2-cat-trigger');
+          if (btnCat) {
+            btnCat.setAttribute('aria-expanded', 'false');
+            try { btnCat.focus(); } catch (_) { }
+          }
+          closed = true;
+        }
+
+        if (menuSub && !menuSub.classList.contains('hidden')) {
+          menuSub.classList.add('hidden');
+          document.getElementById('chevron-step2-subcat')?.classList.remove('rotate-180');
+          const btnSub = document.getElementById('btn-step2-subcat-trigger');
+          if (btnSub) {
+            btnSub.setAttribute('aria-expanded', 'false');
+            try { btnSub.focus(); } catch (_) { }
+          }
+          closed = true;
+        }
+
+        if (closed) {
+          e.stopPropagation();
+        }
+      }
+    });
+  }
+
+  function renderCategoryDropdownContent() {
+    const allCategories = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+    const selectedCat = allCategories.find(c => String(c.id) === String(primaryState.category_id));
+    const catSelectedText = selectedCat ? selectedCat.name : 'Pilih kategori produk';
+    const hasCatSelected = Boolean(selectedCat);
+
+    return `
+              <label id="lbl-step2-cat" for="btn-step2-cat-trigger" class="block text-[11px] font-semibold text-slate-700 mb-1">
+          Kategori Utama <span class="text-red-500">*</span>
+        </label>
+        <input type="hidden" id="select-step2-cat" value="${selectedCat ? escapeHtml(selectedCat.id) : ''}" />
+        <button
+          type="button"
+          id="btn-step2-cat-trigger"
+          class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[6px] border border-slate-300 bg-white text-xs transition cursor-pointer select-none text-left outline-none hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-controls="menu-step2-cat"
+          title="${escapeHtml(catSelectedText)}"
+        >
+          <span id="label-step2-cat-selected" class="truncate ${hasCatSelected ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'}">
+            ${escapeHtml(catSelectedText)}
+          </span>
+          <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0 ml-2" id="chevron-step2-cat" aria-hidden="true"></i>
+        </button>
+
+        <!-- Dropdown Menu Accordion -->
+        <div
+          id="menu-step2-cat"
+          class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-[6px] shadow-lg z-30 flex flex-col overflow-hidden"
+          style="max-height: 280px;"
+          role="listbox"
+        >
+          <!-- Search Input Pin -->
+          <div class="p-2 border-b border-slate-100 bg-slate-50/80 shrink-0">
+            <div class="relative flex items-center">
+              <i class="bi bi-search absolute left-2.5 text-slate-400 text-xs pointer-events-none" aria-hidden="true"></i>
+              <input
+                type="text"
+                id="input-search-step2-cat"
+                placeholder="Cari kategori..."
+                autocomplete="off"
+                class="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-[6px] border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-700"
+              />
+            </div>
+          </div>
+
+          <!-- Categories List (Scrollable) -->
+          <div id="list-step2-cat-items" class="overflow-y-auto max-h-40 py-1 divide-y divide-slate-50">
+            ${allCategories.map(c => {
+              const isSelected = selectedCat && String(selectedCat.id) === String(c.id);
+              return `
+                <button
+                  type="button"
+                  class="cat-option-item w-full flex items-center justify-between px-3 py-2 text-xs text-left hover:bg-emerald-50 hover:text-emerald-700 transition cursor-pointer select-none border-0 ${isSelected ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-700 font-normal'}"
+                  data-id="${escapeHtml(c.id)}"
+                  data-name="${escapeHtml(c.name)}"
+                  role="option"
+                  aria-selected="${isSelected ? 'true' : 'false'}"
+                >
+                  <span class="truncate">${escapeHtml(c.name)}</span>
+                  ${isSelected ? '<i class="bi bi-check2 text-emerald-600 text-sm shrink-0 ml-2" aria-hidden="true"></i>' : ''}
+                </button>
+              `;
+            }).join('')}
+            <div id="msg-step2-cat-empty" class="${allCategories.length === 0 ? '' : 'hidden'} px-3 py-3 text-xs text-slate-400 text-center italic">
+              ${allCategories.length === 0 ? 'Belum ada kategori tersimpan' : 'Kategori tidak ditemukan'}
+            </div>
+          </div>
+
+          <!-- Footer Action Pin: + Tambah kategori baru -->
+          <div id="footer-step2-cat-default" class="p-2 border-t border-slate-100 bg-slate-50/70 shrink-0">
+            <button
+              type="button"
+              id="btn-step2-cat-show-add"
+              class="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/80 rounded-[6px] transition cursor-pointer border-0 bg-transparent"
+            >
+              <i class="bi bi-plus text-base leading-none" aria-hidden="true"></i>
+              <span>Tambah kategori baru</span>
+            </button>
+          </div>
+
+          <!-- Footer Inline Form: Tambah Kategori -->
+          <div id="footer-step2-cat-add-form" class="hidden p-2.5 border-t border-slate-200 bg-slate-50 shrink-0 space-y-2">
+            <div class="text-[11px] font-bold text-slate-700">Tambah Kategori Baru</div>
+            <input
+              type="text"
+              id="input-step2-cat-new-name"
+              placeholder="Nama kategori..."
+              maxlength="50"
+              autocomplete="off"
+              class="w-full px-2.5 py-1.5 text-xs rounded-[6px] border border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-800"
+            />
+            <p id="err-step2-cat-new-name" class="hidden text-[11px] text-red-600 font-medium"></p>
+            <div class="flex items-center justify-end gap-1.5 pt-0.5">
+              <button
+                type="button"
+                id="btn-step2-cat-cancel-add"
+                class="px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-[6px] transition cursor-pointer border-0 bg-transparent"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                id="btn-step2-cat-save-add"
+                class="px-3 py-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-[6px] transition cursor-pointer border-0 shadow-sm"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+    `;
+  }
+
+  function renderCategoryDropdownHtml() {
+    return `
+      <div class="relative w-full" id="wrapper-step2-cat-dropdown">
+        ${renderCategoryDropdownContent()}
+      </div>
+    `;
+  }
+
+  function renderSubCategoryDropdownContent() {
+    const isParentSelected = Boolean(primaryState.category_id);
+    const currentSubs = isParentSelected && DB.getSubCategories ? DB.getSubCategories(primaryState.category_id) : [];
+    const isDetermined = Boolean(primaryState.sub_category_determined);
+    const selectedSub = isParentSelected && isDetermined && primaryState.sub_category_id
+      ? currentSubs.find(s => String(s.id) === String(primaryState.sub_category_id))
+      : null;
+    const isExplicitlyNone = isParentSelected && isDetermined && (primaryState.sub_category_id === null || primaryState.sub_category_id === '');
+
+    let displaySubLabel = 'Pilih subkategori atau tanpa subkategori';
+    let hasValidSubDisplay = false;
+
+    if (isParentSelected && isDetermined) {
+      if (selectedSub) {
+        displaySubLabel = selectedSub.name;
+        hasValidSubDisplay = true;
+      } else if (isExplicitlyNone) {
+        displaySubLabel = 'Tanpa subkategori';
+        hasValidSubDisplay = true;
+      }
+    }
+
+    return `
+              <label id="lbl-step2-subcat" for="btn-step2-subcat-trigger" class="block text-[11px] font-semibold text-slate-700 mb-1">
+          Subkategori <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="hidden"
+          id="select-step2-sub-cat"
+          value="${selectedSub ? escapeHtml(selectedSub.id) : ''}"
+          data-determined="${isDetermined ? 'true' : 'false'}"
+        />
+        <button
+          type="button"
+          id="btn-step2-subcat-trigger"
+          class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[6px] border border-slate-300 bg-white text-xs transition cursor-pointer select-none text-left outline-none hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed"
+          ${!isParentSelected ? 'disabled' : ''}
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-controls="menu-step2-subcat"
+          title="${escapeHtml(displaySubLabel)}"
+        >
+          <span id="label-step2-subcat-selected" class="truncate ${hasValidSubDisplay ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'}">
+            ${escapeHtml(displaySubLabel)}
+          </span>
+          <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0 ml-2" id="chevron-step2-subcat" aria-hidden="true"></i>
+        </button>
+
+        <!-- Dropdown Menu Accordion -->
+        <div
+          id="menu-step2-subcat"
+          class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-[6px] shadow-lg z-30 flex flex-col overflow-hidden"
+          style="max-height: 290px;"
+          role="listbox"
+        >
+          <!-- 1. Input Pencarian Pin: Cari subkategori... -->
+          <div class="p-2 border-b border-slate-100 bg-slate-50/80 shrink-0">
+            <div class="relative flex items-center">
+              <i class="bi bi-search absolute left-2.5 text-slate-400 text-xs pointer-events-none" aria-hidden="true"></i>
+              <input
+                type="text"
+                id="input-search-step2-subcat"
+                placeholder="Cari subkategori..."
+                autocomplete="off"
+                class="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-[6px] border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-700"
+              />
+            </div>
+          </div>
+
+          <!-- Middle Section Scrollable: 2. Tanpa Subkategori, 3. Divider, 4. Daftar Subkategori -->
+          <div class="overflow-y-auto max-h-44 py-1 flex flex-col">
+            <!-- 2. Opsi khusus: Tanpa subkategori -->
+            <button
+              type="button"
+              id="opt-step2-subcat-none"
+              class="subcat-option-none w-full flex items-center justify-between px-3 py-2 text-xs text-left hover:bg-emerald-50 hover:text-emerald-700 transition cursor-pointer select-none border-0 shrink-0 ${isExplicitlyNone ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-700 font-normal'}"
+              data-is-none="true"
+              role="option"
+              aria-selected="${isExplicitlyNone ? 'true' : 'false'}"
+            >
+              <span class="truncate">Tanpa subkategori</span>
+              ${isExplicitlyNone ? '<i class="bi bi-check2 text-emerald-600 text-sm shrink-0 ml-2" aria-hidden="true"></i>' : ''}
+            </button>
+
+            <!-- 3. Pemisah visual -->
+            <div id="divider-step2-subcat-none" class="border-b border-slate-100 my-1 mx-2 shrink-0"></div>
+
+            <!-- 4. Daftar Subkategori Milik Kategori Aktif -->
+            <div id="list-step2-subcat-items" class="divide-y divide-slate-50 flex flex-col">
+              ${currentSubs.map(s => {
+                const isSelected = isDetermined && selectedSub && String(selectedSub.id) === String(s.id);
+                return `
+                  <button
+                    type="button"
+                    class="subcat-option-item w-full flex items-center justify-between px-3 py-2 text-xs text-left hover:bg-emerald-50 hover:text-emerald-700 transition cursor-pointer select-none border-0 ${isSelected ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-700 font-normal'}"
+                    data-id="${escapeHtml(s.id)}"
+                    data-name="${escapeHtml(s.name)}"
+                    role="option"
+                    aria-selected="${isSelected ? 'true' : 'false'}"
+                  >
+                    <span class="truncate">${escapeHtml(s.name)}</span>
+                    ${isSelected ? '<i class="bi bi-check2 text-emerald-600 text-sm shrink-0 ml-2" aria-hidden="true"></i>' : ''}
+                  </button>
+                `;
+              }).join('')}
+              <div id="msg-step2-subcat-empty" class="${currentSubs.length === 0 ? '' : 'hidden'} px-3 py-2 text-[11px] text-slate-400 text-center italic">
+                ${currentSubs.length === 0 ? 'Belum ada subkategori untuk kategori ini' : 'Subkategori tidak ditemukan'}
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Aksi: + Tambah subkategori baru -->
+          <div id="footer-step2-subcat-default" class="p-2 border-t border-slate-100 bg-slate-50/70 shrink-0">
+            <button
+              type="button"
+              id="btn-step2-subcat-show-add"
+              class="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/80 rounded-[6px] transition cursor-pointer border-0 bg-transparent"
+            >
+              <i class="bi bi-plus text-base leading-none" aria-hidden="true"></i>
+              <span>Tambah subkategori baru</span>
+            </button>
+          </div>
+
+          <!-- Footer Inline Form: Tambah Subkategori -->
+          <div id="footer-step2-subcat-add-form" class="hidden p-2.5 border-t border-slate-200 bg-slate-50 shrink-0 space-y-2">
+            <div class="text-[11px] font-bold text-slate-700">Tambah Subkategori Baru</div>
+            <input
+              type="text"
+              id="input-step2-subcat-new-name"
+              placeholder="Nama subkategori..."
+              maxlength="50"
+              autocomplete="off"
+              class="w-full px-2.5 py-1.5 text-xs rounded-[6px] border border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white text-slate-800"
+            />
+            <p id="err-step2-subcat-new-name" class="hidden text-[11px] text-red-600 font-medium"></p>
+            <div class="flex items-center justify-end gap-1.5 pt-0.5">
+              <button
+                type="button"
+                id="btn-step2-subcat-cancel-add"
+                class="px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-[6px] transition cursor-pointer border-0 bg-transparent"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                id="btn-step2-subcat-save-add"
+                class="px-3 py-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-[6px] transition cursor-pointer border-0 shadow-sm"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+    `;
+  }
+
+  function renderSubCategoryDropdownHtml() {
+    return `
+      <div class="relative w-full" id="wrapper-step2-subcat-dropdown">
+        ${renderSubCategoryDropdownContent()}
+      </div>
+    `;
+  }
+
+
+
+  function bindCategorySubcategoryEvents() {
+    ensureCatSubcatDocumentListeners();
+
+    const catWrapper = document.getElementById('wrapper-step2-cat-dropdown');
+    const subWrapper = document.getElementById('wrapper-step2-subcat-dropdown');
+    if (!catWrapper && !subWrapper) return;
+
+    // --- CATEGORY DROPDOWN EVENTS ---
+    const btnCatTrigger = document.getElementById('btn-step2-cat-trigger');
+    const menuCat = document.getElementById('menu-step2-cat');
+    const chevCat = document.getElementById('chevron-step2-cat');
+    const inpSearchCat = document.getElementById('input-search-step2-cat');
+    const listCatItems = document.getElementById('list-step2-cat-items');
+    const msgCatEmpty = document.getElementById('msg-step2-cat-empty');
+    const btnCatShowAdd = document.getElementById('btn-step2-cat-show-add');
+    const footerCatDef = document.getElementById('footer-step2-cat-default');
+    const footerCatAdd = document.getElementById('footer-step2-cat-add-form');
+    const inpCatNewName = document.getElementById('input-step2-cat-new-name');
+    const errCatNewName = document.getElementById('err-step2-cat-new-name');
+    const btnCatCancelAdd = document.getElementById('btn-step2-cat-cancel-add');
+    const btnCatSaveAdd = document.getElementById('btn-step2-cat-save-add');
+
+    function closeCatMenu() {
+      if (menuCat) menuCat.classList.add('hidden');
+      if (chevCat) chevCat.classList.remove('rotate-180');
+      if (btnCatTrigger) btnCatTrigger.setAttribute('aria-expanded', 'false');
+      if (footerCatDef) footerCatDef.classList.remove('hidden');
+      if (footerCatAdd) footerCatAdd.classList.add('hidden');
+      if (inpCatNewName) inpCatNewName.value = '';
+      if (errCatNewName) errCatNewName.classList.add('hidden');
+    }
+
+    if (btnCatTrigger && menuCat) {
+      btnCatTrigger.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isHidden = menuCat.classList.contains('hidden');
+        if (isHidden) {
+          menuCat.classList.remove('hidden');
+          if (chevCat) chevCat.classList.add('rotate-180');
+          btnCatTrigger.setAttribute('aria-expanded', 'true');
+          closeSubcatMenu();
+          if (inpSearchCat) {
+            inpSearchCat.value = '';
+            if (listCatItems) {
+              listCatItems.querySelectorAll('.cat-option-item').forEach(el => el.classList.remove('hidden'));
+            }
+            if (msgCatEmpty) {
+              const allCats = DB.getCategories ? DB.getCategories() : [];
+              msgCatEmpty.classList.toggle('hidden', allCats.length > 0);
+              msgCatEmpty.textContent = (allCats.length === 0) ? 'Belum ada kategori tersimpan' : 'Kategori tidak ditemukan';
+            }
+            setTimeout(() => { try { inpSearchCat.focus(); } catch (_) { } }, 50);
+          }
+        } else {
+          closeCatMenu();
+        }
+      };
+    }
+
+    if (inpSearchCat && listCatItems) {
+      inpSearchCat.oninput = () => {
+        const q = inpSearchCat.value.trim().toLowerCase();
+        let visibleCount = 0;
+        const items = listCatItems.querySelectorAll('.cat-option-item');
+        items.forEach(el => {
+          const name = (el.getAttribute('data-name') || '').toLowerCase();
+          const match = !q || name.includes(q);
+          el.classList.toggle('hidden', !match);
+          if (match) visibleCount++;
+        });
+        if (msgCatEmpty) {
+          msgCatEmpty.classList.toggle('hidden', visibleCount > 0);
+          msgCatEmpty.textContent = (items.length === 0) ? 'Belum ada kategori tersimpan' : 'Kategori tidak ditemukan';
+        }
+      };
+    }
+
+    if (listCatItems) {
+      listCatItems.querySelectorAll('.cat-option-item').forEach(opt => {
+        opt.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const newId = opt.getAttribute('data-id');
+          selectCategory(newId);
+        };
+      });
+    }
+
+    if (btnCatShowAdd && footerCatDef && footerCatAdd) {
+      btnCatShowAdd.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        footerCatDef.classList.add('hidden');
+        footerCatAdd.classList.remove('hidden');
+        if (inpCatNewName) {
+          inpCatNewName.value = '';
+          if (errCatNewName) errCatNewName.classList.add('hidden');
+          setTimeout(() => { try { inpCatNewName.focus(); } catch (_) { } }, 50);
+        }
+      };
+    }
+
+    if (btnCatCancelAdd && footerCatDef && footerCatAdd) {
+      btnCatCancelAdd.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        footerCatAdd.classList.add('hidden');
+        footerCatDef.classList.remove('hidden');
+        if (inpCatNewName) inpCatNewName.value = '';
+        if (errCatNewName) errCatNewName.classList.add('hidden');
+      };
+    }
+
+    if (inpCatNewName) {
+      inpCatNewName.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (btnCatSaveAdd) btnCatSaveAdd.click();
+        }
+      };
+    }
+
+    if (btnCatSaveAdd && inpCatNewName) {
+      btnCatSaveAdd.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const trimmed = inpCatNewName.value.trim();
+        if (!trimmed) {
+          if (errCatNewName) {
+            errCatNewName.textContent = 'Nama kategori tidak boleh kosong.';
+            errCatNewName.classList.remove('hidden');
+          }
+          inpCatNewName.focus();
+          return;
+        }
+
+        const existing = (typeof DB !== 'undefined' && DB.getCategories) ? DB.getCategories() : [];
+        const isDup = existing.some(c => c.name && c.name.trim().toLowerCase() === trimmed.toLowerCase());
+        if (isDup) {
+          if (errCatNewName) {
+            errCatNewName.textContent = `Kategori "${trimmed}" sudah ada.`;
+            errCatNewName.classList.remove('hidden');
+          }
+          inpCatNewName.focus();
+          return;
+        }
+
+        try {
+          const newCat = DB.createCategory({ name: trimmed });
+          selectCategory(newCat.id);
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast(`Kategori "${newCat.name}" berhasil dibuat dan dipilih!`, 'success');
+          }
+        } catch (err) {
+          if (errCatNewName) {
+            errCatNewName.textContent = err.message || 'Gagal menyimpan kategori baru.';
+            errCatNewName.classList.remove('hidden');
+          }
+        }
+      };
+    }
+
+    function selectCategory(catId) {
+      const prevId = primaryState.category_id;
+      primaryState.category_id = catId;
+      if (prevId !== catId) {
+        // Reset subcategory selection upon parent change
+        primaryState.sub_category_id = null;
+        primaryState.sub_category_determined = false;
+      }
+      const catInput = document.getElementById('select-step2-cat');
+      if (catInput) catInput.value = catId || '';
+      const subCatInput = document.getElementById('select-step2-sub-cat');
+      if (subCatInput && prevId !== catId) {
+        subCatInput.value = '';
+        subCatInput.setAttribute('data-determined', 'false');
+      }
+      closeCatMenu();
+
+      if (!primaryState.card_variant_manual_override && primaryState.category_id) {
+        const suggestedVariant = (typeof getSuggestedCardVariantForCategory === 'function')
+          ? getSuggestedCardVariantForCategory(primaryState.category_id)
+          : 'A';
+        if (typeof activeApplyCardVariantFn === 'function') {
+          activeApplyCardVariantFn(suggestedVariant, false);
+        } else {
+          primaryState.card_variant = suggestedVariant;
+          updateProductCardLivePreview();
+        }
+      } else {
+        updateProductCardLivePreview();
+      }
+
+      // Check if Card 1 became valid
+      const missing = getMissingLabelsForCard(2);
+      if (missing.length === 0 && typeof updateStep2CardGatingDOM === 'function') {
+        updateStep2CardGatingDOM();
+      }
+      refreshCategorySubcategoryDropdowns();
+    }
+
+    // --- SUBCATEGORY DROPDOWN EVENTS ---
+    const btnSubTrigger = document.getElementById('btn-step2-subcat-trigger');
+    const menuSub = document.getElementById('menu-step2-subcat');
+    const chevSub = document.getElementById('chevron-step2-subcat');
+    const inpSearchSub = document.getElementById('input-search-step2-subcat');
+    const optSubNone = document.getElementById('opt-step2-subcat-none');
+    const divSubNone = document.getElementById('divider-step2-subcat-none');
+    const listSubItems = document.getElementById('list-step2-subcat-items');
+    const msgSubEmpty = document.getElementById('msg-step2-subcat-empty');
+    const btnSubShowAdd = document.getElementById('btn-step2-subcat-show-add');
+    const footerSubDef = document.getElementById('footer-step2-subcat-default');
+    const footerSubAdd = document.getElementById('footer-step2-subcat-add-form');
+    const inpSubNewName = document.getElementById('input-step2-subcat-new-name');
+    const errSubNewName = document.getElementById('err-step2-subcat-new-name');
+    const btnSubCancelAdd = document.getElementById('btn-step2-subcat-cancel-add');
+    const btnSubSaveAdd = document.getElementById('btn-step2-subcat-save-add');
+
+    function closeSubcatMenu() {
+      if (menuSub) menuSub.classList.add('hidden');
+      if (chevSub) chevSub.classList.remove('rotate-180');
+      if (btnSubTrigger) btnSubTrigger.setAttribute('aria-expanded', 'false');
+      if (footerSubDef) footerSubDef.classList.remove('hidden');
+      if (footerSubAdd) footerSubAdd.classList.add('hidden');
+      if (inpSubNewName) inpSubNewName.value = '';
+      if (errSubNewName) errSubNewName.classList.add('hidden');
+    }
+
+    if (btnSubTrigger && menuSub) {
+      btnSubTrigger.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!primaryState.category_id || btnSubTrigger.disabled) return;
+
+        const isHidden = menuSub.classList.contains('hidden');
+        if (isHidden) {
+          menuSub.classList.remove('hidden');
+          if (chevSub) chevSub.classList.add('rotate-180');
+          btnSubTrigger.setAttribute('aria-expanded', 'true');
+          closeCatMenu();
+          if (inpSearchSub) {
+            inpSearchSub.value = '';
+            if (optSubNone) optSubNone.classList.remove('hidden');
+            if (divSubNone) divSubNone.classList.remove('hidden');
+            if (listSubItems) {
+              listSubItems.querySelectorAll('.subcat-option-item').forEach(el => el.classList.remove('hidden'));
+            }
+            if (msgSubEmpty) {
+              const currentSubs = DB.getSubCategories ? DB.getSubCategories(primaryState.category_id) : [];
+              msgSubEmpty.classList.toggle('hidden', currentSubs.length > 0);
+              msgSubEmpty.textContent = (currentSubs.length === 0) ? 'Belum ada subkategori untuk kategori ini' : 'Subkategori tidak ditemukan';
+            }
+            setTimeout(() => { try { inpSearchSub.focus(); } catch (_) { } }, 50);
+          }
+        } else {
+          closeSubcatMenu();
+        }
+      };
+    }
+
+    if (inpSearchSub) {
+      inpSearchSub.oninput = () => {
+        const q = inpSearchSub.value.trim().toLowerCase();
+        const matchNone = !q || 'tanpa subkategori'.includes(q);
+        if (optSubNone) optSubNone.classList.toggle('hidden', !matchNone);
+        if (divSubNone) divSubNone.classList.toggle('hidden', !matchNone);
+
+        let visibleCount = 0;
+        const items = listSubItems ? listSubItems.querySelectorAll('.subcat-option-item') : [];
+        items.forEach(el => {
+          const name = (el.getAttribute('data-name') || '').toLowerCase();
+          const match = !q || name.includes(q);
+          el.classList.toggle('hidden', !match);
+          if (match) visibleCount++;
+        });
+
+        if (msgSubEmpty) {
+          if (items.length === 0) {
+            msgSubEmpty.textContent = 'Belum ada subkategori untuk kategori ini';
+            msgSubEmpty.classList.remove('hidden');
+          } else if (visibleCount === 0 && !matchNone) {
+            msgSubEmpty.textContent = 'Subkategori tidak ditemukan';
+            msgSubEmpty.classList.remove('hidden');
+          } else {
+            msgSubEmpty.classList.add('hidden');
+          }
+        }
+      };
+    }
+
+    if (optSubNone) {
+      optSubNone.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        primaryState.sub_category_id = null;
+        primaryState.sub_category_determined = true;
+        const subCatInput = document.getElementById('select-step2-sub-cat');
+        if (subCatInput) {
+          subCatInput.value = '';
+          subCatInput.setAttribute('data-determined', 'true');
+        }
+        closeSubcatMenu();
+        updateProductCardLivePreview();
+        refreshCategorySubcategoryDropdowns();
+      };
+    }
+
+    if (listSubItems) {
+      listSubItems.querySelectorAll('.subcat-option-item').forEach(opt => {
+        opt.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const subId = opt.getAttribute('data-id');
+          primaryState.sub_category_id = subId;
+          primaryState.sub_category_determined = true;
+          const subCatInput = document.getElementById('select-step2-sub-cat');
+          if (subCatInput) {
+            subCatInput.value = subId || '';
+            subCatInput.setAttribute('data-determined', 'true');
+          }
+          closeSubcatMenu();
+          updateProductCardLivePreview();
+          refreshCategorySubcategoryDropdowns();
+        };
+      });
+    }
+
+    if (btnSubShowAdd && footerSubDef && footerSubAdd) {
+      btnSubShowAdd.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!primaryState.category_id) return;
+        footerSubDef.classList.add('hidden');
+        footerSubAdd.classList.remove('hidden');
+        if (inpSubNewName) {
+          inpSubNewName.value = '';
+          if (errSubNewName) errSubNewName.classList.add('hidden');
+          setTimeout(() => { try { inpSubNewName.focus(); } catch (_) { } }, 50);
+        }
+      };
+    }
+
+    if (btnSubCancelAdd && footerSubDef && footerSubAdd) {
+      btnSubCancelAdd.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        footerSubAdd.classList.add('hidden');
+        footerSubDef.classList.remove('hidden');
+        if (inpSubNewName) inpSubNewName.value = '';
+        if (errSubNewName) errSubNewName.classList.add('hidden');
+      };
+    }
+
+    if (inpSubNewName) {
+      inpSubNewName.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (btnSubSaveAdd) btnSubSaveAdd.click();
+        }
+      };
+    }
+
+    if (btnSubSaveAdd && inpSubNewName) {
+      btnSubSaveAdd.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!primaryState.category_id) return;
+
+        const trimmed = inpSubNewName.value.trim();
+        if (!trimmed) {
+          if (errSubNewName) {
+            errSubNewName.textContent = 'Nama subkategori tidak boleh kosong.';
+            errSubNewName.classList.remove('hidden');
+          }
+          inpSubNewName.focus();
+          return;
+        }
+
+        if (trimmed.toLowerCase() === 'tanpa subkategori') {
+          if (errSubNewName) {
+            errSubNewName.textContent = 'Nama tidak boleh menggunakan "Tanpa subkategori".';
+            errSubNewName.classList.remove('hidden');
+          }
+          inpSubNewName.focus();
+          return;
+        }
+
+        const existingSubs = DB.getSubCategories ? DB.getSubCategories(primaryState.category_id) : [];
+        const isDup = existingSubs.some(s => s.name && s.name.trim().toLowerCase() === trimmed.toLowerCase());
+        if (isDup) {
+          if (errSubNewName) {
+            errSubNewName.textContent = `Subkategori "${trimmed}" sudah ada pada kategori ini.`;
+            errSubNewName.classList.remove('hidden');
+          }
+          inpSubNewName.focus();
+          return;
+        }
+
+        try {
+          const newSub = DB.createSubCategory({ category_id: primaryState.category_id, name: trimmed });
+          primaryState.sub_category_id = newSub.id;
+          primaryState.sub_category_determined = true;
+          closeSubcatMenu();
+          updateProductCardLivePreview();
+          if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast(`Subkategori "${newSub.name}" berhasil dibuat dan dipilih!`, 'success');
+          }
+          refreshCategorySubcategoryDropdowns();
+        } catch (err) {
+          if (errSubNewName) {
+            errSubNewName.textContent = err.message || 'Gagal menyimpan subkategori baru.';
+            errSubNewName.classList.remove('hidden');
+          }
+        }
+      };
+    }
+
+    // Dukungan legacy button jika dipanggil
+    const btnQuickCatStep2 = document.getElementById('btn-quick-add-category-step2');
+    if (btnQuickCatStep2) {
+      btnQuickCatStep2.onclick = (e) => {
+        e.preventDefault();
+        if (btnCatTrigger && menuCat && menuCat.classList.contains('hidden')) {
+          btnCatTrigger.click();
+        }
+        if (btnCatShowAdd) btnCatShowAdd.click();
+      };
+    }
+  }
+
+  function refreshCategorySubcategoryDropdowns() {
+    const catWrapper = document.getElementById('wrapper-step2-cat-dropdown');
+    const subWrapper = document.getElementById('wrapper-step2-subcat-dropdown');
+    if (catWrapper) {
+      catWrapper.innerHTML = renderCategoryDropdownContent();
+    }
+    if (subWrapper) {
+      subWrapper.innerHTML = renderSubCategoryDropdownContent();
+    }
+    bindCategorySubcategoryEvents();
+  }
+
   function renderStep2Content() {
     const isPhysical = primaryState.product_type !== 'non_physical';
     const shippingCfg = primaryState.shipping_config || {
@@ -15183,43 +16038,17 @@ const ProductForm = (() => {
             <p id="step2-name-min-length-error" class="hidden text-[11px] font-semibold text-red-600 mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle-fill"></i><span>Nama produk minimal harus 5 karakter.</span></p>
           </div>
 
-          <!-- Input Kategori & Sub-Kategori Produk -->
+          <!-- Input Kategori & Sub-Kategori Produk (Hybrid Dropdown Accordion) -->
           <div class="space-y-3 pt-1 border-t border-slate-100">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <label class="block text-xs font-bold text-slate-800">
-                  Kategori Produk <span class="text-red-500">*</span>
-                </label>
-              </div>
-              <button type="button" id="btn-quick-add-category-step2" class="text-primary-brand text-xs font-bold hover:underline flex items-center gap-1 transition cursor-pointer" title="Tambah Kategori">
-                <i class="bi bi-plus-circle"></i>
-                <span>Tambah Kategori</span>
-              </button>
+            <div>
+              <label class="block text-xs font-bold text-slate-800">
+                Kategori Produk <span class="text-red-500">*</span>
+              </label>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label for="select-step2-cat" class="block text-[11px] font-semibold text-slate-700 mb-1">
-                  Kategori Utama <span class="text-red-500">*</span>
-                </label>
-                <select id="select-step2-cat" class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-xs font-semibold focus:border-emerald-500 outline-none bg-white">
-                  <option value="">-- Pilih Kategori Produk --</option>
-                  ${allCategories.map(c => `
-                    <option value="${c.id}" ${String(primaryState.category_id) === String(c.id) ? 'selected' : ''}>${escapeHtml(c.name)}</option>
-                  `).join('')}
-                </select>
-              </div>
-              <div>
-                <label for="select-step2-sub-cat" class="block text-[11px] font-semibold text-slate-700 mb-1">
-                  Sub-Kategori (Opsional)
-                </label>
-                <select id="select-step2-sub-cat" class="w-full px-3.5 py-2.5 rounded-md border border-slate-300 text-xs font-semibold focus:border-emerald-500 outline-none bg-white">
-                  <option value="">-- Tanpa Sub-Kategori --</option>
-                  ${currentSubs.map(s => `
-                    <option value="${s.id}" ${String(primaryState.sub_category_id) === String(s.id) ? 'selected' : ''}>${escapeHtml(s.name)}</option>
-                  `).join('')}
-                </select>
-              </div>
+              ${renderCategoryDropdownHtml()}
+              ${renderSubCategoryDropdownHtml()}
             </div>
           </div>
 
@@ -23178,35 +24007,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       }
 
-      const step2Cat = document.getElementById('select-step2-cat');
-      const step2SubCat = document.getElementById('select-step2-sub-cat');
-      if (step2Cat) {
-        step2Cat.onchange = (e) => {
-          primaryState.category_id = e.target.value;
-          if (step2SubCat) {
-            const subs = primaryState.category_id && DB.getSubCategories ? DB.getSubCategories(primaryState.category_id) : [];
-            step2SubCat.innerHTML = '<option value="">-- Tanpa Sub-Kategori --</option>' + subs.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-            primaryState.sub_category_id = '';
-          }
-          updateProductCardLivePreview();
-          updateStep2CardGatingDOM(true);
-        };
-      }
-
-      if (step2SubCat) {
-        step2SubCat.onchange = (e) => {
-          primaryState.sub_category_id = e.target.value;
-          updateProductCardLivePreview();
-        };
-      }
-
-      const btnQuickCatStep2 = document.getElementById('btn-quick-add-category-step2');
-      if (btnQuickCatStep2) {
-        btnQuickCatStep2.onclick = (e) => {
-          e.preventDefault();
-          openQuickCatModal();
-        };
-      }
+      // Inisialisasi Hybrid Dropdown Accordion Kategori & Subkategori (Step 2)
+      bindCategorySubcategoryEvents();
 
       const btnStep2Upload = document.getElementById('btn-step2-upload-more');
       if (btnStep2Upload) {
@@ -27722,17 +28524,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             const newSub = DB.createSubCategory({ category_id: parentId, name: catName });
             primaryState.category_id = parentId;
             primaryState.sub_category_id = newSub.id;
+            primaryState.sub_category_determined = true;
 
             const catSelect = document.getElementById('select-step2-cat');
             if (catSelect) catSelect.value = parentId;
 
             const subCatSelect = document.getElementById('select-step2-sub-cat');
-            if (subCatSelect && DB.getSubCategories) {
-              const subs = DB.getSubCategories(parentId);
-              subCatSelect.innerHTML = '<option value="">-- Tanpa Sub-Kategori --</option>' + subs.map(s => `<option value="${s.id}" ${String(s.id) === String(newSub.id) ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+            if (subCatSelect) {
+              subCatSelect.value = newSub.id;
+              subCatSelect.setAttribute('data-determined', 'true');
             }
 
             closeQuickCatModal();
+            refreshCategorySubcategoryDropdowns();
             updateStep2CardGatingDOM();
             updateProductCardLivePreview();
             if (typeof App !== 'undefined' && App.showToast) {
@@ -27741,24 +28545,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           } else {
             const newCat = DB.createCategory({ name: catName });
             primaryState.category_id = newCat.id;
-            primaryState.sub_category_id = '';
+            primaryState.sub_category_id = null;
+            primaryState.sub_category_determined = false;
 
             const catSelect = document.getElementById('select-step2-cat') || document.getElementById('select-prod-cat');
             if (catSelect) {
-              const opt = document.createElement('option');
-              opt.value = newCat.id;
-              opt.textContent = newCat.name;
-              opt.selected = true;
-              catSelect.appendChild(opt);
               catSelect.value = newCat.id;
             }
 
             const subCatSelect = document.getElementById('select-step2-sub-cat');
             if (subCatSelect) {
-              subCatSelect.innerHTML = '<option value="" selected>-- Tanpa Sub-Kategori --</option>';
+              subCatSelect.value = '';
+              subCatSelect.setAttribute('data-determined', 'false');
             }
 
             closeQuickCatModal();
+            refreshCategorySubcategoryDropdowns();
             updateStep2CardGatingDOM();
             updateProductCardLivePreview();
             if (typeof App !== 'undefined' && App.showToast) {
@@ -28405,6 +29207,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     function applyCardVariant(variantCode, isManual = false) {
+      activeApplyCardVariantFn = applyCardVariant;
       primaryState.card_variant = variantCode;
       if (isManual) {
         primaryState.card_variant_manual_override = true;
@@ -30358,8 +31161,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // Step 1 & Step 2 Card 1: Info Produk
     primaryState.name = document.getElementById('step2-input-name')?.value || document.getElementById('input-prod-name')?.value || primaryState.name;
     primaryState.description = document.getElementById('input-prod-desc')?.value || primaryState.description || '';
-    primaryState.category_id = document.getElementById('select-step2-cat')?.value || document.getElementById('select-prod-cat')?.value || primaryState.category_id;
-    primaryState.sub_category_id = document.getElementById('select-step2-sub-cat')?.value || document.getElementById('select-prod-sub-cat')?.value || primaryState.sub_category_id;
+    const catInput = document.getElementById('select-step2-cat');
+    if (catInput) {
+      if (catInput.value) {
+        primaryState.category_id = catInput.value;
+      }
+    } else {
+      primaryState.category_id = document.getElementById('select-prod-cat')?.value || primaryState.category_id || '';
+    }
+
+    const subCatInput = document.getElementById('select-step2-sub-cat');
+    if (subCatInput) {
+      const isDet = subCatInput.getAttribute('data-determined');
+      if (isDet === 'true') {
+        primaryState.sub_category_determined = true;
+        primaryState.sub_category_id = subCatInput.value ? subCatInput.value : null;
+      } else if (isDet === 'false') {
+        primaryState.sub_category_determined = false;
+        primaryState.sub_category_id = null;
+      }
+    } else if (document.getElementById('select-prod-sub-cat')) {
+      primaryState.sub_category_id = document.getElementById('select-prod-sub-cat')?.value || primaryState.sub_category_id;
+    }
 
     const variantRad = document.querySelector('input[name="card_variant_radio"]:checked');
     if (variantRad) primaryState.card_variant = variantRad.value;
@@ -31135,7 +31958,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
     if (!primaryState.category_id || String(primaryState.category_id).trim() === '') {
-      addError('Kategori Utama Etalase wajib dipilih.', document.getElementById('select-step2-cat') || document.getElementById('category_id'));
+      const catTarget = document.getElementById('btn-step2-cat-trigger') || document.getElementById('select-step2-cat') || document.getElementById('category_id');
+      addError('Kategori produk wajib dipilih.', catTarget);
+      if (catTarget && catTarget.classList) {
+        catTarget.classList.add('border-red-500', 'ring-1', 'ring-red-200');
+      }
+    }
+    if (!primaryState.sub_category_determined) {
+      const subTarget = document.getElementById('btn-step2-subcat-trigger') || document.getElementById('select-step2-sub-cat');
+      addError('Pilih subkategori atau pilih Tanpa subkategori.', subTarget);
+      if (subTarget && subTarget.classList) {
+        subTarget.classList.add('border-red-500', 'ring-1', 'ring-red-200');
+      }
     }
 
     // 2. Validasi Step 2: Informasi Penjualan

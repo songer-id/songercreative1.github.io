@@ -292,8 +292,17 @@ Di bagian atas Step 2, terpasang bilah subnav navigasi yang menempel rapat (*sti
 - **Komponen**: Kartu putih mandiri `#card-step2-info` (baris 14673).
 - **Fitur di dalamnya**:
   1. *Nama Produk*: Input teks duplikat tersinkronisasi (`#step2-input-name`) yang terikat dua arah dengan `#input-prod-name` Step 1.
-  2. *Kategori Utama Etalase*: Dropdown select `#select-step2-cat` (atau `#select-prod-cat`), membaca daftar kategori dari `DB.getCategories()`. Terikat pada `primaryState.category_id`.
-  3. *Sub-Kategori Etalase*: Dropdown select `#select-step2-sub-cat` yang memuat sub-kategori relasional berdasarkan kategori terpilih via `DB.getSubCategories(catId)`. Terikat pada `primaryState.sub_category_id`.
+  2. *Kategori Utama Etalase*: Komponen **Hybrid Dropdown Accordion** (`#wrapper-step2-cat-dropdown`, trigger `#btn-step2-cat-trigger`) dengan pencarian instan (`#input-search-step2-cat`) dan pembuatan inline manual (`#btn-step2-cat-show-add`).
+     - Tidak ada pilihan default pada produk baru (placeholder `Pilih kategori produk`).
+     - Pengetikan pencarian menyaring daftar kategori aktif tanpa mengubah nilai terpilih.
+     - Aksi `+ Tambah kategori baru` memunculkan formulir inline (dengan validasi nama kosong dan cek duplikasi case-insensitive/trimmed). Setelah disimpan via `DB.createCategory`, kategori baru langsung terpilih, subkategori direset, dan live preview diperbarui.
+     - Terikat pada `primaryState.category_id`. Wajib dipilih; jika kosong, validasi menampilkan pesan `"Kategori produk wajib dipilih."`.
+  3. *Sub-Kategori Etalase*: Komponen **Hybrid Dropdown Accordion** (`#wrapper-step2-subcat-dropdown`, trigger `#btn-step2-subcat-trigger`) yang dinonaktifkan sampai Kategori Utama dipilih.
+     - Urutan konten dropdown: (1) Pencarian `Cari subkategori...`; (2) Opsi khusus `Tanpa subkategori` (`#opt-step2-subcat-none`); (3) Pemisah visual; (4) Daftar subkategori milik kategori aktif (`DB.getSubCategories(catId)`); (5) Aksi `+ Tambah subkategori baru` (`#btn-step2-subcat-show-add`) yang otomatis mengaitkan anak ke parent aktif.
+     - Seller wajib menentukan salah satu opsi (subkategori terdaftar atau `Tanpa subkategori`). Belum menentukan pilihan akan memicu pesan validasi `"Pilih subkategori atau pilih Tanpa subkategori."`.
+     - Pilihan `Tanpa subkategori` tersimpan sebagai `sub_category_id: null` dengan status penentuan `sub_category_determined: true`. Tidak ada record palsu yang dibuat di database.
+     - Mengganti Kategori Utama mereset subkategori (`sub_category_id = null`, `sub_category_determined = false`) dan mewajibkan seller menentukan ulang.
+     - Mode Edit: Memulihkan kategori & subkategori tersimpan; produk dengan `sub_category_id: null` otomatis tampil sebagai `Tanpa subkategori` yang sah tanpa memaksa memilih ulang.
   4. *Kategori Operasional Kasir*: Terikat pada `primaryState.order_category` (default `'Ctk'` untuk percetakan atau `'Non-Ctk'` untuk produk umum).
 
 ### 6.B. Harga dan HPP (Pricing Engine)
