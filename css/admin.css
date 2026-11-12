@@ -3587,9 +3587,10 @@ button:focus-visible {
   box-shadow: 0 0 0 2px var(--color-primary-subtle, #ecfdf5);
 }
 
+/* Menu Dropdown Portal Berada di Atas Drawer (z-95) namun di Bawah Modal/Dialog (z-100) */
 .card-preset-select-menu {
   position: fixed;
-  z-index: 99999;
+  z-index: 98;
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -3650,4 +3651,9 @@ button:focus-visible {
     line-height: 16px !important;
     font-weight: 400 !important;
   }
+}
+
+.btn-footer-icon-item.is-disabled-other {
+  opacity: 0.35;
+  cursor: not-allowed;
 }

@@ -1188,7 +1188,7 @@ const BuyerStore = (() => {
           }, 350);
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // ----------------------------------------------------------------------------
@@ -1502,7 +1502,7 @@ const BuyerStore = (() => {
         orderIds.forEach(id => currentSeen.add(String(id)));
         const updated = Array.from(currentSeen);
         localStorage.setItem(`pos_seen_notif_order_ids_${tid}`, JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     function updateNotifDropdownPosition() {
@@ -1536,8 +1536,8 @@ const BuyerStore = (() => {
           const oEmail = (o.customer_email || '').trim().toLowerCase();
           const oName = (o.customer_name || '').trim().toLowerCase();
           return (custPhone && oPhone && oPhone === custPhone) ||
-                 (custEmail && oEmail && oEmail === custEmail) ||
-                 (custName && oName && oName === custName);
+            (custEmail && oEmail && oEmail === custEmail) ||
+            (custName && oName && oName === custName);
         });
       } else {
         relevantOrders = orders.slice(0, 5);
@@ -2055,8 +2055,8 @@ const BuyerStore = (() => {
 
     const heroShowArrows = shouldShowNavArrows(animType, settings.hero_show_arrows !== false);
     const isAlwaysVisible = (animType === 'manual' || animType === 'manual_swipe') || (settings.hero_arrows_visibility === 'always');
-    const arrowVisibilityClass = isAlwaysVisible 
-      ? 'opacity-100' 
+    const arrowVisibilityClass = isAlwaysVisible
+      ? 'opacity-100'
       : 'opacity-0 group-hover:opacity-100 transition-opacity';
 
     // Helper: generate slides HTML Non-Split
@@ -2245,13 +2245,13 @@ const BuyerStore = (() => {
     if (featuredList.length === 0) return '';
 
     const cardsHtml = featuredList.slice(0, 3).map((prod, idx) => {
-      const effDiscount = (typeof DB !== 'undefined' && DB.calculateEffectiveDiscount) 
-        ? DB.calculateEffectiveDiscount(prod) 
+      const effDiscount = (typeof DB !== 'undefined' && DB.calculateEffectiveDiscount)
+        ? DB.calculateEffectiveDiscount(prod)
         : (prod.effective_discount || { has_discount: false });
       const minPrice = (typeof DB !== 'undefined' && DB.getProductMinPrice) ? DB.getProductMinPrice(prod) : (prod.price || 0);
       const finalPrice = (effDiscount && effDiscount.has_discount) ? effDiscount.discounted_price : minPrice;
       const formattedPrice = (typeof DB !== 'undefined' && DB.formatRupiah) ? DB.formatRupiah(finalPrice) : `Rp ${finalPrice.toLocaleString('id-ID')}`;
-      
+
       const badgeLabels = ['Paling Dicari', 'Best Seller', 'Prioritas Pilihan'];
       const currentBadge = badgeLabels[idx % badgeLabels.length];
       const prodImg = (prod.images && prod.images[0]) || prod.image || 'assets/images/logo-songer-creative.png';
@@ -2649,13 +2649,13 @@ const BuyerStore = (() => {
               <span>${escapeHtml(filterPromoText)}</span>
             </button>
             ${quickNavCategories.map(cat => {
-              const isCatActive = (activeMainCategoryId === cat.id);
-              return `
+        const isCatActive = (activeMainCategoryId === cat.id);
+        return `
                 <button type="button" class="btn-cat-filter px-4 py-2 rounded-full text-xs font-bold transition flex items-center shrink-0 shadow-xs border hover:brightness-95" style="${isCatActive ? activePillStyle : inactivePillStyle}" data-cat="${cat.id}" title="${escapeHtml(cat.name)}">
                   <span>${escapeHtml(cat.name)}</span>
                 </button>
               `;
-            }).join('')}
+      }).join('')}
           </div>
         </div>
       `;
@@ -3620,17 +3620,33 @@ const BuyerStore = (() => {
     const countdownIconColor = prod.countdown_icon_color || config.countdown_icon_color || countdownTextColor;
     const countdownBorder = prod.countdown_border_color || config.countdown_border_color || '#059669';
 
+    // Helper normalisasi & resolusi ikon efektif footer (ikon tidak dirender jika teks kosong)
+    const resolveEffectiveFooterIcon = (rawText, rawIcon, fallbackIcon) => {
+      if (!String(rawText ?? '').trim()) return 'none';
+      if (rawIcon === null || rawIcon === undefined) return fallbackIcon;
+      let cleaned = String(rawIcon).trim().toLowerCase().replace(/^lucide:/, '').replace(/^bi-/, '');
+      if (!cleaned || cleaned === 'none' || cleaned === 'ban' || cleaned === 'tanpa-ikon') return 'none';
+      if (cleaned === 'check') cleaned = 'check-circle';
+      return cleaned;
+    };
+
     // Konfigurasi Footer 1 (Strip Atas) - Utamakan custom_footer_1 per-produk
     const f1Obj = prod.custom_footer_1 || {};
-    const footer1Text = (f1Obj.text !== undefined ? f1Obj.text : (prod.card_footer_text !== undefined ? prod.card_footer_text : (prod.footer_badge_text || config.footer_text || ''))).trim();
-    const footer1Icon = f1Obj.icon || prod.footer_badge_icon || config.footer_icon || 'truck';
+    const rawFooter1Source = f1Obj.text !== undefined
+      ? f1Obj.text
+      : (prod.card_footer_text !== undefined ? prod.card_footer_text : (prod.footer_badge_text ?? config.footer_text ?? ''));
+    const footer1Text = String(rawFooter1Source ?? '').trim();
+    const footer1Icon = resolveEffectiveFooterIcon(footer1Text, f1Obj.icon !== undefined ? f1Obj.icon : (prod.footer_badge_icon !== undefined ? prod.footer_badge_icon : config.footer_icon), 'truck');
     const footer1Bg = f1Obj.bg_color || prod.footer_bg_color || config.footer_bg_color || '#059669';
     const footer1TextColor = f1Obj.text_color || prod.footer_text_color || config.footer_text_color || '#ffffff';
 
     // Konfigurasi Footer 2 (Strip Bawah / Wadah Countdown) - Utamakan custom_footer_2 per-produk
     const f2Obj = prod.custom_footer_2 || {};
-    const footer2Text = (f2Obj.text !== undefined ? f2Obj.text : (prod.card_footer_2_text !== undefined ? prod.card_footer_2_text : (config.footer_2_text || ''))).trim();
-    const footer2Icon = f2Obj.icon || prod.footer_2_badge_icon || config.footer_2_icon || 'minus';
+    const rawFooter2Source = f2Obj.text !== undefined
+      ? f2Obj.text
+      : (prod.card_footer_2_text !== undefined ? prod.card_footer_2_text : (config.footer_2_text ?? ''));
+    const footer2Text = String(rawFooter2Source ?? '').trim();
+    const footer2Icon = resolveEffectiveFooterIcon(footer2Text, f2Obj.icon !== undefined ? f2Obj.icon : (prod.footer_2_badge_icon !== undefined ? prod.footer_2_badge_icon : config.footer_2_icon), 'minus');
     const defaultSecondary = (typeof DB !== 'undefined' && DB.getSettings) ? (DB.getSettings()?.secondary_color || '#f59e0b') : '#f59e0b';
     const footer2Bg = f2Obj.bg_color || prod.footer_2_bg_color || config.footer_2_bg_color || defaultSecondary;
     const footer2TextColor = f2Obj.text_color || prod.footer_2_text_color || config.footer_2_text_color || '#ffffff';
@@ -3653,7 +3669,7 @@ const BuyerStore = (() => {
 
           <!-- Footer 2 (Bawah): Bilah Diskon Countdown saat Promo Aktif, atau Info Paket saat Promo Off -->
           ${hasFooter2 ? (
-            countdownInfo.is_active ? `
+          countdownInfo.is_active ? `
               <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${countdownBg}; color: ${countdownTextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;" title="${escapeHtml(countdownInfo.label_full)}">
                 <i data-lucide="ticket-percent" class="w-3.5 h-3.5 shrink-0" style="color: ${countdownIconColor};"></i>
                 <span class="truncate">${escapeHtml(countdownInfo.footer_label)}</span>
@@ -3664,7 +3680,7 @@ const BuyerStore = (() => {
                 <span class="truncate">${escapeHtml(footer2Text)}</span>
               </div>
             `
-          ) : ''}
+        ) : ''}
         </div>
       `;
     }
@@ -4370,20 +4386,20 @@ const BuyerStore = (() => {
       slidesHtml = `
         <div class="slides-track flex w-full h-full transition-transform duration-500 ease-in-out" style="border-radius: inherit;">
           ${slides.map((slide, idx) => {
-            const isInternalProduct = Boolean(slide.linked_product_id);
-            const prodTargetUrl = isInternalProduct ? `product.html?id=${slide.linked_product_id}` : '';
-            const targetUrl = slide.target_url || prodTargetUrl || sponsorWaUrl;
-            const clickImageEnabled = slide.click_image_enabled !== false && Boolean(targetUrl);
-            const targetAttr = (targetUrl && targetUrl.startsWith('product.html')) ? '' : 'target="_blank"';
-            const ctaBtnHtml = renderSlideCtaButton(slide, sponsorWaUrl);
+        const isInternalProduct = Boolean(slide.linked_product_id);
+        const prodTargetUrl = isInternalProduct ? `product.html?id=${slide.linked_product_id}` : '';
+        const targetUrl = slide.target_url || prodTargetUrl || sponsorWaUrl;
+        const clickImageEnabled = slide.click_image_enabled !== false && Boolean(targetUrl);
+        const targetAttr = (targetUrl && targetUrl.startsWith('product.html')) ? '' : 'target="_blank"';
+        const ctaBtnHtml = renderSlideCtaButton(slide, sponsorWaUrl);
 
-            const content = `
+        const content = `
               <img src="${escapeHtml(slide.image_url)}" alt="Slide ${idx + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" style="border-radius: inherit;" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-300 p-4\\'><i class=\\'bi bi-badge-ad text-3xl mb-1\\'></i><span class=\\'text-xs font-bold\\'>SPACE IKLAN AVAILABLE</span></div>';" />
               <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 group-hover:opacity-75 transition duration-300 pointer-events-none" style="border-radius: inherit;"></div>
               ${ctaBtnHtml}
             `;
 
-            return `
+        return `
               <div class="w-full h-full shrink-0 relative block" style="width: 100%; height: 100%; border-radius: inherit;">
                 ${clickImageEnabled ? `
                   <a href="${escapeHtml(targetUrl)}" ${targetAttr} class="w-full h-full block relative" title="Sponsor ${idx + 1}" style="border-radius: inherit;">
@@ -4396,7 +4412,7 @@ const BuyerStore = (() => {
                 `}
               </div>
             `;
-          }).join('')}
+      }).join('')}
         </div>
       `;
     }
@@ -6168,7 +6184,7 @@ const BuyerStore = (() => {
   }
 
   // Global helper agar klik tautan kategori pada footer langsung memicu filter
-  window.filterBuyerCategory = function(catId) {
+  window.filterBuyerCategory = function (catId) {
     activeMainCategoryId = catId;
     activeQuickFilter = 'all';
     activeSubCategoryId = 'all';

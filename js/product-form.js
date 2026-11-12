@@ -85,18 +85,269 @@ const ProductForm = (() => {
     return [...str].slice(0, 32).join('');
   }
 
-  function renderFooterIconGridHtml(currentIconId, pickerId) {
+  const FOOTER_ICON_ALIASES = {
+    '': 'none',
+    none: 'none',
+    ban: 'none',
+    'tanpa-ikon': 'none',
+    check: 'check-circle'
+  };
+
+  function normalizeFooterTextForComparison(rawText) {
+    return String(rawText ?? '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
+  }
+
+  function isValidFooterText(rawText) {
+    if (rawText === null || rawText === undefined) return false;
+    const str = String(rawText);
+    if (!str.trim()) return false;
+    return getUnicodeLength(str) <= 32;
+  }
+
+  function normalizeFooterIconId(iconId, fallbackId = 'none') {
+    if (iconId === null || iconId === undefined) return fallbackId;
+    let cleaned = String(iconId).trim().toLowerCase().replace(/^lucide:/, '').replace(/^bi-/, '');
+    if (Object.prototype.hasOwnProperty.call(FOOTER_ICON_ALIASES, cleaned)) {
+      cleaned = FOOTER_ICON_ALIASES[cleaned];
+    }
+    return FOOTER_ICONS_CATALOG.some(c => c.id === cleaned) ? cleaned : fallbackId;
+  }
+
+  function getEffectiveFooterIconId(rawText, savedIconId, fallbackSavedIcon = 'none') {
+    if (!isValidFooterText(rawText)) return 'none';
+    return normalizeFooterIconId(savedIconId, fallbackSavedIcon);
+  }
+
+  function renderFooterIconGridHtml(currentIconId, pickerId, otherActiveIconId = 'none') {
+    const normalizedCur = normalizeFooterIconId(currentIconId, pickerId.includes('footer-2') ? 'minus' : 'truck');
+    const normalizedOther = normalizeFooterIconId(otherActiveIconId, 'none');
     return FOOTER_ICONS_CATALOG.map(item => {
-      const isSel = (currentIconId === item.id) || (!currentIconId && item.id === (pickerId.includes('footer-2') ? 'minus' : 'truck'));
+      const isSel = normalizedCur === item.id;
+      const isDisabledOther = item.id !== 'none' && normalizedOther !== 'none' && item.id === normalizedOther;
       const iconInner = item.id === 'none'
         ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
         : `<i data-lucide="${item.icon}" class="w-4.5 h-4.5"></i>`;
+      const btnTitle = isDisabledOther ? `${item.label} — Digunakan pada footer lainnya.` : item.label;
       return `
-        <button type="button" class="btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}" data-icon-id="${item.id}" data-picker="${pickerId}" title="${escapeHtml(item.label)}" role="menuitem">
+        <button type="button" class="btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition ${isDisabledOther ? 'is-disabled-other bg-slate-100 text-slate-300 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100'} ${isSel && !isDisabledOther ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : (isSel && isDisabledOther ? 'ring-2 ring-red-400 bg-red-50 text-red-400' : (!isDisabledOther ? 'text-slate-600' : ''))}" data-icon-id="${item.id}" data-picker="${pickerId}" title="${escapeHtml(btnTitle)}" aria-disabled="${isDisabledOther ? 'true' : 'false'}" ${isDisabledOther ? 'disabled' : ''} role="menuitem">
           ${iconInner}
         </button>
       `;
     }).join('');
+  }
+
+  function evaluateFooterValidationState() {
+    const f1Raw = primaryState.card_footer_text !== undefined && primaryState.card_footer_text !== null ? String(primaryState.card_footer_text) : '';
+    const f2Raw = primaryState.card_footer_2_text !== undefined && primaryState.card_footer_2_text !== null ? String(primaryState.card_footer_2_text) : '';
+    const f1Trim = f1Raw.trim();
+    const f2Trim = f2Raw.trim();
+    const f1Len = getUnicodeLength(f1Raw);
+    const f2Len = getUnicodeLength(f2Raw);
+    const f1Valid = Boolean(f1Trim) && f1Len <= 32;
+    const f2Valid = Boolean(f2Trim) && f2Len <= 32;
+    const f1SavedIcon = normalizeFooterIconId(primaryState.footer_badge_icon, 'truck');
+    const f2SavedIcon = normalizeFooterIconId(primaryState.footer_2_badge_icon, 'minus');
+    const f1EffIcon = f1Valid ? f1SavedIcon : 'none';
+    const f2EffIcon = f2Valid ? f2SavedIcon : 'none';
+
+    const f1RequiredErr = !f1Trim ? 'Label Footer 1 wajib diisi.' : '';
+    const f1LenErr = f1Len > 32 ? `Label Footer 1 melebihi batas 32 karakter (${f1Len}/32).` : '';
+    const f2LenErr = f2Len > 32 ? `Label Footer 2 melebihi batas 32 karakter (${f2Len}/32).` : '';
+    const duplicateTextErr = (f1Valid && f2Valid && normalizeFooterTextForComparison(f1Raw) === normalizeFooterTextForComparison(f2Raw))
+      ? 'Label Footer 2 harus berbeda dari Label Footer 1.'
+      : '';
+    const duplicateIconErr = (f1Valid && f2Valid && f1EffIcon !== 'none' && f2EffIcon !== 'none' && f1EffIcon === f2EffIcon)
+      ? 'Pilih ikon berbeda atau gunakan Tanpa Ikon.'
+      : '';
+
+    return {
+      f1Raw,
+      f2Raw,
+      f1Trim,
+      f2Trim,
+      f1Len,
+      f2Len,
+      f1Valid,
+      f2Valid,
+      f1SavedIcon,
+      f2SavedIcon,
+      f1EffIcon,
+      f2EffIcon,
+      f1RequiredErr,
+      f1LenErr,
+      f2LenErr,
+      duplicateTextErr,
+      duplicateIconErr
+    };
+  }
+
+  function applyFooterErrorBox(boxIds, inputIds, msg) {
+    boxIds.forEach(id => {
+      const box = document.getElementById(id);
+      if (!box) return;
+      const msgEl = box.querySelector('.error-msg') || box;
+      if (msg) {
+        msgEl.textContent = msg;
+        box.classList.remove('hidden');
+      } else {
+        msgEl.textContent = '';
+        box.classList.add('hidden');
+      }
+    });
+    inputIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (msg) {
+        el.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+      } else {
+        el.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+      }
+    });
+  }
+
+  function syncFooterControlsUI() {
+    if (typeof document === 'undefined') return;
+    const state = evaluateFooterValidationState();
+
+    const syncStripIconControls = (stripNum, isValid, effIcon, otherEffIcon) => {
+      const btnIds = stripNum === 1
+        ? ['btn-footer-icon-picker-side', 'btn-footer-icon-picker-mob']
+        : ['btn-footer-2-icon-picker-side', 'btn-footer-2-icon-picker-mob'];
+      const previewIds = stripNum === 1
+        ? ['preview-footer-icon-side', 'preview-footer-icon-mob']
+        : ['preview-footer-2-icon-side', 'preview-footer-2-icon-mob'];
+      const menuIds = stripNum === 1
+        ? ['menu-footer-icon-picker-side', 'menu-footer-icon-picker-mob']
+        : ['menu-footer-2-icon-picker-side', 'menu-footer-2-icon-picker-mob'];
+      const noticeIds = stripNum === 1
+        ? ['notice-footer-icon-picker-side', 'notice-footer-icon-picker-mob']
+        : ['notice-footer-2-icon-picker-side', 'notice-footer-2-icon-picker-mob'];
+      const pickerPrefix = stripNum === 1 ? 'footer-1' : 'footer-2';
+      const step2SelId = stripNum === 1 ? 'select-card-footer-icon' : 'select-card-footer-2-icon';
+
+      btnIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = !isValid;
+        btn.setAttribute('aria-disabled', isValid ? 'false' : 'true');
+        if (!isValid) {
+          btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+          btn.classList.remove('bg-white', 'hover:bg-slate-50', 'cursor-pointer');
+          btn.setAttribute('aria-expanded', 'false');
+          btn.setAttribute('title', `Isi Label Footer ${stripNum} terlebih dahulu untuk memilih ikon`);
+        } else {
+          btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+          btn.classList.add('bg-white', 'hover:bg-slate-50', 'cursor-pointer');
+          btn.setAttribute('title', `Pilih Ikon Footer ${stripNum}`);
+        }
+      });
+
+      if (!isValid) {
+        menuIds.forEach(id => {
+          document.getElementById(id)?.classList.add('hidden');
+        });
+      }
+
+      previewIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = (!isValid || effIcon === 'none')
+          ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
+          : `<i data-lucide="${escapeHtml(effIcon)}" class="w-3.5 h-3.5"></i>`;
+      });
+
+      let hasDisabledOther = false;
+      document.querySelectorAll(`.btn-footer-icon-item[data-picker^="${pickerPrefix}"]`).forEach(itemBtn => {
+        const icId = itemBtn.getAttribute('data-icon-id');
+        const catalogItem = FOOTER_ICONS_CATALOG.find(c => c.id === icId);
+        const baseLabel = catalogItem ? catalogItem.label : icId;
+        const isDisabledOther = icId !== 'none' && otherEffIcon !== 'none' && icId === otherEffIcon;
+        const isSel = isValid && icId === effIcon;
+        if (isDisabledOther) hasDisabledOther = true;
+        itemBtn.disabled = isDisabledOther;
+        itemBtn.setAttribute('aria-disabled', isDisabledOther ? 'true' : 'false');
+        itemBtn.setAttribute('title', isDisabledOther ? `${baseLabel} — Digunakan pada footer lainnya.` : baseLabel);
+        itemBtn.className = `btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition ${isDisabledOther ? 'is-disabled-other bg-slate-100 text-slate-300 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100'} ${isSel && !isDisabledOther ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : (isSel && isDisabledOther ? 'ring-2 ring-red-400 bg-red-50 text-red-400' : (!isDisabledOther ? 'text-slate-600' : ''))}`;
+      });
+
+      noticeIds.forEach(id => {
+        const noticeEl = document.getElementById(id);
+        if (!noticeEl) return;
+        if (hasDisabledOther) {
+          noticeEl.classList.remove('hidden');
+        } else {
+          noticeEl.classList.add('hidden');
+        }
+      });
+
+      const step2Sel = document.getElementById(step2SelId);
+      if (step2Sel) {
+        step2Sel.disabled = !isValid;
+        if (!isValid) {
+          step2Sel.classList.add('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+          step2Sel.value = 'none';
+        } else {
+          step2Sel.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+          step2Sel.value = effIcon;
+        }
+        Array.from(step2Sel.options || []).forEach(opt => {
+          const catItem = FOOTER_ICONS_CATALOG.find(c => c.id === opt.value);
+          if (!catItem) return;
+          const usedByOther = opt.value !== 'none' && otherEffIcon !== 'none' && opt.value === otherEffIcon;
+          opt.disabled = usedByOther;
+          opt.textContent = usedByOther
+            ? `${catItem.label} (${catItem.id}) — Digunakan pada footer lainnya.`
+            : `${catItem.label} (${catItem.id})`;
+        });
+      }
+    };
+
+    syncStripIconControls(1, state.f1Valid, state.f1EffIcon, state.f2EffIcon);
+    syncStripIconControls(2, state.f2Valid, state.f2EffIcon, state.f1EffIcon);
+
+    if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  }
+
+  function syncFooterInlineValidation(options = {}) {
+    if (typeof document === 'undefined') return evaluateFooterValidationState();
+    const {
+      showRequired = false,
+      showLength = true,
+      showSimilarity = true
+    } = options;
+    const state = evaluateFooterValidationState();
+
+    const f1Msg = (showRequired && state.f1RequiredErr)
+      ? state.f1RequiredErr
+      : (showLength && state.f1LenErr ? state.f1LenErr : '');
+    applyFooterErrorBox(
+      ['error-card-footer-text-side', 'error-card-footer-text-mob', 'error-step2-card-footer-text'],
+      ['input-card-footer-text-side', 'input-card-footer-text-mob', 'input-card-footer-text'],
+      f1Msg
+    );
+
+    const f2TextMsg = (showLength && state.f2LenErr)
+      ? state.f2LenErr
+      : (showSimilarity && state.duplicateTextErr ? state.duplicateTextErr : '');
+    applyFooterErrorBox(
+      ['error-card-footer-2-text-side', 'error-card-footer-2-text-mob', 'error-step2-card-footer-2-text'],
+      ['input-card-footer-2-text-side', 'input-card-footer-2-text-mob', 'input-card-footer-2-text'],
+      f2TextMsg
+    );
+
+    const f2IconMsg = (showSimilarity && state.duplicateIconErr) ? state.duplicateIconErr : '';
+    applyFooterErrorBox(
+      ['error-card-footer-2-icon-side', 'error-card-footer-2-icon-mob', 'error-step2-card-footer-2-icon'],
+      ['btn-footer-2-icon-picker-side', 'btn-footer-2-icon-picker-mob', 'select-card-footer-2-icon'],
+      f2IconMsg
+    );
+
+    return state;
   }
 
   function updateFooterCharCounter(inputEl, counterEl) {
@@ -150,6 +401,7 @@ const ProductForm = (() => {
       countdown_icon_color: primaryState.countdown_icon_color,
       countdown_border_color: primaryState.countdown_border_color,
       enable_countdown: primaryState.enable_countdown,
+      isFooterTouched: Boolean(isFooterTouched),
       admin_card_preview_metrics: primaryState.admin_card_preview_metrics ? JSON.parse(JSON.stringify(primaryState.admin_card_preview_metrics)) : {
         rating: { source: 'auto', manual_value: null },
         sales: { source: 'auto', manual_value: null }
@@ -1817,6 +2069,7 @@ const ProductForm = (() => {
   }
 
   function showCancelConfirmationModal(mode, targetMenu) {
+    if (typeof closeAllCardPresetDropdowns === 'function') closeAllCardPresetDropdowns(false);
     let modal = document.getElementById('modal-cancel-form-confirm');
     if (!modal) {
       const div = document.createElement('div');
@@ -2780,10 +3033,10 @@ const ProductForm = (() => {
 
             <!-- Card Live Box Container -->
             <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] mx-auto flex flex-col items-center justify-center transition-colors">
-              <!-- Penanda Footer Contoh Desktop (Task SC-ADMIN-FOOTER-COMBOBOX-PREVIEW-12C) -->
+              <!-- Penanda Footer Contoh Desktop (Task SC-ADMIN-CARD-PRESET-DROPDOWNS-13B-R1) -->
               <div id="preview-footer-sample-badge" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
                 <i class="bi bi-info-circle text-[10px]"></i>
-                <span>Footer kosong ditampilkan sebagai contoh.</span>
+                <span>Label Footer 1 belum diisi; pratinjau menggunakan contoh.</span>
               </div>
               <div id="product-card-preview-container" class="w-full max-w-[260px] relative overflow-hidden">
                 <div id="card-live-preview-box">
@@ -3201,8 +3454,9 @@ const ProductForm = (() => {
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
                               <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-side">
-                                ${renderFooterIconGridHtml(primaryState.footer_badge_icon || 'truck', 'footer-1-side')}
+                                ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'), 'footer-1-side', getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'))}
                               </div>
+                              <div id="notice-footer-icon-picker-side" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
                             </div>
                           </div>
                         </div>
@@ -3255,8 +3509,9 @@ const ProductForm = (() => {
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
                               <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-2-icon-picker-side">
-                                ${renderFooterIconGridHtml(primaryState.footer_2_badge_icon || 'minus', 'footer-2-side')}
+                                ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'), 'footer-2-side', getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'))}
                               </div>
+                              <div id="notice-footer-2-icon-picker-side" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
                             </div>
                           </div>
                         </div>
@@ -3275,6 +3530,7 @@ const ProductForm = (() => {
                           </div>
                         </div>
                       </div>
+                      <div id="error-card-footer-2-icon-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                     </div>
                   </div>
                 </div>
@@ -3341,10 +3597,10 @@ const ProductForm = (() => {
 
             <!-- Card Preview Box -->
             <div id="preview-card-outer-wrapper-mob" class="w-full max-w-[260px] flex flex-col items-center justify-center transition-colors">
-              <!-- Penanda Footer Contoh Mobile (Task SC-ADMIN-FOOTER-COMBOBOX-PREVIEW-12C) -->
+              <!-- Penanda Footer Contoh Mobile (Task SC-ADMIN-CARD-PRESET-DROPDOWNS-13B-R1) -->
               <div id="preview-footer-sample-badge-mob" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
                 <i class="bi bi-info-circle text-[10px]"></i>
-                <span>Footer kosong ditampilkan sebagai contoh.</span>
+                <span>Label Footer 1 belum diisi; pratinjau menggunakan contoh.</span>
               </div>
               <div class="w-full max-w-[260px] relative overflow-hidden">
                 <div id="mobile-card-preview-container">
@@ -3762,8 +4018,9 @@ const ProductForm = (() => {
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
                               <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-mob">
-                                ${renderFooterIconGridHtml(primaryState.footer_badge_icon || 'truck', 'footer-1-mob')}
+                                ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'), 'footer-1-mob', getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'))}
                               </div>
+                              <div id="notice-footer-icon-picker-mob" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
                             </div>
                           </div>
                         </div>
@@ -3816,8 +4073,9 @@ const ProductForm = (() => {
                                 <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                               </div>
                               <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-2-icon-picker-mob">
-                                ${renderFooterIconGridHtml(primaryState.footer_2_badge_icon || 'minus', 'footer-2-mob')}
+                                ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'), 'footer-2-mob', getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'))}
                               </div>
+                              <div id="notice-footer-2-icon-picker-mob" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
                             </div>
                           </div>
                         </div>
@@ -3836,6 +4094,7 @@ const ProductForm = (() => {
                           </div>
                         </div>
                       </div>
+                      <div id="error-card-footer-2-icon-mob" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                     </div>
                   </div>
                 </div>
@@ -5294,6 +5553,10 @@ const ProductForm = (() => {
     setChk('cfg-save-as-default-toggle', false);
     setChk('cfg-save-as-default-toggle-mob', false);
     updateDesignChoiceButtonsState();
+    if (typeof syncFooterControlsUI === 'function') syncFooterControlsUI();
+    if (typeof syncFooterInlineValidation === 'function') {
+      syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+    }
     captureCardDesignSnapshot();
     syncEyeToggleIcons();
     syncFeatureSubpanels();
@@ -5349,69 +5612,54 @@ const ProductForm = (() => {
       syncStateFromDOM();
       const f1Val = (primaryState.card_footer_text || '').trim();
       const f2Val = (primaryState.card_footer_2_text || '').trim();
-      const f1Len = getUnicodeLength(primaryState.card_footer_text);
-      const f2Len = getUnicodeLength(primaryState.card_footer_2_text);
 
       if (primaryState.card_variant === 'C') {
-        let hasErr = false;
-        if (!f1Val) {
-          ['error-card-footer-text-side', 'error-card-footer-text-mob'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-              const msgEl = el.querySelector('.error-msg') || el;
-              msgEl.textContent = 'Label Footer 1 wajib diisi.';
-              el.classList.remove('hidden');
-            }
-          });
-          [document.getElementById('input-card-footer-text-side'), document.getElementById('input-card-footer-text-mob')].forEach(inp => {
-            if (inp) inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-          });
-          hasErr = true;
-        } else if (f1Len > 32) {
-          ['error-card-footer-text-side', 'error-card-footer-text-mob'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-              const msgEl = el.querySelector('.error-msg') || el;
-              msgEl.textContent = `Label Footer 1 melebihi batas 32 karakter (${f1Len}/32).`;
-              el.classList.remove('hidden');
-            }
-          });
-          [document.getElementById('input-card-footer-text-side'), document.getElementById('input-card-footer-text-mob')].forEach(inp => {
-            if (inp) inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-          });
-          hasErr = true;
-        }
+        const footerState = syncFooterInlineValidation({ showRequired: true, showLength: true, showSimilarity: true });
+        syncFooterControlsUI();
 
-        if (f2Len > 32) {
-          ['error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-              const msgEl = el.querySelector('.error-msg') || el;
-              msgEl.textContent = `Label Footer 2 melebihi batas 32 karakter (${f2Len}/32).`;
-              el.classList.remove('hidden');
-            }
-          });
-          [document.getElementById('input-card-footer-2-text-side'), document.getElementById('input-card-footer-2-text-mob')].forEach(inp => {
-            if (inp) inp.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-          });
-          hasErr = true;
-        }
+        const hasErr = Boolean(
+          footerState.f1RequiredErr ||
+          footerState.f1LenErr ||
+          footerState.f2LenErr ||
+          footerState.duplicateTextErr ||
+          footerState.duplicateIconErr
+        );
 
         if (hasErr) {
+          cardAccordionState.footer = true;
+          syncCardAccordionDOM();
+
+          const isMobOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
+          let targetEl = null;
+          if (footerState.f1RequiredErr || footerState.f1LenErr) {
+            targetEl = isMobOpen
+              ? (document.getElementById('input-card-footer-text-mob') || document.getElementById('input-card-footer-text-side'))
+              : (document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob'));
+          } else if (footerState.f2LenErr || footerState.duplicateTextErr) {
+            targetEl = isMobOpen
+              ? (document.getElementById('input-card-footer-2-text-mob') || document.getElementById('input-card-footer-2-text-side'))
+              : (document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text-mob'));
+          } else if (footerState.duplicateIconErr) {
+            targetEl = isMobOpen
+              ? (document.getElementById('btn-footer-2-icon-picker-mob') || document.getElementById('btn-footer-2-icon-picker-side'))
+              : (document.getElementById('btn-footer-2-icon-picker-side') || document.getElementById('btn-footer-2-icon-picker-mob'));
+          }
+
+          if (targetEl) {
+            try { targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) { }
+            try { targetEl.focus(); } catch (_) { }
+          }
+
           if (typeof App !== 'undefined' && App.showToast) {
-            App.showToast('Harap periksa kesalahan input footer terlebih dahulu.', 'error');
+            const toastMsg = footerState.duplicateTextErr || footerState.duplicateIconErr || footerState.f1RequiredErr || 'Harap periksa kesalahan input footer terlebih dahulu.';
+            App.showToast(toastMsg, 'error');
           }
           return false;
         }
       }
 
       // Sembunyikan inline error jika valid
-      ['error-card-footer-text-side', 'error-card-footer-text-mob', 'error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
-        document.getElementById(id)?.classList.add('hidden');
-      });
-      ['input-card-footer-text-side', 'input-card-footer-text-mob', 'input-card-footer-2-text-side', 'input-card-footer-2-text-mob'].forEach(id => {
-        document.getElementById(id)?.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-      });
+      syncFooterInlineValidation({ showRequired: false, showLength: false, showSimilarity: false });
 
       saveCardConfigInputs();
       const saveDefToggle = document.getElementById('cfg-save-as-default-toggle');
@@ -5605,13 +5853,12 @@ const ProductForm = (() => {
       updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
       updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
 
-      // Sembunyikan inline error saat Batal
-      ['error-card-footer-text-side', 'error-card-footer-text-mob', 'error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
-        document.getElementById(id)?.classList.add('hidden');
-      });
-      ['input-card-footer-text-side', 'input-card-footer-text-mob', 'input-card-footer-2-text-side', 'input-card-footer-2-text-mob'].forEach(id => {
-        document.getElementById(id)?.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-      });
+      // Pulihkan status touched, kontrol ikon, dan inline validation dari snapshot saat Batal
+      if (cardDesignSnapshot) {
+        isFooterTouched = Boolean(cardDesignSnapshot.isFooterTouched);
+      }
+      syncFooterControlsUI();
+      syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
 
       // Pulihkan input countdown di DOM
       const rawCdRadCancel = (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '')
@@ -10642,7 +10889,7 @@ const ProductForm = (() => {
       : (document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob'))
     ) || document.getElementById('input-card-footer-text');
     const rawFooterText = (footerTextInput ? footerTextInput.value : (primaryState.card_footer_text || '')).trim();
-    const footerIcon = (primaryState.footer_badge_icon || 'truck').trim();
+    const footerIcon = getEffectiveFooterIconId(rawFooterText, primaryState.footer_badge_icon, 'truck');
 
     // Footer 2 Custom Styles (Khusus Card C)
     const footer2BgColor = (isMobSheetOpen
@@ -10658,22 +10905,20 @@ const ProductForm = (() => {
       : (document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text-mob'))
     ) || document.getElementById('input-card-footer-2-text');
     const rawFooter2Text = (footer2TextInput ? footer2TextInput.value : (primaryState.card_footer_2_text || '')).trim();
-    const footer2Icon = (primaryState.footer_2_badge_icon || 'minus').trim();
+    const footer2Icon = getEffectiveFooterIconId(rawFooter2Text, primaryState.footer_2_badge_icon, 'minus');
 
     // Evaluasi Footer Model C:
-    // Khusus Step 1 Admin Preview (baik tab Pratinjau maupun Desain Kartu, Desktop & Mobile):
-    // Selalu tampilkan dua baris footer dengan fallback teks contoh jika input kosong.
+    // Footer 1 kosong di Step 1 Admin Preview menampilkan teks contoh lokal TANPA ikon + penanda di luar kartu.
+    // Footer 2 opsional: jika teks kosong, strip Footer 2 + ikon + pemisah + ruang kosong disembunyikan total.
     const isStep1CardPreview = (currentStep === 1 && variant === 'C');
     const hasUserFooter1 = Boolean(rawFooterText);
     const hasUserFooter2 = Boolean(rawFooter2Text);
 
     // Teks contoh lokal (TIDAK BOLEH disimpan ke primaryState, card_config, input, atau payload produk)
     const previewF1Text = hasUserFooter1 ? rawFooterText : (isStep1CardPreview ? 'Tersedia berbagai Variasi' : '');
-    const previewF2Text = hasUserFooter2 ? rawFooter2Text : (isStep1CardPreview ? 'Pengiriman Cepat' : '');
+    const previewF2Text = hasUserFooter2 ? rawFooter2Text : '';
 
-    const isF1Sample = isStep1CardPreview && !hasUserFooter1;
-    const isF2Sample = isStep1CardPreview && !isCountdownActive && !hasUserFooter2;
-    const hasSampleFooter = isStep1CardPreview && (isF1Sample || isF2Sample);
+    const hasSampleFooter = isStep1CardPreview && !hasUserFooter1;
 
     const hasFooter1 = Boolean(previewF1Text);
     const hasFooter2 = isCountdownActive || Boolean(previewF2Text);
@@ -10835,7 +11080,7 @@ const ProductForm = (() => {
               <!-- Footer 1 (Atas): Jaminan Kecepatan / Garansi -->
               ${hasFooter1 ? `
                 <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : ''}" style="background-color: ${footerBgColor}; color: ${footerTextColor}; ${!hasFooter2 ? 'border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;' : ''}">
-                  ${(footerIcon && footerIcon !== 'none') ? `<i data-lucide="${escapeHtml(footerIcon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
+                  ${(hasUserFooter1 && footerIcon && footerIcon !== 'none') ? `<i data-lucide="${escapeHtml(footerIcon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
                   <span class="truncate">${escapeHtml(previewF1Text)}</span>
                 </div>
               ` : ''}
@@ -10849,7 +11094,7 @@ const ProductForm = (() => {
                   </div>
                 ` : `
                   <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${footer2BgColor}; color: ${footer2TextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
-                    ${(footer2Icon && footer2Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
+                    ${(hasUserFooter2 && footer2Icon && footer2Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
                     <span class="truncate">${escapeHtml(previewF2Text)}</span>
                   </div>
                 `
@@ -15868,8 +16113,9 @@ const ProductForm = (() => {
                   <div class="relative w-full clean-datalist-wrapper">
                     <input type="text" id="input-card-footer-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" maxlength="32" placeholder="Tersedia berbagai Variasi" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
                   </div>
+                  <div id="error-step2-card-footer-text" class="hidden text-[10px] text-red-600 font-normal flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                   <select id="select-card-footer-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
-                    ${FOOTER_ICONS_CATALOG.map(ic => `<option value="${escapeHtml(ic.id)}" ${(primaryState.footer_badge_icon || 'truck') === ic.id ? 'selected' : ''}>${escapeHtml(ic.label)} (${escapeHtml(ic.id)})</option>`).join('')}
+                    ${FOOTER_ICONS_CATALOG.map(ic => `<option value="${escapeHtml(ic.id)}" ${getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck') === ic.id ? 'selected' : ''}>${escapeHtml(ic.label)} (${escapeHtml(ic.id)})</option>`).join('')}
                   </select>
                 </div>
                 <div class="space-y-1.5">
@@ -15877,9 +16123,11 @@ const ProductForm = (() => {
                   <div class="relative w-full clean-datalist-wrapper">
                     <input type="text" id="input-card-footer-2-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" maxlength="32" placeholder="Pengiriman Cepat (opsional)" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
                   </div>
+                  <div id="error-step2-card-footer-2-text" class="hidden text-[10px] text-red-600 font-normal flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                   <select id="select-card-footer-2-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
-                    ${FOOTER_ICONS_CATALOG.map(ic => `<option value="${escapeHtml(ic.id)}" ${(primaryState.footer_2_badge_icon || 'minus') === ic.id ? 'selected' : ''}>${escapeHtml(ic.label)} (${escapeHtml(ic.id)})</option>`).join('')}
+                    ${FOOTER_ICONS_CATALOG.map(ic => `<option value="${escapeHtml(ic.id)}" ${getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus') === ic.id ? 'selected' : ''}>${escapeHtml(ic.label)} (${escapeHtml(ic.id)})</option>`).join('')}
                   </select>
+                  <div id="error-step2-card-footer-2-icon" class="hidden text-[10px] text-red-600 font-normal flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                 </div>
               </div>
             </div>
@@ -22052,6 +22300,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     hideWizardErrorBanner();
     hidePreviewTestModeAlert();
+    if (typeof closeAllCardPresetDropdowns === 'function') closeAllCardPresetDropdowns(false);
     currentStep = step;
     if (step === 1) {
       isPreviewTestMode = false;
@@ -22749,7 +22998,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // BIND EVENT INTERAKTIF STEP 2
+    let bindStep2FooterEvents = null;
     bindStep2InteractiveEvents = function () {
+      if (typeof bindStep2FooterEvents === 'function') {
+        try { bindStep2FooterEvents(); } catch (_) { }
+      }
       // Card 6: Komisi Afiliasi Events (Dipanggil mandiri di awal)
       if (typeof bindAffiliateCommissionEvents === 'function') {
         try { bindAffiliateCommissionEvents(); } catch (_) { }
@@ -29050,14 +29303,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       isFooterTouched = true;
       updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
       updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
-      if (cleanVal.trim() && getUnicodeLength(cleanVal) <= 32) {
-        ['error-card-footer-text-side', 'error-card-footer-text-mob'].forEach(id => {
-          document.getElementById(id)?.classList.add('hidden');
-        });
-        [inpF1TextSide, inpF1TextMob].forEach(inp => {
-          if (inp) inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-        });
-      }
+      syncFooterControlsUI();
+      syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
     };
 
     [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(el => {
@@ -29088,75 +29335,45 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     });
 
-    if (selF1Icon) {
-      selF1Icon.addEventListener('change', () => {
-        selectFooterIcon(1, selF1Icon.value);
-      });
-    }
-
     // Helper: Select Footer Icon
     function selectFooterIcon(stripNumber, iconId) {
-      const validIcon = FOOTER_ICONS_CATALOG.find(c => c.id === iconId) ? iconId : (stripNumber === 1 ? 'truck' : 'minus');
+      const footerState = evaluateFooterValidationState();
+      const targetValid = stripNumber === 1 ? footerState.f1Valid : footerState.f2Valid;
+      if (!targetValid) {
+        syncFooterControlsUI();
+        return;
+      }
+
+      const fallbackIcon = stripNumber === 1 ? 'truck' : 'minus';
+      const validIcon = normalizeFooterIconId(iconId, fallbackIcon);
+      const otherEffIcon = stripNumber === 1 ? footerState.f2EffIcon : footerState.f1EffIcon;
+      if (validIcon !== 'none' && otherEffIcon !== 'none' && validIcon === otherEffIcon) {
+        syncFooterControlsUI();
+        syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+        return;
+      }
+
+      isFooterTouched = true;
       if (stripNumber === 1) {
         primaryState.footer_badge_icon = validIcon;
         if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
         primaryState.custom_footer_1.icon = validIcon;
-        const step2Sel1 = document.getElementById('select-card-footer-icon');
-        if (step2Sel1 && step2Sel1.value !== validIcon) step2Sel1.value = validIcon;
-
-        // Update previews desktop & mobile
-        ['preview-footer-icon-side', 'preview-footer-icon-mob'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.innerHTML = validIcon === 'none'
-              ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
-              : `<i data-lucide="${escapeHtml(validIcon)}" class="w-3.5 h-3.5"></i>`;
-          }
+        ['menu-footer-icon-picker-side', 'menu-footer-icon-picker-mob'].forEach(id => {
+          const m = document.getElementById(id);
+          if (m) m.classList.add('hidden');
         });
-
-        // Update active highlight in grids
-        document.querySelectorAll('.btn-footer-icon-item[data-picker^="footer-1"]').forEach(btn => {
-          const isSel = btn.getAttribute('data-icon-id') === validIcon;
-          btn.className = `btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}`;
-        });
-
-        const mSide = document.getElementById('menu-footer-icon-picker-side');
-        const mMob = document.getElementById('menu-footer-icon-picker-mob');
-        if (mSide) mSide.classList.add('hidden');
-        if (mMob) mMob.classList.add('hidden');
       } else {
         primaryState.footer_2_badge_icon = validIcon;
         if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
         primaryState.custom_footer_2.icon = validIcon;
-        const step2Sel2 = document.getElementById('select-card-footer-2-icon');
-        if (step2Sel2 && step2Sel2.value !== validIcon) step2Sel2.value = validIcon;
-
-        // Update previews desktop & mobile
-        ['preview-footer-2-icon-side', 'preview-footer-2-icon-mob'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.innerHTML = validIcon === 'none'
-              ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
-              : `<i data-lucide="${escapeHtml(validIcon)}" class="w-3.5 h-3.5"></i>`;
-          }
+        ['menu-footer-2-icon-picker-side', 'menu-footer-2-icon-picker-mob'].forEach(id => {
+          const m = document.getElementById(id);
+          if (m) m.classList.add('hidden');
         });
-
-        // Update active highlight in grids
-        document.querySelectorAll('.btn-footer-icon-item[data-picker^="footer-2"]').forEach(btn => {
-          const isSel = btn.getAttribute('data-icon-id') === validIcon;
-          btn.className = `btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition cursor-pointer hover:bg-slate-100 ${isSel ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : 'text-slate-600'}`;
-        });
-
-        const mSide = document.getElementById('menu-footer-2-icon-picker-side');
-        const mMob = document.getElementById('menu-footer-2-icon-picker-mob');
-        if (mSide) mSide.classList.add('hidden');
-        if (mMob) mMob.classList.add('hidden');
       }
 
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
-
+      syncFooterControlsUI();
+      syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
       markCardDesignAsCustom();
       syncStateFromDOM();
       updateProductCardLivePreview();
@@ -29169,6 +29386,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (btn && menu) {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
           const isClosed = menu.classList.contains('hidden');
           // Close others
           ['menu-footer-icon-picker-side', 'menu-footer-icon-picker-mob', 'menu-footer-2-icon-picker-side', 'menu-footer-2-icon-picker-mob'].forEach(mId => {
@@ -29178,6 +29396,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             }
           });
           if (isClosed) {
+            syncFooterControlsUI();
             menu.classList.remove('hidden');
             btn.setAttribute('aria-expanded', 'true');
             if (window.lucide && typeof lucide.createIcons === 'function') {
@@ -29200,6 +29419,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     document.querySelectorAll('.btn-footer-icon-item').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
         const pId = btn.getAttribute('data-picker');
         const iconId = btn.getAttribute('data-icon-id');
         if (pId && pId.includes('footer-2')) {
@@ -29285,14 +29505,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       isFooterTouched = true;
       updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
       updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
-      if (getUnicodeLength(cleanVal) <= 32) {
-        ['error-card-footer-2-text-side', 'error-card-footer-2-text-mob'].forEach(id => {
-          document.getElementById(id)?.classList.add('hidden');
-        });
-        [inpF2TextSide, inpF2TextMob].forEach(inp => {
-          if (inp) inp.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
-        });
-      }
+      syncFooterControlsUI();
+      syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
     };
 
     [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(el => {
@@ -29323,21 +29537,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     });
 
-    if (selF2Icon) {
-      selF2Icon.addEventListener('change', () => {
-        selectFooterIcon(2, selF2Icon.value);
-      });
-    }
-
     // Preset Footer Buttons
     document.querySelectorAll('.btn-preset-footer').forEach(btn => {
       btn.addEventListener('click', () => {
         const text = btn.getAttribute('data-text');
         const icon = btn.getAttribute('data-icon');
-        if (inpF1Text && text) syncF1Str(text);
-        if (selF1Icon && icon) selF1Icon.value = icon;
-        syncStateFromDOM();
-        updateProductCardLivePreview();
+        if (text) syncF1Str(text);
+        if (icon && isValidFooterText(primaryState.card_footer_text)) {
+          selectFooterIcon(1, icon);
+        } else {
+          syncStateFromDOM();
+          updateProductCardLivePreview();
+        }
       });
     });
 
@@ -29345,12 +29556,71 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       btn.addEventListener('click', () => {
         const text = btn.getAttribute('data-text');
         const icon = btn.getAttribute('data-icon');
-        if (inpF2Text && text) syncF2Str(text);
-        if (selF2Icon && icon) selF2Icon.value = icon;
-        syncStateFromDOM();
-        updateProductCardLivePreview();
+        if (text) syncF2Str(text);
+        if (icon && isValidFooterText(primaryState.card_footer_2_text)) {
+          selectFooterIcon(2, icon);
+        } else {
+          syncStateFromDOM();
+          updateProductCardLivePreview();
+        }
       });
     });
+
+    bindStep2FooterEvents = function () {
+      const s2F1Inp = document.getElementById('input-card-footer-text');
+      const s2F2Inp = document.getElementById('input-card-footer-2-text');
+      const s2F1Sel = document.getElementById('select-card-footer-icon');
+      const s2F2Sel = document.getElementById('select-card-footer-2-icon');
+
+      if (s2F1Inp && s2F1Inp.dataset.scFooterBound !== '1') {
+        s2F1Inp.dataset.scFooterBound = '1';
+        const onS2F1 = e => {
+          syncF1Str(e.target.value);
+          syncStateFromDOM();
+          updateProductCardLivePreview();
+        };
+        s2F1Inp.addEventListener('input', onS2F1);
+        s2F1Inp.addEventListener('change', onS2F1);
+      }
+
+      if (s2F2Inp && s2F2Inp.dataset.scFooterBound !== '1') {
+        s2F2Inp.dataset.scFooterBound = '1';
+        const onS2F2 = e => {
+          syncF2Str(e.target.value);
+          syncStateFromDOM();
+          updateProductCardLivePreview();
+        };
+        s2F2Inp.addEventListener('input', onS2F2);
+        s2F2Inp.addEventListener('change', onS2F2);
+      }
+
+      if (s2F1Sel && s2F1Sel.dataset.scFooterBound !== '1') {
+        s2F1Sel.dataset.scFooterBound = '1';
+        s2F1Sel.addEventListener('change', () => {
+          if (s2F1Sel.disabled) {
+            syncFooterControlsUI();
+            return;
+          }
+          selectFooterIcon(1, s2F1Sel.value);
+        });
+      }
+
+      if (s2F2Sel && s2F2Sel.dataset.scFooterBound !== '1') {
+        s2F2Sel.dataset.scFooterBound = '1';
+        s2F2Sel.addEventListener('change', () => {
+          if (s2F2Sel.disabled) {
+            syncFooterControlsUI();
+            return;
+          }
+          selectFooterIcon(2, s2F2Sel.value);
+        });
+      }
+
+      syncFooterControlsUI();
+      syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+    };
+
+    bindStep2FooterEvents();
 
     // Price Type Radios
     const priceTypeRadios = document.querySelectorAll('input[name="price_type_radio"]');
@@ -30565,10 +30835,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.custom_footer_1.text = f1SyncedVal;
     }
     const footer1IconSel = document.getElementById('select-card-footer-icon');
-    if (currentStep === 2 && footer1IconSel) {
-      primaryState.footer_badge_icon = footer1IconSel.value;
+    if (currentStep === 2 && footer1IconSel && !footer1IconSel.disabled) {
+      const normalizedF1Icon = normalizeFooterIconId(footer1IconSel.value, 'truck');
+      primaryState.footer_badge_icon = normalizedF1Icon;
       if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
-      primaryState.custom_footer_1.icon = footer1IconSel.value;
+      primaryState.custom_footer_1.icon = normalizedF1Icon;
     }
 
     const footer2InpStep2 = document.getElementById('input-card-footer-2-text');
@@ -30584,10 +30855,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       primaryState.custom_footer_2.text = f2SyncedVal;
     }
     const footer2IconSel = document.getElementById('select-card-footer-2-icon');
-    if (currentStep === 2 && footer2IconSel) {
-      primaryState.footer_2_badge_icon = footer2IconSel.value;
+    if (currentStep === 2 && footer2IconSel && !footer2IconSel.disabled) {
+      const normalizedF2Icon = normalizeFooterIconId(footer2IconSel.value, 'minus');
+      primaryState.footer_2_badge_icon = normalizedF2Icon;
       if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
-      primaryState.custom_footer_2.icon = footer2IconSel.value;
+      primaryState.custom_footer_2.icon = normalizedF2Icon;
     }
 
     const condSel = document.getElementById('select-prod-condition');
@@ -30764,22 +31036,54 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     if (!draftMode && primaryState.card_variant === 'C') {
-      const f1Val = (primaryState.card_footer_text || '').trim();
-      const f2Val = (primaryState.card_footer_2_text || '').trim();
-      const f1Len = getUnicodeLength(primaryState.card_footer_text);
-      const f2Len = getUnicodeLength(primaryState.card_footer_2_text);
-      if (f1Len > 32) {
-        addError(`Label Footer 1 melebihi batas 32 karakter (${f1Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob') || document.getElementById('input-card-footer-text'));
+      const isUntouchedLegacy = (formMode === 'edit' && !isFooterTouched);
+      const footerState = syncFooterInlineValidation({
+        showRequired: !(isUntouchedLegacy && !initialCardFooterText),
+        showLength: true,
+        showSimilarity: true
+      });
+      const isMobFooterOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
+      const getFooter1TargetEl = () => {
+        if (currentStep === 2) return document.getElementById('input-card-footer-text') || document.getElementById('input-card-footer-text-side');
+        return (isMobFooterOpen
+          ? (document.getElementById('input-card-footer-text-mob') || document.getElementById('input-card-footer-text-side'))
+          : (document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob'))) || document.getElementById('input-card-footer-text');
+      };
+      const getFooter2TargetEl = () => {
+        if (currentStep === 2) return document.getElementById('input-card-footer-2-text') || document.getElementById('input-card-footer-2-text-side');
+        return (isMobFooterOpen
+          ? (document.getElementById('input-card-footer-2-text-mob') || document.getElementById('input-card-footer-2-text-side'))
+          : (document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text-mob'))) || document.getElementById('input-card-footer-2-text');
+      };
+      const getFooter2IconTargetEl = () => {
+        if (currentStep === 2) return document.getElementById('select-card-footer-2-icon') || document.getElementById('btn-footer-2-icon-picker-side');
+        return (isMobFooterOpen
+          ? (document.getElementById('btn-footer-2-icon-picker-mob') || document.getElementById('btn-footer-2-icon-picker-side'))
+          : (document.getElementById('btn-footer-2-icon-picker-side') || document.getElementById('btn-footer-2-icon-picker-mob'))) || document.getElementById('select-card-footer-2-icon');
+      };
+
+      if (footerState.f1LenErr) {
+        addError(`Label Footer 1 melebihi batas 32 karakter (${footerState.f1Len}/32). Harap persingkat teks terlebih dahulu.`, getFooter1TargetEl());
       }
-      if (f2Len > 32) {
-        addError(`Label Footer 2 melebihi batas 32 karakter (${f2Len}/32). Harap persingkat teks terlebih dahulu.`, document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text-mob') || document.getElementById('input-card-footer-2-text'));
+      if (footerState.f2LenErr) {
+        addError(`Label Footer 2 melebihi batas 32 karakter (${footerState.f2Len}/32). Harap persingkat teks terlebih dahulu.`, getFooter2TargetEl());
       }
 
       // Validasi Footer 1 wajib diisi untuk simpan produk final
-      if (!f1Val) {
-        const isUntouchedLegacy = (formMode === 'edit' && !isFooterTouched && !initialCardFooterText);
-        if (!isUntouchedLegacy) {
-          addError('Label Footer 1 wajib diisi untuk Model Kartu Detail.', document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob') || document.getElementById('input-card-footer-text'));
+      if (footerState.f1RequiredErr) {
+        const isUntouchedEmptyLegacy = (isUntouchedLegacy && !initialCardFooterText);
+        if (!isUntouchedEmptyLegacy) {
+          addError('Label Footer 1 wajib diisi untuk Model Kartu Detail.', getFooter1TargetEl());
+        }
+      }
+
+      // Validasi keunikan teks & ikon antarfooter (bypass hanya untuk data legacy edit yang belum tersentuh)
+      if (!isUntouchedLegacy) {
+        if (footerState.duplicateTextErr) {
+          addError(footerState.duplicateTextErr, getFooter2TargetEl());
+        }
+        if (footerState.duplicateIconErr) {
+          addError(footerState.duplicateIconErr, getFooter2IconTargetEl());
         }
       }
     }
