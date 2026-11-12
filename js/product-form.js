@@ -4243,6 +4243,7 @@ const ProductForm = (() => {
         ${renderOrderMultipleModalMarkup()}
         ${renderSpecificOptionsModalMarkup()}
         ${renderOptionDependencyModalMarkup()}
+        ${renderMaxOrderModalMarkup()}
 
       </div>
     `;
@@ -16115,6 +16116,11 @@ const ProductForm = (() => {
               ${renderPricingModelSection()}
             </div>
 
+            <!-- Maksimal Jumlah Pembelian Khusus Produk Bervariasi -->
+            <div id="section-variant-max-order" class="${(primaryState.pricing_model === 'normal' && primaryState.has_variants) ? 'block' : 'hidden'} space-y-3 pt-2">
+              ${renderVariantMaxOrderSection()}
+            </div>
+
             <!-- Pengaturan Pembelian Khusus Produk Tunggal (Disembunyikan jika Menggunakan Variasi) -->
             <div id="single-product-purchase-settings" class="${(primaryState.pricing_model === 'normal' && !primaryState.has_variants) ? 'space-y-6' : 'hidden'}">
 
@@ -20643,6 +20649,726 @@ const ProductForm = (() => {
     }
 
     return '';
+  }
+
+  // =====================================================================
+  // MAKSIMAL JUMLAH PEMBELIAN: PRODUK BERVARIASI & MODAL PENGATURAN
+  // =====================================================================
+
+  // Ringkasan Teks Maksimal Pembelian
+  function getMaxOrderSummaryText() {
+    if (primaryState.max_order_type === 'per_period') {
+      const period = primaryState.max_order_period || {};
+      const qty = period.max_qty || 10;
+      const days = period.days || 7;
+      const typeLabel = period.period_type === 'recurring' ? 'Berulang' : 'Tidak Berulang';
+      return `Per Periode: Maks. ${qty} produk / ${days} hari (${typeLabel})`;
+    }
+
+    if (primaryState.max_order_type === 'per_order') {
+      const hasSpecific = materialsState.some(m => m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Tanpa Batas' && m.max_order !== 'Unlimited');
+      if (hasSpecific) {
+        return 'Per Pesanan: Spesifik per Varian';
+      }
+      if (primaryState.max_order_qty !== null && primaryState.max_order_qty !== undefined && parseInt(primaryState.max_order_qty, 10) > 0) {
+        return `Per Pesanan: Maks. ${primaryState.max_order_qty} pcs`;
+      }
+      return 'Per Pesanan';
+    }
+
+    const hasSpecific = materialsState.some(m => m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Tanpa Batas' && m.max_order !== 'Unlimited');
+    if (hasSpecific) {
+      return 'Per Pesanan: Spesifik per Varian';
+    }
+    return 'Tanpa Batas';
+  }
+
+  // Sub-Renderer: Bagian Maksimal Jumlah Pembelian pada Produk Bervariasi
+  function renderVariantMaxOrderSection() {
+    return `
+      <div class="p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-1.5">
+            <label class="block text-xs font-bold text-slate-800">
+              Maks. Jumlah Pembelian
+            </label>
+            <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
+              <i class="bi bi-question-circle text-xs"></i>
+              <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                Atur batas maksimal jumlah pembelian untuk produk bervariasi per pesanan atau per periode waktu tertentu.
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            id="btn-open-max-order-modal"
+            class="px-3.5 py-1.5 rounded-lg border border-[var(--color-primary)] bg-white text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)] text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+          >
+            <i class="bi bi-gear"></i>
+            <span>Atur Maks. Pembelian</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-slate-500 font-medium">Status:</span>
+          <span id="max-order-summary-text" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+            ${getMaxOrderSummaryText()}
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  // Markup Modal Maksimal Jumlah Pembelian
+  function renderMaxOrderModalMarkup() {
+    return `
+      <div id="modal-max-order-config" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+          <!-- Header Modal -->
+          <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900" id="max-order-modal-title">Pengaturan Maksimal Jumlah Pembelian</h3>
+              <p class="text-[11px] text-slate-500" id="max-order-modal-subtitle">Atur batasan pembelian untuk produk bervariasi</p>
+            </div>
+            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-max-order-config" id="btn-x-max-order-modal"><i class="bi bi-x-lg"></i></button>
+          </div>
+
+          <!-- Pesan Error Validasi Modal -->
+          <div id="modal-max-order-error-msg" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600 font-semibold flex items-center gap-2">
+            <i class="bi bi-exclamation-circle-fill text-red-500"></i>
+            <span id="modal-max-order-error-text"></span>
+          </div>
+
+          <!-- Pilihan 3 Mode Maksimal Pembelian -->
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <label id="lbl-modal-order-unlimited" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
+              <input type="radio" name="modal_max_order_mode" value="unlimited" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Tanpa Batas</span>
+            </label>
+            <label id="lbl-modal-order-per-order" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
+              <input type="radio" name="modal_max_order_mode" value="per_order" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Per Pesanan</span>
+            </label>
+            <label id="lbl-modal-order-per-period" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
+              <input type="radio" name="modal_max_order_mode" value="per_period" class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Per Periode</span>
+            </label>
+          </div>
+
+          <!-- Badan Konten Modal Dinamis -->
+          <div id="modal-max-order-body" class="space-y-4 pt-1"></div>
+
+          <!-- Footer Aksi -->
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button type="button" id="btn-cancel-max-order-modal" class="px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer">Batal</button>
+            <button type="button" id="btn-save-max-order-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-xs" style="background-color: var(--color-primary);">Simpan Pengaturan</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Variabel State Internal Modal Max Order
+  let maxOrderModalBackup = null;
+  let modalDraftMode = 'unlimited';
+  let modalDraftScope = 'umum';
+  let modalDraftQty = null;
+  let modalDraftPeriod = null;
+
+  function showModalMaxOrderError(msg) {
+    const errWrap = document.getElementById('modal-max-order-error-msg');
+    const errText = document.getElementById('modal-max-order-error-text');
+    if (errWrap && errText) {
+      errText.textContent = msg;
+      errWrap.classList.remove('hidden');
+    }
+  }
+
+  function hideModalMaxOrderError() {
+    const errWrap = document.getElementById('modal-max-order-error-msg');
+    if (errWrap) errWrap.classList.add('hidden');
+  }
+
+  function updateModalMaxOrderRadioStyles() {
+    const modes = ['unlimited', 'per_order', 'per_period'];
+    modes.forEach(m => {
+      const lbl = document.getElementById(`lbl-modal-order-${m.replace('_', '-')}`);
+      const rad = document.querySelector(`input[name="modal_max_order_mode"][value="${m}"]`);
+      if (lbl && rad) {
+        if (modalDraftMode === m) {
+          rad.checked = true;
+          lbl.className = 'p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition';
+        } else {
+          rad.checked = false;
+          lbl.className = 'p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
+        }
+      }
+    });
+  }
+
+  function updateModalScopeRadioStyles() {
+    const lblUmum = document.getElementById('lbl-modal-scope-umum');
+    const lblSpesifik = document.getElementById('lbl-modal-scope-spesifik');
+    const radUmum = document.querySelector('input[name="modal_max_order_scope"][value="umum"]');
+    const radSpesifik = document.querySelector('input[name="modal_max_order_scope"][value="spesifik"]');
+    if (lblUmum && radUmum) {
+      if (modalDraftScope === 'umum') {
+        radUmum.checked = true;
+        lblUmum.className = 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition';
+      } else {
+        radUmum.checked = false;
+        lblUmum.className = 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
+      }
+    }
+    if (lblSpesifik && radSpesifik) {
+      if (modalDraftScope === 'spesifik') {
+        radSpesifik.checked = true;
+        lblSpesifik.className = 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] transition';
+      } else {
+        radSpesifik.checked = false;
+        lblSpesifik.className = 'p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold border-slate-300 text-slate-700 transition';
+      }
+    }
+  }
+
+  function renderModalScopeContent() {
+    if (modalDraftScope === 'umum') {
+      return `
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+          <label for="modal-input-max-order-qty" class="block text-xs font-semibold text-slate-700">
+            Jumlah Maksimal Pembelian Per Pesanan <span class="text-red-500">*</span>:
+          </label>
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              id="modal-input-max-order-qty"
+              min="1"
+              value="${modalDraftQty !== null && modalDraftQty !== undefined ? modalDraftQty : ''}"
+              placeholder="Contoh: 10"
+              class="w-48 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+            />
+            <span class="text-xs text-slate-500 font-medium">produk per checkout</span>
+          </div>
+          <span class="text-[11px] text-slate-400 block">Pembeli tidak dapat memesan melebihi kuantitas ini dalam 1 transaksi pesanan untuk seluruh variasi.</span>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="space-y-2">
+          <p class="text-[11px] text-slate-500 font-medium">Atur batas maksimal pembelian per transaksi untuk masing-masing opsi varian (kosongkan atau isi 'Tanpa Batas' jika tanpa batasan):</p>
+          <div class="border border-slate-200 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-2.5">Opsi Varian</th>
+                  <th class="p-2.5 text-center w-36">Maks. Pembelian</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                ${materialsState.map((mat, idx) => {
+                  const varName = (mat.name || '').trim() || `Varian ${idx + 1}`;
+                  const val = (mat.max_order !== null && mat.max_order !== undefined && mat.max_order !== '' && mat.max_order !== 'Tanpa Batas' && mat.max_order !== 'Unlimited') ? mat.max_order : '';
+                  return `
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-2.5 font-medium text-slate-800">${escapeHtml(varName)}</td>
+                      <td class="p-2 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          class="modal-variant-max-order-input w-full px-2 py-1.5 rounded border border-slate-300 text-center text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+                          data-mat-id="${mat.id}"
+                          value="${val}"
+                          placeholder="Tanpa Batas"
+                        />
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function renderModalPeriodContent() {
+    const period = modalDraftPeriod || {
+      start_date: getTodayDateString(),
+      max_qty: 10,
+      days: 7,
+      period_type: 'non_recurring',
+      end_date: ''
+    };
+    const startDate = period.start_date || getTodayDateString();
+    const maxQty = period.max_qty || 10;
+    const days = parseInt(period.days, 10) || 7;
+    const periodType = period.period_type || 'non_recurring';
+
+    const singleCycleEnd = addDaysToDate(startDate, Math.max(1, days) - 1);
+
+    const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+      const cycleEnd = addDaysToDate(startDate, (cycle * Math.max(1, days)) - 1);
+      return {
+        date: cycleEnd,
+        label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
+      };
+    });
+
+    return `
+      <div class="p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-4">
+        <div class="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700 font-medium flex items-center gap-1.5">
+          <i class="bi bi-info-circle-fill text-blue-500 text-xs"></i>
+          <span>Aturan Per Periode berlaku pada tingkat produk untuk seluruh varian.</span>
+        </div>
+
+        <!-- Tanggal Mulai -->
+        <div>
+          <label for="modal-input-period-start-date" class="block text-xs font-semibold text-slate-700 mb-1">
+            Tanggal Mulai <span class="text-red-500">*</span>:
+          </label>
+          <input
+            type="date"
+            id="modal-input-period-start-date"
+            min="${getTodayDateString()}"
+            value="${startDate}"
+            class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+          />
+          <span class="text-[10px] text-slate-400 mt-0.5 block">Tanggal di masa lalu otomatis dinonaktifkan.</span>
+        </div>
+
+        <!-- Input teks/angka Maks. Jumlah Pembelian [jumlah] produk untuk [jumlah] Hari -->
+        <div class="flex items-center flex-wrap gap-2 text-xs font-semibold text-slate-800">
+          <span>Maks. Jumlah Pembelian</span>
+          <input
+            type="number"
+            id="modal-input-period-max-qty"
+            min="1"
+            value="${maxQty}"
+            class="w-24 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+          />
+          <span>produk untuk</span>
+          <input
+            type="number"
+            id="modal-input-period-days"
+            min="1"
+            value="${days}"
+            class="w-20 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+          />
+          <span>Hari</span>
+        </div>
+
+        <!-- Pilihan Tipe Periode (Radio Button) -->
+        <div class="space-y-3 pt-2 border-t border-slate-200/80">
+          <label class="block text-xs font-bold text-slate-800">Pilihan Tipe Periode <span class="text-red-500">*</span>:</label>
+
+          <div class="space-y-3">
+            <!-- Tidak Berulang -->
+            <div id="wrapper-period-non-recurring" class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="radio" name="modal_period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
+                <span class="text-xs font-bold text-slate-800">Tidak Berulang</span>
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                    Maks. Jumlah Pembelian akan berakhir setelah periode yang ditentukan (dalam hari).
+                  </div>
+                </div>
+              </label>
+
+              <!-- Dynamic note text -->
+              <div id="modal-period-note-text" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal">
+                <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
+              </div>
+            </div>
+
+            <!-- Berulang -->
+            <div id="wrapper-period-recurring" class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="radio" name="modal_period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
+                <span class="text-xs font-bold text-slate-800">Berulang</span>
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                    Maks. Jumlah Pembelian akan diulangi secara berurutan per periode yang ditentukan (dalam hari) hingga tanggal berakhir yang diatur di bawah ini.
+                  </div>
+                </div>
+              </label>
+
+              <div id="modal-recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} pl-6 space-y-1.5">
+                <label for="modal-select-period-end-date" class="block text-[11px] font-bold text-slate-700">Tanggal Berakhir:</label>
+                <select id="modal-select-period-end-date" class="w-full sm:w-72 px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800">
+                  ${recurringOptions.map(opt => `
+                    <option value="${opt.date}" ${period.end_date === opt.date ? 'selected' : ''}>${opt.label}</option>
+                  `).join('')}
+                </select>
+                <span class="text-[10px] text-slate-400 block">Pilihan tanggal dihitung otomatis berdasarkan kelipatan ${days} hari.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindModalScopeEvents() {
+    const radScopes = document.querySelectorAll('input[name="modal_max_order_scope"]');
+    radScopes.forEach(rad => {
+      rad.onchange = () => {
+        modalDraftScope = rad.value;
+        const scopeContent = document.getElementById('modal-max-order-scope-content');
+        if (scopeContent) {
+          scopeContent.innerHTML = renderModalScopeContent();
+        }
+        updateModalScopeRadioStyles();
+      };
+    });
+  }
+
+  function bindModalPeriodEvents() {
+    const sDateInp = document.getElementById('modal-input-period-start-date');
+    const maxQtyInp = document.getElementById('modal-input-period-max-qty');
+    const daysInp = document.getElementById('modal-input-period-days');
+    const radPeriodTypes = document.querySelectorAll('input[name="modal_period_type_radio"]');
+    const selEndDate = document.getElementById('modal-select-period-end-date');
+
+    const updatePeriodCalculation = () => {
+      const sDate = sDateInp ? sDateInp.value : getTodayDateString();
+      const maxQty = maxQtyInp ? (parseInt(maxQtyInp.value, 10) || 10) : 10;
+      const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
+      const checkedRad = document.querySelector('input[name="modal_period_type_radio"]:checked');
+      const periodType = checkedRad ? checkedRad.value : 'non_recurring';
+
+      if (!modalDraftPeriod) modalDraftPeriod = {};
+      modalDraftPeriod.start_date = sDate;
+      modalDraftPeriod.max_qty = maxQty;
+      modalDraftPeriod.days = days;
+      modalDraftPeriod.period_type = periodType;
+
+      const singleCycleEnd = addDaysToDate(sDate, Math.max(1, days) - 1);
+      const noteEl = document.getElementById('modal-period-note-text');
+      if (noteEl) {
+        noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
+      }
+
+      if (selEndDate) {
+        const currentSelected = selEndDate.value;
+        const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+          const cycleEnd = addDaysToDate(sDate, (cycle * Math.max(1, days)) - 1);
+          return {
+            date: cycleEnd,
+            label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
+          };
+        });
+        selEndDate.innerHTML = recurringOptions.map(opt => `
+          <option value="${opt.date}" ${currentSelected === opt.date ? 'selected' : ''}>${opt.label}</option>
+        `).join('');
+        if (!selEndDate.value && recurringOptions.length > 0) {
+          selEndDate.value = recurringOptions[0].date;
+        }
+        modalDraftPeriod.end_date = selEndDate.value;
+      }
+
+      const recWrap = document.getElementById('modal-recurring-end-date-wrapper');
+      const wrapNon = document.getElementById('wrapper-period-non-recurring');
+      const wrapRec = document.getElementById('wrapper-period-recurring');
+      if (recWrap) {
+        if (periodType === 'recurring') {
+          recWrap.classList.remove('hidden');
+          recWrap.classList.add('block');
+        } else {
+          recWrap.classList.remove('block');
+          recWrap.classList.add('hidden');
+        }
+      }
+      if (wrapNon) {
+        wrapNon.className = `p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2`;
+      }
+      if (wrapRec) {
+        wrapRec.className = `p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3`;
+      }
+    };
+
+    if (sDateInp) sDateInp.onchange = updatePeriodCalculation;
+    if (maxQtyInp) {
+      maxQtyInp.oninput = updatePeriodCalculation;
+      maxQtyInp.onchange = updatePeriodCalculation;
+    }
+    if (daysInp) {
+      daysInp.oninput = updatePeriodCalculation;
+      daysInp.onchange = updatePeriodCalculation;
+    }
+    radPeriodTypes.forEach(rad => {
+      rad.onchange = updatePeriodCalculation;
+    });
+    if (selEndDate) {
+      selEndDate.onchange = () => {
+        if (modalDraftPeriod) modalDraftPeriod.end_date = selEndDate.value;
+      };
+    }
+  }
+
+  function renderModalMaxOrderBody() {
+    const body = document.getElementById('modal-max-order-body');
+    if (!body) return;
+    updateModalMaxOrderRadioStyles();
+
+    if (modalDraftMode === 'unlimited') {
+      body.innerHTML = `
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 text-xs text-slate-600 leading-relaxed">
+          <div class="flex items-center gap-2 font-bold text-slate-800 mb-1">
+            <i class="bi bi-infinity text-emerald-600 text-base"></i>
+            <span>Pembelian Tanpa Batas</span>
+          </div>
+          <p>Pembeli dapat memesan tanpa batas kuantitas untuk seluruh variasi produk.</p>
+        </div>
+      `;
+    } else if (modalDraftMode === 'per_order') {
+      body.innerHTML = `
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label id="lbl-modal-scope-umum" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${modalDraftScope === 'umum' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'} transition">
+              <input type="radio" name="modal_max_order_scope" value="umum" ${modalDraftScope === 'umum' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Umum (Semua Varian)</span>
+            </label>
+            <label id="lbl-modal-scope-spesifik" class="p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer font-bold ${modalDraftScope === 'spesifik' ? 'border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : 'border-slate-300 text-slate-700'} transition">
+              <input type="radio" name="modal_max_order_scope" value="spesifik" ${modalDraftScope === 'spesifik' ? 'checked' : ''} class="accent-[var(--color-primary)] cursor-pointer" />
+              <span>Spesifik per Varian</span>
+            </label>
+          </div>
+
+          <div id="modal-max-order-scope-content" class="pt-1">
+            ${renderModalScopeContent()}
+          </div>
+        </div>
+      `;
+      bindModalScopeEvents();
+    } else if (modalDraftMode === 'per_period') {
+      body.innerHTML = renderModalPeriodContent();
+      bindModalPeriodEvents();
+    }
+  }
+
+  function handleMaxOrderModalEscape(e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      closeMaxOrderModal(true);
+    }
+  }
+
+  function openMaxOrderModal() {
+    const modal = document.getElementById('modal-max-order-config');
+    if (!modal) return;
+
+    maxOrderModalBackup = {
+      max_order: primaryState.max_order,
+      max_order_type: primaryState.max_order_type || 'unlimited',
+      max_order_qty: primaryState.max_order_qty,
+      is_unlimited_max_order: primaryState.is_unlimited_max_order,
+      max_order_period: primaryState.max_order_period ? JSON.parse(JSON.stringify(primaryState.max_order_period)) : null,
+      variants: materialsState.map(m => ({ id: m.id, name: m.name, max_order: m.max_order, is_unlimited_max_order: m.is_unlimited_max_order }))
+    };
+
+    if (primaryState.max_order_type === 'per_period') {
+      modalDraftMode = 'per_period';
+    } else if (primaryState.max_order_type === 'per_order') {
+      modalDraftMode = 'per_order';
+      const hasSpecific = materialsState.some(m => m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Tanpa Batas' && m.max_order !== 'Unlimited');
+      modalDraftScope = hasSpecific ? 'spesifik' : 'umum';
+    } else {
+      const hasSpecific = materialsState.some(m => m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Tanpa Batas' && m.max_order !== 'Unlimited');
+      if (hasSpecific) {
+        modalDraftMode = 'per_order';
+        modalDraftScope = 'spesifik';
+      } else {
+        modalDraftMode = 'unlimited';
+        modalDraftScope = 'umum';
+      }
+    }
+
+    modalDraftQty = primaryState.max_order_qty || (primaryState.max_order ? parseInt(primaryState.max_order, 10) : null);
+    modalDraftPeriod = primaryState.max_order_period ? JSON.parse(JSON.stringify(primaryState.max_order_period)) : {
+      start_date: getTodayDateString(),
+      max_qty: 10,
+      days: 7,
+      period_type: 'non_recurring',
+      end_date: ''
+    };
+
+    renderModalMaxOrderBody();
+    hideModalMaxOrderError();
+    modal.classList.remove('hidden');
+
+    document.addEventListener('keydown', handleMaxOrderModalEscape);
+  }
+
+  function closeMaxOrderModal(shouldRevert = false) {
+    const modal = document.getElementById('modal-max-order-config');
+    if (!modal) return;
+    if (shouldRevert && maxOrderModalBackup) {
+      primaryState.max_order = maxOrderModalBackup.max_order;
+      primaryState.max_order_type = maxOrderModalBackup.max_order_type;
+      primaryState.max_order_qty = maxOrderModalBackup.max_order_qty;
+      primaryState.is_unlimited_max_order = maxOrderModalBackup.is_unlimited_max_order;
+      primaryState.max_order_period = maxOrderModalBackup.max_order_period ? JSON.parse(JSON.stringify(maxOrderModalBackup.max_order_period)) : null;
+      if (Array.isArray(maxOrderModalBackup.variants)) {
+        maxOrderModalBackup.variants.forEach(b => {
+          const mat = materialsState.find(m => m.id === b.id);
+          if (mat) {
+            mat.max_order = b.max_order;
+            mat.is_unlimited_max_order = b.is_unlimited_max_order;
+          }
+        });
+      }
+    }
+    document.removeEventListener('keydown', handleMaxOrderModalEscape);
+    modal.classList.add('hidden');
+  }
+
+  function saveMaxOrderModal() {
+    if (modalDraftMode === 'unlimited') {
+      primaryState.max_order_type = 'unlimited';
+      primaryState.max_order = null;
+      primaryState.max_order_qty = null;
+      primaryState.is_unlimited_max_order = true;
+      materialsState.forEach(m => {
+        m.max_order = null;
+        m.is_unlimited_max_order = true;
+      });
+    } else if (modalDraftMode === 'per_order') {
+      if (modalDraftScope === 'umum') {
+        const qtyInp = document.getElementById('modal-input-max-order-qty');
+        const val = qtyInp ? parseInt(qtyInp.value, 10) : null;
+        if (!val || isNaN(val) || val < 1) {
+          showModalMaxOrderError('Jumlah maksimal pembelian per pesanan minimal 1.');
+          return;
+        }
+        primaryState.max_order_type = 'per_order';
+        primaryState.max_order = val;
+        primaryState.max_order_qty = val;
+        primaryState.is_unlimited_max_order = false;
+        materialsState.forEach(m => {
+          m.max_order = null;
+          m.is_unlimited_max_order = false;
+        });
+      } else {
+        const variantInputs = document.querySelectorAll('.modal-variant-max-order-input');
+        variantInputs.forEach(inp => {
+          const matId = inp.dataset.matId;
+          const mat = materialsState.find(m => m.id === matId);
+          if (mat) {
+            const val = inp.value.trim();
+            const digits = val.replace(/\D/g, '');
+            if (digits) {
+              mat.max_order = parseInt(digits, 10);
+              mat.is_unlimited_max_order = false;
+            } else {
+              mat.max_order = null;
+              mat.is_unlimited_max_order = true;
+            }
+          }
+        });
+        primaryState.max_order_type = 'per_order';
+        primaryState.max_order = null;
+        primaryState.max_order_qty = null;
+        primaryState.is_unlimited_max_order = false;
+      }
+    } else if (modalDraftMode === 'per_period') {
+      const sDate = document.getElementById('modal-input-period-start-date')?.value;
+      const maxQty = parseInt(document.getElementById('modal-input-period-max-qty')?.value, 10);
+      const days = parseInt(document.getElementById('modal-input-period-days')?.value, 10);
+      const radPeriod = document.querySelector('input[name="modal_period_type_radio"]:checked');
+      const pType = radPeriod ? radPeriod.value : 'non_recurring';
+      const endDate = document.getElementById('modal-select-period-end-date')?.value || '';
+
+      if (!sDate) {
+        showModalMaxOrderError('Tanggal mulai wajib diisi.');
+        return;
+      }
+      if (isNaN(maxQty) || maxQty < 1) {
+        showModalMaxOrderError('Maks. jumlah pembelian minimal 1 produk.');
+        return;
+      }
+      if (isNaN(days) || days < 1) {
+        showModalMaxOrderError('Durasi periode minimal 1 hari.');
+        return;
+      }
+
+      primaryState.max_order_type = 'per_period';
+      primaryState.max_order = maxQty;
+      primaryState.max_order_qty = maxQty;
+      primaryState.is_unlimited_max_order = false;
+      primaryState.max_order_period = {
+        start_date: sDate,
+        max_qty: maxQty,
+        days: days,
+        period_type: pType,
+        end_date: endDate
+      };
+      materialsState.forEach(m => {
+        m.max_order = null;
+        m.is_unlimited_max_order = false;
+      });
+    }
+
+    // Sync input pada matriks kombinasi variasi jika ada di DOM
+    document.querySelectorAll('.combo-max-order-input').forEach(inp => {
+      const matId = inp.dataset.matId;
+      const mat = materialsState.find(m => m.id === matId);
+      if (mat) {
+        if (mat.max_order !== null && mat.max_order !== undefined && mat.max_order !== 'Tanpa Batas' && mat.max_order !== 'Unlimited') {
+          inp.value = mat.max_order;
+        } else {
+          inp.value = '';
+          inp.placeholder = 'Tanpa Batas';
+        }
+      }
+    });
+
+    const sumEl = document.getElementById('max-order-summary-text');
+    if (sumEl) {
+      sumEl.textContent = getMaxOrderSummaryText();
+    }
+
+    updateProductCardLivePreview();
+    closeMaxOrderModal(false);
+  }
+
+  function bindVariantMaxOrderEvents() {
+    const btnOpen = document.getElementById('btn-open-max-order-modal');
+    if (btnOpen) {
+      btnOpen.onclick = () => {
+        openMaxOrderModal();
+      };
+    }
+
+    const btnCancel = document.getElementById('btn-cancel-max-order-modal');
+    if (btnCancel) {
+      btnCancel.onclick = () => closeMaxOrderModal(true);
+    }
+
+    const btnX = document.getElementById('btn-x-max-order-modal');
+    if (btnX) {
+      btnX.onclick = () => closeMaxOrderModal(true);
+    }
+
+    const btnSave = document.getElementById('btn-save-max-order-modal');
+    if (btnSave) {
+      btnSave.onclick = () => saveMaxOrderModal();
+    }
+
+    const modalEl = document.getElementById('modal-max-order-config');
+    if (modalEl) {
+      modalEl.onclick = (e) => {
+        if (e.target === modalEl) closeMaxOrderModal(true);
+      };
+    }
+
+    const radModes = document.querySelectorAll('input[name="modal_max_order_mode"]');
+    radModes.forEach(rad => {
+      rad.onchange = () => {
+        modalDraftMode = rad.value;
+        renderModalMaxOrderBody();
+      };
+    });
   }
 
   // =====================================================================
@@ -26025,6 +26751,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                   item.is_unlimited_max_order = false;
                 }
               }
+              const sumEl = document.getElementById('max-order-summary-text');
+              if (sumEl && typeof getMaxOrderSummaryText === 'function') {
+                sumEl.textContent = getMaxOrderSummaryText();
+              }
             }
           };
           inp.oninput = handleComboMax;
@@ -26060,6 +26790,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                   item.max_order = undefined;
                   item.is_unlimited_max_order = false;
                 }
+              }
+              const sumEl = document.getElementById('max-order-summary-text');
+              if (sumEl && typeof getMaxOrderSummaryText === 'function') {
+                sumEl.textContent = getMaxOrderSummaryText();
               }
             }
           };
@@ -27365,6 +28099,21 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           bindStep2InteractiveEvents();
         };
       }
+
+      // Maksimal Pembelian Khusus Produk Bervariasi
+      const variantMaxOrderSec = document.getElementById('section-variant-max-order');
+      if (variantMaxOrderSec) {
+        if (primaryState.pricing_model === 'normal' && primaryState.has_variants) {
+          variantMaxOrderSec.classList.remove('hidden');
+          variantMaxOrderSec.classList.add('block');
+          variantMaxOrderSec.innerHTML = renderVariantMaxOrderSection();
+        } else {
+          variantMaxOrderSec.classList.remove('block');
+          variantMaxOrderSec.classList.add('hidden');
+        }
+      }
+
+      bindVariantMaxOrderEvents();
 
       // Helper Binding Harga Grosir Interaktif (Berfungsi untuk Inline & Modal)
       function bindInlineWholesaleEvents() {
@@ -31342,7 +32091,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Max Order (Combobox / Select Sync)
     const normalMaxInp = document.getElementById('input-normal-max-order');
-    if (normalMaxInp) {
+    if (normalMaxInp && !primaryState.has_variants) {
       const raw = normalMaxInp.value.trim();
       const rLow = raw.toLowerCase();
       if (!raw || rLow === 'tanpa max order' || rLow === 'tanpa batas' || rLow === 'unlimited' || raw === '0') {

@@ -395,6 +395,30 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
 - **Status Alur Pengurangan Stok**:
   - **Temuan Kritis**: Berdasarkan penelusuran fungsi `DB.saveOrder()` (`js/db.js` baris 4736) dan transaksi kasir `handlePosCheckout()` (`js/admin-app.js` baris 2196), **TIDAK DITEMUKAN** fungsi pemotongan kuantitas stok otomatis saat pesanan disimpan atau dibayar. Stok saat ini berstatus statis dan hanya termutasi secara manual melalui form edit produk.
 
+### 6.E.1. Maksimal Jumlah Pembelian (Produk Tunggal & Bervariasi)
+- **Produk Tanpa Variasi (Tunggal)**:
+  - Menggunakan kontrol input inline `#input-normal-max-order` (Combobox/Datalist dengan opsi `"Tanpa Batas"` dan angka manual).
+  - Ketika fitur aktif, tersimpan di `primaryState.max_order` dan `primaryState.max_order_qty` dengan tipe `per_order` (atau `null` / `unlimited`).
+- **Produk Bervariasi Aktif (`has_variants: true`)**:
+  - Halaman utama seksi Informasi Penjualan (`#card-step2-sales`) menampilkan kartu ringkas `#section-variant-max-order` yang memuat label `Maks. Jumlah Pembelian`, badge ringkasan konfigurasi aktif (`#max-order-summary-text`), dan tombol `Atur Maks. Pembelian` (`#btn-open-max-order-modal`).
+  - Form pengaturan panjang disembunyikan dari halaman utama dan dialihkan ke modal responsif `#modal-max-order-config` (mengikuti pola modal Songer Creative: `fixed inset-0 z-50 bg-slate-900/50`, `max-w-lg`, `max-h-[90vh] overflow-y-auto`).
+  - **Tiga Mode Pengaturan**:
+    1. `Tanpa Batas` (`unlimited`): Seluruh variasi tidak dibatasi kuantitas pemesanannya (`is_unlimited_max_order: true`, `max_order: null`, `max_order_qty: null`, per-variant `mat.max_order = null`).
+    2. `Per Pesanan` (`per_order`):
+       - Scope `Umum (Semua Varian)`: Mengatur kuantitas maksimal tingkat produk (`primaryState.max_order_qty`, minimal 1 pcs per checkout).
+       - Scope `Spesifik per Varian`: Menyajikan tabel daftar opsi Variasi 1 dari `materialsState` dengan input kuantitas numerik individual (`mat.max_order`) atau placeholder "Tanpa Batas".
+    3. `Per Periode` (`per_period`):
+       - Beroperasi pada tingkat produk untuk seluruh varian secara umum.
+       - Parameter: Tanggal Mulai (`#modal-input-period-start-date`, minimum hari ini), Maks. Jumlah Pembelian (`#modal-input-period-max-qty`, min. 1), Durasi Hari (`#modal-input-period-days`, min. 1).
+       - Tipe Periode: `Tidak Berulang` (`non_recurring`, berakhir setelah 1 siklus) vs `Berulang` (`recurring`, dropdown tanggal berakhir dihitung otomatis berdasarkan kelipatan hari: 2, 3, 4, 5, 6, 8, 12 siklus).
+       - Blok kalkulasi dinamis menghitung dan menampilkan teks catatan waktu mulai dan tanggal berakhir secara real-time.
+  - **Siklus Hidup & Keamanan Data Modal**:
+    - Snapshot backup `maxOrderModalBackup` dicatat saat modal dibuka.
+    - Pembatalan melalui tombol `Batal`, tombol silang `✕`, tombol `Escape`, atau klik luar (backdrop) memulihkan snapshot tanpa menyimpan perubahan parsial.
+    - Tombol `Simpan Pengaturan` melakukan validasi (banner `#modal-max-order-error-msg`), menerapkan nilai ke `primaryState` dan `materialsState`, menyinkronkan kolom input matriks kombinasi (`.combo-max-order-input`), memperbarui teks ringkasan utama, memperbarui live preview, dan menutup modal.
+    - Mode Edit Produk memulihkan konfigurasi tersimpan (baik produk tunggal maupun variasi bertingkat).
+    - Transisi Variasi: Mengaktifkan variasi mengganti input inline menjadi tombol modal dan ringkasan; menonaktifkan seluruh variasi mengembalikan input inline dengan mempertahankan nilai valid sebelumnya.
+
 ### 6.F. Konfigurasi Web (Storefront Presentation)
 - **Model Kartu Etalase**:
   - `Model A` (Standard Cetak): Menampilkan rasio foto 1:1, badge kategori, kalkulator PxL cepat, tombol "+ Keranjang", dan harga mulai dari.
