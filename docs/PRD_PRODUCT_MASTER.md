@@ -401,10 +401,13 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
   - **Tiga Mode Pengaturan**:
     1. `Tanpa Batas` (`unlimited`): Tidak mengaktifkan batas maksimal (`primaryState.is_unlimited_max_order = true`, `max_order = null`, `max_order_qty = null`). Tidak membutuhkan form input tambahan.
     2. `Per Pesanan` (`per_order`): Menampilkan input jumlah maksimal pembelian per pesanan (`#input-max-order-qty`), wajib diisi integer valid minimal 1 produk, dan divalidasi tidak boleh lebih kecil dari minimal pesanan (`min_order`).
-    3. `Per Periode` (`per_period`): Menampilkan konfigurasi periode lengkap:
-       - Tanggal Mulai (`#input-period-start-date`, batas minimum hari ini).
-       - Maks. Jumlah Pembelian (`#input-period-max-qty`, min. 1 produk) dan Durasi Hari (`#input-period-days`, min. 1 hari).
-       - Pilihan Tipe Periode: `Tidak Berulang` (`non_recurring`, berakhir setelah 1 siklus) vs `Berulang` (`recurring`, dropdown tanggal berakhir `#select-period-end-date` dihitung otomatis berdasarkan kelipatan hari: 2, 3, 4, 5, 6, 8, 12 siklus).
+    3. `Per Periode` (`per_period`): Menampilkan konfigurasi periode lengkap dengan kalender popover Shadcn-style:
+       - **Tanggal Mulai** (`#input-period-start-date` & `#btn-calendar-period-start-date`): Field teks manual (`YYYY-MM-DD`) + tombol kalender terintegrasi di dalam input. **Tanpa Tanggal Default**: Pada produk baru, field bernilai kosong (`''`) dan tidak terisi otomatis oleh tanggal hari ini. Wajib divalidasi saat form disimpan.
+       - **Kuantitas & Durasi**: Maks. Jumlah Pembelian (`#input-period-max-qty`, min. 1 produk) dan Durasi Hari (`#input-period-days`, min. 1 hari).
+       - **Pilihan Tipe Periode**:
+         - `Tidak Berulang` (`non_recurring`): Berakhir otomatis setelah 1 siklus (`addDaysToDate(startDate, days - 1)`). Tooltip redundan dihapus karena rincian telah dijelaskan di panel catatan kalkulasi.
+         - `Berulang` (`recurring`): Berulang per periode hingga tanggal berakhir yang ditentukan. Dilengkapi input manual + tombol kalender (`#input-period-end-date` & `#btn-calendar-period-end-date`) serta dropdown pilihan cepat siklus (`#select-period-end-date`, kelipatan 2, 3, 4, 5, 6, 8, 12 siklus) yang tersinkronisasi dua arah. Validasi memeriksa bahwa tanggal berakhir harus tepat kelipatan dari durasi periode (minimal 2 siklus).
+       - **Zero Timezone Shift**: Parsing dan formatting tanggal menggunakan komponen tanggal lokal eksplisit (`new Date(year, month - 1, day)`) sehingga tidak terpengaruh pergeseran offset zona waktu (UTC/WIB).
        - Blok kalkulasi dinamis (`#single-period-note-text`) yang menampilkan waktu mulai, kuantitas batas, interval hari, dan tanggal berakhir secara real-time.
   - **Integritas Validasi & Pemulihan State**:
     - Validasi hanya memeriksa field dari mode yang aktif. Produk baru tanpa pemilihan eksplisit ditolak dengan penanda `Maksimal Jumlah Pembelian` hingga seller menentukan mode.
@@ -413,18 +416,24 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
   - **Status Alur Transaksi / Checkout**:
     - Berdasarkan hasil audit kode, konfigurasi `max_order_period` tersimpan persisten di database (`DB.createProduct` / `DB.updateProduct`), namun **BELUM DITERAPKAN** pada mesin validasi keranjang dan checkout pembeli (`buyer-store.js`). Modul transaksi tidak diubah pada lingkup perbaikan admin ini.
 
-### 6.E.2. Pemulihan Tooltip Bantuan Interaktif (Mobile & Desktop)
-- **5 Titik Tooltip Terverifikasi**:
-  1. *Maksimal Jumlah Pembelian*: `#section-single-max-order` (produk tunggal) dan `#section-variant-max-order` (kartu produk bervariasi).
-  2. *Berat Paket*: `#input-package-weight`.
-  3. *Ukuran Paket*: Bagian dimensi volumetrik P x L x T (`#input-dim-length`, `#input-dim-width`, `#input-dim-height`).
-  4. *Sistem COD*: Toggle bayar di tempat (`#toggle-is-cod`).
-  5. *Dukungan Kurir / Ekspedisi*: Seksi pemilihan metode pengiriman toko (`input[name="courier_checkbox"]`).
-- **Mekanisme Interaksi & Boundary Clamping**:
-  - Seluruh trigger popover bantuan dibungkus elemen `.btn-help-popover` dengan `tabindex="0"`, memuat tooltip `.admin-help-tooltip`.
-  - Mendukung hover pada desktop dan toggle buka/tutup saat diklik/ditap pada perangkat mobile (`pointer-events-auto` saat aktif, mencegah trigger klik ganda pada checkbox/label pembungkus).
-  - Mekanisme viewport clamping menggunakan `clampTooltipToViewport()` dengan `getBoundingClientRect()` dan `requestAnimationFrame()` menghitung batasan layar secara dinamis (`shiftX`) sehingga tooltip tidak terpotong (clipping) keluar layar pada viewport sempit.
-  - Menutup otomatis saat klik di luar area tooltip atau ketika tombol `Escape` ditekan.
+### 6.E.2. Pengaturan Tooltip Bantuan & Kalender Popover (Mobile & Desktop)
+- **Kebijakan Tooltip Pasca-Revisi**:
+  - Tiga tooltip yang bersifat redundan telah dihapus:
+    1. Tooltip pada label *Maksimal Jumlah Pembelian* produk tunggal (`#input-normal-max-order`).
+    2. Tooltip pada opsi *Tidak Berulang* (produk tunggal & modal varian).
+    3. Tooltip pada opsi *Berulang* (produk tunggal & modal varian).
+  - Tooltip bantuan esensial lainnya tetap dipertahankan utuh:
+    1. *Maks. Jumlah Pembelian (Produk Bervariasi)*: Kartu ringkasan `#section-variant-max-order`.
+    2. *Berat Paket*: `#input-package-weight`.
+    3. *Ukuran Paket*: Dimensi volumetrik P x L x T (`#input-dim-length`, `#input-dim-width`, `#input-dim-height`).
+    4. *Sistem COD*: Toggle bayar di tempat (`#toggle-is-cod`).
+    5. *Dukungan Kurir / Ekspedisi*: Seksi pemilihan metode pengiriman toko (`input[name="courier_checkbox"]`).
+- **Mekanisme Kalender Popover Shadcn-Style (Vanilla JS)**:
+  - Mengadopsi visual token Shadcn UI Calendar: compact, border `border-slate-200`, sudut membulat `rounded-[6px]`, bayangan halus `shadow-xl`, latar belakang putih.
+  - Header navigasi bulan sebelumnya/berikutnya dan dropdown pemilihan cepat bulan dan tahun.
+  - Grid 7 kolom hari (`Min`, `Sen`, `Sel`, `Rab`, `Kam`, `Jum`, `Sab`). Tanggal di masa lalu dinonaktifkan. Tanggal terpilih disorot dengan warna aksen brand (`var(--color-primary)`).
+  - Viewport boundary clamping: Posisi popover dihitung dengan `getBoundingClientRect()` dan dibatasi agar tidak meluap keluar layar pada viewport mobile (`window.innerWidth`).
+  - Menutup otomatis saat tanggal dipilih, klik di luar popover, atau penekanan tombol `Escape`.
 - **Produk Bervariasi Aktif (`has_variants: true`)**:
   - Halaman utama seksi Informasi Penjualan (`#card-step2-sales`) menampilkan kartu ringkas `#section-variant-max-order` yang memuat label `Maks. Jumlah Pembelian`, badge ringkasan konfigurasi aktif (`#max-order-summary-text`), dan tombol `Atur Maks. Pembelian` (`#btn-open-max-order-modal`).
   - Form pengaturan panjang disembunyikan dari halaman utama dan dialihkan ke modal responsif `#modal-max-order-config` (mengikuti pola modal Songer Creative: `fixed inset-0 z-50 bg-slate-900/50`, `max-w-lg`, `max-h-[90vh] overflow-y-auto`).
@@ -443,7 +452,34 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - Pembatalan melalui tombol `Batal`, tombol silang `✕`, tombol `Escape`, atau klik luar (backdrop) memulihkan snapshot tanpa menyimpan perubahan parsial.
     - Tombol `Simpan Pengaturan` melakukan validasi (banner `#modal-max-order-error-msg`), menerapkan nilai ke `primaryState` dan `materialsState`, menyinkronkan kolom input matriks kombinasi (`.combo-max-order-input`), memperbarui teks ringkasan utama, memperbarui live preview, dan menutup modal.
     - Mode Edit Produk memulihkan konfigurasi tersimpan (baik produk tunggal maupun variasi bertingkat).
-    - Transisi Variasi: Mengaktifkan variasi mengganti input inline menjadi tombol modal dan ringkasan; menonaktifkan seluruh variasi mengembalikan input inline dengan mempertahankan nilai valid sebelumnya.
+
+
+### 6.E.3. Audit Mendalam Max. Order pada List Variasi Produk (Hasil Audit Teknis)
+- **A. Struktur Hubungan Variasi (DAG Versi 2)**:
+  - Variasi Songer Creative mendukung hingga 4 tingkatan variasi kanonikal:
+    - Rank 1 (`tier1`): Variasi 1 (`materialsState`, baris fisik pada tabel kombinasi).
+    - Rank 2 (`main`): Variasi 2 (`finishingsState.main`).
+    - Rank 3 (`extra_1`): Variasi 3 (`finishingsState.extra_1`).
+    - Rank 4 (`extra_2`): Variasi 4 (`finishingsState.extra_2`).
+  - **Relasi Antarvariasi Aktual**:
+    - Melalui model DAG v2 (`product.variation_dependencies.options[optId]`), setiap opsi anak memiliki mode `general`, `independent`, atau `specific`.
+    - Pada mode `specific`, opsi anak dapat menetapkan `parent_tier` ke tingkat kanonikal apa pun yang memiliki hierarki lebih tinggi (rank lebih kecil).
+    - **Jawaban Pertanyaan Konkret Relasi**:
+      1. *Apakah suatu opsi Variasi 3 dapat dikaitkan hanya ke Bahan A pada Variasi 1?* **YA**. Aturan dependency v2 mengizinkan `rule.parent_tier = 'tier1'` dan `rule.trigger_ids = ['id_bahan_a']`, sehingga opsi Variasi 3 tersebut hanya aktif jika Pembeli memilih Bahan A di Variasi 1, melompati Variasi 2.
+      2. *Apakah Variasi 4 dapat mempunyai keterkaitan sendiri?* **YA**. Opsi pada Variasi 4 (`extra_2`) dapat memiliki dependency sendiri yang mengarah ke Variasi 3 (`extra_1`), Variasi 2 (`main`), atau langsung ke Variasi 1 (`tier1`), atau berjalan independen (`general`).
+- **B. Penerapan Max. Order pada Tabel & Mesin Kalkulasi**:
+  - Kolom `Max. Order` pada tabel List Variasi Produk (`.combo-max-order-input`) saat ini terikat pada `materialsState[i].max_order` (hanya per baris Variasi 1).
+  - Sistem saat ini membedakan batas pembelian ke dalam tiga tingkatan:
+    1. *Tingkat Produk*: Disimpan di `primaryState.max_order` / `primaryState.max_order_qty` / `primaryState.max_order_period`. Berlaku jika `scope = 'umum'`.
+    2. *Tingkat Opsi Variasi 1*: Disimpan di `mat.max_order` pada `materialsState`. Berlaku jika `scope = 'spesifik'`.
+    3. *Tingkat Kombinasi Penuh (Tier 1 x 2 x 3 x 4)*: Belum didukung struktur state tersendiri; tabel matriks menggabungkan cell ketersediaan per baris Tier 1, bukan tabel datar perkalian kartesius penuh seluruh opsi.
+- **C. Analisis Rancangan Pembukaan Modal dari Kolom Tabel**:
+  - Kolom `Max. Order` pada tabel variasi saat ini berbentuk input numerik individual dengan datalist 'Tanpa Batas'.
+  - **Rancangan Aman Terintegrasi**:
+    - Kolom `Max. Order` dapat dilengkapi tombol/aksi `Atur` (seperti kolom Harga Grosir) yang membuka modal `#modal-max-order-config`.
+    - Jika dibuka dari baris tertentu (`data-mat-id`), modal dapat langsung berfokus pada baris opsi varian tersebut dalam mode `Spesifik per Varian`, tanpa merusak pengaturan varian lain.
+    - Snapshot backup `maxOrderModalBackup` tetap melindungi integritas data jika seller membatalkan modal.
+  - **Status**: Implementasi pemindahan pemicu modal di-hold sesuai instruksi hingga pengguna menyetujui rancangan.    - Transisi Variasi: Mengaktifkan variasi mengganti input inline menjadi tombol modal dan ringkasan; menonaktifkan seluruh variasi mengembalikan input inline dengan mempertahankan nilai valid sebelumnya.
 
 ### 6.F. Konfigurasi Web (Storefront Presentation)
 - **Model Kartu Etalase**:

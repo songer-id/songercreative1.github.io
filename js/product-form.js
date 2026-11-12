@@ -1709,18 +1709,35 @@ const ProductForm = (() => {
     });
   }
 
-  // Helper: Tanggal & Waktu Lokal untuk Pengaturan Periode Maksimal Order
-  function getTodayDateString() {
-    const d = new Date();
+  // Helper: Tanggal & Waktu Lokal (Zero Timezone Shift) untuk Pengaturan Periode Maksimal Order
+  function parseLocalDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const parts = dateStr.trim().split('-');
+    if (parts.length !== 3) return null;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+    const dt = new Date(y, m, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m || dt.getDate() !== d) return null;
+    return dt;
+  }
+
+  function formatLocalDate(d) {
+    if (!d || !(d instanceof Date) || isNaN(d.getTime())) return '';
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
+  function getTodayDateString() {
+    return formatLocalDate(new Date());
+  }
+
   function formatDateDisplay(dateStr) {
     if (!dateStr) return '';
-    const parts = dateStr.split('-');
+    const parts = String(dateStr).trim().split('-');
     if (parts.length === 3) {
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
@@ -1728,14 +1745,247 @@ const ProductForm = (() => {
   }
 
   function addDaysToDate(dateStr, days) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
-    d.setDate(d.getDate() + days);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const dt = parseLocalDate(dateStr);
+    if (!dt) return '';
+    dt.setDate(dt.getDate() + days);
+    return formatLocalDate(dt);
+  }
+
+  function isValidRecurringEndDate(startDateStr, endDateStr, days) {
+    if (!startDateStr || !endDateStr || !days || days < 1) return false;
+    const s = parseLocalDate(startDateStr);
+    const e = parseLocalDate(endDateStr);
+    if (!s || !e) return false;
+    const diffMs = e.getTime() - s.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    const cycleCount = diffDays / days;
+    return Number.isInteger(cycleCount) && cycleCount >= 2;
+  }
+
+  function getRecurringCycleCount(startDateStr, endDateStr, days) {
+    if (!startDateStr || !endDateStr || !days || days < 1) return 0;
+    const s = parseLocalDate(startDateStr);
+    const e = parseLocalDate(endDateStr);
+    if (!s || !e) return 0;
+    const diffMs = e.getTime() - s.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    const cycleCount = diffDays / days;
+    return Number.isInteger(cycleCount) ? cycleCount : 0;
+  }
+
+  // Popover Kalender Shadcn-Style Berbasis Vanilla JS
+  let activeCalendarPopover = null;
+
+  function closeActiveCalendarPopover() {
+    if (activeCalendarPopover && activeCalendarPopover.parentNode) {
+      activeCalendarPopover.parentNode.removeChild(activeCalendarPopover);
+    }
+    activeCalendarPopover = null;
+  }
+
+  function openCalendarPopover(triggerBtn, inputEl, options = {}) {
+    closeActiveCalendarPopover();
+
+    const minDateStr = options.minDate || '';
+    const allowedDates = options.allowedDates || null;
+    const onSelect = options.onSelect || null;
+
+    const initialDate = parseLocalDate(inputEl.value);
+    const today = new Date();
+    let viewYear = initialDate ? initialDate.getFullYear() : today.getFullYear();
+    let viewMonth = initialDate ? initialDate.getMonth() : today.getMonth();
+    const selectedDateStr = initialDate ? formatLocalDate(initialDate) : '';
+
+    const popover = document.createElement('div');
+    popover.className = 'sc-calendar-popover fixed z-[99999] bg-white border border-slate-200 rounded-[6px] shadow-xl p-3 w-72 text-slate-800 select-none font-sans text-xs';
+    activeCalendarPopover = popover;
+
+    const monthNames = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    function renderCalendarBody() {
+      const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      const todayStr = getTodayDateString();
+
+      let yearOptions = '';
+      const startYear = today.getFullYear() - 1;
+      const endYear = today.getFullYear() + 10;
+      for (let y = startYear; y <= endYear; y++) {
+        yearOptions += `<option value="${y}" ${y === viewYear ? 'selected' : ''}>${y}</option>`;
+      }
+
+      let monthOptions = '';
+      monthNames.forEach((name, idx) => {
+        monthOptions += `<option value="${idx}" ${idx === viewMonth ? 'selected' : ''}>${name}</option>`;
+      });
+
+      let daysHtml = '';
+      for (let i = 0; i < firstDayOfMonth; i++) {
+        daysHtml += `<div class="h-8"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cellDateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isSelected = selectedDateStr === cellDateStr;
+        const isToday = todayStr === cellDateStr;
+
+        let isDisabled = false;
+        if (minDateStr && cellDateStr < minDateStr) {
+          isDisabled = true;
+        }
+        if (allowedDates) {
+          if (typeof allowedDates === 'function' && !allowedDates(cellDateStr)) {
+            isDisabled = true;
+          } else if (Array.isArray(allowedDates) && !allowedDates.includes(cellDateStr)) {
+            isDisabled = true;
+          }
+        }
+
+        if (isDisabled) {
+          daysHtml += `
+            <div class="h-8 flex items-center justify-center text-slate-300 opacity-40 cursor-not-allowed text-[11px] font-normal">
+              ${d}
+            </div>
+          `;
+        } else if (isSelected) {
+          daysHtml += `
+            <button type="button" data-date="${cellDateStr}" class="btn-cal-day h-8 w-8 mx-auto flex items-center justify-center bg-[var(--color-primary)] text-white font-bold rounded-[6px] shadow-xs cursor-pointer text-[11px] transition">
+              ${d}
+            </button>
+          `;
+        } else if (isToday) {
+          daysHtml += `
+            <button type="button" data-date="${cellDateStr}" class="btn-cal-day h-8 w-8 mx-auto flex items-center justify-center border border-slate-300 text-slate-800 font-bold rounded-[6px] hover:bg-slate-100 cursor-pointer text-[11px] transition">
+              ${d}
+            </button>
+          `;
+        } else {
+          daysHtml += `
+            <button type="button" data-date="${cellDateStr}" class="btn-cal-day h-8 w-8 mx-auto flex items-center justify-center text-slate-700 hover:bg-slate-100 font-medium rounded-[6px] cursor-pointer text-[11px] transition">
+              ${d}
+            </button>
+          `;
+        }
+      }
+
+      popover.innerHTML = `
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+          <button type="button" class="btn-cal-prev p-1 rounded-[6px] hover:bg-slate-100 text-slate-600 transition" aria-label="Bulan sebelumnya">
+            <i class="bi bi-chevron-left text-xs"></i>
+          </button>
+          <div class="flex items-center gap-1.5 font-bold text-slate-800">
+            <select class="sel-cal-month bg-transparent font-bold cursor-pointer outline-none hover:text-[var(--color-primary)] text-xs">
+              ${monthOptions}
+            </select>
+            <select class="sel-cal-year bg-transparent font-bold cursor-pointer outline-none hover:text-[var(--color-primary)] text-xs">
+              ${yearOptions}
+            </select>
+          </div>
+          <button type="button" class="btn-cal-next p-1 rounded-[6px] hover:bg-slate-100 text-slate-600 transition" aria-label="Bulan berikutnya">
+            <i class="bi bi-chevron-right text-xs"></i>
+          </button>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400 mb-1">
+          <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center">
+          ${daysHtml}
+        </div>
+      `;
+
+      popover.querySelector('.btn-cal-prev')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        viewMonth--;
+        if (viewMonth < 0) {
+          viewMonth = 11;
+          viewYear--;
+        }
+        renderCalendarBody();
+      });
+
+      popover.querySelector('.btn-cal-next')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        viewMonth++;
+        if (viewMonth > 11) {
+          viewMonth = 0;
+          viewYear++;
+        }
+        renderCalendarBody();
+      });
+
+      popover.querySelector('.sel-cal-month')?.addEventListener('change', (e) => {
+        e.stopPropagation();
+        viewMonth = parseInt(e.target.value, 10);
+        renderCalendarBody();
+      });
+
+      popover.querySelector('.sel-cal-year')?.addEventListener('change', (e) => {
+        e.stopPropagation();
+        viewYear = parseInt(e.target.value, 10);
+        renderCalendarBody();
+      });
+
+      popover.querySelectorAll('.btn-cal-day').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const chosenDate = btn.getAttribute('data-date');
+          if (chosenDate) {
+            inputEl.value = chosenDate;
+            if (onSelect) onSelect(chosenDate);
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          closeActiveCalendarPopover();
+        });
+      });
+    }
+
+    renderCalendarBody();
+    document.body.appendChild(popover);
+
+    const rect = triggerBtn.getBoundingClientRect();
+    const popoverWidth = 288;
+    let left = rect.left;
+    if (left + popoverWidth > window.innerWidth - 12) {
+      left = window.innerWidth - popoverWidth - 12;
+    }
+    if (left < 12) left = 12;
+
+    let top = rect.bottom + 6;
+    const popoverHeight = 310;
+    if (top + popoverHeight > window.innerHeight - 12 && rect.top > popoverHeight) {
+      top = rect.top - popoverHeight - 6;
+    }
+
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+
+    const outsideListener = (e) => {
+      if (popover && !popover.contains(e.target) && !triggerBtn.contains(e.target) && !inputEl.contains(e.target)) {
+        closeActiveCalendarPopover();
+        cleanup();
+      }
+    };
+
+    const keyListener = (e) => {
+      if (e.key === 'Escape') {
+        closeActiveCalendarPopover();
+        cleanup();
+      }
+    };
+
+    function cleanup() {
+      document.removeEventListener('click', outsideListener, true);
+      document.removeEventListener('keydown', keyListener, true);
+    }
+
+    setTimeout(() => {
+      document.addEventListener('click', outsideListener, true);
+      document.addEventListener('keydown', keyListener, true);
+    }, 10);
   }
 
   // Kondisi Gerbang (Gating): Cek kelengkapan seluruh data wajib di Step 1
@@ -1897,7 +2147,7 @@ const ProductForm = (() => {
       max_order_type: 'unlimited',
       max_order_qty: null,
       max_order_period: {
-        start_date: getTodayDateString(),
+        start_date: '',
         max_qty: 10,
         days: 7,
         period_type: 'non_recurring',
@@ -2363,7 +2613,7 @@ const ProductForm = (() => {
       max_order_qty: (prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? (parseInt(prod.max_order) || null) : (prod.max_order_qty !== undefined ? prod.max_order_qty : null),
       is_unlimited_max_order: prod.is_unlimited_max_order !== undefined ? Boolean(prod.is_unlimited_max_order) : (prod.max_order_type === 'unlimited' || prod.max_order === 'Tanpa Batas' || prod.max_order === 'Unlimited' || !prod.max_order),
       max_order_period: prod.max_order_period || {
-        start_date: getTodayDateString(),
+        start_date: '',
         max_qty: 10,
         days: 7,
         period_type: 'non_recurring',
@@ -16226,12 +16476,6 @@ const ProductForm = (() => {
                   <label for="input-normal-max-order" class="block text-xs font-bold text-slate-800">
                     Maksimal Jumlah Pembelian
                   </label>
-                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
-                    <i class="bi bi-question-circle text-xs"></i>
-                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan atau per periode waktu tertentu.
-                    </div>
-                  </div>
                 </div>
 
                 <div class="relative w-full sm:w-64 custom-select-group" id="wrapper-max-order-type">
@@ -20646,26 +20890,27 @@ const ProductForm = (() => {
 
     if (primaryState.max_order_type === 'per_period') {
       const period = primaryState.max_order_period || {
-        start_date: getTodayDateString(),
+        start_date: '',
         max_qty: 10,
         days: 7,
         period_type: 'non_recurring',
         end_date: ''
       };
-      const startDate = period.start_date || getTodayDateString();
+      const startDate = period.start_date || '';
       const maxQty = period.max_qty || 10;
-      const days = parseInt(period.days) || 7;
+      const days = parseInt(period.days, 10) || 7;
       const periodType = period.period_type || 'non_recurring';
 
-      const singleCycleEnd = addDaysToDate(startDate, Math.max(1, days) - 1);
+      const singleCycleEnd = startDate ? addDaysToDate(startDate, Math.max(1, days) - 1) : '';
 
-      const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+      const recurringOptions = startDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
         const cycleEnd = addDaysToDate(startDate, (cycle * Math.max(1, days)) - 1);
         return {
+          cycle,
           date: cycleEnd,
           label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
         };
-      });
+      }) : [];
 
       return `
         <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4">
@@ -20674,14 +20919,25 @@ const ProductForm = (() => {
             <label for="input-period-start-date" class="block text-xs font-semibold text-slate-700 mb-1">
               Tanggal Mulai <span class="text-red-500">*</span>:
             </label>
-            <input
-              type="date"
-              id="input-period-start-date"
-              min="${getTodayDateString()}"
-              value="${startDate}"
-              class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-emerald-500 outline-none bg-white"
-            />
-            <span class="text-[10px] text-slate-400 mt-0.5 block">Tanggal di masa lalu otomatis dinonaktifkan.</span>
+            <div class="relative w-full sm:w-64">
+              <input
+                type="text"
+                id="input-period-start-date"
+                placeholder="YYYY-MM-DD"
+                value="${startDate}"
+                maxlength="10"
+                class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
+              />
+              <button
+                type="button"
+                id="btn-calendar-period-start-date"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
+                title="Pilih tanggal dari kalender"
+              >
+                <i class="bi bi-calendar-event text-sm"></i>
+              </button>
+            </div>
+            <span class="text-[10px] text-slate-400 mt-0.5 block">Format: YYYY-MM-DD. Tanggal di masa lalu otomatis dinonaktifkan.</span>
           </div>
 
           <!-- Input teks/angka Maks. Jumlah Pembelian [jumlah] produk untuk [jumlah] Hari -->
@@ -20692,7 +20948,7 @@ const ProductForm = (() => {
               id="input-period-max-qty"
               min="1"
               value="${maxQty}"
-              class="w-24 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-emerald-500 outline-none bg-white"
+              class="w-24 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
             />
             <span>produk untuk</span>
             <input
@@ -20700,7 +20956,7 @@ const ProductForm = (() => {
               id="input-period-days"
               min="1"
               value="${days}"
-              class="w-20 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-emerald-500 outline-none bg-white"
+              class="w-20 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
             />
             <span>Hari</span>
           </div>
@@ -20713,43 +20969,60 @@ const ProductForm = (() => {
               <!-- Tidak Berulang -->
               <div id="wrapper-single-period-non-recurring" class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
+                  <input type="radio" name="period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
                   <span class="text-xs font-bold text-slate-800">Tidak Berulang</span>
-                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
-                    <i class="bi bi-question-circle text-xs"></i>
-                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                      Maks. Jumlah Pembelian akan berakhir setelah periode yang ditentukan (dalam hari).
-                    </div>
-                  </div>
                 </label>
 
                 <!-- Dynamic note text -->
                 <div id="single-period-note-text" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal">
-                  <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
+                  ${startDate ? `
+                    <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
+                  ` : `
+                    <span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.
+                  `}
                 </div>
               </div>
 
               <!-- Berulang -->
               <div id="wrapper-single-period-recurring" class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
+                  <input type="radio" name="period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
                   <span class="text-xs font-bold text-slate-800">Berulang</span>
-                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
-                    <i class="bi bi-question-circle text-xs"></i>
-                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                      Maks. Jumlah Pembelian akan diulangi secara berurutan per periode yang ditentukan (dalam hari) hingga tanggal berakhir yang diatur di bawah ini.
-                    </div>
-                  </div>
                 </label>
 
-                <div id="recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} pl-6 space-y-1.5">
-                  <label for="select-period-end-date" class="block text-[11px] font-bold text-slate-700">Tanggal Berakhir:</label>
-                  <select id="select-period-end-date" class="w-full sm:w-72 px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-emerald-500 outline-none bg-white">
-                    ${recurringOptions.map(opt => `
-                      <option value="${opt.date}" ${period.end_date === opt.date ? 'selected' : ''}>${opt.label}</option>
-                    `).join('')}
-                  </select>
-                  <span class="text-[10px] text-slate-400 block">Pilihan tanggal dihitung otomatis berdasarkan kelipatan ${days} hari.</span>
+                <div id="recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} pl-6 space-y-2">
+                  <label for="input-period-end-date" class="block text-[11px] font-bold text-slate-700">Tanggal Berakhir <span class="text-red-500">*</span>:</label>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div class="relative w-full sm:w-56">
+                      <input
+                        type="text"
+                        id="input-period-end-date"
+                        placeholder="YYYY-MM-DD"
+                        value="${period.end_date || ''}"
+                        maxlength="10"
+                        class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
+                      />
+                      <button
+                        type="button"
+                        id="btn-calendar-period-end-date"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
+                        title="Pilih tanggal dari kalender"
+                      >
+                        <i class="bi bi-calendar-event text-sm"></i>
+                      </button>
+                    </div>
+                    <div class="w-full sm:w-auto">
+                      <select id="select-period-end-date" class="w-full sm:w-64 px-3 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-700">
+                        <option value="">Pilih cepat siklus...</option>
+                        ${recurringOptions.map(opt => `
+                          <option value="${opt.date}" ${period.end_date === opt.date ? 'selected' : ''}>${opt.label}</option>
+                        `).join('')}
+                      </select>
+                    </div>
+                  </div>
+                  <div id="period-end-date-feedback" class="text-[11px] text-slate-500 font-medium">
+                    ${!startDate ? 'Tentukan Tanggal Mulai terlebih dahulu.' : (period.end_date ? (isValidRecurringEndDate(startDate, period.end_date, days) ? `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${getRecurringCycleCount(startDate, period.end_date, days)} kali siklus / ${getRecurringCycleCount(startDate, period.end_date, days) * days} hari</span>` : `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`) : `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -20767,48 +21040,76 @@ const ProductForm = (() => {
 
   function bindSinglePeriodEvents() {
     const sDateInp = document.getElementById('input-period-start-date');
+    const btnCalStart = document.getElementById('btn-calendar-period-start-date');
+    const eDateInp = document.getElementById('input-period-end-date');
+    const btnCalEnd = document.getElementById('btn-calendar-period-end-date');
     const maxQtyInp = document.getElementById('input-period-max-qty');
     const daysInp = document.getElementById('input-period-days');
     const radPeriodTypes = document.querySelectorAll('input[name="period_type_radio"]');
     const selEndDate = document.getElementById('select-period-end-date');
+    const feedbackEl = document.getElementById('period-end-date-feedback');
 
     const updateSinglePeriodCalculation = () => {
-      const sDate = sDateInp ? sDateInp.value : getTodayDateString();
+      const sDate = sDateInp ? sDateInp.value.trim() : '';
       const maxQty = maxQtyInp ? (parseInt(maxQtyInp.value, 10) || 10) : 10;
       const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
       const checkedRad = document.querySelector('input[name="period_type_radio"]:checked');
       const periodType = checkedRad ? checkedRad.value : 'non_recurring';
+      const curEndDate = eDateInp ? eDateInp.value.trim() : (selEndDate ? selEndDate.value : '');
 
       if (!primaryState.max_order_period) primaryState.max_order_period = {};
       primaryState.max_order_period.start_date = sDate;
       primaryState.max_order_period.max_qty = maxQty;
       primaryState.max_order_period.days = days;
       primaryState.max_order_period.period_type = periodType;
+      primaryState.max_order_period.end_date = curEndDate;
       primaryState.max_order = maxQty;
       primaryState.max_order_qty = maxQty;
 
-      const singleCycleEnd = addDaysToDate(sDate, Math.max(1, days) - 1);
+      const singleCycleEnd = sDate ? addDaysToDate(sDate, Math.max(1, days) - 1) : '';
       const noteEl = document.getElementById('single-period-note-text');
       if (noteEl) {
-        noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
+        if (sDate) {
+          noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
+        } else {
+          noteEl.innerHTML = `<span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.`;
+        }
       }
 
       if (selEndDate) {
-        const currentSelected = selEndDate.value;
-        const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+        const recurringOptions = sDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
           const cycleEnd = addDaysToDate(sDate, (cycle * Math.max(1, days)) - 1);
           return {
+            cycle,
             date: cycleEnd,
             label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
           };
-        });
-        selEndDate.innerHTML = recurringOptions.map(opt => `
-          <option value="${opt.date}" ${currentSelected === opt.date ? 'selected' : ''}>${opt.label}</option>
+        }) : [];
+
+        selEndDate.innerHTML = `<option value="">Pilih cepat siklus...</option>` + recurringOptions.map(opt => `
+          <option value="${opt.date}" ${curEndDate === opt.date ? 'selected' : ''}>${opt.label}</option>
         `).join('');
-        if (!selEndDate.value && recurringOptions.length > 0) {
-          selEndDate.value = recurringOptions[0].date;
+
+        if (curEndDate && recurringOptions.some(opt => opt.date === curEndDate)) {
+          selEndDate.value = curEndDate;
+        } else if (!curEndDate) {
+          selEndDate.value = '';
         }
-        primaryState.max_order_period.end_date = selEndDate.value;
+      }
+
+      if (feedbackEl) {
+        if (!sDate) {
+          feedbackEl.innerHTML = 'Tentukan Tanggal Mulai terlebih dahulu.';
+        } else if (curEndDate) {
+          if (isValidRecurringEndDate(sDate, curEndDate, days)) {
+            const cycles = getRecurringCycleCount(sDate, curEndDate, days);
+            feedbackEl.innerHTML = `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${cycles} kali siklus / ${cycles * days} hari</span>`;
+          } else {
+            feedbackEl.innerHTML = `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`;
+          }
+        } else {
+          feedbackEl.innerHTML = `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`;
+        }
       }
 
       const recWrap = document.getElementById('recurring-end-date-wrapper');
@@ -20831,18 +21132,53 @@ const ProductForm = (() => {
       }
     };
 
-    if (sDateInp) sDateInp.onchange = updateSinglePeriodCalculation;
+    if (btnCalStart && sDateInp) {
+      btnCalStart.onclick = (e) => {
+        e.stopPropagation();
+        openCalendarPopover(btnCalStart, sDateInp, {
+          minDate: getTodayDateString(),
+          onSelect: () => updateSinglePeriodCalculation()
+        });
+      };
+    }
+
+    if (sDateInp) {
+      sDateInp.oninput = updateSinglePeriodCalculation;
+      sDateInp.onchange = updateSinglePeriodCalculation;
+    }
+
+    if (btnCalEnd && eDateInp) {
+      btnCalEnd.onclick = (e) => {
+        e.stopPropagation();
+        const sDate = sDateInp ? sDateInp.value.trim() : '';
+        const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
+        const minEndDate = sDate ? addDaysToDate(sDate, (2 * days) - 1) : getTodayDateString();
+        openCalendarPopover(btnCalEnd, eDateInp, {
+          minDate: minEndDate,
+          onSelect: () => updateSinglePeriodCalculation()
+        });
+      };
+    }
+
+    if (eDateInp) {
+      eDateInp.oninput = updateSinglePeriodCalculation;
+      eDateInp.onchange = updateSinglePeriodCalculation;
+    }
+
+    if (selEndDate) {
+      selEndDate.onchange = () => {
+        if (eDateInp) {
+          eDateInp.value = selEndDate.value;
+        }
+        updateSinglePeriodCalculation();
+      };
+    }
+
     if (maxQtyInp) maxQtyInp.oninput = updateSinglePeriodCalculation;
     if (daysInp) daysInp.oninput = updateSinglePeriodCalculation;
     radPeriodTypes.forEach(rad => {
       rad.onchange = updateSinglePeriodCalculation;
     });
-    if (selEndDate) {
-      selEndDate.onchange = () => {
-        if (!primaryState.max_order_period) primaryState.max_order_period = {};
-        primaryState.max_order_period.end_date = selEndDate.value;
-      };
-    }
   }
 
   function bindSinglePerOrderEvents() {
@@ -20927,7 +21263,7 @@ const ProductForm = (() => {
           primaryState.is_unlimited_max_order = false;
           if (!primaryState.max_order_period) {
             primaryState.max_order_period = {
-              start_date: getTodayDateString(),
+              start_date: '',
               max_qty: 10,
               days: 7,
               period_type: 'non_recurring',
@@ -21232,26 +21568,27 @@ const ProductForm = (() => {
 
   function renderModalPeriodContent() {
     const period = modalDraftPeriod || {
-      start_date: getTodayDateString(),
+      start_date: '',
       max_qty: 10,
       days: 7,
       period_type: 'non_recurring',
       end_date: ''
     };
-    const startDate = period.start_date || getTodayDateString();
+    const startDate = period.start_date || '';
     const maxQty = period.max_qty || 10;
     const days = parseInt(period.days, 10) || 7;
     const periodType = period.period_type || 'non_recurring';
 
-    const singleCycleEnd = addDaysToDate(startDate, Math.max(1, days) - 1);
+    const singleCycleEnd = startDate ? addDaysToDate(startDate, Math.max(1, days) - 1) : '';
 
-    const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+    const recurringOptions = startDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
       const cycleEnd = addDaysToDate(startDate, (cycle * Math.max(1, days)) - 1);
       return {
+        cycle,
         date: cycleEnd,
         label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
       };
-    });
+    }) : [];
 
     return `
       <div class="p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-4">
@@ -21265,14 +21602,25 @@ const ProductForm = (() => {
           <label for="modal-input-period-start-date" class="block text-xs font-semibold text-slate-700 mb-1">
             Tanggal Mulai <span class="text-red-500">*</span>:
           </label>
-          <input
-            type="date"
-            id="modal-input-period-start-date"
-            min="${getTodayDateString()}"
-            value="${startDate}"
-            class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
-          />
-          <span class="text-[10px] text-slate-400 mt-0.5 block">Tanggal di masa lalu otomatis dinonaktifkan.</span>
+          <div class="relative w-full sm:w-64">
+            <input
+              type="text"
+              id="modal-input-period-start-date"
+              placeholder="YYYY-MM-DD"
+              value="${startDate}"
+              maxlength="10"
+              class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
+            />
+            <button
+              type="button"
+              id="btn-calendar-modal-period-start-date"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
+              title="Pilih tanggal dari kalender"
+            >
+              <i class="bi bi-calendar-event text-sm"></i>
+            </button>
+          </div>
+          <span class="text-[10px] text-slate-400 mt-0.5 block">Format: YYYY-MM-DD. Tanggal di masa lalu otomatis dinonaktifkan.</span>
         </div>
 
         <!-- Input teks/angka Maks. Jumlah Pembelian [jumlah] produk untuk [jumlah] Hari -->
@@ -21283,7 +21631,7 @@ const ProductForm = (() => {
             id="modal-input-period-max-qty"
             min="1"
             value="${maxQty}"
-            class="w-24 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+            class="w-24 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
           />
           <span>produk untuk</span>
           <input
@@ -21291,7 +21639,7 @@ const ProductForm = (() => {
             id="modal-input-period-days"
             min="1"
             value="${days}"
-            class="w-20 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+            class="w-20 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
           />
           <span>Hari</span>
         </div>
@@ -21306,17 +21654,15 @@ const ProductForm = (() => {
               <label class="flex items-center gap-2 cursor-pointer select-none">
                 <input type="radio" name="modal_period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
                 <span class="text-xs font-bold text-slate-800">Tidak Berulang</span>
-                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
-                  <i class="bi bi-question-circle text-xs"></i>
-                  <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                    Maks. Jumlah Pembelian akan berakhir setelah periode yang ditentukan (dalam hari).
-                  </div>
-                </div>
               </label>
 
               <!-- Dynamic note text -->
               <div id="modal-period-note-text" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal">
-                <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
+                ${startDate ? `
+                  <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
+                ` : `
+                  <span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.
+                `}
               </div>
             </div>
 
@@ -21325,22 +21671,41 @@ const ProductForm = (() => {
               <label class="flex items-center gap-2 cursor-pointer select-none">
                 <input type="radio" name="modal_period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
                 <span class="text-xs font-bold text-slate-800">Berulang</span>
-                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
-                  <i class="bi bi-question-circle text-xs"></i>
-                  <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                    Maks. Jumlah Pembelian akan diulangi secara berurutan per periode yang ditentukan (dalam hari) hingga tanggal berakhir yang diatur di bawah ini.
-                  </div>
-                </div>
               </label>
 
-              <div id="modal-recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} pl-6 space-y-1.5">
-                <label for="modal-select-period-end-date" class="block text-[11px] font-bold text-slate-700">Tanggal Berakhir:</label>
-                <select id="modal-select-period-end-date" class="w-full sm:w-72 px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800">
-                  ${recurringOptions.map(opt => `
-                    <option value="${opt.date}" ${period.end_date === opt.date ? 'selected' : ''}>${opt.label}</option>
-                  `).join('')}
-                </select>
-                <span class="text-[10px] text-slate-400 block">Pilihan tanggal dihitung otomatis berdasarkan kelipatan ${days} hari.</span>
+              <div id="modal-recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} pl-6 space-y-2">
+                <label for="modal-input-period-end-date" class="block text-[11px] font-bold text-slate-700">Tanggal Berakhir <span class="text-red-500">*</span>:</label>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div class="relative w-full sm:w-56">
+                    <input
+                      type="text"
+                      id="modal-input-period-end-date"
+                      placeholder="YYYY-MM-DD"
+                      value="${period.end_date || ''}"
+                      maxlength="10"
+                      class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
+                    />
+                    <button
+                      type="button"
+                      id="btn-calendar-modal-period-end-date"
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
+                      title="Pilih tanggal dari kalender"
+                    >
+                      <i class="bi bi-calendar-event text-sm"></i>
+                    </button>
+                  </div>
+                  <div class="w-full sm:w-auto">
+                    <select id="modal-select-period-end-date" class="w-full sm:w-64 px-3 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-700">
+                      <option value="">Pilih cepat siklus...</option>
+                      ${recurringOptions.map(opt => `
+                        <option value="${opt.date}" ${period.end_date === opt.date ? 'selected' : ''}>${opt.label}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+                </div>
+                <div id="modal-period-end-date-feedback" class="text-[11px] text-slate-500 font-medium">
+                  ${!startDate ? 'Tentukan Tanggal Mulai terlebih dahulu.' : (period.end_date ? (isValidRecurringEndDate(startDate, period.end_date, days) ? `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${getRecurringCycleCount(startDate, period.end_date, days)} kali siklus / ${getRecurringCycleCount(startDate, period.end_date, days) * days} hari</span>` : `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`) : `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`)}
+                </div>
               </div>
             </div>
           </div>
@@ -21349,62 +21714,76 @@ const ProductForm = (() => {
     `;
   }
 
-  function bindModalScopeEvents() {
-    const radScopes = document.querySelectorAll('input[name="modal_max_order_scope"]');
-    radScopes.forEach(rad => {
-      rad.onchange = () => {
-        modalDraftScope = rad.value;
-        const scopeContent = document.getElementById('modal-max-order-scope-content');
-        if (scopeContent) {
-          scopeContent.innerHTML = renderModalScopeContent();
-        }
-        updateModalScopeRadioStyles();
-      };
-    });
-  }
-
   function bindModalPeriodEvents() {
     const sDateInp = document.getElementById('modal-input-period-start-date');
+    const btnCalStart = document.getElementById('btn-calendar-modal-period-start-date');
+    const eDateInp = document.getElementById('modal-input-period-end-date');
+    const btnCalEnd = document.getElementById('btn-calendar-modal-period-end-date');
     const maxQtyInp = document.getElementById('modal-input-period-max-qty');
     const daysInp = document.getElementById('modal-input-period-days');
     const radPeriodTypes = document.querySelectorAll('input[name="modal_period_type_radio"]');
     const selEndDate = document.getElementById('modal-select-period-end-date');
+    const feedbackEl = document.getElementById('modal-period-end-date-feedback');
 
     const updatePeriodCalculation = () => {
-      const sDate = sDateInp ? sDateInp.value : getTodayDateString();
+      const sDate = sDateInp ? sDateInp.value.trim() : '';
       const maxQty = maxQtyInp ? (parseInt(maxQtyInp.value, 10) || 10) : 10;
       const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
       const checkedRad = document.querySelector('input[name="modal_period_type_radio"]:checked');
       const periodType = checkedRad ? checkedRad.value : 'non_recurring';
+      const curEndDate = eDateInp ? eDateInp.value.trim() : (selEndDate ? selEndDate.value : '');
 
       if (!modalDraftPeriod) modalDraftPeriod = {};
       modalDraftPeriod.start_date = sDate;
       modalDraftPeriod.max_qty = maxQty;
       modalDraftPeriod.days = days;
       modalDraftPeriod.period_type = periodType;
+      modalDraftPeriod.end_date = curEndDate;
 
-      const singleCycleEnd = addDaysToDate(sDate, Math.max(1, days) - 1);
+      const singleCycleEnd = sDate ? addDaysToDate(sDate, Math.max(1, days) - 1) : '';
       const noteEl = document.getElementById('modal-period-note-text');
       if (noteEl) {
-        noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
+        if (sDate) {
+          noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
+        } else {
+          noteEl.innerHTML = `<span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.`;
+        }
       }
 
       if (selEndDate) {
-        const currentSelected = selEndDate.value;
-        const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+        const recurringOptions = sDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
           const cycleEnd = addDaysToDate(sDate, (cycle * Math.max(1, days)) - 1);
           return {
+            cycle,
             date: cycleEnd,
             label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
           };
-        });
-        selEndDate.innerHTML = recurringOptions.map(opt => `
-          <option value="${opt.date}" ${currentSelected === opt.date ? 'selected' : ''}>${opt.label}</option>
+        }) : [];
+
+        selEndDate.innerHTML = `<option value="">Pilih cepat siklus...</option>` + recurringOptions.map(opt => `
+          <option value="${opt.date}" ${curEndDate === opt.date ? 'selected' : ''}>${opt.label}</option>
         `).join('');
-        if (!selEndDate.value && recurringOptions.length > 0) {
-          selEndDate.value = recurringOptions[0].date;
+
+        if (curEndDate && recurringOptions.some(opt => opt.date === curEndDate)) {
+          selEndDate.value = curEndDate;
+        } else if (!curEndDate) {
+          selEndDate.value = '';
         }
-        modalDraftPeriod.end_date = selEndDate.value;
+      }
+
+      if (feedbackEl) {
+        if (!sDate) {
+          feedbackEl.innerHTML = 'Tentukan Tanggal Mulai terlebih dahulu.';
+        } else if (curEndDate) {
+          if (isValidRecurringEndDate(sDate, curEndDate, days)) {
+            const cycles = getRecurringCycleCount(sDate, curEndDate, days);
+            feedbackEl.innerHTML = `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${cycles} kali siklus / ${cycles * days} hari</span>`;
+          } else {
+            feedbackEl.innerHTML = `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`;
+          }
+        } else {
+          feedbackEl.innerHTML = `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`;
+        }
       }
 
       const recWrap = document.getElementById('modal-recurring-end-date-wrapper');
@@ -21427,7 +21806,48 @@ const ProductForm = (() => {
       }
     };
 
-    if (sDateInp) sDateInp.onchange = updatePeriodCalculation;
+    if (btnCalStart && sDateInp) {
+      btnCalStart.onclick = (e) => {
+        e.stopPropagation();
+        openCalendarPopover(btnCalStart, sDateInp, {
+          minDate: getTodayDateString(),
+          onSelect: () => updatePeriodCalculation()
+        });
+      };
+    }
+
+    if (sDateInp) {
+      sDateInp.oninput = updatePeriodCalculation;
+      sDateInp.onchange = updatePeriodCalculation;
+    }
+
+    if (btnCalEnd && eDateInp) {
+      btnCalEnd.onclick = (e) => {
+        e.stopPropagation();
+        const sDate = sDateInp ? sDateInp.value.trim() : '';
+        const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
+        const minEndDate = sDate ? addDaysToDate(sDate, (2 * days) - 1) : getTodayDateString();
+        openCalendarPopover(btnCalEnd, eDateInp, {
+          minDate: minEndDate,
+          onSelect: () => updatePeriodCalculation()
+        });
+      };
+    }
+
+    if (eDateInp) {
+      eDateInp.oninput = updatePeriodCalculation;
+      eDateInp.onchange = updatePeriodCalculation;
+    }
+
+    if (selEndDate) {
+      selEndDate.onchange = () => {
+        if (eDateInp) {
+          eDateInp.value = selEndDate.value;
+        }
+        updatePeriodCalculation();
+      };
+    }
+
     if (maxQtyInp) {
       maxQtyInp.oninput = updatePeriodCalculation;
       maxQtyInp.onchange = updatePeriodCalculation;
@@ -21439,11 +21859,6 @@ const ProductForm = (() => {
     radPeriodTypes.forEach(rad => {
       rad.onchange = updatePeriodCalculation;
     });
-    if (selEndDate) {
-      selEndDate.onchange = () => {
-        if (modalDraftPeriod) modalDraftPeriod.end_date = selEndDate.value;
-      };
-    }
   }
 
   function renderModalMaxOrderBody() {
@@ -21525,7 +21940,7 @@ const ProductForm = (() => {
 
     modalDraftQty = primaryState.max_order_qty || (primaryState.max_order ? parseInt(primaryState.max_order, 10) : null);
     modalDraftPeriod = primaryState.max_order_period ? JSON.parse(JSON.stringify(primaryState.max_order_period)) : {
-      start_date: getTodayDateString(),
+      start_date: '',
       max_qty: 10,
       days: 7,
       period_type: 'non_recurring',
@@ -21611,15 +22026,15 @@ const ProductForm = (() => {
         primaryState.is_unlimited_max_order = false;
       }
     } else if (modalDraftMode === 'per_period') {
-      const sDate = document.getElementById('modal-input-period-start-date')?.value;
+      const sDate = document.getElementById('modal-input-period-start-date')?.value?.trim();
       const maxQty = parseInt(document.getElementById('modal-input-period-max-qty')?.value, 10);
       const days = parseInt(document.getElementById('modal-input-period-days')?.value, 10);
       const radPeriod = document.querySelector('input[name="modal_period_type_radio"]:checked');
       const pType = radPeriod ? radPeriod.value : 'non_recurring';
-      const endDate = document.getElementById('modal-select-period-end-date')?.value || '';
+      const endDate = document.getElementById('modal-input-period-end-date')?.value?.trim() || document.getElementById('modal-select-period-end-date')?.value || '';
 
       if (!sDate) {
-        showModalMaxOrderError('Tanggal mulai wajib diisi.');
+        showModalMaxOrderError('Tanggal mulai periode maksimal pembelian wajib diisi.');
         return;
       }
       if (isNaN(maxQty) || maxQty < 1) {
@@ -21629,6 +22044,16 @@ const ProductForm = (() => {
       if (isNaN(days) || days < 1) {
         showModalMaxOrderError('Durasi periode minimal 1 hari.');
         return;
+      }
+      if (pType === 'recurring') {
+        if (!endDate) {
+          showModalMaxOrderError('Tanggal berakhir periode berulang wajib diisi.');
+          return;
+        }
+        if (!isValidRecurringEndDate(sDate, endDate, days)) {
+          showModalMaxOrderError(`Tanggal berakhir harus tepat kelipatan dari durasi periode (${days} hari, minimal 2 siklus) dari tanggal mulai.`);
+          return;
+        }
       }
 
       primaryState.max_order_type = 'per_period';
@@ -32411,7 +32836,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const pMaxQty = parseInt(document.getElementById('input-period-max-qty')?.value, 10);
         const pDays = parseInt(document.getElementById('input-period-days')?.value, 10);
         const pTypeRad = document.querySelector('input[name="period_type_radio"]:checked');
-        const pEndDate = document.getElementById('select-period-end-date')?.value;
+        const pEndDate = document.getElementById('input-period-end-date')?.value || document.getElementById('select-period-end-date')?.value;
 
         if (!primaryState.max_order_period) primaryState.max_order_period = {};
         if (pStartDate) primaryState.max_order_period.start_date = pStartDate;
@@ -33345,8 +33770,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (!period.days || period.days < 1) {
         addError('Durasi periode wajib minimal 1 hari.', document.getElementById('input-period-days') || document.getElementById('input-normal-max-order'));
       }
-      if (period.period_type === 'recurring' && !period.end_date) {
-        addError('Tanggal berakhir periode berulang wajib dipilih.', document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
+      if (period.period_type === 'recurring') {
+        if (!period.end_date) {
+          addError('Tanggal berakhir periode berulang wajib dipilih.', document.getElementById('input-period-end-date') || document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
+        } else if (!isValidRecurringEndDate(period.start_date, period.end_date, period.days)) {
+          addError(`Tanggal berakhir harus tepat kelipatan dari durasi periode (${period.days} hari, minimal 2 siklus) dari tanggal mulai.`, document.getElementById('input-period-end-date') || document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
+        }
       }
     }
 
