@@ -1556,6 +1556,14 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           * Menetapkan konteks lapisan internal (`#mobile-preview-header` `z-index: 2`, `#mobile-preview-body` `z-index: 1`, `min-height: 0 !important`, `min-width: 0 !important`, `width: 100% !important`, `overflow-x: hidden !important`), menyingkirkan `-webkit-overflow-scrolling: touch` pada `#mobile-preview-body`, serta menghapus `transition-colors` pada markup `#mobile-preview-body`.
           * Menghapus `#mobile-preview-sheet` dari `scrollSelectors` di `updateProductCardLivePreview()`, mengunci `scrollTop = 0` dan `scrollLeft = 0` pada frame drawer saat render/buka, dan menggunakan `{ preventScroll: true }` pada `.focus()` setelah menutup dropdown preset/posisi diskon serta target error footer.
         - *Status Verifikasi*: `node --check js/product-form.js`, `git diff --check` (pada file tugas), `verify_mobile_drawer_13a.js`, `verify_13b.js`, dan suite sekuensial Node VM skenario `A–J` (`verify_mobile_drawer_recovery_13b_r2.js`) lulus setelah edit final; verifikasi render visual peramban mobile dicatat *pending user visual inspection*.
+      - **Peniadaan Tombol Chip Preset Label Khusus Step 1 (`CLEANUP: SC-ADMIN-STEP1-PRESET-LABELS-REMOVAL`)**:
+        - *Latar Belakang*: Bagian tombol pill chip preset instan `#custom-labels-preset-group` (`.btn-preset-label-step1`: `+ Free Ongkir`, `+ Best Seller`, `+ Paling Laris`, `+ Garansi 100%`, `+ Siap 1 Jam`, `+ Diskon Spesial`) di Step 1 sudah tidak diperlukan karena styling visual (gaya solid/outline, radius sudut, dan warna) label khusus telah dipusatkan pada Accordion Desain Kartu (kelompok Promo & Diskon), sedangkan saran teks label telah terintegrasi langsung pada popover riwayat Combobox Datalist (`custom-labels-history-list`).
+        - *Perubahan*:
+          * Menghapus markup `<div id="custom-labels-preset-group">` beserta wrapper-nya pada `#container-custom-labels-inputs` di `js/product-form.js`.
+          * Menghapus border pembatas sisa (`pt-2 border-t border-slate-100`) pada `#grid-custom-labels-inputs` agar transisi antar-elemen input rapi tanpa garis bertumpuk.
+          * Membersihkan listener klik `.btn-preset-label-step1` dan menyederhanakan `updateQuickLabelChipsLockState()` menjadi no-op function yang aman.
+          * Menghapus selektor `.btn-preset-label-step1` dan `.btn-preset-label` pada `css/admin.css`.
+        - *Status Verifikasi*: `node --check js/product-form.js`, `git diff --check`, `verify_mobile_drawer_13a.js`, `verify_13b.js`, dan `verify_mobile_drawer_recovery_13b_r2.js` lulus 100% PASS.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.

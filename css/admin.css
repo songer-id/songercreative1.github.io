@@ -2658,8 +2658,6 @@ input::-webkit-calendar-picker-indicator {
   color: var(--color-primary-hover) !important;
 }
 
-.btn-preset-label-step1,
-.btn-preset-label,
 #btn-toggle-wholesale,
 #btn-toggle-order-multiple,
 #btn-toggle-sandbox-calc,
@@ -2668,12 +2666,6 @@ input::-webkit-calendar-picker-indicator {
   background-color: var(--color-primary-subtle) !important;
   border-color: var(--color-primary) !important;
   color: var(--color-primary-hover) !important;
-}
-
-.btn-preset-label-step1:hover,
-.btn-preset-label:hover {
-  background-color: var(--color-primary) !important;
-  color: #ffffff !important;
 }
 
 /* 6. Sub-Navbar Sticky Step 2 (.step2-nav-tab, .subnav-tab-active, .subnav-tab-inactive) & Tombol Pratinjau */

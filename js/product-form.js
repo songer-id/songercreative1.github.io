@@ -2896,18 +2896,7 @@ const ProductForm = (() => {
                       </div>
 
                       <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && (primaryState.has_custom_labels !== false)) ? 'space-y-4' : 'hidden'}">
-                        <div class="space-y-2">
-                          <div class="flex flex-wrap gap-1.5" id="custom-labels-preset-group">
-                            <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] text-slate-700 border border-slate-200 transition cursor-pointer" data-label="Free Ongkir">+ Free Ongkir</button>
-                            <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 hover:bg-[var(--color-primary-subtle)] hover:text-[var(--color-primary)] text-slate-700 border border-slate-200 transition cursor-pointer" data-label="Best Seller">+ Best Seller</button>
-                            <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Paling Laris">+ Paling Laris</button>
-                            <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Garansi 100%">+ Garansi 100%</button>
-                            <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Siap 1 Jam">+ Siap 1 Jam</button>
-                            <button type="button" class="btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer" data-label="Diskon Spesial">+ Diskon Spesial</button>
-                          </div>
-                        </div>
-
-                        <div id="grid-custom-labels-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                        <div id="grid-custom-labels-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div id="wrapper-custom-label-1" class="relative">
                             <div class="flex items-center justify-between mb-1">
                               <label for="input-custom-label-1" class="block text-[11px] font-semibold text-slate-700">
@@ -27883,35 +27872,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     // LOGIKA OTOMASI PENGUNCIAN & VALIDASI PANJANG LABEL KHUSUS (MAKSIMAL 2 LABEL)
     // -------------------------------------------------------------
     function updateQuickLabelChipsLockState() {
-      const input1 = document.getElementById('input-custom-label-1');
-      const input2 = document.getElementById('input-custom-label-2');
-      const wrapper2 = document.getElementById('wrapper-custom-label-2');
-
-      const val1 = (input1?.value || '').trim();
-      const val2 = (wrapper2 && !wrapper2.classList.contains('hidden') && input2 && !input2.disabled) ? (input2.value || '').trim() : '';
-
-      const filledSlots = [val1, val2].filter(Boolean);
-      const filledCount = filledSlots.length;
-      const activeLowerLabels = filledSlots.map(s => s.toLowerCase());
-
-      document.querySelectorAll('.btn-preset-label-step1').forEach(btn => {
-        const rawPreset = (btn.getAttribute('data-label') || btn.textContent || '').replace(/^\+\s*/, '').trim().toLowerCase();
-        const isCurrentlyActive = activeLowerLabels.includes(rawPreset);
-
-        if (isCurrentlyActive || filledCount >= 2) {
-          btn.disabled = true;
-          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold opacity-40 cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200 pointer-events-none transition';
-          btn.style.backgroundColor = '';
-          btn.style.color = '';
-          btn.style.borderColor = '';
-        } else {
-          btn.disabled = false;
-          btn.className = 'btn-preset-label-step1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition cursor-pointer';
-          btn.style.backgroundColor = 'var(--color-primary-subtle)';
-          btn.style.color = 'var(--color-primary)';
-          btn.style.borderColor = 'var(--color-primary-subtle)';
-        }
-      });
+      // Tombol chip preset (#custom-labels-preset-group) telah dihapus karena digantikan oleh accordion Desain Kartu & datalist combobox
     }
 
     function updateCustomLabelsLockState() {
@@ -28111,35 +28072,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     });
 
-    // Step 1 Preset Label Buttons (Aksi Cepat)
-    document.querySelectorAll('.btn-preset-label-step1').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (btn.disabled) return;
-        const lbl = btn.getAttribute('data-label') || '';
-        const l1 = document.getElementById('input-custom-label-1');
-        const l2 = document.getElementById('input-custom-label-2');
-        const wrapper2 = document.getElementById('wrapper-custom-label-2');
-        const isL2Visible = wrapper2 && !wrapper2.classList.contains('hidden');
-
-        if (l1 && !l1.value.trim()) {
-          l1.value = lbl;
-        } else if (l2 && isL2Visible && !l2.disabled && !l2.value.trim()) {
-          l2.value = lbl;
-        } else if (l1) {
-          l1.value = lbl;
-        }
-
-        updateCustomLabelsLockState();
-        updateQuickLabelChipsLockState();
-        saveDraftToStorage();
-        updateProductCardLivePreview();
-      });
-    });
-
-    // Otomatisasi inisialisasi state kuncian & kapasitas chip label khusus
+    // Otomatisasi inisialisasi state kuncian & kapasitas label khusus
     updateCustomLabelsLockState();
-    updateQuickLabelChipsLockState();
 
     // Mobile FAB Scroll Auto-hide saat mentok bawah (agar anti-menutupi tombol aksi)
     const fabMobEl = document.getElementById('btn-fab-live-preview');
