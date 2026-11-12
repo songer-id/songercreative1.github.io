@@ -3382,8 +3382,8 @@ const ProductForm = (() => {
 
         <!-- MOBILE BOTTOM SHEET / DRAWER -->
         <div id="mobile-preview-backdrop" class="lg:hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[90] hidden transition-opacity"></div>
-        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] ${currentStep === 1 ? '' : 'bg-white'} rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[88dvh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
-          <div class="p-2.5 px-3 border-b border-slate-200 flex items-center justify-between shrink-0 bg-slate-50/95 gap-2">
+        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] ${currentStep === 1 ? '' : 'bg-white'} rounded-t-2xl rounded-b-none overflow-hidden shadow-2xl border-0 max-h-[88dvh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+          <div id="mobile-preview-header" class="p-2.5 px-3 border-b border-slate-200 flex items-center justify-between shrink-0 bg-slate-50 gap-2">
             <div id="mobile-preview-header-content" class="w-full max-w-[210px]">
               ${getPreviewHeaderHtml(currentStep, true)}
             </div>

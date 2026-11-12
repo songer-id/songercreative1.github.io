@@ -1720,13 +1720,27 @@ input::-webkit-calendar-picker-indicator {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    inset-x: 0 !important;
     max-height: 88dvh !important;
     max-height: min(88vh, 88dvh) !important;
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-radius: 1rem 1rem 0 0 !important;
+    border-top: 0 !important;
+    overflow: hidden !important;
     z-index: 95 !important;
     display: flex !important;
     flex-direction: column !important;
     overscroll-behavior: contain !important;
+  }
+
+  #mobile-preview-header {
+    border-radius: 0 !important;
+    border-top: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-shadow: none !important;
   }
 
   #mobile-preview-body {
