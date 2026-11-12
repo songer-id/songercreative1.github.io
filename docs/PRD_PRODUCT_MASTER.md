@@ -397,8 +397,34 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
 
 ### 6.E.1. Maksimal Jumlah Pembelian (Produk Tunggal & Bervariasi)
 - **Produk Tanpa Variasi (Tunggal)**:
-  - Menggunakan kontrol input inline `#input-normal-max-order` (Combobox/Datalist dengan opsi `"Tanpa Batas"` dan angka manual).
-  - Ketika fitur aktif, tersimpan di `primaryState.max_order` dan `primaryState.max_order_qty` dengan tipe `per_order` (atau `null` / `unlimited`).
+  - Mengadopsi pola dropdown accordion `Input/Pilih` (`#wrapper-max-order-type` dengan trigger `#input-normal-max-order`, hidden native select `#select-max-order-type`, popover `#max-order-type-popover`, dan `#max-order-conditional-wrapper`).
+  - **Tiga Mode Pengaturan**:
+    1. `Tanpa Batas` (`unlimited`): Tidak mengaktifkan batas maksimal (`primaryState.is_unlimited_max_order = true`, `max_order = null`, `max_order_qty = null`). Tidak membutuhkan form input tambahan.
+    2. `Per Pesanan` (`per_order`): Menampilkan input jumlah maksimal pembelian per pesanan (`#input-max-order-qty`), wajib diisi integer valid minimal 1 produk, dan divalidasi tidak boleh lebih kecil dari minimal pesanan (`min_order`).
+    3. `Per Periode` (`per_period`): Menampilkan konfigurasi periode lengkap:
+       - Tanggal Mulai (`#input-period-start-date`, batas minimum hari ini).
+       - Maks. Jumlah Pembelian (`#input-period-max-qty`, min. 1 produk) dan Durasi Hari (`#input-period-days`, min. 1 hari).
+       - Pilihan Tipe Periode: `Tidak Berulang` (`non_recurring`, berakhir setelah 1 siklus) vs `Berulang` (`recurring`, dropdown tanggal berakhir `#select-period-end-date` dihitung otomatis berdasarkan kelipatan hari: 2, 3, 4, 5, 6, 8, 12 siklus).
+       - Blok kalkulasi dinamis (`#single-period-note-text`) yang menampilkan waktu mulai, kuantitas batas, interval hari, dan tanggal berakhir secara real-time.
+  - **Integritas Validasi & Pemulihan State**:
+    - Validasi hanya memeriksa field dari mode yang aktif. Produk baru tanpa pemilihan eksplisit ditolak dengan penanda `Maksimal Jumlah Pembelian` hingga seller menentukan mode.
+    - Mode Edit Produk memulihkan konfigurasi tersimpan (`unlimited`, `per_order`, atau `per_period`) secara utuh beserta seluruh data periodenya.
+    - Transisi antara produk tunggal dan variasi bertingkat mempertahankan nilai konfigurasi di `primaryState` tanpa menghapus data secara diam-diam.
+  - **Status Alur Transaksi / Checkout**:
+    - Berdasarkan hasil audit kode, konfigurasi `max_order_period` tersimpan persisten di database (`DB.createProduct` / `DB.updateProduct`), namun **BELUM DITERAPKAN** pada mesin validasi keranjang dan checkout pembeli (`buyer-store.js`). Modul transaksi tidak diubah pada lingkup perbaikan admin ini.
+
+### 6.E.2. Pemulihan Tooltip Bantuan Interaktif (Mobile & Desktop)
+- **5 Titik Tooltip Terverifikasi**:
+  1. *Maksimal Jumlah Pembelian*: `#section-single-max-order` (produk tunggal) dan `#section-variant-max-order` (kartu produk bervariasi).
+  2. *Berat Paket*: `#input-package-weight`.
+  3. *Ukuran Paket*: Bagian dimensi volumetrik P x L x T (`#input-dim-length`, `#input-dim-width`, `#input-dim-height`).
+  4. *Sistem COD*: Toggle bayar di tempat (`#toggle-is-cod`).
+  5. *Dukungan Kurir / Ekspedisi*: Seksi pemilihan metode pengiriman toko (`input[name="courier_checkbox"]`).
+- **Mekanisme Interaksi & Boundary Clamping**:
+  - Seluruh trigger popover bantuan dibungkus elemen `.btn-help-popover` dengan `tabindex="0"`, memuat tooltip `.admin-help-tooltip`.
+  - Mendukung hover pada desktop dan toggle buka/tutup saat diklik/ditap pada perangkat mobile (`pointer-events-auto` saat aktif, mencegah trigger klik ganda pada checkbox/label pembungkus).
+  - Mekanisme viewport clamping menggunakan `clampTooltipToViewport()` dengan `getBoundingClientRect()` dan `requestAnimationFrame()` menghitung batasan layar secara dinamis (`shiftX`) sehingga tooltip tidak terpotong (clipping) keluar layar pada viewport sempit.
+  - Menutup otomatis saat klik di luar area tooltip atau ketika tombol `Escape` ditekan.
 - **Produk Bervariasi Aktif (`has_variants: true`)**:
   - Halaman utama seksi Informasi Penjualan (`#card-step2-sales`) menampilkan kartu ringkas `#section-variant-max-order` yang memuat label `Maks. Jumlah Pembelian`, badge ringkasan konfigurasi aktif (`#max-order-summary-text`), dan tombol `Atur Maks. Pembelian` (`#btn-open-max-order-modal`).
   - Form pengaturan panjang disembunyikan dari halaman utama dan dialihkan ke modal responsif `#modal-max-order-config` (mengikuti pola modal Songer Creative: `fixed inset-0 z-50 bg-slate-900/50`, `max-w-lg`, `max-h-[90vh] overflow-y-auto`).

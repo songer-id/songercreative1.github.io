@@ -625,9 +625,17 @@ const ProductForm = (() => {
     });
   }
 
+  const closeAllHelpTooltips = () => {
+    document.querySelectorAll('.admin-help-tooltip.is-active, .admin-help-tooltip.block, .tooltip-popover.is-active, .tooltip-popover.block').forEach(tip => {
+      tip.classList.remove('block', 'is-active', 'pointer-events-auto');
+      tip.classList.add('hidden', 'pointer-events-none');
+      tip.style.transform = '';
+    });
+  };
+
   if (!window._tooltipClampingInitialized) {
     window._tooltipClampingInitialized = true;
-    const handleTooltipTrigger = (e) => {
+    const handleTooltipHover = (e) => {
       const trigger = e.target.closest('.btn-help-popover, .tooltip-wrapper, .group:has(.admin-help-tooltip), .group:has(.tooltip-popover)');
       if (!trigger) return;
       const tip = trigger.querySelector('.admin-help-tooltip, .tooltip-popover');
@@ -636,7 +644,7 @@ const ProductForm = (() => {
       }
     };
 
-    // Global Delegasi Custom Combobox (Stok, Max Order, Spesifikasi, Variasi)
+    // Global Delegasi Custom Combobox & Tooltip Popovers
     document.addEventListener('click', (e) => {
       // Delegasi klik tautan pengaturan lokasi -> menu Akun
       const btnGotoAcc = e.target.closest('.btn-goto-account-settings');
@@ -650,12 +658,44 @@ const ProductForm = (() => {
           const navAcc = document.getElementById('admin-nav-account') || document.querySelector('[data-view="account"], #nav-item-account, [data-target="account"]');
           if (navAcc) navAcc.click();
         }
+        return;
+      }
+
+      // Delegasi Interaksi Tooltip / Popover Bantuan (Click / Tap Toggle & Clamping)
+      const helpTrigger = e.target.closest('.btn-help-popover, .tooltip-wrapper');
+      if (helpTrigger) {
+        const tip = helpTrigger.querySelector('.admin-help-tooltip, .tooltip-popover');
+        if (tip) {
+          e.preventDefault();
+          e.stopPropagation();
+          const isCurrentlyActive = tip.classList.contains('is-active') || (tip.classList.contains('block') && !tip.classList.contains('hidden'));
+          closeAllHelpTooltips();
+          if (!isCurrentlyActive) {
+            tip.classList.remove('hidden', 'pointer-events-none');
+            tip.classList.add('block', 'is-active', 'pointer-events-auto');
+            clampTooltipToViewport(tip);
+          }
+          return;
+        }
+      }
+
+      // Jika klik terjadi di dalam tooltip yang sedang aktif, jangan tutup
+      if (e.target.closest('.admin-help-tooltip, .tooltip-popover')) {
+        return;
+      }
+
+      // Klik di luar menutup seluruh tooltip yang terbuka
+      closeAllHelpTooltips();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAllHelpTooltips();
       }
     });
 
-    document.addEventListener('pointerover', handleTooltipTrigger, { passive: true });
-    document.addEventListener('focusin', handleTooltipTrigger, { passive: true });
-    document.addEventListener('click', handleTooltipTrigger, { passive: true });
+    document.addEventListener('pointerover', handleTooltipHover, { passive: true });
+    document.addEventListener('focusin', handleTooltipHover, { passive: true });
   }
 
   // Primary metadata state
@@ -2319,8 +2359,9 @@ const ProductForm = (() => {
       is_unlimited_stock: prod.is_unlimited_stock !== undefined ? Boolean(prod.is_unlimited_stock) : (prod.stock === null || prod.stock === undefined),
       min_order: prod.min_order || 1,
       max_order: (prod.max_order === 0 || prod.max_order === '0' || prod.max_order === 'Unlimited' || prod.max_order === 'Tanpa Batas' || !prod.max_order) ? null : (parseInt(prod.max_order) || null),
-      max_order_type: (prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? 'per_order' : 'unlimited',
-      max_order_qty: (prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? (parseInt(prod.max_order) || null) : null,
+      max_order_type: prod.max_order_type || ((prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? 'per_order' : 'unlimited'),
+      max_order_qty: (prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? (parseInt(prod.max_order) || null) : (prod.max_order_qty !== undefined ? prod.max_order_qty : null),
+      is_unlimited_max_order: prod.is_unlimited_max_order !== undefined ? Boolean(prod.is_unlimited_max_order) : (prod.max_order_type === 'unlimited' || prod.max_order === 'Tanpa Batas' || prod.max_order === 'Unlimited' || !prod.max_order),
       max_order_period: prod.max_order_period || {
         start_date: getTodayDateString(),
         max_qty: 10,
@@ -6244,17 +6285,26 @@ const ProductForm = (() => {
       // A.3. Maksimal Jumlah Pembelian
       const maxOrderInp = document.getElementById('input-normal-max-order');
       const rawMaxOrder = maxOrderInp ? maxOrderInp.value.trim() : (primaryState.max_order !== null && primaryState.max_order !== undefined ? String(primaryState.max_order).trim() : '');
-      const isMaxOrderUnlimited = rawMaxOrder.toLowerCase() === 'tanpa batas' || rawMaxOrder.toLowerCase() === 'unlimited';
+      const rawLow = rawMaxOrder.toLowerCase();
+      const isMaxOrderUnlimited = rawLow === 'tanpa batas' || rawLow === 'unlimited' || (primaryState.max_order_type === 'unlimited' && primaryState.is_unlimited_max_order);
       let isMaxOrderValid = false;
+
       if (isMaxOrderUnlimited) {
         isMaxOrderValid = true;
+      } else if (primaryState.max_order_type === 'per_period') {
+        const p = primaryState.max_order_period || {};
+        isMaxOrderValid = Boolean(p.start_date && (parseInt(p.max_qty, 10) > 0) && (parseInt(p.days, 10) > 0) && (p.period_type !== 'recurring' || p.end_date));
+      } else if (primaryState.max_order_type === 'per_order' || rawLow === 'per pesanan') {
+        const parsedMax = parseInt(rawMaxOrder, 10) || primaryState.max_order_qty;
+        isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
       } else if (rawMaxOrder !== '') {
         const parsedMax = parseInt(rawMaxOrder, 10);
         isMaxOrderValid = (!isNaN(parsedMax) && parsedMax > 0);
       }
+
       if (!isMaxOrderValid) {
         missingItems.push('Maksimal Jumlah Pembelian');
-        if (!firstInvalidEl) firstInvalidEl = maxOrderInp || document.getElementById('input-normal-max-order');
+        if (!firstInvalidEl) firstInvalidEl = document.getElementById('input-max-order-qty') || maxOrderInp || document.getElementById('wrapper-max-order-type');
       }
     } else {
       // ==========================================================================
@@ -7054,6 +7104,7 @@ const ProductForm = (() => {
   function getShippingSimulationSummaryHtml() {
     return '';
   }
+
 
   function addSingleProductToCartDirect() {
     showCartSimulationConfirmModal();
@@ -12501,6 +12552,7 @@ const ProductForm = (() => {
     return '';
   }
 
+
   function bindOptionDependencyModalEvents() {
     const modal = document.getElementById('modal-option-dependency');
     if (!modal) return;
@@ -16168,32 +16220,88 @@ const ProductForm = (() => {
 
 
 
-              <!-- Maksimal Jumlah Pembelian (Native Datalist: Tanpa Batas + Input Manual) -->
-              <div class="space-y-3">
-                <div class="flex items-center gap-1.5 pb-1 ">
+              <!-- Maksimal Jumlah Pembelian (Dropdown Accordion Input/Pilih: Tanpa Batas / Per Pesanan / Per Periode) -->
+              <div class="space-y-3" id="section-single-max-order">
+                <div class="flex items-center gap-1.5 pb-1">
                   <label for="input-normal-max-order" class="block text-xs font-bold text-slate-800">
                     Maksimal Jumlah Pembelian
                   </label>
-                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
+                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                     <i class="bi bi-question-circle text-xs"></i>
-                    <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan. Pilih 'Tanpa Batas' untuk pembelian tanpa batas.
+                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan atau per periode waktu tertentu.
                     </div>
                   </div>
                 </div>
 
-                <div class="w-full sm:w-64">
-                  <input
-                    type="text"
-                    id="input-normal-max-order"
-                    list="datalist-max-order-unlimited"
-                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
-                    placeholder="Input/Pilih"
-                    value="${(primaryState.max_order === null || primaryState.max_order === undefined || primaryState.max_order === '') ? '' : (primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas' ? 'Tanpa Batas' : primaryState.max_order)}"
-                    autocomplete="off"
-                  />
+                <div class="relative w-full sm:w-64 custom-select-group" id="wrapper-max-order-type">
+                  <div class="relative flex items-center">
+                    <input
+                      type="text"
+                      id="input-normal-max-order"
+                      class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer select-none"
+                      placeholder="Input/Pilih"
+                      value="${(() => {
+                        if (primaryState.max_order_type === 'per_order') return 'Per Pesanan';
+                        if (primaryState.max_order_type === 'per_period') return 'Per Periode';
+                        if (primaryState.max_order_type === 'unlimited' && primaryState.is_unlimited_max_order) return 'Tanpa Batas';
+                        if (primaryState.max_order !== null && primaryState.max_order !== undefined && primaryState.max_order !== '') {
+                          return (primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Tanpa Batas' : 'Per Pesanan';
+                        }
+                        return '';
+                      })()}"
+                      autocomplete="off"
+                    />
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                      <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="max-order-type-chevron"></i>
+                    </div>
+                  </div>
+
+                  <select id="select-max-order-type" class="hidden">
+                    <option value="unlimited" ${primaryState.max_order_type === 'unlimited' ? 'selected' : ''}>Tanpa Batas</option>
+                    <option value="per_order" ${primaryState.max_order_type === 'per_order' ? 'selected' : ''}>Per Pesanan</option>
+                    <option value="per_period" ${primaryState.max_order_type === 'per_period' ? 'selected' : ''}>Per Periode</option>
+                  </select>
+
+                  <!-- Popover Menu Dropdown Pilihan Mode -->
+                  <div
+                    id="max-order-type-popover"
+                    class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg p-1 z-50 hidden select-none"
+                    role="listbox"
+                  >
+                    <div
+                      class="custom-max-order-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.max_order_type === 'unlimited' && primaryState.is_unlimited_max_order ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                      data-value="unlimited"
+                      data-label="Tanpa Batas"
+                      role="option"
+                    >
+                      <span>Tanpa Batas</span>
+                      ${primaryState.max_order_type === 'unlimited' && primaryState.is_unlimited_max_order ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                    </div>
+                    <div
+                      class="custom-max-order-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.max_order_type === 'per_order' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                      data-value="per_order"
+                      data-label="Per Pesanan"
+                      role="option"
+                    >
+                      <span>Per Pesanan</span>
+                      ${primaryState.max_order_type === 'per_order' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                    </div>
+                    <div
+                      class="custom-max-order-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.max_order_type === 'per_period' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                      data-value="per_period"
+                      data-label="Per Periode"
+                      role="option"
+                    >
+                      <span>Per Periode</span>
+                      ${primaryState.max_order_type === 'per_period' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                    </div>
+                  </div>
                 </div>
 
+                <div id="max-order-conditional-wrapper">
+                  ${renderMaxOrderSection()}
+                </div>
               </div>
 
               <!-- Pembatas 1: Antara Minimal / Maksimal Jumlah Pembelian dan Bagian Harga Grosir -->
@@ -17819,6 +17927,7 @@ const ProductForm = (() => {
     if (unit === 'mm') return 'mm²';
     return '';
   }
+
 
   function getDefaultMinAreaThreshold(unit) {
     if (unit === 'cm') return 100;
@@ -20510,6 +20619,7 @@ const ProductForm = (() => {
 
 
 
+
   // Sub-Renderer: Maksimal Order
   function renderMaxOrderSection() {
     if (primaryState.max_order_type === 'per_order') {
@@ -20601,32 +20711,32 @@ const ProductForm = (() => {
 
             <div class="space-y-3">
               <!-- Tidak Berulang -->
-              <div class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-emerald-500 bg-white' : 'border-slate-200 bg-white'} space-y-2">
+              <div id="wrapper-single-period-non-recurring" class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
                   <input type="radio" name="period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
                   <span class="text-xs font-bold text-slate-800">Tidak Berulang</span>
-                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
+                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                     <i class="bi bi-question-circle text-xs"></i>
-                    <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                       Maks. Jumlah Pembelian akan berakhir setelah periode yang ditentukan (dalam hari).
                     </div>
                   </div>
                 </label>
 
                 <!-- Dynamic note text -->
-                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal">
+                <div id="single-period-note-text" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal">
                   <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
                 </div>
               </div>
 
               <!-- Berulang -->
-              <div class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-emerald-500 bg-white' : 'border-slate-200 bg-white'} space-y-3">
+              <div id="wrapper-single-period-recurring" class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
                   <input type="radio" name="period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-emerald-600 cursor-pointer" />
                   <span class="text-xs font-bold text-slate-800">Berulang</span>
-                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
+                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                     <i class="bi bi-question-circle text-xs"></i>
-                    <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                       Maks. Jumlah Pembelian akan diulangi secara berurutan per periode yang ditentukan (dalam hari) hingga tanggal berakhir yang diatur di bawah ini.
                     </div>
                   </div>
@@ -20649,6 +20759,235 @@ const ProductForm = (() => {
     }
 
     return '';
+  }
+
+  // =====================================================================
+  // EVENT BINDING: MAKSIMAL ORDER PRODUK TUNGGAL (DROPDOWN ACCORDION)
+  // =====================================================================
+
+  function bindSinglePeriodEvents() {
+    const sDateInp = document.getElementById('input-period-start-date');
+    const maxQtyInp = document.getElementById('input-period-max-qty');
+    const daysInp = document.getElementById('input-period-days');
+    const radPeriodTypes = document.querySelectorAll('input[name="period_type_radio"]');
+    const selEndDate = document.getElementById('select-period-end-date');
+
+    const updateSinglePeriodCalculation = () => {
+      const sDate = sDateInp ? sDateInp.value : getTodayDateString();
+      const maxQty = maxQtyInp ? (parseInt(maxQtyInp.value, 10) || 10) : 10;
+      const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
+      const checkedRad = document.querySelector('input[name="period_type_radio"]:checked');
+      const periodType = checkedRad ? checkedRad.value : 'non_recurring';
+
+      if (!primaryState.max_order_period) primaryState.max_order_period = {};
+      primaryState.max_order_period.start_date = sDate;
+      primaryState.max_order_period.max_qty = maxQty;
+      primaryState.max_order_period.days = days;
+      primaryState.max_order_period.period_type = periodType;
+      primaryState.max_order = maxQty;
+      primaryState.max_order_qty = maxQty;
+
+      const singleCycleEnd = addDaysToDate(sDate, Math.max(1, days) - 1);
+      const noteEl = document.getElementById('single-period-note-text');
+      if (noteEl) {
+        noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
+      }
+
+      if (selEndDate) {
+        const currentSelected = selEndDate.value;
+        const recurringOptions = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+          const cycleEnd = addDaysToDate(sDate, (cycle * Math.max(1, days)) - 1);
+          return {
+            date: cycleEnd,
+            label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
+          };
+        });
+        selEndDate.innerHTML = recurringOptions.map(opt => `
+          <option value="${opt.date}" ${currentSelected === opt.date ? 'selected' : ''}>${opt.label}</option>
+        `).join('');
+        if (!selEndDate.value && recurringOptions.length > 0) {
+          selEndDate.value = recurringOptions[0].date;
+        }
+        primaryState.max_order_period.end_date = selEndDate.value;
+      }
+
+      const recWrap = document.getElementById('recurring-end-date-wrapper');
+      const wrapNon = document.getElementById('wrapper-single-period-non-recurring');
+      const wrapRec = document.getElementById('wrapper-single-period-recurring');
+      if (recWrap) {
+        if (periodType === 'recurring') {
+          recWrap.classList.remove('hidden');
+          recWrap.classList.add('block');
+        } else {
+          recWrap.classList.remove('block');
+          recWrap.classList.add('hidden');
+        }
+      }
+      if (wrapNon) {
+        wrapNon.className = `p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2`;
+      }
+      if (wrapRec) {
+        wrapRec.className = `p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3`;
+      }
+    };
+
+    if (sDateInp) sDateInp.onchange = updateSinglePeriodCalculation;
+    if (maxQtyInp) maxQtyInp.oninput = updateSinglePeriodCalculation;
+    if (daysInp) daysInp.oninput = updateSinglePeriodCalculation;
+    radPeriodTypes.forEach(rad => {
+      rad.onchange = updateSinglePeriodCalculation;
+    });
+    if (selEndDate) {
+      selEndDate.onchange = () => {
+        if (!primaryState.max_order_period) primaryState.max_order_period = {};
+        primaryState.max_order_period.end_date = selEndDate.value;
+      };
+    }
+  }
+
+  function bindSinglePerOrderEvents() {
+    const qtyInp = document.getElementById('input-max-order-qty');
+    if (qtyInp) {
+      qtyInp.oninput = () => {
+        const num = parseInt(qtyInp.value, 10) || null;
+        primaryState.max_order_qty = num;
+        primaryState.max_order = num;
+      };
+    }
+  }
+
+  function bindSingleMaxOrderEvents() {
+    const trigger = document.getElementById('input-normal-max-order') || document.getElementById('wrapper-max-order-type');
+    const popover = document.getElementById('max-order-type-popover');
+    const chevron = document.getElementById('max-order-type-chevron');
+    const normalInput = document.getElementById('input-normal-max-order');
+    const selNative = document.getElementById('select-max-order-type');
+    const wrapper = document.getElementById('max-order-conditional-wrapper');
+
+    if (!trigger || !popover) return;
+
+    const openPopover = () => {
+      popover.classList.remove('hidden');
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+    };
+
+    const closePopover = () => {
+      popover.classList.add('hidden');
+      if (chevron) chevron.style.transform = '';
+    };
+
+    const togglePopover = (e) => {
+      e.stopPropagation();
+      if (popover.classList.contains('hidden')) {
+        openPopover();
+      } else {
+        closePopover();
+      }
+    };
+
+    trigger.onclick = togglePopover;
+
+    popover.querySelectorAll('.custom-max-order-item').forEach(item => {
+      item.onclick = (e) => {
+        e.stopPropagation();
+        const val = item.getAttribute('data-value');
+        const label = item.getAttribute('data-label') || val;
+
+        if (normalInput) normalInput.value = label;
+        if (selNative) selNative.value = val;
+
+        popover.querySelectorAll('.custom-max-order-item').forEach(it => {
+          const isThis = it.getAttribute('data-value') === val;
+          it.className = `custom-max-order-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isThis ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}`;
+          const checkIcon = it.querySelector('.bi-check2');
+          if (isThis && !checkIcon) {
+            it.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>');
+          } else if (!isThis && checkIcon) {
+            checkIcon.remove();
+          }
+        });
+
+        closePopover();
+
+        if (val === 'unlimited') {
+          primaryState.max_order_type = 'unlimited';
+          primaryState.is_unlimited_max_order = true;
+          primaryState.max_order = null;
+          primaryState.max_order_qty = null;
+          if (wrapper) wrapper.innerHTML = renderMaxOrderSection();
+        } else if (val === 'per_order') {
+          primaryState.max_order_type = 'per_order';
+          primaryState.is_unlimited_max_order = false;
+          if (!primaryState.max_order_qty) primaryState.max_order_qty = 10;
+          primaryState.max_order = primaryState.max_order_qty;
+          if (wrapper) wrapper.innerHTML = renderMaxOrderSection();
+          bindSinglePerOrderEvents();
+        } else if (val === 'per_period') {
+          primaryState.max_order_type = 'per_period';
+          primaryState.is_unlimited_max_order = false;
+          if (!primaryState.max_order_period) {
+            primaryState.max_order_period = {
+              start_date: getTodayDateString(),
+              max_qty: 10,
+              days: 7,
+              period_type: 'non_recurring',
+              end_date: ''
+            };
+          }
+          primaryState.max_order = primaryState.max_order_period.max_qty;
+          primaryState.max_order_qty = primaryState.max_order_period.max_qty;
+          if (wrapper) wrapper.innerHTML = renderMaxOrderSection();
+          bindSinglePeriodEvents();
+        }
+      };
+    });
+
+    if (normalInput) {
+      normalInput.oninput = (e) => {
+        const raw = e.target.value.trim();
+        const rLow = raw.toLowerCase();
+        if (!raw || rLow === 'tanpa batas' || rLow === 'unlimited' || rLow === 'tanpa max order' || raw === '0') {
+          primaryState.max_order_type = 'unlimited';
+          primaryState.is_unlimited_max_order = true;
+          primaryState.max_order = null;
+          primaryState.max_order_qty = null;
+          if (selNative) selNative.value = 'unlimited';
+          if (wrapper) wrapper.innerHTML = renderMaxOrderSection();
+        } else if (rLow === 'per periode') {
+          primaryState.max_order_type = 'per_period';
+          primaryState.is_unlimited_max_order = false;
+          if (selNative) selNative.value = 'per_period';
+          if (wrapper) wrapper.innerHTML = renderMaxOrderSection();
+          bindSinglePeriodEvents();
+        } else {
+          const digits = raw.replace(/\D/g, '');
+          const num = digits ? parseInt(digits, 10) : null;
+          primaryState.max_order_type = num ? 'per_order' : 'unlimited';
+          primaryState.is_unlimited_max_order = !num;
+          primaryState.max_order = num;
+          primaryState.max_order_qty = num;
+          if (selNative) selNative.value = num ? 'per_order' : 'unlimited';
+          if (wrapper) wrapper.innerHTML = renderMaxOrderSection();
+          if (num) {
+            const innerQty = document.getElementById('input-max-order-qty');
+            if (innerQty) innerQty.value = num;
+            bindSinglePerOrderEvents();
+          }
+        }
+      };
+    }
+
+    if (primaryState.max_order_type === 'per_order') {
+      bindSinglePerOrderEvents();
+    } else if (primaryState.max_order_type === 'per_period') {
+      bindSinglePeriodEvents();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#wrapper-max-order-type')) {
+        closePopover();
+      }
+    });
   }
 
   // =====================================================================
@@ -20692,9 +21031,9 @@ const ProductForm = (() => {
             <label class="block text-xs font-bold text-slate-800">
               Maks. Jumlah Pembelian
             </label>
-            <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600">
+            <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
               <i class="bi bi-question-circle text-xs"></i>
-              <div class="hidden group-hover:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+              <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
                 Atur batas maksimal jumlah pembelian untuk produk bervariasi per pesanan atau per periode waktu tertentu.
               </div>
             </div>
@@ -28041,64 +28380,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // STEP 2 CONTROLS LAINNYA (STOK, PENGIRIMAN, PROMO, AI)
 
 
-      // Maksimal Pembelian (Combobox Normal Mode)
-      const normalMaxInp = document.getElementById('input-normal-max-order');
-      if (normalMaxInp) {
-        const handleNormalMaxInput = (e) => {
-          const raw = e.target.value.trim();
-          const rLow = raw.toLowerCase();
-          if (!raw || rLow === 'tanpa batas' || rLow === 'tanpa max order' || raw === '0' || rLow === 'unlimited') {
-            primaryState.max_order = null;
-            primaryState.max_order_qty = null;
-            primaryState.max_order_type = 'unlimited';
-            primaryState.is_unlimited_max_order = true;
-          } else {
-            const digits = raw.replace(/\D/g, '');
-            const num = digits ? parseInt(digits, 10) : null;
-            primaryState.max_order = num;
-            primaryState.max_order_qty = num;
-            primaryState.max_order_type = num ? 'per_order' : 'unlimited';
-            primaryState.is_unlimited_max_order = !num;
-          }
-        };
-        normalMaxInp.oninput = handleNormalMaxInput;
-        normalMaxInp.onchange = handleNormalMaxInput;
-        normalMaxInp.onblur = (e) => {
-          const raw = (normalMaxInp.value || '').trim();
-          const rLow = raw.toLowerCase();
-          if (rLow === 'tanpa batas' || rLow === 'unlimited') {
-            normalMaxInp.value = 'Tanpa Batas';
-            primaryState.max_order = null;
-            primaryState.max_order_qty = null;
-            primaryState.max_order_type = 'unlimited';
-            primaryState.is_unlimited_max_order = true;
-          } else if (raw) {
-            const digits = raw.replace(/\D/g, '');
-            const num = digits ? parseInt(digits, 10) : null;
-            normalMaxInp.value = num !== null ? String(num) : '';
-            primaryState.max_order = num;
-            primaryState.max_order_qty = num;
-            primaryState.max_order_type = num ? 'per_order' : 'unlimited';
-            primaryState.is_unlimited_max_order = !num;
-          } else {
-            normalMaxInp.value = '';
-            primaryState.max_order = null;
-            primaryState.max_order_qty = null;
-            primaryState.max_order_type = 'unlimited';
-            primaryState.is_unlimited_max_order = true;
-          }
-        };
-      }
-
-      const selMaxOrderType = document.getElementById('select-max-order-type');
-      if (selMaxOrderType) {
-        selMaxOrderType.onchange = e => {
-          primaryState.max_order_type = e.target.value;
-          const wrap = document.getElementById('max-order-conditional-wrapper');
-          if (wrap) wrap.innerHTML = renderMaxOrderSection();
-          bindStep2InteractiveEvents();
-        };
-      }
+      // Maksimal Pembelian Produk Tunggal (Dropdown Accordion Input/Pilih)
+      bindSingleMaxOrderEvents();
 
       // Maksimal Pembelian Khusus Produk Bervariasi
       const variantMaxOrderSec = document.getElementById('section-variant-max-order');
@@ -32089,45 +32372,58 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const minOrderInp = document.getElementById('input-min-order');
     if (minOrderInp) primaryState.min_order = Math.max(1, parseInt(minOrderInp.value) || 1);
 
-    // Max Order (Combobox / Select Sync)
+    // Max Order (Single Product Dropdown Accordion Sync)
     const normalMaxInp = document.getElementById('input-normal-max-order');
     if (normalMaxInp && !primaryState.has_variants) {
-      const raw = normalMaxInp.value.trim();
-      const rLow = raw.toLowerCase();
-      if (!raw || rLow === 'tanpa max order' || rLow === 'tanpa batas' || rLow === 'unlimited' || raw === '0') {
+      const maxOrderTypeSel = document.getElementById('select-max-order-type');
+      const maxOrderQtyInp = document.getElementById('input-max-order-qty');
+
+      let currentMode = maxOrderTypeSel ? maxOrderTypeSel.value : primaryState.max_order_type;
+      const raw = normalMaxInp.value.trim().toLowerCase();
+      if (raw === 'tanpa batas' || raw === 'unlimited') {
+        currentMode = 'unlimited';
+      } else if (raw === 'per periode') {
+        currentMode = 'per_period';
+      } else if (raw === 'per pesanan') {
+        currentMode = 'per_order';
+      } else if (raw && /^\d+$/.test(raw)) {
+        currentMode = 'per_order';
+        primaryState.max_order_qty = parseInt(raw, 10);
+        primaryState.max_order = primaryState.max_order_qty;
+      }
+
+      primaryState.max_order_type = currentMode || 'unlimited';
+      if (currentMode === 'unlimited') {
         primaryState.max_order = null;
         primaryState.max_order_qty = null;
-        primaryState.max_order_type = 'unlimited';
-        primaryState.is_unlimited_max_order = true;
-      } else {
-        const digits = raw.replace(/\D/g, '');
-        const num = digits ? parseInt(digits, 10) : null;
-        primaryState.max_order = num;
-        primaryState.max_order_qty = num;
-        primaryState.max_order_type = num ? 'per_order' : 'unlimited';
-        primaryState.is_unlimited_max_order = !num;
+        if (normalMaxInp && normalMaxInp.value.trim().toLowerCase() === 'tanpa batas') {
+          primaryState.is_unlimited_max_order = true;
+        }
+      } else if (currentMode === 'per_order') {
+        primaryState.is_unlimited_max_order = false;
+        if (maxOrderQtyInp && maxOrderQtyInp.value) {
+          primaryState.max_order_qty = parseInt(maxOrderQtyInp.value, 10) || null;
+          primaryState.max_order = primaryState.max_order_qty;
+        }
+      } else if (currentMode === 'per_period') {
+        primaryState.is_unlimited_max_order = false;
+        const pStartDate = document.getElementById('input-period-start-date')?.value;
+        const pMaxQty = parseInt(document.getElementById('input-period-max-qty')?.value, 10);
+        const pDays = parseInt(document.getElementById('input-period-days')?.value, 10);
+        const pTypeRad = document.querySelector('input[name="period_type_radio"]:checked');
+        const pEndDate = document.getElementById('select-period-end-date')?.value;
+
+        if (!primaryState.max_order_period) primaryState.max_order_period = {};
+        if (pStartDate) primaryState.max_order_period.start_date = pStartDate;
+        if (!isNaN(pMaxQty)) primaryState.max_order_period.max_qty = pMaxQty;
+        if (!isNaN(pDays)) primaryState.max_order_period.days = pDays;
+        if (pTypeRad) primaryState.max_order_period.period_type = pTypeRad.value;
+        if (pEndDate) primaryState.max_order_period.end_date = pEndDate;
+
+        primaryState.max_order = !isNaN(pMaxQty) ? pMaxQty : null;
+        primaryState.max_order_qty = primaryState.max_order;
       }
-    } else {
-      const maxOrderTypeSel = document.getElementById('select-max-order-type');
-      if (maxOrderTypeSel) primaryState.max_order_type = maxOrderTypeSel.value;
-      const maxOrderQtyInp = document.getElementById('input-max-order-qty');
-      if (maxOrderQtyInp) primaryState.max_order_qty = maxOrderQtyInp.value ? parseInt(maxOrderQtyInp.value) : null;
-      primaryState.max_order = primaryState.max_order_qty;
     }
-
-    // Max Order Period
-    const pStartDate = document.getElementById('input-period-start-date')?.value;
-    const pMaxQty = parseInt(document.getElementById('input-period-max-qty')?.value);
-    const pDays = parseInt(document.getElementById('input-period-days')?.value);
-    const pTypeRad = document.querySelector('input[name="period_type_radio"]:checked');
-    const pEndDate = document.getElementById('select-period-end-date')?.value;
-
-    if (!primaryState.max_order_period) primaryState.max_order_period = {};
-    if (pStartDate) primaryState.max_order_period.start_date = pStartDate;
-    if (!isNaN(pMaxQty)) primaryState.max_order_period.max_qty = pMaxQty;
-    if (!isNaN(pDays)) primaryState.max_order_period.days = pDays;
-    if (pTypeRad) primaryState.max_order_period.period_type = pTypeRad.value;
-    if (pEndDate) primaryState.max_order_period.end_date = pEndDate;
 
     // Wholesale Tiers DOM sync
     const wholesaleRows = document.querySelectorAll('#wholesale-table-body tr[data-tier-id]');
@@ -33031,8 +33327,27 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (primaryState.min_order < 1) {
       addError('Minimal pesanan minimal bernilai 1.', document.getElementById('input-min-order'));
     }
-    if (primaryState.max_order_type === 'per_order' && primaryState.max_order_qty !== null && primaryState.max_order_qty < primaryState.min_order) {
-      addError('Maksimal pesanan per checkout tidak boleh lebih kecil dari minimal pesanan.', document.getElementById('input-normal-max-order') || document.getElementById('input-max-order-qty'));
+    if (primaryState.max_order_type === 'per_order' && !primaryState.has_variants) {
+      if (!primaryState.max_order_qty || primaryState.max_order_qty < 1) {
+        addError('Jumlah maksimal pembelian per pesanan wajib diisi minimal 1 produk.', document.getElementById('input-max-order-qty') || document.getElementById('input-normal-max-order'));
+      } else if (primaryState.max_order_qty < primaryState.min_order) {
+        addError('Maksimal pesanan per checkout tidak boleh lebih kecil dari minimal pesanan.', document.getElementById('input-max-order-qty') || document.getElementById('input-normal-max-order'));
+      }
+    }
+    if (primaryState.max_order_type === 'per_period' && !primaryState.has_variants) {
+      const period = primaryState.max_order_period || {};
+      if (!period.start_date) {
+        addError('Tanggal mulai periode maksimal pembelian wajib diisi.', document.getElementById('input-period-start-date') || document.getElementById('input-normal-max-order'));
+      }
+      if (!period.max_qty || period.max_qty < 1) {
+        addError('Maks. jumlah pembelian per periode wajib minimal 1 produk.', document.getElementById('input-period-max-qty') || document.getElementById('input-normal-max-order'));
+      }
+      if (!period.days || period.days < 1) {
+        addError('Durasi periode wajib minimal 1 hari.', document.getElementById('input-period-days') || document.getElementById('input-normal-max-order'));
+      }
+      if (period.period_type === 'recurring' && !period.end_date) {
+        addError('Tanggal berakhir periode berulang wajib dipilih.', document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
+      }
     }
 
     if (primaryState.has_shipping === true) {
