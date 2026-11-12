@@ -1729,13 +1729,22 @@ input::-webkit-calendar-picker-indicator {
     border-radius: 1rem 1rem 0 0 !important;
     border-top: 0 !important;
     overflow: hidden !important;
+    overflow: clip !important;
     z-index: 95 !important;
     display: flex !important;
     flex-direction: column !important;
     overscroll-behavior: contain !important;
   }
 
+  /* Bebaskan layer transform setelah animasi masuk selesai agar klip sudut + scroll child stabil di compositor */
+  #mobile-preview-sheet.mobile-preview-settled:not(.translate-y-full) {
+    transform: none !important;
+    transition: none !important;
+  }
+
   #mobile-preview-header {
+    position: relative;
+    z-index: 2;
     border-radius: 0 !important;
     border-top: 0 !important;
     border-left: 0 !important;
@@ -1744,9 +1753,14 @@ input::-webkit-calendar-picker-indicator {
   }
 
   #mobile-preview-body {
+    position: relative;
+    z-index: 1;
     flex: 1 1 auto !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+    overflow-x: hidden !important;
     overscroll-behavior: contain !important;
     padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }

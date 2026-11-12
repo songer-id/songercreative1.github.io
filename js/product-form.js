@@ -3588,7 +3588,7 @@ const ProductForm = (() => {
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div id="mobile-preview-body" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col items-center transition-colors" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); ${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+          <div id="mobile-preview-body" class="flex-1 min-h-0 min-w-0 w-full overflow-y-auto overflow-x-hidden p-4 space-y-4 flex flex-col items-center" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); ${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
             <!-- Checkbox Simulasi Diskon Mobile -->
             <label class="w-full max-w-[260px] flex items-center gap-2 text-xs font-normal text-slate-700 cursor-pointer select-none py-1 transition-colors">
               <input type="checkbox" id="cfg-simulate-countdown-preview-mob" class="w-4 h-4 rounded cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1" style="accent-color: var(--color-primary);" />
@@ -4870,7 +4870,11 @@ const ProductForm = (() => {
     }
     activeCardPresetDropdown = null;
     if (returnFocus && prevBtn && typeof prevBtn.focus === 'function') {
-      prevBtn.focus();
+      try {
+        prevBtn.focus({ preventScroll: true });
+      } catch (_) {
+        prevBtn.focus();
+      }
     }
   }
 
@@ -5647,7 +5651,9 @@ const ProductForm = (() => {
 
           if (targetEl) {
             try { targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) { }
-            try { targetEl.focus(); } catch (_) { }
+            try { targetEl.focus({ preventScroll: true }); } catch (_) {
+              try { targetEl.focus(); } catch (__) { }
+            }
           }
 
           if (typeof App !== 'undefined' && App.showToast) {
@@ -10207,7 +10213,6 @@ const ProductForm = (() => {
       '#desktop-preview-sidebar > .flex-1.overflow-y-auto',
       '#desktop-preview-sidebar .overflow-y-auto',
       '#desktop-preview-body',
-      '#mobile-preview-sheet',
       '#mobile-preview-sheet > .overflow-y-auto',
       '#mobile-preview-sheet .overflow-y-auto',
       '#mobile-preview-body',
@@ -10246,6 +10251,11 @@ const ProductForm = (() => {
     }
 
     const restoreAllScrolls = () => {
+      const mobSheetLock = document.getElementById('mobile-preview-sheet');
+      if (mobSheetLock) {
+        if (mobSheetLock.scrollTop !== 0) mobSheetLock.scrollTop = 0;
+        if (mobSheetLock.scrollLeft !== 0) mobSheetLock.scrollLeft = 0;
+      }
       scrollSelectors.forEach(selector => {
         document.querySelectorAll(selector).forEach((el, idx) => {
           const key = `${selector}__${idx}`;
@@ -27506,6 +27516,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const btnCloseMobilePreview = document.getElementById('btn-close-mobile-preview');
     const mobileBackdrop = document.getElementById('mobile-preview-backdrop');
     const mobileSheet = document.getElementById('mobile-preview-sheet');
+    let mobilePreviewSettleTimer = null;
+    let mobilePreviewSettleOnEnd = null;
+
+    const clearMobilePreviewSettleHooks = () => {
+      if (mobilePreviewSettleTimer) {
+        clearTimeout(mobilePreviewSettleTimer);
+        mobilePreviewSettleTimer = null;
+      }
+      if (mobileSheet && mobilePreviewSettleOnEnd && typeof mobileSheet.removeEventListener === 'function') {
+        mobileSheet.removeEventListener('transitionend', mobilePreviewSettleOnEnd);
+      }
+      mobilePreviewSettleOnEnd = null;
+    };
 
     openMobilePreview = function () {
       if (!primaryState.is_active) return;
@@ -27535,6 +27558,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       if (mobileBackdrop) mobileBackdrop.classList.remove('hidden');
       if (mobileSheet) {
+        clearMobilePreviewSettleHooks();
+        const wasClosed = mobileSheet.classList.contains('translate-y-full');
+        if (wasClosed) {
+          mobileSheet.classList.remove('mobile-preview-settled');
+        }
+        mobileSheet.scrollTop = 0;
+        mobileSheet.scrollLeft = 0;
         mobileSheet.classList.remove('translate-y-full');
         if (currentStep === 1) {
           const themeBodyColor = getThemeBodyColor();
@@ -27542,6 +27572,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           mobileSheet.classList.remove('bg-white');
           const mobBodyEl = document.getElementById('mobile-preview-body');
           if (mobBodyEl) mobBodyEl.style.backgroundColor = themeBodyColor;
+        }
+        const finalizeOpenSettle = () => {
+          clearMobilePreviewSettleHooks();
+          if (mobileSheet && !mobileSheet.classList.contains('translate-y-full')) {
+            mobileSheet.classList.add('mobile-preview-settled');
+          }
+        };
+        if (!wasClosed) {
+          mobileSheet.classList.add('mobile-preview-settled');
+        } else {
+          mobilePreviewSettleOnEnd = (evt) => {
+            if (evt && evt.target !== mobileSheet) return;
+            if (evt && evt.propertyName && evt.propertyName !== 'transform') return;
+            finalizeOpenSettle();
+          };
+          if (typeof mobileSheet.addEventListener === 'function') {
+            mobileSheet.addEventListener('transitionend', mobilePreviewSettleOnEnd);
+          }
+          mobilePreviewSettleTimer = setTimeout(finalizeOpenSettle, 340);
+          if (mobilePreviewSettleTimer && typeof mobilePreviewSettleTimer.unref === 'function') {
+            mobilePreviewSettleTimer.unref();
+          }
         }
       }
     };
@@ -27551,7 +27603,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (typeof hidePreviewTestModeAlert === 'function') {
         hidePreviewTestModeAlert();
       }
-      if (mobileSheet) mobileSheet.classList.add('translate-y-full');
+      clearMobilePreviewSettleHooks();
+      if (mobileSheet) {
+        if (mobileSheet.classList.contains('mobile-preview-settled')) {
+          mobileSheet.classList.remove('mobile-preview-settled');
+          void mobileSheet.offsetHeight;
+        }
+        mobileSheet.classList.add('translate-y-full');
+      }
       if (mobileBackdrop) mobileBackdrop.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
       const vp = document.getElementById('admin-main-viewport');
@@ -29000,7 +29059,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             menu.classList.add('hidden');
             if (btn) {
               btn.setAttribute('aria-expanded', 'false');
-              btn.focus();
+              try {
+                btn.focus({ preventScroll: true });
+              } catch (_) {
+                btn.focus();
+              }
             }
             if (icon) icon.classList.remove('rotate-180');
           }
