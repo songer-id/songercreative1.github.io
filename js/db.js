@@ -2712,6 +2712,8 @@ const DB = (() => {
         sub_category_id: productData.sub_category_id || null,
         card_variant: productData.card_variant || 'A',
         card_variant_override: productData.card_variant_override !== undefined ? Boolean(productData.card_variant_override) : true,
+        use_default_card_design: productData.use_default_card_design !== undefined ? Boolean(productData.use_default_card_design) : (productData.card_config ? false : true),
+        card_config: (productData.card_config && typeof productData.card_config === 'object') ? JSON.parse(JSON.stringify(productData.card_config)) : null,
         price_type: parseInt(productData.price_type) || 1,
         stock: productData.is_unlimited_stock ? null : (parseInt(productData.stock) || 0),
         is_unlimited_stock: Boolean(productData.is_unlimited_stock),
@@ -2822,6 +2824,11 @@ const DB = (() => {
         countdown_bg_color: productData.countdown_bg_color || '#059669',
         countdown_text_color: productData.countdown_text_color || '#ffffff',
         countdown_border_color: productData.countdown_border_color || '#059669',
+        countdown_radius: (productData.countdown_radius !== undefined && productData.countdown_radius !== null && String(productData.countdown_radius).trim() !== '')
+          ? productData.countdown_radius
+          : ((productData.card_config && productData.card_config.countdown_radius !== undefined && productData.card_config.countdown_radius !== null && String(productData.card_config.countdown_radius).trim() !== '')
+              ? productData.card_config.countdown_radius
+              : '6px'),
         is_active: productData.is_active !== false,
         sales_count: parseInt(productData.sales_count) || 0,
         admin_card_preview_metrics: (productData.admin_card_preview_metrics && typeof productData.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(productData.admin_card_preview_metrics)) : null,
@@ -2935,6 +2942,8 @@ const DB = (() => {
         sub_category_id: productData.sub_category_id || null,
         card_variant: productData.card_variant || products[index].card_variant || 'A',
         card_variant_override: productData.card_variant_override !== undefined ? Boolean(productData.card_variant_override) : (products[index].card_variant_override !== undefined ? products[index].card_variant_override : true),
+        use_default_card_design: productData.use_default_card_design !== undefined ? Boolean(productData.use_default_card_design) : (productData.card_config ? false : (products[index].use_default_card_design !== undefined ? Boolean(products[index].use_default_card_design) : (products[index].card_config ? false : true))),
+        card_config: productData.card_config !== undefined ? ((productData.card_config && typeof productData.card_config === 'object') ? JSON.parse(JSON.stringify(productData.card_config)) : null) : (products[index].card_config ? JSON.parse(JSON.stringify(products[index].card_config)) : null),
         price_type: parseInt(productData.price_type) || products[index].price_type || 1,
         stock: productData.is_unlimited_stock ? null : (parseInt(productData.stock) || 0),
         is_unlimited_stock: Boolean(productData.is_unlimited_stock),
@@ -3045,6 +3054,11 @@ const DB = (() => {
         countdown_bg_color: productData.countdown_bg_color || products[index].countdown_bg_color || '#059669',
         countdown_text_color: productData.countdown_text_color || products[index].countdown_text_color || '#ffffff',
         countdown_border_color: productData.countdown_border_color || products[index].countdown_border_color || '#059669',
+        countdown_radius: (productData.countdown_radius !== undefined && productData.countdown_radius !== null && String(productData.countdown_radius).trim() !== '')
+          ? productData.countdown_radius
+          : ((productData.card_config && productData.card_config.countdown_radius !== undefined && productData.card_config.countdown_radius !== null && String(productData.card_config.countdown_radius).trim() !== '')
+              ? productData.card_config.countdown_radius
+              : (products[index].countdown_radius !== undefined ? products[index].countdown_radius : (products[index].card_config && products[index].card_config.countdown_radius !== undefined ? products[index].card_config.countdown_radius : '6px'))),
         is_active: productData.is_active !== undefined ? productData.is_active : products[index].is_active,
         sales_count: (products[index] && products[index].sales_count !== undefined) ? products[index].sales_count : (parseInt(productData.sales_count) || 0),
         admin_card_preview_metrics: productData.admin_card_preview_metrics !== undefined ? ((productData.admin_card_preview_metrics && typeof productData.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(productData.admin_card_preview_metrics)) : null) : (products[index].admin_card_preview_metrics || null),

@@ -3431,6 +3431,7 @@ button:focus-visible {
   box-shadow: none !important;
   --tw-ring-shadow: 0 0 #0000 !important;
 }
+
 /* ==========================================================================
    REVISI LAYOUT: SCROLLBAR MODAL BANTUAN & SIMULASI & TABEL UKURAN COMPACT
    ========================================================================== */
@@ -3439,19 +3440,23 @@ button:focus-visible {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
+
 #modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar,
 #modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
+
 #modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar-track,
 #modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 #modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar-thumb,
 #modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 9999px;
 }
+
 #modal-help-dimension-rule .custom-modal-scrollbar::-webkit-scrollbar-thumb:hover,
 #modal-sandbox-pxl-simulator .custom-modal-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8;
@@ -3476,6 +3481,7 @@ button:focus-visible {
 }
 
 @media (min-width: 640px) {
+
   #size-guide-matrix-table .size-col-header-input,
   #size-guide-matrix-table .size-cell-input {
     font-size: 0.75rem !important;
@@ -3483,8 +3489,8 @@ button:focus-visible {
   }
 }
 
-#size-guide-matrix-table .clean-datalist-input-box > .btn-clear-datalist,
-#size-guide-matrix-table .clean-datalist-input-box > .clean-datalist-arrow {
+#size-guide-matrix-table .clean-datalist-input-box>.btn-clear-datalist,
+#size-guide-matrix-table .clean-datalist-input-box>.clean-datalist-arrow {
   right: 0.35rem !important;
   width: 1.125rem !important;
   height: 1.125rem !important;
@@ -3506,6 +3512,7 @@ button:focus-visible {
   max-width: 100% !important;
   width: 100% !important;
 }
+
 /* Scoped Typography for Card Customization Section (Task SC-ADMIN-CARD-TOOLS-UI-12A) */
 #view-product-form #card-customization-section,
 #view-product-form #card-customization-section *,
@@ -3556,6 +3563,7 @@ button:focus-visible {
 
 /* Scoped Mobile Input Tools Typography for Card Customization Section (Task SC-ADMIN-CARD-TOOLS-UI-12A) */
 @media (max-width: 639.98px) {
+
   #view-product-form #card-customization-section-mob .card-tool-label,
   #card-customization-section-mob .card-tool-label {
     font-size: 11px !important;
@@ -3563,5 +3571,83 @@ button:focus-visible {
     font-weight: 400 !important;
     letter-spacing: normal !important;
     text-transform: none !important;
+  }
+}
+
+/* Scoped Portal Dropdowns for Card Preset Controls (Task SC-ADMIN-CARD-PRESET-DROPDOWNS-13B) */
+.card-preset-select-btn {
+  font-weight: 400 !important;
+  outline: none;
+}
+
+.card-preset-select-btn:focus-visible,
+.card-preset-select-btn[aria-expanded="true"] {
+  outline: none;
+  border-color: var(--color-primary, #059669) !important;
+  box-shadow: 0 0 0 2px var(--color-primary-subtle, #ecfdf5);
+}
+
+.card-preset-select-menu {
+  position: fixed;
+  z-index: 99999;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+  padding: 4px 0;
+  overflow-y: auto;
+  max-height: 220px;
+  font-weight: 400 !important;
+}
+
+.card-preset-select-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400 !important;
+  color: #334155;
+  background-color: transparent;
+  text-align: left;
+  cursor: pointer;
+  border: 0;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.card-preset-select-option:hover,
+.card-preset-select-option.is-active {
+  background-color: #f8fafc;
+  outline: none;
+}
+
+.card-preset-select-option[aria-selected="true"] {
+  background-color: var(--color-primary-subtle, #ecfdf5);
+  color: var(--color-primary, #059669);
+  font-weight: 400 !important;
+}
+
+.card-preset-select-option[aria-selected="true"]:hover,
+.card-preset-select-option[aria-selected="true"].is-active {
+  background-color: var(--color-primary-subtle, #ecfdf5);
+  color: var(--color-primary, #059669);
+}
+
+.card-preset-select-check {
+  color: var(--color-primary, #059669);
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+@media (max-width: 639.98px) {
+  .card-preset-select-btn,
+  .card-preset-select-option {
+    font-size: 11px !important;
+    line-height: 16px !important;
+    font-weight: 400 !important;
   }
 }

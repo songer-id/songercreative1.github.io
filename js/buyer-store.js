@@ -3641,11 +3641,11 @@ const BuyerStore = (() => {
     let footerHtml = '';
     if (hasFooter1 || hasFooter2) {
       footerHtml = `
-        <!-- Dua Strip Horizontal Footer di Bagian Bawah Kartu (Tinggi Tetap Presisi Sama) -->
-        <div class="w-full shrink-0 mt-auto flex flex-col">
+        <!-- Dua Strip Horizontal Footer di Bagian Bawah Kartu (Mendukung 1 atau 2 Strip Presisi) -->
+        <div class="w-full shrink-0 mt-auto flex flex-col" style="border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
           <!-- Footer 1 (Atas): Proses Cepat -->
           ${hasFooter1 ? `
-            <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : 'rounded-b-2xl'}" style="background-color: ${footer1Bg}; color: ${footer1TextColor};">
+            <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : ''}" style="background-color: ${footer1Bg}; color: ${footer1TextColor}; ${!hasFooter2 ? 'border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;' : ''}">
               ${(footer1Icon && footer1Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer1Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
               <span class="truncate">${escapeHtml(footer1Text)}</span>
             </div>
@@ -3654,12 +3654,12 @@ const BuyerStore = (() => {
           <!-- Footer 2 (Bawah): Bilah Diskon Countdown saat Promo Aktif, atau Info Paket saat Promo Off -->
           ${hasFooter2 ? (
             countdownInfo.is_active ? `
-              <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${countdownBg}; color: ${countdownTextColor};" title="${escapeHtml(countdownInfo.label_full)}">
+              <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${countdownBg}; color: ${countdownTextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;" title="${escapeHtml(countdownInfo.label_full)}">
                 <i data-lucide="ticket-percent" class="w-3.5 h-3.5 shrink-0" style="color: ${countdownIconColor};"></i>
                 <span class="truncate">${escapeHtml(countdownInfo.footer_label)}</span>
               </div>
             ` : `
-              <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${footer2Bg}; color: ${footer2TextColor};">
+              <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${footer2Bg}; color: ${footer2TextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
                 ${(footer2Icon && footer2Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
                 <span class="truncate">${escapeHtml(footer2Text)}</span>
               </div>

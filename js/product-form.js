@@ -29,6 +29,8 @@ const ProductForm = (() => {
   // State Snapshot Desain Kartu (SC-ADMIN-CARD-DESIGN-04: Tombol Batal & Pemulihan Desain)
   let cardDesignSnapshot = null;
   let cardDesignSnapshotKey = null;
+  let cardLegacyOptionValues = {};
+  let activeCardPresetDropdown = null;
 
   const FOOTER_ICONS_CATALOG = [
     { id: 'none', label: 'Tanpa Ikon', icon: 'ban', category: 'Umum' },
@@ -1524,6 +1526,8 @@ const ProductForm = (() => {
     previewStep1Tab = 'preview';
     cardDesignSnapshot = null;
     cardDesignSnapshotKey = null;
+    cardLegacyOptionValues = {};
+    if (typeof closeAllCardPresetDropdowns === 'function') closeAllCardPresetDropdowns(false);
     cardAccordionState = {
       frame: true,
       'text-info': false,
@@ -1945,6 +1949,8 @@ const ProductForm = (() => {
     previewStep1Tab = 'preview';
     cardDesignSnapshot = null;
     cardDesignSnapshotKey = null;
+    cardLegacyOptionValues = {};
+    if (typeof closeAllCardPresetDropdowns === 'function') closeAllCardPresetDropdowns(false);
     previewTestState.sidebarTab = 'preview';
     previewTestState.isDrawerOpen = false;
     previewTestState.drawerActionType = 'buy';
@@ -2106,6 +2112,11 @@ const ProductForm = (() => {
       countdown_bg_color: prod.countdown_bg_color || getPrimaryThemeColor(),
       countdown_text_color: prod.countdown_text_color || '#ffffff',
       countdown_border_color: prod.countdown_border_color || getPrimaryThemeColor(),
+      countdown_radius: (prod.countdown_radius !== undefined && prod.countdown_radius !== null && String(prod.countdown_radius).trim() !== '')
+        ? prod.countdown_radius
+        : ((prod.card_config && prod.card_config.countdown_radius !== undefined && prod.card_config.countdown_radius !== null && String(prod.card_config.countdown_radius).trim() !== '')
+            ? prod.card_config.countdown_radius
+            : '6px'),
       image_url: imgs.length > 0 ? imgs[0] : null,
       images: imgs,
       image_aspect_ratio: prod.image_aspect_ratio || (prod.card_variant === 'C' ? '4:3' : (prod.card_variant === 'B' ? '3:4' : '1:1')),
@@ -2421,6 +2432,7 @@ const ProductForm = (() => {
 
   function renderForm() {
     syncThemeCSSVariables();
+    if (typeof cleanupCardPresetDropdownPortals === 'function') cleanupCardPresetDropdownPortals();
     const container = document.getElementById('form-container');
     if (!container) return;
 
@@ -2813,34 +2825,8 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-border-text" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
-                      <div class="col-span-2 space-y-1.5 pt-1">
-                        <div class="flex items-center justify-between">
-                          <label for="cfg-border-width" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Outline</label>
-                          <span id="cfg-border-width-val" class="text-[11px] font-mono font-normal text-slate-700" title="1 px" aria-label="Tipis (1 px)">Tipis</span>
-                        </div>
-                        <input type="hidden" id="cfg-border-width" value="1" />
-                        <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="None (0 px)" aria-label="None (0 px)">None</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
-                        </div>
-                      </div>
-                      <div class="col-span-2 space-y-1.5 pt-1">
-                        <div class="flex items-center justify-between">
-                          <label for="cfg-border-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                          <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-border-radius" min="0" max="24" step="1" value="16" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                        </div>
-                        <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="16">16 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="24">24 px</button>
-                        </div>
-                      </div>
+                      ${renderCardPresetDropdownFieldHtml('border-width', false, 'col-span-2 space-y-1 pt-1', primaryState.card_config?.border_width)}
+                      ${renderCardPresetDropdownFieldHtml('border-radius', false, 'col-span-2 space-y-1 pt-1', primaryState.card_config?.border_radius)}
                     </div>
                   </div>
                 </div>
@@ -3000,22 +2986,7 @@ const ProductForm = (() => {
                       <!-- Panel Custom Label Diskon (Tampil jika Label Diskon TRUE) -->
                       <div id="cfg-discount-badge-panel-desk" class="px-2 pt-1 pb-1 space-y-2.5">
                         <!-- Radius Sudut Label Diskon -->
-                        <div class="space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label for="cfg-discount-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-discount-badge-radius" min="0" max="12" step="1" value="8" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                          </div>
-                          <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
-                          </div>
-                        </div>
+                        ${renderCardPresetDropdownFieldHtml('discount-badge-radius', false, 'space-y-1', primaryState.card_config?.discount_badge_radius)}
                         <!-- Posisi Label Diskon (Dropdown) -->
                         <div class="space-y-1">
                           <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Posisi Label</label>
@@ -3093,23 +3064,8 @@ const ProductForm = (() => {
                       </label>
                       <!-- Panel Custom Countdown (Tampil jika Countdown TRUE) -->
                       <div id="cfg-countdown-panel-desk" class="px-2 pt-1 pb-1 space-y-2.5">
-                        <!-- Radius Sudut Countdown Slider 0-12 px + Presets 0, 4, 6, 8, 12 px -->
-                        <div class="space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label for="cfg-countdown-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-countdown-radius" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                          </div>
-                          <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
-                          </div>
-                        </div>
+                        <!-- Radius Sudut Countdown (Dropdown 0, 4, 6, 8, 12 px) -->
+                        ${renderCardPresetDropdownFieldHtml('countdown-radius', false, 'space-y-1', (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '') ? primaryState.countdown_radius : primaryState.card_config?.countdown_radius)}
                         <!-- Warna Countdown -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
                           <div>
@@ -3170,23 +3126,8 @@ const ProductForm = (() => {
                           <input type="hidden" id="cfg-badge-style" value="bg" />
                         </div>
 
-                        <!-- Radius Sudut Label Khusus (Input 0-12 px + Pilihan Cepat 0, 4, 6, 8, 12 px) -->
-                        <div class="space-y-1.5 pt-0.5">
-                          <div class="flex items-center justify-between">
-                            <label for="cfg-badge-radius" class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Radius Sudut</label>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-badge-radius" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                          </div>
-                          <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
-                          </div>
-                        </div>
+                        <!-- Radius Sudut Label Khusus (Dropdown 0, 4, 6, 8, 12 px) -->
+                        ${renderCardPresetDropdownFieldHtml('badge-radius', false, 'space-y-1 pt-0.5', primaryState.card_config?.badge_radius)}
 
                         <!-- Pengaturan Warna Label Khusus -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
@@ -3445,34 +3386,8 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-border-text-mob" value="#e2e8f0" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
-                      <div class="col-span-2 space-y-1.5 pt-1">
-                        <div class="flex items-center justify-between">
-                          <label for="cfg-border-width-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Outline</label>
-                          <span id="cfg-border-width-val-mob" class="text-[11px] font-mono font-normal text-slate-700" title="1 px" aria-label="Tipis (1 px)">Tipis</span>
-                        </div>
-                        <input type="hidden" id="cfg-border-width-mob" value="1" />
-                        <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0" title="None (0 px)" aria-label="None (0 px)">None</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="1" title="Tipis (1 px)" aria-label="Tipis (1 px)">Tipis</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="2" title="Sedang (2 px)" aria-label="Sedang (2 px)">Sedang</button>
-                          <button type="button" class="btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="3" title="Tebal (3 px)" aria-label="Tebal (3 px)">Tebal</button>
-                        </div>
-                      </div>
-                      <div class="col-span-2 space-y-1.5 pt-1">
-                        <div class="flex items-center justify-between">
-                          <label for="cfg-border-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                          <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-border-radius-mob" min="0" max="24" step="1" value="16" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                        </div>
-                        <div class="flex items-center gap-1 pt-0.5">
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="16">16 px</button>
-                          <button type="button" class="btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="24">24 px</button>
-                        </div>
-                      </div>
+                      ${renderCardPresetDropdownFieldHtml('border-width', true, 'col-span-2 space-y-1 pt-1', primaryState.card_config?.border_width)}
+                      ${renderCardPresetDropdownFieldHtml('border-radius', true, 'col-span-2 space-y-1 pt-1', primaryState.card_config?.border_radius)}
                     </div>
                   </div>
                 </div>
@@ -3632,22 +3547,7 @@ const ProductForm = (() => {
                       <!-- Panel Custom Label Diskon Mobile (Tampil jika Label Diskon TRUE) -->
                       <div id="cfg-discount-badge-panel-mob" class="px-2 pt-1 pb-1 space-y-2.5">
                         <!-- Radius Sudut Label Diskon Mobile -->
-                        <div class="space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label for="cfg-discount-badge-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-discount-badge-radius-mob" min="0" max="12" step="1" value="8" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                          </div>
-                          <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
-                          </div>
-                        </div>
+                        ${renderCardPresetDropdownFieldHtml('discount-badge-radius', true, 'space-y-1', primaryState.card_config?.discount_badge_radius)}
                         <!-- Posisi Label Diskon Mobile (Dropdown) -->
                         <div class="space-y-1">
                           <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Posisi Label</label>
@@ -3725,23 +3625,8 @@ const ProductForm = (() => {
                       </label>
                       <!-- Panel Custom Countdown Mobile (Tampil jika Countdown TRUE) -->
                       <div id="cfg-countdown-panel-mob" class="px-2 pt-1 pb-1 space-y-2.5">
-                        <!-- Radius Sudut Countdown Mobile Slider 0-12 px + Presets 0, 4, 6, 8, 12 px -->
-                        <div class="space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label for="cfg-countdown-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-countdown-radius-mob" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                          </div>
-                          <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
-                          </div>
-                        </div>
+                        <!-- Radius Sudut Countdown Mobile (Dropdown 0, 4, 6, 8, 12 px) -->
+                        ${renderCardPresetDropdownFieldHtml('countdown-radius', true, 'space-y-1', (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '') ? primaryState.countdown_radius : primaryState.card_config?.countdown_radius)}
                         <!-- Warna Countdown Mobile -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
                           <div>
@@ -3802,23 +3687,8 @@ const ProductForm = (() => {
                           <input type="hidden" id="cfg-badge-style-mob" value="bg" />
                         </div>
 
-                        <!-- Radius Sudut Label Khusus Mobile (Slider 0-12 px + Pilihan Cepat 0, 4, 6, 8, 12 px) -->
-                        <div class="space-y-1.5 pt-0.5">
-                          <div class="flex items-center justify-between">
-                            <label for="cfg-badge-radius-mob" class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Radius Sudut</label>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                            <input type="number" id="cfg-badge-radius-mob" min="0" max="12" step="1" value="6" class="w-14 px-2 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                            <span class="text-[11px] font-normal text-slate-400 select-none shrink-0">px</span>
-                          </div>
-                          </div>
-                          <div class="flex items-center gap-1 pt-0.5">
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="0">0 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="4">4 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-value="6">6 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="8">8 px</button>
-                            <button type="button" class="btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer" data-value="12">12 px</button>
-                          </div>
-                        </div>
+                        <!-- Radius Sudut Label Khusus Mobile (Dropdown 0, 4, 6, 8, 12 px) -->
+                        ${renderCardPresetDropdownFieldHtml('badge-radius', true, 'space-y-1 pt-0.5', primaryState.card_config?.badge_radius)}
 
                         <!-- Pengaturan Warna Label Khusus Mobile -->
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
@@ -4491,23 +4361,472 @@ const ProductForm = (() => {
     return Math.max(0, Math.min(12, num));
   }
 
-  function updateBadgeRadiusPresetButtons(val) {
-    const isValProvided = val !== undefined && val !== null && val !== '';
-    const num = isValProvided ? parseBadgeRadius(val, 6) : null;
-    document.querySelectorAll('.btn-badge-radius-preset').forEach(btn => {
-      const btnVal = parseInt(btn.dataset.value, 10);
-      if (num !== null && btnVal === num) {
-        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
+  function parseBorderWidth(val, defaultVal = 1) {
+    if (val === undefined || val === null || val === '') return defaultVal;
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return defaultVal;
+    return Math.max(0, Math.min(3, num));
+  }
+
+  function parseBorderRadius(val, defaultVal = 16) {
+    if (val === undefined || val === null || val === '') return defaultVal;
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return defaultVal;
+    return Math.max(0, Math.min(24, num));
+  }
+
+  function parseDiscountBadgeRadius(val, defaultVal = 8) {
+    if (val === undefined || val === null || val === '') return defaultVal;
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return defaultVal;
+    return Math.max(0, Math.min(12, num));
+  }
+
+  function parseCountdownRadius(val, defaultVal = 6) {
+    if (val === undefined || val === null || val === '') return defaultVal;
+    if (typeof val === 'string' && val.includes('9999')) return 12; // sanitize legacy pill
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return defaultVal;
+    return Math.max(0, Math.min(12, num));
+  }
+
+  function getBorderWidthLabel(num) {
+    if (num === 0) return 'None';
+    if (num === 1) return 'Tipis';
+    if (num === 2) return 'Sedang';
+    if (num === 3) return 'Tebal';
+    return `${num} px`;
+  }
+
+  const CARD_PRESET_DROPDOWN_SPECS = {
+    'border-width': {
+      specKey: 'border-width',
+      title: 'Outline',
+      baseId: 'cfg-border-width',
+      containerId: 'cfg-border-width-container',
+      btnId: 'btn-border-width',
+      lblId: 'lbl-border-width',
+      chevronId: 'icon-border-width-chevron',
+      menuId: 'menu-border-width',
+      parser: parseBorderWidth,
+      defaultVal: 1,
+      presets: [
+        { value: 0, label: 'None (0 px)' },
+        { value: 1, label: 'Tipis (1 px)' },
+        { value: 2, label: 'Sedang (2 px)' },
+        { value: 3, label: 'Tebal (3 px)' }
+      ]
+    },
+    'border-radius': {
+      specKey: 'border-radius',
+      title: 'Radius Sudut',
+      baseId: 'cfg-border-radius',
+      containerId: 'cfg-border-radius-container',
+      btnId: 'btn-border-radius',
+      lblId: 'lbl-border-radius',
+      chevronId: 'icon-border-radius-chevron',
+      menuId: 'menu-border-radius',
+      parser: parseBorderRadius,
+      defaultVal: 16,
+      presets: [
+        { value: 0, label: '0 px' },
+        { value: 8, label: '8 px' },
+        { value: 16, label: '16 px' },
+        { value: 24, label: '24 px' }
+      ]
+    },
+    'badge-radius': {
+      specKey: 'badge-radius',
+      title: 'Radius Sudut',
+      baseId: 'cfg-badge-radius',
+      containerId: 'cfg-badge-radius-container',
+      btnId: 'btn-badge-radius',
+      lblId: 'lbl-badge-radius',
+      chevronId: 'icon-badge-radius-chevron',
+      menuId: 'menu-badge-radius',
+      parser: parseBadgeRadius,
+      defaultVal: 6,
+      presets: [
+        { value: 0, label: '0 px' },
+        { value: 4, label: '4 px' },
+        { value: 6, label: '6 px' },
+        { value: 8, label: '8 px' },
+        { value: 12, label: '12 px' }
+      ]
+    },
+    'discount-badge-radius': {
+      specKey: 'discount-badge-radius',
+      title: 'Radius Sudut',
+      baseId: 'cfg-discount-badge-radius',
+      containerId: 'cfg-discount-badge-radius-container',
+      btnId: 'btn-discount-badge-radius',
+      lblId: 'lbl-discount-badge-radius',
+      chevronId: 'icon-discount-badge-radius-chevron',
+      menuId: 'menu-discount-badge-radius',
+      parser: parseDiscountBadgeRadius,
+      defaultVal: 8,
+      presets: [
+        { value: 0, label: '0 px' },
+        { value: 4, label: '4 px' },
+        { value: 6, label: '6 px' },
+        { value: 8, label: '8 px' },
+        { value: 12, label: '12 px' }
+      ]
+    },
+    'countdown-radius': {
+      specKey: 'countdown-radius',
+      title: 'Radius Sudut',
+      baseId: 'cfg-countdown-radius',
+      containerId: 'cfg-countdown-radius-container',
+      btnId: 'btn-countdown-radius',
+      lblId: 'lbl-countdown-radius',
+      chevronId: 'icon-countdown-radius-chevron',
+      menuId: 'menu-countdown-radius',
+      parser: parseCountdownRadius,
+      defaultVal: 6,
+      presets: [
+        { value: 0, label: '0 px' },
+        { value: 4, label: '4 px' },
+        { value: 6, label: '6 px' },
+        { value: 8, label: '8 px' },
+        { value: 12, label: '12 px' }
+      ]
+    }
+  };
+
+  function getCardPresetOptions(specKey, currentNum = null) {
+    const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+    if (!spec) return [];
+    const options = spec.presets.map(p => ({ value: p.value, label: p.label, isLegacy: false }));
+    if (currentNum !== null && currentNum !== undefined && currentNum !== '' && !isNaN(Number(currentNum))) {
+      const parsedCur = spec.parser(currentNum, spec.defaultVal);
+      if (!options.some(o => o.value === parsedCur)) {
+        cardLegacyOptionValues[specKey] = parsedCur;
+      }
+    }
+    const legacyVal = cardLegacyOptionValues[specKey];
+    if (legacyVal !== undefined && legacyVal !== null && !options.some(o => o.value === legacyVal)) {
+      options.push({
+        value: legacyVal,
+        label: `${legacyVal} px (Tersimpan)`,
+        isLegacy: true
+      });
+    }
+    return options;
+  }
+
+  function getCardPresetDisplayLabel(specKey, val) {
+    const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+    if (!spec) return String(val ?? '');
+    const num = spec.parser(val, spec.defaultVal);
+    const opts = getCardPresetOptions(specKey, num);
+    const match = opts.find(o => o.value === num);
+    return match ? match.label : `${num} px`;
+  }
+
+  function renderCardPresetDropdownHtml(specKey, isMobile = false, initialValue = undefined) {
+    const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+    if (!spec) return '';
+    const suffix = isMobile ? '-mob' : '';
+    const labelId = `lbl-title-${specKey}${suffix}`;
+    const num = spec.parser(initialValue, spec.defaultVal);
+    const displayLabel = getCardPresetDisplayLabel(specKey, num);
+    return `
+      <div class="relative w-full" id="${spec.containerId}${suffix}">
+        <input type="hidden" id="${spec.baseId}${suffix}" value="${escapeHtml(String(num))}" />
+        <button
+          type="button"
+          id="${spec.btnId}${suffix}"
+          class="card-preset-select-btn w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-normal text-slate-700 bg-white border border-slate-200 rounded-[6px] hover:bg-slate-50 transition cursor-pointer select-none"
+          data-spec="${specKey}"
+          data-suffix="${suffix}"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-controls="${spec.menuId}${suffix}"
+          aria-labelledby="${labelId} ${spec.lblId}${suffix}"
+          title="${escapeHtml(displayLabel)}"
+        >
+          <span id="${spec.lblId}${suffix}" class="font-normal text-slate-700 truncate">${escapeHtml(displayLabel)}</span>
+          <i class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0 ml-2" id="${spec.chevronId}${suffix}" aria-hidden="true"></i>
+        </button>
+      </div>
+    `;
+  }
+
+  function renderCardPresetDropdownFieldHtml(specKey, isMobile = false, wrapperClass = 'space-y-1', initialValue = undefined) {
+    const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+    if (!spec) return '';
+    const suffix = isMobile ? '-mob' : '';
+    const labelId = `lbl-title-${specKey}${suffix}`;
+    const labelClass = isMobile
+      ? 'block card-tool-label text-[11px] leading-4 font-normal text-slate-500'
+      : 'block text-[10px] font-normal text-slate-500 uppercase tracking-wider';
+    return `
+      <div class="${wrapperClass}">
+        <label id="${labelId}" for="${spec.btnId}${suffix}" class="${labelClass}">${escapeHtml(spec.title)}</label>
+        ${renderCardPresetDropdownHtml(specKey, isMobile, initialValue)}
+      </div>
+    `;
+  }
+
+  function updateOutlineColorControlsState(bw) {
+    const isZero = parseInt(bw, 10) === 0;
+    ['cfg-border-color', 'cfg-border-text'].forEach(base => {
+      ['', '-mob'].forEach(sfx => {
+        const el = document.getElementById(base + sfx);
+        if (!el) return;
+        el.disabled = isZero;
+        if (isZero) {
+          el.classList.add('opacity-40', 'cursor-not-allowed');
+          if (base === 'cfg-border-text') el.classList.add('bg-slate-100');
+        } else {
+          el.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
+        }
+      });
+    });
+  }
+
+  function cleanupCardPresetDropdownPortals() {
+    if (typeof document === 'undefined') {
+      activeCardPresetDropdown = null;
+      return;
+    }
+    document.querySelectorAll('[data-card-preset-portal="true"]').forEach(el => el.remove());
+    activeCardPresetDropdown = null;
+  }
+
+  function closeAllCardPresetDropdowns(returnFocus = false) {
+    const prevBtn = activeCardPresetDropdown ? activeCardPresetDropdown.btnEl : null;
+    if (typeof document !== 'undefined') {
+      Object.values(CARD_PRESET_DROPDOWN_SPECS).forEach(spec => {
+        ['', '-mob'].forEach(suffix => {
+          const btn = document.getElementById(`${spec.btnId}${suffix}`);
+          const chevron = document.getElementById(`${spec.chevronId}${suffix}`);
+          const menu = document.getElementById(`${spec.menuId}${suffix}`);
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+          if (chevron) chevron.classList.remove('rotate-180');
+          if (menu) menu.classList.add('hidden');
+        });
+      });
+    }
+    activeCardPresetDropdown = null;
+    if (returnFocus && prevBtn && typeof prevBtn.focus === 'function') {
+      prevBtn.focus();
+    }
+  }
+
+  function positionCardPresetMenu(btnEl, menuEl) {
+    if (!btnEl || !menuEl) return;
+    const rect = typeof btnEl.getBoundingClientRect === 'function'
+      ? btnEl.getBoundingClientRect()
+      : { top: 0, bottom: 0, left: 0, width: 160 };
+    const vw = (typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth > 0) ? window.innerWidth : 1024;
+    const vh = (typeof window !== 'undefined' && typeof window.innerHeight === 'number' && window.innerHeight > 0) ? window.innerHeight : 768;
+    const menuWidth = Math.max(rect.width || 0, 140);
+    let left = rect.left || 0;
+    if (left + menuWidth > vw - 8) {
+      left = Math.max(8, vw - menuWidth - 8);
+    }
+    const approxHeight = menuEl.offsetHeight || Math.min(220, ((menuEl.children ? menuEl.children.length : 4) * 30) + 8);
+    const spaceBelow = vh - (rect.bottom || 0) - 8;
+    const spaceAbove = (rect.top || 0) - 8;
+    let top = (rect.bottom || 0) + 4;
+    if (spaceBelow < approxHeight && spaceAbove > spaceBelow) {
+      top = Math.max(8, (rect.top || 0) - approxHeight - 4);
+    }
+    menuEl.style.left = `${Math.round(left)}px`;
+    menuEl.style.top = `${Math.round(top)}px`;
+    menuEl.style.width = `${Math.round(menuWidth)}px`;
+  }
+
+  function highlightCardPresetOption(ctx, nextIdx) {
+    if (!ctx || !ctx.menuEl) return;
+    const opts = ctx.options || [];
+    if (opts.length === 0) return;
+    const safeIdx = ((nextIdx % opts.length) + opts.length) % opts.length;
+    ctx.highlightedIdx = safeIdx;
+    const optionEls = ctx.menuEl.querySelectorAll('.card-preset-select-option');
+    let activeId = '';
+    optionEls.forEach((optEl, idx) => {
+      if (idx === safeIdx) {
+        optEl.classList.add('is-active');
+        activeId = optEl.id || '';
       } else {
-        btn.className = 'btn-badge-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
+        optEl.classList.remove('is-active');
       }
     });
-    const inpDesk = document.getElementById('cfg-badge-radius');
-    const inpMob = document.getElementById('cfg-badge-radius-mob');
-    if (num !== null) {
-      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
-      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
+    if (activeId) {
+      ctx.menuEl.setAttribute('aria-activedescendant', activeId);
+    } else {
+      ctx.menuEl.removeAttribute('aria-activedescendant');
     }
+  }
+
+  function syncCardPresetDropdownUI(specKey, val) {
+    const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+    if (!spec) return;
+    const isValProvided = val !== undefined && val !== null && val !== '';
+    const num = isValProvided ? spec.parser(val, spec.defaultVal) : spec.defaultVal;
+    const displayLabel = getCardPresetDisplayLabel(specKey, num);
+
+    if (typeof document !== 'undefined') {
+      ['', '-mob'].forEach(suffix => {
+        const inp = document.getElementById(`${spec.baseId}${suffix}`);
+        if (inp && inp.value !== String(num)) inp.value = String(num);
+        const lbl = document.getElementById(`${spec.lblId}${suffix}`);
+        if (lbl) lbl.textContent = displayLabel;
+        const btn = document.getElementById(`${spec.btnId}${suffix}`);
+        if (btn) btn.setAttribute('title', displayLabel);
+      });
+    }
+
+    if (specKey === 'border-width') {
+      updateOutlineColorControlsState(num);
+    }
+
+    if (activeCardPresetDropdown && activeCardPresetDropdown.specKey === specKey) {
+      renderCardPresetPortalOptions(activeCardPresetDropdown, num);
+    }
+  }
+
+  function selectCardPresetOption(specKey, rawVal) {
+    const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+    if (!spec) return;
+    const num = spec.parser(rawVal, spec.defaultVal);
+    syncCardPresetDropdownUI(specKey, num);
+    closeAllCardPresetDropdowns(true);
+    markCardDesignAsCustom();
+  }
+
+  function renderCardPresetPortalOptions(ctx, selectedValOverride = undefined) {
+    if (!ctx || !ctx.menuEl) return;
+    const spec = CARD_PRESET_DROPDOWN_SPECS[ctx.specKey];
+    if (!spec) return;
+    const hiddenInp = document.getElementById(`${spec.baseId}${ctx.suffix}`);
+    const curVal = selectedValOverride !== undefined ? selectedValOverride : (hiddenInp ? hiddenInp.value : spec.defaultVal);
+    const currentNum = spec.parser(curVal, spec.defaultVal);
+    const options = getCardPresetOptions(ctx.specKey, currentNum);
+    ctx.options = options;
+
+    ctx.menuEl.innerHTML = options.map((opt, idx) => {
+      const isSelected = opt.value === currentNum;
+      const optId = `${spec.menuId}${ctx.suffix}-opt-${idx}`;
+      return `
+        <button
+          type="button"
+          id="${optId}"
+          role="option"
+          aria-selected="${isSelected ? 'true' : 'false'}"
+          data-value="${escapeHtml(String(opt.value))}"
+          class="card-preset-select-option"
+          tabindex="-1"
+        >
+          <span class="truncate font-normal">${escapeHtml(opt.label)}</span>
+          ${isSelected ? '<i class="bi bi-check2 card-preset-select-check" aria-hidden="true"></i>' : ''}
+        </button>
+      `;
+    }).join('');
+
+    ctx.menuEl.querySelectorAll('.card-preset-select-option').forEach((optBtn, idx) => {
+      optBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        selectCardPresetOption(ctx.specKey, optBtn.getAttribute('data-value'));
+      });
+      optBtn.addEventListener('mouseenter', () => {
+        highlightCardPresetOption(ctx, idx);
+      });
+    });
+
+    const selectedIdx = options.findIndex(o => o.value === currentNum);
+    highlightCardPresetOption(ctx, selectedIdx >= 0 ? selectedIdx : 0);
+  }
+
+  function openCardPresetDropdown(specKey, suffix = '', initialHighlightMode = 'selected') {
+    if (typeof document === 'undefined') return;
+    const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+    if (!spec) return;
+    const btnEl = document.getElementById(`${spec.btnId}${suffix}`);
+    const chevronEl = document.getElementById(`${spec.chevronId}${suffix}`);
+    if (!btnEl) return;
+
+    const wasSameOpen = Boolean(
+      activeCardPresetDropdown &&
+      activeCardPresetDropdown.specKey === specKey &&
+      activeCardPresetDropdown.suffix === suffix
+    );
+    if (wasSameOpen) {
+      closeAllCardPresetDropdowns(false);
+      return;
+    }
+
+    closeAllCardPresetDropdowns(false);
+    if (typeof closeAllDiscountBadgePosDropdowns === 'function') {
+      closeAllDiscountBadgePosDropdowns();
+    }
+
+    const menuId = `${spec.menuId}${suffix}`;
+    let menuEl = document.getElementById(menuId);
+    if (!menuEl) {
+      menuEl = document.createElement('div');
+      menuEl.id = menuId;
+      menuEl.setAttribute('data-card-preset-portal', 'true');
+      menuEl.setAttribute('role', 'listbox');
+      menuEl.setAttribute('tabindex', '-1');
+      menuEl.setAttribute('aria-labelledby', `lbl-title-${specKey}${suffix}`);
+      menuEl.className = 'card-preset-select-menu hidden';
+      document.body.appendChild(menuEl);
+    } else if (menuEl.parentNode !== document.body) {
+      document.body.appendChild(menuEl);
+    }
+
+    const ctx = {
+      specKey,
+      suffix,
+      btnEl,
+      menuEl,
+      options: [],
+      highlightedIdx: 0
+    };
+    activeCardPresetDropdown = ctx;
+    renderCardPresetPortalOptions(ctx);
+    if (initialHighlightMode === 'first') {
+      highlightCardPresetOption(ctx, 0);
+    } else if (initialHighlightMode === 'last' && ctx.options.length > 0) {
+      highlightCardPresetOption(ctx, ctx.options.length - 1);
+    }
+
+    menuEl.classList.remove('hidden');
+    btnEl.setAttribute('aria-expanded', 'true');
+    if (chevronEl) chevronEl.classList.add('rotate-180');
+    positionCardPresetMenu(btnEl, menuEl);
+    if (typeof menuEl.focus === 'function') {
+      try {
+        menuEl.focus({ preventScroll: true });
+      } catch (e) {
+        menuEl.focus();
+      }
+    }
+  }
+
+  function updateBadgeRadiusPresetButtons(val) {
+    syncCardPresetDropdownUI('badge-radius', val);
+  }
+
+  function updateBorderWidthPresetButtons(val) {
+    syncCardPresetDropdownUI('border-width', val);
+  }
+
+  function updateBorderRadiusPresetButtons(val) {
+    syncCardPresetDropdownUI('border-radius', val);
+  }
+
+  function updateDiscountBadgeRadiusPresetButtons(val) {
+    syncCardPresetDropdownUI('discount-badge-radius', val);
+  }
+
+  function updateCountdownRadiusPresetButtons(val) {
+    syncCardPresetDropdownUI('countdown-radius', val);
   }
 
   function setBadgeStyleMode(mode) {
@@ -4543,125 +4862,11 @@ const ProductForm = (() => {
     });
   }
 
-  function parseBorderWidth(val, defaultVal = 1) {
-    if (val === undefined || val === null || val === '') return defaultVal;
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return defaultVal;
-    return Math.max(0, Math.min(3, num));
-  }
-
-  function parseBorderRadius(val, defaultVal = 16) {
-    if (val === undefined || val === null || val === '') return defaultVal;
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return defaultVal;
-    return Math.max(0, Math.min(24, num));
-  }
-
   function isMobilePreviewSheetOpen() {
     const s = document.getElementById('mobile-preview-sheet');
     if (!s) return false;
     const isSmall = typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 1024;
     return !s.classList.contains('translate-y-full') || isSmall;
-  }
-
-  function getBorderWidthLabel(num) {
-    if (num === 0) return 'None';
-    if (num === 1) return 'Tipis';
-    if (num === 2) return 'Sedang';
-    if (num === 3) return 'Tebal';
-    return `${num} px`;
-  }
-
-  function updateOutlineColorControlsState(bw) {
-    const isZero = parseInt(bw, 10) === 0;
-    ['cfg-border-color', 'cfg-border-text'].forEach(base => {
-      ['', '-mob'].forEach(sfx => {
-        const el = document.getElementById(base + sfx);
-        if (!el) return;
-        el.disabled = isZero;
-        if (isZero) {
-          el.classList.add('opacity-40', 'cursor-not-allowed');
-          if (base === 'cfg-border-text') el.classList.add('bg-slate-100');
-        } else {
-          el.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
-        }
-      });
-    });
-  }
-
-  function updateBorderWidthPresetButtons(val) {
-    const num = parseBorderWidth(val, 1);
-    document.querySelectorAll('.btn-border-width-preset').forEach(btn => {
-      const btnVal = parseInt(btn.dataset.value, 10);
-      if (btnVal === num) {
-        btn.className = 'btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
-      } else {
-        btn.className = 'btn-border-width-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
-      }
-    });
-    const valLabelDesk = document.getElementById('cfg-border-width-val');
-    const valLabelMob = document.getElementById('cfg-border-width-val-mob');
-    const term = getBorderWidthLabel(num);
-    if (valLabelDesk) {
-      valLabelDesk.textContent = term;
-      valLabelDesk.title = `${num} px`;
-      valLabelDesk.setAttribute('aria-label', `${term} (${num} px)`);
-    }
-    if (valLabelMob) {
-      valLabelMob.textContent = term;
-      valLabelMob.title = `${num} px`;
-      valLabelMob.setAttribute('aria-label', `${term} (${num} px)`);
-    }
-    const bwInpDesk = document.getElementById('cfg-border-width');
-    const bwInpMob = document.getElementById('cfg-border-width-mob');
-    if (bwInpDesk && bwInpDesk.value !== String(num)) bwInpDesk.value = num;
-    if (bwInpMob && bwInpMob.value !== String(num)) bwInpMob.value = num;
-    updateOutlineColorControlsState(num);
-  }
-
-  function updateBorderRadiusPresetButtons(val) {
-    const isValProvided = val !== undefined && val !== null && val !== '';
-    const num = isValProvided ? parseBorderRadius(val, 16) : null;
-    document.querySelectorAll('.btn-border-radius-preset').forEach(btn => {
-      const btnVal = parseInt(btn.dataset.value, 10);
-      if (num !== null && btnVal === num) {
-        btn.className = 'btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
-      } else {
-        btn.className = 'btn-border-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
-      }
-    });
-    const inpDesk = document.getElementById('cfg-border-radius');
-    const inpMob = document.getElementById('cfg-border-radius-mob');
-    if (num !== null) {
-      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
-      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
-    }
-  }
-
-  function parseDiscountBadgeRadius(val, defaultVal = 8) {
-    if (val === undefined || val === null || val === '') return defaultVal;
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return defaultVal;
-    return Math.max(0, Math.min(12, num));
-  }
-
-  function updateDiscountBadgeRadiusPresetButtons(val) {
-    const isValProvided = val !== undefined && val !== null && val !== '';
-    const num = isValProvided ? parseDiscountBadgeRadius(val, 8) : null;
-    document.querySelectorAll('.btn-disc-radius-preset').forEach(btn => {
-      const btnVal = parseInt(btn.dataset.value, 10);
-      if (num !== null && btnVal === num) {
-        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
-      } else {
-        btn.className = 'btn-disc-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
-      }
-    });
-    const inpDesk = document.getElementById('cfg-discount-badge-radius');
-    const inpMob = document.getElementById('cfg-discount-badge-radius-mob');
-    if (num !== null) {
-      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
-      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
-    }
   }
 
   const DISCOUNT_BADGE_POS_LABELS = {
@@ -4749,33 +4954,6 @@ const ProductForm = (() => {
     if (pos === 'bottom-left') return 'bottom-2 left-2';
     if (pos === 'bottom-right') return 'bottom-2 right-2';
     return 'top-2 right-2'; // default top-right
-  }
-
-  function parseCountdownRadius(val, defaultVal = 6) {
-    if (val === undefined || val === null || val === '') return defaultVal;
-    if (typeof val === 'string' && val.includes('9999')) return 12; // sanitize legacy pill
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return defaultVal;
-    return Math.max(0, Math.min(12, num));
-  }
-
-  function updateCountdownRadiusPresetButtons(val) {
-    const isValProvided = val !== undefined && val !== null && val !== '';
-    const num = isValProvided ? parseCountdownRadius(val, 6) : null;
-    document.querySelectorAll('.btn-countdown-radius-preset').forEach(btn => {
-      const btnVal = parseInt(btn.dataset.value, 10);
-      if (num !== null && btnVal === num) {
-        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer';
-      } else {
-        btn.className = 'btn-countdown-radius-preset flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition cursor-pointer';
-      }
-    });
-    const inpDesk = document.getElementById('cfg-countdown-radius');
-    const inpMob = document.getElementById('cfg-countdown-radius-mob');
-    if (num !== null) {
-      if (inpDesk && (typeof document === 'undefined' || document.activeElement !== inpDesk) && inpDesk.value !== String(num)) inpDesk.value = num;
-      if (inpMob && (typeof document === 'undefined' || document.activeElement !== inpMob) && inpMob.value !== String(num)) inpMob.value = num;
-    }
   }
 
   function syncFeatureSubpanels() {
@@ -4867,15 +5045,21 @@ const ProductForm = (() => {
     else if (badgeMob) showBadgeVal = badgeMob.checked;
     else if (badgeBlokA) showBadgeVal = badgeBlokA.checked;
 
+    const isMobOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
     const getVal = (id1, id2, fallback) => {
       const el1 = document.getElementById(id1);
-      if (el1 && el1.value) return el1.value;
       const el2 = document.getElementById(id2);
-      if (el2 && el2.value) return el2.value;
+      const primaryEl = (isMobOpen && el2) ? el2 : el1;
+      const secondaryEl = (isMobOpen && el2) ? el1 : el2;
+      if (primaryEl && primaryEl.value !== undefined && primaryEl.value !== null && String(primaryEl.value) !== '') {
+        return primaryEl.value;
+      }
+      if (secondaryEl && secondaryEl.value !== undefined && secondaryEl.value !== null && String(secondaryEl.value) !== '') {
+        return secondaryEl.value;
+      }
       return fallback;
     };
     const getChk = (id1, id2) => {
-      const isMobOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
       const el1 = document.getElementById(id1);
       const el2 = document.getElementById(id2);
       if (isMobOpen && el2) return el2.checked !== false;
@@ -4958,11 +5142,23 @@ const ProductForm = (() => {
     setVal('cfg-border-color', cfg.border_color || defaultCfg.border_color || '#e2e8f0');
     setVal('cfg-border-text', cfg.border_color || defaultCfg.border_color || '#e2e8f0');
 
+    const syncLegacyTrack = (specKey, parsedNum) => {
+      const spec = CARD_PRESET_DROPDOWN_SPECS[specKey];
+      if (!spec) return;
+      if (!forceDefault && !useDefault && !spec.presets.some(p => p.value === parsedNum)) {
+        cardLegacyOptionValues[specKey] = parsedNum;
+      } else {
+        cardLegacyOptionValues[specKey] = null;
+      }
+    };
+
     const bwNum = parseBorderWidth(cfg.border_width, 1);
+    syncLegacyTrack('border-width', bwNum);
     setVal('cfg-border-width', bwNum);
     updateBorderWidthPresetButtons(bwNum);
 
     const brNum = parseBorderRadius(cfg.border_radius, 16);
+    syncLegacyTrack('border-radius', brNum);
     setVal('cfg-border-radius', brNum);
     updateBorderRadiusPresetButtons(brNum);
     setVal('cfg-title-color', cfg.title_color || '#0f172a');
@@ -4991,6 +5187,7 @@ const ProductForm = (() => {
 
     setChk('cfg-show-discount-badge', cfg.show_discount_badge !== false);
     const discRadNum = parseDiscountBadgeRadius(cfg.discount_badge_radius, 8);
+    syncLegacyTrack('discount-badge-radius', discRadNum);
     setVal('cfg-discount-badge-radius', discRadNum);
     updateDiscountBadgeRadiusPresetButtons(discRadNum);
 
@@ -5015,6 +5212,7 @@ const ProductForm = (() => {
     setBadgeStyleMode(bStyle);
 
     const bRadiusNum = parseBadgeRadius(cfg.badge_radius, 6);
+    syncLegacyTrack('badge-radius', bRadiusNum);
     setVal('cfg-badge-radius', bRadiusNum);
     updateBadgeRadiusPresetButtons(bRadiusNum);
 
@@ -5031,7 +5229,11 @@ const ProductForm = (() => {
     setVal('cfg-badge-border-hex', bBorder);
 
     // Countdown styling tokens
-    const cdRadNum = parseCountdownRadius(primaryState.countdown_radius || cfg.countdown_radius, 6);
+    const rawCdRad = (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '')
+      ? primaryState.countdown_radius
+      : cfg.countdown_radius;
+    const cdRadNum = parseCountdownRadius(rawCdRad, 6);
+    syncLegacyTrack('countdown-radius', cdRadNum);
     setVal('cfg-countdown-radius', cdRadNum);
     updateCountdownRadiusPresetButtons(cdRadNum);
 
@@ -5110,8 +5312,10 @@ const ProductForm = (() => {
 
     if (primaryState.use_default_card_design === false) {
       primaryState.card_config = { ...cfg };
+      primaryState.countdown_radius = cfg.countdown_radius;
     } else {
       delete primaryState.card_config;
+      delete primaryState.countdown_radius;
     }
 
     const shouldSaveDefault = forceSaveAsDefault || (document.getElementById("cfg-save-as-default-toggle")?.checked === true) || (document.getElementById("cfg-save-as-default-toggle-mob")?.checked === true);
@@ -5233,6 +5437,12 @@ const ProductForm = (() => {
 
       isFooterTouched = true;
       // Simpan berhasil -> hasil simpan menjadi nilai baseline untuk pengeditan berikutnya
+      Object.entries(CARD_PRESET_DROPDOWN_SPECS).forEach(([specKey, spec]) => {
+        const curVal = primaryState.card_config ? primaryState.card_config[specKey.replace(/-/g, '_')] : undefined;
+        const parsed = spec.parser(curVal, spec.defaultVal);
+        cardLegacyOptionValues[specKey] = (primaryState.use_default_card_design === false && !spec.presets.some(p => p.value === parsed)) ? parsed : null;
+        syncCardPresetDropdownUI(specKey, parsed);
+      });
       captureCardDesignSnapshot(true);
 
       if (typeof App !== 'undefined' && App.showToast) {
@@ -5404,14 +5614,17 @@ const ProductForm = (() => {
       });
 
       // Pulihkan input countdown di DOM
-      const cRadius = primaryState.countdown_radius || '9999px';
+      const rawCdRadCancel = (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '')
+        ? primaryState.countdown_radius
+        : (primaryState.card_config?.countdown_radius !== undefined ? primaryState.card_config.countdown_radius : 6);
+      const cRadius = parseCountdownRadius(rawCdRadCancel, 6);
       const cBg = primaryState.countdown_bg_color || getThemeBodyColor();
       const cTxt = primaryState.countdown_text_color || '#ffffff';
       const cIco = primaryState.countdown_icon_color || '#ffffff';
       const cBrd = primaryState.countdown_border_color || getThemeBodyColor();
       const cEnable = primaryState.enable_countdown !== false;
 
-      [document.getElementById('cfg-countdown-radius'), document.getElementById('cfg-countdown-radius-mob')].forEach(x => { if (x) x.value = cRadius; });
+      updateCountdownRadiusPresetButtons(cRadius);
       [document.getElementById('cfg-countdown-bg-color'), document.getElementById('cfg-countdown-bg-hex'), document.getElementById('cfg-countdown-bg-color-mob'), document.getElementById('cfg-countdown-bg-hex-mob')].forEach(x => { if (x) x.value = cBg; });
       [document.getElementById('cfg-countdown-text-color'), document.getElementById('cfg-countdown-text-hex'), document.getElementById('cfg-countdown-text-color-mob'), document.getElementById('cfg-countdown-text-hex-mob')].forEach(x => { if (x) x.value = cTxt; });
       [document.getElementById('cfg-countdown-icon-color'), document.getElementById('cfg-countdown-icon-hex'), document.getElementById('cfg-countdown-icon-color-mob'), document.getElementById('cfg-countdown-icon-hex-mob')].forEach(x => { if (x) x.value = cIco; });
@@ -6397,6 +6610,7 @@ const ProductForm = (() => {
       if (btn) {
         btn.onclick = (e) => {
           e.preventDefault();
+          if (typeof closeAllCardPresetDropdowns === 'function') closeAllCardPresetDropdowns(false);
           previewStep1Tab = 'preview';
           updatePreviewSidebarHeader();
           updateProductCardLivePreview();
@@ -10020,14 +10234,25 @@ const ProductForm = (() => {
     const safePrice = (isCustomMode && rawPrice && rawPrice.toLowerCase() !== '#000000') ? rawPrice : (primaryState.card_config?.price_color || defaultPriceColor);
     const safeBtn = (isCustomMode && rawBtn && rawBtn.toLowerCase() !== '#000000') ? rawBtn : (primaryState.card_config?.btn_color || defaultBtnColor);
 
-    const domBw = document.getElementById('cfg-border-width')?.value ?? document.getElementById('cfg-border-width-mob')?.value;
-    const rawBw = (domBw !== undefined && domBw !== null && domBw !== '') ? domBw : primaryState.card_config?.border_width;
+    const isMobSheetOpen = isMobilePreviewSheetOpen();
+    const getLiveDomVal = (deskId, mobId, fallbackVal) => {
+      const dEl = document.getElementById(deskId);
+      const mEl = document.getElementById(mobId);
+      const first = isMobSheetOpen ? mEl : dEl;
+      const second = isMobSheetOpen ? dEl : mEl;
+      const v1 = first?.value;
+      if (v1 !== undefined && v1 !== null && String(v1) !== '') return v1;
+      const v2 = second?.value;
+      if (v2 !== undefined && v2 !== null && String(v2) !== '') return v2;
+      return fallbackVal;
+    };
+
+    const rawBw = getLiveDomVal('cfg-border-width', 'cfg-border-width-mob', primaryState.card_config?.border_width);
     const borderWidthNum = isCustomMode
       ? parseBorderWidth(rawBw, defaultBorderWidth)
       : defaultBorderWidth;
 
-    const domBr = document.getElementById('cfg-border-radius')?.value ?? document.getElementById('cfg-border-radius-mob')?.value;
-    const rawBr = (domBr !== undefined && domBr !== null && domBr !== '') ? domBr : primaryState.card_config?.border_radius;
+    const rawBr = getLiveDomVal('cfg-border-radius', 'cfg-border-radius-mob', primaryState.card_config?.border_radius);
     const borderRadiusNum = isCustomMode
       ? parseBorderRadius(rawBr, defaultBorderRadius)
       : defaultBorderRadius;
@@ -10036,7 +10261,6 @@ const ProductForm = (() => {
       ? 'border: none; border-width: 0px;'
       : `border: ${borderWidthNum}px solid ${safeBorder};`;
 
-    const isMobSheetOpen = isMobilePreviewSheetOpen();
     const getLiveChk = (deskId, mobId, fallback = true) => {
       const dEl = document.getElementById(deskId);
       const mEl = document.getElementById(mobId);
@@ -10176,9 +10400,9 @@ const ProductForm = (() => {
     const strikePriceColor = document.getElementById('cfg-strike-color')?.value || primaryState.card_config?.strike_price_color || '#94a3b8';
 
     // Discount Badge Custom Styles (pada foto produk)
-    const rawDiscRadius = document.getElementById('cfg-discount-badge-radius')?.value ?? primaryState.card_config?.discount_badge_radius;
+    const rawDiscRadius = getLiveDomVal('cfg-discount-badge-radius', 'cfg-discount-badge-radius-mob', primaryState.card_config?.discount_badge_radius);
     const discBadgeRadius = `${parseDiscountBadgeRadius(rawDiscRadius, 8)}px`;
-    const discBadgePos = document.getElementById('cfg-discount-badge-position')?.value || primaryState.card_config?.discount_badge_position || 'top-right';
+    const discBadgePos = getLiveDomVal('cfg-discount-badge-position', 'cfg-discount-badge-position-mob', primaryState.card_config?.discount_badge_position) || 'top-right';
     const discBadgePosClass = getDiscountBadgePositionClass(discBadgePos);
     const discBadgeTextColor = document.getElementById('cfg-discount-badge-text-color')?.value || primaryState.card_config?.discount_badge_text_color || '#ffffff';
     const discBadgeBgColor = document.getElementById('cfg-discount-badge-bg-color')?.value || defCardThemeColor;
@@ -10187,10 +10411,10 @@ const ProductForm = (() => {
 
     // Badge Custom Styles (label khusus)
     const defBadge = getThemeDefaultBadgeColors(variant);
-    const rawBadgeStyle = document.getElementById('cfg-badge-style')?.value ?? primaryState.card_config?.badge_style;
+    const rawBadgeStyle = getLiveDomVal('cfg-badge-style', 'cfg-badge-style-mob', primaryState.card_config?.badge_style);
     const badgeStyleMode = rawBadgeStyle || (primaryState.card_config?.badge_style || defBadge.style || 'bg');
 
-    const rawBadgeRadius = document.getElementById('cfg-badge-radius')?.value ?? document.getElementById('cfg-badge-radius-mob')?.value ?? primaryState.card_config?.badge_radius;
+    const rawBadgeRadius = getLiveDomVal('cfg-badge-radius', 'cfg-badge-radius-mob', primaryState.card_config?.badge_radius);
     const badgeRadiusNum = parseBadgeRadius(rawBadgeRadius, 6);
     const badgeRadius = `${badgeRadiusNum}px`;
 
@@ -10221,7 +10445,10 @@ const ProductForm = (() => {
     }
 
     // Countdown Badge Custom Styles
-    const rawCdRadius = document.getElementById('cfg-countdown-radius')?.value ?? document.getElementById('cfg-countdown-radius-mob')?.value ?? primaryState.countdown_radius;
+    const rawCdFallback = (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '')
+      ? primaryState.countdown_radius
+      : primaryState.card_config?.countdown_radius;
+    const rawCdRadius = getLiveDomVal('cfg-countdown-radius', 'cfg-countdown-radius-mob', rawCdFallback);
     const countdownRadius = `${parseCountdownRadius(rawCdRadius, 6)}px`;
     const countdownBgColor = document.getElementById('cfg-countdown-bg-color')?.value || document.getElementById('cfg-countdown-bg-color-mob')?.value || primaryState.countdown_bg_color || defCardThemeColor;
     const countdownTextColor = document.getElementById('cfg-countdown-text-color')?.value || document.getElementById('cfg-countdown-text-color-mob')?.value || primaryState.countdown_text_color || '#ffffff';
@@ -10402,16 +10629,34 @@ const ProductForm = (() => {
     };
 
     // Footer 1 Custom Styles (Khusus Card C)
-    const footerBgColor = document.getElementById('cfg-footer-bg-color-side')?.value || document.getElementById('cfg-footer-bg-color')?.value || primaryState.footer_bg_color || defCardThemeColor;
-    const footerTextColor = document.getElementById('cfg-footer-text-color-side')?.value || document.getElementById('cfg-footer-text-color')?.value || primaryState.footer_text_color || '#ffffff';
-    const footerTextInput = document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text');
+    const footerBgColor = (isMobSheetOpen
+      ? (document.getElementById('cfg-footer-bg-color-mob')?.value || document.getElementById('cfg-footer-bg-color-side')?.value)
+      : (document.getElementById('cfg-footer-bg-color-side')?.value || document.getElementById('cfg-footer-bg-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-bg-color')?.value || primaryState.footer_bg_color || defCardThemeColor;
+    const footerTextColor = (isMobSheetOpen
+      ? (document.getElementById('cfg-footer-text-color-mob')?.value || document.getElementById('cfg-footer-text-color-side')?.value)
+      : (document.getElementById('cfg-footer-text-color-side')?.value || document.getElementById('cfg-footer-text-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-text-color')?.value || primaryState.footer_text_color || '#ffffff';
+    const footerTextInput = (isMobSheetOpen
+      ? (document.getElementById('input-card-footer-text-mob') || document.getElementById('input-card-footer-text-side'))
+      : (document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text-mob'))
+    ) || document.getElementById('input-card-footer-text');
     const rawFooterText = (footerTextInput ? footerTextInput.value : (primaryState.card_footer_text || '')).trim();
     const footerIcon = (primaryState.footer_badge_icon || 'truck').trim();
 
     // Footer 2 Custom Styles (Khusus Card C)
-    const footer2BgColor = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || (cfg && cfg.footer_2_bg_color) || getSecondaryThemeColor();
-    const footer2TextColor = document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.footer_2_text_color || '#ffffff';
-    const footer2TextInput = document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text');
+    const footer2BgColor = (isMobSheetOpen
+      ? (document.getElementById('cfg-footer-2-bg-color-mob')?.value || document.getElementById('cfg-footer-2-bg-color-side')?.value)
+      : (document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.footer_2_bg_color || (cfg && cfg.footer_2_bg_color) || getSecondaryThemeColor();
+    const footer2TextColor = (isMobSheetOpen
+      ? (document.getElementById('cfg-footer-2-text-color-mob')?.value || document.getElementById('cfg-footer-2-text-color-side')?.value)
+      : (document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.footer_2_text_color || '#ffffff';
+    const footer2TextInput = (isMobSheetOpen
+      ? (document.getElementById('input-card-footer-2-text-mob') || document.getElementById('input-card-footer-2-text-side'))
+      : (document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text-mob'))
+    ) || document.getElementById('input-card-footer-2-text');
     const rawFooter2Text = (footer2TextInput ? footer2TextInput.value : (primaryState.card_footer_2_text || '')).trim();
     const footer2Icon = (primaryState.footer_2_badge_icon || 'minus').trim();
 
@@ -10586,10 +10831,10 @@ const ProductForm = (() => {
 
           <!-- Dua Baris Strip Footer Horizontal di Bagian Bawah Kartu -->
           ${(hasFooter1 || hasFooter2) ? `
-            <div class="w-full shrink-0 mt-auto flex flex-col">
+            <div class="w-full shrink-0 mt-auto flex flex-col" style="border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
               <!-- Footer 1 (Atas): Jaminan Kecepatan / Garansi -->
               ${hasFooter1 ? `
-                <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : 'rounded-b-2xl'}" style="background-color: ${footerBgColor}; color: ${footerTextColor};">
+                <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : ''}" style="background-color: ${footerBgColor}; color: ${footerTextColor}; ${!hasFooter2 ? 'border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;' : ''}">
                   ${(footerIcon && footerIcon !== 'none') ? `<i data-lucide="${escapeHtml(footerIcon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
                   <span class="truncate">${escapeHtml(previewF1Text)}</span>
                 </div>
@@ -10597,18 +10842,18 @@ const ProductForm = (() => {
 
               <!-- Footer 2 (Bawah): Otomatis Jadi Countdown saat Diskon Aktif, atau Info Paket saat Diskon Off -->
               ${hasFooter2 ? (
-                isCountdownActive ? `
-                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${countdownBgColor}; color: ${countdownTextColor};">
+            isCountdownActive ? `
+                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${countdownBgColor}; color: ${countdownTextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
                     <i data-lucide="ticket-percent" class="w-3.5 h-3.5 shrink-0" style="color: ${countdownIconColor};"></i>
                     <span class="truncate">% Diskon Rp1,700RB berakhir Dalam 1Jam</span>
                   </div>
                 ` : `
-                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 rounded-b-2xl tracking-wide shrink-0" style="background-color: ${footer2BgColor}; color: ${footer2TextColor};">
+                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${footer2BgColor}; color: ${footer2TextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
                     ${(footer2Icon && footer2Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
                     <span class="truncate">${escapeHtml(previewF2Text)}</span>
                   </div>
                 `
-              ) : ''}
+          ) : ''}
             </div>
           ` : ''}
         </div>
@@ -15621,24 +15866,19 @@ const ProductForm = (() => {
                 <div class="space-y-1.5">
                   <span class="text-xs font-bold text-slate-800 block">Footer 1 (Strip Atas):</span>
                   <div class="relative w-full clean-datalist-wrapper">
-                    <input type="text" id="input-card-footer-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_text || 'Proses Cepat')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
+                    <input type="text" id="input-card-footer-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" maxlength="32" placeholder="Tersedia berbagai Variasi" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none" />
                   </div>
                   <select id="select-card-footer-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
-                    <option value="truck" ${primaryState.footer_badge_icon === 'truck' ? 'selected' : ''}>Kirim Cepat (truck)</option>
-                    <option value="clock" ${primaryState.footer_badge_icon === 'clock' ? 'selected' : ''}>Jam / Waktu (clock)</option>
-                    <option value="zap" ${primaryState.footer_badge_icon === 'zap' ? 'selected' : ''}>Kilat / Express (zap)</option>
-                    <option value="shield-check" ${primaryState.footer_badge_icon === 'shield-check' ? 'selected' : ''}>Garansi (shield-check)</option>
+                    ${FOOTER_ICONS_CATALOG.map(ic => `<option value="${escapeHtml(ic.id)}" ${(primaryState.footer_badge_icon || 'truck') === ic.id ? 'selected' : ''}>${escapeHtml(ic.label)} (${escapeHtml(ic.id)})</option>`).join('')}
                   </select>
                 </div>
                 <div class="space-y-1.5">
-                  <span class="text-xs font-bold text-slate-800 block">Footer 2 (Strip Bawah):</span>
+                  <span class="text-xs font-bold text-slate-800 block">Footer 2 (Strip Bawah, Opsional):</span>
                   <div class="relative w-full clean-datalist-wrapper">
-                    <input type="text" id="input-card-footer-2-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" value="${escapeHtml(primaryState.card_footer_2_text || 'Variasi Tersedia')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
+                    <input type="text" id="input-card-footer-2-text" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" maxlength="32" placeholder="Pengiriman Cepat (opsional)" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-3 pr-8 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
                   </div>
                   <select id="select-card-footer-2-icon" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-[var(--color-primary)] outline-none">
-                    <option value="minus" ${primaryState.footer_2_badge_icon === 'minus' ? 'selected' : ''}>Strip / Variasi (minus)</option>
-                    <option value="layers" ${primaryState.footer_2_badge_icon === 'layers' ? 'selected' : ''}>Pilihan Paket (layers)</option>
-                    <option value="shield-check" ${primaryState.footer_2_badge_icon === 'shield-check' ? 'selected' : ''}>Garansi Uang Kembali (shield-check)</option>
+                    ${FOOTER_ICONS_CATALOG.map(ic => `<option value="${escapeHtml(ic.id)}" ${(primaryState.footer_2_badge_icon || 'minus') === ic.id ? 'selected' : ''}>${escapeHtml(ic.label)} (${escapeHtml(ic.id)})</option>`).join('')}
                   </select>
                 </div>
               </div>
@@ -27054,6 +27294,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     };
 
     closeMobilePreview = function () {
+      if (typeof closeAllCardPresetDropdowns === 'function') closeAllCardPresetDropdowns(false);
       if (typeof hidePreviewTestModeAlert === 'function') {
         hidePreviewTestModeAlert();
       }
@@ -28129,104 +28370,99 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
-    // Outline Presets & Hidden Inputs (Desktop & Mobile Sync)
-    const handleBwSelect = (val) => {
-      const num = parseBorderWidth(val, 1);
-      const bwInpDesk = document.getElementById('cfg-border-width');
-      const bwInpMob = document.getElementById('cfg-border-width-mob');
-      if (bwInpDesk) bwInpDesk.value = num;
-      if (bwInpMob) bwInpMob.value = num;
-      updateBorderWidthPresetButtons(num);
-      markCardDesignAsCustom();
-    };
-
-    document.querySelectorAll('.btn-border-width-preset').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        handleBwSelect(btn.dataset.value);
-      });
-    });
-
-    // Reusable binding helper for radius number inputs and suggestion buttons
-    const bindRadiusControl = ({ deskId, mobId, presetClass, parser, defaultVal, minVal, maxVal, updater }) => {
-      const deskInp = document.getElementById(deskId);
-      const mobInp = document.getElementById(mobId);
-
-      const syncInputsOnTyping = (sourceEl, targetEl) => {
-        const raw = sourceEl.value;
-        if (targetEl && targetEl.value !== raw) targetEl.value = raw;
-        if (raw.trim() === '') {
-          // Nilai kosong sementara saat mengetik: jangan paksa jadi 0, jangan aktifkan saran
-          updater(null);
-          return;
-        }
-        const parsed = parseInt(raw, 10);
-        if (!isNaN(parsed)) {
-          updater(parsed);
-          markCardDesignAsCustom();
-        }
-      };
-
-      const validateOnBlur = (el) => {
-        const raw = el.value.trim();
-        let num;
-        if (raw === '' || isNaN(parseInt(raw, 10))) {
-          num = defaultVal;
-        } else {
-          num = Math.max(minVal, Math.min(maxVal, parseInt(raw, 10)));
-        }
-        if (deskInp) deskInp.value = num;
-        if (mobInp) mobInp.value = num;
-        updater(num);
-        markCardDesignAsCustom();
-      };
-
-      if (deskInp) {
-        deskInp.addEventListener('input', () => syncInputsOnTyping(deskInp, mobInp));
-        deskInp.addEventListener('blur', () => validateOnBlur(deskInp));
-        deskInp.addEventListener('change', () => validateOnBlur(deskInp));
-      }
-      if (mobInp) {
-        mobInp.addEventListener('input', () => syncInputsOnTyping(mobInp, deskInp));
-        mobInp.addEventListener('blur', () => validateOnBlur(mobInp));
-        mobInp.addEventListener('change', () => validateOnBlur(mobInp));
-      }
-
-      document.querySelectorAll(`.${presetClass}`).forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          const num = parseInt(btn.dataset.value, 10);
-          if (deskInp) deskInp.value = num;
-          if (mobInp) mobInp.value = num;
-          updater(num);
-          markCardDesignAsCustom();
+    // Preset Dropdown Controls (Outline & 4 Radius Controls - Desktop & Mobile Sync)
+    function bindCardPresetDropdownControls() {
+      Object.entries(CARD_PRESET_DROPDOWN_SPECS).forEach(([specKey, spec]) => {
+        ['', '-mob'].forEach(suffix => {
+          const btn = document.getElementById(`${spec.btnId}${suffix}`);
+          if (!btn || btn.dataset.cardPresetBound === '1') return;
+          btn.dataset.cardPresetBound = '1';
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openCardPresetDropdown(specKey, suffix, 'selected');
+          });
+          btn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+              e.preventDefault();
+              e.stopPropagation();
+              openCardPresetDropdown(specKey, suffix, 'selected');
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              e.stopPropagation();
+              openCardPresetDropdown(specKey, suffix, 'selected');
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              e.stopPropagation();
+              openCardPresetDropdown(specKey, suffix, 'last');
+            }
+          });
         });
       });
-    };
 
-    // 1. Radius Kartu (0-24 px, default 16)
-    bindRadiusControl({
-      deskId: 'cfg-border-radius',
-      mobId: 'cfg-border-radius-mob',
-      presetClass: 'btn-border-radius-preset',
-      parser: parseBorderRadius,
-      defaultVal: 16,
-      minVal: 0,
-      maxVal: 24,
-      updater: updateBorderRadiusPresetButtons
-    });
+      if (typeof document !== 'undefined' && !document.__scCardPresetGlobalBound) {
+        document.__scCardPresetGlobalBound = true;
 
-    // 2. Radius Label Khusus (0-12 px, default 6)
-    bindRadiusControl({
-      deskId: 'cfg-badge-radius',
-      mobId: 'cfg-badge-radius-mob',
-      presetClass: 'btn-badge-radius-preset',
-      parser: parseBadgeRadius,
-      defaultVal: 6,
-      minVal: 0,
-      maxVal: 12,
-      updater: updateBadgeRadiusPresetButtons
-    });
+        document.addEventListener('click', (e) => {
+          if (!activeCardPresetDropdown) return;
+          const { btnEl, menuEl } = activeCardPresetDropdown;
+          if ((btnEl && btnEl.contains(e.target)) || (menuEl && menuEl.contains(e.target))) {
+            return;
+          }
+          closeAllCardPresetDropdowns(false);
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (!activeCardPresetDropdown) return;
+          const ctx = activeCardPresetDropdown;
+          const opts = ctx.options || [];
+          if (e.key === 'Escape' || e.key === 'Esc') {
+            e.preventDefault();
+            closeAllCardPresetDropdowns(true);
+          } else if (e.key === 'Tab') {
+            closeAllCardPresetDropdowns(false);
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightCardPresetOption(ctx, (ctx.highlightedIdx || 0) + 1);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightCardPresetOption(ctx, (ctx.highlightedIdx || 0) - 1);
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            highlightCardPresetOption(ctx, 0);
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            highlightCardPresetOption(ctx, Math.max(0, opts.length - 1));
+          } else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            const picked = opts[ctx.highlightedIdx];
+            if (picked) {
+              selectCardPresetOption(ctx.specKey, picked.value);
+            }
+          }
+        });
+
+        document.addEventListener('scroll', (e) => {
+          if (!activeCardPresetDropdown) return;
+          const { menuEl } = activeCardPresetDropdown;
+          if (menuEl && (e.target === menuEl || (e.target && typeof menuEl.contains === 'function' && menuEl.contains(e.target)))) {
+            return;
+          }
+          closeAllCardPresetDropdowns(false);
+        }, true);
+
+        if (typeof window !== 'undefined' && !window.__scCardPresetResizeBound) {
+          window.__scCardPresetResizeBound = true;
+          window.addEventListener('resize', () => {
+            if (activeCardPresetDropdown) {
+              positionCardPresetMenu(activeCardPresetDropdown.btnEl, activeCardPresetDropdown.menuEl);
+            }
+          });
+        }
+      }
+    }
+
+    bindCardPresetDropdownControls();
 
     // Badge Style Mode Segmented Controls (Desktop & Mobile Sync)
     document.querySelectorAll('.btn-badge-style').forEach(btn => {
@@ -28462,18 +28698,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobHex) mobHex.addEventListener('input', e => syncAllStrikeColors(e.target.value));
     });
 
-    // 3. Radius Label Diskon (0-12 px, default 8)
-    bindRadiusControl({
-      deskId: 'cfg-discount-badge-radius',
-      mobId: 'cfg-discount-badge-radius-mob',
-      presetClass: 'btn-disc-radius-preset',
-      parser: parseDiscountBadgeRadius,
-      defaultVal: 8,
-      minVal: 0,
-      maxVal: 12,
-      updater: updateDiscountBadgeRadiusPresetButtons
-    });
-
     // Discount Badge Position Custom Dropdowns (Desktop & Mobile)
     ['', '-mob'].forEach(suffix => {
       const btn = document.getElementById(`btn-discount-badge-pos${suffix}`);
@@ -28481,6 +28705,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          closeAllCardPresetDropdowns(false);
           toggleDiscountBadgePosDropdown(undefined, suffix);
         });
       }
@@ -28553,18 +28778,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (deskHex) deskHex.addEventListener('input', e => syncAllDiscColors(e.target.value));
       if (mobColor) mobColor.addEventListener('input', e => syncAllDiscColors(e.target.value));
       if (mobHex) mobHex.addEventListener('input', e => syncAllDiscColors(e.target.value));
-    });
-
-    // 4. Radius Countdown (0-12 px, default 6)
-    bindRadiusControl({
-      deskId: 'cfg-countdown-radius',
-      mobId: 'cfg-countdown-radius-mob',
-      presetClass: 'btn-countdown-radius-preset',
-      parser: parseCountdownRadius,
-      defaultVal: 6,
-      minVal: 0,
-      maxVal: 12,
-      updater: updateCountdownRadiusPresetButtons
     });
 
     // Feature Toggles (Desktop & Mobile Sync)
@@ -28684,7 +28897,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     const cdTokens = ['bg', 'text', 'icon', 'border'].flatMap(prefix => [`cfg-countdown-${prefix}-color`, `cfg-countdown-${prefix}-hex`]);
-    cdTokens.push('cfg-countdown-radius');
 
     cdTokens.forEach(id => {
       const el = document.getElementById(id);
@@ -28708,9 +28920,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (mobHex) mobHex.value = e.target.value;
             const mobColor = document.getElementById(`${colorId}-mob`);
             if (mobColor) mobColor.value = e.target.value;
-          } else if (id === 'cfg-countdown-radius') {
-            const mobRadius = document.getElementById('cfg-countdown-radius-mob');
-            if (mobRadius) mobRadius.value = e.target.value;
           }
           markCardDesignAsCustom();
         });
@@ -28734,9 +28943,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             if (deskHex) deskHex.value = e.target.value;
             const deskColor = document.getElementById(colorId);
             if (deskColor) deskColor.value = e.target.value;
-          } else if (id === 'cfg-countdown-radius') {
-            const deskRadius = document.getElementById('cfg-countdown-radius');
-            if (deskRadius) deskRadius.value = e.target.value;
           }
           markCardDesignAsCustom();
         });
@@ -28884,8 +29090,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     if (selF1Icon) {
       selF1Icon.addEventListener('change', () => {
-        syncStateFromDOM();
-        updateProductCardLivePreview();
+        selectFooterIcon(1, selF1Icon.value);
       });
     }
 
@@ -28896,6 +29101,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         primaryState.footer_badge_icon = validIcon;
         if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
         primaryState.custom_footer_1.icon = validIcon;
+        const step2Sel1 = document.getElementById('select-card-footer-icon');
+        if (step2Sel1 && step2Sel1.value !== validIcon) step2Sel1.value = validIcon;
 
         // Update previews desktop & mobile
         ['preview-footer-icon-side', 'preview-footer-icon-mob'].forEach(id => {
@@ -28921,6 +29128,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         primaryState.footer_2_badge_icon = validIcon;
         if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
         primaryState.custom_footer_2.icon = validIcon;
+        const step2Sel2 = document.getElementById('select-card-footer-2-icon');
+        if (step2Sel2 && step2Sel2.value !== validIcon) step2Sel2.value = validIcon;
 
         // Update previews desktop & mobile
         ['preview-footer-2-icon-side', 'preview-footer-2-icon-mob'].forEach(id => {
@@ -29029,17 +29238,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
-    // Initial Char Counters update
+    // Initial Char Counters update (Footer 1)
     updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
     updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
-    updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
-    updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
 
     // Footer 2 Inputs (Sinkronisasi Step 1, Desktop Sidebar & Mobile Drawer)
     const inpF2Text = document.getElementById('input-card-footer-2-text');
     const inpF2TextSide = document.getElementById('input-card-footer-2-text-side');
     const inpF2TextMob = document.getElementById('input-card-footer-2-text-mob');
     const selF2Icon = document.getElementById('select-card-footer-2-icon');
+
+    updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
+    updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
 
     const cfgF2Bg = document.getElementById('cfg-footer-2-bg-color');
     const cfgF2BgHex = document.getElementById('cfg-footer-2-bg-hex');
@@ -29115,8 +29325,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     if (selF2Icon) {
       selF2Icon.addEventListener('change', () => {
-        syncStateFromDOM();
-        updateProductCardLivePreview();
+        selectFooterIcon(2, selF2Icon.value);
       });
     }
 
@@ -30151,9 +30360,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (descInp && descInp.value !== undefined) item.description = descInp.value;
           if (priceInp && priceInp.value !== undefined) item.price = priceInp.value === '' ? '' : (parseFloat(priceInp.value) || 0);
           if (costInp && costInp.value !== undefined) {
-          const cVal = costInp.value.trim();
-          item.cost_price = cVal === '' ? '' : (isNaN(parseFloat(cVal)) ? NaN : parseFloat(cVal));
-        }
+            const cVal = costInp.value.trim();
+            item.cost_price = cVal === '' ? '' : (isNaN(parseFloat(cVal)) ? NaN : parseFloat(cVal));
+          }
           if (stockInp && stockInp.value !== undefined) item.stock = (stockInp.value === '' || stockInp.value === 'Unlimited' || stockInp.value === 'Tanpa Batas') ? null : (parseInt(stockInp.value) || 0);
           if (parentSel) item.parent_id = parentSel.value || '';
           if (extraTypeSel) item.extra_type = extraTypeSel.value || '';
@@ -30341,16 +30550,45 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       } catch (err) { }
     }
 
-    // Step 2 Card 6: Lainnya (Footer model 3, condition, sku, barcode)
-    const footer1Inp = document.getElementById('input-card-footer-text');
-    if (footer1Inp) primaryState.card_footer_text = footer1Inp.value.trim();
+    // Step 2 Card 6 / Step 1 Desain Kartu: Lainnya (Footer model 3, condition, sku, barcode)
+    const isMobFooterSheetOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
+    const footer1InpStep2 = document.getElementById('input-card-footer-text');
+    const footer1InpSide = document.getElementById('input-card-footer-text-side');
+    const footer1InpMob = document.getElementById('input-card-footer-text-mob');
+    const activeFooter1Inp = (currentStep === 2 && footer1InpStep2)
+      ? footer1InpStep2
+      : ((isMobFooterSheetOpen ? (footer1InpMob || footer1InpSide) : (footer1InpSide || footer1InpMob)) || footer1InpStep2);
+    if (activeFooter1Inp) {
+      const f1SyncedVal = activeFooter1Inp.value.trim();
+      primaryState.card_footer_text = f1SyncedVal;
+      if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
+      primaryState.custom_footer_1.text = f1SyncedVal;
+    }
     const footer1IconSel = document.getElementById('select-card-footer-icon');
-    if (footer1IconSel) primaryState.footer_badge_icon = footer1IconSel.value;
+    if (currentStep === 2 && footer1IconSel) {
+      primaryState.footer_badge_icon = footer1IconSel.value;
+      if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
+      primaryState.custom_footer_1.icon = footer1IconSel.value;
+    }
 
-    const footer2Inp = document.getElementById('input-card-footer-2-text');
-    if (footer2Inp) primaryState.card_footer_2_text = footer2Inp.value.trim();
+    const footer2InpStep2 = document.getElementById('input-card-footer-2-text');
+    const footer2InpSide = document.getElementById('input-card-footer-2-text-side');
+    const footer2InpMob = document.getElementById('input-card-footer-2-text-mob');
+    const activeFooter2Inp = (currentStep === 2 && footer2InpStep2)
+      ? footer2InpStep2
+      : ((isMobFooterSheetOpen ? (footer2InpMob || footer2InpSide) : (footer2InpSide || footer2InpMob)) || footer2InpStep2);
+    if (activeFooter2Inp) {
+      const f2SyncedVal = activeFooter2Inp.value.trim();
+      primaryState.card_footer_2_text = f2SyncedVal;
+      if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
+      primaryState.custom_footer_2.text = f2SyncedVal;
+    }
     const footer2IconSel = document.getElementById('select-card-footer-2-icon');
-    if (footer2IconSel) primaryState.footer_2_badge_icon = footer2IconSel.value;
+    if (currentStep === 2 && footer2IconSel) {
+      primaryState.footer_2_badge_icon = footer2IconSel.value;
+      if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
+      primaryState.custom_footer_2.icon = footer2IconSel.value;
+    }
 
     const condSel = document.getElementById('select-prod-condition');
     if (condSel) primaryState.condition = condSel.value;
@@ -31242,31 +31480,52 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     // Sync Footer Colors & Texts for Card Variant C
+    const isMobFooterSubmit = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
+    const f1TextSideEl = document.getElementById('input-card-footer-text-side');
+    const f1TextMobEl = document.getElementById('input-card-footer-text-mob');
+    const f1TextStep2El = document.getElementById('input-card-footer-text');
+    const activeF1SubmitEl = (currentStep === 2 && f1TextStep2El)
+      ? f1TextStep2El
+      : ((isMobFooterSubmit ? (f1TextMobEl || f1TextSideEl) : (f1TextSideEl || f1TextMobEl)) || f1TextStep2El);
     const footer1Val = (
-      document.getElementById('input-card-footer-text-side')?.value !== undefined
-        ? document.getElementById('input-card-footer-text-side').value
-        : (document.getElementById('input-card-footer-text')?.value !== undefined
-          ? document.getElementById('input-card-footer-text').value
-          : (primaryState.custom_footer_1?.text !== undefined
-            ? primaryState.custom_footer_1.text
-            : (primaryState.card_footer_text || '')))
+      activeF1SubmitEl?.value !== undefined
+        ? activeF1SubmitEl.value
+        : (primaryState.custom_footer_1?.text !== undefined
+          ? primaryState.custom_footer_1.text
+          : (primaryState.card_footer_text || ''))
     ).trim();
     const footer1IconVal = (primaryState.footer_badge_icon || primaryState.custom_footer_1?.icon || 'truck').trim();
-    const footer1BgVal = document.getElementById('cfg-footer-bg-color-side')?.value || document.getElementById('cfg-footer-bg-color')?.value || primaryState.custom_footer_1?.bg_color || primaryState.footer_bg_color || getPrimaryThemeColor();
-    const footer1TextColVal = document.getElementById('cfg-footer-text-color-side')?.value || document.getElementById('cfg-footer-text-color')?.value || primaryState.custom_footer_1?.text_color || primaryState.footer_text_color || '#ffffff';
+    const footer1BgVal = (isMobFooterSubmit
+      ? (document.getElementById('cfg-footer-bg-color-mob')?.value || document.getElementById('cfg-footer-bg-color-side')?.value)
+      : (document.getElementById('cfg-footer-bg-color-side')?.value || document.getElementById('cfg-footer-bg-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-bg-color')?.value || primaryState.custom_footer_1?.bg_color || primaryState.footer_bg_color || getPrimaryThemeColor();
+    const footer1TextColVal = (isMobFooterSubmit
+      ? (document.getElementById('cfg-footer-text-color-mob')?.value || document.getElementById('cfg-footer-text-color-side')?.value)
+      : (document.getElementById('cfg-footer-text-color-side')?.value || document.getElementById('cfg-footer-text-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-text-color')?.value || primaryState.custom_footer_1?.text_color || primaryState.footer_text_color || '#ffffff';
 
+    const f2TextSideEl = document.getElementById('input-card-footer-2-text-side');
+    const f2TextMobEl = document.getElementById('input-card-footer-2-text-mob');
+    const f2TextStep2El = document.getElementById('input-card-footer-2-text');
+    const activeF2SubmitEl = (currentStep === 2 && f2TextStep2El)
+      ? f2TextStep2El
+      : ((isMobFooterSubmit ? (f2TextMobEl || f2TextSideEl) : (f2TextSideEl || f2TextMobEl)) || f2TextStep2El);
     const footer2Val = (
-      document.getElementById('input-card-footer-2-text-side')?.value !== undefined
-        ? document.getElementById('input-card-footer-2-text-side').value
-        : (document.getElementById('input-card-footer-2-text')?.value !== undefined
-          ? document.getElementById('input-card-footer-2-text').value
-          : (primaryState.custom_footer_2?.text !== undefined
-            ? primaryState.custom_footer_2.text
-            : (primaryState.card_footer_2_text || '')))
+      activeF2SubmitEl?.value !== undefined
+        ? activeF2SubmitEl.value
+        : (primaryState.custom_footer_2?.text !== undefined
+          ? primaryState.custom_footer_2.text
+          : (primaryState.card_footer_2_text || ''))
     ).trim();
     const footer2IconVal = (primaryState.footer_2_badge_icon || primaryState.custom_footer_2?.icon || 'minus').trim();
-    const footer2BgVal = document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || getSecondaryThemeColor();
-    const footer2TextColVal = document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.custom_footer_2?.text_color || primaryState.footer_2_text_color || '#ffffff';
+    const footer2BgVal = (isMobFooterSubmit
+      ? (document.getElementById('cfg-footer-2-bg-color-mob')?.value || document.getElementById('cfg-footer-2-bg-color-side')?.value)
+      : (document.getElementById('cfg-footer-2-bg-color-side')?.value || document.getElementById('cfg-footer-2-bg-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-2-bg-color')?.value || primaryState.custom_footer_2?.bg_color || primaryState.footer_2_bg_color || getSecondaryThemeColor();
+    const footer2TextColVal = (isMobFooterSubmit
+      ? (document.getElementById('cfg-footer-2-text-color-mob')?.value || document.getElementById('cfg-footer-2-text-color-side')?.value)
+      : (document.getElementById('cfg-footer-2-text-color-side')?.value || document.getElementById('cfg-footer-2-text-color-mob')?.value)
+    ) || document.getElementById('cfg-footer-2-text-color')?.value || primaryState.custom_footer_2?.text_color || primaryState.footer_2_text_color || '#ffffff';
 
     primaryState.custom_footer_1 = {
       text: footer1Val,
