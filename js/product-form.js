@@ -5956,7 +5956,7 @@ const ProductForm = (() => {
       .map(l => String(l || '').trim())
       .filter(Boolean);
     if (valid.length === 0) {
-      return '<i class="bi bi-exclamation-circle-fill text-red-600"></i><span class="text-red-600 font-semibold">Masukkan minimal 1 label khusus jika ingin ditampilkan, atau matikan tombol toggle (Off) jika tidak digunakan.</span>';
+      return '<i class="bi bi-exclamation-circle-fill text-red-600"></i><span class="text-red-600 font-semibold">Isi minimal 1 label, atau nonaktifkan jika tidak digunakan.</span>';
     }
     const nameLen = (productName || '').trim().length;
     const isShortName = nameLen <= 28;
@@ -16083,11 +16083,8 @@ const ProductForm = (() => {
           <!-- Label Khusus Ringkas di Step 2 (Read-Only jika ON, Sembunyi jika OFF) -->
           ${primaryState.show_badge !== false ? `
             <div class="space-y-2 pt-1 border-t border-slate-100">
-              <div>
-                <label class="block text-xs font-bold text-slate-800">Label Khusus</label>
-                <p class="text-xs text-slate-500 mt-0.5">Label khusus telah dikunci. Kembali ke langkah sebelumnya jika ingin mengubah label.</p>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <label class="block text-xs font-bold text-slate-800">Label Khusus</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 ${(primaryState.custom_labels || []).filter(Boolean).length > 0 ? (primaryState.custom_labels || []).filter(Boolean).map(lbl => `
                   <div class="px-3 py-2 text-xs rounded-md border border-slate-200 bg-slate-100 text-slate-700 font-medium select-none flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -21570,9 +21567,40 @@ const ProductForm = (() => {
 
   // Order Multiple Section Sub-Renderer
   function renderOrderMultipleSection() {
+    const hasActiveVariants = Boolean(primaryState.has_variants);
     const mode = primaryState.order_multiple_type || 'all';
     const globalVal = primaryState.order_multiple_value || 1;
     const variantMap = primaryState.order_multiples_by_variant || {};
+
+    const singleInputHtml = `
+      <!-- Mode Global / Produk Tunggal -->
+      <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+        <label class="block text-xs font-bold text-slate-800">
+          Kelipatan Pembelian Produk:
+        </label>
+        <div class="flex items-center gap-2">
+          <input
+            type="number"
+            id="input-order-multiple-single"
+            min="2"
+            value="${parseInt(globalVal) >= 2 ? globalVal : ''}"
+            placeholder="Minimal 2"
+            class="w-32 px-3 py-2 rounded-md border ${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]"
+          />
+          <span class="text-xs text-slate-500 font-medium">pcs per transaksi</span>
+        </div>
+        <p id="err-order-multiple-single" class="${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'block' : 'hidden'} text-[11px] font-semibold text-red-600">Minimal Kelipatan 2</p>
+        <p class="text-[11px] text-slate-400">Contoh: Diatur 10, maka pembeli hanya dapat membeli 10, 20, 30, dst.</p>
+      </div>
+    `;
+
+    if (!hasActiveVariants) {
+      return `
+        <div class="space-y-4">
+          ${singleInputHtml}
+        </div>
+      `;
+    }
 
     // Available options from Variasi 1
     const availableVariants = materialsState.map((m, idx) => ({
@@ -21597,27 +21625,7 @@ const ProductForm = (() => {
           </label>
         </div>
 
-        ${mode === 'all' ? `
-          <!-- Mode Global -->
-          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-            <label class="block text-xs font-bold text-slate-800">
-              Kelipatan Pembelian Produk:
-            </label>
-            <div class="flex items-center gap-2">
-              <input
-                type="number"
-                id="input-order-multiple-single"
-                min="2"
-                value="${parseInt(globalVal) >= 2 ? globalVal : ''}"
-                placeholder="Minimal 2"
-                class="w-32 px-3 py-2 rounded-md border ${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'border-red-500 ring-1 ring-red-400' : 'border-slate-300'} text-xs font-bold text-center bg-white outline-none focus:border-[var(--color-primary)]"
-              />
-              <span class="text-xs text-slate-500 font-medium">pcs per transaksi</span>
-            </div>
-            <p id="err-order-multiple-single" class="${(parseInt(globalVal) < 2 && globalVal !== '' && globalVal !== null) ? 'block' : 'hidden'} text-[11px] font-semibold text-red-600">Minimal Kelipatan 2</p>
-            <p class="text-[11px] text-slate-400">Contoh: Diatur 10, maka pembeli hanya dapat membeli 10, 20, 30, dst.</p>
-          </div>
-        ` : `
+        ${mode === 'all' ? singleInputHtml : `
           <!-- Mode Spesifik per Varian (Deduplikasi Pilihan Varian) -->
           <div class="space-y-3">
             <p class="text-[11px] text-slate-500">Atur nilai kelipatan pesanan khusus untuk masing-masing opsi varian:</p>
@@ -27632,6 +27640,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         btnCloseMultiple.onclick = deactivateOrderMultiple;
       }
       if (primaryState.has_order_multiple && multipleWrap && !multipleWrap.classList.contains('hidden')) {
+        const activeSingleInp = multipleWrap.querySelector('#input-order-multiple-single');
+        if (activeSingleInp && activeSingleInp.value.trim() !== '') {
+          const num = parseInt(activeSingleInp.value.trim(), 10);
+          if (!isNaN(num)) primaryState.order_multiple_value = num;
+        }
+        multipleWrap.innerHTML = renderOrderMultipleSection();
         bindInlineMultipleEvents();
       }
 
