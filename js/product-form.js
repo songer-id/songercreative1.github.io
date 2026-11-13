@@ -1,5 +1,5 @@
 /**
- * Songer Creative - Advanced Product Form Controller
+  * Songer Creative - Advanced Product Form Controller
  * Mega Refactor Stage 4:
  *  - Removed Order Category from Product Form (determined in cashier/orders)
  *  - Multi-image upload with client-side HTML5 Canvas auto-compression (max 1200x1200px, WebP/JPEG)
@@ -598,7 +598,7 @@ const ProductForm = (() => {
     return `${durNum} ${unit}`;
   }
 
-  // Viewport Boundary Clamping untuk Tooltip Mobile agar tidak terpotong keluar layar
+  // Viewport Boundary Clamping untuk Tooltip Legacy agar tidak terpotong keluar layar
   function clampTooltipToViewport(tipEl) {
     if (!tipEl || typeof tipEl.getBoundingClientRect !== 'function') return;
 
@@ -625,7 +625,159 @@ const ProductForm = (() => {
     });
   }
 
+  // =========================================================================
+  // SC-FLOATING-TOOLTIP PORTAL SINGLETON (Document Body Level)
+  // Dynamic Hover Bridge, Viewport Clamping, Anti-Clipping Modal System
+  // =========================================================================
+  let activeTooltipTrigger = null;
+  let tooltipHideTimer = null;
+  let floatingTooltipEl = null;
+
+  function getOrCreateFloatingTooltip() {
+    if (!floatingTooltipEl || !document.body.contains(floatingTooltipEl)) {
+      floatingTooltipEl = document.getElementById('sc-floating-tooltip');
+      if (!floatingTooltipEl) {
+        floatingTooltipEl = document.createElement('div');
+        floatingTooltipEl.id = 'sc-floating-tooltip';
+        floatingTooltipEl.className = 'sc-floating-tooltip hidden';
+        floatingTooltipEl.setAttribute('role', 'tooltip');
+        floatingTooltipEl.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(floatingTooltipEl);
+
+        // Hover bridge: bila kursor mouse memasuki area tooltip, batalkan timer penutupan
+        floatingTooltipEl.addEventListener('mouseenter', () => {
+          if (tooltipHideTimer) {
+            clearTimeout(tooltipHideTimer);
+            tooltipHideTimer = null;
+          }
+        });
+
+        floatingTooltipEl.addEventListener('mouseleave', (e) => {
+          const related = e.relatedTarget ? e.relatedTarget.closest('.btn-help-popover, .tooltip-wrapper') : null;
+          if (related === activeTooltipTrigger) return;
+          scheduleHideFloatingTooltip(150);
+        });
+      }
+    }
+    return floatingTooltipEl;
+  }
+
+  function updateFloatingTooltipPosition() {
+    if (!activeTooltipTrigger || !floatingTooltipEl || floatingTooltipEl.classList.contains('hidden')) {
+      return;
+    }
+
+    if (!activeTooltipTrigger.isConnected) {
+      hideFloatingTooltipImmediately();
+      return;
+    }
+
+    const triggerRect = activeTooltipTrigger.getBoundingClientRect();
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    // Sembunyikan otomatis jika pemicu berada di luar layar viewport
+    if (triggerRect.bottom <= 0 || triggerRect.top >= vh || triggerRect.right <= 0 || triggerRect.left >= vw) {
+      hideFloatingTooltipImmediately();
+      return;
+    }
+
+    // Periksa jika pemicu berada di dalam modal body / container scrollable dan ter-scroll keluar pandangan
+    const scrollParent = activeTooltipTrigger.closest('#modal-max-order-body, .custom-scrollbar, .overflow-y-auto, .overflow-auto');
+    if (scrollParent) {
+      const parentRect = scrollParent.getBoundingClientRect();
+      if (triggerRect.bottom < parentRect.top || triggerRect.top > parentRect.bottom ||
+          triggerRect.right < parentRect.left || triggerRect.left > parentRect.right) {
+        hideFloatingTooltipImmediately();
+        return;
+      }
+    }
+
+    const tipRect = floatingTooltipEl.getBoundingClientRect();
+    const margin = 12; // Jarak aman dari batas tepi layar (viewport padding)
+    const gap = 8;     // Jarak vertikal antara ikon pemicu dan tooltip
+
+    // Penentuan posisi vertikal: cek ruang atas vs bawah
+    const spaceAbove = triggerRect.top;
+    const spaceBelow = vh - triggerRect.bottom;
+    const neededHeight = tipRect.height + gap;
+
+    let top = 0;
+    if (spaceAbove >= neededHeight + margin) {
+      // Cukup ruang di atas ikon
+      top = triggerRect.top - tipRect.height - gap;
+    } else if (spaceBelow >= neededHeight + margin) {
+      // Cukup ruang di bawah ikon (flip otomatis)
+      top = triggerRect.bottom + gap;
+    } else {
+      // Jika kedua sisi sempit, pilih sisi dengan ruang lebih luas dan clamp dalam viewport
+      if (spaceAbove > spaceBelow) {
+        top = Math.max(margin, triggerRect.top - tipRect.height - gap);
+      } else {
+        top = Math.min(vh - margin - tipRect.height, triggerRect.bottom + gap);
+      }
+    }
+
+    // Penentuan posisi horizontal: posisikan di tengah ikon lalu clamp ke batas aman viewport
+    let left = triggerRect.left + (triggerRect.width / 2) - (tipRect.width / 2);
+
+    if (left < margin) {
+      left = margin;
+    } else if (left + tipRect.width > vw - margin) {
+      left = vw - margin - tipRect.width;
+    }
+
+    floatingTooltipEl.style.top = `${Math.round(top)}px`;
+    floatingTooltipEl.style.left = `${Math.round(left)}px`;
+  }
+
+  function showFloatingTooltip(trigger) {
+    if (!trigger) return;
+    const template = trigger.querySelector('.admin-help-tooltip, .tooltip-popover, [role="tooltip"], div[class*="bg-slate-900"]');
+    if (!template) return;
+
+    if (tooltipHideTimer) {
+      clearTimeout(tooltipHideTimer);
+      tooltipHideTimer = null;
+    }
+
+    const portal = getOrCreateFloatingTooltip();
+    portal.innerHTML = template.innerHTML;
+    activeTooltipTrigger = trigger;
+
+    // Posisikan off-screen sesaat agar layout engine dapat mengukur dimensi konten secara akurat
+    portal.style.top = '-9999px';
+    portal.style.left = '-9999px';
+    portal.classList.remove('hidden');
+    portal.setAttribute('aria-hidden', 'false');
+
+    // Hitung posisi terkoreksi
+    updateFloatingTooltipPosition();
+  }
+
+  function scheduleHideFloatingTooltip(delay = 150) {
+    if (tooltipHideTimer) {
+      clearTimeout(tooltipHideTimer);
+    }
+    tooltipHideTimer = setTimeout(() => {
+      hideFloatingTooltipImmediately();
+    }, delay);
+  }
+
+  function hideFloatingTooltipImmediately() {
+    if (tooltipHideTimer) {
+      clearTimeout(tooltipHideTimer);
+      tooltipHideTimer = null;
+    }
+    if (floatingTooltipEl) {
+      floatingTooltipEl.classList.add('hidden');
+      floatingTooltipEl.setAttribute('aria-hidden', 'true');
+    }
+    activeTooltipTrigger = null;
+  }
+
   const closeAllHelpTooltips = () => {
+    hideFloatingTooltipImmediately();
     document.querySelectorAll('.admin-help-tooltip.is-active, .admin-help-tooltip.block, .tooltip-popover.is-active, .tooltip-popover.block').forEach(tip => {
       tip.classList.remove('block', 'is-active', 'pointer-events-auto');
       tip.classList.add('hidden', 'pointer-events-none');
@@ -635,14 +787,58 @@ const ProductForm = (() => {
 
   if (!window._tooltipClampingInitialized) {
     window._tooltipClampingInitialized = true;
-    const handleTooltipHover = (e) => {
-      const trigger = e.target.closest('.btn-help-popover, .tooltip-wrapper, .group:has(.admin-help-tooltip), .group:has(.tooltip-popover)');
+
+    // Desktop Mouse Hover (pointerover & pointerout) dengan Hover Bridge
+    document.addEventListener('pointerover', (e) => {
+      if (e.pointerType === 'touch') return;
+      const trigger = e.target.closest('.btn-help-popover, .tooltip-wrapper');
       if (!trigger) return;
-      const tip = trigger.querySelector('.admin-help-tooltip, .tooltip-popover');
-      if (tip) {
-        clampTooltipToViewport(tip);
+      showFloatingTooltip(trigger);
+    }, { passive: true });
+
+    document.addEventListener('pointerout', (e) => {
+      if (e.pointerType === 'touch') return;
+      const trigger = e.target.closest('.btn-help-popover, .tooltip-wrapper');
+      if (!trigger) return;
+      const related = e.relatedTarget ? e.relatedTarget.closest('.btn-help-popover, .tooltip-wrapper, #sc-floating-tooltip') : null;
+      if (related === trigger) return; // Kursor masih berada di dalam elemen pemicu yang sama
+      if (related && (related.id === 'sc-floating-tooltip' || related.closest('#sc-floating-tooltip'))) return; // Kursor berpindah ke tooltip
+      scheduleHideFloatingTooltip(150);
+    }, { passive: true });
+
+    // Keyboard Accessibility (focusin & focusout)
+    document.addEventListener('focusin', (e) => {
+      const trigger = e.target.closest('.btn-help-popover, .tooltip-wrapper');
+      if (trigger) {
+        showFloatingTooltip(trigger);
       }
-    };
+    }, { passive: true });
+
+    document.addEventListener('focusout', (e) => {
+      const trigger = e.target.closest('.btn-help-popover, .tooltip-wrapper');
+      if (trigger) {
+        scheduleHideFloatingTooltip(100);
+      }
+    }, { passive: true });
+
+    // Update Dinamis Posisi Tooltip saat Scroll atau Resize Layar / Perubahan Orientasi
+    document.addEventListener('scroll', () => {
+      if (activeTooltipTrigger && floatingTooltipEl && !floatingTooltipEl.classList.contains('hidden')) {
+        requestAnimationFrame(updateFloatingTooltipPosition);
+      }
+    }, { passive: true, capture: true });
+
+    window.addEventListener('resize', () => {
+      if (activeTooltipTrigger && floatingTooltipEl && !floatingTooltipEl.classList.contains('hidden')) {
+        requestAnimationFrame(updateFloatingTooltipPosition);
+      }
+    }, { passive: true });
+
+    window.addEventListener('orientationchange', () => {
+      if (activeTooltipTrigger && floatingTooltipEl && !floatingTooltipEl.classList.contains('hidden')) {
+        requestAnimationFrame(updateFloatingTooltipPosition);
+      }
+    }, { passive: true });
 
     // Global Delegasi Custom Combobox & Tooltip Popovers
     document.addEventListener('click', (e) => {
@@ -664,23 +860,18 @@ const ProductForm = (() => {
       // Delegasi Interaksi Tooltip / Popover Bantuan (Click / Tap Toggle & Clamping)
       const helpTrigger = e.target.closest('.btn-help-popover, .tooltip-wrapper');
       if (helpTrigger) {
-        const tip = helpTrigger.querySelector('.admin-help-tooltip, .tooltip-popover');
-        if (tip) {
-          e.preventDefault();
-          e.stopPropagation();
-          const isCurrentlyActive = tip.classList.contains('is-active') || (tip.classList.contains('block') && !tip.classList.contains('hidden'));
-          closeAllHelpTooltips();
-          if (!isCurrentlyActive) {
-            tip.classList.remove('hidden', 'pointer-events-none');
-            tip.classList.add('block', 'is-active', 'pointer-events-auto');
-            clampTooltipToViewport(tip);
-          }
-          return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeTooltipTrigger === helpTrigger && floatingTooltipEl && !floatingTooltipEl.classList.contains('hidden')) {
+          hideFloatingTooltipImmediately();
+        } else {
+          showFloatingTooltip(helpTrigger);
         }
+        return;
       }
 
       // Jika klik terjadi di dalam tooltip yang sedang aktif, jangan tutup
-      if (e.target.closest('.admin-help-tooltip, .tooltip-popover')) {
+      if (e.target.closest('#sc-floating-tooltip, .admin-help-tooltip, .tooltip-popover')) {
         return;
       }
 
@@ -690,12 +881,14 @@ const ProductForm = (() => {
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (floatingTooltipEl && !floatingTooltipEl.classList.contains('hidden')) {
+          hideFloatingTooltipImmediately();
+          e.stopPropagation();
+          return;
+        }
         closeAllHelpTooltips();
       }
-    });
-
-    document.addEventListener('pointerover', handleTooltipHover, { passive: true });
-    document.addEventListener('focusin', handleTooltipHover, { passive: true });
+    }, true);
   }
 
   // Primary metadata state
@@ -790,9 +983,9 @@ const ProductForm = (() => {
     max_order_qty: null,
     max_order_period: {
       start_date: '',
-      max_qty: 10,
-      days: 7,
-      period_type: 'non_recurring', // 'non_recurring' | 'recurring'
+      max_qty: '',
+      days: '',
+      period_type: 'non_recurring', // default 'non_recurring' untuk konfigurasi baru
       end_date: ''
     },
     has_wholesale: false,
@@ -1710,9 +1903,52 @@ const ProductForm = (() => {
   }
 
   // Helper: Tanggal & Waktu Lokal (Zero Timezone Shift) untuk Pengaturan Periode Maksimal Order
+  function formatDisplayDateDDMMYYYY(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return '';
+    const clean = dateStr.trim();
+    if (clean.includes('/')) return clean;
+    const parts = clean.split('-');
+    if (parts.length === 3) {
+      return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    }
+    return clean;
+  }
+
+  function parseDisplayDateToISO(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return '';
+    const clean = dateStr.trim();
+    if (clean.includes('-')) {
+      const parts = clean.split('-');
+      if (parts.length === 3 && parts[0].length === 4) return clean;
+    }
+    if (clean.includes('/')) {
+      const parts = clean.split('/');
+      if (parts.length === 3) {
+        const d = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        const y = parts[2];
+        if (y.length === 4) return `${y}-${m}-${d}`;
+      }
+    }
+    return clean;
+  }
+
   function parseLocalDate(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return null;
-    const parts = dateStr.trim().split('-');
+    const clean = dateStr.trim();
+    if (clean.includes('/')) {
+      const parts = clean.split('/');
+      if (parts.length === 3) {
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const y = parseInt(parts[2], 10);
+        if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+        const dt = new Date(y, m, d);
+        if (dt.getFullYear() !== y || dt.getMonth() !== m || dt.getDate() !== d) return null;
+        return dt;
+      }
+    }
+    const parts = clean.split('-');
     if (parts.length !== 3) return null;
     const y = parseInt(parts[0], 10);
     const m = parseInt(parts[1], 10) - 1;
@@ -1737,11 +1973,7 @@ const ProductForm = (() => {
 
   function formatDateDisplay(dateStr) {
     if (!dateStr) return '';
-    const parts = String(dateStr).trim().split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    return dateStr;
+    return formatDisplayDateDDMMYYYY(dateStr);
   }
 
   function addDaysToDate(dateStr, days) {
@@ -1775,8 +2007,13 @@ const ProductForm = (() => {
 
   // Popover Kalender Shadcn-Style Berbasis Vanilla JS
   let activeCalendarPopover = null;
+  let activeCalendarPopoverCleanup = null;
 
   function closeActiveCalendarPopover() {
+    if (typeof activeCalendarPopoverCleanup === 'function') {
+      activeCalendarPopoverCleanup();
+      activeCalendarPopoverCleanup = null;
+    }
     if (activeCalendarPopover && activeCalendarPopover.parentNode) {
       activeCalendarPopover.parentNode.removeChild(activeCalendarPopover);
     }
@@ -1798,6 +2035,8 @@ const ProductForm = (() => {
 
     const popover = document.createElement('div');
     popover.className = 'sc-calendar-popover fixed z-[99999] bg-white border border-slate-200 rounded-[6px] shadow-xl p-3 w-72 text-slate-800 select-none font-sans text-xs';
+    popover.style.position = 'fixed';
+    popover.style.zIndex = '99999';
     activeCalendarPopover = popover;
 
     const monthNames = [
@@ -1933,8 +2172,9 @@ const ProductForm = (() => {
           e.stopPropagation();
           const chosenDate = btn.getAttribute('data-date');
           if (chosenDate) {
-            inputEl.value = chosenDate;
-            if (onSelect) onSelect(chosenDate);
+            const isDisplayDDMM = (inputEl.getAttribute('placeholder') || '').toLowerCase().includes('dd/mm') || inputEl.dataset.format === 'dd/mm/yyyy';
+            inputEl.value = isDisplayDDMM ? formatDisplayDateDDMMYYYY(chosenDate) : chosenDate;
+            if (onSelect) onSelect(chosenDate, inputEl.value);
             inputEl.dispatchEvent(new Event('input', { bubbles: true }));
             inputEl.dispatchEvent(new Event('change', { bubbles: true }));
           }
@@ -1956,9 +2196,14 @@ const ProductForm = (() => {
 
     let top = rect.bottom + 6;
     const popoverHeight = 310;
-    if (top + popoverHeight > window.innerHeight - 12 && rect.top > popoverHeight) {
-      top = rect.top - popoverHeight - 6;
+    if (top + popoverHeight > window.innerHeight - 12) {
+      if (rect.top > popoverHeight + 12) {
+        top = rect.top - popoverHeight - 6;
+      } else {
+        top = Math.max(12, window.innerHeight - popoverHeight - 12);
+      }
     }
+    if (top < 12) top = 12;
 
     popover.style.left = `${left}px`;
     popover.style.top = `${top}px`;
@@ -1966,21 +2211,19 @@ const ProductForm = (() => {
     const outsideListener = (e) => {
       if (popover && !popover.contains(e.target) && !triggerBtn.contains(e.target) && !inputEl.contains(e.target)) {
         closeActiveCalendarPopover();
-        cleanup();
       }
     };
 
     const keyListener = (e) => {
       if (e.key === 'Escape') {
         closeActiveCalendarPopover();
-        cleanup();
       }
     };
 
-    function cleanup() {
+    activeCalendarPopoverCleanup = () => {
       document.removeEventListener('click', outsideListener, true);
       document.removeEventListener('keydown', keyListener, true);
-    }
+    };
 
     setTimeout(() => {
       document.addEventListener('click', outsideListener, true);
@@ -2148,8 +2391,8 @@ const ProductForm = (() => {
       max_order_qty: null,
       max_order_period: {
         start_date: '',
-        max_qty: 10,
-        days: 7,
+        max_qty: '',
+        days: '',
         period_type: 'non_recurring',
         end_date: ''
       },
@@ -2612,10 +2855,10 @@ const ProductForm = (() => {
       max_order_type: prod.max_order_type || ((prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? 'per_order' : 'unlimited'),
       max_order_qty: (prod.max_order && prod.max_order !== 'Unlimited' && prod.max_order !== 'Tanpa Batas' && prod.max_order !== 0 && prod.max_order !== '0') ? (parseInt(prod.max_order) || null) : (prod.max_order_qty !== undefined ? prod.max_order_qty : null),
       is_unlimited_max_order: prod.is_unlimited_max_order !== undefined ? Boolean(prod.is_unlimited_max_order) : (prod.max_order_type === 'unlimited' || prod.max_order === 'Tanpa Batas' || prod.max_order === 'Unlimited' || !prod.max_order),
-      max_order_period: prod.max_order_period || {
+      max_order_period: prod.max_order_period ? JSON.parse(JSON.stringify(prod.max_order_period)) : {
         start_date: '',
-        max_qty: 10,
-        days: 7,
+        max_qty: '',
+        days: '',
         period_type: 'non_recurring',
         end_date: ''
       },
@@ -2686,8 +2929,8 @@ const ProductForm = (() => {
       countdown_radius: (prod.countdown_radius !== undefined && prod.countdown_radius !== null && String(prod.countdown_radius).trim() !== '')
         ? prod.countdown_radius
         : ((prod.card_config && prod.card_config.countdown_radius !== undefined && prod.card_config.countdown_radius !== null && String(prod.card_config.countdown_radius).trim() !== '')
-            ? prod.card_config.countdown_radius
-            : '6px'),
+          ? prod.card_config.countdown_radius
+          : '6px'),
       image_url: imgs.length > 0 ? imgs[0] : null,
       images: imgs,
       image_aspect_ratio: prod.image_aspect_ratio || (prod.card_variant === 'C' ? '4:3' : (prod.card_variant === 'B' ? '3:4' : '1:1')),
@@ -15557,8 +15800,8 @@ const ProductForm = (() => {
           <!-- Categories List (Scrollable) -->
           <div id="list-step2-cat-items" class="overflow-y-auto max-h-40 py-1 divide-y divide-slate-50">
             ${allCategories.map(c => {
-              const isSelected = selectedCat && String(selectedCat.id) === String(c.id);
-              return `
+      const isSelected = selectedCat && String(selectedCat.id) === String(c.id);
+      return `
                 <button
                   type="button"
                   class="cat-option-item w-full flex items-center justify-between px-3 py-2 text-xs text-left hover:bg-emerald-50 hover:text-emerald-700 transition cursor-pointer select-none border-0 ${isSelected ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-700 font-normal'}"
@@ -15571,7 +15814,7 @@ const ProductForm = (() => {
                   ${isSelected ? '<i class="bi bi-check2 text-emerald-600 text-sm shrink-0 ml-2" aria-hidden="true"></i>' : ''}
                 </button>
               `;
-            }).join('')}
+    }).join('')}
             <div id="msg-step2-cat-empty" class="${allCategories.length === 0 ? '' : 'hidden'} px-3 py-3 text-xs text-slate-400 text-center italic">
               ${allCategories.length === 0 ? 'Belum ada kategori tersimpan' : 'Kategori tidak ditemukan'}
             </div>
@@ -15721,8 +15964,8 @@ const ProductForm = (() => {
             <!-- 4. Daftar Subkategori Milik Kategori Aktif -->
             <div id="list-step2-subcat-items" class="divide-y divide-slate-50 flex flex-col">
               ${currentSubs.map(s => {
-                const isSelected = isDetermined && selectedSub && String(selectedSub.id) === String(s.id);
-                return `
+      const isSelected = isDetermined && selectedSub && String(selectedSub.id) === String(s.id);
+      return `
                   <button
                     type="button"
                     class="subcat-option-item w-full flex items-center justify-between px-3 py-2 text-xs text-left hover:bg-emerald-50 hover:text-emerald-700 transition cursor-pointer select-none border-0 ${isSelected ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-700 font-normal'}"
@@ -15735,7 +15978,7 @@ const ProductForm = (() => {
                     ${isSelected ? '<i class="bi bi-check2 text-emerald-600 text-sm shrink-0 ml-2" aria-hidden="true"></i>' : ''}
                   </button>
                 `;
-              }).join('')}
+    }).join('')}
               <div id="msg-step2-subcat-empty" class="${currentSubs.length === 0 ? '' : 'hidden'} px-3 py-2 text-[11px] text-slate-400 text-center italic">
                 ${currentSubs.length === 0 ? 'Belum ada subkategori untuk kategori ini' : 'Subkategori tidak ditemukan'}
               </div>
@@ -16418,10 +16661,8 @@ const ProductForm = (() => {
               ${renderPricingModelSection()}
             </div>
 
-            <!-- Maksimal Jumlah Pembelian Khusus Produk Bervariasi -->
-            <div id="section-variant-max-order" class="${(primaryState.pricing_model === 'normal' && primaryState.has_variants) ? 'block' : 'hidden'} space-y-3 pt-2">
-              ${renderVariantMaxOrderSection()}
-            </div>
+            <!-- Maksimal Jumlah Pembelian Khusus Produk Bervariasi (Dihapus dari form utama, diatur via List Variasi Produk) -->
+            <div id="section-variant-max-order" class="hidden"></div>
 
             <!-- Pengaturan Pembelian Khusus Produk Tunggal (Disembunyikan jika Menggunakan Variasi) -->
             <div id="single-product-purchase-settings" class="${(primaryState.pricing_model === 'normal' && !primaryState.has_variants) ? 'space-y-6' : 'hidden'}">
@@ -16476,6 +16717,12 @@ const ProductForm = (() => {
                   <label for="input-normal-max-order" class="block text-xs font-bold text-slate-800">
                     Maksimal Jumlah Pembelian
                   </label>
+                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                    <i class="bi bi-question-circle text-xs"></i>
+                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                      Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan atau per periode. Kamu hanya dapat memilih satu tipe pengaturan.
+                    </div>
+                  </div>
                 </div>
 
                 <div class="relative w-full sm:w-64 custom-select-group" id="wrapper-max-order-type">
@@ -16486,14 +16733,14 @@ const ProductForm = (() => {
                       class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer select-none"
                       placeholder="Input/Pilih"
                       value="${(() => {
-                        if (primaryState.max_order_type === 'per_order') return 'Per Pesanan';
-                        if (primaryState.max_order_type === 'per_period') return 'Per Periode';
-                        if (primaryState.max_order_type === 'unlimited' && primaryState.is_unlimited_max_order) return 'Tanpa Batas';
-                        if (primaryState.max_order !== null && primaryState.max_order !== undefined && primaryState.max_order !== '') {
-                          return (primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Tanpa Batas' : 'Per Pesanan';
-                        }
-                        return '';
-                      })()}"
+          if (primaryState.max_order_type === 'per_order') return 'Per Pesanan';
+          if (primaryState.max_order_type === 'per_period') return 'Per Periode';
+          if (primaryState.max_order_type === 'unlimited' && primaryState.is_unlimited_max_order) return 'Tanpa Batas';
+          if (primaryState.max_order !== null && primaryState.max_order !== undefined && primaryState.max_order !== '') {
+            return (primaryState.max_order === 'Unlimited' || primaryState.max_order === 'Tanpa Batas') ? 'Tanpa Batas' : 'Per Pesanan';
+          }
+          return '';
+        })()}"
                       autocomplete="off"
                     />
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
@@ -20478,7 +20725,7 @@ const ProductForm = (() => {
     const model = primaryState.pricing_model || 'normal';
 
     // Helper render kartu Variasi 1 s/d 4 (Persis Gambar 1, 2, 3, 4)
-    function renderVariationCard(tier, tierNum, title, placeholderLabel, labelKey, tooltipText) {
+    function renderVariationCard(tier, tierNum, title, placeholderLabel, labelKey, tooltipText = 'Judul merupakan nama pilihan yang ditampilkan kepada pembeli. Gunakan nama yang singkat dan jelas agar variasi atau layanan tambahan mudah dikenali.') {
       const isTier1 = tier === 'tier1';
       const labelVal = isTier1 ? (primaryState.variation_1_label || primaryState.variation_labels?.label_tier_1 || '') : (primaryState.variation_labels?.[labelKey] || '');
       const isSamePrice = Boolean(primaryState.same_price_tiers && primaryState.same_price_tiers[tier]);
@@ -20513,9 +20760,9 @@ const ProductForm = (() => {
                   />
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
-                <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" tabindex="0">
-                  <i class="bi bi-question-circle-fill text-sm"></i>
-                  <div class="hidden group-hover:block group-focus:block absolute left-6 top-0 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
                     ${escapeHtml(tooltipText)}
                   </div>
                 </div>
@@ -20585,13 +20832,10 @@ const ProductForm = (() => {
             <div class="space-y-2 pr-8 sm:pr-0">
               <div class="flex items-center gap-2">
                 <div class="text-base font-bold text-slate-900">Layanan Extras</div>
-                <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                  <button type="button" class="w-5 h-5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center text-[11px] transition cursor-help border border-slate-300/80">
-                    <i class="bi bi-question-circle"></i>
-                  </button>
-                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
                     Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
-                    <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                   </div>
                 </div>
               </div>
@@ -20610,10 +20854,10 @@ const ProductForm = (() => {
                   />
                   <div class="label-dup-error-msg hidden mt-1"></div>
                 </div>
-                <div class="group relative inline-flex items-center text-slate-400 hover:text-slate-600 cursor-help" tabindex="0">
-                  <i class="bi bi-question-circle-fill text-sm"></i>
-                  <div class="hidden group-hover:block group-focus:block absolute left-6 top-0 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
-                    Ubah nama label layanan ekstra di luar perhitungan qty. Contoh: Langsung Proses, Layanan Prioritas, Packaging Kayu
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                    Judul merupakan nama pilihan yang ditampilkan kepada pembeli. Gunakan nama yang singkat dan jelas agar variasi atau layanan tambahan mudah dikenali.
                   </div>
                 </div>
               </div>
@@ -20677,16 +20921,16 @@ const ProductForm = (() => {
         <!-- Area Variasi Bertingkat (Variasi 1 s/d 4) -->
         <div class="space-y-4 pt-1" id="hierarchical-variations-container">
           <!-- Kartu Variasi 1 (Akar / Varian Utama) -->
-          ${renderVariationCard('tier1', 1, 'Variasi 1', 'Cth. Bahan Utama, Dll', 'label_tier_1', 'Ubah nama label sebagai judul pilihan variasi utama produk Anda. Contoh: Bahan Utama, Ukuran, Warna')}
+          ${renderVariationCard('tier1', 1, 'Variasi 1', 'Cth. Bahan Utama, Dll', 'label_tier_1', 'Judul merupakan nama pilihan yang ditampilkan kepada pembeli. Gunakan nama yang singkat dan jelas agar variasi atau layanan tambahan mudah dikenali.')}
 
           <!-- Kartu Variasi 2 (Jika Aktif) -->
-          ${isVar2Active ? renderVariationCard('main', 2, 'Variasi 2', 'Cth. Toping, Dll', 'label_tier_2', 'Ubah nama label sebagai judul pilihan variasi jenis produk Anda. Contoh: Toping, Ukuran, Model') : ''}
+          ${isVar2Active ? renderVariationCard('main', 2, 'Variasi 2', 'Cth. Toping, Dll', 'label_tier_2', 'Judul merupakan nama pilihan yang ditampilkan kepada pembeli. Gunakan nama yang singkat dan jelas agar variasi atau layanan tambahan mudah dikenali.') : ''}
 
           <!-- Kartu Variasi 3 (Jika Aktif) -->
-          ${isVar3Active ? renderVariationCard('extra_1', 3, 'Variasi 3', 'Cth. Toping, Dll', 'label_extra_1', 'Ubah nama label sebagai judul pilihan variasi pendukung produk Anda. Contoh: Toping, Finishing, Laminasi') : ''}
+          ${isVar3Active ? renderVariationCard('extra_1', 3, 'Variasi 3', 'Cth. Toping, Dll', 'label_extra_1', 'Judul merupakan nama pilihan yang ditampilkan kepada pembeli. Gunakan nama yang singkat dan jelas agar variasi atau layanan tambahan mudah dikenali.') : ''}
 
           <!-- Kartu Variasi 4 (Jika Aktif) -->
-          ${isVar4Active ? renderVariationCard('extra_2', 4, 'Variasi 4', 'Cth. Toping, Dll', 'label_extra_2', 'Ubah nama label sebagai judul pilihan variasi tambahan produk Anda. Contoh: Toping, Kemasan, Aksesoris') : ''}
+          ${isVar4Active ? renderVariationCard('extra_2', 4, 'Variasi 4', 'Cth. Toping, Dll', 'label_extra_2', 'Judul merupakan nama pilihan yang ditampilkan kepada pembeli. Gunakan nama yang singkat dan jelas agar variasi atau layanan tambahan mudah dikenali.') : ''}
 
           <!-- Tombol Pemicu Tambah Variasi [2/3/4] -->
           <div class="pt-1">
@@ -20738,13 +20982,10 @@ const ProductForm = (() => {
                   <i class="bi bi-plus-lg text-xs"></i>
                   <span>Layanan Extra</span>
                 </button>
-                <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                  <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs">
-                    <i class="bi bi-question-circle"></i>
-                  </button>
-                  <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
                     Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
-                    <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                   </div>
                 </div>
               </div>
@@ -20832,13 +21073,10 @@ const ProductForm = (() => {
                     <i class="bi bi-plus-lg text-xs"></i>
                     <span>Layanan Extra</span>
                   </button>
-                  <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                    <button type="button" class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition cursor-help border border-slate-200 shadow-2xs">
-                      <i class="bi bi-question-circle"></i>
-                    </button>
-                    <div class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
+                  <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                    <i class="bi bi-question-circle text-xs"></i>
+                    <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
                       Terhitung setelah jumlah Qty. Contoh: Layanan Prioritas, Langsung Diproses, dll.
-                      <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                     </div>
                   </div>
                 </div>
@@ -20891,26 +21129,15 @@ const ProductForm = (() => {
     if (primaryState.max_order_type === 'per_period') {
       const period = primaryState.max_order_period || {
         start_date: '',
-        max_qty: 10,
-        days: 7,
+        max_qty: '',
+        days: '',
         period_type: 'non_recurring',
         end_date: ''
       };
       const startDate = period.start_date || '';
-      const maxQty = period.max_qty || 10;
-      const days = parseInt(period.days, 10) || 7;
+      const maxQty = (period.max_qty !== undefined && period.max_qty !== null && period.max_qty !== '') ? period.max_qty : '';
+      const days = (period.days !== undefined && period.days !== null && period.days !== '') ? period.days : '';
       const periodType = period.period_type || 'non_recurring';
-
-      const singleCycleEnd = startDate ? addDaysToDate(startDate, Math.max(1, days) - 1) : '';
-
-      const recurringOptions = startDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
-        const cycleEnd = addDaysToDate(startDate, (cycle * Math.max(1, days)) - 1);
-        return {
-          cycle,
-          date: cycleEnd,
-          label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
-        };
-      }) : [];
 
       return `
         <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-4">
@@ -20923,8 +21150,9 @@ const ProductForm = (() => {
               <input
                 type="text"
                 id="input-period-start-date"
-                placeholder="YYYY-MM-DD"
-                value="${startDate}"
+                placeholder="dd/mm/yyyy"
+                data-format="dd/mm/yyyy"
+                value="${formatDisplayDateDDMMYYYY(startDate)}"
                 maxlength="10"
                 class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
               />
@@ -20934,10 +21162,9 @@ const ProductForm = (() => {
                 class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
                 title="Pilih tanggal dari kalender"
               >
-                <i class="bi bi-calendar-event text-sm"></i>
+                <i class="bi bi-calendar-event text-sm pointer-events-none"></i>
               </button>
             </div>
-            <span class="text-[10px] text-slate-400 mt-0.5 block">Format: YYYY-MM-DD. Tanggal di masa lalu otomatis dinonaktifkan.</span>
           </div>
 
           <!-- Input teks/angka Maks. Jumlah Pembelian [jumlah] produk untuk [jumlah] Hari -->
@@ -20948,6 +21175,7 @@ const ProductForm = (() => {
               id="input-period-max-qty"
               min="1"
               value="${maxQty}"
+              placeholder="10"
               class="w-24 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
             />
             <span>produk untuk</span>
@@ -20956,77 +21184,92 @@ const ProductForm = (() => {
               id="input-period-days"
               min="1"
               value="${days}"
+              placeholder="7"
               class="w-20 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
             />
             <span>Hari</span>
           </div>
 
-          <!-- Pilihan Tipe Periode (Radio Button) -->
-          <div class="space-y-3 pt-2 border-t border-slate-200/80">
-            <label class="block text-xs font-bold text-slate-800">Pilihan Tipe Periode <span class="text-red-500">*</span>:</label>
+          <!-- Pilihan Tipe Periode (Radio Button Horizontal: [Berulang] [Tidak Berulang]) -->
+          <div class="space-y-2 pt-2 border-t border-slate-200/80">
+            <label class="block text-xs font-bold text-slate-800">Pilihan Tipe Periode:</label>
 
-            <div class="space-y-3">
-              <!-- Tidak Berulang -->
-              <div id="wrapper-single-period-non-recurring" class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2">
+            <div class="flex flex-row flex-wrap items-center gap-4 sm:gap-6 py-1">
+              <!-- Berulang -->
+              <div class="flex items-center gap-1.5">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
-                  <span class="text-xs font-bold text-slate-800">Tidak Berulang</span>
+                  <input type="radio" name="period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] accent-[var(--color-primary)] cursor-pointer" />
+                  <span class="text-xs font-semibold text-slate-800">Berulang</span>
                 </label>
-
-                <!-- Dynamic note text -->
-                <div id="single-period-note-text" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal">
-                  ${startDate ? `
-                    <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
-                  ` : `
-                    <span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.
-                  `}
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                    Maks. Jumlah Pembelian akan diulangi secara berurutan per periode yang ditentukan (dalam hari) hingga tanggal berakhir yang diatur di bawah ini.
+                  </div>
                 </div>
               </div>
 
-              <!-- Berulang -->
-              <div id="wrapper-single-period-recurring" class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3">
+              <!-- Tidak Berulang -->
+              <div class="flex items-center gap-1.5">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
-                  <span class="text-xs font-bold text-slate-800">Berulang</span>
+                  <input type="radio" name="period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] accent-[var(--color-primary)] cursor-pointer" />
+                  <span class="text-xs font-semibold text-slate-800">Tidak Berulang</span>
                 </label>
-
-                <div id="recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} pl-6 space-y-2">
-                  <label for="input-period-end-date" class="block text-[11px] font-bold text-slate-700">Tanggal Berakhir <span class="text-red-500">*</span>:</label>
-                  <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <div class="relative w-full sm:w-56">
-                      <input
-                        type="text"
-                        id="input-period-end-date"
-                        placeholder="YYYY-MM-DD"
-                        value="${period.end_date || ''}"
-                        maxlength="10"
-                        class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
-                      />
-                      <button
-                        type="button"
-                        id="btn-calendar-period-end-date"
-                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
-                        title="Pilih tanggal dari kalender"
-                      >
-                        <i class="bi bi-calendar-event text-sm"></i>
-                      </button>
-                    </div>
-                    <div class="w-full sm:w-auto">
-                      <select id="select-period-end-date" class="w-full sm:w-64 px-3 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-700">
-                        <option value="">Pilih cepat siklus...</option>
-                        ${recurringOptions.map(opt => `
-                          <option value="${opt.date}" ${period.end_date === opt.date ? 'selected' : ''}>${opt.label}</option>
-                        `).join('')}
-                      </select>
-                    </div>
-                  </div>
-                  <div id="period-end-date-feedback" class="text-[11px] text-slate-500 font-medium">
-                    ${!startDate ? 'Tentukan Tanggal Mulai terlebih dahulu.' : (period.end_date ? (isValidRecurringEndDate(startDate, period.end_date, days) ? `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${getRecurringCycleCount(startDate, period.end_date, days)} kali siklus / ${getRecurringCycleCount(startDate, period.end_date, days) * days} hari</span>` : `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`) : `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`)}
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                    Maks. Jumlah Pembelian akan berakhir setelah periode yang ditentukan (dalam hari).
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- Tanggal Berakhir (HANYA DITAMPILKAN JIKA BERULANG) -->
+          <div id="recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} space-y-1.5">
+            <label for="input-period-end-date" class="block text-xs font-semibold text-slate-700">
+              Tanggal Berakhir <span class="text-red-500">*</span>:
+            </label>
+            <div class="relative w-full sm:w-64">
+              <div class="relative flex items-center w-full rounded-[6px] border border-slate-300 bg-white focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)]">
+                <!-- Ikon Kalender Tunggal di Kiri -->
+                <button
+                  type="button"
+                  id="btn-calendar-period-end-date"
+                  class="pl-3 pr-1.5 py-2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none transition cursor-pointer flex items-center justify-center shrink-0 border-0 bg-transparent"
+                  title="Pilih tanggal dari kalender"
+                >
+                  <i class="bi bi-calendar-event text-sm pointer-events-none"></i>
+                </button>
+                <!-- Input Tanggal di Tengah -->
+                <input
+                  type="text"
+                  id="input-period-end-date"
+                  placeholder="dd/mm/yyyy"
+                  data-format="dd/mm/yyyy"
+                  value="${formatDisplayDateDDMMYYYY(period.end_date || '')}"
+                  maxlength="10"
+                  class="w-full py-2 px-1 text-xs font-semibold border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-slate-800 placeholder-slate-400 shadow-none"
+                />
+                <!-- Chevron di Kanan untuk Accordion Opsi Siklus Cepat -->
+                <button
+                  type="button"
+                  id="btn-toggle-quick-cycles"
+                  class="pr-3 pl-1.5 py-2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none transition cursor-pointer flex items-center justify-center shrink-0 border-0 bg-transparent"
+                  title="Buka pilihan siklus cepat"
+                >
+                  <i id="icon-chevron-quick-cycles" class="bi bi-chevron-down text-xs transition-transform duration-200 pointer-events-none"></i>
+                </button>
+              </div>
+
+              <!-- Dropdown Accordion Siklus Cepat (format: dd/mm/yyyy) -->
+              <div id="quick-cycles-dropdown" class="hidden absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-slate-200 rounded-[6px] shadow-lg max-h-48 overflow-y-auto py-1"></div>
+            </div>
+            <div id="period-end-date-feedback" class="text-[11px] text-slate-500 font-medium pt-0.5"></div>
+          </div>
+
+          <!-- Dynamic Note Text -->
+          <div id="single-period-note-text" class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal"></div>
         </div>
       `;
     }
@@ -21043,98 +21286,132 @@ const ProductForm = (() => {
     const btnCalStart = document.getElementById('btn-calendar-period-start-date');
     const eDateInp = document.getElementById('input-period-end-date');
     const btnCalEnd = document.getElementById('btn-calendar-period-end-date');
+    const btnToggleCycles = document.getElementById('btn-toggle-quick-cycles');
+    const chevronIcon = document.getElementById('icon-chevron-quick-cycles');
+    const quickCyclesDropdown = document.getElementById('quick-cycles-dropdown');
     const maxQtyInp = document.getElementById('input-period-max-qty');
     const daysInp = document.getElementById('input-period-days');
     const radPeriodTypes = document.querySelectorAll('input[name="period_type_radio"]');
-    const selEndDate = document.getElementById('select-period-end-date');
     const feedbackEl = document.getElementById('period-end-date-feedback');
+    const noteEl = document.getElementById('single-period-note-text');
+    const recWrap = document.getElementById('recurring-end-date-wrapper');
+
+    const closeQuickCycles = () => {
+      if (quickCyclesDropdown) quickCyclesDropdown.classList.add('hidden');
+      if (chevronIcon) chevronIcon.style.transform = 'rotate(0deg)';
+    };
 
     const updateSinglePeriodCalculation = () => {
-      const sDate = sDateInp ? sDateInp.value.trim() : '';
-      const maxQty = maxQtyInp ? (parseInt(maxQtyInp.value, 10) || 10) : 10;
-      const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
+      const sDateDisplay = sDateInp ? sDateInp.value.trim() : '';
+      const sDateISO = parseDisplayDateToISO(sDateDisplay);
+      const rawMaxQty = maxQtyInp ? maxQtyInp.value.trim() : '';
+      const maxQty = rawMaxQty !== '' ? parseInt(rawMaxQty, 10) : '';
+      const rawDays = daysInp ? daysInp.value.trim() : '';
+      const days = rawDays !== '' ? parseInt(rawDays, 10) : '';
       const checkedRad = document.querySelector('input[name="period_type_radio"]:checked');
-      const periodType = checkedRad ? checkedRad.value : 'non_recurring';
-      const curEndDate = eDateInp ? eDateInp.value.trim() : (selEndDate ? selEndDate.value : '');
+      const periodType = checkedRad ? checkedRad.value : 'recurring';
+      const eDateDisplay = eDateInp ? eDateInp.value.trim() : '';
+      const eDateISO = parseDisplayDateToISO(eDateDisplay);
 
       if (!primaryState.max_order_period) primaryState.max_order_period = {};
-      primaryState.max_order_period.start_date = sDate;
+      primaryState.max_order_period.start_date = sDateISO;
       primaryState.max_order_period.max_qty = maxQty;
       primaryState.max_order_period.days = days;
       primaryState.max_order_period.period_type = periodType;
-      primaryState.max_order_period.end_date = curEndDate;
-      primaryState.max_order = maxQty;
-      primaryState.max_order_qty = maxQty;
+      primaryState.max_order_period.end_date = periodType === 'recurring' ? eDateISO : '';
+      primaryState.max_order = maxQty || null;
+      primaryState.max_order_qty = maxQty || null;
 
-      const singleCycleEnd = sDate ? addDaysToDate(sDate, Math.max(1, days) - 1) : '';
-      const noteEl = document.getElementById('single-period-note-text');
-      if (noteEl) {
-        if (sDate) {
-          noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
-        } else {
-          noteEl.innerHTML = `<span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.`;
-        }
-      }
-
-      if (selEndDate) {
-        const recurringOptions = sDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
-          const cycleEnd = addDaysToDate(sDate, (cycle * Math.max(1, days)) - 1);
-          return {
-            cycle,
-            date: cycleEnd,
-            label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
-          };
-        }) : [];
-
-        selEndDate.innerHTML = `<option value="">Pilih cepat siklus...</option>` + recurringOptions.map(opt => `
-          <option value="${opt.date}" ${curEndDate === opt.date ? 'selected' : ''}>${opt.label}</option>
-        `).join('');
-
-        if (curEndDate && recurringOptions.some(opt => opt.date === curEndDate)) {
-          selEndDate.value = curEndDate;
-        } else if (!curEndDate) {
-          selEndDate.value = '';
-        }
-      }
-
-      if (feedbackEl) {
-        if (!sDate) {
-          feedbackEl.innerHTML = 'Tentukan Tanggal Mulai terlebih dahulu.';
-        } else if (curEndDate) {
-          if (isValidRecurringEndDate(sDate, curEndDate, days)) {
-            const cycles = getRecurringCycleCount(sDate, curEndDate, days);
-            feedbackEl.innerHTML = `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${cycles} kali siklus / ${cycles * days} hari</span>`;
-          } else {
-            feedbackEl.innerHTML = `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`;
-          }
-        } else {
-          feedbackEl.innerHTML = `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`;
-        }
-      }
-
-      const recWrap = document.getElementById('recurring-end-date-wrapper');
-      const wrapNon = document.getElementById('wrapper-single-period-non-recurring');
-      const wrapRec = document.getElementById('wrapper-single-period-recurring');
       if (recWrap) {
         if (periodType === 'recurring') {
           recWrap.classList.remove('hidden');
-          recWrap.classList.add('block');
         } else {
-          recWrap.classList.remove('block');
           recWrap.classList.add('hidden');
+          closeQuickCycles();
         }
       }
-      if (wrapNon) {
-        wrapNon.className = `p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2`;
+
+      // Dynamic note
+      if (noteEl) {
+        if (!sDateISO) {
+          noteEl.innerHTML = `<span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.`;
+        } else if (!maxQty || !days) {
+          noteEl.innerHTML = `<span class="font-bold text-slate-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span>. Lengkapi maks. produk dan hari untuk melihat jadwal.`;
+        } else if (periodType === 'non_recurring') {
+          const singleCycleEnd = addDaysToDate(sDateISO, Math.max(1, days) - 1);
+          noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berlaku selama 1 kali siklus dan berakhir pada <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(singleCycleEnd)} 23:59</span>.`;
+        } else {
+          // recurring
+          if (eDateISO && isValidRecurringEndDate(sDateISO, eDateISO, days)) {
+            const cycles = getRecurringCycleCount(sDateISO, eDateISO, days);
+            noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang <span class="font-bold text-slate-900">${cycles} kali</span> dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(eDateISO)} 23:59</span>.`;
+          } else {
+            noteEl.innerHTML = `<span class="font-bold text-slate-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Silakan tentukan Tanggal Berakhir untuk melihat total siklus.`;
+          }
+        }
       }
-      if (wrapRec) {
-        wrapRec.className = `p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3`;
+
+      // Quick cycles dropdown items
+      if (quickCyclesDropdown) {
+        if (sDateISO && days) {
+          const cycles = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+            const cycleEnd = addDaysToDate(sDateISO, (cycle * Math.max(1, days)) - 1);
+            return {
+              cycle,
+              dateISO: cycleEnd,
+              displayDate: formatDisplayDateDDMMYYYY(cycleEnd)
+            };
+          });
+          quickCyclesDropdown.innerHTML = cycles.map(c => `
+            <button
+              type="button"
+              class="btn-quick-cycle-item w-full text-left px-3 py-1.5 hover:bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer transition flex items-center justify-between border-b border-slate-50 last:border-b-0 ${eDateISO === c.dateISO ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}"
+              data-date-iso="${c.dateISO}"
+              data-date-display="${c.displayDate}"
+            >
+              <span>${c.displayDate}</span>
+              ${eDateISO === c.dateISO ? '<i class="bi bi-check text-emerald-600 font-bold"></i>' : ''}
+            </button>
+          `).join('');
+
+          quickCyclesDropdown.querySelectorAll('.btn-quick-cycle-item').forEach(cBtn => {
+            cBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const iso = cBtn.getAttribute('data-date-iso');
+              const disp = cBtn.getAttribute('data-date-display');
+              if (eDateInp) eDateInp.value = disp;
+              if (!primaryState.max_order_period) primaryState.max_order_period = {};
+              primaryState.max_order_period.end_date = iso;
+              closeQuickCycles();
+              updateSinglePeriodCalculation();
+            };
+          });
+        } else {
+          quickCyclesDropdown.innerHTML = `<div class="px-3 py-2 text-[11px] text-slate-400 italic">Tentukan Tanggal Mulai & Durasi hari terlebih dahulu.</div>`;
+        }
+      }
+
+      // Feedback text
+      if (feedbackEl) {
+        if (!sDateISO) {
+          feedbackEl.innerHTML = 'Tentukan Tanggal Mulai terlebih dahulu.';
+        } else if (!eDateISO) {
+          feedbackEl.innerHTML = `Pilih tanggal berakhir kelipatan ${days || 7} hari (minimal 2 siklus / ${(days || 7) * 2} hari).`;
+        } else if (isValidRecurringEndDate(sDateISO, eDateISO, days)) {
+          const cycles = getRecurringCycleCount(sDateISO, eDateISO, days);
+          feedbackEl.innerHTML = `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${cycles} kali siklus / ${cycles * days} hari</span>`;
+        } else {
+          feedbackEl.innerHTML = `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days || 7} hari (minimal 2 siklus) dari tanggal mulai.</span>`;
+        }
       }
     };
 
     if (btnCalStart && sDateInp) {
       btnCalStart.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
+        closeQuickCycles();
         openCalendarPopover(btnCalStart, sDateInp, {
           minDate: getTodayDateString(),
           onSelect: () => updateSinglePeriodCalculation()
@@ -21149,10 +21426,13 @@ const ProductForm = (() => {
 
     if (btnCalEnd && eDateInp) {
       btnCalEnd.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        const sDate = sDateInp ? sDateInp.value.trim() : '';
+        closeQuickCycles();
+        const sDateDisplay = sDateInp ? sDateInp.value.trim() : '';
+        const sDateISO = parseDisplayDateToISO(sDateDisplay);
         const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
-        const minEndDate = sDate ? addDaysToDate(sDate, (2 * days) - 1) : getTodayDateString();
+        const minEndDate = sDateISO ? addDaysToDate(sDateISO, (2 * days) - 1) : getTodayDateString();
         openCalendarPopover(btnCalEnd, eDateInp, {
           minDate: minEndDate,
           onSelect: () => updateSinglePeriodCalculation()
@@ -21163,15 +21443,29 @@ const ProductForm = (() => {
     if (eDateInp) {
       eDateInp.oninput = updateSinglePeriodCalculation;
       eDateInp.onchange = updateSinglePeriodCalculation;
+      eDateInp.onclick = (e) => {
+        e.stopPropagation();
+      };
     }
 
-    if (selEndDate) {
-      selEndDate.onchange = () => {
-        if (eDateInp) {
-          eDateInp.value = selEndDate.value;
+    if (btnToggleCycles && quickCyclesDropdown) {
+      btnToggleCycles.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeActiveCalendarPopover();
+        if (quickCyclesDropdown.classList.contains('hidden')) {
+          quickCyclesDropdown.classList.remove('hidden');
+          if (chevronIcon) chevronIcon.style.transform = 'rotate(180deg)';
+        } else {
+          closeQuickCycles();
         }
-        updateSinglePeriodCalculation();
       };
+
+      document.addEventListener('click', (e) => {
+        if (quickCyclesDropdown && !quickCyclesDropdown.contains(e.target) && !btnToggleCycles.contains(e.target)) {
+          closeQuickCycles();
+        }
+      });
     }
 
     if (maxQtyInp) maxQtyInp.oninput = updateSinglePeriodCalculation;
@@ -21179,6 +21473,8 @@ const ProductForm = (() => {
     radPeriodTypes.forEach(rad => {
       rad.onchange = updateSinglePeriodCalculation;
     });
+
+    updateSinglePeriodCalculation();
   }
 
   function bindSinglePerOrderEvents() {
@@ -21264,8 +21560,8 @@ const ProductForm = (() => {
           if (!primaryState.max_order_period) {
             primaryState.max_order_period = {
               start_date: '',
-              max_qty: 10,
-              days: 7,
+              max_qty: '',
+              days: '',
               period_type: 'non_recurring',
               end_date: ''
             };
@@ -21396,46 +21692,58 @@ const ProductForm = (() => {
   // Markup Modal Maksimal Jumlah Pembelian
   function renderMaxOrderModalMarkup() {
     return `
-      <div id="modal-max-order-config" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
-          <!-- Header Modal -->
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+      <div id="modal-max-order-config" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-200/80">
+          <!-- Header Modal (Sticky di Atas) -->
+          <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between shrink-0 bg-white">
             <div>
-              <h3 class="text-sm font-bold text-slate-900" id="max-order-modal-title">Pengaturan Maksimal Jumlah Pembelian</h3>
-              <p class="text-[11px] text-slate-500" id="max-order-modal-subtitle">Atur batasan pembelian untuk produk bervariasi</p>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-900" id="max-order-modal-title">Maksimal Jumlah Pembelian</h3>
+                <!-- Tooltip Maks. Jumlah Pembelian -->
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                    Maks. jumlah pembelian diatur pada level produk. Pengaturan ini membatasi maks. jumlah produk yang dapat dibeli per pesanan atau per periode. Kamu hanya dapat memilih satu tipe pengaturan.
+                  </div>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5" id="max-order-modal-subtitle">Atur batasan pembelian untuk produk bervariasi</p>
             </div>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer" data-modal="modal-max-order-config" id="btn-x-max-order-modal"><i class="bi bi-x-lg"></i></button>
+            <button type="button" class="btn-close-modal text-slate-400 hover:text-red-500 font-bold p-1 leading-none text-base cursor-pointer rounded-lg hover:bg-slate-100 transition" data-modal="modal-max-order-config" id="btn-x-max-order-modal" aria-label="Tutup modal"><i class="bi bi-x-lg"></i></button>
           </div>
 
-          <!-- Pesan Error Validasi Modal -->
-          <div id="modal-max-order-error-msg" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600 font-semibold flex items-center gap-2">
-            <i class="bi bi-exclamation-circle-fill text-red-500"></i>
-            <span id="modal-max-order-error-text"></span>
+          <!-- Area Scroll Konten Tunggal yang Terkontrol -->
+          <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scrollbar">
+            <!-- Pesan Error Validasi Modal -->
+            <div id="modal-max-order-error-msg" class="hidden p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600 font-semibold flex items-center gap-2">
+              <i class="bi bi-exclamation-circle-fill text-red-500"></i>
+              <span id="modal-max-order-error-text"></span>
+            </div>
+
+            <!-- Pilihan 3 Mode Maksimal Pembelian -->
+            <div id="modal-max-order-modes-container" class="grid grid-cols-3 gap-2 text-xs">
+              <label id="lbl-modal-order-unlimited" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
+                <input type="radio" name="modal_max_order_mode" value="unlimited" class="accent-[var(--color-primary)] cursor-pointer" />
+                <span>Tanpa Batas</span>
+              </label>
+              <label id="lbl-modal-order-per-order" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
+                <input type="radio" name="modal_max_order_mode" value="per_order" class="accent-[var(--color-primary)] cursor-pointer" />
+                <span>Per Pesanan</span>
+              </label>
+              <label id="lbl-modal-order-per-period" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
+                <input type="radio" name="modal_max_order_mode" value="per_period" class="accent-[var(--color-primary)] cursor-pointer" />
+                <span>Per Periode</span>
+              </label>
+            </div>
+
+            <!-- Badan Konten Modal Dinamis -->
+            <div id="modal-max-order-body" class="space-y-4"></div>
           </div>
 
-          <!-- Pilihan 3 Mode Maksimal Pembelian -->
-          <div class="grid grid-cols-3 gap-2 text-xs">
-            <label id="lbl-modal-order-unlimited" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
-              <input type="radio" name="modal_max_order_mode" value="unlimited" class="accent-[var(--color-primary)] cursor-pointer" />
-              <span>Tanpa Batas</span>
-            </label>
-            <label id="lbl-modal-order-per-order" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
-              <input type="radio" name="modal_max_order_mode" value="per_order" class="accent-[var(--color-primary)] cursor-pointer" />
-              <span>Per Pesanan</span>
-            </label>
-            <label id="lbl-modal-order-per-period" class="p-2 sm:p-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold border-slate-300 text-slate-700 transition">
-              <input type="radio" name="modal_max_order_mode" value="per_period" class="accent-[var(--color-primary)] cursor-pointer" />
-              <span>Per Periode</span>
-            </label>
-          </div>
-
-          <!-- Badan Konten Modal Dinamis -->
-          <div id="modal-max-order-body" class="space-y-4 pt-1"></div>
-
-          <!-- Footer Aksi -->
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
-            <button type="button" id="btn-cancel-max-order-modal" class="px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer">Batal</button>
-            <button type="button" id="btn-save-max-order-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-xs" style="background-color: var(--color-primary);">Simpan Pengaturan</button>
+          <!-- Footer Aksi (Sticky di Bawah) -->
+          <div class="px-5 py-3 border-t border-slate-200 flex items-center justify-end gap-2 shrink-0 bg-slate-50/80 rounded-b-xl">
+            <button type="button" id="btn-cancel-max-order-modal" class="px-4 py-2 rounded-md border border-slate-300 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 transition cursor-pointer shadow-2xs">Batal</button>
+            <button type="button" id="btn-save-max-order-modal" class="btn-primary-brand px-4 py-2 rounded-md text-xs font-bold text-white cursor-pointer shadow-2xs transition hover:brightness-95" style="background-color: var(--color-primary);">Simpan</button>
           </div>
         </div>
       </div>
@@ -21448,6 +21756,8 @@ const ProductForm = (() => {
   let modalDraftScope = 'umum';
   let modalDraftQty = null;
   let modalDraftPeriod = null;
+  let currentModalContext = 'global'; // 'global' | 'variant_per_order' | 'variant_per_period'
+  let currentModalTargetMatId = null;
 
   function showModalMaxOrderError(msg) {
     const errWrap = document.getElementById('modal-max-order-error-msg');
@@ -21540,9 +21850,9 @@ const ProductForm = (() => {
               </thead>
               <tbody class="divide-y divide-slate-200">
                 ${materialsState.map((mat, idx) => {
-                  const varName = (mat.name || '').trim() || `Varian ${idx + 1}`;
-                  const val = (mat.max_order !== null && mat.max_order !== undefined && mat.max_order !== '' && mat.max_order !== 'Tanpa Batas' && mat.max_order !== 'Unlimited') ? mat.max_order : '';
-                  return `
+        const varName = (mat.name || '').trim() || `Varian ${idx + 1}`;
+        const val = (mat.max_order !== null && mat.max_order !== undefined && mat.max_order !== '' && mat.max_order !== 'Tanpa Batas' && mat.max_order !== 'Unlimited') ? mat.max_order : '';
+        return `
                     <tr class="hover:bg-slate-50">
                       <td class="p-2.5 font-medium text-slate-800">${escapeHtml(varName)}</td>
                       <td class="p-2 text-center">
@@ -21557,7 +21867,7 @@ const ProductForm = (() => {
                       </td>
                     </tr>
                   `;
-                }).join('')}
+      }).join('')}
               </tbody>
             </table>
           </div>
@@ -21569,26 +21879,15 @@ const ProductForm = (() => {
   function renderModalPeriodContent() {
     const period = modalDraftPeriod || {
       start_date: '',
-      max_qty: 10,
-      days: 7,
+      max_qty: '',
+      days: '',
       period_type: 'non_recurring',
       end_date: ''
     };
     const startDate = period.start_date || '';
-    const maxQty = period.max_qty || 10;
-    const days = parseInt(period.days, 10) || 7;
+    const maxQty = (period.max_qty !== undefined && period.max_qty !== null && period.max_qty !== '') ? period.max_qty : '';
+    const days = (period.days !== undefined && period.days !== null && period.days !== '') ? period.days : '';
     const periodType = period.period_type || 'non_recurring';
-
-    const singleCycleEnd = startDate ? addDaysToDate(startDate, Math.max(1, days) - 1) : '';
-
-    const recurringOptions = startDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
-      const cycleEnd = addDaysToDate(startDate, (cycle * Math.max(1, days)) - 1);
-      return {
-        cycle,
-        date: cycleEnd,
-        label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
-      };
-    }) : [];
 
     return `
       <div class="p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-4">
@@ -21606,8 +21905,9 @@ const ProductForm = (() => {
             <input
               type="text"
               id="modal-input-period-start-date"
-              placeholder="YYYY-MM-DD"
-              value="${startDate}"
+              placeholder="dd/mm/yyyy"
+              data-format="dd/mm/yyyy"
+              value="${formatDisplayDateDDMMYYYY(startDate)}"
               maxlength="10"
               class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
             />
@@ -21617,10 +21917,9 @@ const ProductForm = (() => {
               class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
               title="Pilih tanggal dari kalender"
             >
-              <i class="bi bi-calendar-event text-sm"></i>
+              <i class="bi bi-calendar-event text-sm pointer-events-none"></i>
             </button>
           </div>
-          <span class="text-[10px] text-slate-400 mt-0.5 block">Format: YYYY-MM-DD. Tanggal di masa lalu otomatis dinonaktifkan.</span>
         </div>
 
         <!-- Input teks/angka Maks. Jumlah Pembelian [jumlah] produk untuk [jumlah] Hari -->
@@ -21631,6 +21930,7 @@ const ProductForm = (() => {
             id="modal-input-period-max-qty"
             min="1"
             value="${maxQty}"
+            placeholder="10"
             class="w-24 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
           />
           <span>produk untuk</span>
@@ -21639,77 +21939,92 @@ const ProductForm = (() => {
             id="modal-input-period-days"
             min="1"
             value="${days}"
+            placeholder="7"
             class="w-20 px-2.5 py-1.5 rounded-[6px] border border-slate-300 text-xs font-bold text-center focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
           />
           <span>Hari</span>
         </div>
 
-        <!-- Pilihan Tipe Periode (Radio Button) -->
-        <div class="space-y-3 pt-2 border-t border-slate-200/80">
-          <label class="block text-xs font-bold text-slate-800">Pilihan Tipe Periode <span class="text-red-500">*</span>:</label>
+        <!-- Pilihan Tipe Periode (Radio Button Horizontal: [Berulang] [Tidak Berulang]) -->
+        <div class="space-y-2 pt-2 border-t border-slate-200/80">
+          <label class="block text-xs font-bold text-slate-800">Pilihan Tipe Periode:</label>
 
-          <div class="space-y-3">
-            <!-- Tidak Berulang -->
-            <div id="wrapper-period-non-recurring" class="p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2">
+          <div class="flex flex-row flex-wrap items-center gap-4 sm:gap-6 py-1">
+            <!-- Berulang -->
+            <div class="flex items-center gap-1.5">
               <label class="flex items-center gap-2 cursor-pointer select-none">
-                <input type="radio" name="modal_period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
-                <span class="text-xs font-bold text-slate-800">Tidak Berulang</span>
+                <input type="radio" name="modal_period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] accent-[var(--color-primary)] cursor-pointer" />
+                <span class="text-xs font-semibold text-slate-800">Berulang</span>
               </label>
-
-              <!-- Dynamic note text -->
-              <div id="modal-period-note-text" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal">
-                ${startDate ? `
-                  <span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(startDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.
-                ` : `
-                  <span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.
-                `}
+              <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                <i class="bi bi-question-circle text-xs"></i>
+                <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                  Maks. Jumlah Pembelian akan diulangi secara berurutan per periode yang ditentukan (dalam hari) hingga tanggal berakhir yang diatur di bawah ini.
+                </div>
               </div>
             </div>
 
-            <!-- Berulang -->
-            <div id="wrapper-period-recurring" class="p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3">
+            <!-- Tidak Berulang -->
+            <div class="flex items-center gap-1.5">
               <label class="flex items-center gap-2 cursor-pointer select-none">
-                <input type="radio" name="modal_period_type_radio" value="recurring" ${periodType === 'recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] cursor-pointer" />
-                <span class="text-xs font-bold text-slate-800">Berulang</span>
+                <input type="radio" name="modal_period_type_radio" value="non_recurring" ${periodType === 'non_recurring' ? 'checked' : ''} class="w-4 h-4 text-[var(--color-primary)] accent-[var(--color-primary)] cursor-pointer" />
+                <span class="text-xs font-semibold text-slate-800">Tidak Berulang</span>
               </label>
-
-              <div id="modal-recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} pl-6 space-y-2">
-                <label for="modal-input-period-end-date" class="block text-[11px] font-bold text-slate-700">Tanggal Berakhir <span class="text-red-500">*</span>:</label>
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <div class="relative w-full sm:w-56">
-                    <input
-                      type="text"
-                      id="modal-input-period-end-date"
-                      placeholder="YYYY-MM-DD"
-                      value="${period.end_date || ''}"
-                      maxlength="10"
-                      class="w-full pl-3 pr-10 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 placeholder-slate-400"
-                    />
-                    <button
-                      type="button"
-                      id="btn-calendar-modal-period-end-date"
-                      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none p-1 transition cursor-pointer"
-                      title="Pilih tanggal dari kalender"
-                    >
-                      <i class="bi bi-calendar-event text-sm"></i>
-                    </button>
-                  </div>
-                  <div class="w-full sm:w-auto">
-                    <select id="modal-select-period-end-date" class="w-full sm:w-64 px-3 py-2 rounded-[6px] border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-700">
-                      <option value="">Pilih cepat siklus...</option>
-                      ${recurringOptions.map(opt => `
-                        <option value="${opt.date}" ${period.end_date === opt.date ? 'selected' : ''}>${opt.label}</option>
-                      `).join('')}
-                    </select>
-                  </div>
-                </div>
-                <div id="modal-period-end-date-feedback" class="text-[11px] text-slate-500 font-medium">
-                  ${!startDate ? 'Tentukan Tanggal Mulai terlebih dahulu.' : (period.end_date ? (isValidRecurringEndDate(startDate, period.end_date, days) ? `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${getRecurringCycleCount(startDate, period.end_date, days)} kali siklus / ${getRecurringCycleCount(startDate, period.end_date, days) * days} hari</span>` : `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`) : `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`)}
+              <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                <i class="bi bi-question-circle text-xs"></i>
+                <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-72 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                  Maks. Jumlah Pembelian akan berakhir setelah periode yang ditentukan (dalam hari).
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Tanggal Berakhir (HANYA DITAMPILKAN JIKA BERULANG) -->
+        <div id="modal-recurring-end-date-wrapper" class="${periodType === 'recurring' ? 'block' : 'hidden'} space-y-1.5">
+          <label for="modal-input-period-end-date" class="block text-xs font-semibold text-slate-700">
+            Tanggal Berakhir <span class="text-red-500">*</span>:
+          </label>
+          <div class="relative w-full sm:w-64">
+            <div class="relative flex items-center w-full rounded-[6px] border border-slate-300 bg-white focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)]">
+              <!-- Ikon Kalender Tunggal di Kiri -->
+              <button
+                type="button"
+                id="btn-calendar-modal-period-end-date"
+                class="pl-3 pr-1.5 py-2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none transition cursor-pointer flex items-center justify-center shrink-0 border-0 bg-transparent"
+                title="Pilih tanggal dari kalender"
+              >
+                <i class="bi bi-calendar-event text-sm pointer-events-none"></i>
+              </button>
+              <!-- Input Tanggal di Tengah -->
+              <input
+                type="text"
+                id="modal-input-period-end-date"
+                placeholder="dd/mm/yyyy"
+                data-format="dd/mm/yyyy"
+                value="${formatDisplayDateDDMMYYYY(period.end_date || '')}"
+                maxlength="10"
+                class="w-full py-2 px-1 text-xs font-semibold border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-slate-800 placeholder-slate-400 shadow-none"
+              />
+              <!-- Chevron di Kanan untuk Accordion Opsi Siklus Cepat -->
+              <button
+                type="button"
+                id="btn-toggle-modal-quick-cycles"
+                class="pr-3 pl-1.5 py-2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none transition cursor-pointer flex items-center justify-center shrink-0 border-0 bg-transparent"
+                title="Buka pilihan siklus cepat"
+              >
+                <i id="icon-chevron-modal-quick-cycles" class="bi bi-chevron-down text-xs transition-transform duration-200 pointer-events-none"></i>
+              </button>
+            </div>
+
+            <!-- Dropdown Accordion Siklus Cepat (format: dd/mm/yyyy) -->
+            <div id="modal-quick-cycles-dropdown" class="hidden absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-slate-200 rounded-[6px] shadow-lg max-h-48 overflow-y-auto py-1"></div>
+          </div>
+          <div id="modal-period-end-date-feedback" class="text-[11px] text-slate-500 font-medium pt-0.5"></div>
+        </div>
+
+        <!-- Dynamic Note Text -->
+        <div id="modal-period-note-text" class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed font-normal"></div>
       </div>
     `;
   }
@@ -21719,96 +22034,130 @@ const ProductForm = (() => {
     const btnCalStart = document.getElementById('btn-calendar-modal-period-start-date');
     const eDateInp = document.getElementById('modal-input-period-end-date');
     const btnCalEnd = document.getElementById('btn-calendar-modal-period-end-date');
+    const btnToggleCycles = document.getElementById('btn-toggle-modal-quick-cycles');
+    const chevronIcon = document.getElementById('icon-chevron-modal-quick-cycles');
+    const quickCyclesDropdown = document.getElementById('modal-quick-cycles-dropdown');
     const maxQtyInp = document.getElementById('modal-input-period-max-qty');
     const daysInp = document.getElementById('modal-input-period-days');
     const radPeriodTypes = document.querySelectorAll('input[name="modal_period_type_radio"]');
-    const selEndDate = document.getElementById('modal-select-period-end-date');
     const feedbackEl = document.getElementById('modal-period-end-date-feedback');
+    const noteEl = document.getElementById('modal-period-note-text');
+    const recWrap = document.getElementById('modal-recurring-end-date-wrapper');
+
+    const closeQuickCycles = () => {
+      if (quickCyclesDropdown) quickCyclesDropdown.classList.add('hidden');
+      if (chevronIcon) chevronIcon.style.transform = 'rotate(0deg)';
+    };
 
     const updatePeriodCalculation = () => {
-      const sDate = sDateInp ? sDateInp.value.trim() : '';
-      const maxQty = maxQtyInp ? (parseInt(maxQtyInp.value, 10) || 10) : 10;
-      const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
+      const sDateDisplay = sDateInp ? sDateInp.value.trim() : '';
+      const sDateISO = parseDisplayDateToISO(sDateDisplay);
+      const rawMaxQty = maxQtyInp ? maxQtyInp.value.trim() : '';
+      const maxQty = rawMaxQty !== '' ? parseInt(rawMaxQty, 10) : '';
+      const rawDays = daysInp ? daysInp.value.trim() : '';
+      const days = rawDays !== '' ? parseInt(rawDays, 10) : '';
       const checkedRad = document.querySelector('input[name="modal_period_type_radio"]:checked');
-      const periodType = checkedRad ? checkedRad.value : 'non_recurring';
-      const curEndDate = eDateInp ? eDateInp.value.trim() : (selEndDate ? selEndDate.value : '');
+      const periodType = checkedRad ? checkedRad.value : 'recurring';
+      const eDateDisplay = eDateInp ? eDateInp.value.trim() : '';
+      const eDateISO = parseDisplayDateToISO(eDateDisplay);
 
       if (!modalDraftPeriod) modalDraftPeriod = {};
-      modalDraftPeriod.start_date = sDate;
+      modalDraftPeriod.start_date = sDateISO;
       modalDraftPeriod.max_qty = maxQty;
       modalDraftPeriod.days = days;
       modalDraftPeriod.period_type = periodType;
-      modalDraftPeriod.end_date = curEndDate;
+      modalDraftPeriod.end_date = periodType === 'recurring' ? eDateISO : '';
 
-      const singleCycleEnd = sDate ? addDaysToDate(sDate, Math.max(1, days) - 1) : '';
-      const noteEl = document.getElementById('modal-period-note-text');
-      if (noteEl) {
-        if (sDate) {
-          noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDateDisplay(sDate)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang 1 kali dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDateDisplay(singleCycleEnd)} 23:59</span>.`;
-        } else {
-          noteEl.innerHTML = `<span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.`;
-        }
-      }
-
-      if (selEndDate) {
-        const recurringOptions = sDate ? [2, 3, 4, 5, 6, 8, 12].map(cycle => {
-          const cycleEnd = addDaysToDate(sDate, (cycle * Math.max(1, days)) - 1);
-          return {
-            cycle,
-            date: cycleEnd,
-            label: `${formatDateDisplay(cycleEnd)} (${cycle} kali siklus / ${cycle * days} hari)`
-          };
-        }) : [];
-
-        selEndDate.innerHTML = `<option value="">Pilih cepat siklus...</option>` + recurringOptions.map(opt => `
-          <option value="${opt.date}" ${curEndDate === opt.date ? 'selected' : ''}>${opt.label}</option>
-        `).join('');
-
-        if (curEndDate && recurringOptions.some(opt => opt.date === curEndDate)) {
-          selEndDate.value = curEndDate;
-        } else if (!curEndDate) {
-          selEndDate.value = '';
-        }
-      }
-
-      if (feedbackEl) {
-        if (!sDate) {
-          feedbackEl.innerHTML = 'Tentukan Tanggal Mulai terlebih dahulu.';
-        } else if (curEndDate) {
-          if (isValidRecurringEndDate(sDate, curEndDate, days)) {
-            const cycles = getRecurringCycleCount(sDate, curEndDate, days);
-            feedbackEl.innerHTML = `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${cycles} kali siklus / ${cycles * days} hari</span>`;
-          } else {
-            feedbackEl.innerHTML = `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days} hari (minimal 2 siklus) dari tanggal mulai.</span>`;
-          }
-        } else {
-          feedbackEl.innerHTML = `Pilih tanggal berakhir kelipatan ${days} hari (minimal 2 siklus / ${days * 2} hari).`;
-        }
-      }
-
-      const recWrap = document.getElementById('modal-recurring-end-date-wrapper');
-      const wrapNon = document.getElementById('wrapper-period-non-recurring');
-      const wrapRec = document.getElementById('wrapper-period-recurring');
       if (recWrap) {
         if (periodType === 'recurring') {
           recWrap.classList.remove('hidden');
-          recWrap.classList.add('block');
         } else {
-          recWrap.classList.remove('block');
           recWrap.classList.add('hidden');
+          closeQuickCycles();
         }
       }
-      if (wrapNon) {
-        wrapNon.className = `p-3 rounded-xl border ${periodType === 'non_recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-2`;
+
+      // Dynamic note
+      if (noteEl) {
+        if (!sDateISO) {
+          noteEl.innerHTML = `<span class="font-bold text-slate-600">Catatan:</span> Masukkan Tanggal Mulai untuk melihat ringkasan jadwal batas pembelian.`;
+        } else if (!maxQty || !days) {
+          noteEl.innerHTML = `<span class="font-bold text-slate-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span>. Lengkapi maks. produk dan hari untuk melihat jadwal.`;
+        } else if (periodType === 'non_recurring') {
+          const singleCycleEnd = addDaysToDate(sDateISO, Math.max(1, days) - 1);
+          noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berlaku selama 1 kali siklus dan berakhir pada <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(singleCycleEnd)} 23:59</span>.`;
+        } else {
+          // recurring
+          if (eDateISO && isValidRecurringEndDate(sDateISO, eDateISO, days)) {
+            const cycles = getRecurringCycleCount(sDateISO, eDateISO, days);
+            noteEl.innerHTML = `<span class="font-bold text-emerald-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Pengaturan ini akan berulang <span class="font-bold text-slate-900">${cycles} kali</span> dan maks. batas pembelian akan berakhir pada <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(eDateISO)} 23:59</span>.`;
+          } else {
+            noteEl.innerHTML = `<span class="font-bold text-slate-800">Catatan:</span> Batas pembelian akan berlaku mulai <span class="font-bold text-slate-900">${formatDisplayDateDDMMYYYY(sDateISO)} 00:00</span> dan setiap Pembeli hanya dapat membeli maks. <span class="font-bold text-slate-900">${maxQty} produk</span> ini setiap <span class="font-bold text-slate-900">${days} hari</span>. Silakan tentukan Tanggal Berakhir untuk melihat total siklus.`;
+          }
+        }
       }
-      if (wrapRec) {
-        wrapRec.className = `p-3 rounded-xl border ${periodType === 'recurring' ? 'border-[var(--color-primary)] bg-white' : 'border-slate-200 bg-white'} space-y-3`;
+
+      // Quick cycles dropdown items
+      if (quickCyclesDropdown) {
+        if (sDateISO && days) {
+          const cycles = [2, 3, 4, 5, 6, 8, 12].map(cycle => {
+            const cycleEnd = addDaysToDate(sDateISO, (cycle * Math.max(1, days)) - 1);
+            return {
+              cycle,
+              dateISO: cycleEnd,
+              displayDate: formatDisplayDateDDMMYYYY(cycleEnd)
+            };
+          });
+          quickCyclesDropdown.innerHTML = cycles.map(c => `
+            <button
+              type="button"
+              class="btn-quick-cycle-item w-full text-left px-3 py-1.5 hover:bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer transition flex items-center justify-between border-b border-slate-50 last:border-b-0 ${eDateISO === c.dateISO ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}"
+              data-date-iso="${c.dateISO}"
+              data-date-display="${c.displayDate}"
+            >
+              <span>${c.displayDate}</span>
+              ${eDateISO === c.dateISO ? '<i class="bi bi-check text-emerald-600 font-bold"></i>' : ''}
+            </button>
+          `).join('');
+
+          quickCyclesDropdown.querySelectorAll('.btn-quick-cycle-item').forEach(cBtn => {
+            cBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const iso = cBtn.getAttribute('data-date-iso');
+              const disp = cBtn.getAttribute('data-date-display');
+              if (eDateInp) eDateInp.value = disp;
+              if (!modalDraftPeriod) modalDraftPeriod = {};
+              modalDraftPeriod.end_date = iso;
+              closeQuickCycles();
+              updatePeriodCalculation();
+            };
+          });
+        } else {
+          quickCyclesDropdown.innerHTML = `<div class="px-3 py-2 text-[11px] text-slate-400 italic">Tentukan Tanggal Mulai & Durasi hari terlebih dahulu.</div>`;
+        }
+      }
+
+      // Feedback text
+      if (feedbackEl) {
+        if (!sDateISO) {
+          feedbackEl.innerHTML = 'Tentukan Tanggal Mulai terlebih dahulu.';
+        } else if (!eDateISO) {
+          feedbackEl.innerHTML = `Pilih tanggal berakhir kelipatan ${days || 7} hari (minimal 2 siklus / ${(days || 7) * 2} hari).`;
+        } else if (isValidRecurringEndDate(sDateISO, eDateISO, days)) {
+          const cycles = getRecurringCycleCount(sDateISO, eDateISO, days);
+          feedbackEl.innerHTML = `<span class="text-emerald-700 font-semibold"><i class="bi bi-check-circle"></i> Sesuai: ${cycles} kali siklus / ${cycles * days} hari</span>`;
+        } else {
+          feedbackEl.innerHTML = `<span class="text-red-500 font-medium"><i class="bi bi-exclamation-circle"></i> Tanggal berakhir harus tepat kelipatan ${days || 7} hari (minimal 2 siklus) dari tanggal mulai.</span>`;
+        }
       }
     };
 
     if (btnCalStart && sDateInp) {
       btnCalStart.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
+        closeQuickCycles();
         openCalendarPopover(btnCalStart, sDateInp, {
           minDate: getTodayDateString(),
           onSelect: () => updatePeriodCalculation()
@@ -21823,10 +22172,13 @@ const ProductForm = (() => {
 
     if (btnCalEnd && eDateInp) {
       btnCalEnd.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        const sDate = sDateInp ? sDateInp.value.trim() : '';
+        closeQuickCycles();
+        const sDateDisplay = sDateInp ? sDateInp.value.trim() : '';
+        const sDateISO = parseDisplayDateToISO(sDateDisplay);
         const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
-        const minEndDate = sDate ? addDaysToDate(sDate, (2 * days) - 1) : getTodayDateString();
+        const minEndDate = sDateISO ? addDaysToDate(sDateISO, (2 * days) - 1) : getTodayDateString();
         openCalendarPopover(btnCalEnd, eDateInp, {
           minDate: minEndDate,
           onSelect: () => updatePeriodCalculation()
@@ -21837,15 +22189,29 @@ const ProductForm = (() => {
     if (eDateInp) {
       eDateInp.oninput = updatePeriodCalculation;
       eDateInp.onchange = updatePeriodCalculation;
+      eDateInp.onclick = (e) => {
+        e.stopPropagation();
+      };
     }
 
-    if (selEndDate) {
-      selEndDate.onchange = () => {
-        if (eDateInp) {
-          eDateInp.value = selEndDate.value;
+    if (btnToggleCycles && quickCyclesDropdown) {
+      btnToggleCycles.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeActiveCalendarPopover();
+        if (quickCyclesDropdown.classList.contains('hidden')) {
+          quickCyclesDropdown.classList.remove('hidden');
+          if (chevronIcon) chevronIcon.style.transform = 'rotate(180deg)';
+        } else {
+          closeQuickCycles();
         }
-        updatePeriodCalculation();
       };
+
+      document.addEventListener('click', (e) => {
+        if (quickCyclesDropdown && !quickCyclesDropdown.contains(e.target) && !btnToggleCycles.contains(e.target)) {
+          closeQuickCycles();
+        }
+      });
     }
 
     if (maxQtyInp) {
@@ -21859,6 +22225,8 @@ const ProductForm = (() => {
     radPeriodTypes.forEach(rad => {
       rad.onchange = updatePeriodCalculation;
     });
+
+    updatePeriodCalculation();
   }
 
   function renderModalMaxOrderBody() {
@@ -21912,6 +22280,17 @@ const ProductForm = (() => {
     const modal = document.getElementById('modal-max-order-config');
     if (!modal) return;
 
+    currentModalContext = 'global';
+    currentModalTargetMatId = null;
+
+    const titleEl = document.getElementById('max-order-modal-title');
+    const subtitleEl = document.getElementById('max-order-modal-subtitle');
+    const modesContainer = document.getElementById('modal-max-order-modes-container');
+
+    if (titleEl) titleEl.textContent = 'Maksimal Jumlah Pembelian';
+    if (subtitleEl) subtitleEl.textContent = 'Atur batasan pembelian untuk produk bervariasi';
+    if (modesContainer) modesContainer.classList.remove('hidden');
+
     maxOrderModalBackup = {
       max_order: primaryState.max_order,
       max_order_type: primaryState.max_order_type || 'unlimited',
@@ -21941,8 +22320,8 @@ const ProductForm = (() => {
     modalDraftQty = primaryState.max_order_qty || (primaryState.max_order ? parseInt(primaryState.max_order, 10) : null);
     modalDraftPeriod = primaryState.max_order_period ? JSON.parse(JSON.stringify(primaryState.max_order_period)) : {
       start_date: '',
-      max_qty: 10,
-      days: 7,
+      max_qty: '',
+      days: '',
       period_type: 'non_recurring',
       end_date: ''
     };
@@ -21954,10 +22333,97 @@ const ProductForm = (() => {
     document.addEventListener('keydown', handleMaxOrderModalEscape);
   }
 
+  function openVariantPerOrderModal(matId) {
+    const modal = document.getElementById('modal-max-order-config');
+    if (!modal) return;
+    const mat = materialsState.find(m => m.id === matId);
+    if (!mat) return;
+
+    currentModalContext = 'variant_per_order';
+    currentModalTargetMatId = matId;
+
+    const titleEl = document.getElementById('max-order-modal-title');
+    const subtitleEl = document.getElementById('max-order-modal-subtitle');
+    const modesContainer = document.getElementById('modal-max-order-modes-container');
+    const body = document.getElementById('modal-max-order-body');
+
+    if (titleEl) titleEl.textContent = 'Maksimal Jumlah Pembelian';
+    if (subtitleEl) subtitleEl.textContent = `Variasi: ${mat.name || 'Opsi'}`;
+    if (modesContainer) modesContainer.classList.add('hidden');
+
+    const currentVal = (mat.max_order !== null && mat.max_order !== undefined && mat.max_order !== '' && mat.max_order !== 'Tanpa Batas' && !isNaN(Number(mat.max_order))) ? mat.max_order : '';
+
+    if (body) {
+      body.innerHTML = `
+        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
+          <label for="modal-input-variant-per-order-qty" class="block text-xs font-semibold text-slate-700">
+            Jumlah Maksimal Pembelian Per Pesanan <span class="text-red-500">*</span>:
+          </label>
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              id="modal-input-variant-per-order-qty"
+              min="1"
+              value="${currentVal}"
+              placeholder="Contoh: 10"
+              class="w-48 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800"
+            />
+            <span class="text-xs text-slate-500 font-medium">produk per checkout</span>
+          </div>
+          <span class="text-[11px] text-slate-400 block">Pembeli tidak dapat memesan melebihi jumlah ini dalam 1 transaksi pesanan untuk variasi ini.</span>
+        </div>
+      `;
+    }
+
+    hideModalMaxOrderError();
+    modal.classList.remove('hidden');
+    document.addEventListener('keydown', handleMaxOrderModalEscape);
+
+    setTimeout(() => {
+      const inp = document.getElementById('modal-input-variant-per-order-qty');
+      if (inp) inp.focus();
+    }, 50);
+  }
+
+  function openVariantPerPeriodModal(matId) {
+    const modal = document.getElementById('modal-max-order-config');
+    if (!modal) return;
+
+    currentModalContext = 'variant_per_period';
+    currentModalTargetMatId = matId;
+
+    const titleEl = document.getElementById('max-order-modal-title');
+    const subtitleEl = document.getElementById('max-order-modal-subtitle');
+    const modesContainer = document.getElementById('modal-max-order-modes-container');
+    const body = document.getElementById('modal-max-order-body');
+
+    if (titleEl) titleEl.textContent = 'Maksimal Jumlah Pembelian';
+    if (subtitleEl) subtitleEl.textContent = 'Pengaturan Periode (Berlaku untuk seluruh variasi)';
+    if (modesContainer) modesContainer.classList.add('hidden');
+
+    modalDraftPeriod = primaryState.max_order_period ? JSON.parse(JSON.stringify(primaryState.max_order_period)) : {
+      start_date: '',
+      max_qty: '',
+      days: '',
+      period_type: 'non_recurring',
+      end_date: ''
+    };
+
+    if (body) {
+      body.innerHTML = renderModalPeriodContent();
+      bindModalPeriodEvents();
+    }
+
+    hideModalMaxOrderError();
+    modal.classList.remove('hidden');
+    document.addEventListener('keydown', handleMaxOrderModalEscape);
+  }
+
   function closeMaxOrderModal(shouldRevert = false) {
     const modal = document.getElementById('modal-max-order-config');
     if (!modal) return;
-    if (shouldRevert && maxOrderModalBackup) {
+
+    if (currentModalContext === 'global' && shouldRevert && maxOrderModalBackup) {
       primaryState.max_order = maxOrderModalBackup.max_order;
       primaryState.max_order_type = maxOrderModalBackup.max_order_type;
       primaryState.max_order_qty = maxOrderModalBackup.max_order_qty;
@@ -21973,11 +22439,97 @@ const ProductForm = (() => {
         });
       }
     }
+
+    currentModalContext = 'global';
+    currentModalTargetMatId = null;
+    hideFloatingTooltipImmediately();
+    hideModalMaxOrderError();
     document.removeEventListener('keydown', handleMaxOrderModalEscape);
     modal.classList.add('hidden');
   }
 
   function saveMaxOrderModal() {
+    if (currentModalContext === 'variant_per_order') {
+      const qtyInp = document.getElementById('modal-input-variant-per-order-qty');
+      const rawVal = qtyInp ? qtyInp.value.trim() : '';
+      const val = parseInt(rawVal, 10);
+      if (isNaN(val) || val < 1) {
+        showModalMaxOrderError('Jumlah maksimal pembelian per pesanan minimal 1.');
+        return;
+      }
+      const mat = materialsState.find(m => m.id === currentModalTargetMatId);
+      if (mat) {
+        mat.max_order = val;
+        mat.is_unlimited_max_order = false;
+      }
+      if (primaryState.max_order_type === 'per_period') {
+        primaryState.max_order_type = 'per_order';
+      }
+      closeMaxOrderModal(false);
+      if (typeof refreshCombinationMatrixTable === 'function') {
+        refreshCombinationMatrixTable();
+      }
+      updateProductCardLivePreview();
+      return;
+    }
+
+    if (currentModalContext === 'variant_per_period') {
+      const sDateDisplay = document.getElementById('modal-input-period-start-date')?.value?.trim() || '';
+      const sDateISO = parseDisplayDateToISO(sDateDisplay);
+      const maxQty = parseInt(document.getElementById('modal-input-period-max-qty')?.value, 10);
+      const days = parseInt(document.getElementById('modal-input-period-days')?.value, 10);
+      const radPeriod = document.querySelector('input[name="modal_period_type_radio"]:checked');
+      const pType = radPeriod ? radPeriod.value : 'recurring';
+      const endDateDisplay = document.getElementById('modal-input-period-end-date')?.value?.trim() || '';
+      const endDateISO = parseDisplayDateToISO(endDateDisplay);
+
+      if (!sDateISO) {
+        showModalMaxOrderError('Tanggal mulai periode maksimal pembelian wajib diisi.');
+        return;
+      }
+      if (isNaN(maxQty) || maxQty < 1) {
+        showModalMaxOrderError('Maks. jumlah pembelian minimal 1 produk.');
+        return;
+      }
+      if (isNaN(days) || days < 1) {
+        showModalMaxOrderError('Durasi periode minimal 1 hari.');
+        return;
+      }
+      if (pType === 'recurring') {
+        if (!endDateISO) {
+          showModalMaxOrderError('Tanggal berakhir periode berulang wajib diisi.');
+          return;
+        }
+        if (!isValidRecurringEndDate(sDateISO, endDateISO, days)) {
+          showModalMaxOrderError(`Tanggal berakhir harus tepat kelipatan dari durasi periode (${days} hari, minimal 2 siklus) dari tanggal mulai.`);
+          return;
+        }
+      }
+
+      primaryState.max_order_type = 'per_period';
+      primaryState.max_order = maxQty;
+      primaryState.max_order_qty = maxQty;
+      primaryState.is_unlimited_max_order = false;
+      primaryState.max_order_period = {
+        start_date: sDateISO,
+        max_qty: maxQty,
+        days: days,
+        period_type: pType,
+        end_date: pType === 'recurring' ? endDateISO : ''
+      };
+      materialsState.forEach(m => {
+        m.max_order = null;
+        m.is_unlimited_max_order = false;
+      });
+
+      closeMaxOrderModal(false);
+      if (typeof refreshCombinationMatrixTable === 'function') {
+        refreshCombinationMatrixTable();
+      }
+      updateProductCardLivePreview();
+      return;
+    }
+
     if (modalDraftMode === 'unlimited') {
       primaryState.max_order_type = 'unlimited';
       primaryState.max_order = null;
@@ -22026,12 +22578,14 @@ const ProductForm = (() => {
         primaryState.is_unlimited_max_order = false;
       }
     } else if (modalDraftMode === 'per_period') {
-      const sDate = document.getElementById('modal-input-period-start-date')?.value?.trim();
+      const sDateDisplay = document.getElementById('modal-input-period-start-date')?.value?.trim() || '';
+      const sDate = parseDisplayDateToISO(sDateDisplay);
       const maxQty = parseInt(document.getElementById('modal-input-period-max-qty')?.value, 10);
       const days = parseInt(document.getElementById('modal-input-period-days')?.value, 10);
       const radPeriod = document.querySelector('input[name="modal_period_type_radio"]:checked');
-      const pType = radPeriod ? radPeriod.value : 'non_recurring';
-      const endDate = document.getElementById('modal-input-period-end-date')?.value?.trim() || document.getElementById('modal-select-period-end-date')?.value || '';
+      const pType = radPeriod ? radPeriod.value : 'recurring';
+      const endDateDisplay = document.getElementById('modal-input-period-end-date')?.value?.trim() || '';
+      const endDate = parseDisplayDateToISO(endDateDisplay);
 
       if (!sDate) {
         showModalMaxOrderError('Tanggal mulai periode maksimal pembelian wajib diisi.');
@@ -22065,7 +22619,7 @@ const ProductForm = (() => {
         max_qty: maxQty,
         days: days,
         period_type: pType,
-        end_date: endDate
+        end_date: pType === 'recurring' ? endDate : ''
       };
       materialsState.forEach(m => {
         m.max_order = null;
@@ -22073,27 +22627,128 @@ const ProductForm = (() => {
       });
     }
 
-    // Sync input pada matriks kombinasi variasi jika ada di DOM
-    document.querySelectorAll('.combo-max-order-input').forEach(inp => {
-      const matId = inp.dataset.matId;
-      const mat = materialsState.find(m => m.id === matId);
-      if (mat) {
-        if (mat.max_order !== null && mat.max_order !== undefined && mat.max_order !== 'Tanpa Batas' && mat.max_order !== 'Unlimited') {
-          inp.value = mat.max_order;
-        } else {
-          inp.value = '';
-          inp.placeholder = 'Tanpa Batas';
-        }
-      }
-    });
+    if (typeof refreshCombinationMatrixTable === 'function') {
+      refreshCombinationMatrixTable();
+    }
 
     const sumEl = document.getElementById('max-order-summary-text');
-    if (sumEl) {
+    if (sumEl && typeof getMaxOrderSummaryText === 'function') {
       sumEl.textContent = getMaxOrderSummaryText();
     }
 
     updateProductCardLivePreview();
     closeMaxOrderModal(false);
+  }
+
+  // Floating Dropdown Menu untuk Kolom Max. Order pada Tabel Matriks Variasi
+  let activeComboMaxOrderDropdown = null;
+
+  function closeComboMaxOrderDropdown() {
+    if (activeComboMaxOrderDropdown) {
+      activeComboMaxOrderDropdown.remove();
+      activeComboMaxOrderDropdown = null;
+    }
+  }
+
+  function openComboMaxOrderDropdown(triggerBtn) {
+    if (activeComboMaxOrderDropdown && activeComboMaxOrderDropdown._trigger === triggerBtn) {
+      closeComboMaxOrderDropdown();
+      return;
+    }
+    closeComboMaxOrderDropdown();
+    if (typeof closeActiveCalendarPopover === 'function') closeActiveCalendarPopover();
+
+    const matId = triggerBtn.getAttribute('data-mat-id');
+    const mat = materialsState.find(m => m.id === matId);
+    if (!mat) return;
+
+    const dropdown = document.createElement('div');
+    dropdown._trigger = triggerBtn;
+    dropdown.className = 'sc-combo-max-order-dropdown fixed z-[99999] bg-white border border-slate-200 rounded-lg shadow-xl py-1 w-36 text-xs font-medium text-slate-800 select-none';
+
+    const isTanpaBatas = Boolean(mat.is_unlimited_max_order || mat.max_order === 'Tanpa Batas' || mat.max_order === 'Unlimited');
+    const isPerPesanan = Boolean(!isTanpaBatas && mat.max_order !== null && mat.max_order !== undefined && mat.max_order !== '' && !isNaN(Number(mat.max_order)) && primaryState.max_order_type !== 'per_period');
+    const isPerPeriode = Boolean(primaryState.max_order_type === 'per_period');
+
+    dropdown.innerHTML = `
+      <button type="button" class="btn-opt-combo-max w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between text-slate-700 cursor-pointer transition" data-mode="unlimited">
+        <span>Tanpa Batas</span>
+        ${isTanpaBatas ? '<i class="bi bi-check text-emerald-600 font-bold text-sm"></i>' : ''}
+      </button>
+      <button type="button" class="btn-opt-combo-max w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between text-slate-700 cursor-pointer transition" data-mode="per_order">
+        <span>Per Pesanan</span>
+        ${isPerPesanan ? '<i class="bi bi-check text-emerald-600 font-bold text-sm"></i>' : ''}
+      </button>
+      <button type="button" class="btn-opt-combo-max w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between text-slate-700 cursor-pointer transition" data-mode="per_period">
+        <span>Per Periode</span>
+        ${isPerPeriode ? '<i class="bi bi-check text-emerald-600 font-bold text-sm"></i>' : ''}
+      </button>
+    `;
+
+    document.body.appendChild(dropdown);
+    activeComboMaxOrderDropdown = dropdown;
+
+    const rect = triggerBtn.getBoundingClientRect();
+    const dropdownWidth = 144;
+    const dropdownHeight = 115;
+    let left = rect.left;
+    if (left + dropdownWidth > window.innerWidth - 10) {
+      left = window.innerWidth - dropdownWidth - 10;
+    }
+    if (left < 10) left = 10;
+
+    let top = rect.bottom + 4;
+    if (top + dropdownHeight > window.innerHeight - 10 && rect.top > dropdownHeight) {
+      top = rect.top - dropdownHeight - 4;
+    }
+
+    dropdown.style.left = `${left}px`;
+    dropdown.style.top = `${top}px`;
+
+    dropdown.querySelectorAll('.btn-opt-combo-max').forEach(optBtn => {
+      optBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const mode = optBtn.getAttribute('data-mode');
+        closeComboMaxOrderDropdown();
+
+        if (mode === 'unlimited') {
+          mat.max_order = null;
+          mat.is_unlimited_max_order = true;
+          if (primaryState.max_order_type === 'per_period') {
+            primaryState.max_order_type = 'per_order';
+          }
+          const lbl = triggerBtn.querySelector('.combo-max-order-label');
+          if (lbl) lbl.textContent = 'Tanpa Batas';
+          updateProductCardLivePreview();
+        } else if (mode === 'per_order') {
+          openVariantPerOrderModal(mat.id);
+        } else if (mode === 'per_period') {
+          openVariantPerPeriodModal(mat.id);
+        }
+      };
+    });
+
+    const outsideClickListener = (e) => {
+      if (dropdown && !dropdown.contains(e.target) && !triggerBtn.contains(e.target)) {
+        closeComboMaxOrderDropdown();
+        cleanup();
+      }
+    };
+    const escKeyListener = (e) => {
+      if (e.key === 'Escape') {
+        closeComboMaxOrderDropdown();
+        cleanup();
+      }
+    };
+    function cleanup() {
+      document.removeEventListener('click', outsideClickListener, true);
+      document.removeEventListener('keydown', escKeyListener, true);
+    }
+    setTimeout(() => {
+      document.addEventListener('click', outsideClickListener, true);
+      document.addEventListener('keydown', escKeyListener, true);
+    }, 10);
   }
 
   function bindVariantMaxOrderEvents() {
@@ -22658,6 +23313,35 @@ const ProductForm = (() => {
         `;
       }
 
+      function renderCombinationMaxOrderCell(matItem) {
+        let displayLabel = 'Pilih';
+        if (primaryState.max_order_type === 'per_period') {
+          displayLabel = 'Per Periode';
+        } else if (matItem.is_unlimited_max_order || matItem.max_order === 'Tanpa Batas' || matItem.max_order === 'Unlimited') {
+          displayLabel = 'Tanpa Batas';
+        } else if (matItem.max_order !== undefined && matItem.max_order !== null && matItem.max_order !== '' && !isNaN(Number(matItem.max_order))) {
+          displayLabel = 'Per Pesanan';
+        } else {
+          displayLabel = 'Pilih';
+        }
+        const isPlaceholder = displayLabel === 'Pilih';
+
+        return `
+          <div class="inline-flex items-center justify-center w-full">
+            <button
+              type="button"
+              class="btn-combo-max-order-trigger bg-white text-slate-800 border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-normal w-28 flex items-center justify-between gap-1 select-none hover:border-slate-400 focus:border-[var(--color-primary)] transition cursor-pointer shadow-2xs"
+              data-mat-id="${matItem.id}"
+              data-mat-name="${escapeHtml(matItem.name || '')}"
+              aria-haspopup="listbox"
+            >
+              <span class="combo-max-order-label truncate ${isPlaceholder ? 'text-slate-400 font-normal' : 'text-slate-700 font-semibold'}">${displayLabel}</span>
+              <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 transition-transform duration-200"></i>
+            </button>
+          </div>
+        `;
+      }
+
       return `
         <tr class="hover:bg-slate-50 transition border-b border-slate-200" data-mat-id="${mat.id}">
           <!-- Kolom Variasi 1 (Foto Opsi + Teks Real-Time) -->
@@ -22693,19 +23377,9 @@ const ProductForm = (() => {
             />
           </td>
 
-          <!-- Kolom Max. Order (Input Number + Popover Datalist) -->
+          <!-- Kolom Max. Order (Dropdown Accordion 3 Pilihan) -->
           <td class="p-3 align-middle text-center min-w-[125px]">
-            <input
-              type="number"
-              step="1"
-              min="1"
-              class="combo-max-order-input w-28 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
-              data-mat-id="${mat.id}"
-              value="${maxOrderVal}"
-              placeholder="${maxOrderPlaceholder}"
-              list="datalist-max-order-unlimited"
-              autocomplete="off"
-            />
+            ${renderCombinationMaxOrderCell(mat)}
           </td>
 
           <!-- Kolom Harga Grosir -->
@@ -23231,8 +23905,9 @@ const ProductForm = (() => {
         return n && (n.value || '').trim() !== '';
       });
 
+      const maxLen = (tier === 'extra_3') ? 15 : 20;
       if ((hasAnyFilled && isCurEmpty) || !val) {
-        if (errorEl && (errorEl.textContent === 'Nama opsi sudah digunakan' || errorEl.textContent === 'Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter')) {
+        if (errorEl && (errorEl.textContent === 'Nama opsi sudah digunakan' || errorEl.textContent === `Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-${maxLen} karakter` || errorEl.textContent === 'Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter' || errorEl.textContent === 'Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-20 karakter')) {
           errorEl.textContent = '';
           errorEl.classList.add('hidden');
           inp.classList.remove('border-red-500');
@@ -23240,7 +23915,7 @@ const ProductForm = (() => {
         return;
       }
 
-      if (val.length > 15) {
+      if (val.length > maxLen) {
         // Validasi panjang karakter yang menangani pesan error
         return;
       }
@@ -23339,8 +24014,9 @@ const ProductForm = (() => {
         setError('');
         return false;
       }
-      if (!isExtraNone && val.length > 15) {
-        setError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter');
+      const maxLen = (tier === 'extra_3') ? 15 : 20;
+      if (!isExtraNone && val.length > maxLen) {
+        setError(`Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-${maxLen} karakter`);
         return false;
       }
       if (checkOptionNameDuplicate(tier, val, idx)) {
@@ -23516,6 +24192,7 @@ const ProductForm = (() => {
                 <input
                   type="text"
                   data-field="name"
+                  maxlength="20"
                   value="${escapeHtml(mat.name || '')}"
                   placeholder="${placeholderName}"
                   style="border-radius: 0px !important; box-sizing: border-box !important;"
@@ -23668,6 +24345,7 @@ const ProductForm = (() => {
                 <input
                   type="text"
                   data-field="name"
+                  maxlength="15"
                   value="${escapeHtml(isLastRow ? defaultNoneName : (fin.name || ''))}"
                   placeholder="${placeholderName}"
                   ${isLastRow ? 'readonly' : ''}
@@ -23782,6 +24460,7 @@ const ProductForm = (() => {
                 <input
                   type="text"
                   data-field="name"
+                  maxlength="20"
                   value="${escapeHtml(fin.name || '')}"
                   placeholder="${placeholderName}"
                   style="border-radius: 0px !important; box-sizing: border-box !important;"
@@ -24110,8 +24789,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const nameVal = (m.name || '').trim();
         if (!nameVal) {
           addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
-        } else if (nameVal.length > 15) {
-          addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+        } else if (nameVal.length > 20) {
+          addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 20 karakter.`, nameInp || rowEl);
         } else if (checkOptionNameDuplicate('tier1', nameVal, idx)) {
           addError(`Variasi 1: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
         }
@@ -24184,10 +24863,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         const nameVal = (f.name || '').trim();
         const isExtraNone = (isExtra3 && (f.is_default_none || (nameVal && nameVal.startsWith('Tanpa '))));
+        const maxLen = isExtra3 ? 15 : 20;
         if (!nameVal) {
           addError(`${label} (Baris ${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
-        } else if (!isExtraNone && nameVal.length > 15) {
-          addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal 15 karakter.`, nameInp || rowEl);
+        } else if (!isExtraNone && nameVal.length > maxLen) {
+          addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal ${maxLen} karakter.`, nameInp || rowEl);
         } else if (checkOptionNameDuplicate(tier, nameVal, idx)) {
           addError(`${label}: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
         }
@@ -27493,73 +28173,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           };
         });
 
-        // 3. Max. Order per Baris (Input Number + Popover Datalist: Mendukung 'Tanpa Batas' / Angka)
-        document.querySelectorAll('.combo-max-order-input').forEach(inp => {
-          const handleComboMax = (e) => {
-            const matId = inp.getAttribute('data-mat-id');
-            const item = materialsState.find(m => m.id === matId);
-            if (item) {
-              const raw = e.target.value.trim();
-              if (raw) {
-                const digits = raw.replace(/\D/g, '');
-                const num = digits ? parseInt(digits, 10) : null;
-                item.max_order = num;
-                item.is_unlimited_max_order = false;
-                inp.placeholder = 'Input/Pilih';
-              } else {
-                if (inp.placeholder === 'Tanpa Batas') {
-                  item.max_order = null;
-                  item.is_unlimited_max_order = true;
-                } else {
-                  item.max_order = undefined;
-                  item.is_unlimited_max_order = false;
-                }
-              }
-              const sumEl = document.getElementById('max-order-summary-text');
-              if (sumEl && typeof getMaxOrderSummaryText === 'function') {
-                sumEl.textContent = getMaxOrderSummaryText();
-              }
-            }
-          };
-          inp.oninput = handleComboMax;
-          inp.onchange = handleComboMax;
-          inp.onblur = (e) => {
-            const matId = inp.getAttribute('data-mat-id');
-            const item = materialsState.find(m => m.id === matId);
-            if (item) {
-              const raw = (inp.value || '').trim();
-              if (raw) {
-                const digits = raw.replace(/\D/g, '');
-                const num = digits ? parseInt(digits, 10) : null;
-                if (num !== null && num > 0) {
-                  inp.value = String(num);
-                  inp.placeholder = 'Input/Pilih';
-                  item.max_order = num;
-                  item.is_unlimited_max_order = false;
-                } else {
-                  inp.value = '';
-                  inp.placeholder = 'Input/Pilih';
-                  item.max_order = undefined;
-                  item.is_unlimited_max_order = false;
-                }
-              } else {
-                if (inp.placeholder === 'Tanpa Batas' || item.is_unlimited_max_order || item.max_order === null) {
-                  inp.value = '';
-                  inp.placeholder = 'Tanpa Batas';
-                  item.max_order = null;
-                  item.is_unlimited_max_order = true;
-                } else {
-                  inp.value = '';
-                  inp.placeholder = 'Input/Pilih';
-                  item.max_order = undefined;
-                  item.is_unlimited_max_order = false;
-                }
-              }
-              const sumEl = document.getElementById('max-order-summary-text');
-              if (sumEl && typeof getMaxOrderSummaryText === 'function') {
-                sumEl.textContent = getMaxOrderSummaryText();
-              }
-            }
+        // 3. Max. Order per Baris (Dropdown Accordion: Tanpa Batas / Per Pesanan / Per Periode)
+        document.querySelectorAll('.btn-combo-max-order-trigger').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openComboMaxOrderDropdown(btn);
           };
         });
 
@@ -28808,17 +29427,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // Maksimal Pembelian Produk Tunggal (Dropdown Accordion Input/Pilih)
       bindSingleMaxOrderEvents();
 
-      // Maksimal Pembelian Khusus Produk Bervariasi
+      // Maksimal Pembelian Khusus Produk Bervariasi (Diatur via tabel List Variasi Produk)
       const variantMaxOrderSec = document.getElementById('section-variant-max-order');
       if (variantMaxOrderSec) {
-        if (primaryState.pricing_model === 'normal' && primaryState.has_variants) {
-          variantMaxOrderSec.classList.remove('hidden');
-          variantMaxOrderSec.classList.add('block');
-          variantMaxOrderSec.innerHTML = renderVariantMaxOrderSection();
-        } else {
-          variantMaxOrderSec.classList.remove('block');
-          variantMaxOrderSec.classList.add('hidden');
-        }
+        variantMaxOrderSec.classList.remove('block');
+        variantMaxOrderSec.classList.add('hidden');
+        variantMaxOrderSec.innerHTML = '';
       }
 
       bindVariantMaxOrderEvents();
@@ -33537,8 +34151,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
           if (!m.name || !m.name.trim()) {
             addError(`Variasi 1: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
-          } else if (m.name.trim().length > 15) {
-            addError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter', nameInp || rowEl);
+          } else if (m.name.trim().length > 20) {
+            addError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-20 karakter', nameInp || rowEl);
           } else if (checkOptionNameDuplicate('tier1', m.name, idx)) {
             addError(`Variasi 1: Nama opsi "${m.name}" kembar / duplikat.`, nameInp || rowEl);
           }
@@ -33618,10 +34232,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const stockInp = rowEl?.querySelector('input[data-field="stock"]');
 
           const isExtraNone = (isExtra3 && (idx === list.length - 1 || f.is_default_none || (f.name && f.name.startsWith('Tanpa '))));
+          const maxLen = isExtra3 ? 15 : 20;
           if (!f.name || !f.name.trim()) {
             addError(`${label}: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
-          } else if (!isExtraNone && f.name.trim().length > 15) {
-            addError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter', nameInp || rowEl);
+          } else if (!isExtraNone && f.name.trim().length > maxLen) {
+            addError(`Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-${maxLen} karakter`, nameInp || rowEl);
           } else if (checkOptionNameDuplicate(tier, f.name, idx)) {
             addError(`${label}: Nama opsi "${f.name}" kembar / duplikat.`, nameInp || rowEl);
           }
@@ -33759,22 +34374,22 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         addError('Maksimal pesanan per checkout tidak boleh lebih kecil dari minimal pesanan.', document.getElementById('input-max-order-qty') || document.getElementById('input-normal-max-order'));
       }
     }
-    if (primaryState.max_order_type === 'per_period' && !primaryState.has_variants) {
+    if (primaryState.max_order_type === 'per_period') {
       const period = primaryState.max_order_period || {};
       if (!period.start_date) {
-        addError('Tanggal mulai periode maksimal pembelian wajib diisi.', document.getElementById('input-period-start-date') || document.getElementById('input-normal-max-order'));
+        addError('Tanggal mulai periode maksimal pembelian wajib diisi.', document.getElementById('input-period-start-date') || document.getElementById('modal-period-start-date') || document.getElementById('input-normal-max-order'));
       }
       if (!period.max_qty || period.max_qty < 1) {
-        addError('Maks. jumlah pembelian per periode wajib minimal 1 produk.', document.getElementById('input-period-max-qty') || document.getElementById('input-normal-max-order'));
+        addError('Maks. jumlah pembelian per periode wajib minimal 1 produk.', document.getElementById('input-period-max-qty') || document.getElementById('modal-period-max-qty') || document.getElementById('input-normal-max-order'));
       }
       if (!period.days || period.days < 1) {
-        addError('Durasi periode wajib minimal 1 hari.', document.getElementById('input-period-days') || document.getElementById('input-normal-max-order'));
+        addError('Durasi periode wajib minimal 1 hari.', document.getElementById('input-period-days') || document.getElementById('modal-period-days') || document.getElementById('input-normal-max-order'));
       }
       if (period.period_type === 'recurring') {
         if (!period.end_date) {
-          addError('Tanggal berakhir periode berulang wajib dipilih.', document.getElementById('input-period-end-date') || document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
+          addError('Tanggal berakhir periode berulang wajib dipilih.', document.getElementById('input-period-end-date') || document.getElementById('modal-period-end-date') || document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
         } else if (!isValidRecurringEndDate(period.start_date, period.end_date, period.days)) {
-          addError(`Tanggal berakhir harus tepat kelipatan dari durasi periode (${period.days} hari, minimal 2 siklus) dari tanggal mulai.`, document.getElementById('input-period-end-date') || document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
+          addError(`Tanggal berakhir harus tepat kelipatan dari durasi periode (${period.days} hari, minimal 2 siklus) dari tanggal mulai.`, document.getElementById('input-period-end-date') || document.getElementById('modal-period-end-date') || document.getElementById('select-period-end-date') || document.getElementById('input-normal-max-order'));
         }
       }
     }
