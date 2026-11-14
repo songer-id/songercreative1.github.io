@@ -657,6 +657,12 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
      - Spacing kartu Lainnya (`#card-step2-others`): Dibuat seragam compact pada mobile (`p-3.5 sm:p-6 space-y-3 sm:space-y-6`).
      - Padding footer tindakan (`#step2-footer-actions`): Dibuat proporsional pada mobile (`py-2.5 px-3 sm:p-4 gap-2.5 sm:gap-3`), mengurangi tinggi berlebih tanpa mengurangi ukuran sentuh tombol aksi.
      - Menghilangkan padding-bottom ganda pada mobile (`#wizard-form-col` `padding-bottom: 0 !important;` dan `#step2-cards-container` `padding-bottom: 1rem !important;`), memangkas 64px trailing blank space berlebih di bawah form.
+  3. *Penyesuaian Ruang Bawah Form Step 2 (Desktop Only)*:
+     - Mengeliminasi ruang kosong berlebih di bawah area tombol tindakan (`#step2-footer-actions`) pada desktop tanpa memengaruhi tampilan mobile.
+     - Menetapkan `padding-bottom: 0.75rem !important;` (12px) pada `#step2-cards-container` dalam media query khusus desktop (`@media (min-width: 640px)`), selaras 100% konsisten dengan jarak antarkartu form (`gap: 0.75rem`), jarak kartu 7 ke footer, dan jarak subnavbar ke kartu 1 (`padding-top: 0.75rem`).
+     - Menetapkan `padding-bottom: 0 !important;` pada `#product-form-wrapper[data-step="2"]` di desktop guna menetralkan utility class Tailwind `sm:pb-12` (48px).
+     - Menetapkan `padding-bottom: 0 !important;` pada `#admin-main-viewport:has(#view-product-form:not(.hidden))` saat form produk aktif guna menetralkan padding bawah viewport desktop `lg:p-8` (32px).
+     - Proteksi mobile: Aturan media query mobile (`@media (max-width: 639px)` dan `@media (max-width: 640px)`) tetap dipertahankan utuh 100% tanpa perubahan apa pun.
 
 ### 6.J. Deskripsi Produk (Rich Text Editor & Sanitasi HTML)
 - **Komponen Rich Text Editor (`#rich-text-editor-wrapper`)**:

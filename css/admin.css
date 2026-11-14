@@ -861,10 +861,10 @@ input[type="radio"]:active {
   overflow: visible !important;
 }
 
-/* Hilangkan padding pembatas viewport saat form produk aktif agar subnav menempel rapat di top 0 */
-/* Hilangkan padding pembatas viewport saat form produk aktif agar subnav menempel rapat di top 0 */
+/* Hilangkan padding pembatas viewport saat form produk aktif agar subnav menempel rapat di top 0 dan tanpa padding bawah berlebih */
 #admin-main-viewport:has(#view-product-form:not(.hidden)) {
   padding-top: 0 !important;
+  padding-bottom: 0 !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
@@ -3452,10 +3452,22 @@ button:focus-visible {
   /* 12px seragam antar-kartu dan footer */
   padding-top: 0.75rem !important;
   /* 12px jarak persis dari subnavbar ke kartu pertama */
-  padding-bottom: 2.5rem !important;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+}
+
+@media (min-width: 640px) {
+  /* Desktop Step 2: Jarak Bawah Compact & Konsisten 0.75rem (12px) dengan Jarak Antarkartu */
+  #step2-cards-container {
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Hilangkan padding-bottom berlebih dari pembungkus form di Step 2 Desktop */
+  #product-form-wrapper[data-step="2"],
+  #product-form-wrapper:has(#step-pane-2:not(.hidden)) {
+    padding-bottom: 0 !important;
+  }
 }
 
 .step2-section-card,
