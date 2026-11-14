@@ -3458,16 +3458,36 @@ button:focus-visible {
 }
 
 @media (min-width: 640px) {
-  /* Desktop Step 2: Jarak Bawah Compact & Konsisten 0.75rem (12px) dengan Jarak Antarkartu */
+  /* Desktop Step 1 & Step 2: Jarak Bawah Compact & Konsisten 0.75rem (12px) */
+  #step-pane-1,
   #step2-cards-container {
     padding-bottom: 0.75rem !important;
   }
 
-  /* Hilangkan padding-bottom berlebih dari pembungkus form di Step 2 Desktop */
-  #product-form-wrapper[data-step="2"],
-  #product-form-wrapper:has(#step-pane-2:not(.hidden)) {
+  /* Hilangkan padding-bottom sm:pb-12 (48px) dari pembungkus form di Desktop */
+  #product-form-wrapper {
     padding-bottom: 0 !important;
   }
+}
+
+/* Tombol Aksi Step 1 & Step 2 Flat: Bebas Efek Bayangan / Box Shadow */
+#btn-step-1-cancel,
+#btn-step-1-next,
+#btn-step-2-prev,
+#btn-save-draft,
+#btn-submit-product,
+#btn-step-1-cancel:hover,
+#btn-step-1-next:hover,
+#btn-step-2-prev:hover,
+#btn-save-draft:hover,
+#btn-submit-product:hover,
+#btn-step-1-cancel:active,
+#btn-step-1-next:active,
+#btn-step-2-prev:active,
+#btn-save-draft:active,
+#btn-submit-product:active {
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 .step2-section-card,

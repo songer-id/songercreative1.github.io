@@ -3430,7 +3430,7 @@ const ProductForm = (() => {
                   <!-- Input 3: Pilih Jenis Model Kartu Produk (Hanya jika Etalase ON) -->
                   <div id="section-step1-input3-cardmodel" class="${!primaryState.is_active ? 'hidden' : 'space-y-3'}">
                     <hr class="border-slate-100" />
-                    <div class="border-b border-slate-100 pb-2">
+                    <div class="mb-1.5">
                       <label class="block text-xs font-bold text-slate-800">
                         Model Kartu Produk <span class="text-red-500">*</span>
                       </label>
@@ -3480,13 +3480,11 @@ const ProductForm = (() => {
                     <!-- Input 4: Foto Produk * (Hanya jika Etalase ON) -->
                     <div id="section-step1-input4-photo" class="${!primaryState.is_active ? 'hidden' : 'space-y-3'}">
                       <hr class="border-slate-100" />
-                      <div class="border-b border-slate-100 pb-2">
-                        <div class="flex items-center justify-between flex-wrap gap-2">
-                          <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
-                            <span>Foto Produk</span> <span class="text-red-500">*</span>
-                          </label>
-                          <span id="gallery-ratio-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Rasio ${getActiveCardRatioInfo().ratioText}</span>
-                        </div>
+                      <div class="flex items-center justify-between flex-wrap gap-2 mb-1.5">
+                        <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                          <span>Foto Produk</span> <span class="text-red-500">*</span>
+                        </label>
+                        <span id="gallery-ratio-badge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Rasio ${getActiveCardRatioInfo().ratioText}</span>
                       </div>
 
                       <div>
@@ -3626,7 +3624,7 @@ const ProductForm = (() => {
                   <i class="bi bi-x-lg"></i>
                   <span>Batal</span>
                 </button>
-                <button type="button" id="btn-step-1-next" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-md flex items-center gap-2 transition cursor-pointer">
+                <button type="button" id="btn-step-1-next" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-none flex items-center gap-2 transition cursor-pointer">
                   <span>Lanjutkan</span>
                   <i class="bi bi-arrow-right"></i>
                 </button>
@@ -18787,13 +18785,13 @@ const ProductForm = (() => {
 
           <div class="flex items-center gap-3">
             <!-- Tombol Simpan Draf -->
-            <button type="button" id="btn-save-draft" class="px-5 py-2.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer">
+            <button type="button" id="btn-save-draft" class="px-5 py-2.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-none transition flex items-center gap-2 cursor-pointer">
               <i class="bi bi-file-earmark-text"></i>
               <span>Simpan Draf</span>
             </button>
 
             <!-- Tombol Simpan Produk -->
-            <button type="button" id="btn-submit-product" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-lg flex items-center gap-2 transition cursor-pointer">
+            <button type="button" id="btn-submit-product" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-none flex items-center gap-2 transition cursor-pointer">
               <span id="btn-submit-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <i id="btn-submit-icon" class="bi bi-floppy"></i>
               <span id="btn-submit-text">Simpan Produk</span>

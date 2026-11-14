@@ -657,12 +657,11 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
      - Spacing kartu Lainnya (`#card-step2-others`): Dibuat seragam compact pada mobile (`p-3.5 sm:p-6 space-y-3 sm:space-y-6`).
      - Padding footer tindakan (`#step2-footer-actions`): Dibuat proporsional pada mobile (`py-2.5 px-3 sm:p-4 gap-2.5 sm:gap-3`), mengurangi tinggi berlebih tanpa mengurangi ukuran sentuh tombol aksi.
      - Menghilangkan padding-bottom ganda pada mobile (`#wizard-form-col` `padding-bottom: 0 !important;` dan `#step2-cards-container` `padding-bottom: 1rem !important;`), memangkas 64px trailing blank space berlebih di bawah form.
-  3. *Penyesuaian Ruang Bawah Form Step 2 (Desktop Only)*:
-     - Mengeliminasi ruang kosong berlebih di bawah area tombol tindakan (`#step2-footer-actions`) pada desktop tanpa memengaruhi tampilan mobile.
-     - Menetapkan `padding-bottom: 0.75rem !important;` (12px) pada `#step2-cards-container` dalam media query khusus desktop (`@media (min-width: 640px)`), selaras 100% konsisten dengan jarak antarkartu form (`gap: 0.75rem`), jarak kartu 7 ke footer, dan jarak subnavbar ke kartu 1 (`padding-top: 0.75rem`).
-     - Menetapkan `padding-bottom: 0 !important;` pada `#product-form-wrapper[data-step="2"]` di desktop guna menetralkan utility class Tailwind `sm:pb-12` (48px).
-     - Menetapkan `padding-bottom: 0 !important;` pada `#admin-main-viewport:has(#view-product-form:not(.hidden))` saat form produk aktif guna menetralkan padding bawah viewport desktop `lg:p-8` (32px).
-     - Proteksi mobile: Aturan media query mobile (`@media (max-width: 639px)` dan `@media (max-width: 640px)`) tetap dipertahankan utuh 100% tanpa perubahan apa pun.
+  3. *Penyelarasan Ruang Bawah Step 1 & Step 2, Tombol Flat Tanpa Shadow, dan Pembersihan Garis Berlebih*:
+     - Menyamakan jarak bawah Step 1 dengan Step 2 pada desktop menjadi 0.75rem (12px): Menetapkan `padding-bottom: 0.75rem !important;` pada `#step-pane-1` dan `#step2-cards-container` dalam media query khusus desktop (`@media (min-width: 640px)`), serta menetralkan `padding-bottom: 0 !important;` pada `#product-form-wrapper` guna meniadakan `sm:pb-12` (48px).
+     - Menghilangkan efek bayangan (shadow) pada seluruh tombol tindakan Step 1 (`#btn-step-1-cancel`, `#btn-step-1-next`) dan Step 2 (`#btn-step-2-prev`, `#btn-save-draft`, `#btn-submit-product`), menghasilkan tampilan tombol flat modern tanpa box-shadow/filter pada status normal, hover, maupun active.
+     - Menghilangkan 2 garis horizontal berlebih pada Step 1 di bawah label "Model Kartu Produk *" dan "Foto Produk *" (menghapus wrapper `border-b border-slate-100 pb-2`), dengan tetap mempertahankan garis pemisah antarseksi (`<hr class="border-slate-100" />`).
+     - Proteksi mobile: Seluruh media query mobile (`@media (max-width: 639px)` dan `@media (max-width: 640px)`) tetap dipertahankan utuh 100% tanpa regresi.
 
 ### 6.J. Deskripsi Produk (Rich Text Editor & Sanitasi HTML)
 - **Komponen Rich Text Editor (`#rich-text-editor-wrapper`)**:
