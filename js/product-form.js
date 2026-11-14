@@ -14484,7 +14484,7 @@ const ProductForm = (() => {
 
     return `
       <!-- Bagian Komisi Afiliasi Produk (Clean Flat & Compact SaaS Layout) -->
-      <div class="border-t border-slate-100 pt-4 space-y-4" id="section-product-affiliate-commission">
+      <div class="border-t border-slate-100 pt-2.5 sm:pt-4 space-y-2.5 sm:space-y-4" id="section-product-affiliate-commission">
         <!-- Baris Header & Toggle Aktivasi -->
         <div class="flex items-center justify-between flex-wrap gap-2.5 pb-2 border-b border-slate-100">
           <div class="flex items-center gap-1.5">
@@ -14504,7 +14504,7 @@ const ProductForm = (() => {
         </div>
 
         <!-- Panel Konfigurasi Komisi (Tampil saat Toggle ON) -->
-        <div id="affiliate-commission-config-box" class="${isEnabled ? 'block' : 'hidden'} space-y-4" style="display: ${isEnabled ? 'block' : 'none'};">
+        <div id="affiliate-commission-config-box" class="${isEnabled ? 'block' : 'hidden'} space-y-2.5 sm:space-y-4" style="display: ${isEnabled ? 'block' : 'none'};">
           <!-- Pilihan Jenis Komisi: 2 Mode (Komisi Tunggal vs Komisi Grosir) -->
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-800">Jenis Komisi:</label>
@@ -14521,7 +14521,7 @@ const ProductForm = (() => {
           </div>
 
           <!-- Mode 1: Komisi Tunggal -->
-          <div id="affiliate-mode-single" class="${mode === 'single' ? 'block' : 'hidden'} space-y-3" style="display: ${mode === 'single' ? 'block' : 'none'};">
+          <div id="affiliate-mode-single" class="${mode === 'single' ? 'block' : 'hidden'} space-y-2 sm:space-y-3" style="display: ${mode === 'single' ? 'block' : 'none'};">
             <div>
               <label class="block text-xs font-bold text-slate-800 mb-1">Bentuk & Nilai Komisi Afiliasi <span class="text-red-500">*</span>:</label>
               <div class="flex items-center gap-2 max-w-md">
@@ -14608,7 +14608,7 @@ const ProductForm = (() => {
             </div>
 
             <!-- Teks Ringkasan Konversi & Pembagian Otomatis Real-Time -->
-            <div id="affiliate-single-helper-box" class="mt-2 text-slate-600 text-[11px] flex items-center justify-between ${helper.isVisible ? 'flex' : 'hidden'}">
+            <div id="affiliate-single-helper-box" class="mt-1.5 sm:mt-2 text-slate-600 text-[11px] flex items-center justify-between ${helper.isVisible ? 'flex' : 'hidden'}">
               <div class="flex items-center gap-1.5 font-medium">
                 <i class="bi bi-arrow-repeat text-[var(--color-primary)]"></i>
                 <span id="affiliate-single-helper-text">${helper.text}</span>
@@ -14689,7 +14689,7 @@ const ProductForm = (() => {
           </div>
 
           <!-- Syarat Tambahan: Min. Nilai Pesanan (Rp) -->
-          <div class="border-t border-slate-100 pt-3 mt-3">
+          <div class="border-t border-slate-100 pt-2 sm:pt-2.5">
             <div class="flex items-center gap-1.5 mb-1.5">
               <label for="input-affiliate-min-order" class="text-xs font-bold text-slate-800">Min. Nilai Pesanan (Rp)</label>
               <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0" id="btn-tooltip-min-order">
@@ -18728,7 +18728,7 @@ const ProductForm = (() => {
 
         <!-- CARD 7: LAINNYA (GATED) -->
         ${missingCard5.length > 0 ? renderFlashbackCard('Lainnya', 'bi-sliders', missingCard5, 'card-step2-others') : `
-          <div class="bg-white rounded-lg border-0 shadow-none p-4 sm:p-6 space-y-4 sm:space-y-6 step2-section-card" id="card-step2-others">
+          <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-3 sm:space-y-6 step2-section-card" id="card-step2-others">
             <div class="flex items-center justify-between pb-1">
               <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Lainnya</h2>
             </div>
@@ -18779,7 +18779,7 @@ const ProductForm = (() => {
         `}
 
         <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
-        <div id="step2-footer-actions" class="step2-footer-actions bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between flex-wrap gap-3">
+        <div id="step2-footer-actions" class="step2-footer-actions bg-white rounded-lg border-0 shadow-none py-2.5 px-3 sm:p-4 flex items-center justify-between flex-wrap gap-2.5 sm:gap-3">
           <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
             <i class="bi bi-arrow-left"></i>
             <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>

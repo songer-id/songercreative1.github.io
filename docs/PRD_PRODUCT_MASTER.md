@@ -646,6 +646,17 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
      - Pilihan bentuk komisi dipertahankan 100%: `[%] Persen` (`percentage`) dan `[IDR] Komisi Rp` (`fixed`), dilengkapi penanda centang aktif (`bi-check2`).
      - Input nilai komisi tunggal `#input-affiliate-single-value` memiliki tinggi `h-9` dan placeholder persis `Input`.
      - Seluruh validasi komisi (clamp maksimal 100% untuk persentase, kalkulasi konversi real-time, sinkronisasi `syncStateFromDOM()`, dan pemulihan data pada Edit Produk) dipertahankan utuh.
+- **Penyelarasan Layout Mobile Komisi Afiliasi & Spacing Form**:
+  1. *Perbaikan Placeholder `#input-affiliate-min-order`*:
+     - Proteksi padding kiri input ber-prefix: Aturan mobile global `.step2-section-card input` yang sebelumnya membatasi padding menjadi `0.375rem 0.625rem` (10px) dioverride secara eksplisit untuk input ber-prefix `Rp` (`#input-affiliate-min-order` dan `.tier-comm-val.pl-8`) dengan `padding-left: 2.375rem !important` (38px).
+     - Menghilangkan tumpang tindih antara teks/placeholder `Contoh: 50.000 (Opsional)` dengan elemen prefix `<span class="absolute left-3 ...">Rp</span>`, memberikan margin bersih 10px setelah prefix pada seluruh lebar layar mobile (320px–414px).
+     - Proteksi placeholder mobile: Menetapkan `font-weight: 400 !important; text-overflow: ellipsis !important; overflow: hidden !important; white-space: nowrap !important;` pada seluruh selector placeholder form produk agar teks placeholder yang panjang (termasuk `#input-affiliate-min-qty` `Contoh: 10 (Kosongkan jika berlaku mulai 1 pcs)`) tidak pecah, tidak bertumpuk, dan terpotong secara rapi dengan elipsis tanpa memicu horizontal overflow.
+  2. *Penyelarasan Spacing Mobile Compact (~50% Reduction)*:
+     - Spacing antarkomponen internal Komisi Afiliasi diperketat di mobile: `#section-product-affiliate-commission` (`pt-2.5 sm:pt-4 space-y-2.5 sm:space-y-4`), `#affiliate-commission-config-box` (`space-y-2.5 sm:space-y-4`), `#affiliate-mode-single` (`space-y-2 sm:space-y-3`), dan `#affiliate-single-helper-box` (`mt-1.5 sm:mt-2`).
+     - Eliminasi double margin: Menghapus utility class ganda `mt-3` pada container Syarat Tambahan (`pt-2 sm:pt-2.5 mt-0`), memanfaatkan container `space-y` untuk memisahkan garis pembatas secara proporsional.
+     - Spacing kartu Lainnya (`#card-step2-others`): Dibuat seragam compact pada mobile (`p-3.5 sm:p-6 space-y-3 sm:space-y-6`).
+     - Padding footer tindakan (`#step2-footer-actions`): Dibuat proporsional pada mobile (`py-2.5 px-3 sm:p-4 gap-2.5 sm:gap-3`), mengurangi tinggi berlebih tanpa mengurangi ukuran sentuh tombol aksi.
+     - Menghilangkan padding-bottom ganda pada mobile (`#wizard-form-col` `padding-bottom: 0 !important;` dan `#step2-cards-container` `padding-bottom: 1rem !important;`), memangkas 64px trailing blank space berlebih di bawah form.
 
 ### 6.J. Deskripsi Produk (Rich Text Editor & Sanitasi HTML)
 - **Komponen Rich Text Editor (`#rich-text-editor-wrapper`)**:

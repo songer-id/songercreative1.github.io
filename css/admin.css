@@ -2293,7 +2293,7 @@ input::-webkit-calendar-picker-indicator {
     padding-left: 0 !important;
     padding-right: 0 !important;
     padding-top: 0 !important;
-    padding-bottom: 2rem !important;
+    padding-bottom: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     margin-top: 0 !important;
@@ -2315,7 +2315,7 @@ input::-webkit-calendar-picker-indicator {
     /* px-1.5 tipis */
     padding-right: 0.375rem !important;
     /* px-1.5 tipis */
-    padding-bottom: 2rem !important;
+    padding-bottom: 1rem !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -2469,6 +2469,20 @@ input::-webkit-calendar-picker-indicator {
     line-height: 1.25 !important;
   }
 
+  /* Input dengan Prefix Rp di Komisi Afiliasi (Preserve Left Padding dari Prefix Absolute Rp) */
+  #input-affiliate-min-order,
+  .step2-section-card #input-affiliate-min-order {
+    padding-left: 2.375rem !important;
+    /* 38px: ruang bersih lapang dari prefix Rp di kiri (left: 12px) */
+    padding-right: 0.75rem !important;
+  }
+
+  .tier-comm-val.pl-8,
+  .step2-section-card input.tier-comm-val.pl-8 {
+    padding-left: 2rem !important;
+    /* 32px: ruang bersih lapang dari prefix Rp di tabel tier */
+  }
+
   #view-product-form textarea,
   .step2-section-card textarea,
   .step1-section-card textarea {
@@ -2483,8 +2497,12 @@ input::-webkit-calendar-picker-indicator {
   .step2-section-card textarea::placeholder {
     font-size: 0.8125rem !important;
     /* 13px */
+    font-weight: 400 !important;
     color: #94a3b8 !important;
     /* slate-400 */
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
   }
 
   /* Teks Deskripsi / Keterangan Pendukung */
@@ -3406,7 +3424,15 @@ button:focus-visible {
     padding-right: 0.375rem !important;
     /* px-1.5 tipis */
     padding-top: 0 !important;
-    padding-bottom: 2rem !important;
+    padding-bottom: 1rem !important;
+    gap: 0.625rem !important;
+  }
+
+  #step2-footer-actions {
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
   }
 }
 
