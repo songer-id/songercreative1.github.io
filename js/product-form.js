@@ -25,6 +25,11 @@ const ProductForm = (() => {
   let isLivePreviewOpen = true; // Desktop preview sidebar open/collapsed state
   let isPreviewTestMode = false;
   let previewStep1Tab = 'preview'; // 'preview' | 'design'
+  let autoScrollVariationTableToRight = null;
+  let setVariantDimensionsState = null;
+  let triggerPendingVariantDimensionsAutoScroll = null;
+  let pendingAutoScrollVariantDimensions = false;
+  let syncShippingVariantDimensionsVisibility = null;
 
   // State Snapshot Desain Kartu (SC-ADMIN-CARD-DESIGN-04: Tombol Batal & Pemulihan Desain)
   let cardDesignSnapshot = null;
@@ -1037,9 +1042,12 @@ const ProductForm = (() => {
         weight_unit: 'gram',
         length: '',           // Kosong (opsional)
         width: '',            // Kosong (opsional)
-        height: ''            // Kosong (opsional)
+        height: '',           // Kosong (opsional)
+        has_variant_dimensions: false
       };
     })(),
+    has_variant_dimensions: false,
+    variant_dimensions: {},
     image_url: null,
     images: [],
     image_aspect_ratio: '1:1',
@@ -1914,6 +1922,37 @@ const ProductForm = (() => {
     return clean;
   }
 
+  const INDO_MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+  function formatDisplayDateIndoShort(dateStr) {
+    if (!dateStr) return '';
+    if (dateStr instanceof Date && !isNaN(dateStr.getTime())) {
+      return `${dateStr.getDate()} ${INDO_MONTH_SHORT[dateStr.getMonth()]} ${dateStr.getFullYear()}`;
+    }
+    if (typeof dateStr !== 'string') return '';
+    const clean = dateStr.trim();
+    let y, m, d;
+    if (clean.includes('-')) {
+      const parts = clean.split('-');
+      if (parts.length === 3) {
+        y = parseInt(parts[0], 10);
+        m = parseInt(parts[1], 10) - 1;
+        d = parseInt(parts[2], 10);
+      }
+    } else if (clean.includes('/')) {
+      const parts = clean.split('/');
+      if (parts.length === 3) {
+        d = parseInt(parts[0], 10);
+        m = parseInt(parts[1], 10) - 1;
+        y = parseInt(parts[2], 10);
+      }
+    }
+    if (m >= 0 && m < 12 && d > 0 && y > 0) {
+      return `${d} ${INDO_MONTH_SHORT[m]} ${y}`;
+    }
+    return clean;
+  }
+
   function parseDisplayDateToISO(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return '';
     const clean = dateStr.trim();
@@ -2220,14 +2259,23 @@ const ProductForm = (() => {
       }
     };
 
+    const scrollListener = (e) => {
+      if (popover && popover.contains(e.target)) {
+        return;
+      }
+      closeActiveCalendarPopover();
+    };
+
     activeCalendarPopoverCleanup = () => {
       document.removeEventListener('click', outsideListener, true);
       document.removeEventListener('keydown', keyListener, true);
+      window.removeEventListener('scroll', scrollListener, true);
     };
 
     setTimeout(() => {
       document.addEventListener('click', outsideListener, true);
       document.addEventListener('keydown', keyListener, true);
+      window.addEventListener('scroll', scrollListener, true);
     }, 10);
   }
 
@@ -2311,6 +2359,7 @@ const ProductForm = (() => {
     currentStep = 1;
     isPreviewTestMode = false;
     previewStep1Tab = 'preview';
+    pendingAutoScrollVariantDimensions = false;
     cardDesignSnapshot = null;
     cardDesignSnapshotKey = null;
     cardLegacyOptionValues = {};
@@ -2437,9 +2486,12 @@ const ProductForm = (() => {
           weight_unit: 'gram',
           length: '',           // Kosong (opsional)
           width: '',            // Kosong (opsional)
-          height: ''            // Kosong (opsional)
+          height: '',           // Kosong (opsional)
+          has_variant_dimensions: false
         };
       })(),
+      has_variant_dimensions: false,
+      variant_dimensions: {},
       custom_footer_1: { ...f1Default },
       custom_footer_2: { ...f2Default },
       card_footer_text: f1Default.text,
@@ -2737,6 +2789,7 @@ const ProductForm = (() => {
     currentStep = 1;
     isPreviewTestMode = false;
     previewStep1Tab = 'preview';
+    pendingAutoScrollVariantDimensions = false;
     cardDesignSnapshot = null;
     cardDesignSnapshotKey = null;
     cardLegacyOptionValues = {};
@@ -2909,9 +2962,20 @@ const ProductForm = (() => {
           weight_unit: sc.weight_unit || 'gram',
           length: (sc.length !== undefined && sc.length !== null && sc.length !== '') ? sc.length : (sc.length_cm || ''),
           width: (sc.width !== undefined && sc.width !== null && sc.width !== '') ? sc.width : (sc.width_cm || ''),
-          height: (sc.height !== undefined && sc.height !== null && sc.height !== '') ? sc.height : (sc.height_cm || '')
+          height: (sc.height !== undefined && sc.height !== null && sc.height !== '') ? sc.height : (sc.height_cm || ''),
+          has_variant_dimensions: (sc.has_variant_dimensions !== undefined)
+            ? Boolean(sc.has_variant_dimensions)
+            : ((prod.has_variant_dimensions !== undefined)
+                ? Boolean(prod.has_variant_dimensions)
+                : Boolean(Array.isArray(prod.materials) && prod.materials.some(m => (m.weight !== undefined && m.weight !== null && m.weight !== '') || (m.length !== undefined && m.length !== null && m.length !== ''))))
         };
       })(),
+      has_variant_dimensions: (prod.shipping_config?.has_variant_dimensions !== undefined)
+        ? Boolean(prod.shipping_config.has_variant_dimensions)
+        : ((prod.has_variant_dimensions !== undefined)
+            ? Boolean(prod.has_variant_dimensions)
+            : Boolean(Array.isArray(prod.materials) && prod.materials.some(m => (m.weight !== undefined && m.weight !== null && m.weight !== '') || (m.length !== undefined && m.length !== null && m.length !== '')))),
+      variant_dimensions: (prod.variant_dimensions && typeof prod.variant_dimensions === 'object') ? JSON.parse(JSON.stringify(prod.variant_dimensions)) : {},
       custom_footer_1: f1Prod,
       custom_footer_2: f2Prod,
       card_footer_text: f1Prod.text,
@@ -7536,11 +7600,13 @@ const ProductForm = (() => {
         ${iconHtml}
 
         <div class="space-y-1">
-          <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
-            Simulasi Pratinjau
-          </span>
-          <h3 class="text-sm font-extrabold text-slate-900 leading-tight">${config.title}</h3>
-          ${config.message ? `<p class="text-[11px] text-slate-500 leading-relaxed">${config.message}</p>` : ''}
+          ${config.badge ? `
+            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+              ${escapeHtml(config.badge)}
+            </span>
+          ` : ''}
+          <h3 class="text-sm font-extrabold text-slate-900 leading-tight">${escapeHtml(config.title || '')}</h3>
+          ${(config.message && config.type !== 'buy') ? `<p class="text-[11px] text-slate-500 leading-relaxed">${escapeHtml(config.message)}</p>` : ''}
         </div>
 
         ${config.bodyHtml || ''}
@@ -7581,8 +7647,7 @@ const ProductForm = (() => {
   function showBuySimulationConfirmModal() {
     showPreviewTestModal({
       type: 'buy',
-      title: 'Simulasi Pembelian',
-      message: 'Contoh aksi Beli Sekarang berhasil. Tidak ada pesanan yang dibuat.'
+      title: 'Simulasi Pembelian Berhasil'
     });
   }
 
@@ -8135,6 +8200,500 @@ const ProductForm = (() => {
     };
   }
 
+  // ==========================================================================
+  // RESOLVER SENTRAL ATURAN MAKSIMAL PEMBELIAN (REUSABLE RESOLVER)
+  // Mendukung: Tanpa Batas, Per Pesanan (Umum & Spesifik DAG v2), Per Periode (Akumulatif)
+  // Digunakan oleh: Drawer Preview, Live PDP, Checkout/Cart Guard
+  // ==========================================================================
+  function resolveProductMaxOrderInfo(prodOrState = null, selectionsArg = null, opts = {}) {
+    const prod = prodOrState || primaryState;
+    if (!prod) {
+      return {
+        status: 'configuration_invalid',
+        max_qty: null,
+        displayText: 'Informasi produk tidak tersedia.',
+        periodInfo: null,
+        combinationText: null
+      };
+    }
+
+    const mList = Array.isArray(prod.materials) ? prod.materials : (Array.isArray(materialsState) ? materialsState : []);
+    const validMaterials = mList.filter(m => m && m.name && m.name.trim() !== '');
+    const hasVariants = Boolean(prod.has_variants && validMaterials.length > 0);
+
+    // KASUS 1: PRODUK TANPA VARIASI
+    if (!hasVariants) {
+      const mode = prod.max_order_type || (prod.max_order ? 'per_order' : 'unlimited');
+      const isUnlimited = Boolean(prod.is_unlimited_max_order || mode === 'unlimited' || (!prod.max_order && !prod.max_order_qty && mode !== 'per_period'));
+
+      if (isUnlimited) {
+        return {
+          status: 'unlimited',
+          max_qty: null,
+          displayText: '',
+          periodInfo: null,
+          combinationText: null
+        };
+      }
+
+      if (mode === 'per_order') {
+        const qty = parseInt(prod.max_order_qty !== undefined && prod.max_order_qty !== null ? prod.max_order_qty : prod.max_order, 10);
+        if (isNaN(qty) || qty <= 0) {
+          return {
+            status: 'configuration_invalid',
+            max_qty: null,
+            displayText: 'Pengaturan maksimal pembelian per pesanan tidak valid.',
+            periodInfo: null,
+            combinationText: null
+          };
+        }
+        return {
+          status: 'per_order_general',
+          max_qty: qty,
+          displayText: `Maksimal pembelian produk ini adalah ${qty} produk per pesanan.`,
+          periodInfo: null,
+          combinationText: null
+        };
+      }
+
+      if (mode === 'per_period') {
+        const period = prod.max_order_period || {};
+        const maxQty = parseInt(period.max_qty || prod.max_order_qty || prod.max_order, 10);
+        const days = parseInt(period.days, 10);
+        const startDate = period.start_date || '';
+        const periodType = period.period_type || 'non_recurring';
+        const endDate = period.end_date || '';
+
+        if (!startDate || isNaN(maxQty) || maxQty <= 0 || isNaN(days) || days <= 0) {
+          return {
+            status: 'configuration_invalid',
+            max_qty: null,
+            displayText: 'Pengaturan periode maksimal pembelian belum lengkap.',
+            periodInfo: null,
+            combinationText: null
+          };
+        }
+
+        const formattedStart = formatDisplayDateDDMMYYYY(startDate);
+
+        if (periodType === 'non_recurring') {
+          const singleCycleEnd = addDaysToDate(parseDisplayDateToISO(startDate), Math.max(1, days) - 1);
+          const formattedEnd = formatDisplayDateDDMMYYYY(singleCycleEnd);
+          const formattedEndIndo = formatDisplayDateIndoShort(singleCycleEnd);
+          return {
+            status: 'per_period_non_recurring',
+            max_qty: maxQty,
+            displayText: `Maksimal pembelian produk ini adalah ${maxQty} produk dalam periode ${days} hari.`,
+            periodInfo: {
+              start_date: startDate,
+              end_date: singleCycleEnd,
+              days,
+              period_type: 'non_recurring',
+              formatted_start_date: formattedStart,
+              formatted_end_date: formattedEnd,
+              formatted_end_date_indo: formattedEndIndo
+            },
+            combinationText: null
+          };
+        } else {
+          if (!endDate) {
+            return {
+              status: 'configuration_invalid',
+              max_qty: null,
+              displayText: 'Tanggal berakhir periode berulang belum ditentukan.',
+              periodInfo: null,
+              combinationText: null
+            };
+          }
+          const formattedEnd = formatDisplayDateDDMMYYYY(endDate);
+          const formattedEndIndo = formatDisplayDateIndoShort(endDate);
+          return {
+            status: 'per_period_recurring',
+            max_qty: maxQty,
+            displayText: `Maksimal pembelian produk ini adalah ${maxQty} produk setiap periode ${days} hari, berlaku berulang hingga ${formattedEndIndo}.`,
+            periodInfo: {
+              start_date: startDate,
+              end_date: endDate,
+              days,
+              period_type: 'recurring',
+              formatted_start_date: formattedStart,
+              formatted_end_date: formattedEnd,
+              formatted_end_date_indo: formattedEndIndo
+            },
+            combinationText: null
+          };
+        }
+      }
+
+      return {
+        status: 'unlimited',
+        max_qty: null,
+        displayText: '',
+        periodInfo: null,
+        combinationText: null
+      };
+    }
+
+    // KASUS 2: PRODUK DENGAN VARIASI
+    // 2.A. Mode Per Periode — Global Akumulatif
+    if (prod.max_order_type === 'per_period') {
+      const period = prod.max_order_period || {};
+      const maxQty = parseInt(period.max_qty || prod.max_order_qty || prod.max_order, 10);
+      const days = parseInt(period.days, 10);
+      const startDate = period.start_date || '';
+      const periodType = period.period_type || 'non_recurring';
+      const endDate = period.end_date || '';
+
+      if (!startDate || isNaN(maxQty) || maxQty <= 0 || isNaN(days) || days <= 0) {
+        return {
+          status: 'configuration_invalid',
+          max_qty: null,
+          displayText: 'Pengaturan periode maksimal pembelian belum lengkap.',
+          periodInfo: null,
+          combinationText: null
+        };
+      }
+
+      const formattedStart = formatDisplayDateDDMMYYYY(startDate);
+
+      if (periodType === 'non_recurring') {
+        const singleCycleEnd = addDaysToDate(parseDisplayDateToISO(startDate), Math.max(1, days) - 1);
+        const formattedEnd = formatDisplayDateDDMMYYYY(singleCycleEnd);
+        const formattedEndIndo = formatDisplayDateIndoShort(singleCycleEnd);
+        return {
+          status: 'per_period_non_recurring',
+          max_qty: maxQty,
+          displayText: `Maksimal pembelian produk ini adalah ${maxQty} produk dalam periode ${days} hari.`,
+          periodInfo: {
+            start_date: startDate,
+            end_date: singleCycleEnd,
+            days,
+            period_type: 'non_recurring',
+            formatted_start_date: formattedStart,
+            formatted_end_date: formattedEnd,
+            formatted_end_date_indo: formattedEndIndo
+          },
+          combinationText: null
+        };
+      } else {
+        if (!endDate) {
+          return {
+            status: 'configuration_invalid',
+            max_qty: null,
+            displayText: 'Tanggal berakhir periode berulang belum ditentukan.',
+            periodInfo: null,
+            combinationText: null
+          };
+        }
+        const formattedEnd = formatDisplayDateDDMMYYYY(endDate);
+        const formattedEndIndo = formatDisplayDateIndoShort(endDate);
+        return {
+          status: 'per_period_recurring',
+          max_qty: maxQty,
+          displayText: `Maksimal pembelian produk ini adalah ${maxQty} produk setiap periode ${days} hari, berlaku berulang hingga ${formattedEndIndo}.`,
+          periodInfo: {
+            start_date: startDate,
+            end_date: endDate,
+            days,
+            period_type: 'recurring',
+            formatted_start_date: formattedStart,
+            formatted_end_date: formattedEnd,
+            formatted_end_date_indo: formattedEndIndo
+          },
+          combinationText: null
+        };
+      }
+    }
+
+    // 2.B. Mode Per Pesanan atau Tanpa Batas
+    const hasSpecificMat = validMaterials.some(m => m.max_order !== null && m.max_order !== undefined && m.max_order !== '' && m.max_order !== 'Tanpa Batas' && m.max_order !== 'Unlimited' && !isNaN(Number(m.max_order)));
+    const hasCombinationRules = Array.isArray(prod.combination_rules) && prod.combination_rules.some(r => r && r.max_order !== undefined && r.max_order !== null && r.max_order !== '');
+    const isAllMatUnlimited = validMaterials.every(m => Boolean(m.is_unlimited_max_order || m.max_order === null || m.max_order === 'Tanpa Batas' || m.max_order === 'Unlimited'));
+
+    const isModeUmum = (prod.max_order_type === 'per_order' && prod.max_order_qty && parseInt(prod.max_order_qty) > 0 && !hasSpecificMat && !hasCombinationRules);
+
+    if (isModeUmum) {
+      const qty = parseInt(prod.max_order_qty, 10);
+      return {
+        status: 'per_order_general',
+        max_qty: qty,
+        displayText: `Maksimal pembelian produk ini adalah ${qty} produk per pesanan.`,
+        periodInfo: null,
+        combinationText: null
+      };
+    }
+
+    if ((prod.max_order_type === 'unlimited' || prod.is_unlimited_max_order) && !hasSpecificMat && !hasCombinationRules && isAllMatUnlimited) {
+      return {
+        status: 'unlimited',
+        max_qty: null,
+        displayText: '',
+        periodInfo: null,
+        combinationText: null
+      };
+    }
+
+    // 2.C. Mode Spesifik per Varian
+    const v2ListSource = (prod.finishings && prod.finishings.main) || finishingsState.main || [];
+    const v3ListSource = (prod.finishings && prod.finishings.extra_1) || finishingsState.extra_1 || [];
+    const v4ListSource = (prod.finishings && prod.finishings.extra_2) || finishingsState.extra_2 || [];
+
+    const validV2 = v2ListSource.filter(f => f && f.name && f.name.trim() !== '');
+    const validV3 = v3ListSource.filter(f => f && f.name && f.name.trim() !== '');
+    const validV4 = v4ListSource.filter(f => f && f.name && f.name.trim() !== '');
+
+    const hasT2 = Boolean(prod.has_variation_2 && validV2.length > 0);
+    const hasT3 = Boolean(hasT2 && prod.has_variation_3 && validV3.length > 0);
+    const hasT4 = Boolean(hasT3 && prod.has_variation_4 && validV4.length > 0);
+
+    function getAllowedTiers(matId) {
+      let t2Allowed = hasT2 ? validV2 : [];
+      if (hasT2 && typeof getAllowedVariationOptions === 'function') {
+        const check2 = getAllowedVariationOptions(matId, 'main');
+        if (check2.isSkipped || check2.isEmptyResolved) {
+          t2Allowed = [];
+        } else if (check2.isSpecific && Array.isArray(check2.allowedIds)) {
+          t2Allowed = validV2.filter(f => check2.allowedIds.includes(f.id || f.tier_id));
+        }
+      }
+
+      let t3Allowed = hasT3 ? validV3 : [];
+      if (hasT3 && typeof getAllowedVariationOptions === 'function') {
+        const check3 = getAllowedVariationOptions(matId, 'extra_1');
+        if (check3.isSkipped || check3.isEmptyResolved) {
+          t3Allowed = [];
+        } else if (check3.isSpecific && Array.isArray(check3.allowedIds)) {
+          t3Allowed = validV3.filter(f => check3.allowedIds.includes(f.id || f.tier_id));
+        }
+      }
+
+      let t4Allowed = hasT4 ? validV4 : [];
+      if (hasT4 && typeof getAllowedVariationOptions === 'function') {
+        const check4 = getAllowedVariationOptions(matId, 'extra_2');
+        if (check4.isSkipped || check4.isEmptyResolved) {
+          t4Allowed = [];
+        } else if (check4.isSpecific && Array.isArray(check4.allowedIds)) {
+          t4Allowed = validV4.filter(f => check4.allowedIds.includes(f.id || f.tier_id));
+        }
+      }
+
+      return { t2Allowed, t3Allowed, t4Allowed };
+    }
+
+    const allCombos = [];
+    validMaterials.forEach(m => {
+      const { t2Allowed, t3Allowed, t4Allowed } = (typeof opts.getAllowedForMat === 'function')
+        ? opts.getAllowedForMat(m.id)
+        : getAllowedTiers(m.id);
+
+      const v2Loop = (hasT2 && t2Allowed.length > 0) ? t2Allowed : [null];
+      v2Loop.forEach(v2 => {
+        const v3Loop = (hasT3 && v2 && t3Allowed.length > 0) ? t3Allowed : [null];
+        v3Loop.forEach(v3 => {
+          const v4Loop = (hasT4 && v3 && t4Allowed.length > 0) ? t4Allowed : [null];
+          v4Loop.forEach(v4 => {
+            const t1Id = m.id;
+            const t2Id = v2 ? (v2.id || v2.tier_id) : null;
+            const t3Id = v3 ? (v3.id || v3.tier_id) : null;
+            const t4Id = v4 ? (v4.id || v4.tier_id) : null;
+
+            let combMax = Infinity;
+            if (hasCombinationRules) {
+              const matches = prod.combination_rules.filter(r => {
+                const m1 = !r.tier1_id || r.tier1_id === '*' || r.tier1_id === t1Id;
+                const m2 = !r.tier2_id || r.tier2_id === '*' || r.tier2_id === t2Id;
+                const m3 = !r.tier3_id || r.tier3_id === '*' || r.tier3_id === t3Id;
+                const m4 = !r.tier4_id || r.tier4_id === '*' || r.tier4_id === t4Id;
+                return m1 && m2 && m3 && m4;
+              });
+              if (matches.length > 0) {
+                matches.sort((a, b) => {
+                  const specA = (a.tier1_id && a.tier1_id !== '*' ? 1 : 0) + (a.tier2_id && a.tier2_id !== '*' ? 1 : 0) + (a.tier3_id && a.tier3_id !== '*' ? 1 : 0) + (a.tier4_id && a.tier4_id !== '*' ? 1 : 0);
+                  const specB = (b.tier1_id && b.tier1_id !== '*' ? 1 : 0) + (b.tier2_id && b.tier2_id !== '*' ? 1 : 0) + (b.tier3_id && b.tier3_id !== '*' ? 1 : 0) + (b.tier4_id && b.tier4_id !== '*' ? 1 : 0);
+                  return specB - specA;
+                });
+                const best = matches[0];
+                if (best.max_order !== undefined && best.max_order !== null) {
+                  if (best.max_order === 'Tanpa Batas' || best.max_order === 'Unlimited') {
+                    combMax = Infinity;
+                  } else if (parseInt(best.max_order, 10) > 0) {
+                    combMax = parseInt(best.max_order, 10);
+                  }
+                }
+              } else if (m.max_order !== undefined && m.max_order !== null && !isNaN(Number(m.max_order))) {
+                combMax = parseInt(m.max_order, 10);
+              }
+            } else {
+              if (m.is_unlimited_max_order || m.max_order === 'Tanpa Batas' || m.max_order === 'Unlimited' || m.max_order === null) {
+                combMax = Infinity;
+              } else if (parseInt(m.max_order, 10) > 0) {
+                combMax = parseInt(m.max_order, 10);
+              }
+            }
+
+            const names = [m.name, v2?.name, v3?.name, v4?.name].filter(Boolean);
+            allCombos.push({
+              t1Id,
+              t2Id,
+              t3Id,
+              t4Id,
+              names,
+              max_order: combMax
+            });
+          });
+        });
+      });
+    });
+
+    const selections = selectionsArg || {};
+    const selT1 = selections.tier1 !== undefined ? selections.tier1 : (previewTestState?.selectedTier1Id || null);
+    const selT2 = (selections.tier2 !== undefined ? selections.tier2 : (selections.main !== undefined ? selections.main : previewTestState?.selectedTier2Id)) || null;
+    const selT3 = (selections.tier3 !== undefined ? selections.tier3 : (selections.extra_1 !== undefined ? selections.extra_1 : previewTestState?.selectedTier3Id)) || null;
+    const selT4 = (selections.tier4 !== undefined ? selections.tier4 : (selections.extra_2 !== undefined ? selections.extra_2 : previewTestState?.selectedTier4Id)) || null;
+
+    if (!selT1) {
+      const uniqueRules = Array.from(new Set(allCombos.map(c => c.max_order)));
+      if (uniqueRules.length === 1 && uniqueRules[0] === Infinity) {
+        return {
+          status: 'unlimited',
+          max_qty: null,
+          displayText: '',
+          periodInfo: null,
+          combinationText: null
+        };
+      }
+      return {
+        status: 'selection_required',
+        max_qty: null,
+        displayText: 'Pilih variasi untuk melihat batas maksimal pembelian.',
+        periodInfo: null,
+        combinationText: null
+      };
+    }
+
+    const matchingCombos = allCombos.filter(c => {
+      if (selT1 && c.t1Id !== selT1) return false;
+      if (selT2 && c.t2Id && c.t2Id !== selT2) return false;
+      if (selT3 && c.t3Id && c.t3Id !== selT3) return false;
+      if (selT4 && c.t4Id && c.t4Id !== selT4) return false;
+      return true;
+    });
+
+    if (matchingCombos.length === 0) {
+      return {
+        status: 'configuration_invalid',
+        max_qty: null,
+        displayText: 'Kombinasi variasi yang dipilih tidak tersedia.',
+        periodInfo: null,
+        combinationText: null
+      };
+    }
+
+    const requiresT2 = matchingCombos.some(c => c.t2Id !== null);
+    const requiresT3 = matchingCombos.some(c => c.t3Id !== null);
+    const requiresT4 = matchingCombos.some(c => c.t4Id !== null);
+
+    const isComplete = Boolean(
+      (!requiresT2 || selT2) &&
+      (!requiresT3 || selT3) &&
+      (!requiresT4 || selT4)
+    );
+
+    if (isComplete) {
+      const chosen = matchingCombos[0];
+      const comboText = chosen.names.join(' \u2013 ');
+      const isMultiTier = chosen.names.length > 1;
+
+      if (chosen.max_order === Infinity) {
+        return {
+          status: 'unlimited',
+          max_qty: null,
+          displayText: '',
+          periodInfo: null,
+          combinationText: comboText
+        };
+      } else {
+        return {
+          status: 'per_order_specific',
+          max_qty: chosen.max_order,
+          displayText: `Maksimal pembelian produk ini adalah ${chosen.max_order} produk per pesanan.`,
+          periodInfo: null,
+          combinationText: comboText
+        };
+      }
+    } else {
+      const remainingRules = Array.from(new Set(matchingCombos.map(c => c.max_order)));
+      if (remainingRules.length === 1) {
+        const sameRule = remainingRules[0];
+        const selectedNames = [];
+        const mObj = validMaterials.find(m => m.id === selT1);
+        if (mObj) selectedNames.push(mObj.name);
+        if (selT2) {
+          const v2Obj = validV2.find(v => (v.id || v.tier_id) === selT2);
+          if (v2Obj) selectedNames.push(v2Obj.name);
+        }
+        const partialComboText = selectedNames.join(' \u2013 ');
+        const isMulti = selectedNames.length > 1;
+
+        if (sameRule === Infinity) {
+          return {
+            status: 'unlimited',
+            max_qty: null,
+            displayText: '',
+            periodInfo: null,
+            combinationText: partialComboText
+          };
+        } else {
+          return {
+            status: 'per_order_specific',
+            max_qty: sameRule,
+            displayText: `Maksimal pembelian produk ini adalah ${sameRule} produk per pesanan.`,
+            periodInfo: null,
+            combinationText: partialComboText
+          };
+        }
+      }
+
+      return {
+        status: 'selection_required',
+        max_qty: null,
+        displayText: 'Pilih variasi berikutnya untuk mengetahui batas maksimal pembelian.',
+        periodInfo: null,
+        combinationText: null
+      };
+    }
+  }
+
+  // Helper Pembaruan Live Teks Maksimal Pembelian di Drawer
+  function updateDrawerMaxOrderDisplay() {
+    const sectionEls = document.querySelectorAll('#drawer-max-order-section');
+    const textEls = document.querySelectorAll('#drawer-max-order-text');
+    if (!sectionEls.length && !textEls.length) return;
+    const info = resolveProductMaxOrderInfo(primaryState, {
+      tier1: previewTestState.selectedTier1Id,
+      tier2: previewTestState.selectedTier2Id,
+      tier3: previewTestState.selectedTier3Id,
+      tier4: previewTestState.selectedTier4Id
+    });
+    const isVisible = Boolean(
+      info &&
+      info.status !== 'unlimited' &&
+      info.status !== 'configuration_invalid' &&
+      info.displayText &&
+      info.displayText.trim() !== ''
+    );
+    sectionEls.forEach(sec => {
+      if (isVisible) {
+        sec.classList.remove('hidden');
+      } else {
+        sec.classList.add('hidden');
+      }
+    });
+    textEls.forEach(el => {
+      el.textContent = isVisible ? info.displayText : '';
+    });
+  }
+
   // Helper Sinkronisasi Ketersediaan Opsi Variasi (Disabled/Enabled) di Drawer DOM
   function updateShopeeDrawerVariationOptionsAvailability(container) {
     if (!container) return;
@@ -8239,6 +8798,7 @@ const ProductForm = (() => {
 
     // Update Ringkasan Keterangan Opsi Terpilih di Drawer
     updateDrawerSelectedOptionsDescriptions();
+    updateDrawerMaxOrderDisplay();
   }
 
   function renderDrawerVariationGroup(group, mode, groupIndex) {
@@ -8493,9 +9053,11 @@ const ProductForm = (() => {
   function updateShopeeDrawerSubmitButtonState(rule, curQty) {
     const stepMult = rule?.order_multiple || 1;
     const minOrder = rule?.min_order || 1;
+    const maxOrder = (rule && rule.max_order !== undefined && rule.max_order !== null) ? rule.max_order : Infinity;
     const isMultipleInvalid = (stepMult > 1 && (curQty % stepMult !== 0));
     const isMinOrderInvalid = (minOrder > 1 && curQty < minOrder);
-    const isInvalid = isMultipleInvalid || isMinOrderInvalid || !checkAllVariationsSelected();
+    const isMaxOrderInvalid = (maxOrder !== Infinity && curQty > maxOrder);
+    const isInvalid = isMultipleInvalid || isMinOrderInvalid || isMaxOrderInvalid || !checkAllVariationsSelected();
 
     const submitButtons = document.querySelectorAll(
       '.mini-pdp-drawer-root .btn-shopee-submit:not(#btn-close-spec-drawer):not(.btn-close-spec-drawer), #btn-shopee-drawer-confirm'
@@ -8538,6 +9100,19 @@ const ProductForm = (() => {
     }
     const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
     const isAllVariationsSelected = checkAllVariationsSelected();
+    const maxOrderInfo = resolveProductMaxOrderInfo(primaryState, {
+      tier1: previewTestState.selectedTier1Id,
+      tier2: previewTestState.selectedTier2Id,
+      tier3: previewTestState.selectedTier3Id,
+      tier4: previewTestState.selectedTier4Id
+    });
+    const isMaxOrderVisible = Boolean(
+      maxOrderInfo &&
+      maxOrderInfo.status !== 'unlimited' &&
+      maxOrderInfo.status !== 'configuration_invalid' &&
+      maxOrderInfo.displayText &&
+      maxOrderInfo.displayText.trim() !== ''
+    );
 
     const dimLabel = getCustomDimensionLabel();
     const dimUnit = primaryState.dimension_unit || primaryState.custom_dimension_unit || 'meter';
@@ -8731,7 +9306,8 @@ const ProductForm = (() => {
 
     const isMultipleInvalid = (rule.order_multiple > 1 && (curQty % rule.order_multiple !== 0));
     const isMinOrderInvalid = (minOrderQty > 1 && curQty < minOrderQty);
-    const isSubmitDisabled = isMultipleInvalid || isMinOrderInvalid || !checkAllVariationsSelected();
+    const isMaxOrderInvalid = (maxOrderQty !== Infinity && curQty > maxOrderQty);
+    const isSubmitDisabled = isMultipleInvalid || isMinOrderInvalid || isMaxOrderInvalid || !checkAllVariationsSelected();
 
     // Evaluasi Harga Final
     let grandTotalPrice = 0;
@@ -8946,6 +9522,14 @@ const ProductForm = (() => {
             <div id="drawer-selected-options-descriptions" class="hidden"></div>
           `}
 
+          <!-- Maksimal Pembelian -->
+          <div id="drawer-max-order-section" class="px-3 py-2 border-t border-slate-100 bg-white shrink-0 ${isMaxOrderVisible ? '' : 'hidden'}">
+            <div class="text-[11px] font-semibold text-slate-500 mb-0.5">Maksimal Pembelian</div>
+            <div id="drawer-max-order-text" class="text-xs text-slate-700 leading-snug font-normal">
+              ${escapeHtml(isMaxOrderVisible ? maxOrderInfo.displayText : '')}
+            </div>
+          </div>
+
           <div class="p-3 flex items-center justify-between shrink-0 bg-white">
             <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
             <div class="drawer-qty-stepper inline-flex items-center rounded-none border-0 overflow-hidden bg-slate-100 shadow-none">
@@ -9078,6 +9662,14 @@ const ProductForm = (() => {
             <!-- Ringkasan Keterangan Opsi Terpilih di Dalam Drawer (Tepat di Atas Garis Jumlah Pesanan / Footer) -->
             <div id="drawer-selected-options-descriptions" class="space-y-1 pt-1.5 border-t border-slate-100 ${drawerDescriptionsHtml ? '' : 'hidden'}">
               ${drawerDescriptionsHtml}
+            </div>
+          </div>
+
+          <!-- Maksimal Pembelian -->
+          <div id="drawer-max-order-section" class="px-3 py-2 border-t border-slate-100 bg-white shrink-0 ${isMaxOrderVisible ? '' : 'hidden'}">
+            <div class="text-[11px] font-semibold text-slate-500 mb-0.5">Maksimal Pembelian</div>
+            <div id="drawer-max-order-text" class="text-xs text-slate-700 leading-snug font-normal">
+              ${escapeHtml(isMaxOrderVisible ? maxOrderInfo.displayText : '')}
             </div>
           </div>
 
@@ -9552,6 +10144,9 @@ const ProductForm = (() => {
     }
     hidePreviewTestModeAlert();
     validateAndAdjustSpecificVariations();
+    if (!previewTestState.qty || previewTestState.qty < 1) {
+      previewTestState.qty = 1;
+    }
     const isAlreadyOpen = previewTestState.isDrawerOpen;
     previewTestState.isDrawerOpen = true;
     previewTestState.drawerActionType = actionType || 'buy';
@@ -9617,6 +10212,19 @@ const ProductForm = (() => {
 
     const hasVariations = Boolean(primaryState.has_variants && validMaterials.length > 0);
     const isAllVariationsSelected = checkAllVariationsSelected();
+    const maxOrderInfo = resolveProductMaxOrderInfo(primaryState, {
+      tier1: previewTestState.selectedTier1Id,
+      tier2: previewTestState.selectedTier2Id,
+      tier3: previewTestState.selectedTier3Id,
+      tier4: previewTestState.selectedTier4Id
+    });
+    const isMaxOrderVisible = Boolean(
+      maxOrderInfo &&
+      maxOrderInfo.status !== 'unlimited' &&
+      maxOrderInfo.status !== 'configuration_invalid' &&
+      maxOrderInfo.displayText &&
+      maxOrderInfo.displayText.trim() !== ''
+    );
     updateDrawerQtyButtonsState();
 
     const pInp = document.querySelector('.input-shopee-dim-p');
@@ -9861,6 +10469,7 @@ const ProductForm = (() => {
     updateShopeeDrawerSubmitButtonState(rule, curQty);
 
     updateDrawerSelectedOptionsDescriptions();
+    updateDrawerMaxOrderDisplay();
   }
 
   function bindMiniPdpInteractiveEvents() {
@@ -10126,7 +10735,7 @@ const ProductForm = (() => {
         };
       });
 
-      // 8. Tombol Beli Sekarang - Sesuai Aturan Alur Keputusan Kasus A & B
+      // 8. Tombol Beli Sekarang - Buka Drawer Preview Terlebih Dahulu
       container.querySelectorAll('.btn-preview-buy-now').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
@@ -10137,24 +10746,7 @@ const ProductForm = (() => {
           }
           hidePreviewTestModeAlert();
 
-          const hasVariations = Boolean(primaryState.has_variants && (materialsState || []).some(m => m && m.name && m.name.trim() !== ''));
-
-          if (primaryState.has_custom_dimension && !isCustomDimensionValid()) {
-            openShopeeCheckoutDrawer('buy');
-            return;
-          }
-
-          if (!hasVariations) {
-            // KASUS A.1: Produk TANPA variasi -> LANGSUNG VALID
-            showBuySimulationConfirmModal();
-          } else {
-            // KASUS B.1: Produk MEMILIKI Variasi
-            if (checkAllVariationsSelected()) {
-              showBuySimulationConfirmModal();
-            } else {
-              openShopeeCheckoutDrawer('buy');
-            }
-          }
+          openShopeeCheckoutDrawer('buy');
         };
       });
 
@@ -10713,12 +11305,39 @@ const ProductForm = (() => {
         container.querySelectorAll('.btn-shopee-submit').forEach(btn => {
           btn.onclick = (e) => {
             e.preventDefault();
+
+            // Ambil state kuantitas terbaru dari input dan state
+            const qtyInp = container.querySelector('.input-preview-test-qty, #input-preview-test-qty');
+            if (qtyInp) {
+              const parsedVal = parseInt(qtyInp.value, 10);
+              if (!isNaN(parsedVal) && parsedVal > 0) {
+                previewTestState.qty = parsedVal;
+              }
+            }
             const curQ = previewTestState.qty || 1;
             const currentRule = resolveActiveCombinationRule();
             const stepMult = currentRule?.order_multiple || 1;
             const minOrd = currentRule?.min_order || 1;
 
             if ((stepMult > 1 && (curQ % stepMult !== 0)) || (minOrd > 1 && curQ < minOrd)) {
+              return;
+            }
+
+            // Validasi Maksimal Jumlah Pembelian
+            const maxOrd = (currentRule && currentRule.max_order !== undefined && currentRule.max_order !== null)
+              ? currentRule.max_order
+              : Infinity;
+            if (maxOrd !== Infinity && curQ > maxOrd) {
+              return;
+            }
+
+            const maxOrderInfo = resolveProductMaxOrderInfo(primaryState, {
+              tier1: previewTestState.selectedTier1Id,
+              tier2: previewTestState.selectedTier2Id,
+              tier3: previewTestState.selectedTier3Id,
+              tier4: previewTestState.selectedTier4Id
+            });
+            if (maxOrderInfo && maxOrderInfo.max_qty !== null && curQ > maxOrderInfo.max_qty) {
               return;
             }
 
@@ -16924,96 +17543,122 @@ const ProductForm = (() => {
 
               <!-- Bagian 1: Berat & Ukuran Paket (Mobile-First Compact) -->
               <div class="space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <!-- Berat Paket -->
-                  <div>
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <label for="input-package-weight" class="text-xs font-bold text-slate-800">
-                        Berat Paket <span class="text-red-500">*</span>:
-                      </label>
-                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
-                        <i class="bi bi-question-circle text-xs"></i>
-                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                          Berat paket dalam gram. Digunakan oleh ekspedisi logistik untuk menghitung tarif ongkos kirim kiloan.
-                        </div>
-                      </div>
-                    </div>
-                    <div class="relative flex items-center">
-                      <input
-                        type="number"
-                        id="input-package-weight"
-                        min="1"
-                        step="any"
-                        value="${shippingCfg.weight !== undefined && shippingCfg.weight !== null && shippingCfg.weight !== '' ? shippingCfg.weight : ''}"
-                        class="w-full pl-3.5 pr-12 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition"
-                        placeholder="Contoh: 500"
-                      />
-                      <span class="absolute right-3.5 text-xs font-bold text-slate-400 select-none pointer-events-none">gr</span>
-                      <select id="select-package-weight-unit" class="hidden">
-                        <option value="gram" selected>gram</option>
-                      </select>
-                    </div>
-                    <span id="package-weight-error-msg" class="text-[11px] text-red-600 font-semibold hidden mt-1">Berat Paket wajib diisi jika pengiriman aktif.</span>
-                  </div>
-
-                  <!-- Ukuran Dimensi Paket (P x L x T) -->
-                  <div>
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <label class="text-xs font-bold text-slate-800">
-                        Ukuran Paket (Opsional):
-                      </label>
-                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
-                        <i class="bi bi-question-circle text-xs"></i>
-                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                          Panjang, lebar, dan tinggi paket dalam cm untuk menghitung berat volumetrik paket jika ukuran melebihi standar ekspedisi: (P × L × T) ÷ 6.000.
-                        </div>
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                      <div class="relative flex items-center">
-                        <input type="number" id="input-dim-length" min="1" step="any" value="${shippingCfg.length || ''}" placeholder="P" class="w-full pl-2.5 pr-7 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition" />
-                        <span class="absolute right-2 text-[10px] font-bold text-slate-400 select-none pointer-events-none">cm</span>
-                      </div>
-                      <div class="relative flex items-center">
-                        <input type="number" id="input-dim-width" min="1" step="any" value="${shippingCfg.width || ''}" placeholder="L" class="w-full pl-2.5 pr-7 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition" />
-                        <span class="absolute right-2 text-[10px] font-bold text-slate-400 select-none pointer-events-none">cm</span>
-                      </div>
-                      <div class="relative flex items-center">
-                        <input type="number" id="input-dim-height" min="1" step="any" value="${shippingCfg.height || ''}" placeholder="T" class="w-full pl-2.5 pr-7 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition" />
-                        <span class="absolute right-2 text-[10px] font-bold text-slate-400 select-none pointer-events-none">cm</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Info Volumetrik Real-time -->
-                <div id="volumetric-weight-info" class="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-xs text-slate-700 hidden transition"></div>
-              </div>
-
-              <!-- Bagian 2: Sistem COD & Dukungan Kurir -->
-              <div class="border-t border-slate-100 pt-4 space-y-4">
-                <!-- Baris Toggle Sistem COD -->
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between gap-3 select-none">
+                <!-- Toggle Berat & Dimensi berbeda untuk tiap variasi -->
+                <div id="variant-dimensions-toggle-wrapper" class="${(isPhysical && primaryState.has_variants && primaryState.has_shipping) ? 'block' : 'hidden'} pb-1">
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 select-none">
                     <div class="flex items-center gap-1.5">
-                      <span class="text-xs font-bold text-slate-800">Sistem COD (Bayar di Tempat)</span>
+                      <span class="text-xs font-bold text-slate-800">Berat & Dimensi berbeda untuk tiap variasi</span>
                       <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
                         <i class="bi bi-question-circle text-xs"></i>
                         <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                          Izinkan pembeli membayar pesanan secara tunai saat barang diterima, baik melalui kurir antar toko maupun ekspedisi rekanan.
+                          Aktifkan jika setiap variasi produk memiliki berat atau dimensi paket yang berbeda. Pengaturan diisi pada tabel List Variasi Produk.
                         </div>
                       </div>
                     </div>
                     <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
                       <input
                         type="checkbox"
-                        id="toggle-is-cod"
-                        ${shippingCfg.is_cod ? 'checked' : ''}
-                        class="sr-only peer"
+                        id="toggle-variant-dimensions"
+                        class="sr-only peer toggle-variant-dimensions"
+                        ${Boolean(primaryState.has_variant_dimensions || shippingCfg.has_variant_dimensions) ? 'checked' : ''}
                       />
                       <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
                     </label>
                   </div>
+                </div>
+
+                <!-- Container Input Tingkat Produk (Sembunyi jika Berat & Dimensi per variasi aktif) -->
+                <div id="product-level-shipping-dimensions-container" class="${(isPhysical && primaryState.has_variants && primaryState.has_shipping && Boolean(primaryState.has_variant_dimensions || shippingCfg.has_variant_dimensions)) ? 'hidden' : 'block'} space-y-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Berat Paket -->
+                    <div>
+                      <div class="flex items-center gap-1.5 mb-1">
+                        <label for="input-package-weight" class="text-xs font-bold text-slate-800">
+                          Berat Paket <span class="text-red-500">*</span>:
+                        </label>
+                        <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                          <i class="bi bi-question-circle text-xs"></i>
+                          <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                            Berat paket dalam gram. Digunakan oleh ekspedisi logistik untuk menghitung tarif ongkos kirim kiloan.
+                          </div>
+                        </div>
+                      </div>
+                      <div class="relative flex items-center">
+                        <input
+                          type="number"
+                          id="input-package-weight"
+                          min="1"
+                          step="any"
+                          value="${shippingCfg.weight !== undefined && shippingCfg.weight !== null && shippingCfg.weight !== '' ? shippingCfg.weight : ''}"
+                          class="w-full pl-3.5 pr-12 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition"
+                          placeholder="Contoh: 500"
+                        />
+                        <span class="absolute right-3.5 text-xs font-bold text-slate-400 select-none pointer-events-none">gr</span>
+                        <select id="select-package-weight-unit" class="hidden">
+                          <option value="gram" selected>gram</option>
+                        </select>
+                      </div>
+                      <span id="package-weight-error-msg" class="text-[11px] text-red-600 font-semibold hidden mt-1">Berat Paket wajib diisi jika pengiriman aktif.</span>
+                    </div>
+
+                    <!-- Ukuran Dimensi Paket (P x L x T) -->
+                    <div>
+                      <div class="flex items-center gap-1.5 mb-1">
+                        <label class="text-xs font-bold text-slate-800">
+                          Ukuran Paket (Opsional):
+                        </label>
+                        <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0">
+                          <i class="bi bi-question-circle text-xs"></i>
+                          <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                            Panjang, lebar, dan tinggi paket dalam cm untuk menghitung berat volumetrik paket jika ukuran melebihi standar ekspedisi: (P × L × T) ÷ 6.000.
+                          </div>
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-3 gap-2">
+                        <div class="relative flex items-center">
+                          <input type="number" id="input-dim-length" min="1" step="any" value="${shippingCfg.length || ''}" placeholder="P" class="w-full pl-2.5 pr-7 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition" />
+                          <span class="absolute right-2 text-[10px] font-bold text-slate-400 select-none pointer-events-none">cm</span>
+                        </div>
+                        <div class="relative flex items-center">
+                          <input type="number" id="input-dim-width" min="1" step="any" value="${shippingCfg.width || ''}" placeholder="L" class="w-full pl-2.5 pr-7 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition" />
+                          <span class="absolute right-2 text-[10px] font-bold text-slate-400 select-none pointer-events-none">cm</span>
+                        </div>
+                        <div class="relative flex items-center">
+                          <input type="number" id="input-dim-height" min="1" step="any" value="${shippingCfg.height || ''}" placeholder="T" class="w-full pl-2.5 pr-7 py-2 rounded-xl border border-slate-300 text-xs text-center font-bold text-slate-800 focus:border-emerald-500 outline-none bg-white transition" />
+                          <span class="absolute right-2 text-[10px] font-bold text-slate-400 select-none pointer-events-none">cm</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Info Volumetrik Real-time -->
+                  <!-- Info Volumetrik Real-time -->
+                  <div id="volumetric-weight-info" class="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-xs text-slate-700 hidden transition"></div>
+                </div>
+              </div>
+
+              <!-- Bagian 2: Sistem COD & Dukungan Kurir -->
+              <div class="border-t border-slate-100 pt-4 space-y-4">
+                <!-- Pilihan Sistem COD (Checkbox Bergaya Pilihan Kurir) -->
+                <div>
+                  <label class="p-2 sm:p-2.5 min-h-[42px] rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition" style="border-radius: 6px;">
+                    <input
+                      type="checkbox"
+                      id="toggle-is-cod"
+                      name="shipping_is_cod"
+                      ${shippingCfg.is_cod ? 'checked' : ''}
+                      class="w-4 h-4 text-emerald-600 accent-[var(--color-primary)] rounded cursor-pointer shrink-0"
+                    />
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <span class="text-xs font-bold text-slate-800">Sistem COD (Bayar di Tempat)</span>
+                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover shrink-0" tabindex="0">
+                        <i class="bi bi-question-circle text-xs"></i>
+                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                          Izinkan pembeli membayar pesanan secara tunai saat barang diterima, baik melalui kurir antar toko maupun ekspedisi rekanan.
+                        </div>
+                      </div>
+                    </div>
+                  </label>
                 </div>
 
                 <!-- Pilihan Kurir Tersedia -->
@@ -17028,57 +17673,57 @@ const ProductForm = (() => {
                     </div>
                   </div>
                   <div class="grid grid-cols-2 gap-2">
-                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
+                    <label class="p-2 sm:p-2.5 min-h-[42px] rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition" style="border-radius: 6px;">
                       <input
                         type="checkbox"
                         name="courier_checkbox"
                         value="pickup"
                         ${couriersList.includes('pickup') ? 'checked' : ''}
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
+                        class="w-4 h-4 text-emerald-600 accent-[var(--color-primary)] rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Ambil di Toko</span>
                     </label>
 
-                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
+                    <label class="p-2 sm:p-2.5 min-h-[42px] rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition" style="border-radius: 6px;">
                       <input
                         type="checkbox"
                         name="courier_checkbox"
                         value="local_store"
                         ${couriersList.includes('local_store') || couriersList.includes('instant') ? 'checked' : ''}
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
+                        class="w-4 h-4 text-emerald-600 accent-[var(--color-primary)] rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Kurir Toko / Lokal</span>
                     </label>
 
-                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
+                    <label class="p-2 sm:p-2.5 min-h-[42px] rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition" style="border-radius: 6px;">
                       <input
                         type="checkbox"
                         name="courier_checkbox"
                         value="reguler"
                         ${couriersList.includes('reguler') ? 'checked' : ''}
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
+                        class="w-4 h-4 text-emerald-600 accent-[var(--color-primary)] rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Reguler Domestik</span>
                     </label>
 
-                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition">
+                    <label class="p-2 sm:p-2.5 min-h-[42px] rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition" style="border-radius: 6px;">
                       <input
                         type="checkbox"
                         name="courier_checkbox"
                         value="cargo"
                         ${couriersList.includes('cargo') ? 'checked' : ''}
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
+                        class="w-4 h-4 text-emerald-600 accent-[var(--color-primary)] rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Kargo / Partai Besar</span>
                     </label>
 
-                    <label class="p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition col-span-2 sm:col-span-1">
+                    <label class="p-2 sm:p-2.5 min-h-[42px] rounded-[6px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer flex items-center gap-2 select-none transition col-span-2 sm:col-span-1" style="border-radius: 6px;">
                       <input
                         type="checkbox"
                         name="courier_checkbox"
                         value="international"
                         ${couriersList.includes('international') ? 'checked' : ''}
-                        class="w-4 h-4 text-emerald-600 rounded cursor-pointer shrink-0"
+                        class="w-4 h-4 text-emerald-600 accent-[var(--color-primary)] rounded cursor-pointer shrink-0"
                       />
                       <span class="text-xs font-bold text-slate-800 truncate">Luar Negeri</span>
                     </label>
@@ -21232,15 +21877,13 @@ const ProductForm = (() => {
             </label>
             <div class="relative w-full sm:w-64">
               <div class="relative flex items-center w-full rounded-[6px] border border-slate-300 bg-white focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)]">
-                <!-- Ikon Kalender Tunggal di Kiri -->
-                <button
-                  type="button"
-                  id="btn-calendar-period-end-date"
-                  class="pl-3 pr-1.5 py-2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none transition cursor-pointer flex items-center justify-center shrink-0 border-0 bg-transparent"
-                  title="Pilih tanggal dari kalender"
+                <!-- Ikon Kalender Dekoratif di Kiri (Bukan Tombol / Pemicu Kalender) -->
+                <span
+                  class="pl-3 pr-1.5 py-2 text-slate-400 flex items-center justify-center shrink-0 select-none pointer-events-none"
+                  aria-hidden="true"
                 >
-                  <i class="bi bi-calendar-event text-sm pointer-events-none"></i>
-                </button>
+                  <i class="bi bi-calendar-event text-sm"></i>
+                </span>
                 <!-- Input Tanggal di Tengah -->
                 <input
                   type="text"
@@ -21249,7 +21892,8 @@ const ProductForm = (() => {
                   data-format="dd/mm/yyyy"
                   value="${formatDisplayDateDDMMYYYY(period.end_date || '')}"
                   maxlength="10"
-                  class="w-full py-2 px-1 text-xs font-semibold border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-slate-800 placeholder-slate-400 shadow-none"
+                  style="border: none !important; outline: none !important; box-shadow: none !important;"
+                  class="embedded-period-input w-full py-2 px-1.5 text-xs font-semibold border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-slate-800 placeholder-slate-400 shadow-none leading-none"
                 />
                 <!-- Chevron di Kanan untuk Accordion Opsi Siklus Cepat -->
                 <button
@@ -21285,7 +21929,6 @@ const ProductForm = (() => {
     const sDateInp = document.getElementById('input-period-start-date');
     const btnCalStart = document.getElementById('btn-calendar-period-start-date');
     const eDateInp = document.getElementById('input-period-end-date');
-    const btnCalEnd = document.getElementById('btn-calendar-period-end-date');
     const btnToggleCycles = document.getElementById('btn-toggle-quick-cycles');
     const chevronIcon = document.getElementById('icon-chevron-quick-cycles');
     const quickCyclesDropdown = document.getElementById('quick-cycles-dropdown');
@@ -21424,22 +22067,6 @@ const ProductForm = (() => {
       sDateInp.onchange = updateSinglePeriodCalculation;
     }
 
-    if (btnCalEnd && eDateInp) {
-      btnCalEnd.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeQuickCycles();
-        const sDateDisplay = sDateInp ? sDateInp.value.trim() : '';
-        const sDateISO = parseDisplayDateToISO(sDateDisplay);
-        const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
-        const minEndDate = sDateISO ? addDaysToDate(sDateISO, (2 * days) - 1) : getTodayDateString();
-        openCalendarPopover(btnCalEnd, eDateInp, {
-          minDate: minEndDate,
-          onSelect: () => updateSinglePeriodCalculation()
-        });
-      };
-    }
-
     if (eDateInp) {
       eDateInp.oninput = updateSinglePeriodCalculation;
       eDateInp.onchange = updateSinglePeriodCalculation;
@@ -21466,6 +22093,14 @@ const ProductForm = (() => {
           closeQuickCycles();
         }
       });
+
+      window.addEventListener('scroll', (e) => {
+        if (quickCyclesDropdown && !quickCyclesDropdown.classList.contains('hidden')) {
+          if (!quickCyclesDropdown.contains(e.target)) {
+            closeQuickCycles();
+          }
+        }
+      }, true);
     }
 
     if (maxQtyInp) maxQtyInp.oninput = updateSinglePeriodCalculation;
@@ -21987,15 +22622,13 @@ const ProductForm = (() => {
           </label>
           <div class="relative w-full sm:w-64">
             <div class="relative flex items-center w-full rounded-[6px] border border-slate-300 bg-white focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)]">
-              <!-- Ikon Kalender Tunggal di Kiri -->
-              <button
-                type="button"
-                id="btn-calendar-modal-period-end-date"
-                class="pl-3 pr-1.5 py-2 text-slate-400 hover:text-[var(--color-primary)] focus:outline-none transition cursor-pointer flex items-center justify-center shrink-0 border-0 bg-transparent"
-                title="Pilih tanggal dari kalender"
+              <!-- Ikon Kalender Dekoratif di Kiri (Bukan Tombol / Pemicu Kalender) -->
+              <span
+                class="pl-3 pr-1.5 py-2 text-slate-400 flex items-center justify-center shrink-0 select-none pointer-events-none"
+                aria-hidden="true"
               >
-                <i class="bi bi-calendar-event text-sm pointer-events-none"></i>
-              </button>
+                <i class="bi bi-calendar-event text-sm"></i>
+              </span>
               <!-- Input Tanggal di Tengah -->
               <input
                 type="text"
@@ -22004,7 +22637,8 @@ const ProductForm = (() => {
                 data-format="dd/mm/yyyy"
                 value="${formatDisplayDateDDMMYYYY(period.end_date || '')}"
                 maxlength="10"
-                class="w-full py-2 px-1 text-xs font-semibold border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-slate-800 placeholder-slate-400 shadow-none"
+                style="border: none !important; outline: none !important; box-shadow: none !important;"
+                class="embedded-period-input w-full py-2 px-1.5 text-xs font-semibold border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-slate-800 placeholder-slate-400 shadow-none leading-none"
               />
               <!-- Chevron di Kanan untuk Accordion Opsi Siklus Cepat -->
               <button
@@ -22033,7 +22667,6 @@ const ProductForm = (() => {
     const sDateInp = document.getElementById('modal-input-period-start-date');
     const btnCalStart = document.getElementById('btn-calendar-modal-period-start-date');
     const eDateInp = document.getElementById('modal-input-period-end-date');
-    const btnCalEnd = document.getElementById('btn-calendar-modal-period-end-date');
     const btnToggleCycles = document.getElementById('btn-toggle-modal-quick-cycles');
     const chevronIcon = document.getElementById('icon-chevron-modal-quick-cycles');
     const quickCyclesDropdown = document.getElementById('modal-quick-cycles-dropdown');
@@ -22170,22 +22803,6 @@ const ProductForm = (() => {
       sDateInp.onchange = updatePeriodCalculation;
     }
 
-    if (btnCalEnd && eDateInp) {
-      btnCalEnd.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeQuickCycles();
-        const sDateDisplay = sDateInp ? sDateInp.value.trim() : '';
-        const sDateISO = parseDisplayDateToISO(sDateDisplay);
-        const days = daysInp ? (parseInt(daysInp.value, 10) || 7) : 7;
-        const minEndDate = sDateISO ? addDaysToDate(sDateISO, (2 * days) - 1) : getTodayDateString();
-        openCalendarPopover(btnCalEnd, eDateInp, {
-          minDate: minEndDate,
-          onSelect: () => updatePeriodCalculation()
-        });
-      };
-    }
-
     if (eDateInp) {
       eDateInp.oninput = updatePeriodCalculation;
       eDateInp.onchange = updatePeriodCalculation;
@@ -22212,6 +22829,14 @@ const ProductForm = (() => {
           closeQuickCycles();
         }
       });
+
+      window.addEventListener('scroll', (e) => {
+        if (quickCyclesDropdown && !quickCyclesDropdown.classList.contains('hidden')) {
+          if (!quickCyclesDropdown.contains(e.target)) {
+            closeQuickCycles();
+          }
+        }
+      }, true);
     }
 
     if (maxQtyInp) {
@@ -23191,6 +23816,9 @@ const ProductForm = (() => {
     const isVar2Active = Boolean(primaryState.has_variation_2 && finishingsState.main && finishingsState.main.length > 0);
     const isVar3Active = Boolean(isVar2Active && primaryState.has_variation_3 && finishingsState.extra_1 && finishingsState.extra_1.length > 0);
     const isVar4Active = Boolean(isVar3Active && primaryState.has_variation_4 && finishingsState.extra_2 && finishingsState.extra_2.length > 0);
+    const isPhysical = (primaryState.product_type === 'physical' || (primaryState.product_type !== 'non_physical' && primaryState.product_type !== ''));
+    const isShippingActive = Boolean(primaryState.has_shipping);
+    const hasVariantDims = isPhysical && isShippingActive && Boolean(primaryState.has_variant_dimensions || primaryState.shipping_config?.has_variant_dimensions);
 
     const labelVar1 = primaryState.variation_labels?.label_tier_1 || 'Variasi 1';
     const labelVar2 = primaryState.variation_labels?.label_tier_2 || 'Variasi 2';
@@ -23313,6 +23941,74 @@ const ProductForm = (() => {
         `;
       }
 
+      function renderVariantWeightCell(matItem) {
+        const wVal = (matItem.weight !== undefined && matItem.weight !== null && matItem.weight !== '')
+          ? matItem.weight
+          : (primaryState.variant_dimensions?.[matItem.id]?.weight ?? '');
+        return `
+          <div class="relative flex items-center justify-center">
+            <input
+              type="number"
+              min="1"
+              step="any"
+              class="combo-variant-weight-input w-24 px-2 py-1.5 pr-7 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-mat-id="${matItem.id}"
+              value="${wVal}"
+              placeholder="0"
+            />
+            <span class="absolute right-2 text-[10px] text-slate-400 select-none pointer-events-none">gr</span>
+          </div>
+        `;
+      }
+
+      function renderVariantDimCell(matItem) {
+        const pVal = (matItem.length !== undefined && matItem.length !== null && matItem.length !== '')
+          ? matItem.length
+          : (primaryState.variant_dimensions?.[matItem.id]?.length ?? '');
+        const lVal = (matItem.width !== undefined && matItem.width !== null && matItem.width !== '')
+          ? matItem.width
+          : (primaryState.variant_dimensions?.[matItem.id]?.width ?? '');
+        const tVal = (matItem.height !== undefined && matItem.height !== null && matItem.height !== '')
+          ? matItem.height
+          : (primaryState.variant_dimensions?.[matItem.id]?.height ?? '');
+        return `
+          <div class="inline-flex items-center gap-1 justify-center">
+            <input
+              type="number"
+              min="1"
+              step="any"
+              class="combo-variant-dim-p w-12 px-1 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-mat-id="${matItem.id}"
+              value="${pVal}"
+              placeholder="P"
+              title="Panjang (cm)"
+            />
+            <span class="text-slate-400 text-xs select-none">×</span>
+            <input
+              type="number"
+              min="1"
+              step="any"
+              class="combo-variant-dim-l w-12 px-1 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-mat-id="${matItem.id}"
+              value="${lVal}"
+              placeholder="L"
+              title="Lebar (cm)"
+            />
+            <span class="text-slate-400 text-xs select-none">×</span>
+            <input
+              type="number"
+              min="1"
+              step="any"
+              class="combo-variant-dim-t w-12 px-1 py-1.5 rounded-md border border-slate-300 text-xs font-normal text-center bg-white text-slate-800 outline-none focus:border-[var(--color-primary)] shadow-2xs"
+              data-mat-id="${matItem.id}"
+              value="${tVal}"
+              placeholder="T"
+              title="Tinggi (cm)"
+            />
+          </div>
+        `;
+      }
+
       function renderCombinationMaxOrderCell(matItem) {
         let displayLabel = 'Pilih';
         if (primaryState.max_order_type === 'per_period') {
@@ -23391,6 +24087,18 @@ const ProductForm = (() => {
           <td class="p-3 align-middle text-center min-w-[140px]">
             ${renderMultipleCell()}
           </td>
+
+          ${hasVariantDims ? `
+            <!-- Kolom Berat -->
+            <td class="p-3 align-middle text-center min-w-[110px]" data-col="variant-weight">
+              ${renderVariantWeightCell(mat)}
+            </td>
+
+            <!-- Kolom Dimensi -->
+            <td class="p-3 align-middle text-center min-w-[170px]" data-col="variant-dim">
+              ${renderVariantDimCell(mat)}
+            </td>
+          ` : ''}
         </tr>
       `;
     }).join('');
@@ -23436,6 +24144,10 @@ const ProductForm = (() => {
                     <input type="checkbox" id="chk-combo-header-order-multiple" class="rounded cursor-pointer focus:ring-0 outline-none shadow-none" style="accent-color: var(--color-primary);" ${primaryState.has_order_multiple ? 'checked' : ''} />
                   </label>
                 </th>
+                ${hasVariantDims ? `
+                  <th class="p-3 text-center min-w-[110px]" data-col="variant-weight">Berat</th>
+                  <th class="p-3 text-center min-w-[170px]" data-col="variant-dim">Dimensi</th>
+                ` : ''}
               </tr>
             </thead>
             <tbody id="combo-matrix-table-body" class="divide-y divide-slate-200">
@@ -23907,7 +24619,7 @@ const ProductForm = (() => {
 
       const maxLen = (tier === 'extra_3') ? 15 : 20;
       if ((hasAnyFilled && isCurEmpty) || !val) {
-        if (errorEl && (errorEl.textContent === 'Nama opsi sudah digunakan' || errorEl.textContent === `Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-${maxLen} karakter` || errorEl.textContent === 'Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-15 karakter' || errorEl.textContent === 'Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-20 karakter')) {
+        if (errorEl && (errorEl.textContent === 'Nama opsi sudah digunakan' || errorEl.textContent.includes('Silakan masukkan antara') || errorEl.textContent.includes('terlalu panjang'))) {
           errorEl.textContent = '';
           errorEl.classList.add('hidden');
           inp.classList.remove('border-red-500');
@@ -24016,7 +24728,8 @@ const ProductForm = (() => {
       }
       const maxLen = (tier === 'extra_3') ? 15 : 20;
       if (!isExtraNone && val.length > maxLen) {
-        setError(`Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-${maxLen} karakter`);
+        const errMsg = (maxLen === 20) ? 'Silakan masukkan antara 1–20 karakter.' : `Silakan masukkan antara 1–${maxLen} karakter.`;
+        setError(errMsg);
         return false;
       }
       if (checkOptionNameDuplicate(tier, val, idx)) {
@@ -24192,7 +24905,6 @@ const ProductForm = (() => {
                 <input
                   type="text"
                   data-field="name"
-                  maxlength="20"
                   value="${escapeHtml(mat.name || '')}"
                   placeholder="${placeholderName}"
                   style="border-radius: 0px !important; box-sizing: border-box !important;"
@@ -24460,7 +25172,6 @@ const ProductForm = (() => {
                 <input
                   type="text"
                   data-field="name"
-                  maxlength="20"
                   value="${escapeHtml(fin.name || '')}"
                   placeholder="${placeholderName}"
                   style="border-radius: 0px !important; box-sizing: border-box !important;"
@@ -24790,7 +25501,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!nameVal) {
           addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
         } else if (nameVal.length > 20) {
-          addError(`Variasi 1 (Opsi ke-${idx + 1}): Nama opsi maksimal 20 karakter.`, nameInp || rowEl);
+          addError(`Variasi 1 (Opsi ke-${idx + 1}): Silakan masukkan antara 1–20 karakter.`, nameInp || rowEl);
         } else if (checkOptionNameDuplicate('tier1', nameVal, idx)) {
           addError(`Variasi 1: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
         }
@@ -24867,7 +25578,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!nameVal) {
           addError(`${label} (Baris ${idx + 1}): Nama opsi wajib diisi.`, nameInp || rowEl);
         } else if (!isExtraNone && nameVal.length > maxLen) {
-          addError(`${label} (Baris ${idx + 1}): Nama opsi maksimal ${maxLen} karakter.`, nameInp || rowEl);
+          addError(`${label} (Baris ${idx + 1}): Silakan masukkan antara 1–${maxLen} karakter.`, nameInp || rowEl);
         } else if (checkOptionNameDuplicate(tier, nameVal, idx)) {
           addError(`${label}: Nama opsi "${nameVal}" kembar / duplikat.`, nameInp || rowEl);
         }
@@ -25026,6 +25737,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const el = document.getElementById(targetId);
     if (!el) return;
 
+    if (targetId === 'card-step2-sales' && typeof triggerPendingVariantDimensionsAutoScroll === 'function') {
+      triggerPendingVariantDimensionsAutoScroll();
+    }
+    if (targetId === 'card-step2-shipping' && typeof syncShippingVariantDimensionsVisibility === 'function') {
+      syncShippingVariantDimensionsVisibility();
+    }
+
     isProgrammaticTabScroll = true;
     currentStep2ActiveCardId = targetId;
     setActiveStep2NavTab(targetId, true);
@@ -25105,6 +25823,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (activeId !== currentStep2ActiveCardId) {
       currentStep2ActiveCardId = activeId;
       setActiveStep2NavTab(activeId, true);
+      if (activeId === 'card-step2-sales' && typeof triggerPendingVariantDimensionsAutoScroll === 'function') {
+        triggerPendingVariantDimensionsAutoScroll();
+      }
+      if (activeId === 'card-step2-shipping' && typeof syncShippingVariantDimensionsVisibility === 'function') {
+        syncShippingVariantDimensionsVisibility();
+      }
     }
   }
 
@@ -25999,6 +26723,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (typeof updateProductCardLivePreview === 'function') {
         updateProductCardLivePreview();
       }
+      if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+        syncShippingVariantDimensionsVisibility();
+      }
       if (window.lucide && typeof window.lucide.createIcons === 'function') {
         window.lucide.createIcons();
       }
@@ -26259,6 +26986,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const container = document.getElementById('pricing-model-interactive-container');
           if (container) container.innerHTML = renderPricingModelSection();
           bindStep2InteractiveEvents();
+          if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+            syncShippingVariantDimensionsVisibility();
+          }
           updateProductCardLivePreview();
           if (window.lucide) window.lucide.createIcons();
         };
@@ -26553,6 +27283,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const container = document.getElementById('pricing-model-interactive-container');
           if (container) container.innerHTML = renderPricingModelSection();
           bindStep2InteractiveEvents();
+          if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+            syncShippingVariantDimensionsVisibility();
+          }
           updateProductCardLivePreview();
           if (window.lucide) window.lucide.createIcons();
         };
@@ -26579,6 +27312,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const container = document.getElementById('pricing-model-interactive-container');
           if (container) container.innerHTML = renderPricingModelSection();
           bindStep2InteractiveEvents();
+          if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+            syncShippingVariantDimensionsVisibility();
+          }
           updateProductCardLivePreview();
           if (window.lucide) window.lucide.createIcons();
         };
@@ -26605,6 +27341,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const container = document.getElementById('pricing-model-interactive-container');
           if (container) container.innerHTML = renderPricingModelSection();
           bindStep2InteractiveEvents();
+          if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+            syncShippingVariantDimensionsVisibility();
+          }
           updateProductCardLivePreview();
           if (window.lucide) window.lucide.createIcons();
         };
@@ -26638,6 +27377,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const container = document.getElementById('pricing-model-interactive-container');
           if (container) container.innerHTML = renderPricingModelSection();
           bindStep2InteractiveEvents();
+          if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+            syncShippingVariantDimensionsVisibility();
+          }
           updateProductCardLivePreview();
           if (window.lucide) window.lucide.createIcons();
         };
@@ -26654,6 +27396,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           const container = document.getElementById('pricing-model-interactive-container');
           if (container) container.innerHTML = renderPricingModelSection();
           bindStep2InteractiveEvents();
+          if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+            syncShippingVariantDimensionsVisibility();
+          }
           updateProductCardLivePreview();
           if (window.lucide) window.lucide.createIcons();
         };
@@ -28109,14 +28854,128 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // =====================================================================
       // TABEL MATRIKS KOMBINASI BAWAH & MODAL GROSIR / KELIPATAN
       // =====================================================================
-      function refreshCombinationMatrixTable() {
+      autoScrollVariationTableToRight = function () {
+        const container = document.querySelector('#combination-matrix-section .variation-table-container');
+        if (!container) return;
+
+        const vp = document.getElementById('admin-main-viewport');
+        const vpScrollTop = vp ? vp.scrollTop : null;
+        const winY = (typeof window !== 'undefined') ? (window.scrollY || window.pageYOffset || 0) : 0;
+
+        const doScroll = () => {
+          const currentContainer = document.querySelector('#combination-matrix-section .variation-table-container');
+          if (!currentContainer) return;
+          const maxScroll = currentContainer.scrollWidth - currentContainer.clientWidth;
+          if (maxScroll > 0) {
+            if (typeof currentContainer.scrollTo === 'function') {
+              try {
+                currentContainer.scrollTo({
+                  left: currentContainer.scrollWidth,
+                  behavior: 'smooth'
+                });
+              } catch (e) {
+                currentContainer.scrollLeft = currentContainer.scrollWidth;
+              }
+            } else {
+              currentContainer.scrollLeft = currentContainer.scrollWidth;
+            }
+          }
+          if (vp && vpScrollTop !== null && vp.scrollTop !== vpScrollTop) {
+            vp.scrollTop = vpScrollTop;
+          }
+          if (typeof window !== 'undefined') {
+            const currentWinY = window.scrollY || window.pageYOffset || 0;
+            if (currentWinY !== winY) {
+              window.scrollTo({ top: winY, behavior: 'instant' });
+            }
+          }
+        };
+
+        requestAnimationFrame(() => {
+          doScroll();
+          setTimeout(doScroll, 60);
+        });
+      };
+
+      syncShippingVariantDimensionsVisibility = function () {
+        const isPhysical = (primaryState.product_type === 'physical' || (primaryState.product_type !== 'non_physical' && primaryState.product_type !== ''));
+        const hasVariants = Boolean(primaryState.has_variants);
+        const isShipping = Boolean(primaryState.has_shipping);
+        const shouldShowToggle = isPhysical && hasVariants && isShipping;
+        const isVarDimsActive = Boolean(primaryState.has_variant_dimensions || primaryState.shipping_config?.has_variant_dimensions);
+
+        const toggleWrap = document.getElementById('variant-dimensions-toggle-wrapper');
+        if (toggleWrap) {
+          toggleWrap.classList.toggle('hidden', !shouldShowToggle);
+          toggleWrap.classList.toggle('block', shouldShowToggle);
+        }
+
+        const toggleInput = document.getElementById('toggle-variant-dimensions');
+        if (toggleInput) {
+          toggleInput.checked = isVarDimsActive;
+        }
+
+        const prodLevelContainer = document.getElementById('product-level-shipping-dimensions-container');
+        if (prodLevelContainer) {
+          const hideProdLevel = shouldShowToggle && isVarDimsActive;
+          prodLevelContainer.classList.toggle('hidden', hideProdLevel);
+          prodLevelContainer.classList.toggle('block', !hideProdLevel);
+        }
+      };
+
+      setVariantDimensionsState = function (enabled, triggeredByUser = false) {
+        const isTransitionOffToOn = (!primaryState.has_variant_dimensions && !primaryState.shipping_config?.has_variant_dimensions) && enabled;
+        primaryState.has_variant_dimensions = enabled;
+        if (!primaryState.shipping_config) primaryState.shipping_config = {};
+        primaryState.shipping_config.has_variant_dimensions = enabled;
+
+        // Pending auto-scroll management: pemicu scroll tertunda hanya saat transisi OFF -> ON oleh aksi user
+        if (isTransitionOffToOn && triggeredByUser) {
+          pendingAutoScrollVariantDimensions = true;
+        } else if (!enabled) {
+          pendingAutoScrollVariantDimensions = false;
+        }
+
+        if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+          syncShippingVariantDimensionsVisibility();
+        }
+
+        refreshCombinationMatrixTable({ shouldAutoScroll: false });
+      };
+
+      triggerPendingVariantDimensionsAutoScroll = function () {
+        if (!pendingAutoScrollVariantDimensions) return;
+        pendingAutoScrollVariantDimensions = false;
+        setTimeout(() => {
+          autoScrollVariationTableToRight();
+        }, 250);
+      };
+
+      function refreshCombinationMatrixTable(options = {}) {
         const section = document.getElementById('combination-matrix-section');
         if (section) {
+          const oldContainer = section.querySelector('.variation-table-container');
+          const prevScrollLeft = (oldContainer && !options.shouldAutoScroll) ? oldContainer.scrollLeft : null;
+          const winY = (typeof window !== 'undefined') ? (window.scrollY || window.pageYOffset || 0) : 0;
+
           section.outerHTML = renderCombinationMatrixTable();
           bindCombinationMatrixEvents();
           if (typeof bindCleanDatalistPopovers === 'function') {
             const newSec = document.getElementById('combination-matrix-section');
             if (newSec) bindCleanDatalistPopovers(newSec);
+          }
+
+          if (typeof window !== 'undefined' && (window.scrollY || window.pageYOffset || 0) !== winY) {
+            window.scrollTo({ top: winY, behavior: 'instant' });
+          }
+
+          const newContainer = document.querySelector('#combination-matrix-section .variation-table-container');
+          if (newContainer) {
+            if (options.shouldAutoScroll) {
+              autoScrollVariationTableToRight();
+            } else if (prevScrollLeft !== null && prevScrollLeft > 0) {
+              newContainer.scrollLeft = prevScrollLeft;
+            }
           }
         }
       }
@@ -28201,6 +29060,33 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             updateProductCardLivePreview();
           };
         }
+
+        // 5c. Input Berat per Variasi
+        document.querySelectorAll('.combo-variant-weight-input').forEach(inp => {
+          inp.oninput = (e) => {
+            const matId = inp.getAttribute('data-mat-id');
+            const item = materialsState.find(m => m.id === matId);
+            const val = e.target.value.trim() !== '' ? (parseFloat(e.target.value) || '') : '';
+            if (item) item.weight = val;
+            if (!primaryState.variant_dimensions) primaryState.variant_dimensions = {};
+            if (!primaryState.variant_dimensions[matId]) primaryState.variant_dimensions[matId] = {};
+            primaryState.variant_dimensions[matId].weight = val;
+          };
+        });
+
+        // 5d. Input Dimensi per Variasi (P, L, T)
+        document.querySelectorAll('.combo-variant-dim-p, .combo-variant-dim-l, .combo-variant-dim-t').forEach(inp => {
+          inp.oninput = (e) => {
+            const matId = inp.getAttribute('data-mat-id');
+            const item = materialsState.find(m => m.id === matId);
+            const val = e.target.value.trim() !== '' ? (parseFloat(e.target.value) || '') : '';
+            const field = inp.classList.contains('combo-variant-dim-p') ? 'length' : (inp.classList.contains('combo-variant-dim-l') ? 'width' : 'height');
+            if (item) item[field] = val;
+            if (!primaryState.variant_dimensions) primaryState.variant_dimensions = {};
+            if (!primaryState.variant_dimensions[matId]) primaryState.variant_dimensions[matId] = {};
+            primaryState.variant_dimensions[matId][field] = val;
+          };
+        });
 
         // 6. Sel Ringkasan Ketersediaan Opsi Variasi 2 s.d. 4 (Hanya Baca + Popover)
         document.querySelectorAll('.combo-summary-cell').forEach(cell => {
@@ -29742,6 +30628,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             shippingDisabledBanner.classList.toggle('hidden', primaryState.has_shipping);
             shippingDisabledBanner.classList.toggle('block', !primaryState.has_shipping);
           }
+          if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+            syncShippingVariantDimensionsVisibility();
+          }
+          if (typeof refreshCombinationMatrixTable === 'function') {
+            refreshCombinationMatrixTable({ shouldAutoScroll: false });
+          }
           updateProductCardLivePreview();
         };
       }
@@ -29756,6 +30648,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             primaryState.shipping_config.cod_expedition = true;
           }
           updateProductCardLivePreview();
+        };
+      }
+
+      const toggleVarDimsShipping = document.getElementById('toggle-variant-dimensions');
+      if (toggleVarDimsShipping) {
+        toggleVarDimsShipping.onchange = (e) => {
+          if (typeof setVariantDimensionsState === 'function') {
+            setVariantDimensionsState(e.target.checked, true);
+          }
         };
       }
 
@@ -30229,6 +31130,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             btnExpand.style.display = 'none';
           }
         }
+      }
+
+      if (typeof syncShippingVariantDimensionsVisibility === 'function') {
+        syncShippingVariantDimensionsVisibility();
       }
     };
 
@@ -33244,6 +34149,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
   }
 
   function syncStateFromDOM() {
+    // Tipe Produk (Fisik vs Non-Fisik)
+    const productTypeRad = document.querySelector('input[name="product_type_radio"]:checked');
+    if (productTypeRad && productTypeRad.value) {
+      primaryState.product_type = productTypeRad.value;
+    }
+
     // Step 1 & Step 2 Card 1: Info Produk
     primaryState.name = document.getElementById('step2-input-name')?.value || document.getElementById('input-prod-name')?.value || primaryState.name;
     primaryState.description = document.getElementById('input-prod-desc')?.value || primaryState.description || '';
@@ -33622,6 +34533,36 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             mat.order_multiple_value = null;
           }
         }
+
+        const weightInp = row.querySelector('.combo-variant-weight-input');
+        if (weightInp) {
+          const wRaw = weightInp.value.trim();
+          mat.weight = wRaw !== '' ? (parseFloat(wRaw) || '') : '';
+        }
+        const dimPInp = row.querySelector('.combo-variant-dim-p');
+        if (dimPInp) {
+          const pRaw = dimPInp.value.trim();
+          mat.length = pRaw !== '' ? (parseFloat(pRaw) || '') : '';
+        }
+        const dimLInp = row.querySelector('.combo-variant-dim-l');
+        if (dimLInp) {
+          const lRaw = dimLInp.value.trim();
+          mat.width = lRaw !== '' ? (parseFloat(lRaw) || '') : '';
+        }
+        const dimTInp = row.querySelector('.combo-variant-dim-t');
+        if (dimTInp) {
+          const tRaw = dimTInp.value.trim();
+          mat.height = tRaw !== '' ? (parseFloat(tRaw) || '') : '';
+        }
+        if (!primaryState.variant_dimensions) primaryState.variant_dimensions = {};
+        if (mat.weight !== undefined || mat.length !== undefined || mat.width !== undefined || mat.height !== undefined) {
+          primaryState.variant_dimensions[matId] = {
+            weight: mat.weight,
+            length: mat.length,
+            width: mat.width,
+            height: mat.height
+          };
+        }
       }
     });
 
@@ -33672,6 +34613,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     if (!primaryState.shipping_config) primaryState.shipping_config = {};
+    const toggleVarDims = document.getElementById('toggle-variant-dimensions') || document.querySelector('.toggle-variant-dimensions');
+    if (toggleVarDims) {
+      primaryState.has_variant_dimensions = toggleVarDims.checked;
+      primaryState.shipping_config.has_variant_dimensions = toggleVarDims.checked;
+    }
     const codCheck = document.getElementById('toggle-is-cod') || document.getElementById('check-shipping-cod');
     if (codCheck) {
       primaryState.shipping_config.is_cod = codCheck.checked;
@@ -34152,7 +35098,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (!m.name || !m.name.trim()) {
             addError(`Variasi 1: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
           } else if (m.name.trim().length > 20) {
-            addError('Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-20 karakter', nameInp || rowEl);
+            addError('Silakan masukkan antara 1–20 karakter.', nameInp || rowEl);
           } else if (checkOptionNameDuplicate('tier1', m.name, idx)) {
             addError(`Variasi 1: Nama opsi "${m.name}" kembar / duplikat.`, nameInp || rowEl);
           }
@@ -34236,7 +35182,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (!f.name || !f.name.trim()) {
             addError(`${label}: Opsi ke-${idx + 1} wajib diisi namanya.`, nameInp || rowEl);
           } else if (!isExtraNone && f.name.trim().length > maxLen) {
-            addError(`Opsi yang kamu masukkan terlalu panjang. Silakan masukkan nilai antara 1-${maxLen} karakter`, nameInp || rowEl);
+            addError(maxLen === 20 ? 'Silakan masukkan antara 1–20 karakter.' : `Silakan masukkan antara 1–${maxLen} karakter.`, nameInp || rowEl);
           } else if (checkOptionNameDuplicate(tier, f.name, idx)) {
             addError(`${label}: Nama opsi "${f.name}" kembar / duplikat.`, nameInp || rowEl);
           }
@@ -34395,24 +35341,58 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     if (primaryState.has_shipping === true) {
-      const pkgWeight = primaryState.shipping_config?.weight;
+      const isPhysical = (primaryState.product_type === 'physical' || primaryState.product_type !== 'non_physical');
+      const hasVariants = Boolean(primaryState.has_variants);
+      const isVariantDimsActive = Boolean(primaryState.has_variant_dimensions || primaryState.shipping_config?.has_variant_dimensions);
+      const isUsingVariantDims = isPhysical && hasVariants && isVariantDimsActive;
+
       const weightInp = document.getElementById('input-package-weight') || document.getElementById('input-pkg-weight');
       const weightErrEl = document.getElementById('package-weight-error-msg');
-      const isWeightInvalid = pkgWeight === undefined || pkgWeight === null || pkgWeight === '' || isNaN(parseFloat(pkgWeight)) || parseFloat(pkgWeight) <= 0;
 
-      if (isWeightInvalid) {
-        addError('Berat Paket wajib diisi jika pengiriman aktif.', weightInp || document.getElementById('card-step2-shipping'));
-        if (weightInp) {
-          weightInp.classList.add('border-red-500');
-          weightInp.classList.remove('border-slate-300');
-        }
-        if (weightErrEl) weightErrEl.classList.remove('hidden');
-      } else {
+      if (isUsingVariantDims) {
+        // Validasi berat per variasi: pastikan setiap opsi variasi aktif memiliki nilai berat > 0
         if (weightInp) {
           weightInp.classList.remove('border-red-500');
           weightInp.classList.add('border-slate-300');
         }
         if (weightErrEl) weightErrEl.classList.add('hidden');
+
+        const activeVariants = (materialsState || []).filter(m => m && (m.name || m.title || '').trim() !== '');
+        let missingVariantWeightCount = 0;
+        let firstInvalidVariantInp = null;
+
+        activeVariants.forEach(m => {
+          const w = m.weight;
+          const isVarWeightInvalid = (w === undefined || w === null || w === '' || isNaN(parseFloat(w)) || parseFloat(w) <= 0);
+          if (isVarWeightInvalid) {
+            missingVariantWeightCount++;
+            if (!firstInvalidVariantInp) {
+              firstInvalidVariantInp = document.querySelector(`.combo-variant-weight-input[data-mat-id="${m.id}"]`);
+            }
+          }
+        });
+
+        if (missingVariantWeightCount > 0) {
+          addError('Berat wajib diisi (> 0 gr) untuk setiap variasi jika berat per variasi aktif.', firstInvalidVariantInp || document.getElementById('combination-matrix-section') || document.getElementById('card-step2-sales'));
+        }
+      } else {
+        const pkgWeight = primaryState.shipping_config?.weight;
+        const isWeightInvalid = pkgWeight === undefined || pkgWeight === null || pkgWeight === '' || isNaN(parseFloat(pkgWeight)) || parseFloat(pkgWeight) <= 0;
+
+        if (isWeightInvalid) {
+          addError('Berat Paket wajib diisi jika pengiriman aktif.', weightInp || document.getElementById('card-step2-shipping'));
+          if (weightInp) {
+            weightInp.classList.add('border-red-500');
+            weightInp.classList.remove('border-slate-300');
+          }
+          if (weightErrEl) weightErrEl.classList.remove('hidden');
+        } else {
+          if (weightInp) {
+            weightInp.classList.remove('border-red-500');
+            weightInp.classList.add('border-slate-300');
+          }
+          if (weightErrEl) weightErrEl.classList.add('hidden');
+        }
       }
 
       const couriers = primaryState.shipping_config?.couriers;
@@ -34987,11 +35967,18 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     parseCountdownRadius,
     updateCountdownRadiusPresetButtons,
     handleApplyDefaultCardDesign,
-    formatSalesCount
+    formatSalesCount,
+    resolveProductMaxOrderInfo,
+    updateDrawerMaxOrderDisplay,
+    autoScrollVariationTableToRight: () => { if (typeof autoScrollVariationTableToRight === 'function') autoScrollVariationTableToRight(); },
+    setVariantDimensionsState: (enabled, user) => { if (typeof setVariantDimensionsState === 'function') setVariantDimensionsState(enabled, user); },
+    refreshCombinationMatrixTable: (opts) => { if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix(opts); }
   };
 })();
 
 window.ProductForm = ProductForm;
+window.resolveProductMaxOrderInfo = ProductForm.resolveProductMaxOrderInfo;
+window.updateDrawerMaxOrderDisplay = ProductForm.updateDrawerMaxOrderDisplay;
 window.formatSalesCount = ProductForm.formatSalesCount;
 window.handleApplyDefaultCardDesign = ProductForm.handleApplyDefaultCardDesign;
 window.toggleCardAccordion = ProductForm.toggleCardAccordion;

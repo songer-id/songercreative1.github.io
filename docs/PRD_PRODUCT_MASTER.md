@@ -371,8 +371,8 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
   - `umum`: Opsi berlaku untuk semua pilihan pada variasi sebelumnya.
   - `spesifik`: Opsi hanya muncul jika pembeli memilih varian bahan tertentu (pemetaan disimpan dalam objek `primaryState.specific_options_map`).
 - **Ketentuan Batas Karakter Opsi & Tooltip Judul Variasi**:
-  - **Batas Karakter Opsi Variasi 1 s/d 4**: Maksimal 20 karakter (`maxlength="20"`, validasi 1–20 karakter). Berlaku untuk opsi Root (Variasi 1), Umum, maupun Spesifik.
-  - **Batas Karakter Opsi Layanan Extras**: Maksimal 15 karakter (`maxlength="15"`, validasi 1–15 karakter; opsi default *"Tanpa ..."* dikecualikan).
+  - **Batas Karakter Opsi Variasi 1 s/d 4**: Maksimal 20 karakter via validasi JavaScript murni (atribut HTML `maxlength="20"` dilepas agar browser mengizinkan pengetikan/paste karakter ke-21 ke atas untuk memicu pesan validasi). Ketika input melebihi 20 karakter, pesan kesalahan langsung muncul di bawah input dengan redaksi baku: *"Silakan masukkan antara 1–20 karakter."* dengan border merah (`border-red-500`) tanpa tampilan counter karakter (seperti `21/20`). Pesan kesalahan dan border merah otomatis hilang ketika input kembali `<= 20` karakter. Berlaku untuk pengetikan manual maupun paste. Form submit ditolak jika terdapat Nama Opsi melebihi 20 karakter. Karakter tidak dipotong otomatis dan data lama tidak diubah sepihak.
+  - **Batas Karakter Opsi Layanan Extras**: Tetap maksimal 15 karakter (`maxlength="15"`, validasi 1–15 karakter; opsi default *"Tanpa ..."* dikecualikan).
   - **Konsistensi Tooltip Judul Variasi & Extras**: Seluruh ikon bantuan pada input Judul Variasi 1, 2, 3, 4 dan Judul Layanan Extras menggunakan redaksi standar: *"Judul merupakan nama pilihan yang ditampilkan kepada pembeli. Gunakan nama yang singkat dan jelas agar variasi atau layanan tambahan mudah dikenali."*
   - **Konsistensi Ikon Tooltip Layanan Extra**: Ikon bantuan pada tombol `+ Layanan Extra` dan kartu Layanan Extras menggunakan format transparan tanpa background lingkaran, border, maupun shadow, terintegrasi penuh ke sistem floating tooltip portal.
 
@@ -412,7 +412,8 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
        - Pilihan Tipe Periode: Radio button horizontal `[Berulang]` diikuti `[Tidak Berulang]` di bawah label `Pilihan Tipe Periode:`.
        - Kondisi `Berulang`: Menampilkan Tanggal Mulai, Maks. Qty, Days, Tanggal Berakhir, dan ringkasan dinamis berulang.
        - Kondisi `Tidak Berulang`: Menampilkan Tanggal Mulai, Maks. Qty, Days, ringkasan dinamis 1 siklus, serta menyembunyikan input Tanggal Berakhir tanpa auto-fill tanggal berakhir.
-       - Trigger Tanggal Berakhir Terpadu: Komponen `[ikon kalender | input dd/mm/yyyy | ikon chevron]` yang membuka popover kalender atau dropdown accordion pilihan siklus cepat (2, 3, 4, 5, 6, 8, 12 siklus yang hanya menampilkan tanggal `dd/mm/yyyy`).
+       - Input Tanggal Berakhir Terpadu: Komponen `[ikon kalender dekoratif | input dd/mm/yyyy | ikon chevron]`. Ikon kalender di kiri bersifat murni visual/dekoratif (`<span>`, bukan tombol pemicu kalender), input teks bebas dari border/ring/shadow ganda internal saat difokuskan sehingga hanya wrapper luar yang menampilkan indikator fokus keyboard, dan ikon chevron di kanan membuka dropdown accordion pilihan siklus cepat (2, 3, 4, 5, 6, 8, 12 siklus yang hanya mengisi tanggal `dd/mm/yyyy`).
+       - Perilaku Popover Kalender (Tanggal Mulai): Membuka kalender popover interaktif. Ketika pengguna melakukan scroll pada halaman utama maupun area scroll konten modal Max. Order, kalender popover otomatis tertutup secara bersih tanpa mengubah nilai tanggal yang sudah dipilih dan tanpa meninggalkan event listener tersisa.
        - Catatan Dinamis (`#single-period-note-text`): Menampilkan ringkasan jadwal dan siklus batas pembelian secara real-time.
   - **Nilai Awal / Default**:
     - Pada pembuatan produk baru, nilai awal field periode dikosongkan (`start_date: ''`, `max_qty: ''`, `days: ''`, `end_date: ''`). Mode Edit memulihkan seluruh nilai tersimpan secara utuh.
@@ -466,6 +467,112 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - Tombol `Simpan Pengaturan` melakukan validasi (banner `#modal-max-order-error-msg`), menerapkan nilai ke `primaryState` dan `materialsState`, menyinkronkan kolom input matriks kombinasi (`.combo-max-order-input`), memperbarui teks ringkasan utama, memperbarui live preview, dan menutup modal.
     - Mode Edit Produk memulihkan konfigurasi tersimpan (baik produk tunggal maupun variasi bertingkat).
     - Transisi Variasi: Mengaktifkan variasi mengganti input inline menjadi tombol modal dan ringkasan; menonaktifkan seluruh variasi mengembalikan input inline dengan mempertahankan nilai valid sebelumnya.
+
+### 6.E.3. Standarisasi Maksimal Pembelian pada Drawer Preview & Reusable Resolver
+- **Tujuan Arsitektur**:
+  - Menyediakan resolver tunggal terpusat `resolveProductMaxOrderInfo(prodOrState, selections, opts)` yang membaca konfigurasi aktual produk dan mengembalikan status terstruktur beserta redaksi baku yang konsisten untuk Drawer Preview Detail Produk sekarang, Halaman Detail Produk Pembeli nantinya, dan guard validasi checkout.
+- **Daftar Status Resolver (`resolveProductMaxOrderInfo`)**:
+  - `unlimited`: Produk atau variasi tanpa batas kuantitas.
+  - `per_order_general`: Batas per pesanan berlaku umum/global.
+  - `per_order_specific`: Batas per pesanan spesifik pada kombinasi variasi terpilih.
+  - `per_period_non_recurring`: Batas per periode 1 siklus tunggal (tidak berulang).
+  - `per_period_recurring`: Batas per periode multi-siklus (berulang hingga batas tanggal tertentu).
+  - `selection_required`: Pembeli belum memilih variasi atau pilihan belum lengkap sehingga aturan belum dapat dipastikan.
+  - `configuration_invalid`: Konfigurasi tidak lengkap atau kombinasi tidak valid.
+- **Standar Redaksi Teks & Perilaku Tampilan pada Drawer Preview (`#drawer-max-order-section`)**:
+  - Judul Seksi: **Maksimal Pembelian** (`text-[11px] font-semibold text-slate-500 mb-0.5`).
+  - Elemen Keterangan: `#drawer-max-order-text` (`text-xs text-slate-700 leading-snug font-normal`).
+  - **Aturan Sembunyi / Tampil Dinamis**:
+    * Jika status resolver adalah `unlimited` atau `configuration_invalid`, seluruh seksi `#drawer-max-order-section` disembunyikan sepenuhnya (`class="... hidden"`), tanpa menampilkan judul "Maksimal Pembelian", tanpa teks deskripsi, dan tanpa menyisakan ruang kosong atau border.
+    * Jika status resolver menunjukkan pembatasan aktif (`per_order_general`, `per_order_specific`, `per_period_non_recurring`, `per_period_recurring`, `selection_required`), `#drawer-max-order-section` ditampilkan kembali secara otomatis.
+    * Saat pembeli berpindah opsi variasi, seksi `#drawer-max-order-section` beralih secara live antara tampil dan sembunyi tanpa reload halaman.
+  - **Redaksi Dinamis Standar Saat Pembatasan Aktif**:
+    * **1. Per Pesanan** (Produk Tanpa Variasi, Variasi Mode Umum, maupun Variasi Mode Spesifik Terpilih):
+      - `"Maksimal pembelian produk ini adalah [Jumlah] produk per pesanan."`
+      - *Belum Memilih Variasi*: `"Pilih variasi untuk melihat batas maksimal pembelian."`
+      - *Pilihan Belum Lengkap (Aturan Berbeda)*: `"Pilih variasi berikutnya untuk mengetahui batas maksimal pembelian."`
+    * **2. Per Periode — Tidak Berulang** (Produk Tanpa Variasi & Produk Bervariasi Akumulatif):
+      - `"Maksimal pembelian produk ini adalah [Jumlah] produk dalam periode [Durasi] hari."` (tidak menyertakan tanggal mulai atau selesai).
+    * **3. Per Periode — Berulang** (Produk Tanpa Variasi & Produk Bervariasi Akumulatif):
+      - `"Maksimal pembelian produk ini adalah [Jumlah] produk setiap periode [Durasi] hari, berlaku berulang hingga [Tanggal Akhir]."`
+      - *Format Tanggal Akhir*: Menggunakan singkatan 3 huruf bulan bahasa Indonesia (contoh: `13 Des 2026`, bukan angka `13/12/2026`).
+    * **4. Tanpa Batas**:
+      - Ketika resolver menghasilkan status `unlimited`, seksi `#drawer-max-order-section` disembunyikan sepenuhnya tanpa teks dan tanpa menyisakan ruang kosong.
+- **Pembaruan Dinamis & Integritas Relasi Variasi**:
+  - Dijalankan secara reaktif pada `updateShopeeDrawerLivePricing()` dan `updateShopeeDrawerVariationOptionsAvailability()` melalui fungsi helper `updateDrawerMaxOrderDisplay()`.
+  - Mengikuti dependency graph DAG v2 (`VariationEngine` / `getAllowedVariationOptions`): menghormati opsi skip dan reset pilihan anak saat opsi induk berubah tanpa reload halaman.
+- **Temuan Audit Checkout Engine**:
+  - Konfigurasi `max_order`, `max_order_type`, `max_order_qty`, `max_order_period`, dan per-variant `max_order` tersimpan persisten di `DB.createProduct()` dan `DB.updateProduct()`.
+  - Pada Drawer Preview, stepper kuantitas dibatasi otomatis oleh `max_order` (`previewTestState.qty <= maxOrderQty`).
+  - Namun, pada mesin kasir POS (`js/pos.js`) dan etalase pembeli (`js/buyer-store.js`), logika transaksi saat ini baru membaca batas minimum (`min_order`) dan belum membatasi penambahan ke keranjang berdasarkan `max_order`. Resolver `resolveProductMaxOrderInfo` dipersiapkan agar dapat digunakan langsung oleh modul transaksi saat pengembangan checkout pembeli dibuka.
+
+### 6.E.4. Alur Pembelian Drawer Preview & Modal Simulasi Pembelian Berhasil
+- **Alur Interaksi Tombol Beli Sekarang**:
+  - Tombol `.btn-preview-buy-now` pada footer kartu pratinjau produk selalu membuka Drawer Preview (`openShopeeCheckoutDrawer('buy')`) terlebih dahulu tanpa memotong alur ke modal simulasi, baik untuk produk tanpa variasi maupun produk dengan variasi.
+  - Nilai kuantitas awal pada Drawer Preview diinisialisasi ke default 1 (`previewTestState.qty = 1`) dan diproses sebagai kuantitas valid.
+  - Perubahan kuantitas (menjadi 2, 3, dst.) melalui stepper atau pengetikan langsung diinputkan ke `previewTestState.qty` dan dievaluasi secara live terhadap batas `min_order`, `order_multiple`, dan `max_order`.
+  - Pada produk bervariasi, kombinasi opsi variasi yang sedang dipilih tetap aktif dan menjadi dasar perhitungan kalkulasi harga, diskon grosir, dan batas maksimal pembelian.
+- **Validasi Submit & Modal Keberhasilan Sederhana**:
+  - Tombol `Beli Sekarang` di dalam Drawer (`#btn-shopee-drawer-confirm` / `.btn-shopee-submit`) membaca nilai kuantitas dan variasi terbaru sebelum memicu simulasi.
+  - Jika kuantitas melanggar batas maksimal (`curQ > maxOrder`), submit diblokir.
+  - Ketika simulasi pembelian berhasil dipicu (`showBuySimulationConfirmModal()`):
+    * Modal menampilkan layout bersih dan profesional: Ikon keberhasilan (`bi-check2-circle`), judul persis **"Simulasi Pembelian Berhasil"**, tombol tutup **X** di sudut kanan atas, dan tombol **"Tutup"** di bagian bawah.
+    * Badge `SIMULASI PRATINJAU` serta teks deskripsi lama (`"Contoh aksi Beli Sekarang berhasil..."` dan `"Tidak ada pesanan yang dibuat..."`) dihilangkan sepenuhnya.
+    * Drawer Preview di lapisan bawah tetap terbuka (`isDrawerOpen: true`) dan tidak di-reset.
+    * Saat modal ditutup melalui tombol Tutup, tombol X, atau klik latar belakang, pengguna kembali ke Drawer Preview dengan kuantitas dan pilihan variasi yang tetap utuh dan tersimpan.
+    * Tidak ada pesanan, transaksi, atau mutasi data nyata yang dibuat oleh simulasi pratinjau.
+
+### 6.E.3. Pengaturan Berat & Dimensi per Variasi & Auto-Scroll Horizontal (8.A - Koreksi Terfokus)
+- **Posisi Tunggal Toggle Berat & Dimensi berbeda untuk tiap variasi**:
+  - Ditetapkan **satu toggle saja** pada: **Step 2 → Pengiriman → Berat & Dimensi Paket** (`#card-step2-shipping`, switch `#toggle-variant-dimensions`).
+  - Tampilan toggle dihilangkan sepenuhnya dari header tabel List Variasi Produk (`#combination-matrix-section`), sehingga List Variasi Produk murni menjadi tempat mengisi nilai opsi saat fitur aktif.
+- **Kondisi Tampil Toggle**:
+  - Toggle switch hanya muncul apabila:
+    1. Produk merupakan produk fisik (`primaryState.product_type === 'physical'`).
+    2. Produk memiliki variasi aktif (`primaryState.has_variants: true`).
+    3. Pengiriman produk aktif dan digunakan (`primaryState.has_shipping: true`).
+  - Jika pengiriman dinonaktifkan atau produk non-fisik, seller tidak diminta mengatur berat/dimensi variasi.
+- **Perilaku Toggle ON / OFF**:
+  - **OFF**:
+    - Menampilkan input Berat Paket tingkat produk (`#input-package-weight`) dan Ukuran Paket (`#input-dim-length/width/height`).
+    - Menyembunyikan kolom Berat dan Dimensi di tabel List Variasi Produk tanpa menghapus nilai data tersimpan di `materialsState` maupun `primaryState.variant_dimensions`.
+    - Validasi pengiriman hanya memvalidasi berat tingkat produk.
+  - **ON**:
+    - Menyembunyikan input berat dan dimensi tingkat produk secara bersih tanpa banner notifikasi ekstra.
+    - Menampilkan kolom **Berat** (`data-col="variant-weight"`) dan **Dimensi** (`data-col="variant-dim"`) di sisi paling kanan tabel matriks, tepat setelah kolom Kelipatan Order.
+    - Validasi pengiriman mewajibkan setiap opsi variasi aktif memiliki nilai berat (> 0 gram).
+- **Mekanisme Pemicu Auto-Scroll Tertunda (Deferred Auto-Scroll)**:
+  - Karena toggle berada pada tab Pengiriman sedangkan tabel matriks berada pada tab Penjualan:
+    - **Saat Toggle OFF → ON oleh User**: Sistem menandai penanda scroll tertunda (`pendingAutoScrollVariantDimensions = true`). Tabel matriks tidak langsung digulir saat masih tersembunyi dan sistem tidak memaksa perpindahan tab ke Penjualan.
+    - **Saat Seller Membuka Tab Penjualan**: Ketika tab Penjualan (`card-step2-sales`) dibuka/dilihat oleh seller dan tabel sudah siap, kontainer horizontal `.variation-table-container` otomatis digulirkan ke kanan satu kali dengan animasi halus.
+    - **Pembersihan Flag**: Setelah auto-scroll berjalan, penanda dibersihkan (`pendingAutoScrollVariantDimensions = false`) sehingga perpindahan atau render tab selanjutnya tidak memicu scroll berulang.
+    - **Pembatalan**: Jika seller mematikan toggle kembali ke OFF sebelum membuka tab Penjualan, penanda auto-scroll langsung dibatalkan (`pendingAutoScrollVariantDimensions = false`).
+    - **Edit Produk dengan Toggle Sudah ON**: Pemuatan awal halaman tidak memicu auto-scroll.
+    - **Isolasi Scroll Penuh**: Hanya area scroll horizontal tabel yang bergerak (`.variation-table-container.scrollLeft`). Scroll vertikal halaman utama (`admin-main-viewport` & `window.scrollY`) dijaga strictly tidak bergeser.
+    - **Kompatibilitas Mobile**: Mendukung touch-momentum scrolling (`-webkit-overflow-scrolling: touch`) dan fallback scrollLeft. Seller tetap leluasa melakukan scroll manual setelahnya.
+
+### 6.E.5. Penyelarasan UI Pengiriman, Sistem COD Checkbox, dan Standarisasi Radius 6px Kurir
+- **Penghapusan Notifikasi Berat & Dimensi Per Variasi**:
+  - Elemen `#variant-dimensions-active-notice` berwarna hijau dihapus beserta ruang yang ditinggalkan untuk merapikan layout seksi Pengiriman.
+  - Toggle switch `Berat & Dimensi berbeda untuk tiap variasi` di seksi Pengiriman tetap aktif, berfungsi, dan tersinkronisasi reaktif dengan tabel variasi.
+- **Sistem COD Berbentuk Checkbox**:
+  - `Sistem COD (Bayar di Tempat)` diubah dari toggle switch menjadi satu kotak pilihan checkbox (`[ ] Sistem COD (Bayar di Tempat)`) dengan gaya visual identik dengan kotak pilihan kurir.
+  - Seluruh area kotak pilihan COD dapat diklik (`<label>` wrapper).
+  - Tercentang = `is_cod: true`, tidak tercentang = `is_cod: false`.
+  - State, kontrak penyimpanan (`primaryState.shipping_config.is_cod`), dan persistensi mode edit dipertahankan tanpa perubahan kontrak bisnis.
+  - Tooltip bantuan COD dipertahankan dengan interaksi hover desktop dan tap mobile (`.btn-help-popover`).
+  - Tidak ada label COD ganda.
+- **Standarisasi Radius 6px dan Konsistensi Visual Kotak Pilihan**:
+  - Radius seluruh kotak pilihan kurir dan COD distandarisasi menjadi **6px** (`rounded-[6px]` dan `border-radius: 6px;`), menggantikan `rounded-xl`.
+  - Berlaku seragam untuk:
+    1. Ambil di Toko (`pickup`)
+    2. Kurir Toko / Lokal (`local_store`)
+    3. Reguler Domestik (`reguler`)
+    4. Kargo / Partai Besar (`cargo`)
+    5. Luar Negeri (`international`)
+    6. Sistem COD (`toggle-is-cod`)
+  - Padding dan tinggi seluruh kotak dibuat seragam (`p-2 sm:p-2.5 min-h-[42px]`) dengan checkbox dan teks sejajar vertikal (`flex items-center gap-2`).
+  - Tata letak grid dua kolom desktop (`grid grid-cols-2 gap-2`) dan layout responsif mobile tetap dipertahankan.
 
 ### 6.F. Konfigurasi Web (Storefront Presentation)
 - **Model Kartu Etalase**:
@@ -542,6 +649,10 @@ Berikut adalah inventaris teknis seluruh variabel state yang bekerja pada formul
 | `sandboxPxlState` | `js/product-form.js` (L1745) | Object | `{ selectedMainOptionId: '', selectedFinishingIds: [], simLength: '', simWidth: '' }` | State sementara untuk simulasi perhitungan ukuran PxL di Step 2. | Input modal simulator | `updateSandboxCalculation()` | `renderSandboxCalculationResultsHtml()` | Sementara (In-Memory) |
 | `initialEditSnapshot` | `js/product-form.js` (L1753) | String (Hash/JSON) | `null` | Snapshot serialized seluruh state saat produk pertama kali dimuat di mode edit. | `getNormalizedProductStateSnapshot()` | `loadProductForEdit()` | `hasEditProductChanged()` | Sementara (In-Memory) |
 | `previewTestState` | `js/product-form.js` (L160) | Object | `{ selectedTier1Id, selectedTier2Id, qty: 1, ... }` | State pilihan simulasi interaktif pembeli saat menguji klik varian di pratinjau. | Klik pada chip pratinjau | Handler chip pratinjau live card | Drawer & PDP live simulation | Sementara (In-Memory) |
+| `has_variant_dimensions` | `js/product-form.js` (L1044) | Boolean | `false` | Menandai apakah berat dan dimensi diatur berbeda untuk tiap variasi produk di List Variasi Produk. | Toggle `#toggle-variant-dimensions` (Step 2 Pengiriman) | `setVariantDimensionsState()` | `renderCombinationMatrixTable()`, validasi, shipping | Disimpan di `shipping_config` & `products` |
+| `variant_dimensions` | `js/product-form.js` (L1045) | Object | `{}` | Menyimpan pemetaan data berat (gram) dan dimensi ($P \times L \times T$ cm) per varian berdasarkan `mat.id`. | Input kolom matriks `.combo-variant-weight-input` & `.combo-variant-dim-*` | `syncStateFromDOM()`, `oninput` | `renderCombinationMatrixTable()`, shipping calculation | Disimpan di tabel `products` di `js/db.js` |
+| `has_variant_dimensions` | `js/product-form.js` (L1044) | Boolean | `false` | Menandai apakah berat dan dimensi diatur berbeda untuk tiap variasi produk di List Variasi Produk. | Toggle `#toggle-variant-dimensions` (Step 2 Pengiriman) | `setVariantDimensionsState()` | `renderCombinationMatrixTable()`, validasi, shipping | Disimpan di `shipping_config` & `products` |
+| `variant_dimensions` | `js/product-form.js` (L1045) | Object | `{}` | Menyimpan pemetaan data berat (gram) dan dimensi ($P \times L \times T$ cm) per varian berdasarkan `mat.id`. | Input kolom matriks `.combo-variant-weight-input` & `.combo-variant-dim-*` | `syncStateFromDOM()`, `oninput` | `renderCombinationMatrixTable()`, shipping calculation | Disimpan di tabel `products` di `js/db.js` |
 
 ---
 

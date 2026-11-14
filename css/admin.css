@@ -1969,6 +1969,7 @@ input::-webkit-calendar-picker-indicator {
 .variation-table-container {
   position: relative !important;
   overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: 0 !important;
   padding-bottom: 0.25rem !important;
 }
@@ -2783,7 +2784,7 @@ body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
 }
 
 /* 7. Input Focus Border, Focus Ring, Checkbox/Radio Accent, & Combobox Hover */
-#view-product-form input:not([type="checkbox"]):not([type="radio"]):not(.mat-input):not(.fin-input):focus:not(.border-red-500),
+#view-product-form input:not([type="checkbox"]):not([type="radio"]):not(.mat-input):not(.fin-input):not(.embedded-period-input):not(#input-period-end-date):not(#modal-input-period-end-date):focus:not(.border-red-500),
 #view-product-form select:not(.fin-input):focus:not(.border-red-500),
 #view-product-form textarea:focus:not(.border-red-500),
 #view-product-form .input-custom-label-slot:focus,
@@ -2793,6 +2794,22 @@ body:has(#desktop-preview-sidebar.translate-x-0) #btn-expand-preview-sidebar {
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 2px var(--color-primary-subtle) !important;
   outline: none !important;
+}
+
+/* Input Tanggal Berakhir di dalam wrapper gabungan (Single Product & Modal Variasi):
+   Bebas border/ring/shadow internal agar hanya wrapper luar yang memiliki indikator fokus */
+#view-product-form input.embedded-period-input,
+#view-product-form input.embedded-period-input:focus,
+input#input-period-end-date,
+input#input-period-end-date:focus,
+input#modal-input-period-end-date,
+input#modal-input-period-end-date:focus {
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
 }
 
 #view-product-form input[type="radio"],
