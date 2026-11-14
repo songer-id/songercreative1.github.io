@@ -1542,3 +1542,52 @@ body.visual-edit-active [data-section]:hover {
 .product-description-content del {
   text-decoration: line-through !important;
 }
+
+/* Headings H1, H2 & Ukuran Inline (PDP & Storefront) */
+#pdp-full-description h1,
+.product-description-content h1,
+#pdp-full-description .text-h1,
+.product-description-content .text-h1,
+#pdp-full-description .rte-h1,
+.product-description-content .rte-h1 {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  color: #0f172a !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.35rem !important;
+}
+
+#pdp-full-description h2,
+.product-description-content h2,
+#pdp-full-description .text-h2,
+.product-description-content .text-h2,
+#pdp-full-description .rte-h2,
+.product-description-content .rte-h2 {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #1e293b !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+#pdp-full-description span.text-h1,
+.product-description-content span.text-h1,
+#pdp-full-description span.rte-h1,
+.product-description-content span.rte-h1 {
+  font-size: 1.3em !important;
+  font-weight: 700 !important;
+  display: inline !important;
+  margin: 0 !important;
+}
+
+#pdp-full-description span.text-h2,
+.product-description-content span.text-h2,
+#pdp-full-description span.rte-h2,
+.product-description-content span.rte-h2 {
+  font-size: 1.15em !important;
+  font-weight: 600 !important;
+  display: inline !important;
+  margin: 0 !important;
+}

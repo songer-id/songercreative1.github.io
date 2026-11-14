@@ -14045,8 +14045,12 @@ const ProductForm = (() => {
     if (primaryState.is_active && (!primaryState.images || primaryState.images.length === 0) && !primaryState.image_url) {
       missing.push('Foto Produk');
     }
-    if (!primaryState.category_id || String(primaryState.category_id).trim() === '') {
-      missing.push('Kategori Produk');
+    // Syarat aktivasi Step 2: Kategori harus dipilih DAN Subkategori harus sudah ditentukan
+    // (baik memilih subkategori spesifik maupun memilih "Tanpa subkategori" secara eksplisit)
+    const hasCategory = Boolean(primaryState.category_id && String(primaryState.category_id).trim() !== '');
+    const hasSubCatDetermined = hasCategory && Boolean(primaryState.sub_category_determined);
+    if (!hasCategory || !hasSubCatDetermined) {
+      missing.push('kategori produk');
     }
 
     // Card 2 (Informasi Penjualan) s/d Card 6 (Lainnya) dibuka bersamaan mengikuti kelengkapan Card 1 (Informasi Produk)
@@ -14054,11 +14058,10 @@ const ProductForm = (() => {
   }
 
   function renderFlashbackCard(cardTitle, cardIcon, missingLabels, cardId) {
-    const missingFieldsText = Array.isArray(missingLabels) ? missingLabels.join(', ') : missingLabels;
     return `
       <div class="bg-white rounded-lg border-0 shadow-none p-5 sm:p-6 select-none" id="${cardId}">
         <h3 class="text-base font-bold text-slate-400">${escapeHtml(cardTitle)}</h3>
-        <p class="text-xs text-slate-400 mt-2">Tersedia setelah memilih ${missingFieldsText}</p>
+        <p class="text-xs text-slate-400 mt-2">Tersedia setelah memilih kategori produk</p>
       </div>
     `;
   }
@@ -17015,12 +17018,11 @@ const ProductForm = (() => {
         updateProductCardLivePreview();
       }
 
-      // Check if Card 1 became valid
-      const missing = getMissingLabelsForCard(2);
-      if (missing.length === 0 && typeof updateStep2CardGatingDOM === 'function') {
+      // Update tampilan dropdown dan evaluasi gerbang aktivasi Card Step 2
+      refreshCategorySubcategoryDropdowns();
+      if (typeof updateStep2CardGatingDOM === 'function') {
         updateStep2CardGatingDOM();
       }
-      refreshCategorySubcategoryDropdowns();
     }
 
     // --- SUBCATEGORY DROPDOWN EVENTS ---
@@ -17126,6 +17128,9 @@ const ProductForm = (() => {
         closeSubcatMenu();
         updateProductCardLivePreview();
         refreshCategorySubcategoryDropdowns();
+        if (typeof updateStep2CardGatingDOM === 'function') {
+          updateStep2CardGatingDOM();
+        }
       };
     }
 
@@ -17145,6 +17150,9 @@ const ProductForm = (() => {
           closeSubcatMenu();
           updateProductCardLivePreview();
           refreshCategorySubcategoryDropdowns();
+          if (typeof updateStep2CardGatingDOM === 'function') {
+            updateStep2CardGatingDOM();
+          }
         };
       });
     }
@@ -17230,6 +17238,9 @@ const ProductForm = (() => {
             App.showToast(`Subkategori "${newSub.name}" berhasil dibuat dan dipilih!`, 'success');
           }
           refreshCategorySubcategoryDropdowns();
+          if (typeof updateStep2CardGatingDOM === 'function') {
+            updateStep2CardGatingDOM();
+          }
         } catch (err) {
           if (errSubNewName) {
             errSubNewName.textContent = err.message || 'Gagal menyimpan subkategori baru.';
@@ -18289,6 +18300,19 @@ const ProductForm = (() => {
                     </button>
                     <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="redo" title="Redo (Mengulangi perubahan)" aria-label="Redo">
                       <i class="bi bi-arrow-clockwise text-xs sm:text-sm"></i>
+                    </button>
+                  </div>
+
+                  <!-- Group Heading & Ukuran: H1 | H2 | Aa -->
+                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
+                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold text-xs select-none" data-command="format-h1" title="Heading 1 (Judul utama)" aria-label="Heading 1">
+                      H1
+                    </button>
+                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold text-xs select-none" data-command="format-h2" title="Heading 2 (Subjudul)" aria-label="Heading 2">
+                      H2
+                    </button>
+                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-semibold text-xs select-none" data-command="format-p" title="Teks Normal (Paragraf)" aria-label="Teks Normal">
+                      Aa
                     </button>
                   </div>
 
@@ -26406,6 +26430,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (currentStep === 2) {
         p2.classList.remove('hidden');
         p2.classList.add('block');
+        prevCard1Valid = (getMissingLabelsForCard(2).length === 0);
         p2.innerHTML = renderStep2Content();
         if (typeof bindStep2InteractiveEvents === 'function') {
           bindStep2InteractiveEvents();
@@ -37025,6 +37050,39 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     });
 
     editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        try {
+          const sel = window.getSelection ? window.getSelection() : null;
+          if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            const node = range.commonAncestorContainer;
+            const block = getEnclosingBlock(node);
+            if (block && (block.tagName.toLowerCase() === 'h1' || block.tagName.toLowerCase() === 'h2')) {
+              // Jika kursor berada di akhir heading, buat paragraf normal baru
+              const isAtEnd = (range.collapsed && range.endOffset === (node.nodeType === 3 ? node.length : node.childNodes.length));
+              if (isAtEnd) {
+                e.preventDefault();
+                const p = document.createElement('p');
+                p.innerHTML = '<br>';
+                if (block.nextSibling) {
+                  block.parentNode.insertBefore(p, block.nextSibling);
+                } else {
+                  block.parentNode.appendChild(p);
+                }
+                const newRange = document.createRange();
+                newRange.setStart(p, 0);
+                newRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                syncToTextarea();
+                updateToolbarActiveStates();
+                return;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
       if ((e.ctrlKey || e.metaKey) && !e.altKey) {
         const key = e.key ? e.key.toLowerCase() : '';
         if (key === 'b') {
@@ -37056,6 +37114,131 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     });
 
+    function getEnclosingBlock(node) {
+      let cur = (node && node.nodeType === 1) ? node : (node ? node.parentElement : null);
+      while (cur && cur !== editor) {
+        const tag = cur.tagName ? cur.tagName.toLowerCase() : '';
+        if (['p', 'h1', 'h2', 'div', 'li', 'blockquote'].includes(tag)) {
+          return cur;
+        }
+        cur = cur.parentElement;
+      }
+      return null;
+    }
+
+    function applyHeadingOrSize(type) {
+      editor.focus();
+      const sel = window.getSelection ? window.getSelection() : null;
+      if (!sel || sel.rangeCount === 0) {
+        if (type === 'h1' || type === 'h2') {
+          try { document.execCommand('formatBlock', false, `<${type}>`); } catch (_) {
+            try { document.execCommand('formatBlock', false, type); } catch (_) {}
+          }
+        } else {
+          try { document.execCommand('formatBlock', false, '<p>'); } catch (_) {
+            try { document.execCommand('formatBlock', false, 'p'); } catch (_) {}
+          }
+        }
+        syncToTextarea();
+        updateToolbarActiveStates();
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      const commonNode = range.commonAncestorContainer;
+      const blockEl = getEnclosingBlock(commonNode);
+      const isInsideList = blockEl && (blockEl.tagName.toLowerCase() === 'li' || blockEl.closest('li'));
+
+      let isFullBlock = range.collapsed;
+      if (!isFullBlock && blockEl && !isInsideList) {
+        const blockText = (blockEl.textContent || '').trim();
+        const selText = range.toString().trim();
+        if (selText && blockText && selText === blockText) {
+          isFullBlock = true;
+        }
+      }
+
+      if (isFullBlock && !isInsideList) {
+        const currentTag = blockEl ? blockEl.tagName.toLowerCase() : 'p';
+        if (type === 'p') {
+          try { document.execCommand('formatBlock', false, '<p>'); } catch (_) {
+            try { document.execCommand('formatBlock', false, 'p'); } catch (_) {}
+          }
+          if (blockEl) {
+            blockEl.querySelectorAll('.text-h1, .text-h2, .rte-h1, .rte-h2').forEach(span => {
+              const parent = span.parentNode;
+              while (span.firstChild) parent.insertBefore(span.firstChild, parent);
+              span.remove();
+            });
+          }
+        } else if (type === 'h1') {
+          if (currentTag === 'h1') {
+            try { document.execCommand('formatBlock', false, '<p>'); } catch (_) {
+              try { document.execCommand('formatBlock', false, 'p'); } catch (_) {}
+            }
+          } else {
+            try { document.execCommand('formatBlock', false, '<h1>'); } catch (_) {
+              try { document.execCommand('formatBlock', false, 'h1'); } catch (_) {}
+            }
+          }
+        } else if (type === 'h2') {
+          if (currentTag === 'h2') {
+            try { document.execCommand('formatBlock', false, '<p>'); } catch (_) {
+              try { document.execCommand('formatBlock', false, 'p'); } catch (_) {}
+            }
+          } else {
+            try { document.execCommand('formatBlock', false, '<h2>'); } catch (_) {
+              try { document.execCommand('formatBlock', false, 'h2'); } catch (_) {}
+            }
+          }
+        }
+      } else {
+        // Seleksi sebagian teks (inline)
+        const selText = range.toString();
+        if (!selText) return;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(range.cloneContents());
+        let innerHtml = tempDiv.innerHTML;
+        innerHtml = innerHtml.replace(/<span class="(?:text|rte)-h[12]">(.*?)<\/span>/gi, '$1');
+
+        if (type === 'p') {
+          let parentSpan = commonNode.nodeType === 1 ? commonNode : commonNode.parentElement;
+          while (parentSpan && parentSpan !== editor) {
+            if (parentSpan.classList && (parentSpan.classList.contains('text-h1') || parentSpan.classList.contains('text-h2') || parentSpan.classList.contains('rte-h1') || parentSpan.classList.contains('rte-h2'))) {
+              const pNode = parentSpan.parentNode;
+              while (parentSpan.firstChild) pNode.insertBefore(parentSpan.firstChild, parentSpan);
+              parentSpan.remove();
+              break;
+            }
+            parentSpan = parentSpan.parentElement;
+          }
+          try {
+            document.execCommand('insertHTML', false, innerHtml);
+          } catch (_) {
+            range.deleteContents();
+            if (range.createContextualFragment) {
+              range.insertNode(range.createContextualFragment(innerHtml));
+            }
+          }
+        } else if (type === 'h1' || type === 'h2') {
+          const clsName = `text-${type}`;
+          const wrapped = `<span class="${clsName}">${innerHtml}</span>`;
+          try {
+            document.execCommand('insertHTML', false, wrapped);
+          } catch (_) {
+            range.deleteContents();
+            if (range.createContextualFragment) {
+              range.insertNode(range.createContextualFragment(wrapped));
+            }
+          }
+        }
+      }
+
+      syncToTextarea();
+      updateToolbarActiveStates();
+    }
+
     function updateToolbarActiveStates() {
       if (!toolbar) return;
       const stateCommands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
@@ -37069,6 +37252,37 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           btn.classList.toggle('is-active', Boolean(isActive));
         }
       });
+
+      // Deteksi status Heading: H1, H2, atau Aa (Normal)
+      const btnH1 = toolbar.querySelector('[data-command="format-h1"]');
+      const btnH2 = toolbar.querySelector('[data-command="format-h2"]');
+      const btnAa = toolbar.querySelector('[data-command="format-p"]');
+
+      let isH1 = false;
+      let isH2 = false;
+
+      try {
+        const sel = window.getSelection ? window.getSelection() : null;
+        if (sel && sel.rangeCount > 0) {
+          const node = sel.getRangeAt(0).commonAncestorContainer;
+          let cur = (node && node.nodeType === 1) ? node : (node ? node.parentElement : null);
+          while (cur && cur !== editor) {
+            const tag = cur.tagName ? cur.tagName.toLowerCase() : '';
+            if (tag === 'h1' || (cur.classList && (cur.classList.contains('text-h1') || cur.classList.contains('rte-h1')))) {
+              isH1 = true;
+              break;
+            } else if (tag === 'h2' || (cur.classList && (cur.classList.contains('text-h2') || cur.classList.contains('rte-h2')))) {
+              isH2 = true;
+              break;
+            }
+            cur = cur.parentElement;
+          }
+        }
+      } catch (_) {}
+
+      if (btnH1) btnH1.classList.toggle('is-active', isH1);
+      if (btnH2) btnH2.classList.toggle('is-active', isH2);
+      if (btnAa) btnAa.classList.toggle('is-active', !isH1 && !isH2);
 
       const linkBtn = document.getElementById('btn-rte-link');
       if (linkBtn) {
@@ -37113,6 +37327,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         if (cmd === 'custom-link') {
           handleLinkButtonClick();
+          return;
+        }
+
+        if (cmd === 'format-h1') {
+          applyHeadingOrSize('h1');
+          return;
+        }
+        if (cmd === 'format-h2') {
+          applyHeadingOrSize('h2');
+          return;
+        }
+        if (cmd === 'format-p') {
+          applyHeadingOrSize('p');
           return;
         }
 

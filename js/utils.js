@@ -333,11 +333,12 @@
         const root = doc.body.firstElementChild || doc.body;
 
         const allowedTags = new Set([
-          'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
+          'h1', 'h2', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
           'ul', 'ol', 'li', 'a', 'span', 'div', 'blockquote', 'hr'
         ]);
 
         const allowedAligns = new Set(['left', 'center', 'right', 'justify']);
+        const allowedClasses = new Set(['text-h1', 'text-h2', 'rte-h1', 'rte-h2', 'product-description-content']);
 
         function sanitizeNode(node) {
           const children = Array.from(node.childNodes);
@@ -384,6 +385,13 @@
                     child.setAttribute('rel', 'noopener noreferrer');
                   } else if (name !== 'title') {
                     child.removeAttribute(attr.name);
+                  }
+                } else if (name === 'class') {
+                  const cleanList = val.split(/\s+/).filter(c => allowedClasses.has(c));
+                  if (cleanList.length > 0) {
+                    child.setAttribute('class', cleanList.join(' '));
+                  } else {
+                    child.removeAttribute('class');
                   }
                 } else if (name === 'style') {
                   const alignMatch = val.match(/text-align\s*:\s*(left|center|right|justify)/i);

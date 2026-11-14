@@ -306,6 +306,7 @@ Di bagian atas Step 2, terpasang bilah subnav navigasi yang menempel rapat (*sti
      - Pilihan `Tanpa subkategori` tersimpan sebagai `sub_category_id: null` dengan status penentuan `sub_category_determined: true`. Tidak ada record palsu yang dibuat di database.
      - Mengganti Kategori Utama mereset subkategori (`sub_category_id = null`, `sub_category_determined = false`) dan mewajibkan seller menentukan ulang. Jika kategori dihapus/menjadi tidak valid, field kembali disembunyikan.
      - Mode Edit: Memulihkan kategori & subkategori tersimpan; jika kategori valid, field langsung terlihat; produk dengan `sub_category_id: null` otomatis tampil sebagai `Tanpa subkategori` yang sah tanpa memaksa memilih ulang.
+     - **Syarat Aktivasi Form Step 2 (Card Gating 2..7)**: Bagian formulir Step 2 yang bergantung pada kategori (Card 2 Penjualan, Card 3 Pengiriman, Card 4 Promo, Card 5 Deskripsi, Card 6 Spesifikasi, Card 7 Lainnya) baru aktif setelah **Subkategori Produk sudah ditentukan** (`sub_category_determined === true`), baik dengan memilih subkategori terdaftar maupun memilih `Tanpa subkategori` secara eksplisit. Ketika masih OFF, kartu menampilkan pemberitahuan seragam dengan teks persis: `Tersedia setelah memilih kategori produk`. Jika Kategori diganti, status subkategori dievaluasi ulang (kembali OFF) hingga pilihan subkategori baru ditentukan.
   4. *Kategori Operasional Kasir*: Terikat pada `primaryState.order_category` (default `'Ctk'` untuk percetakan atau `'Non-Ctk'` untuk produk umum).
   5. *Label Khusus Step 2*: Menampilkan chip ringkasan label khusus yang telah diisi pada Step 1 (read-only). Notifikasi penguncian teks lama ditiadakan untuk menjaga tata letak tetap rapi, compact, dan langsung menyatu di bawah label heading.
 
@@ -651,20 +652,29 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
   - Menggantikan input textarea teks biasa menjadi Rich Text Editor berbasis WYSIWYG contenteditable modern dengan toolbar pemformatan teks di sisi atas.
   - Sisi penulisan (`#editor-prod-desc`): contenteditable dengan tinggi dinamis (min-height 140px, max-height 480px, overflow-y auto), font `text-sm`, line-height `1.6`, dan placeholder persis: `"Tulis deskripsi produk di sini..."`.
   - Hidden textarea (`#input-prod-desc`): Dipertahankan tersembunyi untuk kompatibilitas form, serialisasi payload, dan `syncStateFromDOM()`.
-- **13 Tools Toolbar Pemformatan**:
+- **Format Teks Toolbar (Termasuk H1, H2, Aa)**:
   1. *Undo* (`bi-arrow-counterclockwise`): Membatalkan perubahan teks.
   2. *Redo* (`bi-arrow-clockwise`): Mengulangi perubahan yang dibatalkan.
-  3. *Bold / B* (`bi-type-bold`): Format teks tebal (`Ctrl+B`).
-  4. *Italic / I* (`bi-type-italic`): Format teks miring (`Ctrl+I`).
-  5. *Underline / U* (`bi-type-underline`): Format garis bawah (`Ctrl+U`).
-  6. *Strikethrough / S* (`bi-type-strikethrough`): Format teks coret.
-  7. *Align Left* (`bi-text-left`): Rata kiri teks.
-  8. *Align Center* (`bi-text-center`): Rata tengah teks.
-  9. *Align Right* (`bi-text-right`): Rata kanan teks.
-  10. *Bullet List* (`bi-list-ul`): Daftar berpoin tidak berurutan (`<ul><li>`).
-  11. *Numbered List* (`bi-list-ol`): Daftar bernomor berurutan (`<ol><li>`).
-  12. *Link* (`bi-link-45deg`): Modal dialog interaktif (`#rte-link-modal`) untuk menambah/mengubah tautan web aman (`target="_blank" rel="noopener noreferrer"`).
-  13. *Clear Format* (`bi-eraser`): Menghapus seluruh format gaya dan tautan pada teks terseleksi (`removeFormat` & `unlink`).
+  3. *H1* (`format-h1`): Teks berukuran besar untuk judul utama (semantik `<h1>` untuk blok utuh atau `<span class="text-h1">` untuk seleksi inline).
+  4. *H2* (`format-h2`): Teks berukuran sedang untuk subjudul (semantik `<h2>` untuk blok utuh atau `<span class="text-h2">` untuk seleksi inline).
+  5. *Aa* (`format-p`): Teks normal paragraf (mengembalikan format heading ke ukuran paragraf biasa `<p>` atau menghapus inline heading spans).
+  6. *Bold / B* (`bi-type-bold`): Format teks tebal (`Ctrl+B`).
+  7. *Italic / I* (`bi-type-italic`): Format teks miring (`Ctrl+I`).
+  8. *Underline / U* (`bi-type-underline`): Format garis bawah (`Ctrl+U`).
+  9. *Strikethrough / S* (`bi-type-strikethrough`): Format teks coret.
+  10. *Align Left* (`bi-text-left`): Rata kiri teks.
+  11. *Align Center* (`bi-text-center`): Rata tengah teks.
+  12. *Align Right* (`bi-text-right`): Rata kanan teks.
+  13. *Bullet List* (`bi-list-ul`): Daftar berpoin tidak berurutan (`<ul><li>`).
+  14. *Numbered List* (`bi-list-ol`): Daftar bernomor berurutan (`<ol><li>`).
+  15. *Link* (`bi-link-45deg`): Modal dialog interaktif (`#rte-link-modal`) untuk menambah/mengubah tautan web aman (`target="_blank" rel="noopener noreferrer"`).
+  16. *Clear Format* (`bi-eraser`): Menghapus seluruh format gaya dan tautan pada teks terseleksi (`removeFormat` & `unlink`).
+- **Aturan Hierarki & Perilaku Heading H1 | H2 | Aa**:
+  - H1 berukuran lebih besar dari H2, dan Aa merupakan ukuran normal ($H1 > H2 > Aa$).
+  - Seleksi sebagian teks dalam paragraf hanya mengubah bagian teks yang dipilih (menggunakan format inline aman tanpa memengaruhi bagian lain).
+  - Format aktif ditandai secara visual pada tombol toolbar (`.is-active`).
+  - Menekan tombol `Enter` pada posisi akhir heading H1/H2 secara otomatis membuat paragraf baru normal (`<p><br></p>`) sehingga seller dapat langsung mengetik teks normal tanpa merusak format heading sebelumnya.
+  - Kompatibel penuh dengan Bold, Italic, Underline, List, Alignment, Link, serta riwayat Undo/Redo.
 - **Preservasi Seleksi Teks & Shortcut**:
   - Seluruh tombol toolbar mengimplementasikan pencegahan pelepasan fokus (`mousedown` preventDefault), sehingga seleksi teks seller tidak hilang saat tombol format ditekan.
   - State aktif tombol toolbar disinkronkan secara visual (`.is-active`, warna `--color-primary`) melalui event `selectionchange`, `keyup`, dan `mouseup`.

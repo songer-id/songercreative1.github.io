@@ -3913,3 +3913,57 @@ button:focus-visible {
 .rich-text-editor-content del {
   text-decoration: line-through !important;
 }
+
+/* Headings H1, H2 & Ukuran Inline Editor */
+.rich-text-editor-content h1,
+.rich-text-editor-content .text-h1,
+.rich-text-editor-content .rte-h1 {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  color: #0f172a !important;
+  margin-top: 0.65rem !important;
+  margin-bottom: 0.35rem !important;
+}
+
+.rich-text-editor-content h2,
+.rich-text-editor-content .text-h2,
+.rich-text-editor-content .rte-h2 {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #1e293b !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.rich-text-editor-content span.text-h1,
+.rich-text-editor-content span.rte-h1 {
+  font-size: 1.3em !important;
+  font-weight: 700 !important;
+  display: inline !important;
+  margin: 0 !important;
+}
+
+.rich-text-editor-content span.text-h2,
+.rich-text-editor-content span.rte-h2 {
+  font-size: 1.15em !important;
+  font-weight: 600 !important;
+  display: inline !important;
+  margin: 0 !important;
+}
+
+.rte-btn-heading {
+  font-family: inherit;
+  font-size: 11px !important;
+  padding: 0 4px !important;
+  min-width: 24px;
+}
+
+@media (min-width: 640px) {
+  .rte-btn-heading {
+    font-size: 12px !important;
+    padding: 0 6px !important;
+    min-width: 28px;
+  }
+}
