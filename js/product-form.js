@@ -38,6 +38,19 @@ const ProductForm = (() => {
   let cardLegacyOptionValues = {};
   let activeCardPresetDropdown = null;
 
+  const PROMO_LABEL_SUGGESTIONS = [
+    'Promo Bulanan',
+    'Diskon Spesial',
+    'Penawaran Khusus',
+    'Harga Promo',
+    'Promo Terbatas',
+    'Promo Akhir Bulan',
+    'Diskon Pelanggan',
+    'Penawaran Spesial',
+    'Promo Akhir Pekan',
+    'Potongan Harga Spesial'
+  ];
+
   const FOOTER_ICONS_CATALOG = [
     { id: 'none', label: 'Tanpa Ikon', icon: 'ban', category: 'Umum' },
     { id: 'truck', label: 'Pengiriman Cepat', icon: 'truck', category: 'Logistik' },
@@ -1022,7 +1035,7 @@ const ProductForm = (() => {
     promo_display_mode: 'daily', // Mode standar: 'daily' (Promo Harian)
     discount_type: 'percent', // Bentuk diskon harian: [%] Persen | [IDR] Potongan Rp
     discount_value: '', // Nilai diskon harian
-    monthly_promo_label: 'Promo Spesial', // Label teks promo harian
+    monthly_promo_label: '', // Label teks promo harian
     promo_start_date: null,
     promo_end_date: null,
     has_custom_labels: false,
@@ -2466,7 +2479,7 @@ const ProductForm = (() => {
       promo_display_mode: 'daily',
       discount_type: 'percent',
       discount_value: '',
-      monthly_promo_label: 'Promo Spesial',
+      monthly_promo_label: '',
       promo_start_date: null,
       promo_end_date: null,
       has_custom_labels: false,
@@ -2935,7 +2948,7 @@ const ProductForm = (() => {
       promo_display_mode: prod.promo_display_mode || 'daily',
       discount_type: prod.discount_type || 'percent',
       discount_value: (prod.discount_value !== undefined && prod.discount_value !== null && prod.discount_value !== '') ? prod.discount_value : '',
-      monthly_promo_label: prod.monthly_promo_label || prod.promo_label || 'Promo Spesial',
+      monthly_promo_label: (prod.monthly_promo_label !== undefined && prod.monthly_promo_label !== null) ? prod.monthly_promo_label : ((prod.promo_label !== undefined && prod.promo_label !== null) ? prod.promo_label : ''),
       promo_start_date: prod.promo_start_date || null,
       promo_end_date: prod.promo_end_date || null,
       has_custom_labels: prod.has_custom_labels !== undefined ? Boolean(prod.has_custom_labels) : (Array.isArray(prod.custom_labels) && prod.custom_labels.length > 0),
@@ -17865,20 +17878,71 @@ const ProductForm = (() => {
               <div id="promo-monthly-inputs-box" class="${primaryState.auto_monthly_promo ? 'block' : 'hidden'} space-y-2 pt-1">
                 <label class="block text-xs font-bold text-slate-700">Bentuk & Nilai Diskon Bulanan <span class="text-red-500">*</span>:</label>
                 <div class="flex items-center gap-2 max-w-md">
-                  <select id="select-monthly-promo-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-[var(--color-primary)] shrink-0">
-                    <option value="percent" ${primaryState.monthly_discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
-                    <option value="nominal" ${primaryState.monthly_discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
-                  </select>
-                  <input
-                    type="number"
-                    id="input-monthly-promo-value"
-                    min="0"
-                    step="any"
-                    value="${(primaryState.monthly_discount_value !== undefined && primaryState.monthly_discount_value !== null && primaryState.monthly_discount_value !== '') ? primaryState.monthly_discount_value : ''}"
-                    placeholder="Masukkan diskon"
-                    class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none"
-                  />
+                  <!-- Accordion Dropdown Bentuk Diskon Bulanan -->
+                  <div class="relative w-44 shrink-0 custom-select-group" id="wrapper-monthly-promo-type">
+                    <div
+                      id="custom-select-monthly-promo-type"
+                      tabindex="0"
+                      role="button"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer flex items-center justify-between select-none relative shadow-2xs"
+                    >
+                      <span id="selected-monthly-promo-type-label" class="text-slate-800 font-semibold truncate">
+                        ${primaryState.monthly_discount_type === 'nominal' ? '[IDR] Potongan Rp' : '[%] Persen'}
+                      </span>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                        <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="monthly-promo-type-chevron"></i>
+                      </div>
+                    </div>
+
+                    <!-- Native Select Tersembunyi (Kompatibilitas Form & Script) -->
+                    <select id="select-monthly-promo-type" class="hidden">
+                      <option value="percent" ${primaryState.monthly_discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
+                      <option value="nominal" ${primaryState.monthly_discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
+                    </select>
+
+                    <!-- Popover Dropdown Pilihan Bentuk Diskon -->
+                    <div
+                      id="monthly-promo-type-popover"
+                      class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg p-1 z-50 hidden select-none"
+                      role="listbox"
+                    >
+                      <div
+                        class="custom-monthly-promo-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.monthly_discount_type !== 'nominal' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                        data-value="percent"
+                        data-label="[%] Persen"
+                        role="option"
+                      >
+                        <span>[%] Persen</span>
+                        ${primaryState.monthly_discount_type !== 'nominal' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                      </div>
+                      <div
+                        class="custom-monthly-promo-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.monthly_discount_type === 'nominal' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                        data-value="nominal"
+                        data-label="[IDR] Potongan Rp"
+                        role="option"
+                      >
+                        <span>[IDR] Potongan Rp</span>
+                        ${primaryState.monthly_discount_type === 'nominal' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Input Nilai Diskon Bulanan -->
+                  <div class="relative flex-1">
+                    <input
+                      type="number"
+                      id="input-monthly-promo-value"
+                      min="0"
+                      step="any"
+                      value="${(primaryState.monthly_discount_value !== undefined && primaryState.monthly_discount_value !== null && primaryState.monthly_discount_value !== '') ? primaryState.monthly_discount_value : ''}"
+                      placeholder="Input"
+                      class="w-full h-9 px-3.5 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none"
+                    />
+                  </div>
                 </div>
+                <div id="error-monthly-promo-value" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                 <!-- Real-Time Helper Text Konversi Setara Promo Bulanan -->
                 <div id="monthly-discount-auto-convert-box" class="mt-2 text-slate-600 text-[11px] flex items-center justify-between hidden">
                   <div class="flex items-center gap-1.5 font-medium">
@@ -17919,32 +17983,119 @@ const ProductForm = (() => {
                     <label for="input-promo-label" class="block text-xs font-bold text-slate-700 mb-1">
                       Label Teks Promo:
                     </label>
-                    <input
-                      type="text"
-                      id="input-promo-label"
-                      value="${escapeHtml(primaryState.monthly_promo_label || 'Promo Spesial')}"
-                      placeholder="Contoh: Promo Spesial"
-                      class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs focus:border-[var(--color-primary)] outline-none font-semibold text-slate-800"
-                    />
+                    <div class="relative w-full custom-select-group" id="wrapper-promo-label">
+                      <div class="relative flex items-center w-full">
+                        <input
+                          type="text"
+                          id="input-promo-label"
+                          value="${escapeHtml(primaryState.monthly_promo_label || '')}"
+                          placeholder="Input/Pilih"
+                          autocomplete="off"
+                          class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs focus:border-[var(--color-primary)] outline-none font-semibold text-slate-800 bg-white transition"
+                        />
+                        <button
+                          type="button"
+                          id="btn-toggle-promo-label-suggestions"
+                          class="absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-[var(--color-primary)] cursor-pointer border-0 bg-transparent"
+                          tabindex="-1"
+                          title="Pilih saran label promo"
+                        >
+                          <i class="bi bi-chevron-down text-xs transition-transform duration-200 pointer-events-none" id="promo-label-chevron"></i>
+                        </button>
+                      </div>
+
+                      <!-- Dropdown Accordion Saran Label (10 Saran Baku & Profesional) -->
+                      <div
+                        id="promo-label-suggestions-popover"
+                        class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg max-h-56 overflow-y-auto p-1 z-50 hidden select-none"
+                        role="listbox"
+                      >
+                        ${PROMO_LABEL_SUGGESTIONS.map(s => {
+                          const isSelected = (primaryState.monthly_promo_label || '').trim() === s;
+                          return `
+                            <div
+                              class="custom-promo-label-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSelected ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                              data-label="${escapeHtml(s)}"
+                              role="option"
+                            >
+                              <span>${escapeHtml(s)}</span>
+                              ${isSelected ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </div>
+                    <div id="error-promo-label" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                   </div>
 
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Bentuk & Nilai Potongan Diskon <span class="text-red-500">*</span>:</label>
                     <div class="flex items-center gap-2">
-                      <select id="select-promo-discount-type" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white focus:border-[var(--color-primary)] shrink-0">
-                        <option value="percent" ${primaryState.discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
-                        <option value="nominal" ${primaryState.discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
-                      </select>
-                      <input
-                        type="number"
-                        id="input-promo-discount-value"
-                        min="0"
-                        step="any"
-                        value="${(primaryState.discount_value !== undefined && primaryState.discount_value !== null && primaryState.discount_value !== '') ? primaryState.discount_value : ''}"
-                        placeholder="Masukkan diskon"
-                        class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none"
-                      />
+                      <!-- Accordion Dropdown Bentuk Potongan Diskon -->
+                      <div class="relative w-44 shrink-0 custom-select-group" id="wrapper-promo-discount-type">
+                        <div
+                          id="custom-select-promo-discount-type"
+                          tabindex="0"
+                          role="button"
+                          aria-haspopup="listbox"
+                          aria-expanded="false"
+                          class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer flex items-center justify-between select-none relative shadow-2xs"
+                        >
+                          <span id="selected-promo-discount-type-label" class="text-slate-800 font-semibold truncate">
+                            ${primaryState.discount_type === 'nominal' ? '[IDR] Potongan Rp' : '[%] Persen'}
+                          </span>
+                          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                            <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="promo-discount-type-chevron"></i>
+                          </div>
+                        </div>
+
+                        <!-- Native Select Tersembunyi (Kompatibilitas Form & Script) -->
+                        <select id="select-promo-discount-type" class="hidden">
+                          <option value="percent" ${primaryState.discount_type === 'percent' ? 'selected' : ''}>[%] Persen</option>
+                          <option value="nominal" ${primaryState.discount_type === 'nominal' ? 'selected' : ''}>[IDR] Potongan Rp</option>
+                        </select>
+
+                        <!-- Popover Dropdown Pilihan Bentuk Potongan Diskon -->
+                        <div
+                          id="promo-discount-type-popover"
+                          class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg p-1 z-50 hidden select-none"
+                          role="listbox"
+                        >
+                          <div
+                            class="custom-promo-discount-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.discount_type !== 'nominal' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                            data-value="percent"
+                            data-label="[%] Persen"
+                            role="option"
+                          >
+                            <span>[%] Persen</span>
+                            ${primaryState.discount_type !== 'nominal' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                          </div>
+                          <div
+                            class="custom-promo-discount-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.discount_type === 'nominal' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                            data-value="nominal"
+                            data-label="[IDR] Potongan Rp"
+                            role="option"
+                          >
+                            <span>[IDR] Potongan Rp</span>
+                            ${primaryState.discount_type === 'nominal' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Input Nilai Potongan Diskon -->
+                      <div class="relative flex-1">
+                        <input
+                          type="number"
+                          id="input-promo-discount-value"
+                          min="0"
+                          step="any"
+                          value="${(primaryState.discount_value !== undefined && primaryState.discount_value !== null && primaryState.discount_value !== '') ? primaryState.discount_value : ''}"
+                          placeholder="Input"
+                          class="w-full h-9 px-3.5 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none"
+                        />
+                      </div>
                     </div>
+                    <div id="error-promo-discount-value" class="text-[11px] text-red-500 font-medium mt-1 hidden"></div>
                     <div id="discount-auto-convert-box" class="mt-2 text-slate-600 text-[11px] flex items-center justify-between">
                       <div class="flex items-center gap-1.5 font-medium">
                         <i class="bi bi-arrow-repeat text-[var(--color-primary)]"></i>
@@ -30956,6 +31107,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             promoMonthlyInputsBox.classList.toggle('hidden', !e.target.checked);
             promoMonthlyInputsBox.classList.toggle('block', e.target.checked);
           }
+          if (!e.target.checked) {
+            const mValInp = document.getElementById('input-monthly-promo-value');
+            const mErr = document.getElementById('error-monthly-promo-value');
+            if (mValInp) mValInp.classList.remove('border-red-500');
+            if (mErr) mErr.classList.add('hidden');
+          }
           updateMonthlyDiscountAutoConvert();
           updateProductCardLivePreview();
           saveDraftToStorage();
@@ -30974,6 +31131,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         inputMonthlyPromoVal.oninput = e => {
           const raw = e.target.value;
           primaryState.monthly_discount_value = (raw !== '' && raw !== null && raw !== undefined) ? (parseFloat(raw) || 0) : '';
+          if (raw !== '' && parseFloat(raw) > 0) {
+            inputMonthlyPromoVal.classList.remove('border-red-500');
+            const mErr = document.getElementById('error-monthly-promo-value');
+            if (mErr) mErr.classList.add('hidden');
+          }
           updateMonthlyDiscountAutoConvert();
           saveDraftToStorage();
         };
@@ -30992,6 +31154,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             promoDailyInputsBox.classList.toggle('hidden', !e.target.checked);
             promoDailyInputsBox.classList.toggle('block', e.target.checked);
           }
+          if (!e.target.checked) {
+            const dValInp = document.getElementById('input-promo-discount-value');
+            const dErr = document.getElementById('error-promo-discount-value');
+            const lInp = document.getElementById('input-promo-label');
+            const lErr = document.getElementById('error-promo-label');
+            if (dValInp) dValInp.classList.remove('border-red-500');
+            if (dErr) dErr.classList.add('hidden');
+            if (lInp) lInp.classList.remove('border-red-500');
+            if (lErr) lErr.classList.add('hidden');
+          }
           updateDiscountAutoConvert();
           updateProductCardLivePreview();
           saveDraftToStorage();
@@ -31001,7 +31173,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const promoLabelInp = document.getElementById('input-promo-label');
       if (promoLabelInp) {
         promoLabelInp.oninput = e => {
-          primaryState.monthly_promo_label = e.target.value || 'Promo Spesial';
+          primaryState.monthly_promo_label = e.target.value !== undefined ? e.target.value : '';
+          if (e.target.value && e.target.value.trim()) {
+            promoLabelInp.classList.remove('border-red-500');
+            const lErr = document.getElementById('error-promo-label');
+            if (lErr) lErr.classList.add('hidden');
+          }
           updateProductCardLivePreview();
           saveDraftToStorage();
         };
@@ -31011,6 +31188,200 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const inputPromoVal = document.getElementById('input-promo-discount-value');
       const autoBadge = document.getElementById('discount-auto-convert-badge');
       const autoText = document.getElementById('discount-auto-convert-text');
+
+      if (inputPromoVal) {
+        inputPromoVal.oninput = e => {
+          const raw = e.target.value;
+          primaryState.discount_value = (raw !== '' && raw !== null && raw !== undefined) ? (parseFloat(raw) || 0) : '';
+          if (raw !== '' && parseFloat(raw) > 0) {
+            inputPromoVal.classList.remove('border-red-500');
+            const dErr = document.getElementById('error-promo-discount-value');
+            if (dErr) dErr.classList.add('hidden');
+          }
+          updateDiscountAutoConvert();
+          updateProductCardLivePreview();
+          saveDraftToStorage();
+        };
+      }
+
+      // Bind Accordion Dropdowns untuk Program Promo (Diskon Bulanan, Potongan Diskon, Label Saran)
+      bindPromoAccordionDropdowns();
+
+      function bindPromoAccordionDropdowns() {
+        const closeAllPromoPopovers = () => {
+          ['monthly-promo-type', 'promo-discount-type', 'promo-label-suggestions'].forEach(key => {
+            const pop = document.getElementById(`${key}-popover`);
+            const chev = document.getElementById(`${key}-chevron`);
+            if (pop) pop.classList.add('hidden');
+            if (chev) chev.style.transform = 'rotate(0deg)';
+          });
+        };
+
+        // 1. Bentuk Diskon Bulanan
+        const triggerMonthly = document.getElementById('custom-select-monthly-promo-type');
+        const popoverMonthly = document.getElementById('monthly-promo-type-popover');
+        const chevronMonthly = document.getElementById('monthly-promo-type-chevron');
+        const labelMonthly = document.getElementById('selected-monthly-promo-type-label');
+        const selectMonthly = document.getElementById('select-monthly-promo-type');
+
+        if (triggerMonthly && popoverMonthly) {
+          triggerMonthly.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = !popoverMonthly.classList.contains('hidden');
+            closeAllPromoPopovers();
+            if (!isOpen) {
+              popoverMonthly.classList.remove('hidden');
+              if (chevronMonthly) chevronMonthly.style.transform = 'rotate(180deg)';
+            }
+          };
+
+          popoverMonthly.querySelectorAll('.custom-monthly-promo-type-item').forEach(item => {
+            item.onclick = (e) => {
+              e.stopPropagation();
+              const val = item.getAttribute('data-value') || 'percent';
+              const label = item.getAttribute('data-label') || (val === 'nominal' ? '[IDR] Potongan Rp' : '[%] Persen');
+
+              primaryState.monthly_discount_type = val;
+              if (selectMonthly) {
+                selectMonthly.value = val;
+                if (typeof selectMonthly.onchange === 'function') selectMonthly.onchange({ target: selectMonthly });
+              }
+              if (labelMonthly) labelMonthly.textContent = label;
+
+              popoverMonthly.querySelectorAll('.custom-monthly-promo-type-item').forEach(it => {
+                const isThis = it.getAttribute('data-value') === val;
+                it.className = `custom-monthly-promo-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isThis ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}`;
+                const checkIcon = it.querySelector('.bi-check2');
+                if (isThis && !checkIcon) {
+                  it.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>');
+                } else if (!isThis && checkIcon) {
+                  checkIcon.remove();
+                }
+              });
+
+              closeAllPromoPopovers();
+              updateMonthlyDiscountAutoConvert();
+              saveDraftToStorage();
+            };
+          });
+        }
+
+        // 2. Bentuk Potongan Diskon Harian
+        const triggerDaily = document.getElementById('custom-select-promo-discount-type');
+        const popoverDaily = document.getElementById('promo-discount-type-popover');
+        const chevronDaily = document.getElementById('promo-discount-type-chevron');
+        const labelDaily = document.getElementById('selected-promo-discount-type-label');
+        const selectDaily = document.getElementById('select-promo-discount-type');
+
+        if (triggerDaily && popoverDaily) {
+          triggerDaily.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = !popoverDaily.classList.contains('hidden');
+            closeAllPromoPopovers();
+            if (!isOpen) {
+              popoverDaily.classList.remove('hidden');
+              if (chevronDaily) chevronDaily.style.transform = 'rotate(180deg)';
+            }
+          };
+
+          popoverDaily.querySelectorAll('.custom-promo-discount-type-item').forEach(item => {
+            item.onclick = (e) => {
+              e.stopPropagation();
+              const val = item.getAttribute('data-value') || 'percent';
+              const label = item.getAttribute('data-label') || (val === 'nominal' ? '[IDR] Potongan Rp' : '[%] Persen');
+
+              primaryState.discount_type = val;
+              if (selectDaily) {
+                selectDaily.value = val;
+                if (typeof selectDaily.onchange === 'function') selectDaily.onchange({ target: selectDaily });
+              }
+              if (labelDaily) labelDaily.textContent = label;
+
+              popoverDaily.querySelectorAll('.custom-promo-discount-type-item').forEach(it => {
+                const isThis = it.getAttribute('data-value') === val;
+                it.className = `custom-promo-discount-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isThis ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}`;
+                const checkIcon = it.querySelector('.bi-check2');
+                if (isThis && !checkIcon) {
+                  it.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>');
+                } else if (!isThis && checkIcon) {
+                  checkIcon.remove();
+                }
+              });
+
+              closeAllPromoPopovers();
+              updateDiscountAutoConvert();
+              updateProductCardLivePreview();
+              saveDraftToStorage();
+            };
+          });
+        }
+
+        // 3. Saran Label Teks Promo
+        const btnToggleLabel = document.getElementById('btn-toggle-promo-label-suggestions');
+        const popoverLabel = document.getElementById('promo-label-suggestions-popover');
+        const chevronLabel = document.getElementById('promo-label-chevron');
+        const inputLabel = document.getElementById('input-promo-label');
+
+        if (popoverLabel) {
+          const toggleLabelPopover = (e) => {
+            e.stopPropagation();
+            const isOpen = !popoverLabel.classList.contains('hidden');
+            closeAllPromoPopovers();
+            if (!isOpen) {
+              popoverLabel.classList.remove('hidden');
+              if (chevronLabel) chevronLabel.style.transform = 'rotate(180deg)';
+            }
+          };
+
+          if (btnToggleLabel) {
+            btnToggleLabel.onclick = toggleLabelPopover;
+          }
+
+          popoverLabel.querySelectorAll('.custom-promo-label-item').forEach(item => {
+            item.onclick = (e) => {
+              e.stopPropagation();
+              const text = item.getAttribute('data-label') || item.textContent.trim();
+              primaryState.monthly_promo_label = text;
+              if (inputLabel) {
+                inputLabel.value = text;
+                inputLabel.classList.remove('border-red-500');
+              }
+              const errEl = document.getElementById('error-promo-label');
+              if (errEl) errEl.classList.add('hidden');
+
+              popoverLabel.querySelectorAll('.custom-promo-label-item').forEach(it => {
+                const isThis = it.getAttribute('data-label') === text;
+                it.className = `custom-promo-label-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isThis ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}`;
+                const checkIcon = it.querySelector('.bi-check2');
+                if (isThis && !checkIcon) {
+                  it.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>');
+                } else if (!isThis && checkIcon) {
+                  checkIcon.remove();
+                }
+              });
+
+              closeAllPromoPopovers();
+              updateProductCardLivePreview();
+              saveDraftToStorage();
+            };
+          });
+        }
+
+        // Klik di luar menutup seluruh popover promo
+        if (!window._promoDropdownClickOutsideBound) {
+          window._promoDropdownClickOutsideBound = true;
+          document.addEventListener('click', (e) => {
+            if (!e.target.closest('#wrapper-monthly-promo-type') &&
+                !e.target.closest('#wrapper-promo-discount-type') &&
+                !e.target.closest('#wrapper-promo-label')) {
+              closeAllPromoPopovers();
+            }
+          });
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeAllPromoPopovers();
+          });
+        }
+      }
 
       function updateDiscountAutoConvert() {
         const dType = selectPromoType ? selectPromoType.value : (primaryState.discount_type || 'percent');
@@ -34627,7 +34998,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
     const inputPromoLabel = document.getElementById('input-promo-label') || document.getElementById('input-monthly-promo-label');
     if (inputPromoLabel) {
-      primaryState.monthly_promo_label = inputPromoLabel.value || 'Promo Spesial';
+      primaryState.monthly_promo_label = inputPromoLabel.value !== undefined ? inputPromoLabel.value : '';
     }
     const selectPromoType = document.getElementById('select-promo-discount-type') || document.getElementById('select-monthly-discount-type');
     if (selectPromoType) {
@@ -35480,20 +35851,60 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // 3. Validasi Step 3: Promo & Deskripsi (Auto Promo Bulanan & Promo Harian)
     if (primaryState.auto_monthly_promo) {
-      const mNum = parseFloat(primaryState.monthly_discount_value);
-      if (primaryState.monthly_discount_value === '' || isNaN(mNum) || mNum <= 0) {
-        addError('Nilai diskon bulanan wajib diisi dan harus lebih besar dari 0.', document.getElementById('input-monthly-promo-value'));
+      const mVal = primaryState.monthly_discount_value;
+      const mNum = parseFloat(mVal);
+      const mValInp = document.getElementById('input-monthly-promo-value');
+      const mErrEl = document.getElementById('error-monthly-promo-value');
+      if (mVal === '' || mVal === null || mVal === undefined || isNaN(mNum) || mNum <= 0) {
+        addError('Nilai diskon wajib diisi.', mValInp);
+        if (mValInp) mValInp.classList.add('border-red-500');
+        if (mErrEl) {
+          mErrEl.textContent = 'Nilai diskon wajib diisi.';
+          mErrEl.classList.remove('hidden');
+        }
       } else if (primaryState.monthly_discount_type === 'percent' && mNum > 100) {
-        addError('Persentase diskon bulanan maksimal 100%.', document.getElementById('input-monthly-promo-value'));
+        addError('Persentase diskon bulanan maksimal 100%.', mValInp);
+        if (mValInp) mValInp.classList.add('border-red-500');
+        if (mErrEl) {
+          mErrEl.textContent = 'Persentase diskon bulanan maksimal 100%.';
+          mErrEl.classList.remove('hidden');
+        }
       }
     }
 
     if (primaryState.has_daily_promo || primaryState.has_monthly_discount) {
-      const dNum = parseFloat(primaryState.discount_value);
-      if (primaryState.discount_value === '' || isNaN(dNum) || dNum <= 0) {
-        addError('Nilai potongan diskon harian wajib diisi dan harus lebih besar dari 0.', document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val'));
+      // Validasi Label Teks Promo
+      const promoLbl = (primaryState.monthly_promo_label || '').trim();
+      const promoLblInp = document.getElementById('input-promo-label');
+      const promoLblErr = document.getElementById('error-promo-label');
+      if (!promoLbl) {
+        addError('Label teks promo wajib diisi.', promoLblInp);
+        if (promoLblInp) promoLblInp.classList.add('border-red-500');
+        if (promoLblErr) {
+          promoLblErr.textContent = 'Label teks promo wajib diisi.';
+          promoLblErr.classList.remove('hidden');
+        }
+      }
+
+      // Validasi Potongan Diskon
+      const dVal = primaryState.discount_value;
+      const dNum = parseFloat(dVal);
+      const dValInp = document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val');
+      const dErrEl = document.getElementById('error-promo-discount-value');
+      if (dVal === '' || dVal === null || dVal === undefined || isNaN(dNum) || dNum <= 0) {
+        addError('Nilai potongan diskon wajib diisi.', dValInp);
+        if (dValInp) dValInp.classList.add('border-red-500');
+        if (dErrEl) {
+          dErrEl.textContent = 'Nilai potongan diskon wajib diisi.';
+          dErrEl.classList.remove('hidden');
+        }
       } else if (primaryState.discount_type === 'percent' && dNum > 100) {
-        addError('Persentase diskon harian maksimal 100%.', document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val'));
+        addError('Persentase diskon harian maksimal 100%.', dValInp);
+        if (dValInp) dValInp.classList.add('border-red-500');
+        if (dErrEl) {
+          dErrEl.textContent = 'Persentase diskon harian maksimal 100%.';
+          dErrEl.classList.remove('hidden');
+        }
       }
     }
 
