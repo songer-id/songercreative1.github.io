@@ -30,6 +30,7 @@ const ProductForm = (() => {
   let triggerPendingVariantDimensionsAutoScroll = null;
   let pendingAutoScrollVariantDimensions = false;
   let syncShippingVariantDimensionsVisibility = null;
+  let navigateToVariantTableDirectly = null;
 
   // State Snapshot Desain Kartu (SC-ADMIN-CARD-DESIGN-04: Tombol Batal & Pemulihan Desain)
   let cardDesignSnapshot = null;
@@ -17649,13 +17650,11 @@ const ProductForm = (() => {
                       ${shippingCfg.is_cod ? 'checked' : ''}
                       class="w-4 h-4 text-emerald-600 accent-[var(--color-primary)] rounded cursor-pointer shrink-0"
                     />
-                    <div class="flex items-center gap-1.5 min-w-0">
-                      <span class="text-xs font-bold text-slate-800">Sistem COD (Bayar di Tempat)</span>
-                      <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover shrink-0" tabindex="0">
-                        <i class="bi bi-question-circle text-xs"></i>
-                        <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
-                          Izinkan pembeli membayar pesanan secara tunai saat barang diterima, baik melalui kurir antar toko maupun ekspedisi rekanan.
-                        </div>
+                    <span class="text-xs font-bold text-slate-800 leading-normal">Sistem COD (Bayar di Tempat)</span>
+                    <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover shrink-0 ml-0.5" tabindex="0">
+                      <i class="bi bi-question-circle text-xs"></i>
+                      <div class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed">
+                        Izinkan pembeli membayar pesanan secara tunai saat barang diterima, baik melalui kurir antar toko maupun ekspedisi rekanan.
                       </div>
                     </div>
                   </label>
@@ -28880,7 +28879,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               currentContainer.scrollLeft = currentContainer.scrollWidth;
             }
           }
-          if (vp && vpScrollTop !== null && vp.scrollTop !== vpScrollTop) {
+          if (!isProgrammaticTabScroll && vp && vpScrollTop !== null && vp.scrollTop !== vpScrollTop) {
             vp.scrollTop = vpScrollTop;
           }
           if (typeof window !== 'undefined') {
@@ -28929,18 +28928,57 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!primaryState.shipping_config) primaryState.shipping_config = {};
         primaryState.shipping_config.has_variant_dimensions = enabled;
 
-        // Pending auto-scroll management: pemicu scroll tertunda hanya saat transisi OFF -> ON oleh aksi user
-        if (isTransitionOffToOn && triggeredByUser) {
-          pendingAutoScrollVariantDimensions = true;
-        } else if (!enabled) {
-          pendingAutoScrollVariantDimensions = false;
-        }
+        // Reset scroll tertunda karena navigasi langsung dijalankan saat user ON
+        pendingAutoScrollVariantDimensions = false;
 
         if (typeof syncShippingVariantDimensionsVisibility === 'function') {
           syncShippingVariantDimensionsVisibility();
         }
 
         refreshCombinationMatrixTable({ shouldAutoScroll: false });
+
+        if (isTransitionOffToOn && triggeredByUser) {
+          if (typeof navigateToVariantTableDirectly === 'function') {
+            navigateToVariantTableDirectly();
+          }
+        }
+      };
+
+      navigateToVariantTableDirectly = function () {
+        const matrixSection = document.getElementById('combination-matrix-section');
+        const vp = document.getElementById('admin-main-viewport');
+        if (!matrixSection || !vp) return;
+
+        isProgrammaticTabScroll = true;
+        currentStep2ActiveCardId = 'card-step2-sales';
+        if (typeof setActiveStep2NavTab === 'function') {
+          setActiveStep2NavTab('card-step2-sales', true);
+        }
+
+        const subnav = document.getElementById('step2-subnav');
+        const subnavHeight = subnav ? subnav.offsetHeight : 54;
+        const matrixRect = matrixSection.getBoundingClientRect();
+        const vpRect = vp.getBoundingClientRect();
+        const targetScroll = vp.scrollTop + (matrixRect.top - vpRect.top) - (subnavHeight - 12);
+
+        if (typeof vp.scrollTo === 'function') {
+          vp.scrollTo({
+            top: Math.max(0, targetScroll),
+            behavior: 'smooth'
+          });
+        } else {
+          vp.scrollTop = Math.max(0, targetScroll);
+        }
+
+        setTimeout(() => {
+          if (typeof autoScrollVariationTableToRight === 'function') {
+            autoScrollVariationTableToRight();
+          }
+        }, 250);
+
+        setTimeout(() => {
+          isProgrammaticTabScroll = false;
+        }, 800);
       };
 
       triggerPendingVariantDimensionsAutoScroll = function () {
@@ -35972,11 +36010,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     updateDrawerMaxOrderDisplay,
     autoScrollVariationTableToRight: () => { if (typeof autoScrollVariationTableToRight === 'function') autoScrollVariationTableToRight(); },
     setVariantDimensionsState: (enabled, user) => { if (typeof setVariantDimensionsState === 'function') setVariantDimensionsState(enabled, user); },
+    navigateToVariantTableDirectly: () => { if (typeof navigateToVariantTableDirectly === 'function') navigateToVariantTableDirectly(); },
     refreshCombinationMatrixTable: (opts) => { if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix(opts); }
   };
 })();
 
 window.ProductForm = ProductForm;
+window.navigateToVariantTableDirectly = ProductForm.navigateToVariantTableDirectly;
 window.resolveProductMaxOrderInfo = ProductForm.resolveProductMaxOrderInfo;
 window.updateDrawerMaxOrderDisplay = ProductForm.updateDrawerMaxOrderDisplay;
 window.formatSalesCount = ProductForm.formatSalesCount;

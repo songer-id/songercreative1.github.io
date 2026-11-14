@@ -1192,10 +1192,9 @@ input[type="radio"]:active {
   touch-action: manipulation;
 }
 
-/* Toggle Switch Reliability (Pengiriman, COD, Ukuran PxL & Umum) */
+/* Toggle Switch Reliability (Pengiriman, Ukuran PxL & Umum) */
 .toggle-switch-track,
 label:has(#toggle-shipping-enabled)>div,
-label:has(#toggle-is-cod)>div,
 label:has(#toggle-cod-enabled)>div,
 label:has(#input-cod-enabled)>div,
 label:has(#toggle-custom-dimension)>div,
@@ -1214,7 +1213,6 @@ label:has(#toggle-size-guide-enable)>div {
 
 .toggle-switch-track::after,
 label:has(#toggle-shipping-enabled)>div::after,
-label:has(#toggle-is-cod)>div::after,
 label:has(#toggle-cod-enabled)>div::after,
 label:has(#input-cod-enabled)>div::after,
 label:has(#toggle-custom-dimension)>div::after,
@@ -1234,7 +1232,6 @@ label:has(#toggle-size-guide-enable)>div::after {
 
 /* Checked State (Brand Theme / var(--color-primary)) */
 input#toggle-shipping-enabled:checked~div,
-input#toggle-is-cod:checked~div,
 input#toggle-cod-enabled:checked~div,
 input#input-cod-enabled:checked~div,
 input#toggle-custom-dimension:checked~div,
@@ -1244,7 +1241,6 @@ input#toggle-size-guide-enable:checked~div,
 }
 
 input#toggle-shipping-enabled:checked~div::after,
-input#toggle-is-cod:checked~div::after,
 input#toggle-cod-enabled:checked~div::after,
 input#input-cod-enabled:checked~div::after,
 input#toggle-custom-dimension:checked~div::after,
@@ -1252,6 +1248,25 @@ input#toggle-size-guide-enable:checked~div::after,
 .toggle-switch-input:checked~.toggle-switch-track::after {
   transform: translateX(20px) !important;
   border-color: #ffffff !important;
+}
+
+/* Styling Terisolasi Checkbox Pengiriman & COD (Step 2 Pengiriman) */
+#card-step2-shipping label:has(#toggle-is-cod),
+#card-step2-shipping label:has(input[name="courier_checkbox"]) {
+  min-height: 42px !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+}
+
+#card-step2-shipping label:has(#toggle-is-cod)>div {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  position: static !important;
+  display: flex !important;
 }
 
 input.toggle-same-price:checked~div,
