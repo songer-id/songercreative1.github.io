@@ -1091,7 +1091,14 @@ const BuyerStore = (() => {
 
     if (titleEl) titleEl.textContent = prod.name;
     if (catEl) catEl.textContent = prod.category_name || 'Katalog';
-    if (descEl) descEl.textContent = prod.description || 'Tidak ada deskripsi rinci.';
+    if (descEl) {
+      const rawDesc = prod.description || 'Tidak ada deskripsi rinci.';
+      const cleanHtml = (typeof Utils !== 'undefined' && Utils.sanitizeProductDescriptionHtml)
+        ? Utils.sanitizeProductDescriptionHtml(rawDesc)
+        : (typeof sanitizeProductDescriptionHtml === 'function' ? sanitizeProductDescriptionHtml(rawDesc) : rawDesc);
+      descEl.innerHTML = cleanHtml;
+      descEl.classList.add('product-description-content');
+    }
     if (priceEl) priceEl.textContent = formatIDR(finalPrice);
 
     if (strikeEl) {

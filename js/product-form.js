@@ -12861,9 +12861,9 @@ const ProductForm = (() => {
                 <!-- Deskripsi Produk -->
                 <div class="space-y-1 pt-2 border-t border-slate-100">
                   <span class="text-xs font-medium text-slate-600 block">Deskripsi Produk</span>
-                  <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
-                    ${escapeHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
-                  </p>
+                  <div class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed product-description-content">
+                    ${sanitizeProductDescriptionHtml(primaryState.description ? primaryState.description.trim() : 'Deskripsi produk belum diisi. Informasi lengkap spesifikasi dan petunjuk pemesanan akan tampil di sini.')}
+                  </div>
                 </div>
               </div>
             </div>
@@ -18278,12 +18278,130 @@ const ProductForm = (() => {
             </div>
 
             <div>
-              <textarea
-                id="input-prod-desc"
-                rows="5"
-                placeholder="Jelaskan spesifikasi produk, keunggulan bahan, kelengkapan, dan catatan penting untuk pemesan..."
-                class="w-full px-4 py-2.5 rounded-md border border-slate-300 focus:border-[var(--color-primary)] text-slate-800 text-sm transition outline-none resize-y"
-              >${escapeHtml(primaryState.description)}</textarea>
+              <!-- Rich Text Editor Container -->
+              <div class="rich-text-editor-container border border-slate-300 rounded-md overflow-hidden bg-white focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] transition" id="rich-text-editor-wrapper">
+                <!-- Toolbar Format Deskripsi -->
+                <div class="rich-text-toolbar flex items-center flex-wrap gap-1 p-1.5 sm:p-2 bg-slate-50 border-b border-slate-200 select-none text-slate-700" role="toolbar" aria-label="Toolbar Format Deskripsi">
+                  <!-- Group 1: Undo / Redo -->
+                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="undo" title="Undo (Membatalkan perubahan)" aria-label="Undo">
+                      <i class="bi bi-arrow-counterclockwise text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="redo" title="Redo (Mengulangi perubahan)" aria-label="Redo">
+                      <i class="bi bi-arrow-clockwise text-xs sm:text-sm"></i>
+                    </button>
+                  </div>
+
+                  <!-- Group 2: Inline Styles (Bold, Italic, Underline, Strikethrough) -->
+                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold" data-command="bold" title="Bold (Teks tebal - Ctrl+B)" aria-label="Bold">
+                      <i class="bi bi-type-bold text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="italic" title="Italic (Teks miring - Ctrl+I)" aria-label="Italic">
+                      <i class="bi bi-type-italic text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="underline" title="Underline (Garis bawah - Ctrl+U)" aria-label="Underline">
+                      <i class="bi bi-type-underline text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="strikeThrough" title="Strikethrough (Teks coret)" aria-label="Strikethrough">
+                      <i class="bi bi-type-strikethrough text-xs sm:text-sm"></i>
+                    </button>
+                  </div>
+
+                  <!-- Group 3: Alignment (Left, Center, Right) -->
+                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="justifyLeft" title="Align Left (Rata kiri)" aria-label="Align Left">
+                      <i class="bi bi-text-left text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="justifyCenter" title="Align Center (Rata tengah)" aria-label="Align Center">
+                      <i class="bi bi-text-center text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="justifyRight" title="Align Right (Rata kanan)" aria-label="Align Right">
+                      <i class="bi bi-text-right text-xs sm:text-sm"></i>
+                    </button>
+                  </div>
+
+                  <!-- Group 4: Lists (Bullet, Numbered) -->
+                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="insertUnorderedList" title="Bullet List (Daftar berpoin)" aria-label="Bullet List">
+                      <i class="bi bi-list-ul text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="insertOrderedList" title="Numbered List (Daftar bernomor)" aria-label="Numbered List">
+                      <i class="bi bi-list-ol text-xs sm:text-sm"></i>
+                    </button>
+                  </div>
+
+                  <!-- Group 5: Insert Link & Clear Format -->
+                  <div class="flex items-center gap-0.5">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" id="btn-rte-link" data-command="custom-link" title="Link (Menambahkan tautan)" aria-label="Link">
+                      <i class="bi bi-link-45deg text-xs sm:text-sm"></i>
+                    </button>
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="removeFormat" title="Clear Format (Menghapus format teks)" aria-label="Clear Format">
+                      <i class="bi bi-eraser text-xs sm:text-sm"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Editable Writing Area -->
+                <div
+                  id="editor-prod-desc"
+                  contenteditable="true"
+                  spellcheck="false"
+                  role="textbox"
+                  aria-multiline="true"
+                  aria-placeholder="Tulis deskripsi produk di sini..."
+                  class="rich-text-editor-content w-full min-h-[140px] max-h-[500px] overflow-y-auto px-4 py-3 text-slate-800 text-sm leading-relaxed outline-none focus:outline-none"
+                  placeholder="Tulis deskripsi produk di sini..."
+                >${(() => {
+                  const desc = primaryState.description || '';
+                  if (!desc.trim()) return '';
+                  const hasTags = /<[a-z][\s\S]*>/i.test(desc);
+                  if (hasTags) return sanitizeProductDescriptionHtml(desc);
+                  return desc.split(/\r?\n\r?\n/).map(p => `<p>${escapeHtml(p).replace(/\r?\n/g, '<br>')}</p>`).join('');
+                })()}</div>
+
+                <!-- Hidden Textarea for Form & Script Compatibility -->
+                <textarea
+                  id="input-prod-desc"
+                  name="description"
+                  class="hidden sr-only"
+                  tabindex="-1"
+                  aria-hidden="true"
+                >${escapeHtml(primaryState.description)}</textarea>
+              </div>
+
+              <!-- Modal Link Inline Editor -->
+              <div id="rte-link-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-sm p-4 space-y-3">
+                  <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                    <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <i class="bi bi-link-45deg text-[var(--color-primary)] text-sm"></i>
+                      <span>Tautan Teks (Link)</span>
+                    </h4>
+                    <button type="button" id="btn-rte-link-close" class="text-slate-400 hover:text-slate-600 p-1 text-xs cursor-pointer">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                  <div class="space-y-1">
+                    <label class="block text-[11px] font-semibold text-slate-700">URL Tautan:</label>
+                    <input type="url" id="input-rte-link-url" placeholder="https://contoh.com" class="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs text-slate-800 outline-none focus:border-[var(--color-primary)]" />
+                    <p class="text-[10px] text-slate-400">Masukkan alamat website (awalan https:// atau http://)</p>
+                  </div>
+                  <div class="flex items-center justify-between pt-1">
+                    <button type="button" id="btn-rte-link-remove" class="px-2.5 py-1 rounded text-xs text-red-600 hover:bg-red-50 font-semibold transition cursor-pointer hidden">
+                      Hapus Tautan
+                    </button>
+                    <div class="flex items-center gap-1.5 ml-auto">
+                      <button type="button" id="btn-rte-link-cancel" class="px-3 py-1 rounded text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                        Batal
+                      </button>
+                      <button type="button" id="btn-rte-link-save" class="btn-primary-brand px-3.5 py-1 rounded text-xs font-bold text-white shadow-xs transition cursor-pointer" style="background-color: var(--color-primary);">
+                        Simpan
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div id="ai-description-preview-box" class="hidden mt-3 bg-slate-50 border border-slate-200 rounded-md p-4 space-y-3 transition">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-200/80 flex-wrap gap-2">
@@ -31871,6 +31989,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             descInput.value = aiText.textContent;
             primaryState.description = descInput.value;
           }
+          const richEditor = document.getElementById('editor-prod-desc');
+          if (richEditor && aiText) {
+            const raw = aiText.textContent || '';
+            const formatted = raw.split(/\r?\n\r?\n/).map(p => `<p>${escapeHtml(p).replace(/\r?\n/g, '<br>')}</p>`).join('');
+            richEditor.innerHTML = formatted;
+            richEditor.classList.remove('is-empty');
+            if (descInput) descInput.value = sanitizeProductDescriptionHtml(formatted);
+            primaryState.description = descInput ? descInput.value : formatted;
+          }
           if (aiBox) aiBox.classList.add('hidden');
         };
       }
@@ -31880,6 +32007,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           if (aiBox) aiBox.classList.add('hidden');
         };
       }
+
+      // Card 5: Rich Text Editor Events
+      bindRichTextEditorEvents();
 
       // Card 6: Komisi Afiliasi Events
       bindAffiliateCommissionEvents();
@@ -32914,6 +33044,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           descInput.value = currentGeneratedAIText;
         }
         primaryState.description = currentGeneratedAIText;
+
+        const richEditor = document.getElementById('editor-prod-desc');
+        if (richEditor) {
+          const formatted = currentGeneratedAIText.split(/\r?\n\r?\n/).map(p => `<p>${escapeHtml(p).replace(/\r?\n/g, '<br>')}</p>`).join('');
+          richEditor.innerHTML = formatted;
+          richEditor.classList.remove('is-empty');
+          if (descInput) descInput.value = sanitizeProductDescriptionHtml(formatted);
+          primaryState.description = descInput ? descInput.value : formatted;
+        }
 
         if (aiPreviewBox) {
           aiPreviewBox.classList.add('hidden');
@@ -34976,7 +35115,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Step 1 & Step 2 Card 1: Info Produk
     primaryState.name = document.getElementById('step2-input-name')?.value || document.getElementById('input-prod-name')?.value || primaryState.name;
-    primaryState.description = document.getElementById('input-prod-desc')?.value || primaryState.description || '';
+    const descEditorEl = document.getElementById('editor-prod-desc');
+    const descTextareaEl = document.getElementById('input-prod-desc');
+    if (descEditorEl) {
+      const editorText = (descEditorEl.textContent || '').trim();
+      if (!editorText && (!descEditorEl.innerHTML || descEditorEl.innerHTML === '<br>' || descEditorEl.innerHTML === '<p><br></p>' || descEditorEl.innerHTML === '<p></p>')) {
+        primaryState.description = '';
+      } else {
+        primaryState.description = sanitizeProductDescriptionHtml(descEditorEl.innerHTML);
+      }
+      if (descTextareaEl) descTextareaEl.value = primaryState.description;
+    } else if (descTextareaEl) {
+      primaryState.description = descTextareaEl.value || primaryState.description || '';
+    }
     const catInput = document.getElementById('select-step2-cat');
     if (catInput) {
       if (catInput.value) {
@@ -36318,8 +36469,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       }
     }
 
-    if (!primaryState.description || primaryState.description.trim() === '') {
-      addError('Deskripsi produk wajib diisi.', document.getElementById('input-prod-desc') || document.getElementById('card-step2-description'));
+    const cleanDescText = (primaryState.description || '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+
+    if (!cleanDescText) {
+      addError('Deskripsi produk wajib diisi.', document.getElementById('editor-prod-desc') || document.getElementById('input-prod-desc') || document.getElementById('card-step2-description'));
     }
 
     // 4. Validasi Komisi Afiliasi (Jika Aktif)
@@ -36708,6 +36864,421 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       .replace(/'/g, '&#039;');
   }
 
+  function sanitizeProductDescriptionHtml(raw) {
+    if (typeof Utils !== 'undefined' && typeof Utils.sanitizeProductDescriptionHtml === 'function') {
+      return Utils.sanitizeProductDescriptionHtml(raw);
+    }
+    if (raw === null || raw === undefined) return '';
+    const str = String(raw).trim();
+    if (!str) return '';
+
+    const hasTags = /<[a-z][\s\S]*>/i.test(str);
+    if (!hasTags) {
+      const escaped = escapeHtml(str);
+      return escaped
+        .split(/\r?\n\r?\n/)
+        .map(p => `<p>${p.replace(/\r?\n/g, '<br>')}</p>`)
+        .join('');
+    }
+
+    if (typeof DOMParser !== 'undefined') {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(`<div>${str}</div>`, 'text/html');
+        const root = doc.body.firstElementChild || doc.body;
+
+        const allowedTags = new Set([
+          'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
+          'ul', 'ol', 'li', 'a', 'span', 'div', 'blockquote', 'hr'
+        ]);
+
+        const allowedAligns = new Set(['left', 'center', 'right', 'justify']);
+
+        function sanitizeNode(node) {
+          const children = Array.from(node.childNodes);
+          children.forEach(child => {
+            if (child.nodeType === 1) {
+              const tag = child.tagName.toLowerCase();
+              if (!allowedTags.has(tag)) {
+                if (['script', 'style', 'iframe', 'object', 'embed', 'form', 'svg', 'math', 'input', 'button', 'link', 'meta'].includes(tag)) {
+                  child.remove();
+                  return;
+                }
+                sanitizeNode(child);
+                const frag = doc.createDocumentFragment();
+                while (child.firstChild) {
+                  frag.appendChild(child.firstChild);
+                }
+                child.parentNode.replaceChild(frag, child);
+                return;
+              }
+
+              const attrs = Array.from(child.attributes);
+              attrs.forEach(attr => {
+                const name = attr.name.toLowerCase();
+                const val = attr.value;
+
+                if (name.startsWith('on')) {
+                  child.removeAttribute(attr.name);
+                  return;
+                }
+
+                if (tag === 'a') {
+                  if (name === 'href') {
+                    const cleanHref = val.trim();
+                    if (/^(https?:\/\/|mailto:|\/)/i.test(cleanHref) && !/^\s*javascript:/i.test(cleanHref)) {
+                      child.setAttribute('href', cleanHref);
+                    } else {
+                      child.removeAttribute('href');
+                    }
+                  } else if (name === 'target') {
+                    child.setAttribute('target', '_blank');
+                  } else if (name === 'rel') {
+                    child.setAttribute('rel', 'noopener noreferrer');
+                  } else if (name !== 'title') {
+                    child.removeAttribute(attr.name);
+                  }
+                } else if (name === 'style') {
+                  const alignMatch = val.match(/text-align\s*:\s*(left|center|right|justify)/i);
+                  if (alignMatch && allowedAligns.has(alignMatch[1].toLowerCase())) {
+                    child.setAttribute('style', `text-align: ${alignMatch[1].toLowerCase()};`);
+                  } else {
+                    child.removeAttribute('style');
+                  }
+                } else {
+                  child.removeAttribute(attr.name);
+                }
+              });
+
+              if (tag === 'a' && child.hasAttribute('href')) {
+                child.setAttribute('target', '_blank');
+                child.setAttribute('rel', 'noopener noreferrer');
+              }
+
+              sanitizeNode(child);
+            } else if (child.nodeType === 8) {
+              child.remove();
+            }
+          });
+        }
+
+        sanitizeNode(root);
+        return root.innerHTML.trim();
+      } catch (_) {}
+    }
+
+    let safe = str
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+      .replace(/<object[\s\S]*?<\/object>/gi, '')
+      .replace(/<embed[\s\S]*?<\/embed>/gi, '')
+      .replace(/<form[\s\S]*?<\/form>/gi, '')
+      .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
+      .replace(/\son\w+\s*=\s*[^>\s]+/gi, '')
+      .replace(/href\s*=\s*(['"])\s*javascript:[^'"]*\1/gi, 'href=""')
+      .replace(/href\s*=\s*javascript:[^>\s]+/gi, 'href=""');
+
+    return safe;
+  }
+
+  function bindRichTextEditorEvents() {
+    const editor = document.getElementById('editor-prod-desc');
+    const textarea = document.getElementById('input-prod-desc');
+    const toolbar = document.querySelector('.rich-text-toolbar');
+    if (!editor || !textarea) return;
+
+    const updateEmptyState = () => {
+      const text = (editor.textContent || '').trim();
+      if (!text && (!editor.innerHTML || editor.innerHTML === '<br>' || editor.innerHTML === '<p><br></p>' || editor.innerHTML === '<p></p>')) {
+        editor.classList.add('is-empty');
+      } else {
+        editor.classList.remove('is-empty');
+      }
+    };
+
+    const syncToTextarea = () => {
+      updateEmptyState();
+      const rawHtml = editor.innerHTML;
+      const text = (editor.textContent || '').trim();
+      if (!text && (!rawHtml || rawHtml === '<br>' || rawHtml === '<p><br></p>' || rawHtml === '<p></p>')) {
+        textarea.value = '';
+        primaryState.description = '';
+      } else {
+        const sanitized = sanitizeProductDescriptionHtml(rawHtml);
+        textarea.value = sanitized;
+        primaryState.description = sanitized;
+      }
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    updateEmptyState();
+
+    // Pastikan default paragraf menggunakan tag p
+    try {
+      document.execCommand('defaultParagraphSeparator', false, 'p');
+    } catch (_) {}
+
+    editor.addEventListener('input', () => {
+      syncToTextarea();
+      updateToolbarActiveStates();
+    });
+
+    editor.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        const key = e.key ? e.key.toLowerCase() : '';
+        if (key === 'b') {
+          e.preventDefault();
+          document.execCommand('bold', false, null);
+          syncToTextarea();
+          updateToolbarActiveStates();
+        } else if (key === 'i') {
+          e.preventDefault();
+          document.execCommand('italic', false, null);
+          syncToTextarea();
+          updateToolbarActiveStates();
+        } else if (key === 'u') {
+          e.preventDefault();
+          document.execCommand('underline', false, null);
+          syncToTextarea();
+          updateToolbarActiveStates();
+        } else if (key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          document.execCommand('undo', false, null);
+          syncToTextarea();
+          updateToolbarActiveStates();
+        } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+          e.preventDefault();
+          document.execCommand('redo', false, null);
+          syncToTextarea();
+          updateToolbarActiveStates();
+        }
+      }
+    });
+
+    function updateToolbarActiveStates() {
+      if (!toolbar) return;
+      const stateCommands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
+      stateCommands.forEach(cmd => {
+        const btn = toolbar.querySelector(`[data-command="${cmd}"]`);
+        if (btn) {
+          let isActive = false;
+          try {
+            isActive = document.queryCommandState(cmd);
+          } catch (_) {}
+          btn.classList.toggle('is-active', Boolean(isActive));
+        }
+      });
+
+      const linkBtn = document.getElementById('btn-rte-link');
+      if (linkBtn) {
+        let isInsideLink = false;
+        try {
+          const sel = window.getSelection ? window.getSelection() : null;
+          if (sel && sel.rangeCount > 0) {
+            const node = sel.getRangeAt(0).commonAncestorContainer;
+            const parentEl = node.nodeType === 1 ? node : node.parentElement;
+            if (parentEl && parentEl.closest('a')) {
+              isInsideLink = true;
+            }
+          }
+        } catch (_) {}
+        linkBtn.classList.toggle('is-active', isInsideLink);
+      }
+    }
+
+    ['keyup', 'mouseup', 'focus', 'selectionchange'].forEach(evt => {
+      editor.addEventListener(evt, updateToolbarActiveStates);
+    });
+
+    document.addEventListener('selectionchange', () => {
+      if (document.activeElement === editor) {
+        updateToolbarActiveStates();
+      }
+    });
+
+    const buttons = toolbar ? toolbar.querySelectorAll('.rte-btn') : [];
+    buttons.forEach(btn => {
+      // Toolbar tidak boleh menghilangkan seleksi teks ketika tombol format ditekan
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cmd = btn.getAttribute('data-command');
+        if (!cmd) return;
+
+        editor.focus();
+
+        if (cmd === 'custom-link') {
+          handleLinkButtonClick();
+          return;
+        }
+
+        if (cmd === 'removeFormat') {
+          document.execCommand('removeFormat', false, null);
+          document.execCommand('unlink', false, null);
+        } else {
+          document.execCommand(cmd, false, null);
+        }
+
+        syncToTextarea();
+        updateToolbarActiveStates();
+      });
+    });
+
+    let savedRangeForLink = null;
+    const linkModal = document.getElementById('rte-link-modal');
+    const linkInput = document.getElementById('input-rte-link-url');
+    const btnLinkSave = document.getElementById('btn-rte-link-save');
+    const btnLinkRemove = document.getElementById('btn-rte-link-remove');
+    const btnLinkCancel = document.getElementById('btn-rte-link-cancel');
+    const btnLinkClose = document.getElementById('btn-rte-link-close');
+
+    function getParentAnchorFromRange(range) {
+      if (!range) return null;
+      const node = range.commonAncestorContainer;
+      const el = node.nodeType === 1 ? node : node.parentElement;
+      return el ? el.closest('a') : null;
+    }
+
+    function handleLinkButtonClick() {
+      try {
+        const sel = window.getSelection ? window.getSelection() : null;
+        if (sel && sel.rangeCount > 0) {
+          savedRangeForLink = sel.getRangeAt(0).cloneRange();
+        } else {
+          savedRangeForLink = null;
+        }
+      } catch (_) {
+        savedRangeForLink = null;
+      }
+
+      const anchor = getParentAnchorFromRange(savedRangeForLink);
+
+      if (linkModal && linkInput) {
+        if (anchor) {
+          linkInput.value = anchor.getAttribute('href') || '';
+          if (btnLinkRemove) btnLinkRemove.classList.remove('hidden');
+        } else {
+          linkInput.value = '';
+          if (btnLinkRemove) btnLinkRemove.classList.add('hidden');
+        }
+        linkModal.classList.remove('hidden');
+        setTimeout(() => linkInput.focus(), 50);
+      } else {
+        const currentUrl = anchor ? anchor.getAttribute('href') : '';
+        const url = (typeof window.prompt === 'function')
+          ? window.prompt('Masukkan URL tautan (https://...):', currentUrl || 'https://')
+          : null;
+        if (url === null) return;
+        if (url.trim() === '') {
+          if (anchor) document.execCommand('unlink', false, null);
+        } else {
+          applyLinkUrl(url.trim());
+        }
+        syncToTextarea();
+        updateToolbarActiveStates();
+      }
+    }
+
+    function closeLinkModal() {
+      if (linkModal) linkModal.classList.add('hidden');
+      if (editor) editor.focus();
+    }
+
+    function applyLinkUrl(rawUrl) {
+      let url = rawUrl.trim();
+      if (!url) return;
+      if (!/^(https?:\/\/|mailto:|\/)/i.test(url)) {
+        url = 'https://' + url;
+      }
+      if (/^\s*javascript:/i.test(url)) {
+        if (typeof App !== 'undefined' && App.showToast) {
+          App.showToast('URL tautan tidak aman.', 'warning');
+        } else {
+          alert('URL tautan tidak aman.');
+        }
+        return;
+      }
+
+      try {
+        if (savedRangeForLink) {
+          const sel = window.getSelection ? window.getSelection() : null;
+          if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(savedRangeForLink);
+          }
+        }
+      } catch (_) {}
+
+      const existingAnchor = getParentAnchorFromRange(savedRangeForLink);
+      if (existingAnchor) {
+        existingAnchor.setAttribute('href', url);
+        existingAnchor.setAttribute('target', '_blank');
+        existingAnchor.setAttribute('rel', 'noopener noreferrer');
+      } else {
+        document.execCommand('createLink', false, url);
+        try {
+          const sel = window.getSelection ? window.getSelection() : null;
+          if (sel && sel.rangeCount > 0) {
+            const anchor = getParentAnchorFromRange(sel.getRangeAt(0));
+            if (anchor) {
+              anchor.setAttribute('target', '_blank');
+              anchor.setAttribute('rel', 'noopener noreferrer');
+            }
+          }
+        } catch (_) {}
+      }
+      syncToTextarea();
+      updateToolbarActiveStates();
+    }
+
+    if (btnLinkSave) {
+      btnLinkSave.onclick = (e) => {
+        e.preventDefault();
+        const url = linkInput ? linkInput.value.trim() : '';
+        if (url) {
+          applyLinkUrl(url);
+        }
+        closeLinkModal();
+      };
+    }
+
+    if (btnLinkRemove) {
+      btnLinkRemove.onclick = (e) => {
+        e.preventDefault();
+        try {
+          if (savedRangeForLink) {
+            const sel = window.getSelection ? window.getSelection() : null;
+            if (sel) {
+              sel.removeAllRanges();
+              sel.addRange(savedRangeForLink);
+            }
+          }
+        } catch (_) {}
+        document.execCommand('unlink', false, null);
+        syncToTextarea();
+        updateToolbarActiveStates();
+        closeLinkModal();
+      };
+    }
+
+    if (btnLinkCancel) btnLinkCancel.onclick = closeLinkModal;
+    if (btnLinkClose) btnLinkClose.onclick = closeLinkModal;
+    if (linkInput) {
+      linkInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (btnLinkSave) btnLinkSave.click();
+        } else if (e.key === 'Escape') {
+          closeLinkModal();
+        }
+      };
+    }
+  }
+
   return {
     init() {
       formMode = 'create';
@@ -36832,11 +37403,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     autoScrollVariationTableToRight: () => { if (typeof autoScrollVariationTableToRight === 'function') autoScrollVariationTableToRight(); },
     setVariantDimensionsState: (enabled, user) => { if (typeof setVariantDimensionsState === 'function') setVariantDimensionsState(enabled, user); },
     navigateToVariantTableDirectly: () => { if (typeof navigateToVariantTableDirectly === 'function') navigateToVariantTableDirectly(); },
-    refreshCombinationMatrixTable: (opts) => { if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix(opts); }
+    refreshCombinationMatrixTable: (opts) => { if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix(opts); },
+    sanitizeProductDescriptionHtml,
+    bindRichTextEditorEvents
   };
 })();
 
 window.ProductForm = ProductForm;
+window.sanitizeProductDescriptionHtml = ProductForm.sanitizeProductDescriptionHtml;
+window.bindRichTextEditorEvents = ProductForm.bindRichTextEditorEvents;
 window.navigateToVariantTableDirectly = ProductForm.navigateToVariantTableDirectly;
 window.resolveProductMaxOrderInfo = ProductForm.resolveProductMaxOrderInfo;
 window.updateDrawerMaxOrderDisplay = ProductForm.updateDrawerMaxOrderDisplay;

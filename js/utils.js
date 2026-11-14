@@ -46,6 +46,9 @@
     if (typeof root.formatPriceRangeHtmlWithSmallRp === 'undefined') {
       root.formatPriceRangeHtmlWithSmallRp = utils.formatPriceRangeHtmlWithSmallRp;
     }
+    if (typeof root.sanitizeProductDescriptionHtml === 'undefined') {
+      root.sanitizeProductDescriptionHtml = utils.sanitizeProductDescriptionHtml;
+    }
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -299,6 +302,134 @@
     return sCountry || 'Indonesia';
   }
 
+  /**
+   * Sanitasi HTML deskripsi produk untuk Rich Text Editor dan tampilan PDP / Pratinjau.
+   * Hanya mengizinkan tag pemformatan teks yang aman, menyaring atribut berbahaya,
+   * memblokir script, iframe, on* event handlers, dan URL berbahaya (javascript:).
+   *
+   * @param {string} raw - Konten mentah HTML atau plain text
+   * @returns {string} Konten HTML yang aman (XSS safe)
+   */
+  function sanitizeProductDescriptionHtml(raw) {
+    if (raw === null || raw === undefined) return '';
+    const str = String(raw).trim();
+    if (!str) return '';
+
+    // Jika berupa teks murni tanpa tag HTML, konversi baris baru menjadi format paragraf & break
+    const hasTags = /<[a-z][\s\S]*>/i.test(str);
+    if (!hasTags) {
+      const escaped = escapeHtml(str);
+      return escaped
+        .split(/\r?\n\r?\n/)
+        .map(p => `<p>${p.replace(/\r?\n/g, '<br>')}</p>`)
+        .join('');
+    }
+
+    // Jika berjalan di lingkungan browser / DOM yang mendukung DOMParser
+    if (typeof DOMParser !== 'undefined') {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(`<div>${str}</div>`, 'text/html');
+        const root = doc.body.firstElementChild || doc.body;
+
+        const allowedTags = new Set([
+          'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
+          'ul', 'ol', 'li', 'a', 'span', 'div', 'blockquote', 'hr'
+        ]);
+
+        const allowedAligns = new Set(['left', 'center', 'right', 'justify']);
+
+        function sanitizeNode(node) {
+          const children = Array.from(node.childNodes);
+          children.forEach(child => {
+            if (child.nodeType === 1) { // Element node
+              const tag = child.tagName.toLowerCase();
+              if (!allowedTags.has(tag)) {
+                if (['script', 'style', 'iframe', 'object', 'embed', 'form', 'svg', 'math', 'input', 'button', 'link', 'meta'].includes(tag)) {
+                  child.remove();
+                  return;
+                }
+                // Tag tidak dikenal tapi bukan script, ekstrak teks/anaknya
+                sanitizeNode(child);
+                const frag = doc.createDocumentFragment();
+                while (child.firstChild) {
+                  frag.appendChild(child.firstChild);
+                }
+                child.parentNode.replaceChild(frag, child);
+                return;
+              }
+
+              // Filter atribut
+              const attrs = Array.from(child.attributes);
+              attrs.forEach(attr => {
+                const name = attr.name.toLowerCase();
+                const val = attr.value;
+
+                if (name.startsWith('on')) {
+                  child.removeAttribute(attr.name);
+                  return;
+                }
+
+                if (tag === 'a') {
+                  if (name === 'href') {
+                    const cleanHref = val.trim();
+                    if (/^(https?:\/\/|mailto:|\/)/i.test(cleanHref) && !/^\s*javascript:/i.test(cleanHref)) {
+                      child.setAttribute('href', cleanHref);
+                    } else {
+                      child.removeAttribute('href');
+                    }
+                  } else if (name === 'target') {
+                    child.setAttribute('target', '_blank');
+                  } else if (name === 'rel') {
+                    child.setAttribute('rel', 'noopener noreferrer');
+                  } else if (name !== 'title') {
+                    child.removeAttribute(attr.name);
+                  }
+                } else if (name === 'style') {
+                  const alignMatch = val.match(/text-align\s*:\s*(left|center|right|justify)/i);
+                  if (alignMatch && allowedAligns.has(alignMatch[1].toLowerCase())) {
+                    child.setAttribute('style', `text-align: ${alignMatch[1].toLowerCase()};`);
+                  } else {
+                    child.removeAttribute('style');
+                  }
+                } else {
+                  child.removeAttribute(attr.name);
+                }
+              });
+
+              if (tag === 'a' && child.hasAttribute('href')) {
+                child.setAttribute('target', '_blank');
+                child.setAttribute('rel', 'noopener noreferrer');
+              }
+
+              sanitizeNode(child);
+            } else if (child.nodeType === 8) { // Comment
+              child.remove();
+            }
+          });
+        }
+
+        sanitizeNode(root);
+        return root.innerHTML.trim();
+      } catch (_) {}
+    }
+
+    // Fallback regex sanitizer
+    let safe = str
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+      .replace(/<object[\s\S]*?<\/object>/gi, '')
+      .replace(/<embed[\s\S]*?<\/embed>/gi, '')
+      .replace(/<form[\s\S]*?<\/form>/gi, '')
+      .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
+      .replace(/\son\w+\s*=\s*[^>\s]+/gi, '')
+      .replace(/href\s*=\s*(['"])\s*javascript:[^'"]*\1/gi, 'href=""')
+      .replace(/href\s*=\s*javascript:[^>\s]+/gi, 'href=""');
+
+    return safe;
+  }
+
   return {
     formatIDR,
     formatCurrency,
@@ -309,10 +440,12 @@
     generateSlug,
     formatDateID,
     adjustColorBrightness,
-    formatDynamicSellerLocation
+    formatDynamicSellerLocation,
+    sanitizeProductDescriptionHtml
   };
 }));
 
 if (typeof window !== 'undefined') {
   window.formatDynamicSellerLocation = (typeof Utils !== 'undefined' && Utils.formatDynamicSellerLocation) ? Utils.formatDynamicSellerLocation : null;
+  window.sanitizeProductDescriptionHtml = (typeof Utils !== 'undefined' && Utils.sanitizeProductDescriptionHtml) ? Utils.sanitizeProductDescriptionHtml : null;
 }

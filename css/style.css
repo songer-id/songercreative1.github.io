@@ -1469,3 +1469,76 @@ body.visual-edit-active [data-section]:hover {
 .aspect-\[3\/4\] {
   aspect-ratio: 3 / 4 !important;
 }
+
+/* ==========================================================================
+   STYLING DESKRIPSI PRODUK RICH TEXT (PDP & STOREFRONT)
+   ========================================================================== */
+#pdp-full-description,
+.product-description-content {
+  line-height: 1.65;
+  color: #334155;
+  word-break: break-word;
+}
+
+#pdp-full-description p,
+.product-description-content p {
+  margin-bottom: 0.5rem;
+}
+
+#pdp-full-description p:last-child,
+.product-description-content p:last-child {
+  margin-bottom: 0;
+}
+
+#pdp-full-description ul,
+.product-description-content ul {
+  list-style-type: disc !important;
+  padding-left: 1.25rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+#pdp-full-description ol,
+.product-description-content ol {
+  list-style-type: decimal !important;
+  padding-left: 1.25rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+#pdp-full-description li,
+.product-description-content li {
+  margin-bottom: 0.25rem;
+  display: list-item !important;
+}
+
+#pdp-full-description a,
+.product-description-content a {
+  color: var(--color-primary, #33b589) !important;
+  text-decoration: underline !important;
+  transition: opacity 0.15s ease;
+}
+
+#pdp-full-description a:hover,
+.product-description-content a:hover {
+  opacity: 0.8;
+}
+
+#pdp-full-description strong,
+#pdp-full-description b,
+.product-description-content strong,
+.product-description-content b {
+  font-weight: 700 !important;
+}
+
+#pdp-full-description u,
+.product-description-content u {
+  text-decoration: underline !important;
+}
+
+#pdp-full-description s,
+#pdp-full-description strike,
+#pdp-full-description del,
+.product-description-content s,
+.product-description-content strike,
+.product-description-content del {
+  text-decoration: line-through !important;
+}

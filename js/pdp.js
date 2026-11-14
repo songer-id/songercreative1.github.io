@@ -973,7 +973,12 @@
     // Deskripsi
     const descEl = document.getElementById('pdp-full-description');
     if (descEl) {
-      descEl.textContent = prod.description || 'Produk percetakan berkualitas tinggi dengan hasil cetak tajam, warna solid, dan daya tahan maksimal.';
+      const rawDesc = prod.description || 'Produk percetakan berkualitas tinggi dengan hasil cetak tajam, warna solid, dan daya tahan maksimal.';
+      const cleanHtml = (typeof Utils !== 'undefined' && Utils.sanitizeProductDescriptionHtml)
+        ? Utils.sanitizeProductDescriptionHtml(rawDesc)
+        : (typeof sanitizeProductDescriptionHtml === 'function' ? sanitizeProductDescriptionHtml(rawDesc) : rawDesc);
+      descEl.innerHTML = cleanHtml;
+      descEl.classList.add('product-description-content');
     }
 
     // Spesifikasi Produk Tab

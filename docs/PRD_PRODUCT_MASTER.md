@@ -646,6 +646,38 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
      - Input nilai komisi tunggal `#input-affiliate-single-value` memiliki tinggi `h-9` dan placeholder persis `Input`.
      - Seluruh validasi komisi (clamp maksimal 100% untuk persentase, kalkulasi konversi real-time, sinkronisasi `syncStateFromDOM()`, dan pemulihan data pada Edit Produk) dipertahankan utuh.
 
+### 6.J. Deskripsi Produk (Rich Text Editor & Sanitasi HTML)
+- **Komponen Rich Text Editor (`#rich-text-editor-wrapper`)**:
+  - Menggantikan input textarea teks biasa menjadi Rich Text Editor berbasis WYSIWYG contenteditable modern dengan toolbar pemformatan teks di sisi atas.
+  - Sisi penulisan (`#editor-prod-desc`): contenteditable dengan tinggi dinamis (min-height 140px, max-height 480px, overflow-y auto), font `text-sm`, line-height `1.6`, dan placeholder persis: `"Tulis deskripsi produk di sini..."`.
+  - Hidden textarea (`#input-prod-desc`): Dipertahankan tersembunyi untuk kompatibilitas form, serialisasi payload, dan `syncStateFromDOM()`.
+- **13 Tools Toolbar Pemformatan**:
+  1. *Undo* (`bi-arrow-counterclockwise`): Membatalkan perubahan teks.
+  2. *Redo* (`bi-arrow-clockwise`): Mengulangi perubahan yang dibatalkan.
+  3. *Bold / B* (`bi-type-bold`): Format teks tebal (`Ctrl+B`).
+  4. *Italic / I* (`bi-type-italic`): Format teks miring (`Ctrl+I`).
+  5. *Underline / U* (`bi-type-underline`): Format garis bawah (`Ctrl+U`).
+  6. *Strikethrough / S* (`bi-type-strikethrough`): Format teks coret.
+  7. *Align Left* (`bi-text-left`): Rata kiri teks.
+  8. *Align Center* (`bi-text-center`): Rata tengah teks.
+  9. *Align Right* (`bi-text-right`): Rata kanan teks.
+  10. *Bullet List* (`bi-list-ul`): Daftar berpoin tidak berurutan (`<ul><li>`).
+  11. *Numbered List* (`bi-list-ol`): Daftar bernomor berurutan (`<ol><li>`).
+  12. *Link* (`bi-link-45deg`): Modal dialog interaktif (`#rte-link-modal`) untuk menambah/mengubah tautan web aman (`target="_blank" rel="noopener noreferrer"`).
+  13. *Clear Format* (`bi-eraser`): Menghapus seluruh format gaya dan tautan pada teks terseleksi (`removeFormat` & `unlink`).
+- **Preservasi Seleksi Teks & Shortcut**:
+  - Seluruh tombol toolbar mengimplementasikan pencegahan pelepasan fokus (`mousedown` preventDefault), sehingga seleksi teks seller tidak hilang saat tombol format ditekan.
+  - State aktif tombol toolbar disinkronkan secara visual (`.is-active`, warna `--color-primary`) melalui event `selectionchange`, `keyup`, dan `mouseup`.
+  - Mendukung shortcut keyboard standar desktop: `Ctrl+B`, `Ctrl+I`, `Ctrl+U`, `Ctrl+Z`, `Ctrl+Y`.
+- **Keamanan XSS & Sanitasi HTML (`sanitizeProductDescriptionHtml`)**:
+  - Seluruh markup HTML disanitasi secara ketat sebelum disimpan ke `primaryState.description` dan database `DB.createProduct()`/`DB.updateProduct()`.
+  - Menolak dan membuang tag berbahaya: `<script>`, `<style>`, `<iframe>`, `<object>`, `<embed>`, `<form>`, `<input>`, `<button>`, serta seluruh event handler HTML (`onclick`, `onerror`, `onload`, dll.).
+  - Memfilter skema URL tautan: hanya mengizinkan `http://`, `https://`, dan `mailto:`. URL `javascript:` atau skema berbahaya lainnya otomatis diblokir.
+- **Kompatibilitas Produk Lama & Tampilan PDP**:
+  - Deskripsi produk lama berupa teks murni (plain text tanpa tag HTML) otomatis dikonversi dengan preservasi jeda baris (`\n\n` menjadi paragraf `<p>`, `\n` menjadi `<br>`).
+  - PDP (`js/pdp.js` pada `#pdp-full-description`) dan Storefront Modal (`js/buyer-store.js`) menginjeksi HTML tersanitasi secara aman dengan dukungan typography CSS (list style disc/decimal, jarak paragraf, tautan bertema).
+  - Generator Deskripsi AI (`btn-ai-desc-apply`) otomatis merangkai dan menerapkan teks deskripsi ke dalam Rich Text Editor.
+
 ---
 
 ## 7. SPESIFIKASI UI/UX SECARA DETAIL
