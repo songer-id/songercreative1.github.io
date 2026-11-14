@@ -597,6 +597,34 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
   - `sku`: Nomor identitas stok toko (`primaryState.sku`).
   - **Kalkulator Kasir Cepat**: Jika produk bertipe Meter ($P \times L$) dibuka di POS Kasir, kasir otomatis disajikan modal pop-up kalkulator PxL (`#modal-pos-calculator` pada `admin.html` baris 549) untuk menginput panjang dan lebar sebelum masuk ke keranjang belanja kasir (`posCart`).
 
+### 6.H. Spesifikasi Produk (Accordion Input/Pilih & Penyelarasan Saran)
+- **Transformasi Dropdown menjadi Accordion Input/Pilih**:
+  1. *Kondisi Produk (`#wrapper-prod-condition`)*:
+     - Menggantikan dropdown native dengan komponen Accordion Input/Pilih seragam: trigger `#input-prod-condition` (readonly, tinggi `h-9`, radius `rounded-md`, placeholder `Input`, chevron rotasi), hidden native select `#select-prod-condition`, dan floating popover `#prod-condition-popover` (`z-50`).
+     - Seluruh pilihan kondisi produk dipertahankan: `Baru` (`new`) dan `Pernah Dipakai / Bekas` (`used`).
+     - Nilai tersimpan dapat dimuat kembali secara utuh pada mode Edit Produk.
+  2. *Masa Garansi (`#wrapper-warranty-unit`)*:
+     - Menggunakan komponen Accordion Input/Pilih (`#input-warranty-unit`, hidden select `#select-warranty-unit`, popover `#warranty-unit-popover`) dengan placeholder `Input`.
+     - Seluruh pilihan durasi garansi dipertahankan: `Tidak Ada Garansi`, `Hari`, `Bulan`, `Tahun`, dan `Seumur Hidup`.
+     - Berdampingan dengan input angka durasi garansi `#input-warranty-duration` yang muncul kondisional pada satuan Hari, Bulan, dan Tahun.
+  3. *Jenis Garansi (`#wrapper-warranty-type`)*:
+     - Menggunakan komponen Accordion Input/Pilih (`#input-warranty-type`, hidden select `#select-warranty-type`, popover `#warranty-type-popover`) dengan placeholder `Input`.
+     - Pilihan jenis garansi: `Garansi Toko`, `Garansi Resmi Produsen`, `Garansi Distributor`, dan `Garansi Internasional`.
+     - Hubungan kondisional dengan Masa Garansi tetap terjaga (otomatis ditampilkan jika masa garansi bukan "Tidak Ada Garansi", dan disembunyikan saat "Tidak Ada Garansi").
+  4. *Konsistensi Visual & Interaksi*:
+     - Seluruh accordion spesifikasi memiliki border `border-slate-300`, sudut radius `rounded-md` (6px), tinggi `h-9`, ikon chevron rotasi `rotate-180`, penanda centang aktif (`bi-check2`), serta proteksi viewport flip-up agar popover tidak terpotong tepi layar pada mobile maupun desktop.
+- **Pembaruan Saran Merek (`datalist-product-brands`)*:
+  - Nilai saran `Songer Creative` dihilangkan dari autocomplete agar netral bagi toko multi-brand.
+  - Nilai saran merek yang tersedia: `Tanpa Merek`, `Custom / Merk Sendiri`, dan `Lokal`. Field bersifat opsional dan seller tetap bebas mengetik merek manual.
+  - Produk lama yang memiliki merek "Songer Creative" tetap termuat apa adanya pada mode Edit Produk.
+- **Pembaruan Pilihan Asal Produk (`datalist-product-origins`)*:
+  - Teks pilihan `Indonesia (Lokal)` diselaraskan menjadi `Dalam Negeri/Lokal`.
+  - Teks pilihan `Lamongan` diselaraskan menjadi `Jakarta`.
+  - Pilihan lain (`Impor`, `Jawa Timur`, `Surabaya`) dipertahankan. Data asal produk lama tetap kompatibel.
+- **Pembersihan Saran Atribut Tambahan (`SPEC_TITLE_RECOMMENDATIONS` & `datalist-spec-titles`)*:
+  - Opsi saran `SKU Induk` dihilangkan dari rekomendasi atribut spesifikasi tambahan manual untuk mencegah redundansi dengan field SKU utama (`#input-prod-sku`).
+  - Rekomendasi atribut tambahan tersisa: `Dimensi (PxLxT)`, `Bahan`, `Berat Bersih`, `Finishing`, `Ketebalan`, `Isi per Paket`, dan `Asal Produk`. Field SKU utama tetap beroperasi normal.
+
 ---
 
 ## 7. SPESIFIKASI UI/UX SECARA DETAIL

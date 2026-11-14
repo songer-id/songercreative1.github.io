@@ -2870,6 +2870,9 @@ const ProductForm = (() => {
 
     primaryState = {
       name: prod.name,
+      condition: prod.condition || 'new',
+      sku: prod.sku || '',
+      barcode: prod.barcode || '',
       brand: prod.brand || '',
       product_origin: prod.product_origin || '',
       warranty_unit: wUnit,
@@ -15076,8 +15079,7 @@ const ProductForm = (() => {
     'Finishing',
     'Ketebalan',
     'Isi per Paket',
-    'Asal Produk',
-    'SKU Induk'
+    'Asal Produk'
   ];
 
   // Helper render tabel spesifikasi tambahan manual [Judul] [Keterangan]
@@ -18173,11 +18175,61 @@ const ProductForm = (() => {
             <!-- Kondisi, SKU Induk, Barcode -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
               <div>
-                <label for="select-prod-condition" class="block text-xs font-bold text-slate-800 mb-1">Kondisi Produk:</label>
-                <select id="select-prod-condition" class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none bg-white">
-                  <option value="new" ${primaryState.condition === 'new' ? 'selected' : ''}>Baru</option>
-                  <option value="used" ${primaryState.condition === 'used' ? 'selected' : ''}>Pernah Dipakai / Bekas</option>
-                </select>
+                <label for="input-prod-condition" class="block text-xs font-bold text-slate-800 mb-1">Kondisi Produk:</label>
+                <!-- Accordion Input/Pilih Kondisi Produk -->
+                <div class="relative w-full custom-select-group" id="wrapper-prod-condition">
+                  <div class="relative flex items-center">
+                    <input
+                      type="text"
+                      id="input-prod-condition"
+                      readonly
+                      class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer select-none shadow-2xs"
+                      placeholder="Input"
+                      value="${(() => {
+                        const curCond = (primaryState.condition !== undefined && primaryState.condition !== null && primaryState.condition !== '') ? primaryState.condition : 'new';
+                        if (curCond === 'used') return 'Pernah Dipakai / Bekas';
+                        if (curCond === 'new') return 'Baru';
+                        return '';
+                      })()}"
+                      autocomplete="off"
+                    />
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                      <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="prod-condition-chevron"></i>
+                    </div>
+                  </div>
+
+                  <!-- Native Select Tersembunyi (Kompatibilitas Form & Script) -->
+                  <select id="select-prod-condition" class="hidden">
+                    <option value="new" ${(primaryState.condition || 'new') === 'new' ? 'selected' : ''}>Baru</option>
+                    <option value="used" ${primaryState.condition === 'used' ? 'selected' : ''}>Pernah Dipakai / Bekas</option>
+                  </select>
+
+                  <!-- Popover Dropdown Pilihan Kondisi -->
+                  <div
+                    id="prod-condition-popover"
+                    class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg p-1 z-50 hidden select-none max-h-48 overflow-y-auto"
+                    role="listbox"
+                  >
+                    <div
+                      class="custom-prod-condition-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${(primaryState.condition || 'new') === 'new' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                      data-value="new"
+                      data-label="Baru"
+                      role="option"
+                    >
+                      <span>Baru</span>
+                      ${(primaryState.condition || 'new') === 'new' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                    </div>
+                    <div
+                      class="custom-prod-condition-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${primaryState.condition === 'used' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                      data-value="used"
+                      data-label="Pernah Dipakai / Bekas"
+                      role="option"
+                    >
+                      <span>Pernah Dipakai / Bekas</span>
+                      ${primaryState.condition === 'used' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -18222,21 +18274,59 @@ const ProductForm = (() => {
                 </div>
               </div>
 
-              <!-- Baris 2: Masa Garansi (Dropdown Satuan + Input Angka Manual) & Jenis Garansi -->
+              <!-- Baris 2: Masa Garansi (Accordion Input/Pilih Satuan + Input Angka Manual) & Jenis Garansi (Accordion Input/Pilih) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label for="select-warranty-unit" class="block text-xs font-bold text-slate-800 mb-1">Masa Garansi:</label>
+                  <label for="input-warranty-unit" class="block text-xs font-bold text-slate-800 mb-1">Masa Garansi:</label>
                   <div class="flex items-center gap-2">
-                    <select
-                      id="select-warranty-unit"
-                      class="flex-1 h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
-                    >
-                      <option value="Tidak Ada Garansi" ${(primaryState.warranty_unit || 'Tidak Ada Garansi') === 'Tidak Ada Garansi' ? 'selected' : ''}>Tidak Ada Garansi</option>
-                      <option value="Hari" ${primaryState.warranty_unit === 'Hari' ? 'selected' : ''}>Hari</option>
-                      <option value="Bulan" ${primaryState.warranty_unit === 'Bulan' ? 'selected' : ''}>Bulan</option>
-                      <option value="Tahun" ${primaryState.warranty_unit === 'Tahun' ? 'selected' : ''}>Tahun</option>
-                      <option value="Seumur Hidup" ${primaryState.warranty_unit === 'Seumur Hidup' ? 'selected' : ''}>Seumur Hidup</option>
-                    </select>
+                    <!-- Accordion Input/Pilih Satuan Masa Garansi -->
+                    <div class="relative flex-1 custom-select-group" id="wrapper-warranty-unit">
+                      <div class="relative flex items-center">
+                        <input
+                          type="text"
+                          id="input-warranty-unit"
+                          readonly
+                          class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer select-none shadow-2xs"
+                          placeholder="Input"
+                          value="${escapeHtml(primaryState.warranty_unit || 'Tidak Ada Garansi')}"
+                          autocomplete="off"
+                        />
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                          <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="warranty-unit-chevron"></i>
+                        </div>
+                      </div>
+
+                      <!-- Native Select Tersembunyi (Kompatibilitas Form & Script) -->
+                      <select id="select-warranty-unit" class="hidden">
+                        <option value="Tidak Ada Garansi" ${(primaryState.warranty_unit || 'Tidak Ada Garansi') === 'Tidak Ada Garansi' ? 'selected' : ''}>Tidak Ada Garansi</option>
+                        <option value="Hari" ${primaryState.warranty_unit === 'Hari' ? 'selected' : ''}>Hari</option>
+                        <option value="Bulan" ${primaryState.warranty_unit === 'Bulan' ? 'selected' : ''}>Bulan</option>
+                        <option value="Tahun" ${primaryState.warranty_unit === 'Tahun' ? 'selected' : ''}>Tahun</option>
+                        <option value="Seumur Hidup" ${primaryState.warranty_unit === 'Seumur Hidup' ? 'selected' : ''}>Seumur Hidup</option>
+                      </select>
+
+                      <!-- Popover Dropdown Pilihan Satuan Garansi -->
+                      <div
+                        id="warranty-unit-popover"
+                        class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg p-1 z-50 hidden select-none max-h-48 overflow-y-auto"
+                        role="listbox"
+                      >
+                        ${['Tidak Ada Garansi', 'Hari', 'Bulan', 'Tahun', 'Seumur Hidup'].map(opt => {
+                          const isSel = (primaryState.warranty_unit || 'Tidak Ada Garansi') === opt;
+                          return `
+                            <div
+                              class="custom-warranty-unit-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSel ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                              data-value="${opt}"
+                              data-label="${opt}"
+                              role="option"
+                            >
+                              <span>${opt}</span>
+                              ${isSel ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </div>
 
                     <div id="container-warranty-duration" class="${['Hari', 'Bulan', 'Tahun'].includes(primaryState.warranty_unit) ? 'flex' : 'hidden'} items-center gap-1 w-24 shrink-0">
                       <input
@@ -18246,22 +18336,60 @@ const ProductForm = (() => {
                         max="365"
                         value="${primaryState.warranty_duration || ''}"
                         placeholder="Jumlah"
-                        class="w-full h-9 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]"
+                        class="w-full h-9 px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)] shadow-2xs"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div id="container-warranty-type" class="${(primaryState.warranty_unit && primaryState.warranty_unit !== 'Tidak Ada Garansi') ? 'block' : 'hidden'}">
-                  <label for="select-warranty-type" class="block text-xs font-bold text-slate-800 mb-1">Jenis Garansi:</label>
-                  <select
-                    id="select-warranty-type"
-                    class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white focus:border-[var(--color-primary)]"
-                  >
-                    ${['Garansi Toko', 'Garansi Resmi Produsen', 'Garansi Distributor', 'Garansi Internasional'].map(opt => `
-                      <option value="${opt}" ${(primaryState.warranty_type || 'Garansi Toko') === opt ? 'selected' : ''}>${opt}</option>
-                    `).join('')}
-                  </select>
+                  <label for="input-warranty-type" class="block text-xs font-bold text-slate-800 mb-1">Jenis Garansi:</label>
+                  <!-- Accordion Input/Pilih Jenis Garansi -->
+                  <div class="relative w-full custom-select-group" id="wrapper-warranty-type">
+                    <div class="relative flex items-center">
+                      <input
+                        type="text"
+                        id="input-warranty-type"
+                        readonly
+                        class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer select-none shadow-2xs"
+                        placeholder="Input"
+                        value="${escapeHtml(primaryState.warranty_type || '')}"
+                        autocomplete="off"
+                      />
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                        <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="warranty-type-chevron"></i>
+                      </div>
+                    </div>
+
+                    <!-- Native Select Tersembunyi (Kompatibilitas Form & Script) -->
+                    <select id="select-warranty-type" class="hidden">
+                      ${['Garansi Toko', 'Garansi Resmi Produsen', 'Garansi Distributor', 'Garansi Internasional'].map(opt => `
+                        <option value="${opt}" ${(primaryState.warranty_type || 'Garansi Toko') === opt ? 'selected' : ''}>${opt}</option>
+                      `).join('')}
+                    </select>
+
+                    <!-- Popover Dropdown Pilihan Jenis Garansi -->
+                    <div
+                      id="warranty-type-popover"
+                      class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg p-1 z-50 hidden select-none max-h-48 overflow-y-auto"
+                      role="listbox"
+                    >
+                      ${['Garansi Toko', 'Garansi Resmi Produsen', 'Garansi Distributor', 'Garansi Internasional'].map(opt => {
+                        const isSel = (primaryState.warranty_type || 'Garansi Toko') === opt;
+                        return `
+                          <div
+                            class="custom-warranty-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${isSel ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                            data-value="${opt}"
+                            data-label="${opt}"
+                            role="option"
+                          >
+                            <span>${opt}</span>
+                            ${isSel ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -18429,16 +18557,15 @@ const ProductForm = (() => {
         <datalist id="datalist-product-brands">
           <option value="Tanpa Merek"></option>
           <option value="Custom / Merk Sendiri"></option>
-          <option value="Songer Creative"></option>
           <option value="Lokal"></option>
         </datalist>
 
         <datalist id="datalist-product-origins">
-          <option value="Indonesia (Lokal)"></option>
+          <option value="Dalam Negeri/Lokal"></option>
           <option value="Impor"></option>
           <option value="Jawa Timur"></option>
           <option value="Surabaya"></option>
-          <option value="Lamongan"></option>
+          <option value="Jakarta"></option>
         </datalist>
 
         <datalist id="datalist-spec-titles">
@@ -18449,7 +18576,6 @@ const ProductForm = (() => {
           <option value="Ketebalan"></option>
           <option value="Isi per Paket"></option>
           <option value="Asal Produk"></option>
-          <option value="SKU Induk"></option>
         </datalist>
 
         <datalist id="datalist-size-col-titles">
@@ -26920,6 +27046,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const isCustomDuration = ['Hari', 'Bulan', 'Tahun'].includes(unit);
         const hasWarranty = unit !== 'Tidak Ada Garansi';
 
+        const inpWarrantyUnit = document.getElementById('input-warranty-unit');
+        if (inpWarrantyUnit) {
+          inpWarrantyUnit.value = unit;
+        }
+
         if (containerWarrantyDuration) {
           if (isCustomDuration) {
             containerWarrantyDuration.classList.remove('hidden');
@@ -26937,9 +27068,30 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               primaryState.warranty_type = 'Garansi Toko';
               if (selWarrantyType) selWarrantyType.value = 'Garansi Toko';
             }
+            const inpWarrantyType = document.getElementById('input-warranty-type');
+            if (inpWarrantyType) {
+              inpWarrantyType.value = primaryState.warranty_type || 'Garansi Toko';
+            }
+            const popWarrantyType = document.getElementById('warranty-type-popover');
+            if (popWarrantyType) {
+              popWarrantyType.querySelectorAll('.custom-warranty-type-item').forEach(el => {
+                const isThis = el.getAttribute('data-value') === (primaryState.warranty_type || 'Garansi Toko');
+                if (isThis) {
+                  el.className = 'custom-warranty-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]';
+                  if (!el.querySelector('.bi-check2')) el.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>');
+                } else {
+                  el.className = 'custom-warranty-type-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between';
+                  const c = el.querySelector('.bi-check2');
+                  if (c) c.remove();
+                }
+              });
+            }
           } else {
             containerWarrantyType.classList.add('hidden');
             primaryState.warranty_type = '';
+            if (selWarrantyType) selWarrantyType.value = '';
+            const inpWarrantyType = document.getElementById('input-warranty-type');
+            if (inpWarrantyType) inpWarrantyType.value = '';
           }
         }
 
@@ -26962,6 +27114,147 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           updateProductCardLivePreview();
         };
       }
+
+      // Helper Binding Accordion Dropdown Spesifikasi (Kondisi Produk, Masa Garansi, Jenis Garansi)
+      function bindSpecsAccordionDropdowns() {
+        const specsConfigs = [
+          {
+            wrapperId: 'wrapper-prod-condition',
+            inputId: 'input-prod-condition',
+            popoverId: 'prod-condition-popover',
+            chevronId: 'prod-condition-chevron',
+            selectId: 'select-prod-condition',
+            itemClass: 'custom-prod-condition-item',
+            onSelect: (val, label) => {
+              primaryState.condition = val;
+              updateProductCardLivePreview();
+            }
+          },
+          {
+            wrapperId: 'wrapper-warranty-unit',
+            inputId: 'input-warranty-unit',
+            popoverId: 'warranty-unit-popover',
+            chevronId: 'warranty-unit-chevron',
+            selectId: 'select-warranty-unit',
+            itemClass: 'custom-warranty-unit-item',
+            onSelect: (val, label) => {
+              syncWarrantyInputsUI();
+            }
+          },
+          {
+            wrapperId: 'wrapper-warranty-type',
+            inputId: 'input-warranty-type',
+            popoverId: 'warranty-type-popover',
+            chevronId: 'warranty-type-chevron',
+            selectId: 'select-warranty-type',
+            itemClass: 'custom-warranty-type-item',
+            onSelect: (val, label) => {
+              primaryState.warranty_type = val;
+              updateProductCardLivePreview();
+            }
+          }
+        ];
+
+        const closeAllSpecsPopovers = () => {
+          specsConfigs.forEach(cfg => {
+            const pop = document.getElementById(cfg.popoverId);
+            const chev = document.getElementById(cfg.chevronId);
+            if (pop) pop.classList.add('hidden');
+            if (chev) chev.style.transform = '';
+          });
+        };
+
+        specsConfigs.forEach(cfg => {
+          const wrapper = document.getElementById(cfg.wrapperId);
+          const inp = document.getElementById(cfg.inputId);
+          const pop = document.getElementById(cfg.popoverId);
+          const chev = document.getElementById(cfg.chevronId);
+          const sel = document.getElementById(cfg.selectId);
+
+          if (!wrapper || !inp || !pop) return;
+
+          const togglePopover = (e) => {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            const isHidden = pop.classList.contains('hidden');
+            closeAllSpecsPopovers();
+            if (typeof closeAllCleanDatalistPopovers === 'function') closeAllCleanDatalistPopovers();
+            if (isHidden) {
+              pop.classList.remove('hidden');
+              if (chev) chev.style.transform = 'rotate(180deg)';
+
+              // Viewport Clamping / Flip-up check
+              try {
+                const rect = pop.getBoundingClientRect();
+                if (rect.bottom > window.innerHeight && rect.top > rect.height) {
+                  pop.style.top = 'auto';
+                  pop.style.bottom = '100%';
+                  pop.style.marginTop = '0';
+                  pop.style.marginBottom = '4px';
+                } else {
+                  pop.style.top = '';
+                  pop.style.bottom = '';
+                  pop.style.marginTop = '';
+                  pop.style.marginBottom = '';
+                }
+              } catch (_) {}
+            }
+          };
+
+          inp.onclick = togglePopover;
+          wrapper.onclick = (e) => {
+            if (!pop.contains(e.target)) togglePopover(e);
+          };
+
+          pop.querySelectorAll('.' + cfg.itemClass).forEach(item => {
+            item.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const val = item.getAttribute('data-value') || '';
+              const label = item.getAttribute('data-label') || val;
+
+              inp.value = label;
+              if (sel) {
+                sel.value = val;
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+
+              // Update item styles & checkmarks
+              pop.querySelectorAll('.' + cfg.itemClass).forEach(el => {
+                const isThis = (el === item);
+                if (isThis) {
+                  el.className = `${cfg.itemClass} px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]`;
+                  if (!el.querySelector('.bi-check2')) {
+                    el.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>');
+                  }
+                } else {
+                  el.className = `${cfg.itemClass} px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between`;
+                  const check = el.querySelector('.bi-check2');
+                  if (check) check.remove();
+                }
+              });
+
+              closeAllSpecsPopovers();
+              if (typeof cfg.onSelect === 'function') {
+                cfg.onSelect(val, label);
+              }
+            };
+          });
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.custom-select-group')) {
+            closeAllSpecsPopovers();
+          }
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeAllSpecsPopovers();
+        });
+      }
+
+      bindSpecsAccordionDropdowns();
 
       const togglePo = document.getElementById('toggle-is-preorder');
       const containerPoDays = document.getElementById('container-preorder-days');
