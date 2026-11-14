@@ -625,6 +625,27 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
   - Opsi saran `SKU Induk` dihilangkan dari rekomendasi atribut spesifikasi tambahan manual untuk mencegah redundansi dengan field SKU utama (`#input-prod-sku`).
   - Rekomendasi atribut tambahan tersisa: `Dimensi (PxLxT)`, `Bahan`, `Berat Bersih`, `Finishing`, `Ketebalan`, `Isi per Paket`, dan `Asal Produk`. Field SKU utama tetap beroperasi normal.
 
+### 6.I. Komisi Afiliasi (Penyelarasan Tooltip & Accordion Dropdown)
+- **Penyelarasan Tooltip Bantuan Komisi Afiliasi**:
+  1. *Komisi Afiliasi (`#btn-tooltip-affiliate`)*:
+     - Menggunakan redaksi baku: `"Atur komisi yang diberikan kepada afiliasi atas penjualan produk melalui program afiliasi."`
+  2. *Minimal Jumlah Pesanan (Qty) (`#btn-tooltip-min-qty`)*:
+     - Menggunakan redaksi baku: `"Jumlah minimum produk dalam satu pesanan agar ketentuan komisi afiliasi berlaku."`
+  3. *Min. Nilai Pesanan (Rp) (`#btn-tooltip-min-order`)*:
+     - Menggunakan redaksi baku: `"Nilai minimum pesanan yang harus dipenuhi agar ketentuan komisi afiliasi berlaku."`
+  4. *Arsitektur Tooltip & Interaksi*:
+     - Terintegrasi penuh dengan floating tooltip portal global singleton (`#sc-floating-tooltip` pada `document.body`) dengan class trigger `.btn-help-popover` dan template `.admin-help-tooltip`.
+     - Ikon bantuan seragam: `<i class="bi bi-question-circle text-xs"></i>` dengan warna `text-slate-400 hover:text-slate-600`, tanpa dekorasi button/border/shadow, sejajar horizontal dengan label (`flex items-center gap-1.5`).
+     - Prioritas interaksi mobile: tap-to-toggle pada mobile, hover bridge (150ms) pada desktop, keyboard focus (`focusin`/`focusout`), dismiss via tombol Escape dan klik di luar.
+     - Proteksi viewport: auto flip-up/down dan horizontal clamping dengan safe distance 12px dari tepi viewport tanpa terpotong container/drawer/modal atau memicu scrollbar horizontal.
+     - Pembersihan listener klik manual lama di `initAffiliateGlobalListeners` untuk mencegah konflik delegasi ganda.
+- **Transformasi Dropdown Bentuk Komisi menjadi Accordion Dropdown**:
+  1. *Bentuk & Nilai Komisi Afiliasi (`#wrapper-affiliate-unit`)*:
+     - Menggantikan dropdown select native dengan komponen Accordion Input/Pilih seragam: trigger display `#input-affiliate-unit` (readonly, tinggi `h-9`, radius `rounded-md` 6px, placeholder `Input`, chevron rotasi `rotate-180`), hidden native select `#select-affiliate-unit`, dan floating popover `#affiliate-unit-popover` (`z-50 max-h-48 overflow-y-auto`).
+     - Pilihan bentuk komisi dipertahankan 100%: `[%] Persen` (`percentage`) dan `[IDR] Komisi Rp` (`fixed`), dilengkapi penanda centang aktif (`bi-check2`).
+     - Input nilai komisi tunggal `#input-affiliate-single-value` memiliki tinggi `h-9` dan placeholder persis `Input`.
+     - Seluruh validasi komisi (clamp maksimal 100% untuk persentase, kalkulasi konversi real-time, sinkronisasi `syncStateFromDOM()`, dan pemulihan data pada Edit Produk) dipertahankan utuh.
+
 ---
 
 ## 7. SPESIFIKASI UI/UX SECARA DETAIL

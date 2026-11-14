@@ -14486,13 +14486,10 @@ const ProductForm = (() => {
         <div class="flex items-center justify-between flex-wrap gap-2.5 pb-2 border-b border-slate-100">
           <div class="flex items-center gap-1.5">
             <h3 class="text-xs sm:text-sm font-bold text-slate-900">Komisi Afiliasi</h3>
-            <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-              <button type="button" id="btn-tooltip-affiliate" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none">
-                <i class="bi bi-question-circle"></i>
-              </button>
-              <div id="tooltip-popover-affiliate" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
-                Atur komisi khusus bagi afiliator yang berhasil menjual produk ini. Jika dinonaktifkan, produk akan mengikuti aturan komisi global di menu Marketing &gt; Affiliate.
-                <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+            <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0" id="btn-tooltip-affiliate">
+              <i class="bi bi-question-circle text-xs"></i>
+              <div id="tooltip-popover-affiliate" class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                Atur komisi yang diberikan kepada afiliasi atas penjualan produk melalui program afiliasi.
               </div>
             </div>
           </div>
@@ -14525,17 +14522,63 @@ const ProductForm = (() => {
             <div>
               <label class="block text-xs font-bold text-slate-800 mb-1">Bentuk & Nilai Komisi Afiliasi <span class="text-red-500">*</span>:</label>
               <div class="flex items-center gap-2 max-w-md">
-                <select id="select-affiliate-unit" class="px-3 py-2 rounded-md border border-slate-300 text-xs font-bold outline-none focus:outline-none bg-white focus:border-[var(--color-primary)] shrink-0">
-                  <option value="percentage" ${unit === 'percentage' ? 'selected' : ''}>[%] Persen</option>
-                  <option value="fixed" ${unit === 'fixed' ? 'selected' : ''}>[IDR] Komisi Rp</option>
-                </select>
+                <!-- Accordion Input/Pilih Bentuk Komisi Afiliasi -->
+                <div class="relative w-44 shrink-0 custom-select-group" id="wrapper-affiliate-unit">
+                  <div class="relative flex items-center">
+                    <input
+                      type="text"
+                      id="input-affiliate-unit"
+                      readonly
+                      class="w-full h-9 pl-3 pr-8 rounded-md border border-slate-300 text-xs font-semibold focus:border-[var(--color-primary)] outline-none bg-white text-slate-800 transition cursor-pointer select-none shadow-2xs"
+                      placeholder="Input"
+                      value="${unit === 'fixed' ? '[IDR] Komisi Rp' : '[%] Persen'}"
+                      autocomplete="off"
+                    />
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                      <i class="bi bi-chevron-down text-xs transition-transform duration-200" id="affiliate-unit-chevron"></i>
+                    </div>
+                  </div>
+
+                  <!-- Native Select Tersembunyi (Kompatibilitas Form & Script) -->
+                  <select id="select-affiliate-unit" class="hidden">
+                    <option value="percentage" ${unit === 'percentage' ? 'selected' : ''}>[%] Persen</option>
+                    <option value="fixed" ${unit === 'fixed' ? 'selected' : ''}>[IDR] Komisi Rp</option>
+                  </select>
+
+                  <!-- Popover Dropdown Pilihan Bentuk Komisi -->
+                  <div
+                    id="affiliate-unit-popover"
+                    class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg p-1 z-50 hidden select-none max-h-48 overflow-y-auto"
+                    role="listbox"
+                  >
+                    <div
+                      class="custom-affiliate-unit-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${unit === 'percentage' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                      data-value="percentage"
+                      data-label="[%] Persen"
+                      role="option"
+                    >
+                      <span>[%] Persen</span>
+                      ${unit === 'percentage' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                    </div>
+                    <div
+                      class="custom-affiliate-unit-item px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-[var(--color-primary)] cursor-pointer rounded transition flex items-center justify-between ${unit === 'fixed' ? 'font-semibold is-selected bg-[var(--color-primary-subtle)] text-[var(--color-primary)]' : ''}"
+                      data-value="fixed"
+                      data-label="[IDR] Komisi Rp"
+                      role="option"
+                    >
+                      <span>[IDR] Komisi Rp</span>
+                      ${unit === 'fixed' ? '<i class="bi bi-check2 text-xs text-[var(--color-primary)] font-bold"></i>' : ''}
+                    </div>
+                  </div>
+                </div>
+
                 <input
                   type="text"
                   inputmode="decimal"
                   id="input-affiliate-single-value"
                   value="${val}"
-                  placeholder="Masukkan nilai komisi..."
-                  class="w-full px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none focus:outline-none"
+                  placeholder="Input"
+                  class="w-full h-9 px-3.5 py-2 rounded-md border border-slate-300 text-xs font-bold text-slate-900 focus:border-[var(--color-primary)] outline-none focus:outline-none"
                 />
               </div>
             </div>
@@ -14544,13 +14587,10 @@ const ProductForm = (() => {
             <div>
               <div class="flex items-center gap-1.5 mb-1">
                 <label for="input-affiliate-min-qty" class="text-xs font-bold text-slate-800">Minimal Jumlah Pesanan (Qty):</label>
-                <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                  <button type="button" id="btn-tooltip-min-qty" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none">
-                    <i class="bi bi-question-circle"></i>
-                  </button>
-                  <div id="tooltip-popover-min-qty" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
-                    Apabila batas minimal jumlah pesanan diterapkan, nilai komisi yang Anda masukkan dihitung sebagai total komisi paket untuk jumlah minimal tersebut (sistem otomatis membagi komisi per satuan barang). Contoh: Harga produk Rp10.000, Komisi Afiliasi Rp2.000, dan Minimal Pesanan 10 pcs. Maka sistem otomatis menghitung Rp2.000 ÷ 10 pcs = Rp200 per pcs sebagai komisi afiliator (cair saat pesanan minimal 10 pcs selesai).
-                    <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0" id="btn-tooltip-min-qty">
+                  <i class="bi bi-question-circle text-xs"></i>
+                  <div id="tooltip-popover-min-qty" class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                    Jumlah minimum produk dalam satu pesanan agar ketentuan komisi afiliasi berlaku.
                   </div>
                 </div>
               </div>
@@ -14649,13 +14689,10 @@ const ProductForm = (() => {
           <div class="border-t border-slate-100 pt-3 mt-3">
             <div class="flex items-center gap-1.5 mb-1.5">
               <label for="input-affiliate-min-order" class="text-xs font-bold text-slate-800">Min. Nilai Pesanan (Rp)</label>
-              <div class="tooltip-wrapper relative inline-flex items-center group cursor-pointer" tabindex="0">
-                <button type="button" id="btn-tooltip-min-order" class="w-4 h-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] transition cursor-help border border-slate-200 shadow-2xs outline-none focus:outline-none">
-                  <i class="bi bi-question-circle"></i>
-                </button>
-                <div id="tooltip-popover-min-order" class="tooltip-popover hidden group-hover:block group-focus-within:block absolute left-6 top-1/2 -translate-y-1/2 z-50 w-56 sm:w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-md shadow-lg pointer-events-none leading-relaxed">
-                  Komisi hanya diberikan jika total nilai pesanan produk ini mencapai batas minimum. Kosongkan jika tanpa batas minimum.
-                  <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+              <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 btn-help-popover" tabindex="0" id="btn-tooltip-min-order">
+                <i class="bi bi-question-circle text-xs"></i>
+                <div id="tooltip-popover-min-order" class="admin-help-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-64 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                  Nilai minimum pesanan yang harus dipenuhi agar ketentuan komisi afiliasi berlaku.
                 </div>
               </div>
             </div>
@@ -14967,13 +15004,121 @@ const ProductForm = (() => {
     });
 
     const selUnit = document.getElementById('select-affiliate-unit');
+    const wrapperAffUnit = document.getElementById('wrapper-affiliate-unit');
+    const inpAffUnit = document.getElementById('input-affiliate-unit');
+    const popAffUnit = document.getElementById('affiliate-unit-popover');
+    const chevAffUnit = document.getElementById('affiliate-unit-chevron');
+
+    const closeAffUnitPopover = () => {
+      if (popAffUnit) {
+        popAffUnit.classList.add('hidden');
+        popAffUnit.style.top = '';
+        popAffUnit.style.bottom = '';
+      }
+      if (chevAffUnit) {
+        chevAffUnit.style.transform = '';
+      }
+    };
+
     if (selUnit) {
       selUnit.onchange = (e) => {
         primaryState.affiliate_commission_unit = e.target.value;
+        const targetVal = e.target.value;
+        const targetLabel = targetVal === 'fixed' ? '[IDR] Komisi Rp' : '[%] Persen';
+        if (inpAffUnit) inpAffUnit.value = targetLabel;
         updateAffiliateSingleHelper();
         checkAffiliateStockAndPriceWarnings();
         saveDraftToStorage();
       };
+    }
+
+    if (wrapperAffUnit && inpAffUnit && popAffUnit) {
+      const toggleAffUnit = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const isHidden = popAffUnit.classList.contains('hidden');
+        if (isHidden) {
+          popAffUnit.classList.remove('hidden');
+          if (chevAffUnit) chevAffUnit.style.transform = 'rotate(180deg)';
+
+          // Viewport Clamping / Flip-up check
+          try {
+            const rect = popAffUnit.getBoundingClientRect();
+            if (rect.bottom > window.innerHeight && rect.top > rect.height) {
+              popAffUnit.style.top = 'auto';
+              popAffUnit.style.bottom = '100%';
+            } else {
+              popAffUnit.style.top = '';
+              popAffUnit.style.bottom = '';
+            }
+          } catch (_) {}
+        } else {
+          closeAffUnitPopover();
+        }
+      };
+
+      inpAffUnit.onclick = toggleAffUnit;
+      if (chevAffUnit && chevAffUnit.parentElement) {
+        chevAffUnit.parentElement.onclick = toggleAffUnit;
+      }
+
+      const items = popAffUnit.querySelectorAll('.custom-affiliate-unit-item');
+      items.forEach(item => {
+        item.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const val = item.getAttribute('data-value');
+          const label = item.getAttribute('data-label');
+
+          inpAffUnit.value = label || '';
+
+          if (selUnit) {
+            selUnit.value = val;
+            selUnit.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            primaryState.affiliate_commission_unit = val;
+            updateAffiliateSingleHelper();
+            checkAffiliateStockAndPriceWarnings();
+            saveDraftToStorage();
+          }
+
+          items.forEach(it => {
+            const isMatch = it.getAttribute('data-value') === val;
+            it.classList.toggle('font-semibold', isMatch);
+            it.classList.toggle('is-selected', isMatch);
+            it.classList.toggle('bg-[var(--color-primary-subtle)]', isMatch);
+            it.classList.toggle('text-[var(--color-primary)]', isMatch);
+            let checkIcon = it.querySelector('.bi-check2');
+            if (isMatch) {
+              if (!checkIcon) {
+                const icon = document.createElement('i');
+                icon.className = 'bi bi-check2 text-xs text-[var(--color-primary)] font-bold';
+                it.appendChild(icon);
+              }
+            } else if (checkIcon) {
+              checkIcon.remove();
+            }
+          });
+
+          closeAffUnitPopover();
+        };
+      });
+
+      // Outside click listener & escape key
+      const onDocClick = (e) => {
+        if (!wrapperAffUnit.contains(e.target)) {
+          closeAffUnitPopover();
+        }
+      };
+      const onDocKey = (e) => {
+        if (e.key === 'Escape') {
+          closeAffUnitPopover();
+        }
+      };
+      document.addEventListener('click', onDocClick);
+      document.addEventListener('keydown', onDocKey);
     }
 
     const inpSingleVal = document.getElementById('input-affiliate-single-value');
@@ -18733,34 +18878,6 @@ const ProductForm = (() => {
     window._affiliateGlobalClickListener = true;
 
     document.addEventListener('click', (e) => {
-      // Delegasi Klik Tooltip Komisi Afiliasi
-      const affTooltipBtn = e.target.closest('#btn-tooltip-affiliate') || e.target.closest('#btn-tooltip-min-order');
-      if (affTooltipBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        const wrapper = affTooltipBtn.closest('.tooltip-wrapper');
-        const popover = wrapper ? wrapper.querySelector('.tooltip-popover') : null;
-        if (popover) {
-          if (popover.classList.contains('hidden')) {
-            popover.classList.remove('hidden');
-            popover.classList.add('block');
-            clampTooltipToViewport(popover);
-          } else {
-            popover.classList.add('hidden');
-            popover.classList.remove('block');
-          }
-        }
-        return;
-      }
-
-      // Delegasi Tutup Popover Tooltip saat klik di luar
-      if (!e.target.closest('.tooltip-wrapper')) {
-        document.querySelectorAll('#section-product-affiliate-commission .tooltip-popover.block').forEach(p => {
-          p.classList.remove('block');
-          p.classList.add('hidden');
-        });
-      }
-
       // Delegasi Tombol Jenis Komisi Afiliasi (Tunggal vs Bertingkat)
       const affTypeBtn = e.target.closest('.affiliate-type-btn');
       if (affTypeBtn) {
