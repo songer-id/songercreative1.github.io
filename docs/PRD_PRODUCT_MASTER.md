@@ -743,16 +743,17 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Rentang Lebar Penuh Dinamis (Dynamic Offsets)**:
       - **Batas Kiri (Admin Sidebar)**: `left: 4.5rem !important;` (72px) saat sidebar ciut (collapsed), dan otomatis menyesuaikan menjadi `left: 16rem !important;` (256px) saat sidebar melebar (`body:has(#admin-main-sidebar.is-expanded)` atau `body:has(.admin-sidebar-hover-expand.is-expanded)`), dengan transisi halus `left 0.3s cubic-bezier(0.4, 0, 0.2, 1)`.
       - **Batas Kanan (Drawer Preview)**: `right: 0 !important;` saat drawer preview tertutup (`translate-x-full`), dan otomatis bergeser menjadi `right: 320px !important;` (atau `right: 340px !important;` pada $\ge 1280\text{px}$) saat drawer terbuka (`body:has(#desktop-preview-sidebar.translate-x-0)`), dengan transisi halus `right 0.3s ease-in-out`.
-    - **Visual & Gaya Kontainer**:
-      - Background: `background-color: var(--color-primary-subtle) !important;` memberikan nuansa brand yang selaras dengan tema toko.
-      - Border atas: `border-top: 1px solid color-mix(in srgb, var(--color-primary) 20%, #e2e8f0) !important;`.
-      - Shadow elevasi: `box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.04) !important;` (bayangan halus ke atas).
+    - **Visual & Gaya Kontainer (Solid/Opaque Brand Tint)**:
+      - Background: `background-color: color-mix(in srgb, var(--color-primary, #33b589) 10%, #ffffff) !important;` (fallback `var(--color-primary-subtle)`) — bersifat 100% solid/opaque dan bebas transparansi, sehingga konten formulir yang digulir di belakang footer sama sekali tidak terlihat menembus.
+      - Border atas: `border-top: 1px solid color-mix(in srgb, var(--color-primary, #33b589) 20%, #cbd5e1) !important;`.
+      - Shadow elevasi: `box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.05) !important;` (bayangan halus ke atas).
       - Border radius desktop dinolkan (`border-radius: 0 !important;`) agar menyatu rapat dengan tepi kiri dan kanan area kerja.
+      - Penataan Flex & Tombol: Menggunakan `display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 0.75rem;`. Tombol aksi kanan dibungkus rapi dengan `margin-left: auto; flex-shrink: 0; white-space: nowrap;` sehingga seluruh tombol aksi (`Simpan Draf`, `Simpan Produk`, `Lanjutkan`, `Batal`, `Kembali`) selalu terlihat penuh sebelum batas drawer preview pada seluruh kombinasi sidebar dan drawer.
     - **Standarisasi Tombol Sekunder & Primer**:
       - Tombol sekunder (`#btn-step-1-cancel`, `#btn-step-2-prev`, `#btn-save-draft`): Menggunakan latar belakang putih solid (`background-color: #ffffff !important;`), border abu-abu netral (`border: 1px solid #cbd5e1 !important;`), teks slate (`color: #334155 !important;`), serta hover/active state (`background-color: #f8fafc !important; border-color: #94a3b8 !important;`) untuk keterbacaan kontras tinggi di atas latar subtle.
       - Tombol aksi primer (`#btn-step-1-next`, `#btn-submit-product`): Tetap mempertahankan class `.btn-primary-brand` dengan warna tema aktif brand toko.
-    - **Kompensasi Padding Bawah Aman (Safe Bottom Spacing)**:
-      - `#step-pane-1` dan `#step2-cards-container` diberikan `padding-bottom: 5.5rem !important;` pada breakpoint desktop agar konten kartu paling bawah tidak tertutup oleh bilah fixed footer saat pengguna melakukan scroll maksimal ke bawah.
+    - **Kompensasi Padding Bawah Aman (Safe Bottom Spacing - Zero Overlap)**:
+      - Kontainer kartu `#view-product-form #step-pane-1` dan `#view-product-form #step2-cards-container` dikunci menggunakan `padding-bottom: 5.5rem !important;` (88px) pada desktop ($\ge 1024\text{px}$), memberikan jarak aman +25px di atas bilah fixed footer sehingga seksi terakhir (seperti Komisi Afiliasi) tidak tertutup saat scroll maksimal.
     - **Proteksi Tampilan Mobile (< 1024px)**:
       - Pada mobile dan tablet (`< 1024px`), footer dikembalikan sepenuhnya ke alur normal dokumen (`position: static !important; bottom: auto; left: auto; right: auto; width: 100% !important; background-color: #ffffff !important; border-radius: 0.5rem !important; border-top: none !important; box-shadow: none !important;`) tanpa fixed positioning dan tanpa efek samping.
 

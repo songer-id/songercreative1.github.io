@@ -1767,7 +1767,9 @@ input::-webkit-calendar-picker-indicator {
      ======================================================================== */
   .product-form-footer-actions,
   #step1-footer-actions,
-  #step2-footer-actions {
+  #step2-footer-actions,
+  #view-product-form #step1-footer-actions,
+  #view-product-form #step2-footer-actions {
     position: fixed !important;
     bottom: 0 !important;
     left: 4.5rem !important; /* Default: Sidebar Collapsed 72px */
@@ -1775,14 +1777,21 @@ input::-webkit-calendar-picker-indicator {
     width: auto !important;
     max-width: none !important;
     z-index: 30 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem 0.75rem !important;
+    min-width: 0 !important;
     background-color: var(--color-primary-subtle, #f0fdf4) !important;
-    border-top: 1px solid color-mix(in srgb, var(--color-primary, #33b589) 20%, #e2e8f0) !important;
+    background-color: color-mix(in srgb, var(--color-primary, #33b589) 10%, #ffffff) !important;
+    border-top: 1px solid color-mix(in srgb, var(--color-primary, #33b589) 20%, #cbd5e1) !important;
     border-radius: 0 !important;
-    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.04) !important;
-    padding-top: 0.875rem !important;
-    padding-bottom: 0.875rem !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.05) !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
     box-sizing: border-box !important;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s ease-in-out, background-color 0.2s ease !important;
   }
@@ -1806,8 +1815,33 @@ input::-webkit-calendar-picker-indicator {
 
   /* Kompensasi Ruang Bawah Form Step 1 & Step 2 saat Footer Menjadi Fixed (Desktop >= 1024px) */
   #step-pane-1,
-  #step2-cards-container {
-    padding-bottom: 5.5rem !important;
+  #step2-cards-container,
+  #view-product-form #step-pane-1,
+  #view-product-form #step2-cards-container {
+    padding-bottom: 5.5rem !important; /* 88px aman untuk tinggi footer ~63px */
+  }
+
+  /* Kontrol Flex Child agar Tombol Kiri dan Kanan Rapi & Tidak Meluap */
+  .product-form-footer-actions #btn-step-1-cancel,
+  .product-form-footer-actions #btn-step-2-prev {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
+  }
+
+  .product-form-footer-actions > :last-child {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    gap: 0.5rem !important;
+    margin-left: auto !important;
+  }
+
+  .product-form-footer-actions #btn-save-draft,
+  .product-form-footer-actions #btn-submit-product,
+  .product-form-footer-actions #btn-step-1-next {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
   }
 
   /* Tombol Sekunder di dalam Fixed Footer: Background Kontras Putih, Border Halus, Teks Jelas */
@@ -3668,12 +3702,14 @@ button:focus-visible {
   box-sizing: border-box !important;
 }
 
-#step2-footer-actions {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+@media (max-width: 1023.98px) {
+  #step2-footer-actions {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
 }
 
 /* ==========================================================================
