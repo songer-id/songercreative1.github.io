@@ -349,6 +349,26 @@ const AdminApp = (() => {
     root.style.setProperty('--color-primary-hover', primaryHover);
     root.style.setProperty('--color-primary-subtle', primarySubtle);
 
+    const getContrastColor = (hex) => {
+      if (!hex || typeof hex !== 'string') return '#ffffff';
+      let clean = hex.replace('#', '');
+      if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+      if (clean.length !== 6) return '#ffffff';
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+      return yiq >= 150 ? '#0f172a' : '#ffffff';
+    };
+
+    const primaryContrast = getContrastColor(primaryColor);
+    const primaryContrastBorder = primaryContrast === '#ffffff' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 23, 42, 0.4)';
+    const primaryContrastHover = primaryContrast === '#ffffff' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.08)';
+
+    root.style.setProperty('--color-primary-contrast', primaryContrast);
+    root.style.setProperty('--color-primary-contrast-border', primaryContrastBorder);
+    root.style.setProperty('--color-primary-contrast-hover', primaryContrastHover);
+
     root.style.setProperty('--color-secondary', secondaryColor);
     root.style.setProperty('--color-secondary-hover', secondaryHover);
     root.style.setProperty('--color-secondary-subtle', secondarySubtle);

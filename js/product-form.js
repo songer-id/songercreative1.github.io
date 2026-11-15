@@ -514,6 +514,26 @@ const ProductForm = (() => {
         root.style.setProperty('--color-primary-hover', primaryHover);
         root.style.setProperty('--color-primary-subtle', primarySubtle);
 
+        const getContrastColor = (hex) => {
+          if (!hex || typeof hex !== 'string') return '#ffffff';
+          let clean = hex.replace('#', '');
+          if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+          if (clean.length !== 6) return '#ffffff';
+          const r = parseInt(clean.substring(0, 2), 16);
+          const g = parseInt(clean.substring(2, 4), 16);
+          const b = parseInt(clean.substring(4, 6), 16);
+          const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+          return yiq >= 150 ? '#0f172a' : '#ffffff';
+        };
+
+        const primaryContrast = getContrastColor(primaryColor);
+        const primaryContrastBorder = primaryContrast === '#ffffff' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 23, 42, 0.4)';
+        const primaryContrastHover = primaryContrast === '#ffffff' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.08)';
+
+        root.style.setProperty('--color-primary-contrast', primaryContrast);
+        root.style.setProperty('--color-primary-contrast-border', primaryContrastBorder);
+        root.style.setProperty('--color-primary-contrast-hover', primaryContrastHover);
+
         root.style.setProperty('--color-secondary', secondaryColor);
         root.style.setProperty('--color-secondary-hover', secondaryHover);
         root.style.setProperty('--color-secondary-subtle', secondarySubtle);
@@ -4909,6 +4929,7 @@ const ProductForm = (() => {
     syncEyeToggleIcons();
     syncCardAccordionDOM();
     updateProductCardLivePreview();
+    initFooterScrollShadowObserver();
   }
 
   function formatIDR(num) {
@@ -26428,6 +26449,71 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     handleStep2ScrollSpy();
   }
 
+  /**
+   * Mengatur bayangan kondisional fixed footer Step 1 & Step 2.
+   * Hanya aktif jika masih terdapat konten yang dapat di-scroll di bawah viewport (desktop >= 1024px).
+   * Menghilangkan bayangan ketika sudah mencapai scroll paling bawah.
+   */
+  function updateFooterScrollShadow() {
+    const vp = document.getElementById('admin-main-viewport');
+    if (!vp) return;
+
+    if (window.innerWidth < 1024) {
+      const footers = document.querySelectorAll('.product-form-footer-actions');
+      footers.forEach(f => f.classList.remove('has-scroll-shadow'));
+      return;
+    }
+
+    // Jarak sisa scroll ke bawah
+    const remainingScroll = vp.scrollHeight - vp.scrollTop - vp.clientHeight;
+    // Buffer 4px untuk mengantisipasi pembulatan sub-pixel browser
+    const hasScrollBelow = remainingScroll > 4;
+
+    const footers = document.querySelectorAll('.product-form-footer-actions');
+    footers.forEach(f => {
+      if (hasScrollBelow) {
+        f.classList.add('has-scroll-shadow');
+      } else {
+        f.classList.remove('has-scroll-shadow');
+      }
+    });
+  }
+
+  function initFooterScrollShadowObserver() {
+    const vp = document.getElementById('admin-main-viewport');
+    if (!vp) return;
+
+    updateFooterScrollShadow();
+
+    if (!vp.dataset.footerScrollbound) {
+      vp.dataset.footerScrollbound = 'true';
+      let rAFId = null;
+      vp.addEventListener('scroll', () => {
+        if (rAFId) return;
+        rAFId = requestAnimationFrame(() => {
+          updateFooterScrollShadow();
+          rAFId = null;
+        });
+      }, { passive: true });
+    }
+
+    if (!window._hasFooterResizeBound) {
+      window._hasFooterResizeBound = true;
+      window.addEventListener('resize', () => {
+        updateFooterScrollShadow();
+      }, { passive: true });
+    }
+
+    if (typeof ResizeObserver !== 'undefined' && !vp._footerResizeObserver) {
+      const formWrapper = document.getElementById('view-product-form') || vp;
+      const ro = new ResizeObserver(() => {
+        updateFooterScrollShadow();
+      });
+      ro.observe(formWrapper);
+      vp._footerResizeObserver = ro;
+    }
+  }
+
   // --------------------------------------------------------------------------
   // MODUL SCOPE: NAVIGASI WIZARD STEP & VISIBILITAS FORM
   // --------------------------------------------------------------------------
@@ -26500,6 +26586,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     if (window.lucide) window.lucide.createIcons();
     updateProductCardLivePreview();
+    updateFooterScrollShadow();
   }
 
   function handleProductNameValidation(val, isStep1 = true) {
@@ -26629,6 +26716,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         vp.scrollTop = 0;
       }
     }
+    setTimeout(updateFooterScrollShadow, 50);
   }
 
   if (typeof window !== 'undefined') {
@@ -37730,11 +37818,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     navigateToVariantTableDirectly: () => { if (typeof navigateToVariantTableDirectly === 'function') navigateToVariantTableDirectly(); },
     refreshCombinationMatrixTable: (opts) => { if (typeof rebuildCombinationMatrix === 'function') rebuildCombinationMatrix(opts); },
     sanitizeProductDescriptionHtml,
-    bindRichTextEditorEvents
+    bindRichTextEditorEvents,
+    updateFooterScrollShadow,
+    initFooterScrollShadowObserver
   };
 })();
 
 window.ProductForm = ProductForm;
+window.updateFooterScrollShadow = ProductForm.updateFooterScrollShadow;
+window.initFooterScrollShadowObserver = ProductForm.initFooterScrollShadowObserver;
 window.sanitizeProductDescriptionHtml = ProductForm.sanitizeProductDescriptionHtml;
 window.bindRichTextEditorEvents = ProductForm.bindRichTextEditorEvents;
 window.navigateToVariantTableDirectly = ProductForm.navigateToVariantTableDirectly;

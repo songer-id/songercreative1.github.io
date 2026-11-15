@@ -743,19 +743,28 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Rentang Lebar Penuh Dinamis (Dynamic Offsets)**:
       - **Batas Kiri (Admin Sidebar)**: `left: 4.5rem !important;` (72px) saat sidebar ciut (collapsed), dan otomatis menyesuaikan menjadi `left: 16rem !important;` (256px) saat sidebar melebar (`body:has(#admin-main-sidebar.is-expanded)` atau `body:has(.admin-sidebar-hover-expand.is-expanded)`), dengan transisi halus `left 0.3s cubic-bezier(0.4, 0, 0.2, 1)`.
       - **Batas Kanan (Drawer Preview)**: `right: 0 !important;` saat drawer preview tertutup (`translate-x-full`), dan otomatis bergeser menjadi `right: 320px !important;` (atau `right: 340px !important;` pada $\ge 1280\text{px}$) saat drawer terbuka (`body:has(#desktop-preview-sidebar.translate-x-0)`), dengan transisi halus `right 0.3s ease-in-out`.
-    - **Visual & Gaya Kontainer (Solid/Opaque Brand Tint)**:
-      - Background: `background-color: color-mix(in srgb, var(--color-primary, #33b589) 10%, #ffffff) !important;` (fallback `var(--color-primary-subtle)`) — bersifat 100% solid/opaque dan bebas transparansi, sehingga konten formulir yang digulir di belakang footer sama sekali tidak terlihat menembus.
-      - Border atas: `border-top: 1px solid color-mix(in srgb, var(--color-primary, #33b589) 20%, #cbd5e1) !important;`.
-      - Shadow elevasi: `box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.05) !important;` (bayangan halus ke atas).
-      - Border radius desktop dinolkan (`border-radius: 0 !important;`) agar menyatu rapat dengan tepi kiri dan kanan area kerja.
+    - **Visual & Gaya Kontainer (Solid Brand Color & Harmonized Bar)**:
+      - Background: `background-color: var(--color-primary) !important;` (nilai solid/opaque dari warna brand toko aktif) — seragam 100% identik antara Step 1 dan Step 2, bebas dari hardcoded HEX, dan otomatis berubah seketika tema brand diganti oleh pengguna.
+      - Border & Radius Dihapus: `border: none !important; border-top: none !important; border-radius: 0 !important;` — membentuk satu bar horizontal bersih yang menyatu solid dengan tema toko di batas bawah viewport.
+      - Shadow Elevasi Kondisional: Sangat tipis (`box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06) !important;` via class `.has-scroll-shadow`) yang aktif HANYA ketika masih terdapat konten formulir yang dapat digulir di bawah viewport (`#admin-main-viewport`). Ketika pengguna telah mencapai scroll paling bawah (tidak ada lagi konten di bawah), shadow otomatis dinolkan (`box-shadow: none !important;`). Mekanisme ini digerakkan secara efisien oleh event scroll ter-throttle `requestAnimationFrame`, `window resize`, dan `ResizeObserver` tanpa menduplikasi listener.
       - Penataan Flex & Tombol: Menggunakan `display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 0.75rem;`. Tombol aksi kanan dibungkus rapi dengan `margin-left: auto; flex-shrink: 0; white-space: nowrap;` sehingga seluruh tombol aksi (`Simpan Draf`, `Simpan Produk`, `Lanjutkan`, `Batal`, `Kembali`) selalu terlihat penuh sebelum batas drawer preview pada seluruh kombinasi sidebar dan drawer.
-    - **Standarisasi Tombol Sekunder & Primer**:
-      - Tombol sekunder (`#btn-step-1-cancel`, `#btn-step-2-prev`, `#btn-save-draft`): Menggunakan latar belakang putih solid (`background-color: #ffffff !important;`), border abu-abu netral (`border: 1px solid #cbd5e1 !important;`), teks slate (`color: #334155 !important;`), serta hover/active state (`background-color: #f8fafc !important; border-color: #94a3b8 !important;`) untuk keterbacaan kontras tinggi di atas latar subtle.
-      - Tombol aksi primer (`#btn-step-1-next`, `#btn-submit-product`): Tetap mempertahankan class `.btn-primary-brand` dengan warna tema aktif brand toko.
+    - **Penyelarasan & Harmonisasi Tombol CTA (Step 1 & Step 2)**:
+      - **A. Tombol Sekunder / Ghost (`#btn-step-1-cancel`, `#btn-step-2-prev`, `#btn-save-draft`)**:
+        - Latar belakang transparan: `background-color: transparent !important;`.
+        - Border kontras: `border: 1px solid var(--color-primary-contrast-border, rgba(255, 255, 255, 0.7)) !important;`.
+        - Teks dan ikon: Menggunakan warna foreground kontras tinggi (`color: var(--color-primary-contrast, #ffffff) !important;`).
+        - Hover & Active: Efek overlay transparan tipis (`background-color: var(--color-primary-contrast-hover, rgba(255, 255, 255, 0.12)) !important;`) dan active feedback `transform: scale(0.98)`, bebas efek shadow (`box-shadow: none !important;`).
+      - **B. Tombol Primer / CTA (`#btn-step-1-next`, `#btn-submit-product`)**:
+        - Latar belakang putih solid: `background-color: #ffffff !important;`.
+        - Tanpa border: `border: none !important;`.
+        - Teks dan ikon: Menggunakan warna brand aktif (`color: var(--color-primary) !important;`).
+        - Spinner tombol Simpan Produk: Menggunakan aksen brand `border-color: var(--color-primary) !important; border-top-color: transparent !important;`.
+        - Hover & Active: Warna putih sedikit teredup (`background-color: #f8fafc !important;`) dengan active feedback `scale(0.98)`, bebas efek shadow (`box-shadow: none !important;`).
     - **Kompensasi Padding Bawah Aman (Safe Bottom Spacing - Zero Overlap)**:
       - Kontainer kartu `#view-product-form #step-pane-1` dan `#view-product-form #step2-cards-container` dikunci menggunakan `padding-bottom: 5.5rem !important;` (88px) pada desktop ($\ge 1024\text{px}$), memberikan jarak aman +25px di atas bilah fixed footer sehingga seksi terakhir (seperti Komisi Afiliasi) tidak tertutup saat scroll maksimal.
     - **Proteksi Tampilan Mobile (< 1024px)**:
-      - Pada mobile dan tablet (`< 1024px`), footer dikembalikan sepenuhnya ke alur normal dokumen (`position: static !important; bottom: auto; left: auto; right: auto; width: 100% !important; background-color: #ffffff !important; border-radius: 0.5rem !important; border-top: none !important; box-shadow: none !important;`) tanpa fixed positioning dan tanpa efek samping.
+      - Pada mobile dan tablet (`< 1024px`), footer dikembalikan sepenuhnya ke alur normal dokumen (`position: static !important; bottom: auto; left: auto; right: auto; width: 100% !important; background-color: #ffffff !important; border-radius: 0.5rem !important; border-top: none !important; box-shadow: none !important;`).
+      - Tombol aksi primer pada mobile tetap menggunakan background brand `var(--color-primary)` dengan teks putih, dan tombol sekunder menggunakan kartu putih dengan border slate standar.
 
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:

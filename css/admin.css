@@ -23,6 +23,9 @@ textarea::-moz-selection {
   --color-primary: #33b589;
   --color-primary-hover: color-mix(in srgb, var(--color-primary) 85%, #000000);
   --color-primary-subtle: color-mix(in srgb, var(--color-primary) 12%, #ffffff);
+  --color-primary-contrast: #ffffff;
+  --color-primary-contrast-border: rgba(255, 255, 255, 0.7);
+  --color-primary-contrast-hover: rgba(255, 255, 255, 0.12);
 
   /* 2. Warna Kedua (Secondary / Accent) */
   --color-secondary: #f59e0b;
@@ -986,9 +989,9 @@ input[type="radio"]:active {
 
 #view-product-form .step1-section-card,
 #view-product-form .step2-section-card,
-#view-product-form #step-pane-1>div.bg-white,
+#view-product-form #step-pane-1>div.bg-white:not(.product-form-footer-actions),
 #view-product-form [id^="card-step2-"],
-#view-product-form #step-pane-1>div,
+#view-product-form #step-pane-1>div:not(.product-form-footer-actions),
 #view-product-form #step-pane-2>div>div.bg-white,
 .step1-section-card,
 .step2-section-card {
@@ -1783,17 +1786,26 @@ input::-webkit-calendar-picker-indicator {
     flex-wrap: wrap !important;
     gap: 0.5rem 0.75rem !important;
     min-width: 0 !important;
-    background-color: var(--color-primary-subtle, #f0fdf4) !important;
-    background-color: color-mix(in srgb, var(--color-primary, #33b589) 10%, #ffffff) !important;
-    border-top: 1px solid color-mix(in srgb, var(--color-primary, #33b589) 20%, #cbd5e1) !important;
+    background-color: var(--color-primary) !important;
+    border: none !important;
+    border-top: none !important;
     border-radius: 0 !important;
-    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
     padding-top: 0.75rem !important;
     padding-bottom: 0.75rem !important;
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
     box-sizing: border-box !important;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s ease-in-out, background-color 0.2s ease !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s ease-in-out, background-color 0.2s ease, box-shadow 0.2s ease !important;
+  }
+
+  /* Shadow Footer: Sangat halus (0 -2px 8px rgba(0,0,0,0.06)) & kondisional ketika masih ada konten scroll di bawah */
+  .product-form-footer-actions.has-scroll-shadow,
+  #step1-footer-actions.has-scroll-shadow,
+  #step2-footer-actions.has-scroll-shadow,
+  #view-product-form #step1-footer-actions.has-scroll-shadow,
+  #view-product-form #step2-footer-actions.has-scroll-shadow {
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06) !important;
   }
 
   /* Posisi Kiri: Mengikuti Kondisi Sidebar Admin Expanded (256px / 16rem) */
@@ -1802,14 +1814,20 @@ input::-webkit-calendar-picker-indicator {
   body:has(#admin-main-sidebar.is-expanded) #step1-footer-actions,
   body:has(.admin-sidebar-hover-expand.is-expanded) #step1-footer-actions,
   body:has(#admin-main-sidebar.is-expanded) #step2-footer-actions,
-  body:has(.admin-sidebar-hover-expand.is-expanded) #step2-footer-actions {
+  body:has(.admin-sidebar-hover-expand.is-expanded) #step2-footer-actions,
+  body:has(#admin-main-sidebar.is-expanded) #view-product-form #step1-footer-actions,
+  body:has(.admin-sidebar-hover-expand.is-expanded) #view-product-form #step1-footer-actions,
+  body:has(#admin-main-sidebar.is-expanded) #view-product-form #step2-footer-actions,
+  body:has(.admin-sidebar-hover-expand.is-expanded) #view-product-form #step2-footer-actions {
     left: 16rem !important; /* 256px */
   }
 
   /* Posisi Kanan: Mengikuti Kondisi Drawer Preview Terbuka (translate-x-0) (320px di 1024-1279px) */
   body:has(#desktop-preview-sidebar.translate-x-0) .product-form-footer-actions,
   body:has(#desktop-preview-sidebar.translate-x-0) #step1-footer-actions,
-  body:has(#desktop-preview-sidebar.translate-x-0) #step2-footer-actions {
+  body:has(#desktop-preview-sidebar.translate-x-0) #step2-footer-actions,
+  body:has(#desktop-preview-sidebar.translate-x-0) #view-product-form #step1-footer-actions,
+  body:has(#desktop-preview-sidebar.translate-x-0) #view-product-form #step2-footer-actions {
     right: 320px !important;
   }
 
@@ -1844,28 +1862,86 @@ input::-webkit-calendar-picker-indicator {
     white-space: nowrap !important;
   }
 
-  /* Tombol Sekunder di dalam Fixed Footer: Background Kontras Putih, Border Halus, Teks Jelas */
+  /* ========================================================================
+     PENYESUAIAN TOMBOL CTA DI FIXED FOOTER (DESKTOP >= 1024px)
+     ======================================================================== */
+
+  /* A. Tombol Sekunder / Ghost (Batal Step 1, Kembali Step 2, Simpan Draf Step 2) */
   .product-form-footer-actions #btn-step-1-cancel,
   .product-form-footer-actions #btn-step-2-prev,
   .product-form-footer-actions #btn-save-draft {
-    background-color: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #334155 !important;
+    background-color: transparent !important;
+    border: 1px solid var(--color-primary-contrast-border, rgba(255, 255, 255, 0.7)) !important;
+    color: var(--color-primary-contrast, #ffffff) !important;
     box-shadow: none !important;
     transition: all 0.15s ease !important;
+  }
+
+  .product-form-footer-actions #btn-step-1-cancel i,
+  .product-form-footer-actions #btn-step-2-prev i,
+  .product-form-footer-actions #btn-save-draft i,
+  .product-form-footer-actions #btn-step-1-cancel span,
+  .product-form-footer-actions #btn-step-2-prev span,
+  .product-form-footer-actions #btn-save-draft span {
+    color: var(--color-primary-contrast, #ffffff) !important;
   }
 
   .product-form-footer-actions #btn-step-1-cancel:hover,
   .product-form-footer-actions #btn-step-2-prev:hover,
   .product-form-footer-actions #btn-save-draft:hover {
-    background-color: #f8fafc !important;
-    border-color: #94a3b8 !important;
-    color: #0f172a !important;
+    background-color: var(--color-primary-contrast-hover, rgba(255, 255, 255, 0.12)) !important;
+    border-color: var(--color-primary-contrast, #ffffff) !important;
+    color: var(--color-primary-contrast, #ffffff) !important;
   }
 
   .product-form-footer-actions #btn-step-1-cancel:active,
   .product-form-footer-actions #btn-step-2-prev:active,
   .product-form-footer-actions #btn-save-draft:active {
+    background-color: rgba(255, 255, 255, 0.22) !important;
+    transform: scale(0.98);
+  }
+
+  /* B. Tombol Primer / CTA (Lanjutkan Step 1, Simpan Produk Step 2) */
+  #view-product-form .product-form-footer-actions #btn-step-1-next,
+  #view-product-form .product-form-footer-actions #btn-submit-product,
+  .product-form-footer-actions #btn-step-1-next,
+  .product-form-footer-actions #btn-submit-product {
+    background-color: #ffffff !important;
+    border: none !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+  }
+
+  #view-product-form .product-form-footer-actions #btn-step-1-next i,
+  #view-product-form .product-form-footer-actions #btn-submit-product i,
+  #view-product-form .product-form-footer-actions #btn-step-1-next span,
+  #view-product-form .product-form-footer-actions #btn-submit-product span,
+  .product-form-footer-actions #btn-step-1-next i,
+  .product-form-footer-actions #btn-submit-product i,
+  .product-form-footer-actions #btn-step-1-next span,
+  .product-form-footer-actions #btn-submit-product span {
+    color: var(--color-primary) !important;
+  }
+
+  /* Spinner di tombol Simpan Produk */
+  .product-form-footer-actions #btn-submit-product #btn-submit-spinner {
+    border-color: var(--color-primary) !important;
+    border-top-color: transparent !important;
+  }
+
+  #view-product-form .product-form-footer-actions #btn-step-1-next:hover,
+  #view-product-form .product-form-footer-actions #btn-submit-product:hover,
+  .product-form-footer-actions #btn-step-1-next:hover,
+  .product-form-footer-actions #btn-submit-product:hover {
+    background-color: #f8fafc !important;
+    color: var(--color-primary) !important;
+  }
+
+  #view-product-form .product-form-footer-actions #btn-step-1-next:active,
+  #view-product-form .product-form-footer-actions #btn-submit-product:active,
+  .product-form-footer-actions #btn-step-1-next:active,
+  .product-form-footer-actions #btn-submit-product:active {
     background-color: #f1f5f9 !important;
     transform: scale(0.98);
   }
@@ -1879,7 +1955,9 @@ input::-webkit-calendar-picker-indicator {
   /* Posisi Kanan Fixed Footer saat Drawer Preview Terbuka di Layar Lebar (>= 1280px) */
   body:has(#desktop-preview-sidebar.translate-x-0) .product-form-footer-actions,
   body:has(#desktop-preview-sidebar.translate-x-0) #step1-footer-actions,
-  body:has(#desktop-preview-sidebar.translate-x-0) #step2-footer-actions {
+  body:has(#desktop-preview-sidebar.translate-x-0) #step2-footer-actions,
+  body:has(#desktop-preview-sidebar.translate-x-0) #view-product-form #step1-footer-actions,
+  body:has(#desktop-preview-sidebar.translate-x-0) #view-product-form #step2-footer-actions {
     right: 340px !important;
   }
 }
@@ -1908,6 +1986,19 @@ input::-webkit-calendar-picker-indicator {
     border-radius: 0.5rem !important;
     background-color: #ffffff !important;
     border: none !important;
+  }
+
+  .product-form-footer-actions #btn-step-1-next,
+  .product-form-footer-actions #btn-submit-product {
+    background-color: var(--color-primary) !important;
+    color: #ffffff !important;
+  }
+
+  .product-form-footer-actions #btn-step-1-next i,
+  .product-form-footer-actions #btn-submit-product i,
+  .product-form-footer-actions #btn-step-1-next span,
+  .product-form-footer-actions #btn-submit-product span {
+    color: #ffffff !important;
   }
 
   /* Saat mobile preview aktif, naikkan stacking context viewport di atas topbar header (z-40) */
@@ -2553,8 +2644,8 @@ input::-webkit-calendar-picker-indicator {
   /* 2. Kartu Seksi Utama: Flat Clean Fluid Wide (Lebar Penuh w-full Tanpa Batas max-width) */
   .step2-section-card,
   .step1-section-card,
-  #step-pane-1>div.bg-white,
-  #step-pane-1>div,
+  #step-pane-1>div.bg-white:not(.product-form-footer-actions),
+  #step-pane-1>div:not(.product-form-footer-actions),
   #card-step2-info,
   #card-step2-sales,
   #card-step2-shipping,
@@ -2736,9 +2827,7 @@ input::-webkit-calendar-picker-indicator {
    ========================================================================== */
 
 /* 1. Tombol Utama, Tombol AI, FAB Live Preview, & Tab Mode Uji Coba Aktif */
-#view-product-form .btn-primary-brand,
-#btn-step-1-next,
-#btn-submit-product,
+#view-product-form .btn-primary-brand:not(#btn-step-1-next):not(#btn-submit-product),
 #btn-submit-product-top,
 #btn-save-option-rule-modal,
 #btn-expand-preview-sidebar,
@@ -2760,15 +2849,9 @@ input::-webkit-calendar-picker-indicator {
   border-color: var(--color-primary) !important;
 }
 
-#view-product-form .btn-primary-brand:hover,
-#view-product-form .btn-primary-brand:focus,
-#view-product-form .btn-primary-brand:active,
-#btn-step-1-next:hover,
-#btn-step-1-next:focus,
-#btn-step-1-next:active,
-#btn-submit-product:hover,
-#btn-submit-product:focus,
-#btn-submit-product:active,
+#view-product-form .btn-primary-brand:not(#btn-step-1-next):not(#btn-submit-product):hover,
+#view-product-form .btn-primary-brand:not(#btn-step-1-next):not(#btn-submit-product):focus,
+#view-product-form .btn-primary-brand:not(#btn-step-1-next):not(#btn-submit-product):active,
 #btn-submit-product-top:hover,
 #btn-submit-product-top:focus,
 #btn-submit-product-top:active,
@@ -3143,15 +3226,9 @@ input#modal-input-period-end-date:focus {
 .btn-trigger-extra-action:hover,
 .btn-trigger-extra-action:focus,
 .btn-trigger-extra-action:active,
-.btn-primary-brand:hover,
-.btn-primary-brand:focus,
-.btn-primary-brand:active,
-#btn-step-1-next:hover,
-#btn-step-1-next:focus,
-#btn-step-1-next:active,
-#btn-submit-product:hover,
-#btn-submit-product:focus,
-#btn-submit-product:active,
+.btn-primary-brand:not(#btn-step-1-next):not(#btn-submit-product):hover,
+.btn-primary-brand:not(#btn-step-1-next):not(#btn-submit-product):focus,
+.btn-primary-brand:not(#btn-step-1-next):not(#btn-submit-product):active,
 #btn-ai-generate-desc:hover,
 #btn-ai-generate-desc:focus,
 #btn-ai-generate-desc:active,
