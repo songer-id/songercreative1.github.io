@@ -3650,7 +3650,7 @@ const ProductForm = (() => {
               </div>
 
               <!-- TOMBOL AKSI BAWAH STEP 1 -->
-              <div class="bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between">
+              <div id="step1-footer-actions" class="step1-footer-actions product-form-footer-actions bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between">
                 <button type="button" id="btn-step-1-cancel" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5">
                   <i class="bi bi-x-lg"></i>
                   <span>Batal</span>
@@ -18815,7 +18815,7 @@ const ProductForm = (() => {
         `}
 
         <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
-        <div id="step2-footer-actions" class="step2-footer-actions bg-white rounded-lg border-0 shadow-none py-2.5 px-3 sm:p-4 flex items-center justify-between flex-wrap gap-2.5 sm:gap-3">
+        <div id="step2-footer-actions" class="product-form-footer-actions step2-footer-actions bg-white rounded-lg border-0 shadow-none py-2.5 px-3 sm:p-4 flex items-center justify-between flex-wrap gap-2.5 sm:gap-3">
           <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
             <i class="bi bi-arrow-left"></i>
             <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>

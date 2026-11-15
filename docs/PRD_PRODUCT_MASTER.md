@@ -738,6 +738,23 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - Bergerak sinkron dan mulus mengikuti transisi `transform` 300ms drawer tanpa drift.
     - Menggantikan pemicu desktop lama (`#btn-expand-preview-sidebar` FAB Step 1, `#btn-subnav-toggle-preview` Subnav Step 2, dan `#btn-toggle-preview-sidebar` Header Drawer) yang dinonaktifkan di layar $\ge 1024$px via CSS.
     - Pada layar mobile (`< 1024px`), tombol dock terpadu disembunyikan mutlak, mempertahankan FAB mobile `#btn-fab-live-preview` dan bottom-sheet `#mobile-preview-sheet`.
+  - **Fixed Footer Action Bar Step 1 & Step 2 (`.product-form-footer-actions`, `#step1-footer-actions`, `#step2-footer-actions`)**:
+    - **Posisi Fixed Bawah Desktop**: Pada breakpoint desktop ($\ge 1024\text{px}$), bilah aksi bawah Step 1 (`#step1-footer-actions`) dan Step 2 (`#step2-footer-actions`) diposisikan tetap di bagian bawah layar (`position: fixed !important; bottom: 0 !important; z-index: 30 !important; width: auto !important; max-width: none !important;`).
+    - **Rentang Lebar Penuh Dinamis (Dynamic Offsets)**:
+      - **Batas Kiri (Admin Sidebar)**: `left: 4.5rem !important;` (72px) saat sidebar ciut (collapsed), dan otomatis menyesuaikan menjadi `left: 16rem !important;` (256px) saat sidebar melebar (`body:has(#admin-main-sidebar.is-expanded)` atau `body:has(.admin-sidebar-hover-expand.is-expanded)`), dengan transisi halus `left 0.3s cubic-bezier(0.4, 0, 0.2, 1)`.
+      - **Batas Kanan (Drawer Preview)**: `right: 0 !important;` saat drawer preview tertutup (`translate-x-full`), dan otomatis bergeser menjadi `right: 320px !important;` (atau `right: 340px !important;` pada $\ge 1280\text{px}$) saat drawer terbuka (`body:has(#desktop-preview-sidebar.translate-x-0)`), dengan transisi halus `right 0.3s ease-in-out`.
+    - **Visual & Gaya Kontainer**:
+      - Background: `background-color: var(--color-primary-subtle) !important;` memberikan nuansa brand yang selaras dengan tema toko.
+      - Border atas: `border-top: 1px solid color-mix(in srgb, var(--color-primary) 20%, #e2e8f0) !important;`.
+      - Shadow elevasi: `box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.04) !important;` (bayangan halus ke atas).
+      - Border radius desktop dinolkan (`border-radius: 0 !important;`) agar menyatu rapat dengan tepi kiri dan kanan area kerja.
+    - **Standarisasi Tombol Sekunder & Primer**:
+      - Tombol sekunder (`#btn-step-1-cancel`, `#btn-step-2-prev`, `#btn-save-draft`): Menggunakan latar belakang putih solid (`background-color: #ffffff !important;`), border abu-abu netral (`border: 1px solid #cbd5e1 !important;`), teks slate (`color: #334155 !important;`), serta hover/active state (`background-color: #f8fafc !important; border-color: #94a3b8 !important;`) untuk keterbacaan kontras tinggi di atas latar subtle.
+      - Tombol aksi primer (`#btn-step-1-next`, `#btn-submit-product`): Tetap mempertahankan class `.btn-primary-brand` dengan warna tema aktif brand toko.
+    - **Kompensasi Padding Bawah Aman (Safe Bottom Spacing)**:
+      - `#step-pane-1` dan `#step2-cards-container` diberikan `padding-bottom: 5.5rem !important;` pada breakpoint desktop agar konten kartu paling bawah tidak tertutup oleh bilah fixed footer saat pengguna melakukan scroll maksimal ke bawah.
+    - **Proteksi Tampilan Mobile (< 1024px)**:
+      - Pada mobile dan tablet (`< 1024px`), footer dikembalikan sepenuhnya ke alur normal dokumen (`position: static !important; bottom: auto; left: auto; right: auto; width: 100% !important; background-color: #ffffff !important; border-radius: 0.5rem !important; border-top: none !important; box-shadow: none !important;`) tanpa fixed positioning dan tanpa efek samping.
 
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
