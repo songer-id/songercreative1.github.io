@@ -18290,19 +18290,19 @@ const ProductForm = (() => {
               <!-- Rich Text Editor Container -->
               <div class="rich-text-editor-container border border-slate-300 rounded-md overflow-hidden bg-white focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] transition" id="rich-text-editor-wrapper">
                 <!-- Toolbar Format Deskripsi -->
-                <div class="rich-text-toolbar flex items-center flex-wrap gap-1 p-1.5 sm:p-2 bg-slate-50 border-b border-slate-200 select-none text-slate-700" role="toolbar" aria-label="Toolbar Format Deskripsi">
+                <div class="rich-text-toolbar flex items-center flex-wrap gap-1 sm:gap-1.5 p-1.5 sm:p-2 bg-slate-50 border-b border-slate-200 select-none text-slate-700" role="toolbar" aria-label="Toolbar Format Deskripsi">
                   <!-- Group 1: Undo / Redo -->
-                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="undo" title="Undo (Membatalkan perubahan)" aria-label="Undo">
+                  <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="undo" title="Undo (Membatalkan perubahan)" aria-label="Undo">
                       <i class="bi bi-arrow-counterclockwise text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="redo" title="Redo (Mengulangi perubahan)" aria-label="Redo">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="redo" title="Redo (Mengulangi perubahan)" aria-label="Redo">
                       <i class="bi bi-arrow-clockwise text-xs sm:text-sm"></i>
                     </button>
                   </div>
 
                   <!-- Group Heading & Ukuran: H1 | H2 | Aa -->
-                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
+                  <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
                     <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold text-xs select-none" data-command="format-h1" title="Heading 1 (Judul utama)" aria-label="Heading 1">
                       H1
                     </button>
@@ -18315,50 +18315,50 @@ const ProductForm = (() => {
                   </div>
 
                   <!-- Group 2: Inline Styles (Bold, Italic, Underline, Strikethrough) -->
-                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold" data-command="bold" title="Bold (Teks tebal - Ctrl+B)" aria-label="Bold">
+                  <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold select-none" data-command="bold" title="Bold (Teks tebal - Ctrl+B)" aria-label="Bold">
                       <i class="bi bi-type-bold text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="italic" title="Italic (Teks miring - Ctrl+I)" aria-label="Italic">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="italic" title="Italic (Teks miring - Ctrl+I)" aria-label="Italic">
                       <i class="bi bi-type-italic text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="underline" title="Underline (Garis bawah - Ctrl+U)" aria-label="Underline">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="underline" title="Underline (Garis bawah - Ctrl+U)" aria-label="Underline">
                       <i class="bi bi-type-underline text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="strikeThrough" title="Strikethrough (Teks coret)" aria-label="Strikethrough">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="strikeThrough" title="Strikethrough (Teks coret)" aria-label="Strikethrough">
                       <i class="bi bi-type-strikethrough text-xs sm:text-sm"></i>
                     </button>
                   </div>
 
                   <!-- Group 3: Alignment (Left, Center, Right) -->
-                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="justifyLeft" title="Align Left (Rata kiri)" aria-label="Align Left">
+                  <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="justifyLeft" title="Align Left (Rata kiri)" aria-label="Align Left">
                       <i class="bi bi-text-left text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="justifyCenter" title="Align Center (Rata tengah)" aria-label="Align Center">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="justifyCenter" title="Align Center (Rata tengah)" aria-label="Align Center">
                       <i class="bi bi-text-center text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="justifyRight" title="Align Right (Rata kanan)" aria-label="Align Right">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="justifyRight" title="Align Right (Rata kanan)" aria-label="Align Right">
                       <i class="bi bi-text-right text-xs sm:text-sm"></i>
                     </button>
                   </div>
 
                   <!-- Group 4: Lists (Bullet, Numbered) -->
-                  <div class="flex items-center gap-0.5 border-r border-slate-200 pr-1.5 mr-0.5">
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="insertUnorderedList" title="Bullet List (Daftar berpoin)" aria-label="Bullet List">
+                  <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="insertUnorderedList" title="Bullet List (Daftar berpoin)" aria-label="Bullet List">
                       <i class="bi bi-list-ul text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="insertOrderedList" title="Numbered List (Daftar bernomor)" aria-label="Numbered List">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="insertOrderedList" title="Numbered List (Daftar bernomor)" aria-label="Numbered List">
                       <i class="bi bi-list-ol text-xs sm:text-sm"></i>
                     </button>
                   </div>
 
                   <!-- Group 5: Insert Link & Clear Format -->
-                  <div class="flex items-center gap-0.5">
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" id="btn-rte-link" data-command="custom-link" title="Link (Menambahkan tautan)" aria-label="Link">
+                  <div class="rte-group flex items-center gap-0.5 shrink-0">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" id="btn-rte-link" data-command="custom-link" title="Link (Menambahkan tautan)" aria-label="Link">
                       <i class="bi bi-link-45deg text-xs sm:text-sm"></i>
                     </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer" data-command="removeFormat" title="Clear Format (Menghapus format teks)" aria-label="Clear Format">
+                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="removeFormat" title="Clear Format (Menghapus format teks)" aria-label="Clear Format">
                       <i class="bi bi-eraser text-xs sm:text-sm"></i>
                     </button>
                   </div>
@@ -18372,7 +18372,7 @@ const ProductForm = (() => {
                   role="textbox"
                   aria-multiline="true"
                   aria-placeholder="Tulis deskripsi produk di sini..."
-                  class="rich-text-editor-content w-full min-h-[140px] max-h-[500px] overflow-y-auto px-4 py-3 text-slate-800 text-sm leading-relaxed outline-none focus:outline-none"
+                  class="rich-text-editor-content w-full min-h-[140px] max-h-[260px] sm:max-h-[480px] overflow-y-auto px-4 py-3 text-slate-800 text-sm leading-relaxed outline-none focus:outline-none"
                   placeholder="Tulis deskripsi produk di sini..."
                 >${(() => {
                   const desc = primaryState.description || '';
@@ -37045,6 +37045,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     editor.addEventListener('input', () => {
       syncToTextarea();
       updateToolbarActiveStates();
+      // Pastikan kursor tetap terlihat di dalam viewport editor saat teks panjang
+      try {
+        const sel = window.getSelection ? window.getSelection() : null;
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          const editorRect = editor.getBoundingClientRect();
+          if (rect.bottom > editorRect.bottom) {
+            editor.scrollTop += (rect.bottom - editorRect.bottom) + 8;
+          } else if (rect.top < editorRect.top) {
+            editor.scrollTop -= (editorRect.top - rect.top) + 8;
+          }
+        }
+      } catch (_) {}
     });
 
     editor.addEventListener('keydown', (e) => {
@@ -37298,6 +37312,23 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         linkBtn.classList.toggle('is-active', isInsideLink);
       }
     }
+
+    const fabMobEl = document.getElementById('btn-fab-live-preview');
+    editor.addEventListener('focus', () => {
+      document.body.classList.add('is-editor-typing');
+      if (fabMobEl) {
+        fabMobEl.classList.add('opacity-0', 'pointer-events-none');
+      }
+    });
+
+    editor.addEventListener('blur', () => {
+      document.body.classList.remove('is-editor-typing');
+      const vp = document.getElementById('admin-main-viewport') || document.documentElement;
+      const distFromBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight;
+      if (distFromBottom >= 100 && fabMobEl) {
+        fabMobEl.classList.remove('opacity-0', 'pointer-events-none');
+      }
+    });
 
     ['keyup', 'mouseup', 'focus', 'selectionchange'].forEach(evt => {
       editor.addEventListener(evt, updateToolbarActiveStates);

@@ -691,6 +691,17 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
   - Format aktif ditandai secara visual pada tombol toolbar (`.is-active`).
   - Menekan tombol `Enter` pada posisi akhir heading H1/H2 secara otomatis membuat paragraf baru normal (`<p><br></p>`) sehingga seller dapat langsung mengetik teks normal tanpa merusak format heading sebelumnya.
   - Kompatibel penuh dengan Bold, Italic, Underline, List, Alignment, Link, serta riwayat Undo/Redo.
+  - **Penyelarasan Warna Netral Heading (Tanpa Pewarisan Warna Brand)**: H1, H2, dan Aa hanya mengatur ukuran, bobot font, dan struktur heading, tanpa mengubah warna teks. Teks H1 terkunci pada warna netral dark slate `#0f172a`, H2 pada `#1e293b`, dan Aa (paragraf) pada `#1e293b` (dan `#334155` di PDP). Aturan styling card header brand color (`var(--color-primary)`) pada `css/admin.css` diisolasi secara ketat ke header kartu saja (`#card-step2-description > div:first-child > h2:not(.rich-text-editor-content *)`) sehingga tag `<h2>` di dalam editor deskripsi tidak pernah berubah warna menjadi hijau.
+- **Tata Letak Toolbar Responsif & Grouping Mobile**:
+  - Toolbar dikelompokkan ke dalam 6 grup fungsional (`.rte-group`) dengan pembatas separator rapi: Group 1 (Undo/Redo), Group 2 (H1/H2/Aa), Group 3 (Bold/Italic/Underline/Strikethrough), Group 4 (Align Left/Center/Right), Group 5 (Bullet/Numbered List), dan Group 6 (Link/Clear Format).
+  - Setiap grup memiliki `flex-shrink: 0` sehingga tombol-tombol dalam grup tidak terpecah saat toolbar membungkus ke baris baru pada layar sempit (320px–414px) dan tidak menimbulkan horizontal overflow.
+  - Ukuran tombol seragam: $28 \times 28\text{ px}$ pada mobile dan $30 \times 30\text{ px}$ pada desktop.
+- **Batas Tinggi Area Penulisan Responsif (Mobile vs Desktop)**:
+  - Mobile: Dibatasi pada tinggi minimum 140px dan tinggi maksimum 260px (`min-height: 140px; max-height: 260px; overflow-y: auto; overflow-x: hidden; word-break: break-word;`). Konten panjang digulir di dalam area editor, dengan toolbar tetap berada di luar area yang digulir. Kursor penulisan dipantau secara otomatis agar selalu berada di dalam viewport editor.
+  - Desktop: Mempertahankan batas tinggi existing hingga 480px (`max-height: 480px`).
+- **Pencegahan Overlap Tombol Floating Pratinjau**:
+  - Tombol floating `Pratinjau` (`#btn-fab-live-preview`) otomatis disembunyikan (`opacity: 0; pointer-events: none; visibility: hidden;`) saat seller sedang berfokus/mengetik pada editor deskripsi (via CSS `:has(#editor-prod-desc:focus)`, `:has(.rich-text-editor-container:focus-within)`, kelas `.is-editor-typing`, serta event handler JS `focus`/`blur`).
+  - `#card-step2-description` pada mobile memiliki safe clearance padding bawah (`padding-bottom: 3.5rem`) untuk menjamin ujung teks deskripsi dan kontainer editor tidak tertutup oleh tombol melayang saat dalam kondisi idle.
 - **Preservasi Seleksi Teks & Shortcut**:
   - Seluruh tombol toolbar mengimplementasikan pencegahan pelepasan fokus (`mousedown` preventDefault), sehingga seleksi teks seller tidak hilang saat tombol format ditekan.
   - State aktif tombol toolbar disinkronkan secara visual (`.is-active`, warna `--color-primary`) melalui event `selectionchange`, `keyup`, dan `mouseup`.

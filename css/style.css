@@ -1483,6 +1483,7 @@ body.visual-edit-active [data-section]:hover {
 #pdp-full-description p,
 .product-description-content p {
   margin-bottom: 0.5rem;
+  color: #334155 !important;
 }
 
 #pdp-full-description p:last-child,
@@ -1580,6 +1581,7 @@ body.visual-edit-active [data-section]:hover {
   font-weight: 700 !important;
   display: inline !important;
   margin: 0 !important;
+  color: #0f172a !important;
 }
 
 #pdp-full-description span.text-h2,
@@ -1590,4 +1592,5 @@ body.visual-edit-active [data-section]:hover {
   font-weight: 600 !important;
   display: inline !important;
   margin: 0 !important;
+  color: #1e293b !important;
 }
