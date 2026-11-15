@@ -1694,6 +1694,7 @@ input::-webkit-calendar-picker-indicator {
     width: 320px !important;
     z-index: 35 !important;
     box-shadow: none !important;
+    overflow: visible !important;
   }
 
   #desktop-preview-sidebar.translate-x-full {
@@ -1710,6 +1711,56 @@ input::-webkit-calendar-picker-indicator {
   #btn-fab-live-preview {
     display: none !important;
   }
+
+  /* Sembunyikan Pemicu Desktop Lama di Layar Desktop (>= 1024px) */
+  #btn-expand-preview-sidebar,
+  #btn-subnav-toggle-preview,
+  #btn-toggle-preview-sidebar {
+    display: none !important;
+  }
+
+  /* Tombol Pemicu Terpadu Desktop Dock (Buka/Tutup) */
+  .desktop-preview-dock-trigger,
+  #btn-dock-toggle-preview {
+    position: absolute !important;
+    left: -32px !important;
+    top: calc(50vh - 4rem) !important;
+    transform: translateY(-50%) !important;
+    width: 32px !important;
+    height: 52px !important;
+    z-index: 50 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-right: none !important;
+    border-radius: 8px 0 0 8px !important;
+    box-shadow: -3px 0 8px rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    outline: none !important;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
+  }
+
+  .desktop-preview-dock-trigger:hover,
+  #btn-dock-toggle-preview:hover {
+    background-color: #f8fafc !important;
+    color: var(--color-primary, #0e281f) !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .desktop-preview-dock-trigger:hover svg,
+  #btn-dock-toggle-preview:hover svg {
+    color: var(--color-primary, #0e281f) !important;
+  }
+
+  .desktop-preview-dock-trigger:active,
+  #btn-dock-toggle-preview:active {
+    transform: translateY(-50%) scale(0.96) !important;
+  }
 }
 
 @media (min-width: 1280px) {
@@ -1721,7 +1772,9 @@ input::-webkit-calendar-picker-indicator {
 @media (max-width: 1023.98px) {
 
   #desktop-preview-sidebar,
-  #btn-expand-preview-sidebar {
+  #btn-expand-preview-sidebar,
+  #btn-dock-toggle-preview,
+  .desktop-preview-dock-trigger {
     display: none !important;
   }
 

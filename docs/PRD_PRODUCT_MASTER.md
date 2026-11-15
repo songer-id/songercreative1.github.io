@@ -731,6 +731,13 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
 - **Desktop ( $\ge 1024$px / Layar Lebar)**:
   - Kolom Wizard form memberikan ruang padding kanan (`lg:pr-[320px] xl:pr-[340px]`) saat Desktop Preview Sidebar aktif.
   - Desktop Preview Sidebar (`#desktop-preview-sidebar`) mengunci posisi di dock kanan sejajar dengan topbar admin (`fixed right-0 top-16 h-[calc(100vh-4rem)]`).
+  - **Pemicu Drawer Terpadu (`#btn-dock-toggle-preview`)**:
+    - Satu tombol terpadu berwujud dock-tab (`desktop-preview-dock-trigger`) menempel di sisi luar kiri `#desktop-preview-sidebar` pada `left: -32px`, `width: 32px`, `height: 52px`, `border-radius: 8px 0 0 8px`, dan berposisi tengah vertikal presisi terhadap viewport (`top: calc(50vh - 4rem); transform: translateY(-50%)`).
+    - **Saat Drawer Tertutup (`translate-x-full`)**: Tombol terparkir rapi di tengah tepi kanan viewport dengan ikon chevrons-left `<<` dan tooltip `Buka Pratinjau`.
+    - **Saat Drawer Terbuka (`translate-x-0`)**: Tombol menempel di batas kiri drawer dengan ikon chevrons-right `>>` dan tooltip `Tutup Pratinjau`.
+    - Bergerak sinkron dan mulus mengikuti transisi `transform` 300ms drawer tanpa drift.
+    - Menggantikan pemicu desktop lama (`#btn-expand-preview-sidebar` FAB Step 1, `#btn-subnav-toggle-preview` Subnav Step 2, dan `#btn-toggle-preview-sidebar` Header Drawer) yang dinonaktifkan di layar $\ge 1024$px via CSS.
+    - Pada layar mobile (`< 1024px`), tombol dock terpadu disembunyikan mutlak, mempertahankan FAB mobile `#btn-fab-live-preview` dan bottom-sheet `#mobile-preview-sheet`.
 
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:

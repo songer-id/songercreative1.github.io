@@ -3332,6 +3332,37 @@ const ProductForm = (() => {
     `;
   }
 
+  function getDockPreviewToggleSvg(isOpen) {
+    if (isOpen) {
+      // Panel drawer is OPEN -> chevrons point right >> indicating collapse/close to the right
+      return `<svg data-lucide="chevrons-right" class="w-4 h-4 text-slate-500 group-hover:text-[var(--color-primary)] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>`;
+    } else {
+      // Panel drawer is CLOSED -> chevrons point left << indicating expand/open to the left
+      return `<svg data-lucide="chevrons-left" class="w-4 h-4 text-slate-500 group-hover:text-[var(--color-primary)] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>`;
+    }
+  }
+
+  function syncDockPreviewToggleButtonState(isOpen) {
+    const btnDock = document.getElementById('btn-dock-toggle-preview');
+    const iconContainer = document.getElementById('btn-dock-toggle-preview-icon');
+    if (btnDock) {
+      const titleText = isOpen ? 'Tutup Pratinjau' : 'Buka Pratinjau';
+      btnDock.title = titleText;
+      btnDock.setAttribute('aria-label', titleText);
+      btnDock.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if (!primaryState.is_active) {
+        btnDock.classList.add('hidden');
+        btnDock.style.display = 'none';
+      } else {
+        btnDock.classList.remove('hidden');
+        btnDock.style.display = '';
+      }
+    }
+    if (iconContainer) {
+      iconContainer.innerHTML = getDockPreviewToggleSvg(isOpen);
+    }
+  }
+
   function renderForm() {
     syncThemeCSSVariables();
     if (typeof cleanupCardPresetDropdownPortals === 'function') cleanupCardPresetDropdownPortals();
@@ -3648,6 +3679,13 @@ const ProductForm = (() => {
 
         <!-- DESKTOP FIXED OFF-CANVAS PREVIEW SIDEBAR (DOCK KANAN SEJATI) -->
         <aside id="desktop-preview-sidebar" class="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[320px] xl:w-[340px] bg-white border-l border-slate-200 shadow-none z-30 flex flex-col transition-transform duration-300 ease-in-out max-lg:hidden ${isLivePreviewOpen && primaryState.is_active ? 'translate-x-0' : 'translate-x-full'}" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+
+          <!-- Unified Desktop Dock Drawer Toggle Tab (Step 1 & Step 2 Identik) -->
+          <button type="button" id="btn-dock-toggle-preview" class="desktop-preview-dock-trigger hidden lg:flex items-center justify-center cursor-pointer select-none group" title="${isLivePreviewOpen ? 'Tutup Pratinjau' : 'Buka Pratinjau'}" aria-label="${isLivePreviewOpen ? 'Tutup Pratinjau' : 'Buka Pratinjau'}" aria-expanded="${isLivePreviewOpen ? 'true' : 'false'}" style="${!primaryState.is_active ? 'display: none !important;' : ''}">
+            <span id="btn-dock-toggle-preview-icon" class="flex items-center justify-center pointer-events-none transition-transform duration-150 group-hover:scale-110">
+              ${isLivePreviewOpen ? getDockPreviewToggleSvg(true) : getDockPreviewToggleSvg(false)}
+            </span>
+          </button>
 
           <!-- Sticky Header Sidebar: Step 1 ([Pratinjau] vs [Desain Kartu]) vs Step 2 ([Pratinjau] vs [Uji Coba]) -->
           <div class="p-2.5 px-3 border-b border-slate-200 bg-slate-50/95 shrink-0 flex items-center justify-between gap-2">
@@ -32054,6 +32092,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const btnExpand = document.getElementById('btn-expand-preview-sidebar');
       const subnavFixed = document.getElementById('step2-subnav-fixed');
 
+      syncDockPreviewToggleButtonState(isOpen);
+
       if (isOpen) {
         if (subnavFixed) subnavFixed.classList.add('preview-open');
         // Saat panel pratinjau AKTIF / TERBUKA: Sembunyikan semua tombol pemicu pratinjau
@@ -32150,6 +32190,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           wizardCol.classList.remove('lg:pr-[300px]', 'xl:pr-[340px]', 'lg:pr-[320px]', 'xl:pr-[360px]');
         }
       }
+      syncDockPreviewToggleButtonState(isOpen);
       updateSubnavPreviewButtonState(isOpen);
     }
 
@@ -32209,6 +32250,21 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     ProductForm.setSidebarState = setSidebarState;
     ProductForm.updateStorefrontVisibility = updateStorefrontVisibility;
     ProductForm.updateSubnavPreviewButtonState = updateSubnavPreviewButtonState;
+    ProductForm.syncDockPreviewToggleButtonState = syncDockPreviewToggleButtonState;
+    ProductForm.getDockPreviewToggleSvg = getDockPreviewToggleSvg;
+
+    const btnDockToggle = document.getElementById('btn-dock-toggle-preview');
+    if (btnDockToggle) {
+      btnDockToggle.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof setSidebarState === 'function') {
+          setSidebarState(!isLivePreviewOpen);
+        } else if (typeof ProductForm.setSidebarState === 'function') {
+          ProductForm.setSidebarState(!isLivePreviewOpen);
+        }
+      };
+    }
 
     if (btnToggleSidebar) {
       btnToggleSidebar.addEventListener('click', () => setSidebarState(false));
@@ -34810,6 +34866,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Delegasi Klik File Picker & Aksi Galeri (Berlaku global di level document)
     document.addEventListener('click', (e) => {
+      // Pemicu Drawer Preview Desktop Terpadu (#btn-dock-toggle-preview)
+      const dockToggleBtn = e.target.closest('#btn-dock-toggle-preview');
+      if (dockToggleBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof setSidebarState === 'function') {
+          setSidebarState(!isLivePreviewOpen);
+        } else if (typeof ProductForm.setSidebarState === 'function') {
+          ProductForm.setSidebarState(!isLivePreviewOpen);
+        }
+        return;
+      }
+
       // 0. Tombol Pratinjau di bar Sub-Navbar Step 2
       const togglePreviewBtn = e.target.closest('#btn-subnav-toggle-preview');
       if (togglePreviewBtn) {
