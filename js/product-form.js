@@ -7208,9 +7208,9 @@ const ProductForm = (() => {
     if (missingItems.length > 0) {
       return {
         allowed: false,
-        title: 'Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu',
+        title: 'Data Produk Belum Lengkap',
         missingItems: missingItems,
-        reason: 'Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu',
+        reason: 'Data Produk Belum Lengkap',
         detailMessage: 'Bagian yang belum lengkap: ' + missingItems.join(', '),
         targetEl: firstInvalidEl
       };
@@ -7393,35 +7393,32 @@ const ProductForm = (() => {
     if (roots.length === 0) return;
 
     const isObj = (typeof checkOrMessage === 'object' && checkOrMessage !== null);
-    const title = isObj && checkOrMessage.title ? checkOrMessage.title : 'Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu';
+    const title = isObj && checkOrMessage.title ? checkOrMessage.title : 'Data Produk Belum Lengkap';
     const items = isObj && Array.isArray(checkOrMessage.missingItems) && checkOrMessage.missingItems.length > 0
       ? checkOrMessage.missingItems
       : (isObj && checkOrMessage.reason ? [checkOrMessage.reason] : [String(checkOrMessage || 'Silahkan lengkapi data penjualan wajib.')]);
     const targetEl = isObj ? checkOrMessage.targetEl : null;
 
     const modalInner = `
-      <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-5 max-w-[240px] w-full text-center space-y-3 border border-slate-100 relative animate-modal-pop pointer-events-auto">
+      <div class="bg-white rounded-lg shadow-2xl p-4 sm:p-5 max-w-[240px] w-full text-center space-y-2.5 border border-slate-100 relative animate-modal-pop pointer-events-auto">
         <div class="w-11 h-11 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl mx-auto shadow-inner">
           <i class="bi bi-exclamation-triangle-fill"></i>
         </div>
 
         <div class="space-y-1">
-          <h3 class="text-xs font-extrabold text-slate-900 leading-snug">
+          <h3 class="text-[11px] font-bold text-slate-900 leading-snug" style="font-size: 11px !important; font-weight: 700 !important;">
             ${escapeHtml(title)}
           </h3>
-          <p class="text-[10px] text-slate-500 font-medium leading-tight">
-            Lengkapi data berikut untuk menguji pratinjau produk.
-          </p>
         </div>
 
-        <div class="text-left bg-amber-50/90 border border-amber-200/80 rounded-lg p-2.5 space-y-1 max-h-[140px] overflow-y-auto">
+        <div class="text-left bg-amber-50/90 border border-amber-200/80 rounded-lg p-2.5 space-y-1 max-h-[140px] overflow-y-auto" style="max-height: 140px; overflow-y: auto;">
           <span class="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">Bagian yang belum lengkap:</span>
           <ul class="text-[10px] text-amber-800 list-disc list-inside space-y-0.5 leading-snug font-medium">
             ${items.map(it => `<li>${escapeHtml(it)}</li>`).join('')}
           </ul>
         </div>
 
-        <button type="button" class="btn-confirm-validation-ok w-full py-2 px-3 rounded-lg text-white text-xs font-bold transition shadow-xs cursor-pointer btn-primary-brand" style="background-color: var(--color-primary);">
+        <button type="button" class="btn-confirm-validation-ok w-full py-2 px-3 rounded-lg text-white text-xs font-bold transition shadow-xs cursor-pointer btn-primary-brand" style="background-color: var(--color-primary); border-radius: 0.5rem !important;">
           OK / Mengerti
         </button>
       </div>
@@ -7718,7 +7715,7 @@ const ProductForm = (() => {
     }
 
     const modalInner = `
-      <div class="bg-white rounded-2xl shadow-xl max-w-[270px] w-full p-4 text-center space-y-3 border border-slate-100 relative animate-modal-pop pointer-events-auto">
+      <div class="bg-white rounded-xl shadow-xl max-w-[270px] w-full p-4 text-center space-y-2.5 border border-slate-100 relative animate-modal-pop pointer-events-auto">
         <button type="button" class="btn-close-sim-modal absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-sm p-1 cursor-pointer">
           <i class="bi bi-x-lg"></i>
         </button>
@@ -7739,7 +7736,7 @@ const ProductForm = (() => {
 
         <div class="pt-1 flex items-center gap-2">
           ${config.secondaryBtnHtml || ''}
-          <button type="button" class="btn-close-sim-modal flex-1 py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+          <button type="button" class="btn-close-sim-modal flex-1 py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
             Tutup
           </button>
         </div>
@@ -7780,8 +7777,8 @@ const ProductForm = (() => {
   function showCartSimulationConfirmModal() {
     showPreviewTestModal({
       type: 'cart',
-      title: 'Simulasi Keranjang',
-      message: 'Contoh aksi Masukkan Keranjang berhasil. Keranjang pembeli tidak berubah.'
+      title: 'Simulasi Berhasil',
+      message: 'Produk Dimasukkan ke keranjang'
     });
   }
 

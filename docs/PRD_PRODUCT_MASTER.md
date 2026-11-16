@@ -834,6 +834,22 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Active state: Background berubah ke `color-mix(in srgb, var(--color-primary) 18%, #ffffff) !important;` dengan efek tekan lembut `transform: scale(0.98);`.
       - Focus-visible state: Dilengkapi indikator ring tegas `outline: 2px solid var(--color-primary) !important; outline-offset: 2px !important;` untuk aksesibilitas keyboard.
 
+  - **Penyempurnaan Redaksi dan Visual Tiga Modal Uji Coba Produk (Task 2.8B)**:
+    - **Popup Simulasi Tambah ke Keranjang (`showCartSimulationConfirmModal`)**:
+      - Redaksi disederhanakan dan diperjelas: Judul diubah menjadi **"Simulasi Berhasil"**, deskripsi diubah menjadi **"Produk Dimasukkan ke keranjang"**.
+      - Radius kontainer modal diperkecil dari 16px (`rounded-2xl`) menjadi 12px (`rounded-xl`), radius tombol Tutup diselaraskan menjadi 8px (`rounded-lg`), dan spacing antar elemen dirapikan (`space-y-2.5`).
+    - **Popup Simulasi Pembelian Berhasil (`showBuySimulationConfirmModal`)**:
+      - Judul tetap konsisten **"Simulasi Pembelian Berhasil"**, deskripsi pesan berulang dihilangkan agar tampilan ringkas dan bersih.
+      - Radius kontainer modal 12px (`rounded-xl`) dan radius tombol Tutup 8px (`rounded-lg`).
+      - Mempertahankan alur drawer variasi di lapisan bawah tetap terbuka (`isDrawerOpen: true`), sehingga saat modal ditutup pengguna tidak kehilangan konteks pilihan produk.
+    - **Popup Validasi Data Produk Belum Lengkap (`canActivateTestMode` & `showPreviewTestModeAlert`)**:
+      - Judul diseragamkan menjadi ringkas dan to-the-point: **"Data Produk Belum Lengkap"** (menggantikan redaksi lama *"Silahkan Lengkapi Informasi Penjualan Terlebih Dahulu"*).
+      - Tipografi judul dikunci pada ukuran 11px tebal (`font-size: 11px !important; font-weight: 700 !important;`) untuk mencegah layout shift dan override tipografi SaaS di perangkat mobile.
+      - Teks keterangan lama *"Lengkapi data berikut untuk menguji pratinjau produk."* dihapus sepenuhnya.
+      - Radius wadah dialog disesuaikan menjadi 8px (`rounded-lg`), radius tombol OK dikunci 8px (`rounded-lg`), dan kontainer daftar missing items dikunci dengan `max-height: 140px; overflow-y: auto;` agar tidak mengalami overflow vertikal pada viewport mobile ringkas (seperti 375x667).
+    - **Integritas Sistem & Logika Bisnis**:
+      - 100% mempertahankan logika validasi `canActivateTestMode()`, state DAG kalkulasi keranjang, navigasi, dan drawer spesifikasi produk tanpa refactoring liar.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
