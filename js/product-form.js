@@ -25,6 +25,9 @@ const ProductForm = (() => {
   let isLivePreviewOpen = true; // Desktop preview sidebar open/collapsed state
   let isPreviewTestMode = false;
   let previewStep1Tab = 'preview'; // 'preview' | 'design'
+  let previewSimulationState = {
+    isDiscountSimulated: false
+  };
   let autoScrollVariationTableToRight = null;
   let setVariantDimensionsState = null;
   let triggerPendingVariantDimensionsAutoScroll = null;
@@ -3707,23 +3710,30 @@ const ProductForm = (() => {
             </span>
           </button>
 
-          <!-- Sticky Header Sidebar: Step 1 ([Pratinjau] vs [Desain Kartu]) vs Step 2 ([Pratinjau] vs [Uji Coba]) -->
-          <div class="p-2.5 px-3 border-b border-slate-200 bg-slate-50/95 shrink-0 flex items-center justify-between gap-2">
-            <div id="desktop-preview-header-content" class="w-full max-w-[210px]">
-              ${getPreviewHeaderHtml(currentStep, false)}
+          <!-- Sticky Header Sidebar: Step 1 (Preview Kartu Produk) vs Step 2 (Preview Detail Produk) -->
+          <div class="p-2.5 px-3 border-b border-slate-200 bg-slate-50/95 shrink-0">
+            <div class="flex items-start justify-between gap-2">
+              <div id="desktop-preview-header-content" class="flex-1 min-w-0">
+                ${getPreviewHeaderHtml(currentStep, false)}
+              </div>
+              <button type="button" id="btn-toggle-preview-sidebar" class="p-1.5 -mr-1 -mt-0.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer shrink-0" title="Tutup Panel Preview">
+                <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+              </button>
             </div>
-            <button type="button" id="btn-toggle-preview-sidebar" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer shrink-0" title="Tutup Panel Preview">
-              <i data-lucide="chevrons-right" class="w-4 h-4"></i>
-            </button>
           </div>
 
           <!-- Body Sidebar (Scrollable) -->
-          <div id="desktop-preview-body" class="flex-1 overflow-y-auto p-4 space-y-4 transition-colors" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
-            <!-- Checkbox Simulasi Diskon -->
-            <label class="w-full max-w-[260px] mx-auto flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none py-1 transition-colors">
-              <input type="checkbox" id="cfg-simulate-countdown-preview" class="w-4 h-4 rounded cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1" style="accent-color: var(--color-primary);" />
-              <span>Simulasi Diskon</span>
-            </label>
+          <div id="desktop-preview-body" class="preview-custom-scrollbar flex-1 overflow-y-auto p-4 space-y-4 transition-colors" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+            <!-- Toggle Simulasi Diskon (Ikon Mata) -->
+            <div id="wrapper-simulate-discount-preview" class="w-full max-w-[260px] mx-auto flex items-center py-0.5 transition-colors">
+              <button type="button" id="btn-simulate-discount-preview" class="btn-toggle-simulate-discount inline-flex items-center gap-2 px-2.5 py-1.5 min-h-[38px] rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 active:bg-slate-200/60 transition cursor-pointer select-none" aria-label="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}" aria-pressed="${isSimulateDiscountActive() ? 'true' : 'false'}" title="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}">
+                <span class="simulate-discount-icon-box flex items-center justify-center w-5 h-5 text-base transition-colors" style="${isSimulateDiscountActive() ? 'color: var(--color-primary);' : 'color: #94a3b8;'}">
+                  <i class="bi ${isSimulateDiscountActive() ? 'bi-eye-fill' : 'bi-eye-slash-fill'}"></i>
+                </span>
+                <span class="simulate-discount-label">Simulasi Diskon</span>
+              </button>
+              <input type="checkbox" id="cfg-simulate-countdown-preview" class="hidden sr-only" tabindex="-1" aria-hidden="true" style="display:none;" />
+            </div>
 
             <!-- Card Live Box Container -->
             <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] mx-auto flex flex-col items-center justify-center transition-colors">
@@ -4274,20 +4284,25 @@ const ProductForm = (() => {
         <!-- MOBILE BOTTOM SHEET / DRAWER -->
         <div id="mobile-preview-backdrop" class="lg:hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[90] hidden transition-opacity"></div>
         <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] ${currentStep === 1 ? '' : 'bg-white'} rounded-t-2xl rounded-b-none overflow-hidden shadow-2xl border-0 max-h-[88dvh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
-          <div id="mobile-preview-header" class="p-2.5 px-3 border-b border-slate-200 flex items-center justify-between shrink-0 bg-slate-50 gap-2">
-            <div id="mobile-preview-header-content" class="w-full max-w-[210px]">
+          <div id="mobile-preview-header" class="p-2.5 px-3 border-b border-slate-200 flex items-start justify-between shrink-0 bg-slate-50 gap-2">
+            <div id="mobile-preview-header-content" class="flex-1 min-w-0">
               ${getPreviewHeaderHtml(currentStep, true)}
             </div>
-            <button type="button" id="btn-close-mobile-preview" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer shrink-0">
+            <button type="button" id="btn-close-mobile-preview" class="w-7 h-7 -mr-0.5 -mt-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer shrink-0">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
           <div id="mobile-preview-body" class="flex-1 min-h-0 min-w-0 w-full overflow-y-auto overflow-x-hidden p-4 space-y-4 flex flex-col items-center" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); ${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
-            <!-- Checkbox Simulasi Diskon Mobile -->
-            <label class="w-full max-w-[260px] flex items-center gap-2 text-xs font-normal text-slate-700 cursor-pointer select-none py-1 transition-colors">
-              <input type="checkbox" id="cfg-simulate-countdown-preview-mob" class="w-4 h-4 rounded cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1" style="accent-color: var(--color-primary);" />
-              <span>Simulasi Diskon</span>
-            </label>
+            <!-- Toggle Simulasi Diskon Mobile (Ikon Mata) -->
+            <div id="wrapper-simulate-discount-preview-mob" class="w-full max-w-[260px] flex items-center py-0.5 transition-colors">
+              <button type="button" id="btn-simulate-discount-preview-mob" class="btn-toggle-simulate-discount inline-flex items-center gap-2 px-2.5 py-1.5 min-h-[38px] rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 active:bg-slate-200/60 transition cursor-pointer select-none" aria-label="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}" aria-pressed="${isSimulateDiscountActive() ? 'true' : 'false'}" title="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}">
+                <span class="simulate-discount-icon-box flex items-center justify-center w-5 h-5 text-base transition-colors" style="${isSimulateDiscountActive() ? 'color: var(--color-primary);' : 'color: #94a3b8;'}">
+                  <i class="bi ${isSimulateDiscountActive() ? 'bi-eye-fill' : 'bi-eye-slash-fill'}"></i>
+                </span>
+                <span class="simulate-discount-label">Simulasi Diskon</span>
+              </button>
+              <input type="checkbox" id="cfg-simulate-countdown-preview-mob" class="hidden sr-only" tabindex="-1" aria-hidden="true" style="display:none;" />
+            </div>
 
             <!-- Card Preview Box -->
             <div id="preview-card-outer-wrapper-mob" class="w-full max-w-[260px] flex flex-col items-center justify-center transition-colors">
@@ -7460,81 +7475,104 @@ const ProductForm = (() => {
     });
   }
 
+  function isSimulateDiscountActive() {
+    const cb = document.getElementById('cfg-simulate-countdown-preview') || document.getElementById('cfg-simulate-countdown-preview-mob');
+    if (cb && typeof cb.checked === 'boolean' && cb.checked !== previewSimulationState.isDiscountSimulated) {
+      previewSimulationState.isDiscountSimulated = cb.checked;
+    }
+    return Boolean(previewSimulationState && previewSimulationState.isDiscountSimulated);
+  }
+
+  function toggleSimulateDiscount(forceState) {
+    if (typeof forceState === 'boolean') {
+      previewSimulationState.isDiscountSimulated = forceState;
+    } else {
+      previewSimulationState.isDiscountSimulated = !previewSimulationState.isDiscountSimulated;
+    }
+    const isActive = previewSimulationState.isDiscountSimulated;
+
+    ['cfg-simulate-countdown-preview', 'cfg-simulate-countdown-preview-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = isActive;
+    });
+
+    syncSimulateDiscountUI();
+    updateProductCardLivePreview();
+  }
+
+  function syncSimulateDiscountUI() {
+    const isActive = isSimulateDiscountActive();
+    const tooltipText = isActive ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon';
+
+    ['btn-simulate-discount-preview', 'btn-simulate-discount-preview-mob'].forEach(btnId => {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      btn.setAttribute('aria-label', tooltipText);
+      btn.setAttribute('title', tooltipText);
+
+      const iconBox = btn.querySelector('.simulate-discount-icon-box');
+      if (iconBox) {
+        if (isActive) {
+          iconBox.style.color = 'var(--color-primary)';
+          iconBox.innerHTML = '<i class="bi bi-eye-fill"></i>';
+        } else {
+          iconBox.style.color = '#94a3b8';
+          iconBox.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
+        }
+      }
+    });
+  }
+
   function getPreviewHeaderHtml(step, isMobile = false) {
+    const titleText = step === 2 ? 'Preview Detail Produk' : 'Preview Kartu Produk';
+    const descText = 'Hanya untuk referensi saja, tampilan di aplikasi mungkin akan sedikit berbeda.';
+    const suffix = isMobile ? '-mob' : '';
+
     if (step === 1) {
       const isDesign = (previewStep1Tab === 'design');
-      if (isMobile) {
-        return `
-          <div class="flex flex-col gap-1 w-full">
-            <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-              <button type="button" id="btn-step1-tab-preview-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isDesign ? 'color: var(--color-primary);' : ''}">
-                <span>Pratinjau</span>
-              </button>
-              <button type="button" id="btn-step1-tab-design-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isDesign ? 'color: var(--color-primary);' : ''}">
-                <span>Desain Kartu</span>
-              </button>
-            </div>
+      return `
+        <div class="space-y-2 w-full">
+          <div class="space-y-0.5">
+            <h4 class="preview-header-title text-xs font-bold text-slate-800 leading-tight">${titleText}</h4>
+            <p class="preview-header-subtitle text-[10px] text-slate-500 leading-snug">${descText}</p>
           </div>
-        `;
-      } else {
-        return `
-          <div class="flex flex-col gap-1 w-full">
-            <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-              <button type="button" id="btn-step1-tab-preview" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isDesign ? 'color: var(--color-primary);' : ''}">
-                <span>Pratinjau</span>
-              </button>
-              <button type="button" id="btn-step1-tab-design" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isDesign ? 'color: var(--color-primary);' : ''}">
-                <span>Desain Kartu</span>
-              </button>
-            </div>
+          <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+            <button type="button" id="btn-step1-tab-preview${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isDesign ? 'color: var(--color-primary);' : ''}">
+              <span>Pratinjau</span>
+            </button>
+            <button type="button" id="btn-step1-tab-design${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isDesign ? 'color: var(--color-primary);' : ''}">
+              <span>Desain Kartu</span>
+            </button>
           </div>
-        `;
-      }
+        </div>
+      `;
     } else {
       const isTest = (previewTestState.sidebarTab === 'test');
-      if (isMobile) {
-        return `
-          <div class="flex flex-col gap-1 w-full">
-            <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-              <button type="button" id="btn-preview-mode-passive-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">
-                <span>Pratinjau</span>
-              </button>
-              <button type="button" id="btn-preview-mode-test-mob" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isTest ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isTest ? 'background-color: var(--color-primary);' : ''}">
-                <span>Uji Coba</span>
-              </button>
-            </div>
-            <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
-            <div id="preview-test-mode-alert-mob" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
-              <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
-              <span class="flex-1 font-medium preview-test-alert-text"></span>
-              <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
-                <i class="bi bi-x text-sm"></i>
-              </button>
-            </div>
+      const alertId = isMobile ? 'preview-test-mode-alert-mob' : 'preview-test-mode-alert';
+      return `
+        <div class="space-y-2 w-full">
+          <div class="space-y-0.5">
+            <h4 class="preview-header-title text-xs font-bold text-slate-800 leading-tight">${titleText}</h4>
+            <p class="preview-header-subtitle text-[10px] text-slate-500 leading-snug">${descText}</p>
           </div>
-        `;
-      } else {
-        return `
-          <div class="flex flex-col gap-1 w-full">
-            <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-              <button type="button" id="btn-preview-mode-passive" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">
-                <span>Pratinjau</span>
-              </button>
-              <button type="button" id="btn-preview-mode-test" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isTest ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isTest ? 'background-color: var(--color-primary);' : ''}">
-                <span>Uji Coba</span>
-              </button>
-            </div>
-            <div class="text-[10px] font-semibold text-slate-500 text-center">Detail Produk</div>
-            <div id="preview-test-mode-alert" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
-              <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
-              <span class="flex-1 font-medium preview-test-alert-text"></span>
-              <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
-                <i class="bi bi-x text-sm"></i>
-              </button>
-            </div>
+          <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+            <button type="button" id="btn-preview-mode-passive${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">
+              <span>Pratinjau</span>
+            </button>
+            <button type="button" id="btn-preview-mode-test${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isTest ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isTest ? 'background-color: var(--color-primary);' : ''}">
+              <span>Uji Coba</span>
+            </button>
           </div>
-        `;
-      }
+          <div id="${alertId}" class="hidden w-full mt-1.5 p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-snug flex items-start gap-1.5 shadow-2xs transition-all">
+            <i class="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 text-xs mt-0.5"></i>
+            <span class="flex-1 font-medium preview-test-alert-text"></span>
+            <button type="button" class="btn-close-preview-test-alert text-amber-600 hover:text-amber-800 p-0.5 -mr-1 -mt-0.5 leading-none cursor-pointer" title="Tutup">
+              <i class="bi bi-x text-sm"></i>
+            </button>
+          </div>
+        </div>
+      `;
     }
   }
 
@@ -9571,10 +9609,10 @@ const ProductForm = (() => {
             </div>
             <div class="flex-1 pr-6 min-w-0">
               ${effHasDiscount ? `
-                <div class="drawer-header-price text-sm font-semibold text-red-600 leading-tight">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
+                <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: var(--color-primary);">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(headerStrikeUnitPrice).toLocaleString('id-ID')}</div>
               ` : `
-                <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: ${accentColor};">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
+                <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: var(--color-primary);">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
               `}
               <div class="text-[11px] text-slate-500 font-medium mt-0.5">Stok: <span class="drawer-stock-display font-semibold text-slate-700">${stockDisplayText}</span></div>
@@ -9702,15 +9740,15 @@ const ProductForm = (() => {
             <div class="flex-1 pr-6 min-w-0">
               ${isAllVariationsSelected ? `
                 ${effHasDiscount ? `
-                  <div class="drawer-header-price text-sm font-semibold text-red-600 leading-tight">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
+                  <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: var(--color-primary);">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                   <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5">Rp${Math.round(headerStrikeUnitPrice).toLocaleString('id-ID')}</div>
                 ` : `
-                  <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: ${accentColor};">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
+                  <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: var(--color-primary);">${formatPriceHtmlWithSmallRp(headerUnitPrice)}</div>
                   <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
                 `}
                 <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5 hidden">Pilih varian dahulu</div>
               ` : `
-                <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: ${accentColor};">${drawerPriceRangeString}</div>
+                <div class="drawer-header-price text-sm font-semibold leading-tight" style="color: var(--color-primary);">${drawerPriceRangeString}</div>
                 <div class="drawer-header-strike-price text-[10px] line-through text-slate-400 font-normal mt-0.5 hidden"></div>
                 <div class="drawer-header-variant-warning text-[10px] text-amber-600 font-semibold mt-0.5">Pilih varian dahulu</div>
               `}
@@ -11598,8 +11636,8 @@ const ProductForm = (() => {
     });
 
     // Kotak Simulasi Diskon & Panel Desain Kartu
-    const simDiscountDesk = document.getElementById('cfg-simulate-countdown-preview')?.closest('label');
-    const simDiscountMob = document.getElementById('cfg-simulate-countdown-preview-mob')?.closest('label');
+    const simDiscountDesk = document.getElementById('wrapper-simulate-discount-preview') || document.getElementById('btn-simulate-discount-preview') || document.getElementById('cfg-simulate-countdown-preview')?.closest('label');
+    const simDiscountMob = document.getElementById('wrapper-simulate-discount-preview-mob') || document.getElementById('btn-simulate-discount-preview-mob') || document.getElementById('cfg-simulate-countdown-preview-mob')?.closest('label');
     const customSectionDesk = document.getElementById('card-customization-section');
     const customSectionMob = document.getElementById('card-customization-section-mob');
 
@@ -11651,6 +11689,7 @@ const ProductForm = (() => {
 
     syncCardAccordionDOM();
     syncEyeToggleIcons();
+    syncSimulateDiscountUI();
 
     // 1. Baca data langsung dari form DOM
     const nameInput = (currentStep === 2 ? document.getElementById('step2-input-name') : null) || document.getElementById('input-prod-name');
@@ -11975,7 +12014,7 @@ const ProductForm = (() => {
     const countdownStyle = `background-color: ${countdownBgColor}; color: ${countdownTextColor}; border: 1px solid ${countdownBorderColor}; border-radius: ${countdownRadius};`;
 
     // Countdown configs & simulation toggle
-    const simulateCountdown = (document.getElementById("cfg-simulate-countdown-preview")?.checked === true) || (document.getElementById("cfg-simulate-countdown-preview-mob")?.checked === true);
+    const simulateCountdown = isSimulateDiscountActive();
     const enableCountdown = document.getElementById('cfg-enable-countdown') ? document.getElementById('cfg-enable-countdown').checked : (primaryState.enable_countdown !== false);
 
     // Evaluasi deadline waktu berakhir promo (wajib valid dan belum lewat)
@@ -12729,7 +12768,7 @@ const ProductForm = (() => {
       const miniPdpHtml = `
         <div class="mini-pdp-card w-full bg-white rounded-none border border-slate-200/80 shadow-md overflow-hidden text-left font-sans relative flex flex-col max-h-[calc(100vh-11rem)]">
           <!-- AREA KONTEN UTAMA MINI PDP (SCROLLABLE) -->
-          <div class="flex-1 overflow-y-auto">
+          <div class="preview-custom-scrollbar flex-1 overflow-y-auto">
             <div class="mini-pdp-scroll-content ${!isTestMode ? 'pointer-events-none select-none' : ''}">
               <!-- Foto Utama Mini PDP (Bersih murni dari teks uji coba di atas foto) -->
               <div class="relative w-full aspect-square bg-slate-100 overflow-hidden shrink-0 rounded-none">
@@ -12755,7 +12794,7 @@ const ProductForm = (() => {
                 <!-- URUTAN 1: Baris Harga (Rentang Harga) & Teks Terjual -->
                 <div class="flex items-baseline justify-between gap-2 pt-1">
                   <div class="flex items-baseline gap-2 flex-wrap min-w-0">
-                    <span class="text-sm sm:text-base font-semibold truncate" style="color: ${accentColor};">
+                    <span class="mini-pdp-main-price text-sm sm:text-base font-semibold truncate" style="color: var(--color-primary);">
                       ${displayPriceString}
                     </span>
                     ${effHasDiscount ? `
@@ -34014,19 +34053,28 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       });
     }
 
-    // Simulation Countdown Toggle (Desktop & Mobile Sync)
+    // Simulation Discount Eye Button Toggle (Desktop & Mobile Sync)
+    ['btn-simulate-discount-preview', 'btn-simulate-discount-preview-mob'].forEach(btnId => {
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSimulateDiscount();
+        });
+      }
+    });
+
     const simCd = document.getElementById('cfg-simulate-countdown-preview');
     const simCdMob = document.getElementById('cfg-simulate-countdown-preview-mob');
     if (simCd) {
-      simCd.addEventListener('change', () => {
-        if (simCdMob) simCdMob.checked = simCd.checked;
-        updateProductCardLivePreview();
+      simCd.addEventListener('change', (e) => {
+        toggleSimulateDiscount(e.target.checked);
       });
     }
     if (simCdMob) {
-      simCdMob.addEventListener('change', () => {
-        if (simCd) simCd.checked = simCdMob.checked;
-        updateProductCardLivePreview();
+      simCdMob.addEventListener('change', (e) => {
+        toggleSimulateDiscount(e.target.checked);
       });
     }
 
@@ -37820,11 +37868,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     sanitizeProductDescriptionHtml,
     bindRichTextEditorEvents,
     updateFooterScrollShadow,
-    initFooterScrollShadowObserver
+    initFooterScrollShadowObserver,
+    isSimulateDiscountActive,
+    toggleSimulateDiscount,
+    syncSimulateDiscountUI
   };
 })();
 
 window.ProductForm = ProductForm;
+window.isSimulateDiscountActive = ProductForm.isSimulateDiscountActive;
+window.toggleSimulateDiscount = ProductForm.toggleSimulateDiscount;
+window.syncSimulateDiscountUI = ProductForm.syncSimulateDiscountUI;
 window.updateFooterScrollShadow = ProductForm.updateFooterScrollShadow;
 window.initFooterScrollShadowObserver = ProductForm.initFooterScrollShadowObserver;
 window.sanitizeProductDescriptionHtml = ProductForm.sanitizeProductDescriptionHtml;

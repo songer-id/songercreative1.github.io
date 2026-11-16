@@ -766,6 +766,26 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Pada mobile dan tablet (`< 1024px`), footer dikembalikan sepenuhnya ke alur normal dokumen (`position: static !important; bottom: auto; left: auto; right: auto; width: 100% !important; background-color: #ffffff !important; border-radius: 0.5rem !important; border-top: none !important; box-shadow: none !important;`).
       - Tombol aksi primer pada mobile tetap menggunakan background brand `var(--color-primary)` dengan teks putih, dan tombol sekunder menggunakan kartu putih dengan border slate standar.
 
+  - **Penyempurnaan Live Preview Produk Desktop & Mobile (Task 2.3)**:
+    - **Header Preview & Keterangan**:
+      - Step 1: Judul **Preview Kartu Produk**, Keterangan: *"Hanya untuk referensi saja, tampilan di aplikasi mungkin akan sedikit berbeda."*
+      - Step 2: Judul **Preview Detail Produk**, Keterangan: *"Hanya untuk referensi saja, tampilan di aplikasi mungkin akan sedikit berbeda."*
+      - Layout vertikal compact dan rapi (`.preview-header-title`, `.preview-header-subtitle`), responsif tanpa terpotong di layar mobile 375px maupun desktop. Menghilangkan badge teks redundan "Detail Produk" lama di Step 2.
+    - **Kontrol Simulasi Diskon (Ikon Mata Bootstrap Icons)**:
+      - Menggantikan kontrol checkbox native secara total dengan tombol interaktif `[Ikon Mata] Simulasi Diskon` (`#btn-simulate-discount-preview` & `#btn-simulate-discount-preview-mob`).
+      - Status Aktif: Ikon `<i class="bi bi-eye-fill"></i>`, warna tema brand aktif (`var(--color-primary)`), tooltip & `aria-label`: *"Sembunyikan simulasi diskon"*, `aria-pressed="true"`.
+      - Status Nonaktif: Ikon `<i class="bi bi-eye-slash-fill"></i>`, warna netral sekunder (`#94a3b8`), tooltip & `aria-label`: *"Tampilkan simulasi diskon"*, `aria-pressed="false"`.
+      - Area sentuh/klik nyaman $\ge 38\text{px}$, hover feedback halus (`hover:bg-slate-100/80`), event terisolasi (`stopPropagation()`).
+      - Sinkronisasi instan dua arah antara desktop dan mobile, serta tetap sinkron saat form atau Preview mengalami re-render. Tidak memutasi harga asli, nilai diskon input pengguna, atau data produk yang disimpan ke database.
+    - **Penyempurnaan Scrollbar Preview (Scoped Desktop)**:
+      - Diterapkan secara scoped khusus pada area scroll Preview desktop (`#desktop-preview-sidebar`, `#desktop-preview-body`, `.mini-pdp-card .overflow-y-auto`, `.mini-pdp-drawer-sheet .overflow-y-auto`, `.preview-custom-scrollbar`).
+      - Lebar scrollbar minimalis 5px, track transparan, thumb abu-abu netral `rgba(156, 163, 175, 0.4)` dengan radius penuh (`rounded-full`), dan hover `rgba(107, 114, 128, 0.65)`.
+      - Kompatibel Chromium (`::-webkit-scrollbar`) dan Firefox (`scrollbar-width: thin; scrollbar-color: ...`). Mobile tetap mempertahankan scrolling sentuh native murni tanpa gangguan.
+    - **Warna Harga Detail Produk Mengikuti Brand (Step 2)**:
+      - Elemen harga utama Mini PDP Step 2 (`.mini-pdp-main-price`) dan Drawer Shopee (`.drawer-header-price`) mengadopsi token dinamis `var(--color-primary) !important;`.
+      - Bebas dari warna hijau statis atau HEX tetap, sehingga otomatis langsung ter-update seketika tema brand toko diganti (`applyTheme()` / store settings).
+      - Bekerja konsisten pada Mode Tambah Produk dan Edit Produk, saat preview pertama dibuka maupun pasca re-render. Harga coret sebelum diskon tetap berwarna netral sekunder (`text-slate-400`), dan badge diskon tetap merah menyala (`bg-red-500`).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

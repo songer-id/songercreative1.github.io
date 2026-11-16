@@ -372,6 +372,10 @@ const AdminApp = (() => {
     root.style.setProperty('--color-secondary', secondaryColor);
     root.style.setProperty('--color-secondary-hover', secondaryHover);
     root.style.setProperty('--color-secondary-subtle', secondarySubtle);
+
+    if (typeof window !== 'undefined' && window.ProductForm && typeof window.ProductForm.updateProductCardLivePreview === 'function') {
+      try { window.ProductForm.updateProductCardLivePreview(); } catch (_) { }
+    }
   }
 
   function adjustColorBrightness(hex, percent) {

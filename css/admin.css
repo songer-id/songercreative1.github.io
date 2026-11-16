@@ -4374,3 +4374,81 @@ body.is-editor-typing #btn-fab-live-preview {
   transform: translate(-50%, 12px) !important;
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease !important;
 }
+
+/* ==========================================================================
+   TASK 2.3: PREVIEW CUSTOM SCROLLBAR (DESKTOP ONLY / SCOPED)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  #desktop-preview-sidebar,
+  #desktop-preview-body,
+  #desktop-preview-sidebar .overflow-y-auto,
+  .mini-pdp-card .overflow-y-auto,
+  .mini-pdp-drawer-sheet .overflow-y-auto,
+  .preview-custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+  }
+
+  #desktop-preview-sidebar::-webkit-scrollbar,
+  #desktop-preview-body::-webkit-scrollbar,
+  #desktop-preview-sidebar .overflow-y-auto::-webkit-scrollbar,
+  .mini-pdp-card .overflow-y-auto::-webkit-scrollbar,
+  .mini-pdp-drawer-sheet .overflow-y-auto::-webkit-scrollbar,
+  .preview-custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  #desktop-preview-sidebar::-webkit-scrollbar-track,
+  #desktop-preview-body::-webkit-scrollbar-track,
+  #desktop-preview-sidebar .overflow-y-auto::-webkit-scrollbar-track,
+  .mini-pdp-card .overflow-y-auto::-webkit-scrollbar-track,
+  .mini-pdp-drawer-sheet .overflow-y-auto::-webkit-scrollbar-track,
+  .preview-custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 9999px;
+  }
+
+  #desktop-preview-sidebar::-webkit-scrollbar-thumb,
+  #desktop-preview-body::-webkit-scrollbar-thumb,
+  #desktop-preview-sidebar .overflow-y-auto::-webkit-scrollbar-thumb,
+  .mini-pdp-card .overflow-y-auto::-webkit-scrollbar-thumb,
+  .mini-pdp-drawer-sheet .overflow-y-auto::-webkit-scrollbar-thumb,
+  .preview-custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.4);
+    border-radius: 9999px;
+    border: none;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  #desktop-preview-sidebar::-webkit-scrollbar-thumb:hover,
+  #desktop-preview-body::-webkit-scrollbar-thumb:hover,
+  #desktop-preview-sidebar .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+  .mini-pdp-card .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+  .mini-pdp-drawer-sheet .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+  .preview-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(107, 114, 128, 0.65);
+  }
+}
+
+/* ==========================================================================
+   TASK 2.3: PREVIEW DETAIL PRODUK (STEP 2) HARGA BRAND & SIMULASI DISKON
+   ========================================================================== */
+.mini-pdp-main-price,
+.mini-pdp-card .mini-pdp-main-price,
+.mini-pdp-drawer-sheet .drawer-header-price {
+  color: var(--color-primary) !important;
+}
+
+.btn-toggle-simulate-discount {
+  min-height: 38px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-toggle-simulate-discount:hover {
+  background-color: rgba(241, 245, 249, 0.85);
+}
+
+.btn-toggle-simulate-discount:active {
+  background-color: rgba(226, 232, 240, 0.75);
+}
