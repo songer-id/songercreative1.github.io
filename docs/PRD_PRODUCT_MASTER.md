@@ -786,6 +786,18 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Bebas dari warna hijau statis atau HEX tetap, sehingga otomatis langsung ter-update seketika tema brand toko diganti (`applyTheme()` / store settings).
       - Bekerja konsisten pada Mode Tambah Produk dan Edit Produk, saat preview pertama dibuka maupun pasca re-render. Harga coret sebelum diskon tetap berwarna netral sekunder (`text-slate-400`), dan badge diskon tetap merah menyala (`bg-red-500`).
 
+  - **Fixed Footer Preview Detail & Penyesuaian Visual Tombol (Task 2.4)**:
+    - **Footer Preview Detail Produk Tetap di Bawah (Tidak Ikut Scroll)**:
+      - Tiga tombol CTA aksi pembeli pada Preview Detail Produk Step 2 (Chat WhatsApp `.btn-preview-chat-wa`, Keranjang `.btn-preview-add-cart`, dan Beli Sekarang `.btn-preview-buy-now`) dikunci secara fixed di bagian bawah drawer preview desktop dan sheet mobile (`.mini-pdp-bottom-bar`).
+      - Scrolling hanya terjadi secara independen pada area konten produk (`.mini-pdp-card > .preview-custom-scrollbar`), sehingga saat pengguna menggulir rincian produk, deskripsi, maupun spesifikasi ke atas dan ke bawah, ketiga tombol CTA tetap diam di posisinya dan selalu dapat diakses.
+      - Posisi footer tetap berada di dalam batas drawer/sheet (tidak terdorong keluar layar atau tertutup batas viewport), berlatar belakang solid `#ffffff`, dan seluruh fungsionalitas klik (simulasi WhatsApp, drawer variasi keranjang, drawer variasi checkout) tetap berjalan 100%.
+    - **Penyelarasan Visual Tombol Sekunder di Fixed Footer Form**:
+      - Tombol Batal Step 1 (`#btn-step-1-cancel`), Kembali Step 2 (`#btn-step-2-prev`), dan Simpan Draf Step 2 (`#btn-save-draft`) diubah dari ghost button (transparan dengan border tipis) menjadi tombol kartu putih solid (`background-color: #ffffff !important; border: none !important;`).
+      - Warna teks dan ikon tombol otomatis mengikuti warna brand toko yang aktif (`color: var(--color-primary) !important;`), tanpa bayangan (`box-shadow: none !important;`), dan memiliki efek hover selaras brand yang lembut (`var(--color-primary-subtle)`).
+      - Container fixed footer tetap mempertahankan background brand `var(--color-primary)` yang solid dan identik antara Step 1 dan Step 2, serta tombol primer (#btn-step-1-next dan #btn-submit-product) tetap mempertahankan styling utamanya.
+    - **Penyesuaian Border Radius Tombol Preview**:
+      - Mengurangi border radius tombol tab "Pratinjau", "Desain Kartu", dan "Uji Coba" dari pil bulat berlebih (`rounded-full`) menjadi modern medium radius yang tegas dan konsisten dengan sistem desain Songer Creative: kontainer tab menggunakan `rounded-lg` (8px / `0.5rem`), tombol tab menggunakan `rounded-md` (6px / `0.375rem`), dan tombol aksi FAB preview (`#btn-expand-preview-sidebar`, `#btn-fab-live-preview`) menggunakan `rounded-lg` (8px / `0.5rem`).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

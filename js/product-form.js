@@ -3674,7 +3674,7 @@ const ProductForm = (() => {
 
               <!-- TOMBOL AKSI BAWAH STEP 1 -->
               <div id="step1-footer-actions" class="step1-footer-actions product-form-footer-actions bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between">
-                <button type="button" id="btn-step-1-cancel" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5">
+                <button type="button" id="btn-step-1-cancel" class="px-5 py-2.5 border-0 rounded-md text-xs font-semibold hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5" style="background-color: #ffffff; color: var(--color-primary);">
                   <i class="bi bi-x-lg"></i>
                   <span>Batal</span>
                 </button>
@@ -3695,7 +3695,7 @@ const ProductForm = (() => {
         </div>
 
         <!-- Floating Action Button (FAB) Buka Preview di Step 1 Desktop (Horizontal di Kanan Bawah) -->
-        <button type="button" id="btn-expand-preview-sidebar" class="${(isLivePreviewOpen || !primaryState.is_active || currentStep !== 1) ? 'hidden' : 'hidden lg:flex'} btn-primary-brand fixed right-6 bottom-6 z-25 text-white px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 text-xs font-bold transition-all duration-200 cursor-pointer select-none active:scale-95 group" title="Buka Pratinjau">
+        <button type="button" id="btn-expand-preview-sidebar" class="${(isLivePreviewOpen || !primaryState.is_active || currentStep !== 1) ? 'hidden' : 'hidden lg:flex'} btn-primary-brand fixed right-6 bottom-6 z-25 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 text-xs font-bold transition-all duration-200 cursor-pointer select-none active:scale-95 group" title="Buka Pratinjau">
           <i class="bi bi-eye text-sm"></i>
           <span>Pratinjau</span>
         </button>
@@ -4276,7 +4276,7 @@ const ProductForm = (() => {
 
         <!-- FLOATING STRIP BUTTON TO EXPAND DESKTOP SIDEBAR HAS BEEN MOVED TO SUBNAVBAR [PRATINJAU] -->
         <!-- MOBILE FLOATING ACTION BUTTON (FAB) (Posisikan di tengah bawah) -->
-        <button type="button" id="btn-fab-live-preview" class="btn-primary-brand lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 active:scale-95 text-white px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none">
+        <button type="button" id="btn-fab-live-preview" class="btn-primary-brand lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 active:scale-95 text-white px-3.5 py-2 rounded-lg shadow-lg flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none">
           <i class="bi bi-eye text-sm"></i>
           <span>Pratinjau</span>
         </button>
@@ -7537,11 +7537,11 @@ const ProductForm = (() => {
             <h4 class="preview-header-title text-xs font-bold text-slate-800 leading-tight">${titleText}</h4>
             <p class="preview-header-subtitle text-[10px] text-slate-500 leading-snug">${descText}</p>
           </div>
-          <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-            <button type="button" id="btn-step1-tab-preview${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isDesign ? 'color: var(--color-primary);' : ''}">
+          <div class="preview-tab-pill-container inline-flex p-0.5 rounded-lg bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+            <button type="button" id="btn-step1-tab-preview${suffix}" class="flex-1 py-1 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isDesign ? 'color: var(--color-primary);' : ''}">
               <span>Pratinjau</span>
             </button>
-            <button type="button" id="btn-step1-tab-design${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isDesign ? 'color: var(--color-primary);' : ''}">
+            <button type="button" id="btn-step1-tab-design${suffix}" class="flex-1 py-1 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isDesign ? 'color: var(--color-primary);' : ''}">
               <span>Desain Kartu</span>
             </button>
           </div>
@@ -7556,11 +7556,11 @@ const ProductForm = (() => {
             <h4 class="preview-header-title text-xs font-bold text-slate-800 leading-tight">${titleText}</h4>
             <p class="preview-header-subtitle text-[10px] text-slate-500 leading-snug">${descText}</p>
           </div>
-          <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
-            <button type="button" id="btn-preview-mode-passive${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">
+          <div class="preview-tab-pill-container inline-flex p-0.5 rounded-lg bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
+            <button type="button" id="btn-preview-mode-passive${suffix}" class="flex-1 py-1 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">
               <span>Pratinjau</span>
             </button>
-            <button type="button" id="btn-preview-mode-test${suffix}" class="flex-1 py-1 px-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isTest ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isTest ? 'background-color: var(--color-primary);' : ''}">
+            <button type="button" id="btn-preview-mode-test${suffix}" class="flex-1 py-1 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${isTest ? 'btn-primary-brand text-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${isTest ? 'background-color: var(--color-primary);' : ''}">
               <span>Uji Coba</span>
             </button>
           </div>
@@ -11685,6 +11685,19 @@ const ProductForm = (() => {
       if (simDiscountMob) simDiscountMob.classList.remove('hidden');
       if (customSectionDesk) customSectionDesk.classList.add('hidden');
       if (customSectionMob) customSectionMob.classList.add('hidden');
+    }
+
+    const deskPreviewBody = document.getElementById('desktop-preview-body');
+    const mobPreviewBody = document.getElementById('mobile-preview-body');
+    const mobPreviewSheet = document.getElementById('mobile-preview-sheet');
+    if (currentStep === 2) {
+      if (deskPreviewBody) deskPreviewBody.classList.add('preview-body-step2');
+      if (mobPreviewBody) mobPreviewBody.classList.add('preview-body-step2');
+      if (mobPreviewSheet) mobPreviewSheet.classList.add('preview-sheet-step2');
+    } else {
+      if (deskPreviewBody) deskPreviewBody.classList.remove('preview-body-step2');
+      if (mobPreviewBody) mobPreviewBody.classList.remove('preview-body-step2');
+      if (mobPreviewSheet) mobPreviewSheet.classList.remove('preview-sheet-step2');
     }
 
     syncCardAccordionDOM();
@@ -18876,14 +18889,14 @@ const ProductForm = (() => {
 
         <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
         <div id="step2-footer-actions" class="product-form-footer-actions step2-footer-actions bg-white rounded-lg border-0 shadow-none py-2.5 px-3 sm:p-4 flex items-center justify-between flex-wrap gap-2.5 sm:gap-3">
-          <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border border-slate-300 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer">
+          <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border-0 rounded-md text-xs font-semibold hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer" style="background-color: #ffffff; color: var(--color-primary);">
             <i class="bi bi-arrow-left"></i>
             <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>
           </button>
 
           <div class="flex items-center gap-3">
             <!-- Tombol Simpan Draf -->
-            <button type="button" id="btn-save-draft" class="px-5 py-2.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-none transition flex items-center gap-2 cursor-pointer">
+            <button type="button" id="btn-save-draft" class="px-5 py-2.5 rounded-md border-0 bg-white hover:bg-slate-50 text-xs font-bold shadow-none transition flex items-center gap-2 cursor-pointer" style="color: var(--color-primary);">
               <i class="bi bi-file-earmark-text"></i>
               <span>Simpan Draf</span>
             </button>

@@ -1866,13 +1866,16 @@ input::-webkit-calendar-picker-indicator {
      PENYESUAIAN TOMBOL CTA DI FIXED FOOTER (DESKTOP >= 1024px)
      ======================================================================== */
 
-  /* A. Tombol Sekunder / Ghost (Batal Step 1, Kembali Step 2, Simpan Draf Step 2) */
+  /* A. Tombol Sekunder / Ghost (Batal Step 1, Kembali Step 2, Simpan Draf Step 2) - TASK 2.4 */
   .product-form-footer-actions #btn-step-1-cancel,
   .product-form-footer-actions #btn-step-2-prev,
-  .product-form-footer-actions #btn-save-draft {
-    background-color: transparent !important;
-    border: 1px solid var(--color-primary-contrast-border, rgba(255, 255, 255, 0.7)) !important;
-    color: var(--color-primary-contrast, #ffffff) !important;
+  .product-form-footer-actions #btn-save-draft,
+  #btn-step-1-cancel,
+  #btn-step-2-prev,
+  #btn-save-draft {
+    background-color: #ffffff !important;
+    border: none !important;
+    color: var(--color-primary) !important;
     box-shadow: none !important;
     transition: all 0.15s ease !important;
   }
@@ -1882,22 +1885,34 @@ input::-webkit-calendar-picker-indicator {
   .product-form-footer-actions #btn-save-draft i,
   .product-form-footer-actions #btn-step-1-cancel span,
   .product-form-footer-actions #btn-step-2-prev span,
-  .product-form-footer-actions #btn-save-draft span {
-    color: var(--color-primary-contrast, #ffffff) !important;
+  .product-form-footer-actions #btn-save-draft span,
+  #btn-step-1-cancel i,
+  #btn-step-2-prev i,
+  #btn-save-draft i,
+  #btn-step-1-cancel span,
+  #btn-step-2-prev span,
+  #btn-save-draft span {
+    color: var(--color-primary) !important;
   }
 
   .product-form-footer-actions #btn-step-1-cancel:hover,
   .product-form-footer-actions #btn-step-2-prev:hover,
-  .product-form-footer-actions #btn-save-draft:hover {
-    background-color: var(--color-primary-contrast-hover, rgba(255, 255, 255, 0.12)) !important;
-    border-color: var(--color-primary-contrast, #ffffff) !important;
-    color: var(--color-primary-contrast, #ffffff) !important;
+  .product-form-footer-actions #btn-save-draft:hover,
+  #btn-step-1-cancel:hover,
+  #btn-step-2-prev:hover,
+  #btn-save-draft:hover {
+    background-color: var(--color-primary-subtle) !important;
+    border: none !important;
+    color: var(--color-primary) !important;
   }
 
   .product-form-footer-actions #btn-step-1-cancel:active,
   .product-form-footer-actions #btn-step-2-prev:active,
-  .product-form-footer-actions #btn-save-draft:active {
-    background-color: rgba(255, 255, 255, 0.22) !important;
+  .product-form-footer-actions #btn-save-draft:active,
+  #btn-step-1-cancel:active,
+  #btn-step-2-prev:active,
+  #btn-save-draft:active {
+    background-color: color-mix(in srgb, var(--color-primary) 18%, #ffffff) !important;
     transform: scale(0.98);
   }
 
@@ -4451,4 +4466,136 @@ body.is-editor-typing #btn-fab-live-preview {
 
 .btn-toggle-simulate-discount:active {
   background-color: rgba(226, 232, 240, 0.75);
+}
+
+/* ==========================================================================
+   TASK 2.4 — FIXED PREVIEW DETAIL FOOTER & PENYESUAIAN VISUAL TOMBOL
+   ========================================================================== */
+
+/* 1. Fixed Preview Detail Footer (Desktop Step 2) */
+#desktop-preview-body:has(.mini-pdp-card),
+#desktop-preview-body.preview-body-step2 {
+  overflow-y: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-bottom: 0.75rem !important;
+}
+
+#desktop-preview-body:has(.mini-pdp-card) #preview-card-outer-wrapper,
+#desktop-preview-body:has(.mini-pdp-card) #product-card-preview-container,
+#desktop-preview-body:has(.mini-pdp-card) #card-live-preview-box,
+#desktop-preview-body.preview-body-step2 #preview-card-outer-wrapper,
+#desktop-preview-body.preview-body-step2 #product-card-preview-container,
+#desktop-preview-body.preview-body-step2 #card-live-preview-box {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#desktop-preview-body:has(.mini-pdp-card) .mini-pdp-card,
+#desktop-preview-body.preview-body-step2 .mini-pdp-card {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#desktop-preview-body:has(.mini-pdp-card) .mini-pdp-card > .preview-custom-scrollbar,
+#desktop-preview-body.preview-body-step2 .mini-pdp-card > .preview-custom-scrollbar {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+#desktop-preview-body:has(.mini-pdp-card) .mini-pdp-bottom-bar,
+#desktop-preview-body.preview-body-step2 .mini-pdp-bottom-bar {
+  flex-shrink: 0 !important;
+  background-color: #ffffff !important;
+}
+
+/* 2. Fixed Preview Detail Footer (Mobile Step 2) */
+#mobile-preview-sheet:has(.mini-pdp-card),
+#mobile-preview-sheet.preview-sheet-step2 {
+  height: 88dvh !important;
+}
+
+#mobile-preview-body:has(.mini-pdp-card),
+#mobile-preview-body.preview-body-step2 {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+#mobile-preview-body:has(.mini-pdp-card) #wrapper-simulate-discount-preview-mob,
+#mobile-preview-body.preview-body-step2 #wrapper-simulate-discount-preview-mob {
+  flex-shrink: 0 !important;
+}
+
+#mobile-preview-body:has(.mini-pdp-card) #preview-card-outer-wrapper-mob,
+#mobile-preview-body:has(.mini-pdp-card) #mobile-card-preview-container,
+#mobile-preview-body.preview-body-step2 #preview-card-outer-wrapper-mob,
+#mobile-preview-body.preview-body-step2 #mobile-card-preview-container {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 260px !important;
+}
+
+#mobile-preview-body:has(.mini-pdp-card) .mini-pdp-card,
+#mobile-preview-body.preview-body-step2 .mini-pdp-card {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#mobile-preview-body:has(.mini-pdp-card) .mini-pdp-card > .preview-custom-scrollbar,
+#mobile-preview-body.preview-body-step2 .mini-pdp-card > .preview-custom-scrollbar {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+#mobile-preview-body:has(.mini-pdp-card) .mini-pdp-bottom-bar,
+#mobile-preview-body.preview-body-step2 .mini-pdp-bottom-bar {
+  flex-shrink: 0 !important;
+  background-color: #ffffff !important;
+}
+
+/* 3. Border Radius Tombol Preview (Pratinjau, Edit Kartu, Uji Coba) */
+#btn-expand-preview-sidebar,
+#btn-fab-live-preview {
+  border-radius: 0.5rem !important; /* rounded-lg (8px) modern, replaces overly round pill rounded-full */
+}
+
+.preview-tab-pill-container {
+  border-radius: 0.5rem !important; /* rounded-lg (8px) */
+}
+
+.preview-tab-pill-container button,
+#btn-step1-tab-preview,
+#btn-step1-tab-design,
+#btn-preview-mode-passive,
+#btn-preview-mode-test,
+#btn-step1-tab-preview-mob,
+#btn-step1-tab-design-mob,
+#btn-preview-mode-passive-mob,
+#btn-preview-mode-test-mob {
+  border-radius: 0.375rem !important; /* rounded-md (6px) tegas & modern */
 }
