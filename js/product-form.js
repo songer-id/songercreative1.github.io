@@ -18810,9 +18810,6 @@ const ProductForm = (() => {
                     <label for="toggle-is-preorder" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
                       <span>Sistem Pre-Order (PO)</span>
                     </label>
-                    <p class="text-[11px] text-slate-500">
-                      Aktifkan jika produk memerlukan waktu pengerjaan / inden sebelum dikirim.
-                    </p>
                   </div>
                   <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
                     <input

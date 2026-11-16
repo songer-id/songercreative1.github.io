@@ -813,6 +813,16 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Ikon mata (`.simulate-discount-icon-box`, 14px) dan label teks (`.simulate-discount-label`, 12px font-semibold) sejajar sempurna secara vertikal.
       - **Ekspansi Ruang Pratinjau**: Memberikan tambahan ruang vertikal sebesar +54px pada area scrollable detail produk desktop (dari 497px menjadi 551px) dan +37px pada mobile (dari 357px menjadi 394px), sehingga rincian produk tampil jauh lebih luas dan lega tanpa mengorbankan fungsionalitas fixed footer CTA atau status simulasi diskon.
 
+  - **Pembersihan Helper Pre-Order & Border Footer Action Desktop (Task 2.7)**:
+    - **Pembersihan Teks Helper Pre-Order**:
+      - Menghapus teks helper statis `"Aktifkan jika produk memerlukan waktu pengerjaan / inden sebelum dikirim."` dari kartu toggle Sistem Pre-Order (PO) di Step 2 (`js/product-form.js`).
+      - Tampilan baris Pre-Order menjadi lebih ringkas dan bersih tanpa teks pembantu berlebih, dengan tetap mempertahankan 100% fungsionalitas toggle `#toggle-is-preorder`, input durasi estimasi hari `#input-preorder-days`, validasi, sinkronisasi state `primaryState.is_preorder`, dan persistensi database.
+    - **Border Brand Dinamis Tombol Footer Action Desktop**:
+      - Menambahkan border tipis `1px solid var(--color-primary) !important;` pada tombol aksi sekunder di fixed footer desktop (`min-width: 1024px`): Batal Step 1 (`#btn-step-1-cancel`), Kembali Step 2 (`#btn-step-2-prev`), dan Simpan Draf Step 2 (`#btn-save-draft`).
+      - Background tombol tetap putih solid (`#ffffff`), teks dan ikon tetap mengikuti warna brand aktif (`var(--color-primary)`), dan border tetap konsisten terlihat pada status normal, hover (`:hover`), dan active (`:active`).
+      - Status hover tetap mengadopsi background subtle brand toko aktif (`var(--color-primary-subtle)`).
+      - Menjaga integritas ukuran tombol tanpa perubahan dimensi atau layout shift, serta mempertahankan tampilan mobile yang sudah sesuai tanpa terpengaruh oleh media query desktop.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
