@@ -7424,6 +7424,35 @@ const ProductForm = (() => {
       </div>
     `;
 
+    let hasHandledDismiss = false;
+    const dismissAndNavigate = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (hasHandledDismiss) return;
+      hasHandledDismiss = true;
+
+      hidePreviewTestModeAlert();
+
+      const closeFn = (typeof closeMobilePreview === 'function' ? closeMobilePreview : (typeof ProductForm !== 'undefined' && typeof ProductForm.closeMobilePreview === 'function' ? ProductForm.closeMobilePreview : null));
+      const mobileSheet = document.getElementById('mobile-preview-sheet');
+      const isDrawerOpen = mobileSheet && !mobileSheet.classList.contains('translate-y-full');
+
+      if (isDrawerOpen && typeof closeFn === 'function') {
+        closeFn();
+        if (targetEl) {
+          setTimeout(() => {
+            focusAndHighlightValidationTarget(targetEl);
+          }, 320);
+        }
+      } else {
+        if (targetEl) {
+          focusAndHighlightValidationTarget(targetEl);
+        }
+      }
+    };
+
     roots.forEach(root => {
       root.className = 'absolute inset-0 bg-black/40 z-50 flex items-center justify-center p-4 pointer-events-auto backdrop-blur-2xs';
       if (root.id === 'preview-scoped-modal-root-mob') {
@@ -7434,21 +7463,12 @@ const ProductForm = (() => {
 
       const okBtn = root.querySelector('.btn-confirm-validation-ok');
       if (okBtn) {
-        okBtn.onclick = (e) => {
-          e.preventDefault();
-          hidePreviewTestModeAlert();
-          if (targetEl) {
-            focusAndHighlightValidationTarget(targetEl);
-          }
-        };
+        okBtn.onclick = dismissAndNavigate;
       }
 
       root.onclick = (e) => {
         if (e.target === root) {
-          hidePreviewTestModeAlert();
-          if (targetEl) {
-            focusAndHighlightValidationTarget(targetEl);
-          }
+          dismissAndNavigate(e);
         }
       };
     });

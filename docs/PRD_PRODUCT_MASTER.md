@@ -850,6 +850,19 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Integritas Sistem & Logika Bisnis**:
       - 100% mempertahankan logika validasi `canActivateTestMode()`, state DAG kalkulasi keranjang, navigasi, dan drawer spesifikasi produk tanpa refactoring liar.
 
+  - **Sinkronisasi Penutupan Drawer Preview Mobile saat Konfirmasi Validasi Uji Coba (Task 2.8C)**:
+    - **Penyelesaian Masalah Mobile Viewport**:
+      - Ketika mode Uji Coba diaktifkan atau tombol aksi (Beli Sekarang / Tambah Keranjang) ditekan pada perangkat mobile dalam kondisi data produk belum lengkap, modal alert *"Data Produk Belum Lengkap"* muncul.
+      - Sebelumnya, penanganan tombol *"OK / Mengerti"* hanya memanggil `hidePreviewTestModeAlert()`, sehingga drawer preview mobile (`#mobile-preview-sheet`) dan backdrop gelap (`#mobile-preview-backdrop`) tetap terbuka menutupi 88% layar, menghalangi pandangan seller terhadap field form yang perlu diperbaiki.
+    - **Alur Penutupan Terpadu (`dismissAndNavigate`)**:
+      - Menutup popup alert validasi via `hidePreviewTestModeAlert()`.
+      - Menutup drawer preview mobile via `closeMobilePreview()` (atau `ProductForm.closeMobilePreview`) yang secara terpadu menambahkan kelas `translate-y-full`, menyembunyikan backdrop (`hidden`), dan memulihkan scroll halaman utama (`document.body.classList.remove('overflow-hidden')`).
+      - Menyinkronkan waktu tunggu transisi animasi penutupan drawer mobile selama 320ms (melampaui durasi CSS transition 300ms) sebelum memicu auto-scroll dan auto-focus navigasi.
+      - Memanggil `focusAndHighlightValidationTarget(targetEl)` untuk menggulirkan viewport ke elemen form pertama yang tidak valid dan memberikan aksentuasi visual ring tegas (`ring-2 ring-amber-400`).
+      - Penanganan dismissal berlaku identik dan konsisten baik melalui klik tombol *"OK / Mengerti"* maupun klik pada area backdrop luar modal (`#preview-scoped-modal-root-mob`).
+    - **Isolasi Desktop Preview**:
+      - Pada viewport desktop (`width >= 1024px`), sidebar preview tetap aktif dan terlihat di sisi kanan tanpa tertutup, sementara form di sisi kiri langsung menggulirkan dan menyorot input yang tidak valid tanpa jeda transisi drawer mobile.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
