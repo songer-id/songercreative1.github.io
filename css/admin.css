@@ -1685,6 +1685,64 @@ input::-webkit-calendar-picker-indicator {
   -webkit-user-select: none;
 }
 
+/* ========================================================================
+   TOMBOL AKSI SEKUNDER FOOTER ACTION (DESKTOP & MOBILE) - TASK 2.7A
+   Batal Step 1, Kembali Step 2, Simpan Draf Step 2
+   ======================================================================== */
+.product-form-footer-actions #btn-step-1-cancel,
+.product-form-footer-actions #btn-step-2-prev,
+.product-form-footer-actions #btn-save-draft,
+#btn-step-1-cancel,
+#btn-step-2-prev,
+#btn-save-draft {
+  background-color: #ffffff !important;
+  border: 1px solid var(--color-primary) !important;
+  color: var(--color-primary) !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: all 0.15s ease !important;
+}
+
+.product-form-footer-actions #btn-step-1-cancel i,
+.product-form-footer-actions #btn-step-2-prev i,
+.product-form-footer-actions #btn-save-draft i,
+.product-form-footer-actions #btn-step-1-cancel span,
+.product-form-footer-actions #btn-step-2-prev span,
+.product-form-footer-actions #btn-save-draft span,
+#btn-step-1-cancel i,
+#btn-step-2-prev i,
+#btn-save-draft i,
+#btn-step-1-cancel span,
+#btn-step-2-prev span,
+#btn-save-draft span {
+  color: var(--color-primary) !important;
+}
+
+.product-form-footer-actions #btn-step-1-cancel:active,
+.product-form-footer-actions #btn-step-2-prev:active,
+.product-form-footer-actions #btn-save-draft:active,
+#btn-step-1-cancel:active,
+#btn-step-2-prev:active,
+#btn-save-draft:active {
+  background-color: color-mix(in srgb, var(--color-primary) 18%, #ffffff) !important;
+  border: 1px solid var(--color-primary) !important;
+  color: var(--color-primary) !important;
+  transform: scale(0.98);
+}
+
+.product-form-footer-actions #btn-step-1-cancel:focus-visible,
+.product-form-footer-actions #btn-step-2-prev:focus-visible,
+.product-form-footer-actions #btn-save-draft:focus-visible,
+#btn-step-1-cancel:focus-visible,
+#btn-step-2-prev:focus-visible,
+#btn-save-draft:focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+}
+
 /* Kunci Posisi Fixed Sidebar Preview Desktop */
 @media (min-width: 1024px) {
   #desktop-preview-sidebar {
@@ -1866,7 +1924,12 @@ input::-webkit-calendar-picker-indicator {
      PENYESUAIAN TOMBOL CTA DI FIXED FOOTER (DESKTOP >= 1024px)
      ======================================================================== */
 
-  /* A. Tombol Sekunder / Ghost (Batal Step 1, Kembali Step 2, Simpan Draf Step 2) - TASK 2.7 */
+  /* Scope variable subtle di bilah fixed footer desktop agar solid opaque pastel */
+  .product-form-footer-actions {
+    --color-primary-subtle: color-mix(in srgb, var(--color-primary) 12%, #ffffff) !important;
+  }
+
+  /* A. Tombol Sekunder / Ghost (Batal Step 1, Kembali Step 2, Simpan Draf Step 2) - TASK 2.7A */
   .product-form-footer-actions #btn-step-1-cancel,
   .product-form-footer-actions #btn-step-2-prev,
   .product-form-footer-actions #btn-save-draft,
@@ -1877,6 +1940,8 @@ input::-webkit-calendar-picker-indicator {
     border: 1px solid var(--color-primary) !important;
     color: var(--color-primary) !important;
     box-shadow: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
     transition: all 0.15s ease !important;
   }
 
@@ -1901,8 +1966,27 @@ input::-webkit-calendar-picker-indicator {
   #btn-step-1-cancel:hover,
   #btn-step-2-prev:hover,
   #btn-save-draft:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 12%, #ffffff) !important;
     background-color: var(--color-primary-subtle) !important;
     border: 1px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+
+  .product-form-footer-actions #btn-step-1-cancel:hover i,
+  .product-form-footer-actions #btn-step-2-prev:hover i,
+  .product-form-footer-actions #btn-save-draft:hover i,
+  .product-form-footer-actions #btn-step-1-cancel:hover span,
+  .product-form-footer-actions #btn-step-2-prev:hover span,
+  .product-form-footer-actions #btn-save-draft:hover span,
+  #btn-step-1-cancel:hover i,
+  #btn-step-2-prev:hover i,
+  #btn-save-draft:hover i,
+  #btn-step-1-cancel:hover span,
+  #btn-step-2-prev:hover span,
+  #btn-save-draft:hover span {
     color: var(--color-primary) !important;
   }
 
@@ -1914,7 +1998,18 @@ input::-webkit-calendar-picker-indicator {
   #btn-save-draft:active {
     background-color: color-mix(in srgb, var(--color-primary) 18%, #ffffff) !important;
     border: 1px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
     transform: scale(0.98);
+  }
+
+  .product-form-footer-actions #btn-step-1-cancel:focus-visible,
+  .product-form-footer-actions #btn-step-2-prev:focus-visible,
+  .product-form-footer-actions #btn-save-draft:focus-visible,
+  #btn-step-1-cancel:focus-visible,
+  #btn-step-2-prev:focus-visible,
+  #btn-save-draft:focus-visible {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
   }
 
   /* B. Tombol Primer / CTA (Lanjutkan Step 1, Simpan Produk Step 2) */
@@ -2015,6 +2110,48 @@ input::-webkit-calendar-picker-indicator {
   .product-form-footer-actions #btn-step-1-next span,
   .product-form-footer-actions #btn-submit-product span {
     color: #ffffff !important;
+  }
+
+  /* Tombol Aksi Sekunder Mobile: Border Brand Solid & Background Putih - TASK 2.7A */
+  .product-form-footer-actions #btn-step-1-cancel,
+  .product-form-footer-actions #btn-step-2-prev,
+  .product-form-footer-actions #btn-save-draft,
+  #btn-step-1-cancel,
+  #btn-step-2-prev,
+  #btn-save-draft {
+    background-color: #ffffff !important;
+    border: 1px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .product-form-footer-actions #btn-step-1-cancel i,
+  .product-form-footer-actions #btn-step-2-prev i,
+  .product-form-footer-actions #btn-save-draft i,
+  .product-form-footer-actions #btn-step-1-cancel span,
+  .product-form-footer-actions #btn-step-2-prev span,
+  .product-form-footer-actions #btn-save-draft span,
+  #btn-step-1-cancel i,
+  #btn-step-2-prev i,
+  #btn-save-draft i,
+  #btn-step-1-cancel span,
+  #btn-step-2-prev span,
+  #btn-save-draft span {
+    color: var(--color-primary) !important;
+  }
+
+  .product-form-footer-actions #btn-step-1-cancel:active,
+  .product-form-footer-actions #btn-step-2-prev:active,
+  .product-form-footer-actions #btn-save-draft:active,
+  #btn-step-1-cancel:active,
+  #btn-step-2-prev:active,
+  #btn-save-draft:active {
+    background-color: color-mix(in srgb, var(--color-primary) 18%, #ffffff) !important;
+    border: 1px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
+    transform: scale(0.98);
   }
 
   /* Saat mobile preview aktif, naikkan stacking context viewport di atas topbar header (z-40) */

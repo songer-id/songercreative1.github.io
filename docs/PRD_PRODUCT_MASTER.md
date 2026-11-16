@@ -820,8 +820,19 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Border Brand Dinamis Tombol Footer Action Desktop**:
       - Menambahkan border tipis `1px solid var(--color-primary) !important;` pada tombol aksi sekunder di fixed footer desktop (`min-width: 1024px`): Batal Step 1 (`#btn-step-1-cancel`), Kembali Step 2 (`#btn-step-2-prev`), dan Simpan Draf Step 2 (`#btn-save-draft`).
       - Background tombol tetap putih solid (`#ffffff`), teks dan ikon tetap mengikuti warna brand aktif (`var(--color-primary)`), dan border tetap konsisten terlihat pada status normal, hover (`:hover`), dan active (`:active`).
-      - Status hover tetap mengadopsi background subtle brand toko aktif (`var(--color-primary-subtle)`).
-      - Menjaga integritas ukuran tombol tanpa perubahan dimensi atau layout shift, serta mempertahankan tampilan mobile yang sudah sesuai tanpa terpengaruh oleh media query desktop.
+      - Menjaga integritas ukuran tombol tanpa perubahan dimensi atau layout shift.
+
+  - **Audit dan Perbaikan Footer Action Mobile & Desktop (Task 2.7A)**:
+    - **Penyelarasan Border Brand Universal (Desktop & Mobile)**:
+      - Menetapkan styling dasar global tombol aksi sekunder (#btn-step-1-cancel, #btn-step-2-prev, #btn-save-draft) dengan border `1px solid var(--color-primary) !important;`, background putih solid (`#ffffff !important;`), teks dan ikon mengikuti `var(--color-primary) !important;`, serta bebas bayangan (`box-shadow: none !important;`) pada seluruh breakpoint (Desktop 1366px/1280px/1024px, Tablet 768px, Mobile 390px/375px).
+      - Mengeliminasi ketiadaan border brand di mobile yang sebelumnya tertimpa utility class Tailwind `border-0`.
+    - **Pencegahan Disappearance Tombol saat Hover Desktop**:
+      - Menyelesaikan masalah tombol menghilang saat hover di desktop yang diakibatkan oleh nilai runtime `--color-primary-subtle` berupa `rgba(..., 0.12)`. Nilai transparan tersebut sebelumnya membiarkan background bilah footer fixed desktop (`var(--color-primary)`) tembus hingga 88%, menyebabkan tombol tersamarkan menjadi sewarna dengan bilah footer.
+      - Menetapkan background hover menggunakan formula solid opaque `color-mix(in srgb, var(--color-primary) 12%, #ffffff) !important;` dan melakukan scoping lokal `--color-primary-subtle` pada kontainer `.product-form-footer-actions`.
+      - Menjamin tombol tetap tampil solid dengan kontras tinggi, border brand tetap tegas, serta teks dan ikon selalu terbaca 100% saat kursor diarahkan ke tombol.
+    - **Interaksi Active & Focus-Visible**:
+      - Active state: Background berubah ke `color-mix(in srgb, var(--color-primary) 18%, #ffffff) !important;` dengan efek tekan lembut `transform: scale(0.98);`.
+      - Focus-visible state: Dilengkapi indikator ring tegas `outline: 2px solid var(--color-primary) !important; outline-offset: 2px !important;` untuk aksesibilitas keyboard.
 
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
