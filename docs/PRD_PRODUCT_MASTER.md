@@ -895,6 +895,24 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% pada 10 skenario pengujian komprehensif (136/136 test assertions PASS) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667.
       - Mempertahankan integritas penuh regresi Task 2.8C terkait dismissal popup validasi dan penutupan drawer mobile.
 
+  - **Auto-Reset Mode Uji Coba ke Pratinjau Ketika Data Produk Berubah (Task 2.8E)**:
+    - **Prinsip & Rasionalitas**:
+      - Ketika mode Uji Coba (*Preview Test Mode*) sedang aktif di Step 2, segala bentuk perubahan atau penyesuaian pada data produk (nama produk, harga jual, stok, kategori, subkategori, label variasi, harga/stok variasi, penambahan/penghapusan variasi, dimensi custom, status garansi, dsb.) akan **langsung menonaktifkan mode Uji Coba dan secara otomatis mengembalikan preview ke mode Pratinjau pasif**.
+      - Aturan ini berlaku mutlak meskipun perubahan data yang dilakukan seller masih menghasilkan data yang valid, karena simulasi transaksi sebelumnya sudah tidak merepresentasikan kondisi aktual produk.
+    - **Integritas Data Form & Eliminasi False Alert**:
+      - Proses deaktifasi Uji Coba dilakukan secara hening (*silent reset*) melalui fungsi `resetTestModeToPreview()` tanpa memunculkan popup validasi yang mengganggu saat seller sedang mengetik atau mengedit form.
+      - Seluruh data form yang diinput oleh seller tetap utuh dan tersimpan di `primaryState`, `materialsState`, dan `finishingsState` tanpa risiko ter-reset atau hilang.
+    - **Arsitektur Deteksi Dua Lapis (Dual-Layer Detection)**:
+      1. *Global Capture-Phase Event Delegation*: Mendengarkan event `input`, `change`, dan `click` pada fase tangkap (`addEventListener(..., true)`) di tingkat dokumen untuk menangkap seluruh mutasi input, dropdown, custom select, dan klik tombol aksi data (`.btn-delete-mat`, `.btn-delete-fin`, `.btn-delete-extra`, `#btn-enable-variants`, `#btn-disable-variants`, `#btn-close-var-tier-1..4`, `#btn-trigger-variasi-2..4`, `#btn-clear-stock-qty`, `.cat-option-item`, `.subcat-option-item`, `.custom-prod-condition-item`, `.btn-opt-combo-max`, dll.) sebelum event terblokir oleh `stopPropagation()`.
+      2. *Direct Method Wiring*: Memasang pemanggilan eksplisit `resetTestModeToPreview()` pada fungsi mutasi inti seperti `selectCategory()`, `selectSubcategory()`, dan `closeAndShiftVariationTier()`.
+    - **Isolasi Kontrol Simulasi & Non-Data Form**:
+      - Event yang bersumber dari dalam kontainer preview (`#desktop-preview-sidebar`, `#mobile-preview-sheet`, `#mobile-preview-drawer`, `#preview-scoped-modal-root`, `#preview-scoped-modal-root-mob`) secara ketat diabaikan agar interaksi simulasi pembeli (seperti toggle ikon mata Simulasi Diskon, pembukaan drawer Beli Sekarang / Keranjang, penyesuaian quantity +/- di dalam drawer simulasi, pemilihan chip variasi di drawer) tetap mempertahankan status Uji Coba.
+      - Input filter pencarian kategori (`#input-search-step2-cat`, `#input-search-step2-subcat`) dan interaksi non-data (accordion expand/collapse, scroll viewport) diisolasi sehingga tidak memicu reset prematur.
+    - **Sinkronisasi Instan Desktop & Mobile**:
+      - Status kedua header (`#desktop-preview-sidebar` dan `#mobile-preview-sheet`) selalu tersinkronisasi seketika: tombol "Pratinjau" aktif dan tombol "Uji Coba" kembali pasif tanpa desinkronisasi visual.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada 12 skenario pengujian komprehensif (140/140 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

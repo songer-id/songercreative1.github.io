@@ -7629,6 +7629,83 @@ const ProductForm = (() => {
     });
   }
 
+  function resetTestModeToPreview() {
+    if (previewTestState.sidebarTab !== 'test' && !isPreviewTestMode) {
+      return;
+    }
+    if (typeof hidePreviewTestModeAlert === 'function') {
+      hidePreviewTestModeAlert();
+    }
+    previewTestState.sidebarTab = 'preview';
+    isPreviewTestMode = false;
+    previewTestState.isDrawerOpen = false;
+    updatePreviewSidebarHeader();
+    updateProductCardLivePreview();
+  }
+
+  function handleFormProductDataChange(e) {
+    if (previewTestState.sidebarTab !== 'test' && !isPreviewTestMode) {
+      return;
+    }
+    const target = e.target;
+    if (!target || !target.closest) return;
+
+    // Abaikan jika interaksi berasal dari dalam preview (desktop/mobile preview/modal)
+    if (target.closest('#desktop-preview-sidebar') ||
+        target.closest('#mobile-preview-sheet') ||
+        target.closest('#mobile-preview-drawer') ||
+        target.closest('#preview-scoped-modal-root') ||
+        target.closest('#preview-scoped-modal-root-mob')) {
+      return;
+    }
+
+    // Abaikan search/filter input internal popover
+    if (target.id === 'input-search-step2-cat' ||
+        target.id === 'input-search-step2-subcat' ||
+        target.id === 'input-step2-cat-new-name' ||
+        target.id === 'input-step2-subcat-new-name') {
+      return;
+    }
+
+    // Periksa apakah target berada di dalam form Step 2 atau Step 1
+    if (target.closest('#step-pane-2') || target.closest('#step-pane-1')) {
+      resetTestModeToPreview();
+    }
+  }
+
+  function handleFormProductDataClick(e) {
+    if (previewTestState.sidebarTab !== 'test' && !isPreviewTestMode) {
+      return;
+    }
+    const btn = e.target.closest('button, [role="button"], .cat-option-item, .subcat-option-item, .custom-prod-condition-item, .custom-warranty-unit-item, .custom-warranty-type-item, .custom-combo-max-order-item, .btn-opt-combo-max');
+    if (!btn) return;
+
+    // Abaikan jika berasal dari dalam preview
+    if (btn.closest('#desktop-preview-sidebar') ||
+        btn.closest('#mobile-preview-sheet') ||
+        btn.closest('#mobile-preview-drawer') ||
+        btn.closest('#preview-scoped-modal-root') ||
+        btn.closest('#preview-scoped-modal-root-mob')) {
+      return;
+    }
+
+    // Periksa apakah elemen merupakan kontrol aksi perubahan data
+    const isDataBtn = btn.matches(
+      '.btn-delete-mat, .btn-delete-fin, .btn-delete-extra, .btn-move-mat, .btn-move-fin, ' +
+      '.btn-delete-gallery-img, .btn-move-left-image, .btn-move-right-image, ' +
+      '#btn-enable-variants, #btn-disable-variants, #btn-close-var-tier-1, #btn-close-variasi-1, .btn-remove-variation-group, ' +
+      '#btn-trigger-variasi-2, #btn-close-variasi-2, #btn-close-var-tier-2, ' +
+      '#btn-trigger-variasi-3, #btn-close-variasi-3, #btn-close-var-tier-3, ' +
+      '#btn-trigger-variasi-4, #btn-close-variasi-4, #btn-close-var-tier-4, ' +
+      '#btn-trigger-extra-service, #btn-trigger-extra-service-normal, .btn-trigger-extra-action, #btn-close-extra-service, ' +
+      '#btn-clear-stock-qty, .btn-clear-combo-img, .cat-option-item, .subcat-option-item, ' +
+      '.custom-prod-condition-item, .custom-warranty-unit-item, .custom-warranty-type-item, .custom-combo-max-order-item, .btn-opt-combo-max'
+    );
+    if (isDataBtn) {
+      resetTestModeToPreview();
+    }
+  }
+
   function isSimulateDiscountActive() {
     const cb = document.getElementById('cfg-simulate-countdown-preview') || document.getElementById('cfg-simulate-countdown-preview-mob');
     if (cb && typeof cb.checked === 'boolean' && cb.checked !== previewSimulationState.isDiscountSimulated) {
@@ -7806,12 +7883,7 @@ const ProductForm = (() => {
       if (btn) {
         btn.onclick = (e) => {
           e.preventDefault();
-          hidePreviewTestModeAlert();
-          previewTestState.sidebarTab = 'preview';
-          isPreviewTestMode = false;
-          previewTestState.isDrawerOpen = false;
-          updatePreviewSidebarHeader();
-          updateProductCardLivePreview();
+          resetTestModeToPreview();
         };
       }
     });
@@ -17261,6 +17333,7 @@ const ProductForm = (() => {
     }
 
     function selectCategory(catId) {
+      if (typeof resetTestModeToPreview === 'function') resetTestModeToPreview();
       const prevId = primaryState.category_id;
       primaryState.category_id = catId || '';
       if (!catId || prevId !== catId) {
@@ -17413,6 +17486,7 @@ const ProductForm = (() => {
           e.preventDefault();
           e.stopPropagation();
           const subId = opt.getAttribute('data-id');
+          if (typeof resetTestModeToPreview === 'function') resetTestModeToPreview();
           primaryState.sub_category_id = subId;
           primaryState.sub_category_determined = true;
           const subCatInput = document.getElementById('select-step2-sub-cat');
@@ -27179,6 +27253,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     };
 
     closeAndShiftVariationTier = function (closedTierIndex) {
+      if (typeof resetTestModeToPreview === 'function') resetTestModeToPreview();
       // 1. Panggil syncStateFromDOM() terlebih dahulu agar seluruh ketikan terbaru di DOM tersimpan ke state
       if (typeof syncStateFromDOM === 'function') {
         syncStateFromDOM();
@@ -32593,14 +32668,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (btn) {
         btn.onclick = (e) => {
           e.preventDefault();
-          if (typeof hidePreviewTestModeAlert === 'function') {
-            hidePreviewTestModeAlert();
-          }
-          previewTestState.sidebarTab = 'preview';
-          isPreviewTestMode = false;
-          previewTestState.isDrawerOpen = false;
-          syncPreviewModeHeaderButtons();
-          updateProductCardLivePreview();
+          resetTestModeToPreview();
         };
       }
     });
@@ -32617,11 +32685,19 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
           hidePreviewTestModeAlert();
           previewTestState.sidebarTab = 'test';
+          isPreviewTestMode = true;
           syncPreviewModeHeaderButtons();
           updateProductCardLivePreview();
         };
       }
     });
+
+    if (!window._productDataChangeAutoResetBound) {
+      window._productDataChangeAutoResetBound = true;
+      document.addEventListener('input', handleFormProductDataChange, true);
+      document.addEventListener('change', handleFormProductDataChange, true);
+      document.addEventListener('click', handleFormProductDataClick, true);
+    }
     // Mobile Bottom Sheet / Drawer
     const btnFabLivePreview = document.getElementById('btn-fab-live-preview');
     const btnCloseMobilePreview = document.getElementById('btn-close-mobile-preview');
@@ -38049,11 +38125,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     focusAndHighlightValidationTarget,
     canActivateTestMode,
     showPreviewTestModeAlert,
-    hidePreviewTestModeAlert
+    hidePreviewTestModeAlert,
+    resetTestModeToPreview,
+    deactivatePreviewTestMode: resetTestModeToPreview,
+    getIsPreviewTestMode: () => isPreviewTestMode
   };
 })();
 
 window.ProductForm = ProductForm;
+window.resetTestModeToPreview = ProductForm.resetTestModeToPreview;
+window.deactivatePreviewTestMode = ProductForm.deactivatePreviewTestMode;
 window.isSimulateDiscountActive = ProductForm.isSimulateDiscountActive;
 window.toggleSimulateDiscount = ProductForm.toggleSimulateDiscount;
 window.syncSimulateDiscountUI = ProductForm.syncSimulateDiscountUI;
