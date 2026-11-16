@@ -674,6 +674,7 @@ const ProductForm = (() => {
   let activeTooltipTrigger = null;
   let tooltipHideTimer = null;
   let floatingTooltipEl = null;
+  let lastTooltipOpenTime = 0;
 
   function getOrCreateFloatingTooltip() {
     if (!floatingTooltipEl || !document.body.contains(floatingTooltipEl)) {
@@ -784,6 +785,7 @@ const ProductForm = (() => {
     }
 
     const portal = getOrCreateFloatingTooltip();
+    lastTooltipOpenTime = Date.now();
     portal.innerHTML = template.innerHTML;
     activeTooltipTrigger = trigger;
 
@@ -904,7 +906,9 @@ const ProductForm = (() => {
       if (helpTrigger) {
         e.preventDefault();
         e.stopPropagation();
-        if (activeTooltipTrigger === helpTrigger && floatingTooltipEl && !floatingTooltipEl.classList.contains('hidden')) {
+        const isOpen = (activeTooltipTrigger === helpTrigger && floatingTooltipEl && !floatingTooltipEl.classList.contains('hidden'));
+        const timeSinceOpen = Date.now() - lastTooltipOpenTime;
+        if (isOpen && timeSinceOpen > 250) {
           hideFloatingTooltipImmediately();
         } else {
           showFloatingTooltip(helpTrigger);
@@ -3725,12 +3729,12 @@ const ProductForm = (() => {
           <!-- Body Sidebar (Scrollable) -->
           <div id="desktop-preview-body" class="preview-custom-scrollbar flex-1 overflow-y-auto p-4 space-y-4 transition-colors" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
             <!-- Toggle Simulasi Diskon (Ikon Mata) -->
-            <div id="wrapper-simulate-discount-preview" class="w-full max-w-[260px] mx-auto flex items-center py-0.5 transition-colors">
-              <button type="button" id="btn-simulate-discount-preview" class="btn-toggle-simulate-discount inline-flex items-center gap-2 px-2.5 py-1.5 min-h-[38px] rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 active:bg-slate-200/60 transition cursor-pointer select-none" aria-label="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}" aria-pressed="${isSimulateDiscountActive() ? 'true' : 'false'}" title="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}">
-                <span class="simulate-discount-icon-box flex items-center justify-center w-5 h-5 text-base transition-colors" style="${isSimulateDiscountActive() ? 'color: var(--color-primary);' : 'color: #94a3b8;'}">
+            <div id="wrapper-simulate-discount-preview" class="w-full max-w-[260px] mx-auto flex items-center py-0 transition-colors">
+              <button type="button" id="btn-simulate-discount-preview" class="btn-toggle-simulate-discount inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-100 active:bg-slate-200/60 transition cursor-pointer select-none" aria-label="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}" aria-pressed="${isSimulateDiscountActive() ? 'true' : 'false'}" title="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}">
+                <span class="simulate-discount-icon-box flex items-center justify-center w-4 h-4 text-sm transition-colors" style="${isSimulateDiscountActive() ? 'color: var(--color-primary);' : 'color: #94a3b8;'}">
                   <i class="bi ${isSimulateDiscountActive() ? 'bi-eye-fill' : 'bi-eye-slash-fill'}"></i>
                 </span>
-                <span class="simulate-discount-label">Simulasi Diskon</span>
+                <span class="simulate-discount-label text-xs">Simulasi Diskon</span>
               </button>
               <input type="checkbox" id="cfg-simulate-countdown-preview" class="hidden sr-only" tabindex="-1" aria-hidden="true" style="display:none;" />
             </div>
@@ -4294,12 +4298,12 @@ const ProductForm = (() => {
           </div>
           <div id="mobile-preview-body" class="flex-1 min-h-0 min-w-0 w-full overflow-y-auto overflow-x-hidden p-4 space-y-4 flex flex-col items-center" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); ${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
             <!-- Toggle Simulasi Diskon Mobile (Ikon Mata) -->
-            <div id="wrapper-simulate-discount-preview-mob" class="w-full max-w-[260px] flex items-center py-0.5 transition-colors">
-              <button type="button" id="btn-simulate-discount-preview-mob" class="btn-toggle-simulate-discount inline-flex items-center gap-2 px-2.5 py-1.5 min-h-[38px] rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 active:bg-slate-200/60 transition cursor-pointer select-none" aria-label="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}" aria-pressed="${isSimulateDiscountActive() ? 'true' : 'false'}" title="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}">
-                <span class="simulate-discount-icon-box flex items-center justify-center w-5 h-5 text-base transition-colors" style="${isSimulateDiscountActive() ? 'color: var(--color-primary);' : 'color: #94a3b8;'}">
+            <div id="wrapper-simulate-discount-preview-mob" class="w-full max-w-[260px] flex items-center py-0 transition-colors">
+              <button type="button" id="btn-simulate-discount-preview-mob" class="btn-toggle-simulate-discount inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-100 active:bg-slate-200/60 transition cursor-pointer select-none" aria-label="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}" aria-pressed="${isSimulateDiscountActive() ? 'true' : 'false'}" title="${isSimulateDiscountActive() ? 'Sembunyikan simulasi diskon' : 'Tampilkan simulasi diskon'}">
+                <span class="simulate-discount-icon-box flex items-center justify-center w-4 h-4 text-sm transition-colors" style="${isSimulateDiscountActive() ? 'color: var(--color-primary);' : 'color: #94a3b8;'}">
                   <i class="bi ${isSimulateDiscountActive() ? 'bi-eye-fill' : 'bi-eye-slash-fill'}"></i>
                 </span>
-                <span class="simulate-discount-label">Simulasi Diskon</span>
+                <span class="simulate-discount-label text-xs">Simulasi Diskon</span>
               </button>
               <input type="checkbox" id="cfg-simulate-countdown-preview-mob" class="hidden sr-only" tabindex="-1" aria-hidden="true" style="display:none;" />
             </div>
@@ -7533,9 +7537,14 @@ const ProductForm = (() => {
       const isDesign = (previewStep1Tab === 'design');
       return `
         <div class="space-y-2 w-full">
-          <div class="space-y-0.5">
+          <div class="flex items-center gap-1.5 py-0.5">
             <h4 class="preview-header-title text-xs font-bold text-slate-800 leading-tight">${titleText}</h4>
-            <p class="preview-header-subtitle text-[10px] text-slate-500 leading-snug">${descText}</p>
+            <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 focus:text-slate-700 btn-help-popover transition-colors" tabindex="0" id="btn-tooltip-preview-info${suffix}" role="button" aria-label="Informasi Pratinjau">
+              <i class="bi bi-info-circle text-[12px]"></i>
+              <div class="admin-help-tooltip preview-header-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-60 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                ${descText}
+              </div>
+            </div>
           </div>
           <div class="preview-tab-pill-container inline-flex p-0.5 rounded-lg bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
             <button type="button" id="btn-step1-tab-preview${suffix}" class="flex-1 py-1 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isDesign ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isDesign ? 'color: var(--color-primary);' : ''}">
@@ -7552,9 +7561,14 @@ const ProductForm = (() => {
       const alertId = isMobile ? 'preview-test-mode-alert-mob' : 'preview-test-mode-alert';
       return `
         <div class="space-y-2 w-full">
-          <div class="space-y-0.5">
+          <div class="flex items-center gap-1.5 py-0.5">
             <h4 class="preview-header-title text-xs font-bold text-slate-800 leading-tight">${titleText}</h4>
-            <p class="preview-header-subtitle text-[10px] text-slate-500 leading-snug">${descText}</p>
+            <div class="group relative cursor-pointer inline-flex items-center text-slate-400 hover:text-slate-600 focus:text-slate-700 btn-help-popover transition-colors" tabindex="0" id="btn-tooltip-preview-info${suffix}" role="button" aria-label="Informasi Pratinjau">
+              <i class="bi bi-info-circle text-[12px]"></i>
+              <div class="admin-help-tooltip preview-header-tooltip hidden group-hover:block group-focus:block absolute left-5 top-0 z-50 w-60 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl pointer-events-none leading-relaxed font-normal">
+                ${descText}
+              </div>
+            </div>
           </div>
           <div class="preview-tab-pill-container inline-flex p-0.5 rounded-lg bg-slate-200/80 border border-slate-200 text-xs font-bold w-full">
             <button type="button" id="btn-preview-mode-passive${suffix}" class="flex-1 py-1 px-2.5 rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer ${!isTest ? 'bg-white shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'}" style="${!isTest ? 'color: var(--color-primary);' : ''}">

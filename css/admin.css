@@ -4599,3 +4599,86 @@ body.is-editor-typing #btn-fab-live-preview {
 #btn-preview-mode-test-mob {
   border-radius: 0.375rem !important; /* rounded-md (6px) tegas & modern */
 }
+/* ==========================================================================
+   TASK 2.5 — TOOLTIP INFORMASI PREVIEW & COMPACT WRAPPER SIMULASI DISKON
+   ========================================================================== */
+
+/* 1. Compact Wrapper Simulasi Diskon (Desktop & Mobile) */
+#wrapper-simulate-discount-preview,
+#wrapper-simulate-discount-preview-mob {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.25rem !important;
+  min-height: auto !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-toggle-simulate-discount {
+  min-height: 28px !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.375rem !important; /* rounded-md (6px) */
+  line-height: 1 !important;
+  gap: 0.375rem !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+@media (max-width: 1023px) {
+  .btn-toggle-simulate-discount {
+    min-height: 36px !important; /* Touch target nyaman pada mobile >= 36px */
+    padding: 0.375rem 0.625rem !important;
+  }
+}
+
+.btn-toggle-simulate-discount .simulate-discount-icon-box {
+  width: 1rem !important;
+  height: 1rem !important;
+  font-size: 0.875rem !important; /* 14px */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-toggle-simulate-discount .simulate-discount-label {
+  font-size: 0.75rem !important; /* text-xs (12px) */
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
+
+/* Mengurangi gap antar elemen di body preview agar preview produk lebih leluasa */
+#desktop-preview-body:has(.mini-pdp-card),
+#desktop-preview-body.preview-body-step2 {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+#desktop-preview-body:has(.mini-pdp-card) > :not([hidden]) ~ :not([hidden]),
+#desktop-preview-body.preview-body-step2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0 !important;
+  margin-top: 0.375rem !important; /* Mengurangi jarak 16px bawaan space-y-4 menjadi 6px */
+  margin-bottom: 0 !important;
+}
+
+#mobile-preview-body:has(.mini-pdp-card) > :not([hidden]) ~ :not([hidden]),
+#mobile-preview-body.preview-body-step2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0 !important;
+  margin-top: 0.375rem !important;
+  margin-bottom: 0 !important;
+}
+
+/* 2. Tooltip Informasi Header Preview */
+.preview-header-info-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.preview-header-info-trigger:hover,
+.preview-header-info-trigger:focus-visible {
+  color: #475569;
+}

@@ -798,6 +798,21 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Penyesuaian Border Radius Tombol Preview**:
       - Mengurangi border radius tombol tab "Pratinjau", "Desain Kartu", dan "Uji Coba" dari pil bulat berlebih (`rounded-full`) menjadi modern medium radius yang tegas dan konsisten dengan sistem desain Songer Creative: kontainer tab menggunakan `rounded-lg` (8px / `0.5rem`), tombol tab menggunakan `rounded-md` (6px / `0.375rem`), dan tombol aksi FAB preview (`#btn-expand-preview-sidebar`, `#btn-fab-live-preview`) menggunakan `rounded-lg` (8px / `0.5rem`).
 
+  - **Tooltip Informasi Preview & Compact Wrapper Simulasi Diskon (Task 2.5)**:
+    - **Header Preview Ringkas & Tooltip Informasi**:
+      - Teks keterangan "Hanya untuk referensi saja, tampilan di aplikasi mungkin akan sedikit berbeda." pada Step 1 (Preview Kartu Produk) dan Step 2 (Preview Detail Produk) diringkas dari subtitle teks langsung menjadi ikon informasi interaktif (`bi bi-info-circle`, 12px) di samping judul header preview (`#btn-tooltip-preview-info` dan `#btn-tooltip-preview-info-mob`).
+      - Terintegrasi penuh dengan portal tooltip singleton sistem `#sc-floating-tooltip` yang menempel di `document.body` level:
+        - **Desktop**: Muncul saat kursor mouse melakukan *hover* (pointerover/pointerout) dengan hover-bridge yang mulus, serta dapat diakses via keyboard focus (`tabindex="0"`, focusin/focusout).
+        - **Mobile**: Muncul saat ikon ditekan/tap, dan dapat ditutup kembali dengan menekan ikon untuk kedua kalinya atau mengetuk sembarang area di luar tooltip.
+        - **Anti-Clipping Viewport Clamping**: Tooltip selalu berada di dalam batas aman layar (12px safe margin) dan tidak akan pernah terpotong oleh batas sidebar drawer atau sheet mobile.
+      - Menghilangkan ~28px tinggi vertikal redundan dari header preview di Step 1 maupun Step 2.
+    - **Compact Wrapper Simulasi Diskon**:
+      - Wrapper kontrol `#wrapper-simulate-discount-preview` dan `#wrapper-simulate-discount-preview-mob` dipadatkan: padding vertikal dinolkan (`padding-top: 0; padding-bottom: 0;`), margin atas dinolkan, dan margin bawah dipangkas menjadi 4px (`0.25rem`).
+      - Spacing antar-elemen di body preview dipangkas dari 16px (`space-y-4`) menjadi 6px (`0.375rem`), serta padding vertikal body Step 2 diatur kompak menjadi 8px (`0.5rem`).
+      - Tombol toggle `.btn-toggle-simulate-discount` dibuat compact: tinggi tombol 28px pada desktop dan tetap mempertahankan area sentuh minimal 36px yang nyaman pada mobile (`@media (max-width: 1023px)`).
+      - Ikon mata (`.simulate-discount-icon-box`, 14px) dan label teks (`.simulate-discount-label`, 12px font-semibold) sejajar sempurna secara vertikal.
+      - **Ekspansi Ruang Pratinjau**: Memberikan tambahan ruang vertikal sebesar +54px pada area scrollable detail produk desktop (dari 497px menjadi 551px) dan +37px pada mobile (dari 357px menjadi 394px), sehingga rincian produk tampil jauh lebih luas dan lega tanpa mengorbankan fungsionalitas fixed footer CTA atau status simulasi diskon.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
