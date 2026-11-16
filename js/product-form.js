@@ -6838,37 +6838,123 @@ const ProductForm = (() => {
     }
   }
 
-  function focusAndHighlightValidationTarget(targetEl) {
+    function focusAndHighlightValidationTarget(targetEl) {
     if (!targetEl) return;
+
+    // 1. Resolve element if targetEl is a selector string or element
+    let el = typeof targetEl === 'string'
+      ? document.querySelector(targetEl)
+      : ((targetEl && targetEl.id) ? (document.getElementById(targetEl.id) || targetEl) : targetEl);
+
+    if (!el) return;
+
+    // 2. Check if target is inside Step 1 and we are currently on Step 2
     const isInsideStep1 = Boolean(
-      (typeof targetEl.closest === 'function' && targetEl.closest('#step-pane-1')) ||
-      targetEl.id === 'input-prod-name' ||
-      targetEl.id === 'select-prod-category' ||
-      targetEl.id === 'section-step1-basic'
+      (typeof el.closest === 'function' && el.closest('#step-pane-1')) ||
+      el.id === 'input-prod-name' ||
+      el.id === 'select-prod-category' ||
+      el.id === 'section-step1-basic'
     );
     if (isInsideStep1 && currentStep !== 1) {
       if (typeof goToStep === 'function') goToStep(1);
     }
-    setTimeout(() => {
-      const el = (targetEl.id ? document.getElementById(targetEl.id) : null) || targetEl;
-      if (el) {
-        const scrollBox = (typeof el.closest === 'function')
-          ? (el.closest('.variation-option-row, tr, .step2-section-card, .form-group') || el)
-          : el;
-        if (typeof scrollBox.scrollIntoView === 'function') {
-          scrollBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        if (typeof el.focus === 'function' && el.tagName !== 'DIV' && el.tagName !== 'TR' && el.tagName !== 'TABLE') {
-          try { el.focus({ preventScroll: true }); } catch (err) { }
-        }
-        if (scrollBox.classList) {
-          scrollBox.classList.add('ring-2', 'ring-amber-400', 'transition-all');
-          setTimeout(() => {
-            scrollBox.classList.remove('ring-2', 'ring-amber-400');
-          }, 3000);
+
+    // 3. Open any closed accordions, cards, or collapsible sections containing target
+    if (typeof cardAccordionState !== 'undefined' && typeof syncCardAccordionDOM === 'function') {
+      const accordionBody = (typeof el.closest === 'function') ? el.closest('[id^="accordion-body-"]') : null;
+      if (accordionBody && accordionBody.id) {
+        const key = accordionBody.id.replace('accordion-body-', '');
+        if (cardAccordionState[key] === false) {
+          cardAccordionState[key] = true;
+          syncCardAccordionDOM();
         }
       }
-    }, 200);
+    }
+
+    // Expand details or hidden parent panels (excluding step panes)
+    let parent = el.parentElement;
+    while (parent && parent !== document.body) {
+      if (parent.tagName === 'DETAILS' && !parent.open) {
+        parent.open = true;
+      }
+      if (parent.classList && parent.classList.contains('hidden') && parent.id && parent.id !== 'step-pane-1' && parent.id !== 'step-pane-2') {
+        parent.classList.remove('hidden');
+      }
+      parent = parent.parentElement;
+    }
+
+    // 4. Wait for layout settling using rAF check
+    let attempts = 0;
+    const maxAttempts = 12;
+    function executeScrollAndHighlight() {
+      attempts++;
+      const activeEl = (el.id ? document.getElementById(el.id) : null) || el;
+      if (!activeEl || !activeEl.isConnected) {
+        if (attempts < maxAttempts) {
+          requestAnimationFrame(executeScrollAndHighlight);
+        }
+        return;
+      }
+
+      const rect = activeEl.getBoundingClientRect();
+      if ((rect.height === 0 || activeEl.offsetParent === null) && attempts < maxAttempts) {
+        requestAnimationFrame(executeScrollAndHighlight);
+        return;
+      }
+
+      const vp = document.getElementById('admin-main-viewport');
+      if (vp) {
+        const vpRect = vp.getBoundingClientRect();
+        const elRect = activeEl.getBoundingClientRect();
+
+        // Calculate sticky header/subnav offset
+        const subnavEl = document.getElementById('step2-subnav-fixed') || document.getElementById('step2-subnav');
+        const subnavHeight = (subnavEl && subnavEl.offsetHeight > 0) ? subnavEl.offsetHeight : (currentStep === 2 ? 44 : 0);
+
+        // Top clearance: sticky subnav height + 20px comfortable reading margin
+        const topClearance = subnavHeight + 20;
+
+        // Current scroll position + distance of element top from viewport top - clearance
+        const targetScrollTop = vp.scrollTop + (elRect.top - vpRect.top) - topClearance;
+
+        if (typeof vp.scrollTo === 'function') {
+          vp.scrollTo({
+            top: Math.max(0, targetScrollTop),
+            behavior: 'smooth'
+          });
+        } else {
+          vp.scrollTop = Math.max(0, targetScrollTop);
+        }
+      } else if (typeof activeEl.scrollIntoView === 'function') {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      // 5. Highlight target input cleanly
+      const highlightBox = (typeof activeEl.closest === 'function')
+        ? (activeEl.closest('.variation-option-row, tr, .step2-section-card, .form-group') || activeEl)
+        : activeEl;
+
+      if (activeEl.classList) {
+        activeEl.classList.add('ring-2', 'ring-amber-400', 'transition-all');
+      }
+      if (highlightBox && highlightBox !== activeEl && highlightBox.classList) {
+        highlightBox.classList.add('ring-2', 'ring-amber-400', 'transition-all');
+      }
+
+      setTimeout(() => {
+        if (activeEl.classList) activeEl.classList.remove('ring-2', 'ring-amber-400');
+        if (highlightBox && highlightBox.classList) highlightBox.classList.remove('ring-2', 'ring-amber-400');
+      }, 3000);
+
+      // 6. Focus input without secondary scroll jump
+      if (typeof activeEl.focus === 'function' && activeEl.tagName !== 'DIV' && activeEl.tagName !== 'TR' && activeEl.tagName !== 'TABLE') {
+        try {
+          activeEl.focus({ preventScroll: true });
+        } catch (err) { }
+      }
+    }
+
+    requestAnimationFrame(executeScrollAndHighlight);
   }
 
   function canActivateTestMode() {
@@ -6882,22 +6968,27 @@ const ProductForm = (() => {
     }
 
     const missingItems = [];
-    let firstInvalidEl = null;
+    const invalidTargets = [];
 
-    // 1. Validasi Nama Produk (Step 1)
-    const prodNameInp = document.getElementById('input-prod-name');
+    // 1. Validasi Nama Produk (Step 1 atau Step 2)
+    const prodNameInp = (currentStep === 2)
+      ? (document.getElementById('step2-input-name') || document.getElementById('input-prod-name'))
+      : document.getElementById('input-prod-name');
     const prodNameVal = (prodNameInp?.value || primaryState.name || '').trim();
     if (!prodNameVal) {
       missingItems.push('Nama Produk');
-      if (!firstInvalidEl) firstInvalidEl = prodNameInp || document.getElementById('input-prod-name');
+      if (prodNameInp) invalidTargets.push({ el: prodNameInp, label: 'Nama Produk' });
     }
 
-    // 2. Validasi Kategori (Step 1)
+    // 2. Validasi Kategori (Step 1 atau Step 2)
     const catSelect = document.getElementById('select-prod-category');
+    const catTrigger = (currentStep === 2)
+      ? (document.getElementById('btn-step2-cat-trigger') || document.getElementById('select-step2-cat') || catSelect)
+      : catSelect;
     const catVal = (catSelect?.value || primaryState.category_id || '').trim();
     if (!catVal) {
       missingItems.push('Kategori Produk');
-      if (!firstInvalidEl) firstInvalidEl = catSelect || document.getElementById('select-prod-category');
+      if (catTrigger) invalidTargets.push({ el: catTrigger, label: 'Kategori Produk' });
     }
 
     // ==========================================================================
@@ -6910,10 +7001,10 @@ const ProductForm = (() => {
       const priceVal = rawSinglePriceStr !== '' ? parseFloat(rawSinglePriceStr) : NaN;
       if (rawSinglePriceStr === '' || isNaN(priceVal)) {
         missingItems.push('Harga Jual');
-        if (!firstInvalidEl) firstInvalidEl = singlePriceInp || document.getElementById('input-single-price');
+        if (singlePriceInp) invalidTargets.push({ el: singlePriceInp, label: 'Harga Jual' });
       } else if (priceVal < 99) {
         missingItems.push('Harga Jual (Minimal Rp99)');
-        if (!firstInvalidEl) firstInvalidEl = singlePriceInp || document.getElementById('input-single-price');
+        if (singlePriceInp) invalidTargets.push({ el: singlePriceInp, label: 'Harga Jual (Minimal Rp99)' });
       }
 
       // A.2. Stok Produk
@@ -6929,11 +7020,11 @@ const ProductForm = (() => {
       }
       if (!isStockValid) {
         missingItems.push('Stok Produk');
-        if (!firstInvalidEl) firstInvalidEl = stockInp || document.getElementById('input-stock-qty');
+        if (stockInp) invalidTargets.push({ el: stockInp, label: 'Stok Produk' });
       }
 
       // A.3. Maksimal Jumlah Pembelian
-      const maxOrderInp = document.getElementById('input-normal-max-order');
+      const maxOrderInp = document.getElementById('input-normal-max-order') || document.getElementById('input-max-order-qty');
       const rawMaxOrder = maxOrderInp ? maxOrderInp.value.trim() : (primaryState.max_order !== null && primaryState.max_order !== undefined ? String(primaryState.max_order).trim() : '');
       const rawLow = rawMaxOrder.toLowerCase();
       const isMaxOrderUnlimited = rawLow === 'tanpa batas' || rawLow === 'unlimited' || (primaryState.max_order_type === 'unlimited' && primaryState.is_unlimited_max_order);
@@ -6954,7 +7045,8 @@ const ProductForm = (() => {
 
       if (!isMaxOrderValid) {
         missingItems.push('Maksimal Jumlah Pembelian');
-        if (!firstInvalidEl) firstInvalidEl = document.getElementById('input-max-order-qty') || maxOrderInp || document.getElementById('wrapper-max-order-type');
+        const moTarget = maxOrderInp || document.getElementById('input-max-order-qty') || document.getElementById('wrapper-max-order-type');
+        if (moTarget) invalidTargets.push({ el: moTarget, label: 'Maksimal Jumlah Pembelian' });
       }
     } else {
       // ==========================================================================
@@ -7021,8 +7113,8 @@ const ProductForm = (() => {
           const missingMsg = titleInfo.effectiveTitle;
 
           missingItems.push(missingMsg);
-          const firstInp = document.querySelector(`#${group.cardId} input[data-field="name"]`);
-          if (!firstInvalidEl) firstInvalidEl = firstInp || document.getElementById(group.cardId);
+          const firstInp = document.querySelector(`#${group.cardId} input[data-field="name"]`) || document.getElementById(group.cardId);
+          if (firstInp) invalidTargets.push({ el: firstInp, label: missingMsg });
           continue;
         }
 
@@ -7044,28 +7136,36 @@ const ProductForm = (() => {
 
           // 1. Validasi Harga Jual (Support Harga "0" / >= 0)
           const priceInp = rowEl?.querySelector('input[data-field="price"]');
-          let rawPriceStr = (priceInp && priceInp.value.trim() !== '') ? priceInp.value.trim() : (opt.price !== undefined && opt.price !== null ? String(opt.price).trim() : '');
-          if (group.samePrice && rawPriceStr === '' && firstPriceVal !== undefined && firstPriceVal !== null && String(firstPriceVal).trim() !== '') {
-            rawPriceStr = String(firstPriceVal).trim();
+          let rawPriceStr = (priceInp && priceInp.value.trim() !== '') ?
+            priceInp.value.trim() :
+            (opt.price !== undefined && opt.price !== null ? String(opt.price).trim() : '');
+
+          if (group.samePrice && i > 0) {
+            rawPriceStr = firstPriceVal !== undefined && firstPriceVal !== null ? String(firstPriceVal).trim() : '';
           }
+
           const rawPrice = rawPriceStr !== '' ? parseFloat(rawPriceStr) : NaN;
           const isPriceValid = (rawPriceStr !== '' && !isNaN(rawPrice) && rawPrice >= 0);
           if (!isPriceValid) {
             missingItems.push(`Harga Jual (${group.label} - ${optLabel})`);
-            if (!firstInvalidEl) firstInvalidEl = priceInp || rowEl || document.getElementById(group.cardId);
+            const pTarget = priceInp || rowEl || document.getElementById(group.cardId);
+            if (pTarget) invalidTargets.push({ el: pTarget, label: `Harga Jual (${group.label} - ${optLabel})` });
           }
 
-          // 2. Validasi Stok (>= 0 jika bukan unlimited)
-          const isStockUnlimited = (group.stockMode === 'unlimited') || (opt.stock === null) || (String(opt.stock).toLowerCase() === 'unlimited') || (String(opt.stock).toLowerCase() === 'tanpa batas');
-          if (!isStockUnlimited) {
+          // 2. Validasi Stok Varian
+          if (!primaryState.is_unlimited_stock) {
             const stockInp = rowEl?.querySelector('input[data-field="stock"]');
-            let rawStock = (stockInp && stockInp.value.trim() !== '') ? stockInp.value.trim() : (opt.stock !== null && opt.stock !== undefined ? String(opt.stock).trim() : '');
-            if (group.stockMode === 'same' && rawStock === '' && firstStockVal !== undefined && firstStockVal !== null) {
-              rawStock = String(firstStockVal).trim();
+            let rawStock = (stockInp && stockInp.value.trim() !== '') ?
+              stockInp.value.trim() :
+              (opt.stock !== undefined && opt.stock !== null ? String(opt.stock).trim() : '');
+
+            if (group.stockMode === 'same' && i > 0) {
+              rawStock = firstStockVal !== undefined && firstStockVal !== null ? String(firstStockVal).trim() : '';
             }
-            const isStockValUnlimited = rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
+
+            const isStockUnlimited = group.stockMode === 'unlimited' || opt.stock === null || rawStock.toLowerCase() === 'unlimited' || rawStock.toLowerCase() === 'tanpa batas';
             let isStockValid = false;
-            if (isStockValUnlimited) {
+            if (isStockUnlimited) {
               isStockValid = true;
             } else if (rawStock !== '') {
               const parsedStock = parseInt(rawStock, 10);
@@ -7073,7 +7173,8 @@ const ProductForm = (() => {
             }
             if (!isStockValid) {
               missingItems.push(`Stok Produk (${group.label} - ${optLabel})`);
-              if (!firstInvalidEl) firstInvalidEl = stockInp || rowEl || document.getElementById(group.cardId);
+              const sTarget = stockInp || rowEl || document.getElementById(group.cardId);
+              if (sTarget) invalidTargets.push({ el: sTarget, label: `Stok Produk (${group.label} - ${optLabel})` });
             }
           }
         }
@@ -7087,8 +7188,6 @@ const ProductForm = (() => {
           const mat = validMaterials[idx];
           const var1Name = (mat.name && mat.name.trim() !== '') ? mat.name.trim() : `Opsi ${idx + 1}`;
 
-          // Kolom Variasi 2-4 pada List Variasi Produk kini merupakan ringkasan ketersediaan hanya-baca.
-
           // 4. Validasi Harga Grosir (Jika Header Aktif)
           if (primaryState.has_wholesale && isMatWholesaleActive(mat)) {
             const wMode = mat.wholesale_mode || (primaryState.wholesale_mode_by_variant && primaryState.wholesale_mode_by_variant[mat.id]);
@@ -7097,7 +7196,8 @@ const ProductForm = (() => {
               (wMode === 'tiered' && wTiers.length > 0 && wTiers.every(t => t.min_qty > 0 && (t.price > 0 || t.discount > 0)));
             if (!isWValid) {
               missingItems.push(`Harga Grosir (Baris ${var1Name})`);
-              if (!firstInvalidEl) firstInvalidEl = document.querySelector(`.btn-open-wholesale-modal[data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+              const wTarget = document.querySelector(`.btn-open-wholesale-modal[data-mat-id="${mat.id}"]`) || document.getElementById('combination-matrix-section');
+              if (wTarget) invalidTargets.push({ el: wTarget, label: `Harga Grosir (Baris ${var1Name})` });
             }
           }
 
@@ -7111,7 +7211,8 @@ const ProductForm = (() => {
             const isMValid = isNoMult || isNumValid;
             if (!isMValid) {
               missingItems.push(`Kelipatan Order (Baris ${var1Name})`);
-              if (!firstInvalidEl) firstInvalidEl = multInp || document.getElementById('combination-matrix-section');
+              const mTarget = multInp || document.getElementById('combination-matrix-section');
+              if (mTarget) invalidTargets.push({ el: mTarget, label: `Kelipatan Order (Baris ${var1Name})` });
             }
           }
 
@@ -7131,7 +7232,8 @@ const ProductForm = (() => {
 
           if (!isMaxOrderValid) {
             missingItems.push(`Max. Order (Baris Kombinasi ${var1Name})`);
-            if (!firstInvalidEl) firstInvalidEl = maxOrderInp || document.getElementById('combination-matrix-section');
+            const moTarget = maxOrderInp || document.getElementById('combination-matrix-section');
+            if (moTarget) invalidTargets.push({ el: moTarget, label: `Max. Order (Baris Kombinasi ${var1Name})` });
           }
         }
 
@@ -7141,6 +7243,8 @@ const ProductForm = (() => {
             dagRes.errors.forEach(errMsg => {
               missingItems.push(errMsg);
             });
+            const matSec = document.getElementById('combination-matrix-section');
+            if (matSec) invalidTargets.push({ el: matSec, label: 'Dependensi Variasi' });
           }
         }
       }
@@ -7158,8 +7262,8 @@ const ProductForm = (() => {
         const extraTitleInfo = getVariationGroupTitleInfo('extras');
         const missingMsg = extraTitleInfo.effectiveTitle;
         missingItems.push(missingMsg);
-        const exNameInp = document.querySelector('#card-extra-service input[data-field="name"]');
-        if (!firstInvalidEl) firstInvalidEl = exNameInp || document.getElementById('card-extra-service');
+        const exNameInp = document.querySelector('#card-extra-service input[data-field="name"]') || document.getElementById('card-extra-service');
+        if (exNameInp) invalidTargets.push({ el: exNameInp, label: missingMsg });
       }
 
       const stockModeExtras = (primaryState.stock_mode_tiers && primaryState.stock_mode_tiers.extra_3) || '';
@@ -7174,7 +7278,8 @@ const ProductForm = (() => {
         const rawType = (typeSel?.value || ex.extra_type || '').trim();
         if (!rawType) {
           missingItems.push(`Jenis Input Extras (${exLabel})`);
-          if (!firstInvalidEl) firstInvalidEl = typeSel || rowEl || document.getElementById('card-extra-service');
+          const tTarget = typeSel || rowEl || document.getElementById('card-extra-service');
+          if (tTarget) invalidTargets.push({ el: tTarget, label: `Jenis Input Extras (${exLabel})` });
         }
 
         // 2. Harga Satuan (Support Harga "0" / >= 0)
@@ -7184,7 +7289,8 @@ const ProductForm = (() => {
         const isPriceValid = (rawPriceStr !== '' && !isNaN(rawPrice) && rawPrice >= 0);
         if (!isPriceValid) {
           missingItems.push(`Harga Satuan Extras (${exLabel})`);
-          if (!firstInvalidEl) firstInvalidEl = priceInp || rowEl || document.getElementById('card-extra-service');
+          const epTarget = priceInp || rowEl || document.getElementById('card-extra-service');
+          if (epTarget) invalidTargets.push({ el: epTarget, label: `Harga Satuan Extras (${exLabel})` });
         }
 
         // 3. Stok Extras
@@ -7200,8 +7306,34 @@ const ProductForm = (() => {
         }
         if (!isStockValid) {
           missingItems.push(`Stok Extras (${exLabel})`);
-          if (!firstInvalidEl) firstInvalidEl = stockInp || rowEl || document.getElementById('card-extra-service');
+          const esTarget = stockInp || rowEl || document.getElementById('card-extra-service');
+          if (esTarget) invalidTargets.push({ el: esTarget, label: `Stok Extras (${exLabel})` });
         }
+      }
+    }
+
+    // Sort invalid targets strictly by DOM order (topmost element first)
+    let topmostEl = null;
+    let resolvedList = [];
+    if (invalidTargets.length > 0) {
+      resolvedList = invalidTargets.map(item => {
+        let el = item.el;
+        if (typeof el === 'string') el = document.querySelector(el);
+        if (el && el.id) el = document.getElementById(el.id) || el;
+        return (el && el.isConnected) ? el : null;
+      }).filter(Boolean);
+
+      if (resolvedList.length > 0) {
+        resolvedList.sort((a, b) => {
+          if (a === b) return 0;
+          const pos = a.compareDocumentPosition(b);
+          if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+          if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+          return 0;
+        });
+        topmostEl = resolvedList[0];
+      } else {
+        topmostEl = invalidTargets[0].el;
       }
     }
 
@@ -7212,7 +7344,8 @@ const ProductForm = (() => {
         missingItems: missingItems,
         reason: 'Data Produk Belum Lengkap',
         detailMessage: 'Bagian yang belum lengkap: ' + missingItems.join(', '),
-        targetEl: firstInvalidEl
+        targetEl: topmostEl,
+        allTargetEls: resolvedList
       };
     }
 
@@ -37912,7 +38045,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     initFooterScrollShadowObserver,
     isSimulateDiscountActive,
     toggleSimulateDiscount,
-    syncSimulateDiscountUI
+    syncSimulateDiscountUI,
+    focusAndHighlightValidationTarget,
+    canActivateTestMode,
+    showPreviewTestModeAlert,
+    hidePreviewTestModeAlert
   };
 })();
 
@@ -37920,6 +38057,10 @@ window.ProductForm = ProductForm;
 window.isSimulateDiscountActive = ProductForm.isSimulateDiscountActive;
 window.toggleSimulateDiscount = ProductForm.toggleSimulateDiscount;
 window.syncSimulateDiscountUI = ProductForm.syncSimulateDiscountUI;
+window.focusAndHighlightValidationTarget = ProductForm.focusAndHighlightValidationTarget;
+window.canActivateTestMode = ProductForm.canActivateTestMode;
+window.showPreviewTestModeAlert = ProductForm.showPreviewTestModeAlert;
+window.hidePreviewTestModeAlert = ProductForm.hidePreviewTestModeAlert;
 window.updateFooterScrollShadow = ProductForm.updateFooterScrollShadow;
 window.initFooterScrollShadowObserver = ProductForm.initFooterScrollShadowObserver;
 window.sanitizeProductDescriptionHtml = ProductForm.sanitizeProductDescriptionHtml;

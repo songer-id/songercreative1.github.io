@@ -863,6 +863,38 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Isolasi Desktop Preview**:
       - Pada viewport desktop (`width >= 1024px`), sidebar preview tetap aktif dan terlihat di sisi kanan tanpa tertutup, sementara form di sisi kiri langsung menggulirkan dan menyorot input yang tidak valid tanpa jeda transisi drawer mobile.
 
+  - **Ketepatan Auto-Scroll, Pemilihan Field Teratas, dan Fokus Validasi Uji Coba (Task 2.8D)**:
+    - **Penentuan Target Validasi Berdasarkan Urutan Visual Form (DOM Order Sorting)**:
+      - Menggantikan penentuan target sekuensial prosedural lama (yang sebelumnya bergantung pada urutan kondisi `if (!firstInvalidEl)` di kode JavaScript) dengan pengumpulan seluruh target invalid (`invalidTargets = [{ el, label }, ...]`).
+      - Menyaring elemen DOM yang valid dan mengurutkannya secara presisi berdasarkan posisi visual sebenarnya di dalam dokumen menggunakan `Node.compareDocumentPosition`:
+        ```javascript
+        resolvedList.sort((a, b) => {
+          if (a === b) return 0;
+          const pos = a.compareDocumentPosition(b);
+          if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+          if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+          return 0;
+        });
+        ```
+      - Memilih elemen paling atas (`resolvedList[0]`) sebagai target utama fokus dan auto-scroll, menjamin konsistensi navigasi dari atas ke bawah terlepas dari urutan evaluasi validasi internal.
+      - Pada Step 2, Nama Produk dipetakan secara akurat ke `#step2-input-name` di kartu `#card-step2-info`, mencegah loncatan navigasi yang salah sasaran ke `#input-prod-name` di Step 1 saat seller sudah berada di Step 2.
+      - Untuk field pada tabel/repeater variasi atau matriks kombinasi (seperti harga atau stok per baris), target langsung menunjuk ke elemen `<input>` spesifik pada baris yang bermasalah (misal `input[data-field="price"]` baris terkait), bukan wadah kontainer tabel atau kartu induk.
+    - **Ekspansi Otomatis Wadah Accordion & Layout Settling**:
+      - Jika field target berada di dalam accordion atau seksi yang sedang tertutup (misal accordion kartu desain atau elemen `<details>`/collapsible), sistem otomatis membuka seksi tersebut terlebih dahulu (`cardAccordionState[key] = true; syncCardAccordionDOM()`).
+      - Menggunakan mekanisme settling berbasis frame (`requestAnimationFrame`) untuk menunggu perhitungan ukuran dan posisi layout DOM selesai (`offsetHeight > 0` dan `offsetParent !== null`) sebelum koordinat scroll dihitung.
+    - **Kalkulasi Offset Scroll Presisi pada Scroll Container `#admin-main-viewport`**:
+      - Mengarahkan scroll langsung pada scroll container aktual dokumen admin (`#admin-main-viewport`), bukan `window` atau `document.body` (yang berstatus `overflow: hidden`).
+      - Menghitung tinggi sticky subnavbar Step 2 (`#step2-subnav-fixed` / `#step2-subnav`, tinggi ~43px pada desktop dan ~35px pada mobile) dan menambahkan reading clearance aman sebesar 20px:
+        $$\text{targetScrollTop} = \text{vp.scrollTop} + (\text{elRect.top} - \text{vpRect.top}) - (\text{subnavHeight} + 20)$$
+      - Menjamin input target mendarat dengan nyaman di bawah sticky header/subnav (posisi visual $Y \approx 127\text{px}$ pada desktop dan $Y \approx 119\text{px}$ pada mobile, melebihi batas bawah subnav), bebas dari risiko tertutup subnavbar sticky.
+      - Memanfaatkan proteksi padding bawah kontainer `#step2-cards-container` (`padding-bottom: 5.5rem` / 88px) sehingga input di bagian paling bawah halaman (seperti Pengiriman, Layanan Ekstra, SKU) tetap mendarat aman di atas fixed footer desktop (`#step2-footer-actions`).
+    - **Fokus Tunggal & Aksentuasi Visual Tanpa Secondary Jump**:
+      - Memanggil native focus dengan opsi `{ preventScroll: true }`, mencegah peramban melakukan loncatan scroll sekunder yang merusak offset perhitungan manual.
+      - Memberikan aksentuasi visual selektif menggunakan kelas `ring-2 ring-amber-400` dan `outline-none` pada input (serta baris tabel terkait), yang otomatis dibersihkan setelah 3 detik.
+    - **Verifikasi & Kompatibilitas Lintas Viewport**:
+      - Lolos 100% pada 10 skenario pengujian komprehensif (136/136 test assertions PASS) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667.
+      - Mempertahankan integritas penuh regresi Task 2.8C terkait dismissal popup validasi dan penutupan drawer mobile.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
