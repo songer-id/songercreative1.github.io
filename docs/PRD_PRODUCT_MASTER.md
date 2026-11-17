@@ -969,11 +969,42 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% pada 7 skenario pengujian menyeluruh (120/120 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
       - Lolos 100% pada test suite regresi Task 2.8F (66/66 test assertions PASS, 0 FAIL).
 
+  - **Penambahan Pilihan Radius 4px dan Default Radius 0px pada Seluruh Model Kartu Produk (Task 2.9C)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyempurnakan pengaturan radius sudut kartu produk pada seluruh model (Model A / Basic Grid, Model B / Minimalist List, dan Model C / Kartu Detail).
+      - Menambahkan opsi radius `4px` pada dropdown kontrol desain kartu tanpa mengubah opsi yang sudah ada (`0px`, `8px`, `16px`, `24px`).
+      - Menetapkan `0px` sebagai default radius global untuk produk baru maupun produk lama tanpa konfigurasi radius tersimpan.
+    - **Spesifikasi Pilihan Radius & Arsitektur Kontrol**:
+      - Dropdown preset radius (`CARD_PRESET_DROPDOWN_SPECS['border-radius']`) kini menyediakan 5 pilihan lengkap dan berurutan:
+        - `0 px` (Tanpa lengkungan / Sudut tegas)
+        - `4 px` (Lengkungan mikro / Halus)
+        - `8 px` (Lengkungan kecil)
+        - `16 px` (Lengkungan sedang)
+        - `24 px` (Lengkungan besar)
+      - *Centralized Dropdown Engine*: Menggunakan arsitektur dropdown terpusat di `product-form.js`, yang secara otomatis menangani render portal popover, penyesuaian z-index, aksesibilitas keyboard, sinkronisasi label terpilih (`#lbl-border-radius`, `#lbl-border-radius-mob`), input hidden (`#cfg-border-radius`, `#cfg-border-radius-mob`), dan penandaan status kustomisasi kartu.
+    - **Kebijakan Default Radius 0px & Logika Fallback Konsisten**:
+      - *Tambah Produk Baru*: Menggunakan default radius `0px` pada seluruh model kartu (Model A, B, dan C) sesuai `DEFAULT_CARD_VARIANTS_CONFIG` di `js/db.js` (`border_radius: '0px'`).
+      - *Produk Lama / Fallback Null*: Jika nilai `border_radius` tidak didefinisikan, kosong, `null`, atau `undefined`, sistem secara deterministik menerapkan fallback `0px` (menggantikan fallback lama 16px) di:
+        - Helper parsing form: `parseBorderRadius(val, defaultVal = 0)`
+        - Pembacaan konfigurasi DOM: `getCardConfigFromDOM()`
+        - Pemuatan konfigurasi kartu: `loadCardConfigInputs()`
+        - Render live preview kartu: `updateProductCardLivePreview()`
+        - Render etalase pembeli: `buyer-store.js` untuk Model A, Model B, dan Model C.
+      - *Proteksi Konfigurasi Tersimpan*: Produk lama atau produk kustom dengan nilai radius tersimpan eksplisit (seperti `4px`, `8px`, `16px`, atau `24px`) tetap mempertahankan nilai tersimpan tanpa overwrite.
+    - **Sinkronisasi Real-Time Desktop & Mobile**:
+      - Pemilihan radius `4px` atau opsi lainnya langsung memperbarui elemen kartu live preview (`cardEl.style.borderRadius = '<val>px'`) seketika.
+      - Kontrol desktop dan mobile tersinkronisasi 100% dua arah tanpa *flicker*.
+      - Pergantian antar model kartu (Model A <-> Model B <-> Model C) dan navigasi antar Step 1 dan Step 2 mempertahankan pilihan radius yang aktif.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada 10 skenario pengujian komprehensif (140/140 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
+      - Lolos 100% pada regression suite Task 2.9B (120/120 test assertions PASS, 0 FAIL).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
   - Seluruh elemen kontrol input, tombol, select, chip pill: `border-radius: 0.375rem !important;` (`rounded-md` / 6px).
   - Menghilangkan *nested double borders* di seluruh panel.
+  - Kartu Produk: Menggunakan default `0px` (sudut tegas) dengan opsi kustomisasi lengkap `0px`, `4px`, `8px`, `16px`, `24px` (Task 2.9C).
 - **Variabel Warna Dinamis (Sistem Dual-Color Branding)**:
   - Warna Primer (`var(--color-primary)`): Navbar, tab subnav aktif, tombol aksi utama (#btn-step-1-next, #btn-submit-product), focus ring, dan background footer 1.
   - Warna Sekunder (`var(--color-secondary)`): Badge promo, bintang rating, background footer 2, tombol aksi beli cepat.

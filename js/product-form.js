@@ -5388,7 +5388,7 @@ const ProductForm = (() => {
     return Math.max(0, Math.min(3, num));
   }
 
-  function parseBorderRadius(val, defaultVal = 16) {
+  function parseBorderRadius(val, defaultVal = 0) {
     if (val === undefined || val === null || val === '') return defaultVal;
     const num = parseInt(val, 10);
     if (isNaN(num)) return defaultVal;
@@ -5447,9 +5447,10 @@ const ProductForm = (() => {
       chevronId: 'icon-border-radius-chevron',
       menuId: 'menu-border-radius',
       parser: parseBorderRadius,
-      defaultVal: 16,
+      defaultVal: 0,
       presets: [
         { value: 0, label: '0 px' },
+        { value: 4, label: '4 px' },
         { value: 8, label: '8 px' },
         { value: 16, label: '16 px' },
         { value: 24, label: '24 px' }
@@ -6096,8 +6097,8 @@ const ProductForm = (() => {
 
     const rawBw = getVal('cfg-border-width', 'cfg-border-width-mob', '1');
     const bwVal = parseBorderWidth(rawBw, 1);
-    const rawBr = getVal('cfg-border-radius', 'cfg-border-radius-mob', '16');
-    const brVal = parseBorderRadius(rawBr, 16);
+    const rawBr = getVal('cfg-border-radius', 'cfg-border-radius-mob', '0');
+    const brVal = parseBorderRadius(rawBr, 0);
 
     return {
       bg_color: getVal('cfg-bg-color', 'cfg-bg-color-mob', '#ffffff'),
@@ -6181,7 +6182,7 @@ const ProductForm = (() => {
     setVal('cfg-border-width', bwNum);
     updateBorderWidthPresetButtons(bwNum);
 
-    const brNum = parseBorderRadius(cfg.border_radius, 16);
+    const brNum = parseBorderRadius(cfg.border_radius, 0);
     syncLegacyTrack('border-radius', brNum);
     setVal('cfg-border-radius', brNum);
     updateBorderRadiusPresetButtons(brNum);
@@ -12067,7 +12068,7 @@ const ProductForm = (() => {
     const defaultPriceColor = modelDefault.price_color || defCardThemeColor;
     const defaultBtnColor = modelDefault.btn_color || defCardThemeColor;
     const defaultBorderWidth = parseBorderWidth(modelDefault.border_width, 1);
-    const defaultBorderRadius = parseBorderRadius(modelDefault.border_radius, 16);
+    const defaultBorderRadius = parseBorderRadius(modelDefault.border_radius, 0);
 
     const isCustomMode = primaryState.use_default_card_design === false;
 
@@ -38218,6 +38219,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     syncCardAccordionDOM,
     syncEyeToggleIcons,
     syncFeatureSubpanels,
+    selectCardPresetOption,
+    parseBorderRadius,
+    updateBorderRadiusPresetButtons,
     parseDiscountBadgeRadius,
     updateDiscountBadgeRadiusPresetButtons,
     setDiscountBadgePosition,
@@ -38227,6 +38231,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     parseCountdownRadius,
     updateCountdownRadiusPresetButtons,
     handleApplyDefaultCardDesign,
+    getCurrentStep: () => currentStep,
+    goToStep,
     formatSalesCount,
     resolveProductMaxOrderInfo,
     updateDrawerMaxOrderDisplay,
@@ -38271,10 +38277,15 @@ window.resolveProductMaxOrderInfo = ProductForm.resolveProductMaxOrderInfo;
 window.updateDrawerMaxOrderDisplay = ProductForm.updateDrawerMaxOrderDisplay;
 window.formatSalesCount = ProductForm.formatSalesCount;
 window.handleApplyDefaultCardDesign = ProductForm.handleApplyDefaultCardDesign;
+window.getCurrentStep = ProductForm.getCurrentStep;
+window.goToStep = ProductForm.goToStep;
 window.toggleCardAccordion = ProductForm.toggleCardAccordion;
 window.syncCardAccordionDOM = ProductForm.syncCardAccordionDOM;
 window.syncEyeToggleIcons = ProductForm.syncEyeToggleIcons;
 window.syncFeatureSubpanels = ProductForm.syncFeatureSubpanels;
+window.selectCardPresetOption = ProductForm.selectCardPresetOption;
+window.parseBorderRadius = ProductForm.parseBorderRadius;
+window.updateBorderRadiusPresetButtons = ProductForm.updateBorderRadiusPresetButtons;
 window.parseDiscountBadgeRadius = ProductForm.parseDiscountBadgeRadius;
 window.updateDiscountBadgeRadiusPresetButtons = ProductForm.updateDiscountBadgeRadiusPresetButtons;
 window.setDiscountBadgePosition = ProductForm.setDiscountBadgePosition;

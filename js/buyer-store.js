@@ -3287,8 +3287,8 @@ const BuyerStore = (() => {
     const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 1;
     const borderWidth = isNaN(rawBw) ? 1 : Math.max(0, Math.min(3, rawBw));
     const cardBorderStyle = borderWidth === 0 ? 'border: none; border-width: 0px;' : `border: ${borderWidth}px solid ${borderColor};`;
-    const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 16;
-    const borderRadius = `${isNaN(rawBr) ? 16 : Math.max(0, Math.min(24, rawBr))}px`;
+    const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 0;
+    const borderRadius = `${isNaN(rawBr) ? 0 : Math.max(0, Math.min(24, rawBr))}px`;
     const titleColor = config.title_color || '#0f172a';
     const priceColor = config.price_color || '#059669';
 
@@ -3437,8 +3437,8 @@ const BuyerStore = (() => {
     const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 1;
     const borderWidth = isNaN(rawBw) ? 1 : Math.max(0, Math.min(3, rawBw));
     const cardBorderStyle = borderWidth === 0 ? 'border: none; border-width: 0px;' : `border: ${borderWidth}px solid ${borderColor};`;
-    const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 16;
-    const borderRadius = `${isNaN(rawBr) ? 16 : Math.max(0, Math.min(24, rawBr))}px`;
+    const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 0;
+    const borderRadius = `${isNaN(rawBr) ? 0 : Math.max(0, Math.min(24, rawBr))}px`;
     const titleColor = config.title_color || '#0f172a';
     const priceColor = config.price_color || '#059669';
 
@@ -3578,8 +3578,8 @@ const BuyerStore = (() => {
     const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 1;
     const borderWidth = isNaN(rawBw) ? 1 : Math.max(0, Math.min(3, rawBw));
     const cardBorderStyle = borderWidth === 0 ? 'border: none; border-width: 0px;' : `border: ${borderWidth}px solid ${borderColor};`;
-    const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 16;
-    const borderRadius = `${isNaN(rawBr) ? 16 : Math.max(0, Math.min(24, rawBr))}px`;
+    const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 0;
+    const borderRadius = `${isNaN(rawBr) ? 0 : Math.max(0, Math.min(24, rawBr))}px`;
     const titleColor = config.title_color || '#0f172a';
     const priceColor = config.price_color || '#059669';
 
