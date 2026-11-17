@@ -939,6 +939,36 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% pada seluruh skenario pengujian komprehensif (66/66 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
       - Lolos 100% pada regression suite Task 2.8E (140/140 test assertions PASS, 0 FAIL).
 
+  - **Demonstrasi Dua Footer Contoh pada Preview Kartu Detail Step 1 (Task 2.9B)**:
+    - **Tujuan & Rasionalitas**:
+      - Memberikan demonstrasi visual langsung kepada seller pada saat pertama kali melihat Model Kartu Detail (Model C) di tab Pratinjau Step 1 bahwa kartu ini mendukung dua strip footer horizontal.
+      - Membantu seller memahami potensi tata letak visual tanpa mengubah aturan desain, tanpa mengisi otomatis formulir input, dan tanpa mengubah state atau database produk.
+    - **Spesifikasi Tampilan Awal (Tambah Produk Baru)**:
+      - Menampilkan dua strip footer sekaligus:
+        - **Footer 1 (Atas)**: Teks contoh `Tersedia berbagai Variasi`, background menggunakan warna tema utama toko (`var(--color-primary)`), dan teks berkontras tinggi (otomatis `#ffffff` atau `#0f172a` via kalkulasi luminance YIQ).
+        - **Footer 2 (Bawah)**: Teks contoh `Pengiriman Cepat & Aman`, background menggunakan warna tema sekunder toko (`var(--color-secondary)`), dan teks berkontras tinggi.
+      - *Dynamic Theme Color Derivation*: Apabila warna primer dan sekunder toko bernilai sama, background Footer 2 contoh secara dinamis diturunkan (lighten/darken 35%) agar kedua footer contoh tetap memiliki pembeda visual yang tegas dengan keterbacaan teks optimal.
+      - *Strict State & Storage Insulation*: Kedua footer bersifat demonstrasi visual murni; input formulir (`#input-card-footer-text-side`, `#input-card-footer-2-text-side`, dan varian mobile) tetap kosong, `primaryState.card_footer_text` dan `card_footer_2_text` tidak diubah, dan tidak ada data contoh yang tersimpan ke database maupun localStorage.
+    - **Penanda Sesi Transien (`hasEnteredCardDesignTab`)**:
+      - Status awal bernilai `false` saat memulai sesi Tambah Produk baru (`formMode === 'create'`).
+      - Berubah menjadi `true` secara instan ketika seller pertama kali membuka tab **Desain Kartu** (`#btn-step1-tab-design` desktop maupun `#btn-step1-tab-design-mob` mobile).
+      - Bersifat ireversibel selama sesi berjalan: status tidak berubah kembali menjadi `false` saat seller kembali ke tab Pratinjau.
+      - Diinisialisasi langsung ke `true` saat membuka mode Edit Produk Lama (`formMode === 'edit'` / `loadProductForEdit()`), sehingga produk lama tidak pernah menampilkan footer contoh.
+      - Ter-reset bersih kembali ke `false` hanya saat seller memulai sesi Tambah Produk baru berikutnya via `resetFormState()`.
+      - Tidak pernah disimpan ke database atau localStorage.
+    - **Siklus Hidup Tampilan Pasca Desain Kartu**:
+      - Begitu seller membuka tab Desain Kartu, demonstrasi dua footer contoh berhenti sepenuhnya.
+      - Kartu Detail hanya menampilkan footer yang benar-benar dikonfigurasi / diisi oleh seller:
+        - Footer 1 dan 2 belum diisi: Tidak ada footer yang ditampilkan pada kartu (kartu bersih).
+        - Hanya Footer 1 diisi: Hanya strip Footer 1 yang muncul.
+        - Hanya Footer 2 diisi: Hanya strip Footer 2 yang muncul.
+        - Keduanya diisi: Kedua strip footer muncul dengan teks, ikon, dan warna kustom pilihan seller.
+      - Aturan ini tetap bertahan saat seller kembali ke tab Pratinjau (contoh awal tidak pernah muncul kembali).
+      - Integrasi countdown promo dan simulasi diskon pada area Footer 2 tetap berjalan sesuai spesifikasi existing.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada 7 skenario pengujian menyeluruh (120/120 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
+      - Lolos 100% pada test suite regresi Task 2.8F (66/66 test assertions PASS, 0 FAIL).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

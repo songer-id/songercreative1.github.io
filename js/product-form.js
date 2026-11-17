@@ -25,6 +25,7 @@ const ProductForm = (() => {
   let isLivePreviewOpen = true; // Desktop preview sidebar open/collapsed state
   let isPreviewTestMode = false;
   let previewStep1Tab = 'preview'; // 'preview' | 'design'
+  let hasEnteredCardDesignTab = false; // Penanda sesi pertama kali masuk Desain Kartu (Task 2.9B)
   let previewSimulationState = {
     isDiscountSimulated: false
   };
@@ -605,6 +606,49 @@ const ProductForm = (() => {
       if (rootColor) return rootColor;
     } catch (_) { }
     return '#f59e0b';
+  }
+
+  // Helper parsing RGB & kalkulasi kontras warna untuk demonstrasi dua footer (Task 2.9B)
+  function parseColorToRgb(colorStr) {
+    if (!colorStr || typeof colorStr !== 'string') return null;
+    const str = colorStr.trim();
+    if (str.startsWith('#')) {
+      let clean = str.replace('#', '');
+      if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+      if (clean.length === 6) {
+        const r = parseInt(clean.substring(0, 2), 16);
+        const g = parseInt(clean.substring(2, 4), 16);
+        const b = parseInt(clean.substring(4, 6), 16);
+        if (!isNaN(r) && !isNaN(g) && !isNaN(b)) return { r, g, b };
+      }
+    }
+    const rgbMatch = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+    if (rgbMatch) {
+      return {
+        r: parseInt(rgbMatch[1], 10),
+        g: parseInt(rgbMatch[2], 10),
+        b: parseInt(rgbMatch[3], 10)
+      };
+    }
+    return null;
+  }
+
+  function getContrastColor(colorStr) {
+    const rgb = parseColorToRgb(colorStr);
+    if (!rgb) return '#ffffff';
+    const yiq = ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
+    return yiq >= 150 ? '#0f172a' : '#ffffff';
+  }
+
+  function getDistinctSecondaryDemoColor(primaryColorStr) {
+    const rgb = parseColorToRgb(primaryColorStr);
+    if (!rgb) return '#f59e0b';
+    const yiq = ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
+    const percent = yiq >= 150 ? -35 : 35;
+    const newR = Math.min(255, Math.max(0, rgb.r + Math.round(255 * (percent / 100))));
+    const newG = Math.min(255, Math.max(0, rgb.g + Math.round(255 * (percent / 100))));
+    const newB = Math.min(255, Math.max(0, rgb.b + Math.round(255 * (percent / 100))));
+    return '#' + ((1 << 24) + (newR << 16) + (newG << 8) + newB).toString(16).slice(1);
   }
 
 
@@ -2400,6 +2444,7 @@ const ProductForm = (() => {
     currentStep = 1;
     isPreviewTestMode = false;
     previewStep1Tab = 'preview';
+    hasEnteredCardDesignTab = false;
     pendingAutoScrollVariantDimensions = false;
     cardDesignSnapshot = null;
     cardDesignSnapshotKey = null;
@@ -2830,6 +2875,7 @@ const ProductForm = (() => {
     currentStep = 1;
     isPreviewTestMode = false;
     previewStep1Tab = 'preview';
+    hasEnteredCardDesignTab = true;
     pendingAutoScrollVariantDimensions = false;
     cardDesignSnapshot = null;
     cardDesignSnapshotKey = null;
@@ -7857,6 +7903,7 @@ const ProductForm = (() => {
         btn.onclick = (e) => {
           e.preventDefault();
           previewStep1Tab = 'design';
+          hasEnteredCardDesignTab = true;
           if (typeof bindCleanDatalistPopovers === 'function') {
             const cDesk = document.getElementById('card-customization-section');
             const cMob = document.getElementById('card-customization-section-mob');
@@ -12462,18 +12509,60 @@ const ProductForm = (() => {
     const rawFooter2Text = (footer2TextInput ? footer2TextInput.value : (primaryState.card_footer_2_text || '')).trim();
     const footer2Icon = getEffectiveFooterIconId(rawFooter2Text, primaryState.footer_2_badge_icon, 'minus');
 
-    // Evaluasi Footer Model C:
-    // Footer 1 kosong di Step 1 Admin Preview menampilkan teks contoh lokal TANPA ikon + penanda di luar kartu.
-    // Footer 2 opsional: jika teks kosong, strip Footer 2 + ikon + pemisah + ruang kosong disembunyikan total.
+    // Evaluasi Footer Model C (Task 2.9B):
+    // Demonstrasi dua footer contoh aktif HANYA saat Tambah Produk baru (formMode === 'create'),
+    // di Step 1 Model C, sebelum seller pertama kali membuka tab Desain Kartu (!hasEnteredCardDesignTab).
     const isStep1CardPreview = (currentStep === 1 && variant === 'C');
     const hasUserFooter1 = Boolean(rawFooterText);
     const hasUserFooter2 = Boolean(rawFooter2Text);
 
-    // Teks contoh lokal (TIDAK BOLEH disimpan ke primaryState, card_config, input, atau payload produk)
-    const previewF1Text = hasUserFooter1 ? rawFooterText : (isStep1CardPreview ? 'Tersedia berbagai Variasi' : '');
-    const previewF2Text = hasUserFooter2 ? rawFooter2Text : '';
+    const isSampleDemoActive = Boolean(
+      isStep1CardPreview &&
+      formMode === 'create' &&
+      !hasEnteredCardDesignTab
+    );
 
-    const hasSampleFooter = isStep1CardPreview && !hasUserFooter1;
+    // Resolusi Teks & Warna Efektif Footer
+    let previewF1Text = '';
+    let previewF2Text = '';
+    let effFooterBgColor = footerBgColor;
+    let effFooterTextColor = footerTextColor;
+    let effFooter2BgColor = footer2BgColor;
+    let effFooter2TextColor = footer2TextColor;
+
+    if (isSampleDemoActive) {
+      previewF1Text = 'Tersedia berbagai Variasi';
+      previewF2Text = 'Pengiriman Cepat & Aman';
+
+      // Warna demonstrasi dua footer (Task 2.9B):
+      // Footer 1 = Warna tema utama toko
+      // Footer 2 = Warna tema sekunder toko
+      const primaryThemeCol = getPrimaryThemeColor();
+      const secondaryThemeCol = getSecondaryThemeColor();
+      effFooterBgColor = primaryThemeCol;
+      effFooter2BgColor = secondaryThemeCol;
+
+      // Jika warna tema utama dan sekunder sama, gunakan turunan warna dinamis
+      const c1Rgb = parseColorToRgb(effFooterBgColor);
+      const c2Rgb = parseColorToRgb(effFooter2BgColor);
+      if (c1Rgb && c2Rgb && c1Rgb.r === c2Rgb.r && c1Rgb.g === c2Rgb.g && c1Rgb.b === c2Rgb.b) {
+        effFooter2BgColor = getDistinctSecondaryDemoColor(effFooterBgColor);
+      }
+
+      effFooterTextColor = getContrastColor(effFooterBgColor);
+      effFooter2TextColor = getContrastColor(effFooter2BgColor);
+    } else {
+      // Pasca masuk ke Desain Kartu atau pada Mode Edit Produk Lama:
+      // Tampilkan hanya footer yang benar-benar dikonfigurasi/diisi seller
+      previewF1Text = hasUserFooter1 ? rawFooterText : '';
+      previewF2Text = hasUserFooter2 ? rawFooter2Text : '';
+      effFooterBgColor = footerBgColor;
+      effFooterTextColor = footerTextColor;
+      effFooter2BgColor = footer2BgColor;
+      effFooter2TextColor = footer2TextColor;
+    }
+
+    const hasSampleFooter = isSampleDemoActive;
 
     const hasFooter1 = Boolean(previewF1Text);
     const hasFooter2 = isCountdownActive || Boolean(previewF2Text);
@@ -12634,7 +12723,7 @@ const ProductForm = (() => {
             <div class="w-full shrink-0 mt-auto flex flex-col" style="border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
               <!-- Footer 1 (Atas): Jaminan Kecepatan / Garansi -->
               ${hasFooter1 ? `
-                <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : ''}" style="background-color: ${footerBgColor}; color: ${footerTextColor}; ${!hasFooter2 ? 'border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;' : ''}">
+                <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : ''}" style="background-color: ${effFooterBgColor}; color: ${effFooterTextColor}; ${!hasFooter2 ? 'border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;' : ''}">
                   ${(hasUserFooter1 && footerIcon && footerIcon !== 'none') ? `<i data-lucide="${escapeHtml(footerIcon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
                   <span class="truncate">${escapeHtml(previewF1Text)}</span>
                 </div>
@@ -12648,7 +12737,7 @@ const ProductForm = (() => {
                     <span class="truncate">% Diskon Rp1,700RB berakhir Dalam 1Jam</span>
                   </div>
                 ` : `
-                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${footer2BgColor}; color: ${footer2TextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
+                  <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${effFooter2BgColor}; color: ${effFooter2TextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
                     ${(hasUserFooter2 && footer2Icon && footer2Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
                     <span class="truncate">${escapeHtml(previewF2Text)}</span>
                   </div>
@@ -38107,7 +38196,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     syncStateFromDOM,
     getPreviewHeaderHtml,
     getPreviewStep1Tab: () => previewStep1Tab,
-    setPreviewStep1Tab: (t) => { previewStep1Tab = t; },
+    setPreviewStep1Tab: (t) => {
+      previewStep1Tab = t;
+      if (t === 'design') {
+        hasEnteredCardDesignTab = true;
+      }
+    },
+    getHasEnteredCardDesignTab: () => hasEnteredCardDesignTab,
+    setHasEnteredCardDesignTab: (v) => { hasEnteredCardDesignTab = Boolean(v); },
     openMobilePreview: () => { if (typeof openMobilePreview === 'function') openMobilePreview(); },
     closeMobilePreview: () => { if (typeof closeMobilePreview === 'function') closeMobilePreview(); },
     getThemeBodyColor,
