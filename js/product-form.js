@@ -3914,11 +3914,6 @@ const ProductForm = (() => {
 
             <!-- Card Live Box Container -->
             <div id="preview-card-outer-wrapper" class="w-full max-w-[260px] mx-auto flex flex-col items-center justify-center transition-colors">
-              <!-- Penanda Footer Contoh Desktop (Task SC-ADMIN-CARD-PRESET-DROPDOWNS-13B-R1) -->
-              <div id="preview-footer-sample-badge" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
-                <i class="bi bi-info-circle text-[10px]"></i>
-                <span>Label Footer 1 belum diisi; pratinjau menggunakan contoh.</span>
-              </div>
               <div id="product-card-preview-container" class="w-full max-w-[260px] relative overflow-hidden">
                 <div id="card-live-preview-box">
                   <!-- Rendered dynamically -->
@@ -4361,11 +4356,6 @@ const ProductForm = (() => {
 
             <!-- Card Preview Box -->
             <div id="preview-card-outer-wrapper-mob" class="w-full max-w-[260px] flex flex-col items-center justify-center transition-colors">
-              <!-- Penanda Footer Contoh Mobile (Task SC-ADMIN-CARD-PRESET-DROPDOWNS-13B-R1) -->
-              <div id="preview-footer-sample-badge-mob" class="hidden inline-flex items-center justify-center gap-1 text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mb-2 font-normal select-none">
-                <i class="bi bi-info-circle text-[10px]"></i>
-                <span>Label Footer 1 belum diisi; pratinjau menggunakan contoh.</span>
-              </div>
               <div class="w-full max-w-[260px] relative overflow-hidden">
                 <div id="mobile-card-preview-container">
                   <!-- Rendered dynamically -->
@@ -12456,8 +12446,6 @@ const ProductForm = (() => {
       effFooter2TextColor = footer2TextColor;
     }
 
-    const hasSampleFooter = isSampleDemoActive;
-
     const hasFooter1 = Boolean(previewF1Text);
     const hasFooter2 = isCountdownActive || Boolean(previewF2Text);
 
@@ -13239,16 +13227,6 @@ const ProductForm = (() => {
       return;
     }
 
-
-    [
-      document.getElementById('preview-footer-sample-badge'),
-      document.getElementById('preview-footer-sample-badge-mob')
-    ].forEach(badge => {
-      if (badge) {
-        if (hasSampleFooter) badge.classList.remove('hidden');
-        else badge.classList.add('hidden');
-      }
-    });
 
     previewContainer.innerHTML = cardHtml;
     const mobilePreviewBox = document.getElementById('mobile-card-preview-container');

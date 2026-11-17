@@ -1026,6 +1026,24 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% pada 9 skenario pengujian komprehensif Playwright (132/132 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
       - Lolos 100% pada regression suite Task 2.9C (140/140 PASS, 0 FAIL) dan Task 2.8F (66/66 PASS, 0 FAIL).
 
+  - **Penghapusan Ikon Peringatan dan Teks Contoh di Atas Preview Kartu Detail (Task 2.9E)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menghilangkan banner pemberitahuan contoh footer di atas Preview produk (`#preview-footer-sample-badge` dan `#preview-footer-sample-badge-mob`) yang memuat ikon info/seru (`bi-info-circle`) dan teks *"Label Footer 1 belum diisi; pratinjau menggunakan contoh."*.
+      - Membersihkan antarmuka Preview kartu pada desktop dan mobile tanpa meninggalkan ruang kosong (*blank space/margin*) bekas elemen.
+      - Menjaga demonstrasi dua footer contoh Task 2.9B di dalam kartu produk Model C tetap berfungsi normal.
+    - **Pembersihan Markup & Referensi Logika**:
+      - Elemen `#preview-footer-sample-badge` pada Desktop wrapper `#preview-card-outer-wrapper` dan `#preview-footer-sample-badge-mob` pada Mobile wrapper `#preview-card-outer-wrapper-mob` dihapus sepenuhnya dari DOM template `product-form.js`.
+      - Menghapus referensi `hasSampleFooter` dan blok manipulasi class `badge.classList.remove('hidden')` di dalam `updateProductCardLivePreview()`.
+      - Kartu produk pratinjau (`#product-card-preview-container` dan `#mobile-card-preview-container`) kini langsung mengisi area wrapper secara rapi dan presisi tanpa celah vertikal yang tidak wajar.
+    - **Proteksi Fitur & Perilaku Tetap Utuh**:
+      - Demonstrasi dua footer contoh (Task 2.9B) pada produk baru Model C tetap aktif menampilkan *"Tersedia berbagai Variasi"* dan *"Pengiriman Cepat & Aman"* dengan warna latar berbeda.
+      - Status demo tetap berakhir secara deterministik begitu seller masuk ke tab Desain Kartu atau mengisi input footer di form Step 1 (`hasEnteredCardDesignTab = true`).
+      - Validasi Footer 1 wajib dan Footer 2 opsional di form Step 1 tetap berjalan normal.
+      - Badge, label khusus, ikon, dan teks di dalam kartu produk tidak ada yang terhapus atau terpengaruh.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada 6 skenario pengujian komprehensif Playwright (60/60 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
+      - Lolos 100% pada regression suite Task 2.9D-B (132/132 PASS), Task 2.9C (140/140 PASS), dan Task 2.9B (120/120 PASS).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
