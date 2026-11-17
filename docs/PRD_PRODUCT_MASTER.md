@@ -999,6 +999,33 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% pada 10 skenario pengujian komprehensif (140/140 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
       - Lolos 100% pada regression suite Task 2.9B (120/120 test assertions PASS, 0 FAIL).
 
+  - **Pemindahan Pengaturan Label Footer Model C ke Form Utama Step 1 (Task 2.9D-B)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Memindahkan seluruh pengaturan Label Footer Model C (Kartu Detail) dari panel Desain Kartu di Sidebar/Drawer Preview ke form utama Step 1 (`#step-pane-1`).
+      - Posisi baru ditempatkan tepat di bawah bagian Tambahkan Label Khusus (`#section-step1-input6-labels`) di dalam `#step1-cardmodel-unlocked-fields`.
+      - Perubahan murni pemindahan lokasi antarmuka pengguna (UI placement) tanpa mengubah fungsi, skema data, validasi inline, maupun logika bisnis existing.
+    - **Arsitektur Penempatan UI & Struktur Form**:
+      - Pengaturan Footer 1 dan Footer 2 disatukan di dalam container `#section-step1-input7-footers` dengan accordion `#accordion-group-footer`.
+      - Accordion footer di Step 1 diset terbuka secara default (`cardAccordionState.footer: true`) saat Model C dipilih.
+      - Seluruh kontrol footer duplikat pada Drawer Desktop (`#card-customization-section`) dan Drawer Mobile (`#card-customization-section-mob`) dihapus tuntas, sehingga bebas dari duplikasi elemen DOM dan duplikasi event handler.
+    - **Visibilitas Berdasarkan Model Kartu & Proteksi Retensi Nilai**:
+      - Model A dan Model B: `#section-step1-input7-footers` disembunyikan (`hidden`).
+      - Model C: `#section-step1-input7-footers` ditampilkan (`space-y-4`).
+      - Pergantian model kartu (Model A <-> Model B <-> Model C) mempertahankan konfigurasi teks, warna latar, warna teks, dan ikon footer yang telah diisi tanpa menghapus state formulir (`primaryState`).
+    - **Kelengkapan Fitur & Validasi yang Dipertahankan**:
+      - Input teks, limit 32 karakter grafem, dan counter karakter real-time (`${len}/32`).
+      - Validasi inline: Footer 1 wajib diisi pada Model C; Footer 2 opsional.
+      - Validasi keunikan teks: Pesan error inline "Label Footer 2 harus berbeda dari Label Footer 1." apabila teks Footer 2 sama dengan Footer 1.
+      - Icon picker 24 opsi ikon SVG Lucide dengan proteksi duplikasi: Ikon yang dipilih di Footer 1 otomatis dinonaktifkan (`disabled`, `aria-disabled="true"`, class `is-disabled-other`) di Footer 2 dengan pemberitahuan "Digunakan pada footer lainnya.".
+      - Native color picker dan input HEX tersinkronisasi 2 arah untuk background dan teks pada kedua strip footer.
+      - Popover riwayat teks datalist dari database toko (`#footer-texts-history-list`).
+    - **Siklus Hidup Preview Demo 2 Footer (Task 2.9B) & Navigasi Validasi (Task 2.8C/2.8D)**:
+      - *Demo Task 2.9B*: Pada produk baru Model C, live preview menampilkan 2 contoh footer awal sebelum diedit. Interaksi atau pengetikan pertama pada kontrol footer di Step 1 secara permanen mengakhiri status demo (`hasEnteredCardDesignTab = true`). Mengosongkan kembali input tidak akan membangkitkan demo lagi. Mode Edit produk tersimpan memuat konfigurasi asli tanpa memunculkan demo.
+      - *Navigasi Validasi*: Fungsi `focusAndHighlightValidationTarget()` dan helper `getFooter1TargetEl()`, `getFooter2TargetEl()` memetakan target ke kontrol form Step 1 (`#input-card-footer-text-side`, `#input-card-footer-2-text-side`), mengarahkan scroll kontainer admin dan memfokuskan field input yang perlu diperbaiki.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada 9 skenario pengujian komprehensif Playwright (132/132 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
+      - Lolos 100% pada regression suite Task 2.9C (140/140 PASS, 0 FAIL) dan Task 2.8F (66/66 PASS, 0 FAIL).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
