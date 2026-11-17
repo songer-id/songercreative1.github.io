@@ -7601,7 +7601,9 @@ const ProductForm = (() => {
 
       root.onclick = (e) => {
         if (e.target === root) {
-          dismissAndNavigate(e);
+          e.preventDefault();
+          e.stopPropagation();
+          hidePreviewTestModeAlert();
         }
       };
     });
@@ -7615,12 +7617,6 @@ const ProductForm = (() => {
 
     roots.forEach(root => {
       root.classList.add('hidden');
-      root.innerHTML = '';
-      if (root.id === 'preview-scoped-modal-root') {
-        root.className = 'absolute inset-0 z-50 hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs';
-      } else {
-        root.className = 'absolute inset-0 z-[100] hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs';
-      }
     });
 
     ['preview-test-mode-alert', 'preview-test-mode-alert-mob'].forEach(id => {
@@ -32698,6 +32694,33 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       document.addEventListener('change', handleFormProductDataChange, true);
       document.addEventListener('click', handleFormProductDataClick, true);
     }
+
+    // Mekanisme Outside-Click Desktop untuk Menutup Seluruh Popup Preview (Task 2.8F)
+    if (!window._desktopPreviewOutsideClickBound) {
+      window._desktopPreviewOutsideClickBound = true;
+      document.addEventListener('click', function handleDesktopPreviewOutsideClick(e) {
+        if (window.innerWidth < 1024) return;
+        const rootDesk = document.getElementById('preview-scoped-modal-root');
+        if (!rootDesk || rootDesk.classList.contains('hidden')) return;
+
+        const sidebarEl = document.getElementById('desktop-preview-sidebar');
+        if (sidebarEl && sidebarEl.contains(e.target)) return;
+
+        // Abaikan tombol toggle dock, expand, dan subnav preview agar tidak mengganggu toggle sidebar
+        if (e.target && e.target.closest && (
+            e.target.closest('#btn-dock-toggle-preview') ||
+            e.target.closest('#btn-subnav-toggle-preview') ||
+            e.target.closest('#btn-expand-preview-sidebar')
+        )) {
+          return;
+        }
+
+        // Tutup popup preview tanpa menahan interaksi form (tanpa preventDefault / stopPropagation)
+        if (typeof hidePreviewTestModeAlert === 'function') {
+          hidePreviewTestModeAlert();
+        }
+      });
+    }
     // Mobile Bottom Sheet / Drawer
     const btnFabLivePreview = document.getElementById('btn-fab-live-preview');
     const btnCloseMobilePreview = document.getElementById('btn-close-mobile-preview');
@@ -38126,6 +38149,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     canActivateTestMode,
     showPreviewTestModeAlert,
     hidePreviewTestModeAlert,
+    closeAllPreviewModals: hidePreviewTestModeAlert,
     resetTestModeToPreview,
     deactivatePreviewTestMode: resetTestModeToPreview,
     getIsPreviewTestMode: () => isPreviewTestMode

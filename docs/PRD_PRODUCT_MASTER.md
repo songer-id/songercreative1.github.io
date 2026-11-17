@@ -913,6 +913,32 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Pengujian Lintas Viewport**:
       - Lolos 100% pada 12 skenario pengujian komprehensif (140/140 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
 
+  - **Penutupan Seluruh Popup Preview saat Klik di Luar Drawer & Integrasi Lifecycle (Task 2.8F)**:
+    - **Tujuan & Masalah yang Diselesaikan**:
+      - Menyelesaikan masalah popup preview (Simulasi Keranjang, Simulasi Pembelian, dan Pemberitahuan Validasi Uji Coba) yang tertinggal dalam keadaan terbuka saat pengguna meninggalkan Drawer Preview (Mobile) atau berinteraksi di luar Sidebar Preview (Desktop).
+      - Menghindari visual glitch di mana popup lama muncul kembali saat drawer/sidebar preview dibuka kembali.
+    - **Mekanisme Terpusat Penutupan Popup (`hidePreviewTestModeAlert` / `closeAllPreviewModals`)**:
+      - Menyembunyikan root popup scoped desktop (`#preview-scoped-modal-root`) dan mobile (`#preview-scoped-modal-root-mob`) secara non-destruktif dengan menambahkan class `.hidden`.
+      - Menghilangkan penghapusan string class dan `innerHTML = ''` paksa yang berpotensi merusak transisi CSS atau lifecycle komponen.
+      - Menghapus potensi backdrop transparan tertinggal (*invisible blocking backdrop*).
+      - Diekspor secara publik pada modul `ProductForm.closeAllPreviewModals` untuk koordinasi lintas komponen.
+    - **Integrasi Mobile Drawer (`closeMobilePreview`)**:
+      - Ketika pengguna mengeklik backdrop mobile drawer (`#mobile-preview-backdrop`), menekan tombol silang X drawer (`#btn-close-mobile-preview`), atau memicu penutupan drawer mobile: seluruh popup preview yang aktif otomatis ditutup seketika.
+      - Transisi penutupan drawer berjalan mulus (`translate-y-full`), backdrop drawer disembunyikan (`hidden`), overflow scrolling body dipulihkan, dan saat drawer dibuka kembali via FAB, kondisi preview selalu bersih tanpa popup sisa (*no stale modal*).
+      - Klik pada backdrop drawer mobile secara tegas **TIDAK memicu auto-navigasi / scroll** ke input validasi (perilaku navigasi form hanya direservasi untuk tombol "OK / Mengerti").
+    - **Integrasi Desktop Sidebar & Outside-Click Handling**:
+      - Terintegrasi pada penciutan sidebar (`setSidebarState(false)`): popup ditutup bersih dan status mode Uji Coba tetap dipertahankan utuh saat sidebar dibuka kembali.
+      - *Guarded Document Click Listener*: Memasang listener klik global yang hanya aktif di desktop (`window.innerWidth >= 1024`) ketika root modal preview sedang terbuka. Jika klik terjadi di luar `#desktop-preview-sidebar`, popup preview langsung tertutup tanpa menahan event (`tanpa e.preventDefault()` / `e.stopPropagation()`), sehingga form input, tab, atau tombol di halaman utama admin langsung menerima fokus dan aksi klik secara responsif.
+      - Pengecualian selektif diberikan untuk tombol toggle sidebar preview (`#btn-dock-toggle-preview`, `#btn-subnav-toggle-preview`, `#btn-expand-preview-sidebar`) agar interaksi tombol kontrol sidebar tidak terganggu.
+    - **Perlindungan Regresi Perilaku Existing**:
+      - Tombol OK / Mengerti pada popup validasi tetap menjalankan pipeline navigasi otomatis, scroll container halus, pembukaan accordion, dan highlight fokus ke input invalid paling atas (Task 2.8C & Task 2.8D).
+      - Klik langsung pada backdrop modal scoped (`root.onclick`) hanya menutup popup bersangkutan tanpa memicu navigasi atau menutup drawer preview.
+      - Tombol X atau Tutup pada popup simulasi/validasi hanya menutup modal dan mempertahankan drawer variasi Shopee tetap terbuka jika sedang aktif.
+      - Modal sistem lain di luar preview (seperti modal hapus variasi, modal konfirmasi keluar, dll.) tidak terpengaruh sama sekali.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada seluruh skenario pengujian komprehensif (66/66 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
+      - Lolos 100% pada regression suite Task 2.8E (140/140 test assertions PASS, 0 FAIL).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
