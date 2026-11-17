@@ -1044,6 +1044,16 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% pada 6 skenario pengujian komprehensif Playwright (60/60 test assertions PASS, 0 FAIL) di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844, dan Mobile 375x667 dengan 0 JavaScript console errors.
       - Lolos 100% pada regression suite Task 2.9D-B (132/132 PASS), Task 2.9C (140/140 PASS), dan Task 2.9B (120/120 PASS).
 
+  - **Perbaikan Interaksi Drawer Preview Mobile, Nested Overlay, dan UI Step 2 (Task 2.10A Tahap 1)**:
+    - **Tujuan & Ruang Lingkup**:
+      - **Task 1 (Drawer Preview Mobile Step 1 & Step 2)**: Menjamin drawer preview mobile dapat ditutup dengan mengetuk area luar / atas (backdrop area 12dvh teratas). Ketukan di dalam area drawer preview tidak menutup drawer. Tombol close (✕) tetap berfungsi normal.
+      - **Task 2 (Modal Bertingkat Terisolasi / Scoped Modal Popup Step 2)**: Pengetukan di luar kotak modal (di area overlay backdrop di dalam sheet drawer preview) hanya menutup modal bertingkat tersebut. Sheet drawer preview utama tetap terbuka. Pengetukan di dalam kotak modal tidak menutup modal.
+      - **Task 3 (Nested Drawer Step 2: Beli Sekarang, Tambah Keranjang, Spesifikasi, Tabel Ukuran)**: Pengetukan di luar sheet nested drawer hanya menutup nested drawer aktif. Sheet drawer preview utama tetap terbuka. Pengetukan di dalam nested drawer tidak menutupnya. Menerapkan hierarki penutupan bertingkat: nested drawer tutup lebih dahulu -> preview sheet tetap buka -> klik luar berikutnya menutup preview sheet. Spec sheet dan size guide sheet dikunci pada `max-w-[260px] mx-auto` agar sejajar presisi di tengah bingkai simulasi ponsel 260px.
+      - **Task 4 (Atribut & Keterangan Spesifikasi Tambahan Step 2)**: Tabel spesifikasi dinamis (maksimal 10 baris). Penambahan dan penghapusan baris dengan ikon plus tunggal pada tombol `Tambah Baris Spesifikasi`. Header tabel otomatis disembunyikan jika baris = 0 dan ditampilkan jika baris >= 1. Validasi wajib isi (Judul & Keterangan) saat seller menekan Simpan Produk jika terdapat baris spesifikasi aktif (ditandai dengan border merah). Data `custom_specs` tersimpan akurat pada `primaryState` dan DB serta ter-load dengan benar pada mode edit. Input SKU Induk dipastikan unik dan tidak duplikat.
+      - **Task 5 (Pembersihan Garis Pemisah Komisi Afiliasi)**: Garis pembatas `border-t border-slate-100` di atas `#section-product-affiliate-commission` dihilangkan pada tampilan Desktop maupun Mobile.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada 14 skenario pengujian komprehensif Playwright di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844 (iPhone 12/13/14), dan Mobile 375x667 (iPhone SE) dengan 0 failures dan 0 JavaScript console errors.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

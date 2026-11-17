@@ -4360,10 +4360,6 @@ const ProductForm = (() => {
                 <div id="mobile-card-preview-container">
                   <!-- Rendered dynamically -->
                 </div>
-                <!-- Scoped Preview Simulation Modal (Mobile Scoped inside Preview Container) -->
-                <div id="preview-scoped-modal-root-mob" class="absolute inset-0 z-[100] hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs">
-                  <!-- Rendered dynamically -->
-                </div>
               </div>
             </div>
 
@@ -4760,10 +4756,10 @@ const ProductForm = (() => {
             </div>
           </div>
 
-
-
-
-
+          <!-- Scoped Preview Simulation Modal for Mobile (covers the whole mobile sheet) -->
+          <div id="preview-scoped-modal-root-mob" class="absolute inset-0 z-[100] hidden flex items-center justify-center p-2 bg-slate-900/50 backdrop-blur-xs">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
 
         <!-- MODAL MINI: TAMBAH KATEGORI / SUB-KATEGORI BARU CEPAT -->
@@ -7867,7 +7863,7 @@ const ProductForm = (() => {
     }
 
     const modalInner = `
-      <div class="bg-white rounded-xl shadow-xl max-w-[270px] w-full p-4 text-center space-y-2.5 border border-slate-100 relative animate-modal-pop pointer-events-auto">
+      <div class="preview-scoped-modal-card bg-white rounded-xl shadow-xl max-w-[270px] w-full p-4 text-center space-y-2.5 border border-slate-100 relative animate-modal-pop pointer-events-auto">
         <button type="button" class="btn-close-sim-modal absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-sm p-1 cursor-pointer">
           <i class="bi bi-x-lg"></i>
         </button>
@@ -7909,8 +7905,18 @@ const ProductForm = (() => {
         };
       });
 
+      const modalCardEl = root.querySelector('.preview-scoped-modal-card');
+      if (modalCardEl) {
+        modalCardEl.onclick = (e) => {
+          e.stopPropagation();
+        };
+      }
       root.onclick = (e) => {
-        if (e.target === root) roots.forEach(r => r.classList.add('hidden'));
+        if (e.target === root || e.target.classList.contains('preview-scoped-modal-overlay') || e.target.id === 'preview-scoped-modal-root' || e.target.id === 'preview-scoped-modal-root-mob') {
+          e.preventDefault();
+          e.stopPropagation();
+          roots.forEach(r => r.classList.add('hidden'));
+        }
       };
 
       if (config.onMounted) {
@@ -10147,7 +10153,7 @@ const ProductForm = (() => {
 
     return `
       <div class="spec-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 opacity-100 cursor-pointer"></div>
-      <div class="spec-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
+      <div class="spec-drawer-sheet relative z-10 w-full max-w-[260px] mx-auto max-h-[85%] bg-white rounded-t-xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
         <!-- Header Drawer -->
         <div class="border-b border-slate-200 w-full bg-white shrink-0">
           <h3 class="text-sm font-bold text-slate-800 text-center py-3">Spesifikasi</h3>
@@ -10309,7 +10315,7 @@ const ProductForm = (() => {
   function buildProductSizeGuideDrawerHtml() {
     return `
       <div class="size-guide-drawer-backdrop absolute inset-0 bg-black/40 backdrop-blur-2xs transition-opacity duration-300 opacity-100 cursor-pointer"></div>
-      <div class="size-guide-drawer-sheet relative z-10 w-full max-h-[85%] bg-white rounded-t-xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
+      <div class="size-guide-drawer-sheet relative z-10 w-full max-w-[260px] mx-auto max-h-[85%] bg-white rounded-t-xl rounded-b-none shadow-2xl border-t border-slate-200 transform translate-y-0 transition-transform duration-300 ease-out flex flex-col overflow-hidden" style="border-top-left-radius: 0.75rem !important; border-top-right-radius: 0.75rem !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important;">
         <!-- Header Drawer -->
         <div class="border-b border-slate-200 w-full bg-white shrink-0">
           <h3 class="text-sm font-bold text-slate-800 text-center py-3">Tabel Ukuran</h3>
@@ -14786,7 +14792,7 @@ const ProductForm = (() => {
 
     return `
       <!-- Bagian Komisi Afiliasi Produk (Clean Flat & Compact SaaS Layout) -->
-      <div class="border-t border-slate-100 pt-2.5 sm:pt-4 space-y-2.5 sm:space-y-4" id="section-product-affiliate-commission">
+      <div class="pt-2.5 sm:pt-4 space-y-2.5 sm:space-y-4" id="section-product-affiliate-commission">
         <!-- Baris Header & Toggle Aktivasi -->
         <div class="flex items-center justify-between flex-wrap gap-2.5 pb-2 border-b border-slate-100">
           <div class="flex items-center gap-1.5">
@@ -32803,6 +32809,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (btnCloseMobilePreview) btnCloseMobilePreview.addEventListener('click', closeMobilePreview);
     if (mobileBackdrop) mobileBackdrop.addEventListener('click', closeMobilePreview);
 
+    // TASK 3: Klik di luar konten nested drawer Beli/Keranjang (di dalam area preview detail produk) hanya menutup nested drawer
+    if (mobileSheet) {
+      mobileSheet.addEventListener('click', function handleMobileSheetNestedClick(e) {
+        if (previewTestState && previewTestState.isDrawerOpen) {
+          if (e.target.closest('.mini-pdp-drawer-sheet') || e.target.closest('.btn-preview-buy-now') || e.target.closest('.btn-preview-add-cart') || e.target.closest('.btn-preview-cart-trigger') || e.target.closest('#btn-close-mobile-preview')) {
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          closeShopeeCheckoutDrawer();
+        }
+      });
+    }
+
     // Aturan Saling Tutup: Jika hamburger sidebar utama diklik, otomatis tutup drawer preview jika sedang terbuka
     const btnHambDesk = document.getElementById('btn-sidebar-hamburger');
     const btnHambMob = document.getElementById('btn-sidebar-hamburger-mobile');
@@ -36191,8 +36211,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (brandInp) primaryState.brand = brandInp.value.trim();
 
     const specRows = document.querySelectorAll('#custom-specs-tbody tr.custom-spec-row');
+    const list = [];
     if (specRows && specRows.length > 0) {
-      const list = [];
       specRows.forEach(tr => {
         const titleInp = tr.querySelector('.input-spec-title');
         const valInp = tr.querySelector('.input-spec-value');
@@ -36207,8 +36227,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
         }
       });
-      primaryState.custom_specs = list;
     }
+    primaryState.custom_specs = list;
     const originInp = document.getElementById('input-product-origin') || document.getElementById('select-product-origin');
     if (originInp) primaryState.product_origin = originInp.value.trim();
     const warrantyUnitSel = document.getElementById('select-warranty-unit');
@@ -36952,6 +36972,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     if (!cleanDescText) {
       addError('Deskripsi produk wajib diisi.', document.getElementById('editor-prod-desc') || document.getElementById('input-prod-desc') || document.getElementById('card-step2-description'));
+    }
+
+    // Validasi Atribut & Keterangan Spesifikasi Tambahan (Jika terdapat baris spesifikasi)
+    const activeSpecRows = document.querySelectorAll('#custom-specs-tbody tr.custom-spec-row');
+    if (activeSpecRows && activeSpecRows.length > 0) {
+      activeSpecRows.forEach((tr) => {
+        const titleInp = tr.querySelector('.input-spec-title');
+        const valInp = tr.querySelector('.input-spec-value');
+        const titleVal = titleInp ? titleInp.value.trim() : '';
+        const descVal = valInp ? valInp.value.trim() : '';
+        if (!titleVal) {
+          addError('Judul spesifikasi wajib diisi.', titleInp);
+          if (titleInp) titleInp.classList.add('border-red-500');
+        } else if (titleInp) {
+          titleInp.classList.remove('border-red-500');
+        }
+        if (!descVal) {
+          addError('Keterangan spesifikasi wajib diisi.', valInp);
+          if (valInp) valInp.classList.add('border-red-500');
+        } else if (valInp) {
+          valInp.classList.remove('border-red-500');
+        }
+      });
     }
 
     // 4. Validasi Komisi Afiliasi (Jika Aktif)
@@ -38049,6 +38092,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     openProductSpecDrawer,
     closeProductSpecDrawer,
     buildProductSpecDrawerHtml,
+    openShopeeCheckoutDrawer: (action) => openShopeeCheckoutDrawer(action),
+    closeShopeeCheckoutDrawer: () => closeShopeeCheckoutDrawer(),
+    showBuySimulationConfirmModal: () => showBuySimulationConfirmModal(),
+    showCartSimulationConfirmModal: () => showCartSimulationConfirmModal(),
     openProductSizeGuideDrawer,
     closeProductSizeGuideDrawer,
     buildProductSizeGuideDrawerHtml,
