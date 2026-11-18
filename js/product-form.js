@@ -9356,6 +9356,203 @@ const ProductForm = (() => {
     });
   }
 
+  // ============================================================================
+  // TASK 2.10A TAHAP 2: VALIDASI HARGA PRODUK AKTUAL & PROMO STEP 1 - STEP 2
+  // ============================================================================
+  function isActualProductPriceValid() {
+    if (!primaryState.has_variants) {
+      const singlePriceInp = document.getElementById('input-single-price');
+      let rawVal = singlePriceInp ? singlePriceInp.value : primaryState.price;
+      if (rawVal === undefined || rawVal === null || rawVal === '') {
+        rawVal = primaryState.price;
+      }
+      let priceNum = (rawVal !== undefined && rawVal !== null && rawVal !== '') ? parseFloat(rawVal) : 0;
+      if (isNaN(priceNum) || priceNum <= 0) {
+        if (materialsState && materialsState.length > 0 && materialsState[0].price > 0) {
+          priceNum = parseFloat(materialsState[0].price) || 0;
+        }
+      }
+      return !isNaN(priceNum) && priceNum > 0;
+    }
+
+    // Produk dengan variasi: Minimal satu kombinasi variasi aktif menghasilkan harga total > Rp0
+    const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '' && m.name.trim().toLowerCase() !== 'produk standar');
+    const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '' && f.name.trim().toLowerCase() !== 'produk standar');
+    const validV3 = (finishingsState.extra_1 || []).filter(f => f && f.name && f.name.trim() !== '' && f.name.trim().toLowerCase() !== 'produk standar');
+    const validV4 = (finishingsState.extra_2 || []).filter(f => f && f.name && f.name.trim() !== '' && f.name.trim().toLowerCase() !== 'produk standar');
+
+    let p1List = validMaterials.map(m => parseFloat(m.price) || 0);
+    if (p1List.length === 0) {
+      const priceInputs = document.querySelectorAll('.variation-option-row[data-tier="tier1"] input[data-field="price"], #materials-rows-container input[data-field="price"], #materials-table-body input[data-field="price"]');
+      if (priceInputs.length > 0) {
+        p1List = Array.from(priceInputs).map(inp => parseFloat(inp.value)).filter(p => !isNaN(p));
+      } else if (materialsState && materialsState.length > 0) {
+        p1List = materialsState.map(m => parseFloat(m.price) || 0);
+      }
+    }
+
+    if (p1List.length === 0) return false;
+
+    const p2List = (primaryState.has_variation_2 && validV2.length > 0)
+      ? validV2.map(f => parseFloat(f.price) || 0)
+      : [0];
+    const p3List = (primaryState.has_variation_3 && validV3.length > 0)
+      ? validV3.map(f => parseFloat(f.price) || 0)
+      : [0];
+    const p4List = (primaryState.has_variation_4 && validV4.length > 0)
+      ? validV4.map(f => parseFloat(f.price) || 0)
+      : [0];
+
+    for (const p1 of p1List) {
+      for (const p2 of p2List) {
+        for (const p3 of p3List) {
+          for (const p4 of p4List) {
+            if ((p1 + p2 + p3 + p4) > 0) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  function getActivePromoValidationInfo() {
+    // 1. Evaluasi Promo Bulanan
+    const toggleMonthlyEl = document.getElementById('toggle-promo-monthly');
+    const isMonthlyChecked = toggleMonthlyEl
+      ? Boolean(toggleMonthlyEl.checked || primaryState.auto_monthly_promo || primaryState.include_in_monthly_promo)
+      : Boolean(primaryState.auto_monthly_promo || primaryState.include_in_monthly_promo);
+    const selectMonthlyTypeEl = document.getElementById('select-monthly-promo-type');
+    const mType = (selectMonthlyTypeEl && selectMonthlyTypeEl.value) ? selectMonthlyTypeEl.value : (primaryState.monthly_discount_type || 'percent');
+    const inputMonthlyValEl = document.getElementById('input-monthly-promo-value');
+    let rawMVal = (inputMonthlyValEl && inputMonthlyValEl.value !== '') ? inputMonthlyValEl.value : primaryState.monthly_discount_value;
+    if (rawMVal === '' || rawMVal === null || rawMVal === undefined) {
+      rawMVal = primaryState.monthly_discount_value;
+    }
+    const mNum = (rawMVal !== '' && rawMVal !== null && rawMVal !== undefined) ? parseFloat(rawMVal) : NaN;
+
+    const isMonthlyValid = Boolean(
+      isMonthlyChecked &&
+      !isNaN(mNum) &&
+      mNum > 0 &&
+      (mType !== 'percent' || mNum <= 100)
+    );
+
+    // 2. Evaluasi Promo Harian
+    const toggleDailyEl = document.getElementById('toggle-promo-daily') || document.getElementById('toggle-monthly-discount');
+    const isDailyChecked = toggleDailyEl
+      ? Boolean(toggleDailyEl.checked || primaryState.has_daily_promo || primaryState.has_monthly_discount)
+      : Boolean(primaryState.has_daily_promo || primaryState.has_monthly_discount);
+    const selectDailyTypeEl = document.getElementById('select-promo-discount-type') || document.getElementById('select-monthly-discount-type');
+    const dType = (selectDailyTypeEl && selectDailyTypeEl.value) ? selectDailyTypeEl.value : (primaryState.discount_type || 'percent');
+    const inputDailyValEl = document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val');
+    let rawDVal = (inputDailyValEl && inputDailyValEl.value !== '') ? inputDailyValEl.value : primaryState.discount_value;
+    if (rawDVal === '' || rawDVal === null || rawDVal === undefined) {
+      rawDVal = primaryState.discount_value;
+    }
+    const dNum = (rawDVal !== '' && rawDVal !== null && rawDVal !== undefined) ? parseFloat(rawDVal) : NaN;
+    const inputPromoLabelEl = document.getElementById('input-promo-label');
+    let rawPromoLabel = (inputPromoLabelEl && inputPromoLabelEl.value !== '') ? inputPromoLabelEl.value : primaryState.monthly_promo_label;
+    if (rawPromoLabel === undefined || rawPromoLabel === null) {
+      rawPromoLabel = primaryState.monthly_promo_label;
+    }
+    const promoLabel = (rawPromoLabel !== undefined && rawPromoLabel !== null ? String(rawPromoLabel) : '').trim();
+
+    const isDailyValid = Boolean(
+      isDailyChecked &&
+      !isNaN(dNum) &&
+      dNum > 0 &&
+      promoLabel.length > 0 &&
+      (dType !== 'percent' || dNum <= 100)
+    );
+
+    // 3. Evaluasi Deadline Waktu Berakhir Promo Harian (Countdown)
+    const rawPromoEndDate = (document.getElementById('input-promo-end-date')?.value || primaryState.promo_end_date || '').toString().trim();
+    let isDeadlineValid = false;
+    let countdownTimeLeft = '1Jam';
+    if (rawPromoEndDate) {
+      let endDateObj = new Date(rawPromoEndDate);
+      if (!isNaN(endDateObj.getTime())) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(rawPromoEndDate)) {
+          const [y, m, d] = rawPromoEndDate.split('-').map(Number);
+          endDateObj = new Date(y, m - 1, d, 23, 59, 59, 999);
+        }
+        const diffMs = endDateObj.getTime() - Date.now();
+        if (diffMs > 0) {
+          isDeadlineValid = true;
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          if (diffDays >= 1) countdownTimeLeft = `${diffDays}Hari`;
+          else if (diffHours >= 1) countdownTimeLeft = `${diffHours}Jam`;
+          else countdownTimeLeft = `${Math.max(1, diffMinutes)}Mnt`;
+        }
+      }
+    }
+
+    const isValid = isDailyValid || isMonthlyValid;
+
+    // Prioritas: Promo Harian (jika valid) -> Promo Bulanan (jika valid)
+    let activeType = null;
+    let discountType = 'percent';
+    let discountValue = 0;
+    let activeLabel = '';
+    let hasCountdown = false;
+
+    if (isDailyValid) {
+      activeType = 'daily';
+      discountType = dType === 'nominal' ? 'nominal' : 'percent';
+      discountValue = dNum;
+      activeLabel = promoLabel;
+      hasCountdown = isDeadlineValid;
+    } else if (isMonthlyValid) {
+      activeType = 'monthly';
+      discountType = mType === 'nominal' ? 'nominal' : 'percent';
+      discountValue = mNum;
+      activeLabel = 'Diskon Bulanan';
+      hasCountdown = false;
+    }
+
+    return {
+      isValid,
+      isMonthlyValid,
+      isDailyValid,
+      activeType,
+      discountType,
+      discountValue,
+      activeLabel,
+      hasCountdown,
+      isDeadlineValid,
+      countdownTimeLeft,
+      calculateDiscount: function(priceToDiscount) {
+        if (!isValid || priceToDiscount <= 0 || discountValue <= 0) {
+          return {
+            hasDiscount: false,
+            discPercent: 0,
+            discountedPrice: priceToDiscount,
+            strikePrice: 0
+          };
+        }
+        let percent = 0;
+        let discounted = priceToDiscount;
+        if (discountType === 'percent') {
+          percent = Math.min(100, Math.round(discountValue));
+          discounted = Math.round(priceToDiscount * (1 - (percent / 100)));
+        } else {
+          percent = priceToDiscount > 0 ? Math.min(100, Math.round((discountValue / priceToDiscount) * 100)) : 0;
+          discounted = Math.max(0, priceToDiscount - discountValue);
+        }
+        return {
+          hasDiscount: discounted < priceToDiscount,
+          discPercent: percent,
+          discountedPrice: discounted,
+          strikePrice: priceToDiscount
+        };
+      }
+    };
+  }
+
   function buildShopeeDrawerHtml(actionType) {
     const validMaterials = (materialsState || []).filter(m => m && m.name && m.name.trim() !== '');
     const validV2 = (finishingsState.main || []).filter(f => f && f.name && f.name.trim() !== '');
@@ -9549,25 +9746,18 @@ const ProductForm = (() => {
     const baseMin = rawMinUnit;
     const baseMax = rawMaxUnit;
 
-    // Diskon Bulanan
-    const hasDiscount = Boolean(primaryState.has_discount);
-    const discPercent = parseFloat(primaryState.discount_percent) || 0;
-    const simDiscCb = document.getElementById('cfg-simulate-countdown-preview');
-    const simDiscCbMob = document.getElementById('cfg-simulate-countdown-preview-mob');
-    const isSimulateDisc = Boolean((simDiscCb && simDiscCb.checked) || (simDiscCbMob && simDiscCbMob.checked));
-    const effHasDiscount = hasDiscount || isSimulateDisc;
+    // Task 2.10A Tahap 2: Diskon Step 2 murni dari promo aktual & harga valid
+    const isPriceValid = isActualProductPriceValid();
+    const promoInfo = getActivePromoValidationInfo();
+    const step2HasDiscount = Boolean(isPriceValid && promoInfo.isValid);
+    const effHasDiscount = step2HasDiscount;
 
     let effMinPrice = baseMin;
     let effMaxPrice = baseMax;
 
-    if (effHasDiscount) {
-      if (hasDiscount && discPercent > 0) {
-        effMinPrice = Math.round(baseMin * (1 - (discPercent / 100)));
-        effMaxPrice = Math.round(baseMax * (1 - (discPercent / 100)));
-      } else {
-        effMinPrice = Math.round(baseMin * 0.5);
-        effMaxPrice = Math.round(baseMax * 0.5);
-      }
+    if (step2HasDiscount) {
+      effMinPrice = promoInfo.calculateDiscount(baseMin).discountedPrice;
+      effMaxPrice = promoInfo.calculateDiscount(baseMax).discountedPrice;
     }
 
     const drawerPriceRangeString = formatPriceRangeHtmlWithSmallRp(effMinPrice, effMaxPrice);
@@ -9601,14 +9791,11 @@ const ProductForm = (() => {
     if (primaryState.has_custom_dimension && dimPricing.isValid) {
       const effUnitPrice = dimPricing.unitPrice;
       let unitPriceAfterDiscount = effUnitPrice;
-      let step2StrikePrice = effUnitPrice;
-      if (effHasDiscount) {
-        if (hasDiscount && discPercent > 0) {
-          unitPriceAfterDiscount = Math.round(effUnitPrice * (1 - (discPercent / 100)));
-        } else {
-          unitPriceAfterDiscount = Math.round(effUnitPrice * 0.5);
-          step2StrikePrice = effUnitPrice * 2;
-        }
+      let step2StrikePrice = 0;
+      if (step2HasDiscount && effUnitPrice > 0) {
+        const discRes = promoInfo.calculateDiscount(effUnitPrice);
+        unitPriceAfterDiscount = discRes.discountedPrice;
+        step2StrikePrice = discRes.strikePrice;
       }
       baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
@@ -9617,19 +9804,16 @@ const ProductForm = (() => {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
       headerUnitPrice = finalUnitPrice;
-      headerStrikeUnitPrice = (step2StrikePrice || effUnitPrice);
+      headerStrikeUnitPrice = step2StrikePrice ? step2StrikePrice : effUnitPrice;
       grandTotalPrice = finalUnitPrice * curQty;
-      grandStrikePrice = (step2StrikePrice || effUnitPrice) * curQty;
+      grandStrikePrice = step2StrikePrice ? (step2StrikePrice * curQty) : grandTotalPrice;
     } else {
       let unitPriceAfterDiscount = displayBasePrice;
-      let step2StrikePrice = displayBasePrice;
-      if (effHasDiscount) {
-        if (hasDiscount && discPercent > 0) {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
-        } else {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
-          step2StrikePrice = displayBasePrice * 2;
-        }
+      let step2StrikePrice = 0;
+      if (step2HasDiscount && displayBasePrice > 0) {
+        const discRes = promoInfo.calculateDiscount(displayBasePrice);
+        unitPriceAfterDiscount = discRes.discountedPrice;
+        step2StrikePrice = discRes.strikePrice;
       }
       baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
@@ -9638,10 +9822,10 @@ const ProductForm = (() => {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
       headerUnitPrice = finalUnitPrice + extrasActivePrice;
-      headerStrikeUnitPrice = (step2StrikePrice || displayBasePrice) + extrasActivePrice;
+      headerStrikeUnitPrice = (step2StrikePrice ? step2StrikePrice : displayBasePrice) + extrasActivePrice;
       const productSubtotal = finalUnitPrice * curQty;
       grandTotalPrice = productSubtotal + extrasActivePrice;
-      const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
+      const strikeSubtotal = (step2StrikePrice ? step2StrikePrice : displayBasePrice) * curQty;
       grandStrikePrice = strikeSubtotal + extrasActivePrice;
     }
 
@@ -10602,12 +10786,11 @@ const ProductForm = (() => {
     const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
     const displayBasePrice = primaryState.has_variants ? comboUnitBase : ((primaryState.price !== undefined && primaryState.price !== null && primaryState.price !== '' && !isNaN(parseFloat(primaryState.price))) ? parseFloat(primaryState.price) : comboUnitBase);
 
-    const hasDiscount = Boolean(primaryState.has_discount);
-    const discPercent = parseFloat(primaryState.discount_percent) || 0;
-    const simDiscCb = document.getElementById('cfg-simulate-countdown-preview');
-    const simDiscCbMob = document.getElementById('cfg-simulate-countdown-preview-mob');
-    const isSimulateDisc = Boolean((simDiscCb && simDiscCb.checked) || (simDiscCbMob && simDiscCbMob.checked));
-    const effHasDiscount = hasDiscount || isSimulateDisc;
+    // Task 2.10A Tahap 2: Diskon live drawer murni dari promo aktual & harga valid
+    const isPriceValid = isActualProductPriceValid();
+    const promoInfo = getActivePromoValidationInfo();
+    const step2HasDiscount = Boolean(isPriceValid && promoInfo.isValid);
+    const effHasDiscount = step2HasDiscount;
 
     const p1List = validMaterials.map(m => parseFloat(m.price) || 0);
     const minV1 = p1List.length > 0 ? Math.min(...p1List) : (parseFloat(primaryState.price) || 0);
@@ -10629,14 +10812,9 @@ const ProductForm = (() => {
     }
     let effMinPrice = minV1 + minV2 + minV3 + minV4;
     let effMaxPrice = maxV1 + maxV2 + maxV3 + maxV4;
-    if (effHasDiscount) {
-      if (hasDiscount && discPercent > 0) {
-        effMinPrice = Math.round(effMinPrice * (1 - (discPercent / 100)));
-        effMaxPrice = Math.round(effMaxPrice * (1 - (discPercent / 100)));
-      } else {
-        effMinPrice = Math.round(effMinPrice * 0.5);
-        effMaxPrice = Math.round(effMaxPrice * 0.5);
-      }
+    if (step2HasDiscount) {
+      effMinPrice = promoInfo.calculateDiscount(effMinPrice).discountedPrice;
+      effMaxPrice = promoInfo.calculateDiscount(effMaxPrice).discountedPrice;
     }
     const drawerPriceRangeString = formatPriceRangeHtmlWithSmallRp(effMinPrice, effMaxPrice);
 
@@ -10670,14 +10848,11 @@ const ProductForm = (() => {
     if (primaryState.has_custom_dimension && dimPricing.isValid) {
       const effUnitPrice = dimPricing.unitPrice;
       let unitPriceAfterDiscount = effUnitPrice;
-      let step2StrikePrice = effUnitPrice;
-      if (effHasDiscount) {
-        if (hasDiscount && discPercent > 0) {
-          unitPriceAfterDiscount = Math.round(effUnitPrice * (1 - (discPercent / 100)));
-        } else {
-          unitPriceAfterDiscount = Math.round(effUnitPrice * 0.5);
-          step2StrikePrice = effUnitPrice * 2;
-        }
+      let step2StrikePrice = 0;
+      if (step2HasDiscount && effUnitPrice > 0) {
+        const discRes = promoInfo.calculateDiscount(effUnitPrice);
+        unitPriceAfterDiscount = discRes.discountedPrice;
+        step2StrikePrice = discRes.strikePrice;
       }
       baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
@@ -10686,19 +10861,16 @@ const ProductForm = (() => {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
       headerUnitPrice = finalUnitPrice;
-      headerStrikeUnitPrice = (step2StrikePrice || effUnitPrice);
+      headerStrikeUnitPrice = step2StrikePrice ? step2StrikePrice : effUnitPrice;
       grandTotalPrice = finalUnitPrice * curQty;
-      grandStrikePrice = (step2StrikePrice || effUnitPrice) * curQty;
+      grandStrikePrice = step2StrikePrice ? (step2StrikePrice * curQty) : grandTotalPrice;
     } else {
       let unitPriceAfterDiscount = displayBasePrice;
-      let step2StrikePrice = displayBasePrice;
-      if (effHasDiscount) {
-        if (hasDiscount && discPercent > 0) {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
-        } else {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
-          step2StrikePrice = displayBasePrice * 2;
-        }
+      let step2StrikePrice = 0;
+      if (step2HasDiscount && displayBasePrice > 0) {
+        const discRes = promoInfo.calculateDiscount(displayBasePrice);
+        unitPriceAfterDiscount = discRes.discountedPrice;
+        step2StrikePrice = discRes.strikePrice;
       }
       baseUnitPriceAfterDiscount = unitPriceAfterDiscount;
       wholesaleInfo = getPreviewWholesaleDiscount(curQty, unitPriceAfterDiscount, rule.wholesale_tiers);
@@ -10707,10 +10879,10 @@ const ProductForm = (() => {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
       headerUnitPrice = finalUnitPrice + extrasActivePrice;
-      headerStrikeUnitPrice = (step2StrikePrice || displayBasePrice) + extrasActivePrice;
+      headerStrikeUnitPrice = (step2StrikePrice ? step2StrikePrice : displayBasePrice) + extrasActivePrice;
       const productSubtotal = finalUnitPrice * curQty;
       grandTotalPrice = productSubtotal + extrasActivePrice;
-      const strikeSubtotal = (step2StrikePrice || displayBasePrice) * curQty;
+      const strikeSubtotal = (step2StrikePrice ? step2StrikePrice : displayBasePrice) * curQty;
       grandStrikePrice = strikeSubtotal + extrasActivePrice;
     }
 
@@ -11915,28 +12087,16 @@ const ProductForm = (() => {
       }
     }
 
-    // 3. Hitung diskon promo harian / bulanan & simulasi
+    // 3. Hitung diskon promo harian / bulanan & simulasi (Task 2.10A Tahap 2)
+    const s1PromoInfo = getActivePromoValidationInfo();
     let hasDiscount = false;
     let discPercent = 0;
     let discountedPrice = basePrice;
-    const toggleDaily = document.getElementById('toggle-promo-daily') || document.getElementById('toggle-monthly-discount');
-    const isDiscChecked = toggleDaily ? toggleDaily.checked : (primaryState.has_daily_promo || primaryState.has_monthly_discount);
-    if (isDiscChecked && basePrice > 0) {
-      const discTypeSelect = document.getElementById('select-promo-discount-type') || document.getElementById('select-monthly-discount-type');
-      const discValInput = document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val');
-      const dType = discTypeSelect?.value || primaryState.discount_type || 'percent';
-      const rawDVal = discValInput ? discValInput.value : primaryState.discount_value;
-      const dVal = (rawDVal !== '' && rawDVal !== null && rawDVal !== undefined) ? (parseFloat(rawDVal) || 0) : 0;
-      if (dVal > 0) {
-        hasDiscount = true;
-        if (dType === 'percent') {
-          discPercent = Math.min(99, Math.round(dVal));
-          discountedPrice = Math.round(basePrice * (1 - (discPercent / 100)));
-        } else {
-          discPercent = basePrice > 0 ? Math.min(99, Math.round((dVal / basePrice) * 100)) : 0;
-          discountedPrice = Math.max(0, basePrice - dVal);
-        }
-      }
+    if (s1PromoInfo.isValid && basePrice > 0) {
+      const dRes = s1PromoInfo.calculateDiscount(basePrice);
+      hasDiscount = dRes.hasDiscount;
+      discPercent = dRes.discPercent;
+      discountedPrice = dRes.discountedPrice;
     }
 
     // 6. Config Styling & Display Toggles (Perbaiki Bug Kartu Live Preview Berwarna Hitam)
@@ -12820,20 +12980,29 @@ const ProductForm = (() => {
       const baseMin = rawMinUnit;
       const baseMax = rawMaxUnit;
 
+      // Task 2.10A Tahap 2: Validasi independen harga aktual & promo untuk Step 2
+      const isPriceValid = isActualProductPriceValid();
+      const step2PromoInfo = getActivePromoValidationInfo();
+      const step2HasDiscount = Boolean(isPriceValid && step2PromoInfo.isValid);
+
       let effMinPrice = baseMin;
       let effMaxPrice = baseMax;
-      let effMinStrike = baseMin;
-      let effMaxStrike = baseMax;
+      let effMinStrike = 0;
+      let effMaxStrike = 0;
+      let step2DiscPercent = 0;
 
-      if (effHasDiscount) {
-        if (hasDiscount && discPercent > 0) {
-          effMinPrice = Math.round(baseMin * (1 - (discPercent / 100)));
-          effMaxPrice = Math.round(baseMax * (1 - (discPercent / 100)));
-        } else {
-          effMinPrice = Math.round(baseMin * 0.5);
-          effMaxPrice = Math.round(baseMax * 0.5);
-          effMinStrike = baseMin * 2;
-          effMaxStrike = baseMax * 2;
+      if (step2HasDiscount) {
+        if (step2PromoInfo.discountType === 'percent') {
+          step2DiscPercent = Math.min(100, Math.round(step2PromoInfo.discountValue));
+        }
+        const minDisc = step2PromoInfo.calculateDiscount(baseMin);
+        const maxDisc = step2PromoInfo.calculateDiscount(baseMax);
+        effMinPrice = minDisc.discountedPrice;
+        effMaxPrice = maxDisc.discountedPrice;
+        effMinStrike = baseMin;
+        effMaxStrike = baseMax;
+        if (!step2DiscPercent && baseMin > 0) {
+          step2DiscPercent = minDisc.discPercent;
         }
       }
 
@@ -12841,17 +13010,21 @@ const ProductForm = (() => {
 
       // Hitung harga dasar kombinasi aktif (jika variasi dipilih atau produk tunggal)
       const comboUnitBase = v1Price + v2Price + v3Price + v4Price;
-      // PISAHKAN: displayBasePrice murni harga produk utama (TIDAK ditambah extrasActivePrice)
-      const displayBasePrice = comboUnitBase > 0 ? comboUnitBase : (parseFloat(primaryState.price || 0) || effFinalPrice);
+      const singlePriceInp = document.getElementById('input-single-price');
+      let singlePriceVal = singlePriceInp ? singlePriceInp.value : primaryState.price;
+      if (singlePriceVal === undefined || singlePriceVal === null || singlePriceVal === '') singlePriceVal = primaryState.price;
+      const singlePriceNum = (singlePriceVal !== undefined && singlePriceVal !== null && singlePriceVal !== '') ? (parseFloat(singlePriceVal) || 0) : 0;
+      // PISAHKAN: displayBasePrice murni harga produk utama (TIDAK menggunakan effFinalPrice simulasi Step 1)
+      const displayBasePrice = primaryState.has_variants ? comboUnitBase : singlePriceNum;
 
       let unitPriceAfterDiscount = displayBasePrice;
-      let step2StrikePrice = displayBasePrice;
-      if (effHasDiscount) {
-        if (hasDiscount && discPercent > 0) {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * (1 - (discPercent / 100)));
-        } else {
-          unitPriceAfterDiscount = Math.round(displayBasePrice * 0.5);
-          step2StrikePrice = displayBasePrice * 2;
+      let step2StrikePrice = 0;
+      if (step2HasDiscount && displayBasePrice > 0) {
+        const discRes = step2PromoInfo.calculateDiscount(displayBasePrice);
+        unitPriceAfterDiscount = discRes.discountedPrice;
+        step2StrikePrice = discRes.strikePrice;
+        if (!step2DiscPercent) {
+          step2DiscPercent = discRes.discPercent;
         }
       }
 
@@ -12884,7 +13057,7 @@ const ProductForm = (() => {
         finalUnitPrice = Math.max(0, unitPriceAfterDiscount - wholesaleInfo.discountPerPcs);
       }
       if (primaryState.has_variants && !isAllVariationsSelected) {
-        finalUnitPrice = effMinPrice || effFinalPrice;
+        finalUnitPrice = effMinPrice;
       }
 
       // RUMUS BENAR: Extras adalah biaya tambahan di luar Qty Global pesanan utama
@@ -13002,9 +13175,9 @@ const ProductForm = (() => {
                     <span class="text-[10px] font-semibold text-slate-400">Foto Cover</span>
                   </div>
                 `}
-                ${effHasDiscount ? `
+                ${(step2HasDiscount && step2DiscPercent > 0) ? `
                   <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-white bg-red-500 shadow-sm leading-none">
-                    Diskon ${effDiscPercent}%
+                    Diskon ${step2DiscPercent}%
                   </span>
                 ` : ''}
                 <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900/60 backdrop-blur-xs text-white">
@@ -13019,7 +13192,7 @@ const ProductForm = (() => {
                     <span class="mini-pdp-main-price text-sm sm:text-base font-semibold truncate" style="color: var(--color-primary);">
                       ${displayPriceString}
                     </span>
-                    ${effHasDiscount ? `
+                    ${(step2HasDiscount && displayStrikePriceString) ? `
                       <span class="text-[11px] line-through text-slate-400 font-normal shrink-0">
                         ${displayStrikePriceString}
                       </span>
@@ -38186,11 +38359,15 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     closeAllPreviewModals: hidePreviewTestModeAlert,
     resetTestModeToPreview,
     deactivatePreviewTestMode: resetTestModeToPreview,
-    getIsPreviewTestMode: () => isPreviewTestMode
+    getIsPreviewTestMode: () => isPreviewTestMode,
+    isActualProductPriceValid,
+    getActivePromoValidationInfo
   };
 })();
 
 window.ProductForm = ProductForm;
+window.isActualProductPriceValid = ProductForm.isActualProductPriceValid;
+window.getActivePromoValidationInfo = ProductForm.getActivePromoValidationInfo;
 window.resetTestModeToPreview = ProductForm.resetTestModeToPreview;
 window.deactivatePreviewTestMode = ProductForm.deactivatePreviewTestMode;
 window.isSimulateDiscountActive = ProductForm.isSimulateDiscountActive;

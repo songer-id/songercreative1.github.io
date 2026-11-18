@@ -1054,6 +1054,23 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Pengujian Lintas Viewport**:
       - Lolos 100% pada 14 skenario pengujian komprehensif Playwright di 4 ukuran viewport: Desktop 1366x768, Desktop 1024x768, Mobile 390x844 (iPhone 12/13/14), dan Mobile 375x667 (iPhone SE) dengan 0 failures dan 0 JavaScript console errors.
 
+  - **Perbaikan Validasi Simulasi Diskon, Harga Produk, dan Promo Step 1–Step 2 (Task 2.10A Tahap 2)**:
+    - **Tujuan & Ruang Lingkup**:
+      - **Isolasi State Simulasi Step 1**: Mencegah kebocoran harga simulasi Step 1 (harga contoh Rp150.000 / Rp75.000 atau diskon buatan 50%) ke dalam pratinjau Detail Produk (Mini PDP) Step 2 saat seller berpindah langkah.
+      - **Validasi Harga Produk Aktual**:
+        - *Produk Tanpa Variasi*: Harga valid jika harga aktual > Rp0 (bersumber dari `#input-single-price`, `primaryState.price`, atau `materialsState[0].price`).
+        - *Produk dengan Variasi*: Harga valid jika minimal terdapat **SATU** kombinasi variasi aktif yang menghasilkan harga total > Rp0. Kombinasi lain bernilai Rp0 tidak menggugurkan kelayakan. Tidak menggunakan `baseMin > 0` sebagai syarat tunggal.
+      - **Validasi Promo Aktual**:
+        - *Auto Promo Bulanan*: Valid jika `auto_monthly_promo === true`, `monthly_discount_value > 0`, dan persentase $\le 100\%$.
+        - *Promo Harian*: Valid jika `has_daily_promo === true`, `discount_value > 0`, `monthly_promo_label` tidak kosong, dan persentase $\le 100\%$.
+        - Mendukung kedua jenis promo secara setara dengan prioritas promo harian saat keduanya aktif.
+      - **Aturan Render Step 2**: Diskon di Step 2 hanya ditampilkan jika harga produk valid DAN konfigurasi promo valid. Jika salah satu tidak terpenuhi, Step 2 menampilkan harga normal tanpa diskon palsu, tanpa harga coret palsu, dan tanpa badge diskon palsu.
+      - **Pembersihan Fallback `effFinalPrice`**: Mengeliminasi fallback `displayBasePrice` ke `effFinalPrice` dan `finalUnitPrice` ke `effFinalPrice` pada Step 2.
+      - **Perlindungan State Simulasi Step 1**: Nilai `previewSimulationState.isDiscountSimulated` tidak di-reset ke `false` saat berpindah ke Step 2. Saat seller kembali ke Step 1, simulasi tetap aktif sesuai pengaturan seller sebelumnya.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% pada 12 skenario pengujian komprehensif Playwright (`tests/task210a-tahap2.spec.js`) mencakup seluruh 9 skenario wajib di viewport Desktop 1366x768 dan Mobile 390x844 dengan 0 failures dan 0 JavaScript console errors.
+      - Lolos 100% pada regression suite Task 2.10A Tahap 1 (`tests/task210a-tahap1.spec.js` - 14 passed).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
