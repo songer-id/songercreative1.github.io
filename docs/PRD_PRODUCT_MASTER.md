@@ -1162,6 +1162,24 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Struktur DOM dan interaksi dinamis (toggle PO, penambahan baris, placeholder, pembaruan counter `1 / 10` -> `2 / 10`, penghapusan baris hingga kolaps kembali ke tombol) telah terverifikasi sukses (100% PASS).
 
+  - **Penyederhanaan Toolbar Deskripsi Produk (Task 2.10C-4)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyederhanakan toolbar Rich Text Editor pada form Deskripsi Produk di Step 2 Card 5 (`#card-step2-description`) agar ringkas, bersih, dan fokus pada elemen format esensial.
+      - Menghapus kontrol toolbar yang redundan: Undo, Redo, Aa (Format Normal), Rata Kiri, Rata Tengah, dan Rata Kanan.
+      - Mengganti hierarki tombol heading dari H1/H2 menjadi H2/H3 (`format-h2` dan `format-h3`), dengan penerapan tag heading semantik aktual (`<h2>` dan `<h3>`).
+    - **Perilaku Format Teks & Heading Toggle**:
+      - Jika tombol H2 aktif, teks diformat menggunakan Heading 2 (`<h2>` untuk blok utuh atau `<span class="text-h2">` untuk seleksi inline).
+      - Jika tombol H3 aktif, teks diformat menggunakan Heading 3 (`<h3>` untuk blok utuh atau `<span class="text-h3">` untuk seleksi inline).
+      - Menonaktifkan heading: Mengklik kembali tombol heading yang sedang aktif akan otomatis mengembalikan teks ke format paragraf Normal (`<p>`) tanpa membutuhkan tombol Aa.
+      - Jika H2 maupun H3 tidak aktif, teks secara default berstatus paragraf Normal.
+      - Perataan teks: Seluruh teks pada editor Deskripsi Produk terkunci selalu rata kiri (`text-align: left !important;`), tanpa tombol pilihan perataan pada toolbar.
+    - **Konsistensi Tombol & Konten yang Dipertahankan**:
+      - Mempertahankan seluruh tombol format lainnya: Bold, Italic, Underline, Strikethrough, Bullet List, Numbered List, Link, dan Clear Format.
+      - Mempertahankan fitur *Buat Deskripsi dengan AI*, mekanisme penyimpanan deskripsi (`#input-prod-desc`, state `primaryState.description`, dan database/draf).
+      - Menjamin sanitasi HTML (`sanitizeProductDescriptionHtml`) mendukung tag `h2`, `h3`, dan kelas `text-h3`/`rte-h3` dengan aman (XSS safe).
+    - **Verifikasi Fungsionalitas**:
+      - Seluruh 6 poin verifikasi (tombol terhapus tidak tampil, H2/H3 aktif dan semantik benar, toggle off kembali ke Normal `<p>`, teks rata kiri, serta penyimpanan deskripsi) terverifikasi 100% PASS.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

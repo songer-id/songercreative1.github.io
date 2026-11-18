@@ -18843,26 +18843,13 @@ const ProductForm = (() => {
               <div class="rich-text-editor-container border border-slate-300 rounded-md overflow-hidden bg-white focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] transition" id="rich-text-editor-wrapper">
                 <!-- Toolbar Format Deskripsi -->
                 <div class="rich-text-toolbar flex items-center flex-wrap gap-1 sm:gap-1.5 p-1.5 sm:p-2 bg-slate-50 border-b border-slate-200 select-none text-slate-700" role="toolbar" aria-label="Toolbar Format Deskripsi">
-                  <!-- Group 1: Undo / Redo -->
+                  <!-- Group Heading: H2 | H3 -->
                   <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="undo" title="Undo (Membatalkan perubahan)" aria-label="Undo">
-                      <i class="bi bi-arrow-counterclockwise text-xs sm:text-sm"></i>
-                    </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="redo" title="Redo (Mengulangi perubahan)" aria-label="Redo">
-                      <i class="bi bi-arrow-clockwise text-xs sm:text-sm"></i>
-                    </button>
-                  </div>
-
-                  <!-- Group Heading & Ukuran: H1 | H2 | Aa -->
-                  <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
-                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold text-xs select-none" data-command="format-h1" title="Heading 1 (Judul utama)" aria-label="Heading 1">
-                      H1
-                    </button>
-                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold text-xs select-none" data-command="format-h2" title="Heading 2 (Subjudul)" aria-label="Heading 2">
+                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold text-xs select-none" data-command="format-h2" title="Heading 2 (Judul bagian)" aria-label="Heading 2">
                       H2
                     </button>
-                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-semibold text-xs select-none" data-command="format-p" title="Teks Normal (Paragraf)" aria-label="Teks Normal">
-                      Aa
+                    <button type="button" class="rte-btn rte-btn-heading w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer font-bold text-xs select-none" data-command="format-h3" title="Heading 3 (Subjudul)" aria-label="Heading 3">
+                      H3
                     </button>
                   </div>
 
@@ -18882,20 +18869,7 @@ const ProductForm = (() => {
                     </button>
                   </div>
 
-                  <!-- Group 3: Alignment (Left, Center, Right) -->
-                  <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="justifyLeft" title="Align Left (Rata kiri)" aria-label="Align Left">
-                      <i class="bi bi-text-left text-xs sm:text-sm"></i>
-                    </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="justifyCenter" title="Align Center (Rata tengah)" aria-label="Align Center">
-                      <i class="bi bi-text-center text-xs sm:text-sm"></i>
-                    </button>
-                    <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="justifyRight" title="Align Right (Rata kanan)" aria-label="Align Right">
-                      <i class="bi bi-text-right text-xs sm:text-sm"></i>
-                    </button>
-                  </div>
-
-                  <!-- Group 4: Lists (Bullet, Numbered) -->
+                  <!-- Group 3: Lists (Bullet, Numbered) -->
                   <div class="rte-group flex items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 mr-0.5 sm:mr-1 shrink-0">
                     <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" data-command="insertUnorderedList" title="Bullet List (Daftar berpoin)" aria-label="Bullet List">
                       <i class="bi bi-list-ul text-xs sm:text-sm"></i>
@@ -18905,7 +18879,7 @@ const ProductForm = (() => {
                     </button>
                   </div>
 
-                  <!-- Group 5: Insert Link & Clear Format -->
+                  <!-- Group 4: Insert Link & Clear Format -->
                   <div class="rte-group flex items-center gap-0.5 shrink-0">
                     <button type="button" class="rte-btn w-7 h-7 sm:w-8 sm:h-8 rounded inline-flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition cursor-pointer select-none" id="btn-rte-link" data-command="custom-link" title="Link (Menambahkan tautan)" aria-label="Link">
                       <i class="bi bi-link-45deg text-xs sm:text-sm"></i>
@@ -37623,11 +37597,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const root = doc.body.firstElementChild || doc.body;
 
         const allowedTags = new Set([
-          'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
+          'h1', 'h2', 'h3', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
           'ul', 'ol', 'li', 'a', 'span', 'div', 'blockquote', 'hr'
         ]);
 
         const allowedAligns = new Set(['left', 'center', 'right', 'justify']);
+        const allowedClasses = new Set(['text-h1', 'text-h2', 'text-h3', 'rte-h1', 'rte-h2', 'rte-h3', 'product-description-content']);
 
         function sanitizeNode(node) {
           const children = Array.from(node.childNodes);
@@ -37672,6 +37647,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
                     child.setAttribute('rel', 'noopener noreferrer');
                   } else if (name !== 'title') {
                     child.removeAttribute(attr.name);
+                  }
+                } else if (name === 'class') {
+                  const cleanList = val.split(/\s+/).filter(c => allowedClasses.has(c));
+                  if (cleanList.length > 0) {
+                    child.setAttribute('class', cleanList.join(' '));
+                  } else {
+                    child.removeAttribute('class');
                   }
                 } else if (name === 'style') {
                   const alignMatch = val.match(/text-align\s*:\s*(left|center|right|justify)/i);
@@ -37842,7 +37824,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       let cur = (node && node.nodeType === 1) ? node : (node ? node.parentElement : null);
       while (cur && cur !== editor) {
         const tag = cur.tagName ? cur.tagName.toLowerCase() : '';
-        if (['p', 'h1', 'h2', 'div', 'li', 'blockquote'].includes(tag)) {
+        if (['p', 'h1', 'h2', 'h3', 'div', 'li', 'blockquote'].includes(tag)) {
           return cur;
         }
         cur = cur.parentElement;
@@ -37854,7 +37836,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       editor.focus();
       const sel = window.getSelection ? window.getSelection() : null;
       if (!sel || sel.rangeCount === 0) {
-        if (type === 'h1' || type === 'h2') {
+        if (type === 'h2' || type === 'h3') {
           try { document.execCommand('formatBlock', false, `<${type}>`); } catch (_) {
             try { document.execCommand('formatBlock', false, type); } catch (_) {}
           }
@@ -37889,21 +37871,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
             try { document.execCommand('formatBlock', false, 'p'); } catch (_) {}
           }
           if (blockEl) {
-            blockEl.querySelectorAll('.text-h1, .text-h2, .rte-h1, .rte-h2').forEach(span => {
+            blockEl.querySelectorAll('.text-h1, .text-h2, .text-h3, .rte-h1, .rte-h2, .rte-h3').forEach(span => {
               const parent = span.parentNode;
               while (span.firstChild) parent.insertBefore(span.firstChild, parent);
               span.remove();
             });
-          }
-        } else if (type === 'h1') {
-          if (currentTag === 'h1') {
-            try { document.execCommand('formatBlock', false, '<p>'); } catch (_) {
-              try { document.execCommand('formatBlock', false, 'p'); } catch (_) {}
-            }
-          } else {
-            try { document.execCommand('formatBlock', false, '<h1>'); } catch (_) {
-              try { document.execCommand('formatBlock', false, 'h1'); } catch (_) {}
-            }
           }
         } else if (type === 'h2') {
           if (currentTag === 'h2') {
@@ -37915,6 +37887,30 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               try { document.execCommand('formatBlock', false, 'h2'); } catch (_) {}
             }
           }
+          if (blockEl) {
+            blockEl.querySelectorAll('.text-h1, .text-h2, .text-h3, .rte-h1, .rte-h2, .rte-h3').forEach(span => {
+              const parent = span.parentNode;
+              while (span.firstChild) parent.insertBefore(span.firstChild, parent);
+              span.remove();
+            });
+          }
+        } else if (type === 'h3') {
+          if (currentTag === 'h3') {
+            try { document.execCommand('formatBlock', false, '<p>'); } catch (_) {
+              try { document.execCommand('formatBlock', false, 'p'); } catch (_) {}
+            }
+          } else {
+            try { document.execCommand('formatBlock', false, '<h3>'); } catch (_) {
+              try { document.execCommand('formatBlock', false, 'h3'); } catch (_) {}
+            }
+          }
+          if (blockEl) {
+            blockEl.querySelectorAll('.text-h1, .text-h2, .text-h3, .rte-h1, .rte-h2, .rte-h3').forEach(span => {
+              const parent = span.parentNode;
+              while (span.firstChild) parent.insertBefore(span.firstChild, parent);
+              span.remove();
+            });
+          }
         }
       } else {
         // Seleksi sebagian teks (inline)
@@ -37924,12 +37920,27 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const tempDiv = document.createElement('div');
         tempDiv.appendChild(range.cloneContents());
         let innerHtml = tempDiv.innerHTML;
-        innerHtml = innerHtml.replace(/<span class="(?:text|rte)-h[12]">(.*?)<\/span>/gi, '$1');
+        innerHtml = innerHtml.replace(/<span class="(?:text|rte)-h[123]">(.*?)<\/span>/gi, '$1');
 
-        if (type === 'p') {
+        let currentInlineHeading = null;
+        let pScan = commonNode.nodeType === 1 ? commonNode : commonNode.parentElement;
+        while (pScan && pScan !== editor) {
+          if (pScan.classList) {
+            if (pScan.classList.contains('text-h2') || pScan.classList.contains('rte-h2')) {
+              currentInlineHeading = 'h2';
+              break;
+            } else if (pScan.classList.contains('text-h3') || pScan.classList.contains('rte-h3')) {
+              currentInlineHeading = 'h3';
+              break;
+            }
+          }
+          pScan = pScan.parentElement;
+        }
+
+        if (type === 'p' || currentInlineHeading === type) {
           let parentSpan = commonNode.nodeType === 1 ? commonNode : commonNode.parentElement;
           while (parentSpan && parentSpan !== editor) {
-            if (parentSpan.classList && (parentSpan.classList.contains('text-h1') || parentSpan.classList.contains('text-h2') || parentSpan.classList.contains('rte-h1') || parentSpan.classList.contains('rte-h2'))) {
+            if (parentSpan.classList && (parentSpan.classList.contains('text-h1') || parentSpan.classList.contains('text-h2') || parentSpan.classList.contains('text-h3') || parentSpan.classList.contains('rte-h1') || parentSpan.classList.contains('rte-h2') || parentSpan.classList.contains('rte-h3'))) {
               const pNode = parentSpan.parentNode;
               while (parentSpan.firstChild) pNode.insertBefore(parentSpan.firstChild, parentSpan);
               parentSpan.remove();
@@ -37945,7 +37956,17 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
               range.insertNode(range.createContextualFragment(innerHtml));
             }
           }
-        } else if (type === 'h1' || type === 'h2') {
+        } else if (type === 'h2' || type === 'h3') {
+          let parentSpan = commonNode.nodeType === 1 ? commonNode : commonNode.parentElement;
+          while (parentSpan && parentSpan !== editor) {
+            if (parentSpan.classList && (parentSpan.classList.contains('text-h1') || parentSpan.classList.contains('text-h2') || parentSpan.classList.contains('text-h3') || parentSpan.classList.contains('rte-h1') || parentSpan.classList.contains('rte-h2') || parentSpan.classList.contains('rte-h3'))) {
+              const pNode = parentSpan.parentNode;
+              while (parentSpan.firstChild) pNode.insertBefore(parentSpan.firstChild, parentSpan);
+              parentSpan.remove();
+              break;
+            }
+            parentSpan = parentSpan.parentElement;
+          }
           const clsName = `text-${type}`;
           const wrapped = `<span class="${clsName}">${innerHtml}</span>`;
           try {
@@ -37965,7 +37986,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     function updateToolbarActiveStates() {
       if (!toolbar) return;
-      const stateCommands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
+      const stateCommands = ['bold', 'italic', 'underline', 'strikeThrough', 'insertUnorderedList', 'insertOrderedList'];
       stateCommands.forEach(cmd => {
         const btn = toolbar.querySelector(`[data-command="${cmd}"]`);
         if (btn) {
@@ -37977,13 +37998,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
       });
 
-      // Deteksi status Heading: H1, H2, atau Aa (Normal)
-      const btnH1 = toolbar.querySelector('[data-command="format-h1"]');
+      // Deteksi status Heading: H2, H3
       const btnH2 = toolbar.querySelector('[data-command="format-h2"]');
-      const btnAa = toolbar.querySelector('[data-command="format-p"]');
+      const btnH3 = toolbar.querySelector('[data-command="format-h3"]');
 
-      let isH1 = false;
       let isH2 = false;
+      let isH3 = false;
 
       try {
         const sel = window.getSelection ? window.getSelection() : null;
@@ -37992,11 +38012,11 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           let cur = (node && node.nodeType === 1) ? node : (node ? node.parentElement : null);
           while (cur && cur !== editor) {
             const tag = cur.tagName ? cur.tagName.toLowerCase() : '';
-            if (tag === 'h1' || (cur.classList && (cur.classList.contains('text-h1') || cur.classList.contains('rte-h1')))) {
-              isH1 = true;
-              break;
-            } else if (tag === 'h2' || (cur.classList && (cur.classList.contains('text-h2') || cur.classList.contains('rte-h2')))) {
+            if (tag === 'h2' || (cur.classList && (cur.classList.contains('text-h2') || cur.classList.contains('rte-h2')))) {
               isH2 = true;
+              break;
+            } else if (tag === 'h3' || (cur.classList && (cur.classList.contains('text-h3') || cur.classList.contains('rte-h3')))) {
+              isH3 = true;
               break;
             }
             cur = cur.parentElement;
@@ -38004,9 +38024,8 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
       } catch (_) {}
 
-      if (btnH1) btnH1.classList.toggle('is-active', isH1);
       if (btnH2) btnH2.classList.toggle('is-active', isH2);
-      if (btnAa) btnAa.classList.toggle('is-active', !isH1 && !isH2);
+      if (btnH3) btnH3.classList.toggle('is-active', isH3);
 
       const linkBtn = document.getElementById('btn-rte-link');
       if (linkBtn) {
@@ -38071,16 +38090,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           return;
         }
 
-        if (cmd === 'format-h1') {
-          applyHeadingOrSize('h1');
-          return;
-        }
         if (cmd === 'format-h2') {
           applyHeadingOrSize('h2');
           return;
         }
-        if (cmd === 'format-p') {
-          applyHeadingOrSize('p');
+        if (cmd === 'format-h3') {
+          applyHeadingOrSize('h3');
           return;
         }
 

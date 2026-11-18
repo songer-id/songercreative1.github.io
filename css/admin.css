@@ -4371,11 +4371,27 @@ button:focus-visible {
   font-size: 13px;
   line-height: 1.6;
   color: #1e293b;
+  text-align: left !important;
   outline: none;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+.rich-text-editor-content p,
+.rich-text-editor-content h1,
+.rich-text-editor-content h2,
+.rich-text-editor-content h3,
+.rich-text-editor-content div,
+.rich-text-editor-content li,
+#card-step2-description .rich-text-editor-content p,
+#card-step2-description .rich-text-editor-content h1,
+#card-step2-description .rich-text-editor-content h2,
+#card-step2-description .rich-text-editor-content h3,
+#card-step2-description .rich-text-editor-content div,
+#card-step2-description .rich-text-editor-content li {
+  text-align: left !important;
 }
 
 @media (min-width: 640px) {
@@ -4443,7 +4459,7 @@ button:focus-visible {
   text-decoration: line-through !important;
 }
 
-/* Headings H1, H2 & Ukuran Inline Editor (Neutral Slate - Konsisten dengan Tema) */
+/* Headings H1, H2, H3 & Ukuran Inline Editor (Neutral Slate - Konsisten dengan Tema) */
 .rich-text-editor-content h1,
 .rich-text-editor-content .text-h1,
 .rich-text-editor-content .rte-h1,
@@ -4456,6 +4472,7 @@ button:focus-visible {
   color: #0f172a !important;
   margin-top: 0.65rem !important;
   margin-bottom: 0.35rem !important;
+  text-align: left !important;
 }
 
 .rich-text-editor-content h2,
@@ -4470,6 +4487,22 @@ button:focus-visible {
   color: #1e293b !important;
   margin-top: 0.5rem !important;
   margin-bottom: 0.25rem !important;
+  text-align: left !important;
+}
+
+.rich-text-editor-content h3,
+.rich-text-editor-content .text-h3,
+.rich-text-editor-content .rte-h3,
+#card-step2-description .rich-text-editor-content h3,
+#card-step2-description .rich-text-editor-content .text-h3,
+#card-step2-description .rich-text-editor-content .rte-h3 {
+  font-size: 1.025rem !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  color: #334155 !important;
+  margin-top: 0.45rem !important;
+  margin-bottom: 0.2rem !important;
+  text-align: left !important;
 }
 
 .rich-text-editor-content span.text-h1,
@@ -4492,6 +4525,17 @@ button:focus-visible {
   display: inline !important;
   margin: 0 !important;
   color: #1e293b !important;
+}
+
+.rich-text-editor-content span.text-h3,
+.rich-text-editor-content span.rte-h3,
+#card-step2-description .rich-text-editor-content span.text-h3,
+#card-step2-description .rich-text-editor-content span.rte-h3 {
+  font-size: 1.05em !important;
+  font-weight: 600 !important;
+  display: inline !important;
+  margin: 0 !important;
+  color: #334155 !important;
 }
 
 .rich-text-editor-content span.text-p,

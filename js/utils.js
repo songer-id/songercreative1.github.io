@@ -333,12 +333,12 @@
         const root = doc.body.firstElementChild || doc.body;
 
         const allowedTags = new Set([
-          'h1', 'h2', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
+          'h1', 'h2', 'h3', 'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
           'ul', 'ol', 'li', 'a', 'span', 'div', 'blockquote', 'hr'
         ]);
 
         const allowedAligns = new Set(['left', 'center', 'right', 'justify']);
-        const allowedClasses = new Set(['text-h1', 'text-h2', 'rte-h1', 'rte-h2', 'product-description-content']);
+        const allowedClasses = new Set(['text-h1', 'text-h2', 'text-h3', 'rte-h1', 'rte-h2', 'rte-h3', 'product-description-content']);
 
         function sanitizeNode(node) {
           const children = Array.from(node.childNodes);

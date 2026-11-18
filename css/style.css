@@ -1544,7 +1544,12 @@ body.visual-edit-active [data-section]:hover {
   text-decoration: line-through !important;
 }
 
-/* Headings H1, H2 & Ukuran Inline (PDP & Storefront) */
+/* Headings H1, H2, H3 & Ukuran Inline (PDP & Storefront) */
+#pdp-full-description,
+.product-description-content {
+  text-align: left !important;
+}
+
 #pdp-full-description h1,
 .product-description-content h1,
 #pdp-full-description .text-h1,
@@ -1557,6 +1562,7 @@ body.visual-edit-active [data-section]:hover {
   color: #0f172a !important;
   margin-top: 0.75rem !important;
   margin-bottom: 0.35rem !important;
+  text-align: left !important;
 }
 
 #pdp-full-description h2,
@@ -1571,6 +1577,22 @@ body.visual-edit-active [data-section]:hover {
   color: #1e293b !important;
   margin-top: 0.5rem !important;
   margin-bottom: 0.25rem !important;
+  text-align: left !important;
+}
+
+#pdp-full-description h3,
+.product-description-content h3,
+#pdp-full-description .text-h3,
+.product-description-content .text-h3,
+#pdp-full-description .rte-h3,
+.product-description-content .rte-h3 {
+  font-size: 1.025rem !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  color: #334155 !important;
+  margin-top: 0.45rem !important;
+  margin-bottom: 0.2rem !important;
+  text-align: left !important;
 }
 
 #pdp-full-description span.text-h1,
@@ -1593,4 +1615,15 @@ body.visual-edit-active [data-section]:hover {
   display: inline !important;
   margin: 0 !important;
   color: #1e293b !important;
+}
+
+#pdp-full-description span.text-h3,
+.product-description-content span.text-h3,
+#pdp-full-description span.rte-h3,
+.product-description-content span.rte-h3 {
+  font-size: 1.05em !important;
+  font-weight: 600 !important;
+  display: inline !important;
+  margin: 0 !important;
+  color: #334155 !important;
 }
