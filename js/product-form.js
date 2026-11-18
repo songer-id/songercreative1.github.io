@@ -2455,7 +2455,8 @@ const ProductForm = (() => {
       'text-info': false,
       badge: false,
       promo: false,
-      footer: true
+      footer: true,
+      others: true
     };
     previewTestState.sidebarTab = 'preview';
     previewTestState.isDrawerOpen = false;
@@ -2475,6 +2476,9 @@ const ProductForm = (() => {
       name: '',
       brand: '',
       product_origin: '',
+      sku: '',
+      barcode: '',
+      custom_specs: [],
       warranty_unit: 'Tidak Ada Garansi',
       warranty_duration: '',
       warranty_period: 'Tidak Ada Garansi',
@@ -2706,6 +2710,8 @@ const ProductForm = (() => {
         has_wholesale: Boolean(primaryState.has_wholesale),
         wholesale_tiers: Array.isArray(primaryState.wholesale_tiers) ? primaryState.wholesale_tiers : [],
         has_custom_labels: Boolean(primaryState.has_custom_labels),
+        sku: primaryState.sku || '',
+        barcode: primaryState.barcode || '',
         custom_labels: Array.isArray(primaryState.custom_labels) ? primaryState.custom_labels : [],
         custom_specs: Array.isArray(primaryState.custom_specs) ? primaryState.custom_specs : [],
         size_guide: primaryState.size_guide ? JSON.stringify(primaryState.size_guide) : null,
@@ -2736,8 +2742,9 @@ const ProductForm = (() => {
     if (primaryState.description && primaryState.description.trim() !== '') return true;
     if (primaryState.brand && primaryState.brand.trim() !== '') return true;
     if (primaryState.product_origin && primaryState.product_origin.trim() !== '') return true;
+    if (primaryState.sku && primaryState.sku.trim() !== '') return true;
     if (Array.isArray(primaryState.custom_labels) && primaryState.custom_labels.some(l => l && l.trim())) return true;
-    if (Array.isArray(primaryState.custom_specs) && primaryState.custom_specs.some(s => s && (s.title?.trim() || s.desc?.trim()))) return true;
+    if (Array.isArray(primaryState.custom_specs) && primaryState.custom_specs.some(s => s && (s.title?.trim() || s.desc?.trim() || s.value?.trim()))) return true;
     if (primaryState.size_guide && primaryState.size_guide.enabled) return true;
     if (Array.isArray(materialsState) && materialsState.some(m => (m.price > 0 || m.cost_price > 0 || (m.name && m.name !== 'Produk Standar')))) return true;
     return false;
@@ -3844,6 +3851,42 @@ const ProductForm = (() => {
                       </div>
                     </div>
 
+                    <!-- Input 8: Lainnya (Atribut Spesifikasi Tambahan & SKU) -->
+                    <div id="section-step1-input8-others" class="space-y-4">
+                      <hr class="border-slate-100" />
+                      <div id="accordion-group-others" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                        <button type="button" id="btn-accordion-others" aria-expanded="${Boolean(cardAccordionState.others)}" aria-controls="accordion-body-others" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2.5 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="others">
+                          <span class="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+                            <i class="bi bi-sliders text-emerald-600"></i>
+                            <span>Lainnya</span>
+                            <span class="text-[10px] font-normal text-slate-500 ml-1">Atribut Spesifikasi & SKU</span>
+                          </span>
+                          <i id="accordion-icon-others" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 ${cardAccordionState.others ? 'rotate-180' : ''}"></i>
+                        </button>
+                        <div id="accordion-body-others" class="${cardAccordionState.others ? '' : 'hidden'} p-3.5 border-t border-slate-100 space-y-4" role="region" aria-labelledby="btn-accordion-others">
+                          <!-- Input SKU Induk -->
+                          <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                              <label for="input-prod-sku" class="block text-xs font-bold text-slate-800">SKU Induk (Opsional)</label>
+                              <span class="text-[10px] text-slate-400 font-mono">Kode SKU produk</span>
+                            </div>
+                            <input
+                              type="text"
+                              id="input-prod-sku"
+                              value="${escapeHtml(primaryState.sku || '')}"
+                              placeholder="Contoh: SKU-PROD-001"
+                              class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-mono outline-none focus:border-[var(--color-primary)] bg-white text-slate-800"
+                            />
+                          </div>
+
+                          <!-- Tabel Atribut & Spesifikasi Tambahan Manual Seller -->
+                          <div class="pt-1 border-t border-slate-100">
+                            ${renderCustomSpecsTableHtml()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
@@ -4333,7 +4376,7 @@ const ProductForm = (() => {
 
         <!-- MOBILE BOTTOM SHEET / DRAWER -->
         <div id="mobile-preview-backdrop" class="lg:hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[90] hidden transition-opacity"></div>
-        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] ${currentStep === 1 ? '' : 'bg-white'} rounded-t-2xl rounded-b-none overflow-hidden shadow-2xl border-0 max-h-[88dvh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out" style="${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
+        <div id="mobile-preview-sheet" class="lg:hidden fixed inset-x-0 bottom-0 z-[95] pointer-events-none ${currentStep === 1 ? '' : 'bg-white'} rounded-t-2xl rounded-b-none overflow-hidden shadow-2xl border-0 max-h-[88dvh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out" style="visibility: hidden; pointer-events: none; ${currentStep === 1 ? `background-color: ${getThemeBodyColor()};` : ''}">
           <div id="mobile-preview-header" class="p-2.5 px-3 border-b border-slate-200 flex items-start justify-between shrink-0 bg-slate-50 gap-2">
             <div id="mobile-preview-header-content" class="flex-1 min-w-0">
               ${getPreviewHeaderHtml(currentStep, true)}
@@ -4927,7 +4970,8 @@ const ProductForm = (() => {
     'text-info': false,
     badge: false,
     promo: false,
-    footer: true
+    footer: true,
+    others: true
   };
 
   function toggleCardAccordion(groupKey) {
@@ -4938,7 +4982,7 @@ const ProductForm = (() => {
   }
 
   function syncCardAccordionDOM() {
-    const groups = ['frame', 'text-info', 'badge', 'promo', 'footer'];
+    const groups = ['frame', 'text-info', 'badge', 'promo', 'footer', 'others'];
     groups.forEach(key => {
       const isOpen = Boolean(cardAccordionState[key]);
       const btnDesk = document.getElementById(`btn-accordion-${key}`);
@@ -15758,6 +15802,10 @@ const ProductForm = (() => {
             <span>Tambah Baris Spesifikasi</span>
           </button>
         </div>
+
+        <datalist id="datalist-spec-titles">
+          ${SPEC_TITLE_RECOMMENDATIONS.map(t => `<option value="${escapeHtml(t)}"></option>`).join('')}
+        </datalist>
       </div>
     `;
   }
@@ -18942,8 +18990,8 @@ const ProductForm = (() => {
               <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Spesifikasi</h2>
             </div>
 
-            <!-- Kondisi, SKU Induk, Barcode -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1">
+            <!-- Kondisi & Barcode -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div>
                 <label for="input-prod-condition" class="block text-xs font-bold text-slate-800 mb-1">Kondisi Produk:</label>
                 <!-- Accordion Input/Pilih Kondisi Produk -->
@@ -19000,11 +19048,6 @@ const ProductForm = (() => {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <label for="input-prod-sku" class="block text-xs font-bold text-slate-800 mb-1">SKU Induk (Opsional):</label>
-                <input type="text" id="input-prod-sku" value="${escapeHtml(primaryState.sku || '')}" placeholder="SKU-XXXX" class="w-full px-3 py-2 rounded-md border border-slate-300 text-xs font-mono outline-none" />
               </div>
 
               <div>
@@ -19198,10 +19241,6 @@ const ProductForm = (() => {
                 </div>
               </div>
 
-              <!-- Tabel Atribut & Spesifikasi Tambahan Manual Seller -->
-              <div class="pt-1">
-                ${renderCustomSpecsTableHtml()}
-              </div>
             </div>
           </div>
         `}
@@ -27098,6 +27137,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
         }
 
+        // Validasi Atribut & Keterangan Spesifikasi Tambahan di Step 1
+        const activeSpecRows = document.querySelectorAll('#custom-specs-tbody tr.custom-spec-row');
+        if (activeSpecRows && activeSpecRows.length > 0) {
+          activeSpecRows.forEach((tr) => {
+            const titleInp = tr.querySelector('.input-spec-title');
+            const valInp = tr.querySelector('.input-spec-value');
+            const titleVal = titleInp ? titleInp.value.trim() : '';
+            const descVal = valInp ? valInp.value.trim() : '';
+            if (!titleVal) {
+              addS1Error('Judul spesifikasi wajib diisi.', titleInp);
+              if (titleInp) titleInp.classList.add('border-red-500');
+            } else if (titleInp) {
+              titleInp.classList.remove('border-red-500');
+            }
+            if (!descVal) {
+              addS1Error('Keterangan spesifikasi wajib diisi.', valInp);
+              if (valInp) valInp.classList.add('border-red-500');
+            } else if (valInp) {
+              valInp.classList.remove('border-red-500');
+            }
+          });
+        }
+
         if (s1Errors.length > 0) {
           showWizardErrorBanner(s1Errors);
           if (firstInvalidEl) {
@@ -28090,13 +28152,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         };
       }
 
-      const inpSku = document.getElementById('input-prod-sku');
-      if (inpSku) {
-        inpSku.oninput = (e) => {
-          primaryState.sku = e.target.value.trim();
-          updateProductCardLivePreview();
-        };
-      }
+      // SKU Induk dikelola di Step 1 Lainnya
       // Tombol Aksi Bawah & Subnav Step 2: Kembali ke Step 1
       const handleStep2BackAction = (e) => {
         if (e) {
@@ -31899,7 +31955,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       // Init Affiliate Listeners
       initAffiliateGlobalListeners();
 
-      bindCustomSpecsEvents();
+      // bindCustomSpecsEvents dikelola di Step 1 Lainnya
 
       bindSizeGuideEvents();
 
@@ -32913,9 +32969,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (wasClosed) {
           mobileSheet.classList.remove('mobile-preview-settled');
         }
+        mobileSheet.style.visibility = 'visible';
+        mobileSheet.style.pointerEvents = 'auto';
         mobileSheet.scrollTop = 0;
         mobileSheet.scrollLeft = 0;
         mobileSheet.classList.remove('translate-y-full');
+        mobileSheet.classList.remove('pointer-events-none');
         if (currentStep === 1) {
           const themeBodyColor = getThemeBodyColor();
           mobileSheet.style.backgroundColor = themeBodyColor;
@@ -32960,6 +33019,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           void mobileSheet.offsetHeight;
         }
         mobileSheet.classList.add('translate-y-full');
+        mobileSheet.classList.add('pointer-events-none');
+        mobileSheet.style.visibility = 'hidden';
+        mobileSheet.style.pointerEvents = 'none';
       }
       if (mobileBackdrop) mobileBackdrop.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
@@ -33163,6 +33225,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     const btnStep1Next = document.getElementById('btn-step-1-next');
     if (btnStep1Next) {
       btnStep1Next.addEventListener('click', () => goToStep(2));
+    }
+
+    // Step 1 Lainnya: Bind Atribut & Spesifikasi Tambahan dan SKU
+    bindCustomSpecsEvents();
+    const s1SkuInp = document.getElementById('input-prod-sku');
+    if (s1SkuInp) {
+      s1SkuInp.addEventListener('input', (e) => {
+        primaryState.sku = e.target.value.trim();
+        if (typeof saveDraftToStorage === 'function') saveDraftToStorage();
+      });
     }
 
     // Radio Jenis Produk (Fisik vs Non Fisik)
