@@ -15,7 +15,7 @@ const VIEWPORTS = [
 ];
 
 for (const vp of VIEWPORTS) {
-  test.describe(`TASK 2.10C-1 - Viewport: ${vp.name}`, () => {
+  test.describe(`REVISI TASK 2.10C-1 - Viewport: ${vp.name}`, () => {
     test.setTimeout(60000);
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
@@ -73,69 +73,116 @@ for (const vp of VIEWPORTS) {
         mimeType: 'image/png',
         buffer: DUMMY_PNG_BUFFER
       });
-      await page.locator('#input-prod-name').fill('Produk Uji Coba Spesifikasi Step 1');
+      await page.locator('#input-prod-name').fill('Produk Uji Coba Spesifikasi Step 2');
 
       // Nonaktifkan toggle custom labels untuk uji transisi mulus
       await page.evaluate(() => {
         const toggle = document.getElementById('toggle-enable-custom-labels');
-        if (toggle && toggle.checked) toggle.click();
+        if (toggle && toggle.checked) {
+          toggle.click();
+        }
         const p = ProductForm.getPrimaryState();
-        p.show_badge = false;
-        p.has_custom_labels = false;
+        if (p) {
+          p.show_badge = false;
+          p.has_custom_labels = false;
+        }
       });
     }
 
     async function openStep2Form(page) {
-      // Pindah ke Step 2
       await page.evaluate(() => {
-        ProductForm.goToStep(2);
+        const toggle = document.getElementById('toggle-enable-custom-labels');
+        if (toggle && toggle.checked) {
+          const l1 = document.getElementById('input-custom-label-1');
+          if (!l1 || !l1.value.trim()) {
+            toggle.click();
+            const p = ProductForm.getPrimaryState();
+            if (p) {
+              p.show_badge = false;
+              p.has_custom_labels = false;
+            }
+          }
+        }
       });
-      await expect(page.locator('#step-pane-2')).toBeVisible();
 
-      // Buka gating kategori & subkategori
-      await page.locator('#btn-step2-cat-trigger').click();
-      await page.locator('.cat-option-item').first().click();
-      await page.locator('#btn-step2-subcat-trigger').click();
-      await page.locator('#opt-step2-subcat-none').click();
+      const btnNext = page.locator('#btn-step-1-next');
+      if (await btnNext.isVisible()) {
+        await btnNext.click();
+      } else {
+        await page.evaluate(() => {
+          ProductForm.goToStep(2);
+        });
+      }
+      await expect(page.locator('#step-pane-2')).toBeVisible();
+      await expect(page.locator('#step-pane-1')).toBeHidden();
+
+      // Buka gating kategori & subkategori agar Card 2 s/d Card 6 aktif
+      const isCatDetermined = await page.evaluate(() => Boolean(ProductForm.getPrimaryState().category_id && ProductForm.getPrimaryState().sub_category_determined));
+      if (!isCatDetermined) {
+        await page.locator('#btn-step2-cat-trigger').click();
+        await page.locator('.cat-option-item').first().click();
+        await page.locator('#btn-step2-subcat-trigger').click();
+        await page.locator('#opt-step2-subcat-none').click();
+      }
     }
 
-    test('1, 2, 5 & 11/12. Accordion Lainnya di Step 1: Input SKU dan Atribut Spesifikasi tampil & dapat digunakan', async ({ page }) => {
+    test('1. Step 1 TIDAK memuat Accordion Lainnya atau SKU/Spesifikasi', async ({ page }) => {
       await setupProductForm(page);
 
-      // Skenario 1: Accordion Lainnya tersedia di Step 1
-      const accordionGroup = page.locator('#accordion-group-others');
-      await expect(accordionGroup).toBeVisible();
+      // Verifikasi section step1 input8 others TIDAK ADA
+      const sectionOthers = page.locator('#section-step1-input8-others');
+      await expect(sectionOthers).toHaveCount(0);
 
-      const btnAccordion = page.locator('#btn-accordion-others');
-      await expect(btnAccordion).toBeVisible();
-      await expect(btnAccordion).toContainText('Lainnya');
+      const btnAccordionOthers = page.locator('#btn-accordion-others');
+      await expect(btnAccordionOthers).toHaveCount(0);
 
-      // Skenario 2: Komponen Atribut & Keterangan Spesifikasi Tambahan tampil
-      const specsTable = page.locator('#custom-specs-table');
-      await expect(specsTable).toBeAttached();
+      // Verifikasi SKU Induk tidak ada di Step 1
+      const s1Sku = page.locator('#step-pane-1 #input-prod-sku');
+      await expect(s1Sku).toHaveCount(0);
 
-      const btnAddSpec = page.locator('#btn-add-spec-row');
-      await expect(btnAddSpec).toBeVisible();
-      await expect(btnAddSpec).toContainText('Tambah Baris Spesifikasi');
-
-      const counter = page.locator('#custom-specs-counter');
-      await expect(counter).toBeVisible();
-      await expect(counter).toHaveText('0 / 10');
-
-      // Skenario 5: Mengisi SKU di Step 1
-      const inputSku = page.locator('#step-pane-1 #input-prod-sku');
-      await expect(inputSku).toBeVisible();
-      await inputSku.fill('SKU-KAOS-PREMIUM-001');
-
-      const primaryStateSku = await page.evaluate(() => ProductForm.getPrimaryState().sku);
-      expect(primaryStateSku).toBe('SKU-KAOS-PREMIUM-001');
+      // Verifikasi Custom Specs Table tidak ada di Step 1
+      const s1SpecsTable = page.locator('#step-pane-1 #custom-specs-table');
+      await expect(s1SpecsTable).toHaveCount(0);
     });
 
-    test('3 & 4. Menambahkan dan menghapus atribut spesifikasi: state dan counter tersinkronisasi', async ({ page }) => {
+    test('2 & 3. Step 2 Card 6 Spesifikasi: SKU Induk dan Atribut Spesifikasi berada tepat di bawah Sistem PO', async ({ page }) => {
       await setupProductForm(page);
+      await openStep2Form(page);
 
-      const btnAddSpec = page.locator('#btn-add-spec-row');
-      const counter = page.locator('#custom-specs-counter');
+      const cardSpecs = page.locator('#card-step2-specs');
+      await expect(cardSpecs).toBeVisible();
+
+      // Input SKU Induk berada di Card 6 Spesifikasi
+      const skuInput = cardSpecs.locator('#input-prod-sku');
+      await expect(skuInput).toBeVisible();
+      await skuInput.fill('SKU-CARD6-TEST');
+
+      const primaryStateSku = await page.evaluate(() => ProductForm.getPrimaryState().sku);
+      expect(primaryStateSku).toBe('SKU-CARD6-TEST');
+
+      // Pre-Order toggle harus ada di Card 6
+      const togglePreorder = cardSpecs.locator('#toggle-is-preorder');
+      await expect(togglePreorder).toBeAttached();
+
+      // Tabel Atribut & Spesifikasi Tambahan berada di Card 6 tepat di bawah Pre-Order
+      const specsTable = cardSpecs.locator('#custom-specs-table');
+      await expect(specsTable).toBeAttached();
+
+      const btnAddSpec = cardSpecs.locator('#btn-add-spec-row');
+      await expect(btnAddSpec).toBeVisible();
+
+      const counter = cardSpecs.locator('#custom-specs-counter');
+      await expect(counter).toBeVisible();
+      await expect(counter).toHaveText('0 / 10');
+    });
+
+    test('4 & 5. Menambahkan, mengedit, dan menghapus baris spesifikasi di Step 2 Card 6', async ({ page }) => {
+      await setupProductForm(page);
+      await openStep2Form(page);
+
+      const cardSpecs = page.locator('#card-step2-specs');
+      const btnAddSpec = cardSpecs.locator('#btn-add-spec-row');
+      const counter = cardSpecs.locator('#custom-specs-counter');
 
       await expect(counter).toHaveText('0 / 10');
 
@@ -148,22 +195,22 @@ for (const vp of VIEWPORTS) {
       await expect(counter).toHaveText('2 / 10');
 
       // Isi baris 1: Bahan -> Katun Combed 30s
-      const row0 = page.locator('#custom-specs-tbody tr.custom-spec-row').nth(0);
+      const row0 = cardSpecs.locator('#custom-specs-tbody tr.custom-spec-row').nth(0);
       await row0.locator('.input-spec-title').fill('Bahan');
       await row0.locator('.input-spec-value').fill('Katun Combed 30s');
 
       // Isi baris 2: Dimensi cetak -> A3+ Full Color
-      const row1 = page.locator('#custom-specs-tbody tr.custom-spec-row').nth(1);
+      const row1 = cardSpecs.locator('#custom-specs-tbody tr.custom-spec-row').nth(1);
       await row1.locator('.input-spec-title').fill('Dimensi cetak');
       await row1.locator('.input-spec-value').fill('A3+ Full Color');
 
-      // Skenario 3: Verifikasi state
+      // Verifikasi state
       const stateSpecs = await page.evaluate(() => ProductForm.getPrimaryState().custom_specs);
       expect(stateSpecs.length).toBe(2);
       expect(stateSpecs[0]).toEqual({ title: 'Bahan', value: 'Katun Combed 30s' });
       expect(stateSpecs[1]).toEqual({ title: 'Dimensi cetak', value: 'A3+ Full Color' });
 
-      // Skenario 4: Hapus baris 1 (Bahan)
+      // Hapus baris 1 (Bahan)
       await row0.locator('.btn-delete-spec-row').click();
       await expect(counter).toHaveText('1 / 10');
 
@@ -172,51 +219,17 @@ for (const vp of VIEWPORTS) {
       expect(stateAfterDelete[0]).toEqual({ title: 'Dimensi cetak', value: 'A3+ Full Color' });
     });
 
-    test('6. Berpindah ke Step 2: Tidak ada editor spesifikasi atau SKU duplikat di Step 2 Card 6', async ({ page }) => {
+    test('6. Membuka drawer Spesifikasi di Step 2: Atribut dan SKU tampil pada pratinjau', async ({ page }) => {
       await setupProductForm(page);
-
-      // Isi SKU dan satu spesifikasi di Step 1
-      await page.locator('#step-pane-1 #input-prod-sku').fill('SKU-STEP1-TEST');
-      await page.locator('#btn-add-spec-row').click();
-      const row0 = page.locator('#custom-specs-tbody tr.custom-spec-row').nth(0);
-      await row0.locator('.input-spec-title').fill('Bahan');
-      await row0.locator('.input-spec-value').fill('Polyester');
-
-      // Pindah ke Step 2
       await openStep2Form(page);
 
-      // Periksa Card 6 Spesifikasi di Step 2
-      const step2CardSpecs = page.locator('#card-step2-specs');
-      await expect(step2CardSpecs).toBeVisible();
+      const cardSpecs = page.locator('#card-step2-specs');
+      await cardSpecs.locator('#input-prod-sku').fill('SKU-PREVIEW-999');
 
-      // Verifikasi TIDAK ADA input SKU di dalam Step 2 Card 6
-      const skuInStep2 = step2CardSpecs.locator('#input-prod-sku');
-      await expect(skuInStep2).toHaveCount(0);
-
-      // Verifikasi TIDAK ADA tabel custom specs atau tombol tambah di Step 2 Card 6
-      const tableInStep2 = step2CardSpecs.locator('#custom-specs-table');
-      await expect(tableInStep2).toHaveCount(0);
-
-      const btnAddInStep2 = step2CardSpecs.locator('#btn-add-spec-row');
-      await expect(btnAddInStep2).toHaveCount(0);
-
-      // Verifikasi hanya ada tepat SATU input SKU di seluruh form (yaitu di Step 1)
-      const allSkuInputs = page.locator('#input-prod-sku');
-      await expect(allSkuInputs).toHaveCount(1);
-    });
-
-    test('7. Membuka drawer Spesifikasi di Step 2: Atribut dan SKU yang diisi pada Step 1 tampil', async ({ page }) => {
-      await setupProductForm(page);
-
-      // Isi SKU dan Atribut di Step 1
-      await page.locator('#step-pane-1 #input-prod-sku').fill('SKU-IND-999');
-      await page.locator('#btn-add-spec-row').click();
-      const row0 = page.locator('#custom-specs-tbody tr.custom-spec-row').nth(0);
+      await cardSpecs.locator('#btn-add-spec-row').click();
+      const row0 = cardSpecs.locator('#custom-specs-tbody tr.custom-spec-row').nth(0);
       await row0.locator('.input-spec-title').fill('Finishing Cetak');
       await row0.locator('.input-spec-value').fill('Laminasi Doff Panas');
-
-      // Pindah ke Step 2
-      await openStep2Form(page);
 
       if (vp.isMobile) {
         await page.evaluate(() => {
@@ -235,7 +248,7 @@ for (const vp of VIEWPORTS) {
 
       // Verifikasi SKU Induk tampil di dalam drawer spesifikasi
       await expect(drawerSheet).toContainText('SKU Induk');
-      await expect(drawerSheet).toContainText('SKU-IND-999');
+      await expect(drawerSheet).toContainText('SKU-PREVIEW-999');
 
       // Verifikasi Finishing Cetak tampil di dalam drawer spesifikasi
       await expect(drawerSheet).toContainText('Finishing Cetak');
@@ -251,67 +264,102 @@ for (const vp of VIEWPORTS) {
       await expect(drawerSheet).toBeHidden();
     });
 
-    test('8, 9 & 10. Siklus Penyimpanan, Edit, dan Proteksi Kebocoran Data Antarproduk', async ({ page }) => {
+    test('7. Siklus Penyimpanan, Edit Ulang, dan Proteksi Kebocoran Data', async ({ page }) => {
       await setupProductForm(page);
-
-      // Skenario 8: Isi SKU dan spesifikasi di Step 1
-      await page.locator('#step-pane-1 #input-prod-sku').fill('SKU-PROD-ALPHA');
-      await page.locator('#btn-add-spec-row').click();
-      const row0 = page.locator('#custom-specs-tbody tr.custom-spec-row').nth(0);
-      await row0.locator('.input-spec-title').fill('Material Utama');
-      await row0.locator('.input-spec-value').fill('Akrilik Marga Cipta 3mm');
-
-      // Pindah ke Step 2 dan isi data penjualan minimal
       await openStep2Form(page);
-      await page.locator('#input-single-price').fill('150000');
-      await page.locator('#editor-prod-desc').fill('Deskripsi lengkap produk alpha spesifikasi.');
 
-      // Simpan draf produk ke database via ProductForm.saveProduct(true)
+      const cardSpecs = page.locator('#card-step2-specs');
+      await cardSpecs.locator('#input-prod-sku').fill('SKU-PROD-STEP2');
+
+      await cardSpecs.locator('#btn-add-spec-row').click();
+      const row0 = cardSpecs.locator('#custom-specs-tbody tr.custom-spec-row').nth(0);
+      await row0.locator('.input-spec-title').fill('Material Utama');
+      await row0.locator('.input-spec-value').fill('Akrilik 3mm');
+
+      await page.locator('#input-single-price').fill('150000');
       await page.evaluate(() => {
+        const ed = document.getElementById('editor-prod-desc');
+        if (ed) {
+          ed.innerHTML = '<p>Deskripsi produk step 2.</p>';
+          ed.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        ProductForm.getPrimaryState().description = '<p>Deskripsi produk step 2.</p>';
         ProductForm.saveProduct(true);
       });
       await page.waitForTimeout(600);
 
       const savedProduct = await page.evaluate(() => {
         const prods = DB.getProducts();
-        return prods.find(p => p.sku === 'SKU-PROD-ALPHA') || prods[0];
+        return prods.find(p => p.sku === 'SKU-PROD-STEP2') || prods[0];
       });
 
       expect(savedProduct).toBeTruthy();
-      expect(savedProduct.sku).toBe('SKU-PROD-ALPHA');
+      expect(savedProduct.sku).toBe('SKU-PROD-STEP2');
       expect(savedProduct.custom_specs.length).toBe(1);
-      expect(savedProduct.custom_specs[0]).toEqual({ title: 'Material Utama', value: 'Akrilik Marga Cipta 3mm' });
+      expect(savedProduct.custom_specs[0]).toEqual({ title: 'Material Utama', value: 'Akrilik 3mm' });
 
-      // Skenario 9: Buka produk untuk diedit via AdminApp.navigate
+      // Edit produk
       await page.evaluate((prodId) => {
         AdminApp.navigate('edit-product', prodId);
+        const p = ProductForm.getPrimaryState();
+        if (p) {
+          p.show_badge = false;
+          p.has_custom_labels = false;
+        }
       }, savedProduct.id);
 
       await expect(page.locator('#view-product-form')).toBeVisible();
-      const editSkuVal = await page.locator('#step-pane-1 #input-prod-sku').inputValue();
-      expect(editSkuVal).toBe('SKU-PROD-ALPHA');
 
-      const editCounter = await page.locator('#custom-specs-counter').innerText();
+      // Pindah ke Step 2 untuk melihat data yang diedit
+      await openStep2Form(page);
+
+      const editCardSpecs = page.locator('#card-step2-specs');
+      const editSkuVal = await editCardSpecs.locator('#input-prod-sku').inputValue();
+      expect(editSkuVal).toBe('SKU-PROD-STEP2');
+
+      const editCounter = await editCardSpecs.locator('#custom-specs-counter').innerText();
       expect(editCounter).toBe('1 / 10');
 
-      const editTitleVal = await page.locator('#custom-specs-tbody tr.custom-spec-row .input-spec-title').inputValue();
-      const editDescVal = await page.locator('#custom-specs-tbody tr.custom-spec-row .input-spec-value').inputValue();
-      expect(editTitleVal).toBe('Material Utama');
-      expect(editDescVal).toBe('Akrilik Marga Cipta 3mm');
+      const editTitle = await editCardSpecs.locator('#custom-specs-tbody tr.custom-spec-row .input-spec-title').inputValue();
+      const editVal = await editCardSpecs.locator('#custom-specs-tbody tr.custom-spec-row .input-spec-value').inputValue();
+      expect(editTitle).toBe('Material Utama');
+      expect(editVal).toBe('Akrilik 3mm');
 
-      // Skenario 10: Membuka produk baru setelah mengedit produk lama -> TIDAK BOCOR
+      // Buka produk baru -> TIDAK BOCOR
       await page.evaluate(() => {
         AdminApp.navigate('create-product');
       });
 
-      const newProdSkuVal = await page.locator('#step-pane-1 #input-prod-sku').inputValue();
-      expect(newProdSkuVal).toBe('');
+      await expect(page.locator('#step-pane-1')).toBeVisible();
 
-      const newProdCounter = await page.locator('#custom-specs-counter').innerText();
-      expect(newProdCounter).toBe('0 / 10');
+      // Isi field wajib Step 1 agar bisa ke Step 2
+      await page.locator('label:has-text("Fisik")').first().click();
+      await page.locator('label:has-text("Kartu Klasik")').first().click();
+      await page.locator('#input-prod-image').setInputFiles({
+        name: 'test-item-new.png',
+        mimeType: 'image/png',
+        buffer: DUMMY_PNG_BUFFER
+      });
+      await page.locator('#input-prod-name').fill('Produk Baru Segar Bebas Bocor');
+      await page.evaluate(() => {
+        const p = ProductForm.getPrimaryState();
+        if (p) {
+          p.show_badge = false;
+          p.has_custom_labels = false;
+        }
+      });
 
-      const newProdRows = await page.locator('#custom-specs-tbody tr.custom-spec-row').count();
-      expect(newProdRows).toBe(0);
+      await openStep2Form(page);
+
+      const newCardSpecs = page.locator('#card-step2-specs');
+      const newSkuVal = await newCardSpecs.locator('#input-prod-sku').inputValue();
+      expect(newSkuVal).toBe('');
+
+      const newCounter = await newCardSpecs.locator('#custom-specs-counter').innerText();
+      expect(newCounter).toBe('0 / 10');
+
+      const newRows = await newCardSpecs.locator('#custom-specs-tbody tr.custom-spec-row').count();
+      expect(newRows).toBe(0);
 
       const newPrimaryState = await page.evaluate(() => ProductForm.getPrimaryState());
       expect(newPrimaryState.sku).toBe('');

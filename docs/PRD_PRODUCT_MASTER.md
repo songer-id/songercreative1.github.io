@@ -1070,24 +1070,26 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Pengujian Lintas Viewport**:
       - Lolos 100% pada 12 skenario pengujian komprehensif Playwright (`tests/task210a-tahap2.spec.js`) mencakup seluruh 9 skenario wajib di viewport Desktop 1366x768 dan Mobile 390x844 dengan 0 failures dan 0 JavaScript console errors.
       - Lolos 100% pada regression suite Task 2.10A Tahap 1 (`tests/task210a-tahap1.spec.js` - 14 passed).
-  - **Pemindahan Atribut Spesifikasi Tambahan & SKU ke Step 1 Lainnya (Task 2.10C-1)**:
+  - **Pemulihan Lokasi Atribut Spesifikasi Tambahan & SKU Induk ke Step 2 Card 6 (Revisi Task 2.10C-1)**:
     - **Tujuan & Ruang Lingkup**:
-      - **Relokasi Komponen ke Step 1 → Lainnya**:
-        - Memindahkan komponen penginputan *Atribut & Keterangan Spesifikasi Tambahan* dan *SKU Induk* dari Step 2 Card 6 (Spesifikasi & Garansi) ke bagian bawah Step 1 dalam Accordion "Lainnya" (`#section-step1-input8-others`).
-        - Struktur UI Accordion: Menggunakan `#accordion-group-others`, trigger `#btn-accordion-others` dengan atribut aksesibilitas `aria-expanded` dan `aria-controls="accordion-body-others"`, serta container body `#accordion-body-others`. Default state terbuka (`others: true`) saat form dibuka baru.
-        - Mempertahankan fungsionalitas tabel dinamis spesifikasi tambahan: input Judul Spesifikasi (dengan `<datalist id="datalist-spec-titles">` rekomendasi Bahan, Dimensi cetak, SKU, Ukuran, Warna, dsb.), input Keterangan, tombol hapus baris, tombol Tambah Baris Spesifikasi (`#btn-add-spec-row`), counter kapasitas `0 / 10` (`#custom-specs-counter`), serta batas maksimal 10 baris.
-      - **Pembersihan & Eliminasi Duplikasi di Step 2 Card 6**:
-        - Menghapus input SKU (`#input-prod-sku`) dan editor tabel custom specs (`${renderCustomSpecsTableHtml()}`) dari Card 6 Step 2.
-        - Card 6 Step 2 kini murni berfokus pada field penjualan/inventaris: Kondisi Produk (`primaryState.condition`) dan Barcode/EAN (`primaryState.barcode`) dalam layout 2 kolom responsif (`grid grid-cols-1 sm:grid-cols-2`).
-        - Menghapus listener duplikat `#input-prod-sku` dari `bindStep2InteractiveEvents()`.
+      - **Restorasi Komponen ke Posisi Semula (Step 2 → Card 6 Spesifikasi)**:
+        - Membatalkan pemindahan Atribut & Keterangan Spesifikasi Tambahan serta SKU Induk ke Step 1.
+        - Mengembalikan komponen penginputan *Atribut & Keterangan Spesifikasi Tambahan* dan *SKU Induk* ke posisi aslinya di **Step 2 → Card 6 Spesifikasi (`#card-step2-specs`)**.
+        - Input SKU Induk (`#input-prod-sku`) diposisikan kembali berdampingan dengan Kondisi Produk dan Barcode/EAN dalam layout grid 3 kolom responsif (`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3`).
+        - Tabel *Atribut & Keterangan Spesifikasi Tambahan* (`${renderCustomSpecsTableHtml()}`) diposisikan tepat di bawah seksi Sistem Pre-Order (PO) (`#container-preorder-days`).
+        - Menghapus total Accordion "Lainnya" (`#section-step1-input8-others`) beserta state `cardAccordionState.others` di Step 1 tanpa mengubah komponen Step 1 lainnya.
+      - **Pemulihan Event Binding & Logika Form**:
+        - Memulihkan event listener input SKU (`inpSku.oninput`) dan inisialisasi tabel spesifikasi (`bindCustomSpecsEvents()`) di dalam `bindStep2InteractiveEvents()`.
+        - Menghapus validasi baris spesifikasi dari tombol navigasi Lanjutkan Step 1 (`goToStep(2)`), sehingga validasi spesifikasi kembali berjalan pada saat penyimpanan formulir Step 2.
+        - Memperbaiki `syncStateFromDOM()` agar hanya membaca `#custom-specs-tbody` saat elemen tersebut aktif di DOM (mencegah penghapusan tak sengaja `primaryState.custom_specs` saat berpindah dari Step 1 ke Step 2).
       - **Inisialisasi & Pencegahan Kebocoran State (*Zero State Leakage*)**:
-        - `resetFormState()` secara eksplisit menginisialisasi `sku: ''`, `barcode: ''`, `custom_specs: []`, dan `cardAccordionState.others: true`. Menjamin pembukaan form produk baru setelah mengedit produk lama bersih 100% tanpa residu.
+        - `resetFormState()` secara eksplisit menginisialisasi `sku: ''`, `barcode: ''`, dan `custom_specs: []`. Menjamin pembukaan form produk baru setelah mengedit produk lama bersih 100% tanpa residu.
         - `getNormalizedProductStateSnapshot()` dan `hasAnyNewProductData()` mengikutsertakan `sku` dan `custom_specs` sehingga perubahan data spesifikasi dan SKU terdeteksi akurat saat konfirmasi navigasi keluar (*unsaved changes guard*).
         - Persistensi database `js/db.js` pada `DB.createProduct()` dan `DB.updateProduct()` menyimpan `sku` dan `barcode` ke penyimpanan lokal/state master.
-        - Pratinjau Drawer Spesifikasi di Step 2 (Desktop & Mobile) membaca dan menampilkan data `primaryState.sku` dan `primaryState.custom_specs` yang telah diisi seller pada Step 1.
+        - Pratinjau Drawer Spesifikasi di Step 2 (Desktop & Mobile) membaca dan menampilkan data `primaryState.sku` dan `primaryState.custom_specs` secara interaktif dan dinamis.
     - **Verifikasi Pengujian Lintas Viewport**:
-      - Lolos 100% (10/10 test cases) pada test suite Playwright komprehensif (`tests/task210c1.spec.js`) mencakup 12 skenario wajib lintas Desktop 1366x768 dan Mobile 390x844 (iPhone 12/13/14).
-      - Lolos regression test Task 2.10A Tahap 2 (`tests/task210a-tahap2.spec.js`).
+      - Lolos 100% (10/10 test cases) pada test suite Playwright komprehensif (`tests/task210c1.spec.js`) mencakup verifikasi Step 1 bersih, Step 2 Card 6, penambahan/penghapusan baris spesifikasi, drawer preview, penyimpanan DB, edit ulang, dan proteksi kebocoran data lintas Desktop 1366x768 dan Mobile 390x844 (iPhone 12/13/14).
+      - Lolos 100% (6/6 test cases) pada regression suite Task 2.10A Tahap 2 (`tests/task210a-tahap2.spec.js`).
 
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
