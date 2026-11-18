@@ -27,7 +27,8 @@ const ProductForm = (() => {
   let previewStep1Tab = 'preview'; // 'preview' | 'design'
   let hasEnteredCardDesignTab = false; // Penanda sesi pertama kali masuk Desain Kartu (Task 2.9B)
   let previewSimulationState = {
-    isDiscountSimulated: false
+    isDiscountSimulated: false,
+    isDiscountSimulatedStep2: false
   };
   let autoScrollVariationTableToRight = null;
   let setVariantDimensionsState = null;
@@ -7647,6 +7648,9 @@ const ProductForm = (() => {
   }
 
   function isSimulateDiscountActive() {
+    if (currentStep === 2) {
+      return Boolean(previewSimulationState && previewSimulationState.isDiscountSimulatedStep2);
+    }
     const cb = document.getElementById('cfg-simulate-countdown-preview') || document.getElementById('cfg-simulate-countdown-preview-mob');
     if (cb && typeof cb.checked === 'boolean' && cb.checked !== previewSimulationState.isDiscountSimulated) {
       previewSimulationState.isDiscountSimulated = cb.checked;
@@ -7655,6 +7659,38 @@ const ProductForm = (() => {
   }
 
   function toggleSimulateDiscount(forceState) {
+    if (currentStep === 2) {
+      const targetState = (typeof forceState === 'boolean')
+        ? forceState
+        : !Boolean(previewSimulationState && previewSimulationState.isDiscountSimulatedStep2);
+
+      if (targetState) {
+        const check = canActivateStep2DiscountSimulation();
+        if (!check.allowed) {
+          previewSimulationState.isDiscountSimulatedStep2 = false;
+          ['cfg-simulate-countdown-preview', 'cfg-simulate-countdown-preview-mob'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+          });
+          syncSimulateDiscountUI();
+          showPreviewTestModeAlert(check);
+          return false;
+        }
+        previewSimulationState.isDiscountSimulatedStep2 = true;
+      } else {
+        previewSimulationState.isDiscountSimulatedStep2 = false;
+      }
+
+      ['cfg-simulate-countdown-preview', 'cfg-simulate-countdown-preview-mob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = previewSimulationState.isDiscountSimulatedStep2;
+      });
+
+      syncSimulateDiscountUI();
+      updateProductCardLivePreview();
+      return previewSimulationState.isDiscountSimulatedStep2;
+    }
+
     if (typeof forceState === 'boolean') {
       previewSimulationState.isDiscountSimulated = forceState;
     } else {
@@ -7669,6 +7705,7 @@ const ProductForm = (() => {
 
     syncSimulateDiscountUI();
     updateProductCardLivePreview();
+    return isActive;
   }
 
   function syncSimulateDiscountUI() {
@@ -9569,6 +9606,88 @@ const ProductForm = (() => {
         };
       }
     };
+  }
+
+  // ============================================================================
+  // TASK 2.10C-5C: VALIDASI SIMULASI DISKON PREVIEW DETAIL PRODUK STEP 2
+  // ============================================================================
+  function canActivateStep2DiscountSimulation() {
+    const missingItems = [];
+    const invalidTargets = [];
+
+    // 1. Validasi Harga Produk
+    const isPriceValid = isActualProductPriceValid();
+    if (!isPriceValid) {
+      missingItems.push('Harga Jual');
+      let pTarget = null;
+      if (!primaryState.has_variants) {
+        pTarget = document.getElementById('input-single-price');
+      } else {
+        pTarget = document.querySelector('.variation-option-row[data-tier="tier1"] input[data-field="price"], #materials-rows-container input[data-field="price"], #materials-table-body input[data-field="price"]');
+      }
+      if (!pTarget) {
+        pTarget = document.getElementById('card-step2-sales') || document.getElementById('card-step2-variations');
+      }
+      if (pTarget) {
+        invalidTargets.push({ el: pTarget, label: 'Harga Jual' });
+      }
+    }
+
+    // 2. Validasi Promo (Bulanan atau Harian)
+    const promoInfo = getActivePromoValidationInfo();
+    if (!promoInfo.isValid) {
+      missingItems.push('Promo Bulanan atau Promo Harian');
+      let promoTarget = null;
+      const toggleDaily = document.getElementById('toggle-promo-daily') || document.getElementById('toggle-monthly-discount');
+      const isDailyOn = toggleDaily ? toggleDaily.checked : Boolean(primaryState.has_daily_promo || primaryState.has_monthly_discount);
+      const toggleMonthly = document.getElementById('toggle-promo-monthly');
+      const isMonthlyOn = toggleMonthly ? toggleMonthly.checked : Boolean(primaryState.auto_monthly_promo || primaryState.include_in_monthly_promo);
+
+      if (isDailyOn && !promoInfo.isDailyValid) {
+        const promoLabelInp = document.getElementById('input-promo-label');
+        const promoValInp = document.getElementById('input-promo-discount-value') || document.getElementById('input-discount-val');
+        if (promoLabelInp && (!promoLabelInp.value || promoLabelInp.value.trim() === '')) {
+          promoTarget = promoLabelInp;
+        } else if (promoValInp) {
+          promoTarget = promoValInp;
+        }
+      } else if (isMonthlyOn && !promoInfo.isMonthlyValid) {
+        const monthlyValInp = document.getElementById('input-monthly-promo-value');
+        if (monthlyValInp) {
+          promoTarget = monthlyValInp;
+        }
+      }
+
+      if (!promoTarget) {
+        promoTarget = document.getElementById('toggle-promo-daily') ||
+          document.getElementById('toggle-promo-monthly') ||
+          document.getElementById('card-step2-promo');
+      }
+
+      if (promoTarget) {
+        invalidTargets.push({ el: promoTarget, label: 'Promo Bulanan atau Promo Harian' });
+      }
+    }
+
+    if (missingItems.length > 0) {
+      invalidTargets.sort((a, b) => {
+        if (!a.el || !b.el) return 0;
+        if (a.el === b.el) return 0;
+        return (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+      });
+
+      const topmostEl = invalidTargets.length > 0 ? invalidTargets[0].el : null;
+
+      return {
+        allowed: false,
+        title: 'Data Produk Belum Lengkap',
+        missingItems: missingItems,
+        targetEl: topmostEl,
+        allTargetEls: invalidTargets.map(t => t.el)
+      };
+    }
+
+    return { allowed: true };
   }
 
   function buildShopeeDrawerHtml(actionType) {
@@ -27027,6 +27146,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
 
     if (window.lucide) window.lucide.createIcons();
+    syncSimulateDiscountUI();
     updateProductCardLivePreview();
     updateFooterScrollShadow();
   }
@@ -27138,6 +27258,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       isPreviewTestMode = false;
       previewTestState.sidebarTab = 'preview';
       previewTestState.isDrawerOpen = false;
+      hidePreviewTestModeAlert();
+      const s1NameInp = document.getElementById('input-prod-name');
+      if (s1NameInp && primaryState.name) {
+        s1NameInp.value = primaryState.name;
+        handleProductNameValidation(primaryState.name, true);
+      }
     } else if (step === 2) {
       isPreviewTestMode = false;
       previewTestState.sidebarTab = 'preview';
@@ -38434,11 +38560,13 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     deactivatePreviewTestMode: resetTestModeToPreview,
     getIsPreviewTestMode: () => isPreviewTestMode,
     isActualProductPriceValid,
-    getActivePromoValidationInfo
+    getActivePromoValidationInfo,
+    canActivateStep2DiscountSimulation
   };
 })();
 
 window.ProductForm = ProductForm;
+window.canActivateStep2DiscountSimulation = ProductForm.canActivateStep2DiscountSimulation;
 window.isActualProductPriceValid = ProductForm.isActualProductPriceValid;
 window.getActivePromoValidationInfo = ProductForm.getActivePromoValidationInfo;
 window.resetTestModeToPreview = ProductForm.resetTestModeToPreview;

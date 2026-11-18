@@ -1199,6 +1199,36 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Seluruh 17 test cases terfokus (desktop, mobile, batas input 0/negatif/desimal/kosong, stok produk, dismiss & focus) terverifikasi 100% PASS (`scratch/test_task210c5b_min_order.js`).
 
+  - **Validasi Simulasi Diskon pada Preview Detail Produk Step 2 (Task 2.10C-5C)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menerapkan validasi ketat khusus saat seller mengaktifkan tombol *Simulasi Diskon* (`#btn-simulate-discount-preview` / `#btn-simulate-discount-preview-mob`) pada Preview Detail Produk (Mini PDP) Step 2.
+      - Memastikan Simulasi Diskon Step 2 hanya dapat diaktifkan jika syarat dasar penjualan promo terpenuhi: harga produk valid dan minimal salah satu program promo (bulanan atau harian) aktif dan valid.
+      - Berbeda dengan validasi Uji Coba menyeluruh (`canActivateTestMode()`), validasi Simulasi Diskon Step 2 (`canActivateStep2DiscountSimulation()`) secara independen dan terisolasi hanya mengevaluasi **Harga Produk** dan **Promo**.
+    - **Syarat Kelayakan Simulasi Diskon Step 2**:
+      - *Harga Produk Aktual* (`isActualProductPriceValid()`):
+        - Produk tunggal: Harga aktual harus valid dan > Rp0 (bersumber dari `#input-single-price`, `primaryState.price`, atau `materialsState[0].price`).
+        - Produk variasi: Minimal terdapat satu kombinasi variasi aktif yang menghasilkan harga total > Rp0.
+      - *Promo Bulanan atau Promo Harian* (`getActivePromoValidationInfo()`):
+        - Minimal salah satu promo harus aktif dan memiliki konfigurasi nilai diskon valid:
+          - *Promo Bulanan*: Toggle aktif, nilai diskon > 0, dan persentase $\le 100\%$.
+          - *Promo Harian*: Toggle aktif, label promo terisi, nilai diskon > 0, dan persentase $\le 100\%$.
+        - Jika kedua promo aktif bersamaan, promo harian diprioritaskan sebagai contoh simulasi (diskon tidak pernah digabungkan).
+        - Jika salah satu promo valid, simulasi diizinkan aktif meskipun promo lainnya tidak valid atau nonaktif.
+    - **Perilaku Validasi, Alert Modal, dan Auto-Scroll**:
+      - Jika syarat belum terpenuhi saat seller mengaktifkan Simulasi Diskon di Step 2:
+        - Aktivasi simulasi dibatalkan (`previewSimulationState.isDiscountSimulatedStep2 = false`).
+        - Memunculkan dialog modal peringatan terpadu `showPreviewTestModeAlert(check)` pada desktop (`#preview-scoped-modal-root`) dan mobile (`#preview-scoped-modal-root-mob`).
+        - Menyajikan daftar bagian yang belum lengkap pada `missingItems`: `'Harga Jual'`, `'Promo Bulanan atau Promo Harian'`, atau keduanya.
+        - Ketika seller menekan *"OK / Mengerti"*, sistem otomatis menutup modal, menutup lembar sheet mobile (jika di mobile), menjalankan auto-scroll menuju input yang belum valid dengan clearance header sticky 64px, membuka kartu/accordion tertutup, dan memberikan highlight ring amber (`ring-2 ring-amber-400` selama 3 detik) via `focusAndHighlightValidationTarget(targetEl)`.
+        - Jika kedua syarat sama-sama tidak valid, target auto-scroll mengarah ke input harga (karena urutan DOM paling atas).
+    - **Perlindungan Independensi Step 1 & Sinkronisasi Navigasi**:
+      - Simulasi Diskon Step 1 tetap 100% demonstratif (`previewSimulationState.isDiscountSimulated`), bebas menggunakan data fallback (Rp150.000 / Rp75.000), dan tidak pernah diblokir oleh validasi harga/promo Step 2.
+      - Saat seller berpindah langkah dari Step 2 kembali ke Step 1 via `goToStep(1)`:
+        - Sinkronisasi DOM berjalan akurat sehingga preview kartu etalase Step 1 merefleksikan nama, harga, dan foto terbaru dari Step 2.
+        - Status simulasi demonstrasi Step 1 tetap independen dan terjaga.
+    - **Verifikasi Fungsionalitas**:
+      - Seluruh 42 skenario pengujian terfokus (harga kosong, promo nonaktif, kedua syarat invalid, promo bulanan saja, promo harian saja, kedua promo aktif, desktop modal/ring, mobile modal/sheet auto-dismiss, Step 1 demonstratif independen, serta sinkronisasi navigasi Step 2 -> Step 1) terverifikasi 100% PASS (`scratch/test_task210c5c_simulate_discount.js`).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
