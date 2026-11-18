@@ -15722,24 +15722,25 @@ const ProductForm = (() => {
     const specs = (Array.isArray(primaryState.custom_specs) && primaryState.custom_specs.length > 0)
       ? primaryState.custom_specs
       : [];
+    const hasSpecs = specs.length > 0;
 
     return `
-      <div class="pt-2">
-        <div class="flex items-center justify-between mb-2">
+      <div class="pt-2" id="custom-specs-wrapper">
+        <div id="custom-specs-header" class="${hasSpecs ? 'flex' : 'hidden'} items-center justify-between mb-2">
           <div>
-            <h3 class="text-xs font-bold text-slate-900">
-              <span>Atribut & Keterangan Spesifikasi Tambahan</span>
+            <h3 class="text-xs font-bold text-slate-900" id="custom-specs-title">
+              <span>Spesifikasi Tambahan</span>
             </h3>
-            <p class="text-[11px] text-slate-500">Tambahkan spesifikasi khusus seperti bahan, dimensi cetak, SKU, dsb.</p>
+            <p class="text-[11px] text-slate-500" id="custom-specs-desc">Tambahkan spesifikasi khusus seperti bahan, dimensi cetak, SKU, dsb.</p>
           </div>
           <span id="custom-specs-counter" class="text-[11px] font-semibold text-slate-400">
             ${specs.length} / 10
           </span>
         </div>
 
-        <div class="overflow-x-visible">
+        <div class="overflow-x-visible ${hasSpecs ? '' : 'hidden'}" id="custom-specs-table-container">
           <table class="w-full text-left border-collapse" id="custom-specs-table">
-            <thead id="custom-specs-thead" class="${specs.length === 0 ? 'hidden' : ''}">
+            <thead id="custom-specs-thead" class="${hasSpecs ? '' : 'hidden'}">
               <tr class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th class="py-1.5 pr-2 w-5/12 font-semibold">Judul</th>
                 <th class="py-1.5 px-2 w-6/12 font-semibold">Keterangan</th>
@@ -15752,7 +15753,7 @@ const ProductForm = (() => {
           </table>
         </div>
 
-        <div class="mt-2.5">
+        <div class="mt-2.5" id="custom-specs-btn-container">
           <button
             type="button"
             id="btn-add-spec-row"
@@ -15782,7 +15783,7 @@ const ProductForm = (() => {
             <input
               type="text"
               class="input-spec-title clean-datalist-input w-full h-9 px-3 pr-8 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs"
-              placeholder="Ketik atau pilih judul..."
+              placeholder="Input/Pilih"
               value="${escapeHtml(title)}"
               data-datalist-id="datalist-spec-titles"
               data-datalist="datalist-spec-titles"
@@ -15794,7 +15795,7 @@ const ProductForm = (() => {
           <input
             type="text"
             class="input-spec-value w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-medium outline-none bg-white text-slate-800 focus:border-[var(--color-primary)] shadow-2xs"
-            placeholder="Masukkan keterangan..."
+            placeholder="Masukkan Ket."
             value="${escapeHtml(value)}"
           />
         </td>
@@ -15816,10 +15817,28 @@ const ProductForm = (() => {
     const tbody = document.getElementById('custom-specs-tbody');
     const countBadge = document.getElementById('custom-specs-counter') || document.getElementById('custom-specs-count');
     const thead = document.getElementById('custom-specs-thead') || document.querySelector('#custom-specs-table thead');
+    const headerEl = document.getElementById('custom-specs-header');
+    const tableContainer = document.getElementById('custom-specs-table-container');
 
     const updateSpecsUIState = () => {
       const rows = tbody ? tbody.querySelectorAll('tr.custom-spec-row') : [];
       if (countBadge) countBadge.textContent = `${rows.length} / 10`;
+      if (headerEl) {
+        if (rows.length === 0) {
+          headerEl.classList.add('hidden');
+          headerEl.classList.remove('flex');
+        } else {
+          headerEl.classList.remove('hidden');
+          headerEl.classList.add('flex');
+        }
+      }
+      if (tableContainer) {
+        if (rows.length === 0) {
+          tableContainer.classList.add('hidden');
+        } else {
+          tableContainer.classList.remove('hidden');
+        }
+      }
       if (thead) {
         if (rows.length === 0) {
           thead.classList.add('hidden');
@@ -18169,6 +18188,44 @@ const ProductForm = (() => {
                   ${renderOrderMultipleSection()}
                 </div>
               </div>
+
+              <!-- Pembatas 3: Antara Bagian Kelipatan Pesanan dan Sistem Pre-Order -->
+              <hr class="border-t border-slate-100 my-4" />
+
+              <!-- Sistem Pre-Order (PO) -->
+              <div class="space-y-2 pt-1" id="section-preorder">
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border-0 shadow-none">
+                  <div>
+                    <label for="toggle-is-preorder" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
+                      <span>Sistem Pre-Order (PO)</span>
+                    </label>
+                  </div>
+                  <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      id="toggle-is-preorder"
+                      ${primaryState.is_preorder ? 'checked' : ''}
+                      class="sr-only peer"
+                    />
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+                  </label>
+                </div>
+
+                <div id="container-preorder-days" class="${primaryState.is_preorder ? 'block' : 'hidden'} pl-1">
+                  <label for="input-preorder-days" class="block text-xs font-bold text-slate-800 mb-1">Estimasi Waktu Pre-Order (Hari):</label>
+                  <div class="flex items-center gap-2 max-w-[200px]">
+                    <input
+                      type="number"
+                      id="input-preorder-days"
+                      min="1"
+                      max="90"
+                      value="${primaryState.preorder_days || 7}"
+                      class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]"
+                    />
+                    <span class="text-xs text-slate-500 font-semibold">Hari</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -19169,41 +19226,6 @@ const ProductForm = (() => {
                         `;
                       }).join('')}
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Baris 3: Pre-Order -->
-              <div class="space-y-2 pt-1">
-                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border-0 shadow-none">
-                  <div>
-                    <label for="toggle-is-preorder" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
-                      <span>Sistem Pre-Order (PO)</span>
-                    </label>
-                  </div>
-                  <label class="relative inline-flex items-center select-none cursor-pointer shrink-0">
-                    <input
-                      type="checkbox"
-                      id="toggle-is-preorder"
-                      ${primaryState.is_preorder ? 'checked' : ''}
-                      class="sr-only peer"
-                    />
-                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
-                  </label>
-                </div>
-
-                <div id="container-preorder-days" class="${primaryState.is_preorder ? 'block' : 'hidden'} pl-1">
-                  <label for="input-preorder-days" class="block text-xs font-bold text-slate-800 mb-1">Estimasi Waktu Pre-Order (Hari):</label>
-                  <div class="flex items-center gap-2 max-w-[200px]">
-                    <input
-                      type="number"
-                      id="input-preorder-days"
-                      min="1"
-                      max="90"
-                      value="${primaryState.preorder_days || 7}"
-                      class="w-full h-9 px-3 py-1.5 rounded-md border border-slate-300 text-xs font-bold outline-none focus:border-[var(--color-primary)]"
-                    />
-                    <span class="text-xs text-slate-500 font-semibold">Hari</span>
                   </div>
                 </div>
               </div>

@@ -1134,6 +1134,34 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% (10/10 test cases PASS, 0 FAIL) pada regression suite Task 2.10C-1 (`tests/task210c1.spec.js` - Spesifikasi & SKU Step 2 aman).
       - Lolos 100% (6/6 test cases PASS, 0 FAIL) pada regression suite Task 2.10A Tahap 2 (`tests/task210a-tahap2.spec.js` - Simulasi Promo & PDP aman).
 
+  - **Perbaikan Tampilan Awal Spesifikasi Tambahan & Relokasi Sistem Pre-Order (Task 2.10C-3)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyempurnakan alur pengguna (UX) pada komponen Spesifikasi Tambahan di Step 2 Card 6 agar bersih dan tidak membebani ruang saat form pertama kali dibuka.
+      - Memindahkan blok Sistem Pre-Order (PO) ke Step 2 Card 2 (Informasi Penjualan) tepat di bawah Kelipatan Pesanan.
+      - Mempertahankan integritas fungsionalitas penambahan, pengeditan, penghapusan baris spesifikasi, batas maksimum 10 baris, validasi judul & nilai, sinkronisasi state `primaryState.custom_specs`, drawer preview, serta persistensi database/draf.
+    - **Relokasi Sistem Pre-Order (PO) ke Step 2 Card 2**:
+      - Memindahkan blok elemen Pre-Order (`#section-preorder`, `#toggle-is-preorder`, `#container-preorder-days`, `#input-preorder-days`) dari Step 2 Card 6 (`#card-step2-specs`) ke Step 2 Card 2 (`#card-step2-sales`), tepat berada di bawah seksi Kelipatan Pesanan (`#section-order-multiple`) dengan pemisah garis horizontal bersih.
+      - Seluruh event binding, validasi durasi (1-90 hari), toggle on/off, sinkronisasi DOM (`syncStateFromDOM()`), dan persistensi database tetap utuh 100%.
+    - **Penyempurnaan Tampilan Awal Spesifikasi Tambahan (Zero State)**:
+      - Ketika form pertama kali dibuka dan belum ada baris spesifikasi yang ditambahkan (`custom_specs.length === 0`):
+        - **Hanya menampilkan tombol aksi tunggal**: `+ Tambah Baris Spesifikasi` (`#btn-add-spec-row`).
+        - **Menyembunyikan sepenuhnya**: Judul (`#custom-specs-title`), deskripsi petunjuk (`#custom-specs-desc`), header tabel (`#custom-specs-thead`), input judul & keterangan, serta counter kapasitas (`#custom-specs-counter`).
+    - **Tampilan Interaktif Setelah Tombol Diklik (Active State)**:
+      - Ketika tombol `+ Tambah Baris Spesifikasi` diklik:
+        - Header spesifikasi ditampilkan (`#custom-specs-header` dengan `flex`):
+          - Judul: **Spesifikasi Tambahan** (`#custom-specs-title`).
+          - Deskripsi: *"Tambahkan spesifikasi khusus seperti bahan, dimensi cetak, SKU, dsb."* (`#custom-specs-desc`).
+          - Counter kapasitas dinamis: `${rows.length} / 10` (`#custom-specs-counter`).
+        - Tabel spesifikasi dan header kolom (Judul, Keterangan, Aksi) ditampilkan.
+        - Baris input baru memiliki placeholder yang ringkas dan intuitif:
+          - Input Judul: placeholder `"Input/Pilih"` (dengan dukungan datalist saran judul).
+          - Input Keterangan: placeholder `"Masukkan Ket."`.
+        - Tombol `+ Tambah Baris Spesifikasi` tetap berada di bawah tabel untuk menambahkan baris berikutnya hingga batas maksimum 10 baris.
+        - Counter kapasitas terupdate secara otomatis dan akurat setiap kali baris ditambah atau dihapus.
+      - Jika seluruh baris dihapus hingga tersisa 0 baris, tampilan secara elegan kolaps kembali ke kondisi awal (hanya tombol `+ Tambah Baris Spesifikasi` yang terlihat).
+    - **Verifikasi Fungsionalitas**:
+      - Struktur DOM dan interaksi dinamis (toggle PO, penambahan baris, placeholder, pembaruan counter `1 / 10` -> `2 / 10`, penghapusan baris hingga kolaps kembali ke tombol) telah terverifikasi sukses (100% PASS).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
