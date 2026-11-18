@@ -1180,6 +1180,25 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Seluruh 6 poin verifikasi (tombol terhapus tidak tampil, H2/H3 aktif dan semantik benar, toggle off kembali ke Normal `<p>`, teks rata kiri, serta penyimpanan deskripsi) terverifikasi 100% PASS.
 
+  - **Validasi Minimal Pesanan pada Mode Uji Coba (Task 2.10C-5B)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Mengintegrasikan validasi input Minimal Pesanan (`#input-min-order`, `primaryState.min_order`) ke dalam mekanisme `canActivateTestMode()` untuk Uji Coba pratinjau produk di Step 2 Card 2 (`#card-step2-sales`).
+      - Memastikan kelayakan data pembelian sebelum seller atau calon pembeli menguji alur interaksi checkout (keranjang dan beli sekarang).
+    - **Aturan Validasi**:
+      - Input Minimal Pesanan wajib memiliki nilai (tidak boleh kosong).
+      - Wajib berupa angka bulat (integer, regex `/^\d+$/`).
+      - Nilai minimal 1 (`min_order >= 1`). Nilai 0, negatif, desimal, teks, atau kosong ditolak.
+      - Menambahkan informasi kesalahan ke `missingItems` (label `"Minimal Pesanan"`) dan `invalidTargets` (`#input-min-order`).
+      - Memperbaiki sinkronisasi `syncStateFromDOM()` agar tidak lagi memaksakan fallback `1` secara prematur saat input kosong atau 0, sehingga status invalid di DOM dapat terdeteksi akurat oleh sistem validasi.
+    - **Interaksi Pengguna & Auto-Scroll Terpadu**:
+      - Memanfaatkan dialog popup peringatan terpadu `showPreviewTestModeAlert(check)` pada desktop (`#preview-scoped-modal-root`) dan mobile (`#preview-scoped-modal-root-mob`).
+      - Ketika seller menekan tombol *"OK / Mengerti"*, sistem secara otomatis menutup lembar pratinjau mobile (jika terbuka) dan mengarahkan auto-scroll dengan kompensasi header sticky 64px, memberikan aksentuasi visual ring amber (`ring-2 ring-amber-400` selama 3 detik), serta memfokuskan kursor langsung ke `#input-min-order`.
+    - **Komponen yang Dipertahankan**:
+      - Validasi stok produk (stok 0 tetap valid, stok Unlimited tetap valid, stok kosong ditolak).
+      - Kelipatan pesanan, harga produk dan variasi, promo bulanan dan harian, simulasi diskon Step 1, dan preview detail produk tetap utuh tanpa regresi.
+    - **Verifikasi Fungsionalitas**:
+      - Seluruh 17 test cases terfokus (desktop, mobile, batas input 0/negatif/desimal/kosong, stok produk, dismiss & focus) terverifikasi 100% PASS (`scratch/test_task210c5b_min_order.js`).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

@@ -6955,7 +6955,19 @@ const ProductForm = (() => {
         if (stockInp) invalidTargets.push({ el: stockInp, label: 'Stok Produk' });
       }
 
-      // A.3. Maksimal Jumlah Pembelian
+      // A.3. Minimal Pesanan (Minimal Jumlah Pembelian)
+      const minOrderInp = document.getElementById('input-min-order');
+      const rawMinOrder = minOrderInp ? minOrderInp.value.trim() : (primaryState.min_order !== null && primaryState.min_order !== undefined ? String(primaryState.min_order).trim() : '');
+      const isMinOrderInt = /^\d+$/.test(rawMinOrder);
+      const parsedMinOrder = isMinOrderInt ? parseInt(rawMinOrder, 10) : NaN;
+      const isMinOrderValid = (isMinOrderInt && !isNaN(parsedMinOrder) && parsedMinOrder >= 1);
+
+      if (!isMinOrderValid) {
+        missingItems.push('Minimal Pesanan');
+        if (minOrderInp) invalidTargets.push({ el: minOrderInp, label: 'Minimal Pesanan' });
+      }
+
+      // A.4. Maksimal Jumlah Pembelian
       const maxOrderInp = document.getElementById('input-normal-max-order') || document.getElementById('input-max-order-qty');
       const rawMaxOrder = maxOrderInp ? maxOrderInp.value.trim() : (primaryState.max_order !== null && primaryState.max_order !== undefined ? String(primaryState.max_order).trim() : '');
       const rawLow = rawMaxOrder.toLowerCase();
@@ -35979,7 +35991,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
     // Min Order
     const minOrderInp = document.getElementById('input-min-order');
-    if (minOrderInp) primaryState.min_order = Math.max(1, parseInt(minOrderInp.value) || 1);
+    if (minOrderInp) {
+      const rawMin = minOrderInp.value.trim();
+      primaryState.min_order = (rawMin === '') ? null : (isNaN(parseInt(rawMin, 10)) ? null : parseInt(rawMin, 10));
+    }
 
     // Max Order (Single Product Dropdown Accordion Sync)
     const normalMaxInp = document.getElementById('input-normal-max-order');
