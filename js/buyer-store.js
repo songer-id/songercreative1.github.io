@@ -3284,8 +3284,8 @@ const BuyerStore = (() => {
 
     const bgColor = config.bg_color || '#ffffff';
     const borderColor = config.border_color || '#e2e8f0';
-    const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 1;
-    const borderWidth = isNaN(rawBw) ? 1 : Math.max(0, Math.min(3, rawBw));
+    const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 0;
+    const borderWidth = isNaN(rawBw) ? 0 : Math.max(0, Math.min(3, rawBw));
     const cardBorderStyle = borderWidth === 0 ? 'border: none; border-width: 0px;' : `border: ${borderWidth}px solid ${borderColor};`;
     const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 0;
     const borderRadius = `${isNaN(rawBr) ? 0 : Math.max(0, Math.min(24, rawBr))}px`;
@@ -3300,8 +3300,8 @@ const BuyerStore = (() => {
     const showDiscBadge = config.show_discount_badge !== false;
 
     // Discount badge styling on image
-    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 8;
-    const discBadgeRadius = `${isNaN(rawDiscRad) ? 8 : Math.max(0, Math.min(12, rawDiscRad))}px`;
+    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 4;
+    const discBadgeRadius = `${isNaN(rawDiscRad) ? 4 : Math.max(0, Math.min(12, rawDiscRad))}px`;
     const discBadgeBg = config.discount_badge_bg_color || '#059669';
     const discBadgeText = config.discount_badge_text_color || '#ffffff';
     const discBadgeBorder = config.discount_badge_border_color || discBadgeBg;
@@ -3310,8 +3310,8 @@ const BuyerStore = (() => {
     const discPosClass = (rawDiscPos === 'top-left' ? 'top-2 left-2' : rawDiscPos === 'bottom-left' ? 'bottom-2 left-2' : rawDiscPos === 'bottom-right' ? 'bottom-2 right-2' : 'top-2 right-2');
     const strikePriceColor = config.strike_price_color || '#94a3b8';
 
-    const rawBadgeRadius = config.badge_radius !== undefined && config.badge_radius !== null ? parseInt(config.badge_radius, 10) : 6;
-    const badgeRadiusNum = isNaN(rawBadgeRadius) ? 6 : Math.max(0, Math.min(12, rawBadgeRadius));
+    const rawBadgeRadius = config.badge_radius !== undefined && config.badge_radius !== null ? parseInt(config.badge_radius, 10) : 4;
+    const badgeRadiusNum = isNaN(rawBadgeRadius) ? 4 : Math.max(0, Math.min(12, rawBadgeRadius));
     const badgeRadius = `${badgeRadiusNum}px`;
     const badgeTextColor = config.badge_text_color || '#047857';
     const badgeBgColor = config.badge_bg_color || '#ecfdf5';
@@ -3332,7 +3332,7 @@ const BuyerStore = (() => {
 
     // Evaluasi Countdown Promo Produk Spesifik (Aktor Utama menggantikan Label Khusus jika Aktif)
     const countdownInfo = (typeof DB !== 'undefined' && DB.getProductCountdownInfo) ? DB.getProductCountdownInfo(prod, effDiscount) : { is_active: false };
-    const countdownRadius = config.countdown_radius || '9999px';
+    const countdownRadius = config.countdown_radius || '4px';
     const countdownBg = prod.countdown_bg_color || config.countdown_bg_color || '#059669';
     const countdownTextColor = prod.countdown_text_color || config.countdown_text_color || '#ffffff';
     const countdownIconColor = prod.countdown_icon_color || config.countdown_icon_color || countdownTextColor;
@@ -3434,8 +3434,8 @@ const BuyerStore = (() => {
 
     const bgColor = config.bg_color || '#ffffff';
     const borderColor = config.border_color || '#e9d5ff';
-    const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 1;
-    const borderWidth = isNaN(rawBw) ? 1 : Math.max(0, Math.min(3, rawBw));
+    const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 0;
+    const borderWidth = isNaN(rawBw) ? 0 : Math.max(0, Math.min(3, rawBw));
     const cardBorderStyle = borderWidth === 0 ? 'border: none; border-width: 0px;' : `border: ${borderWidth}px solid ${borderColor};`;
     const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 0;
     const borderRadius = `${isNaN(rawBr) ? 0 : Math.max(0, Math.min(24, rawBr))}px`;
@@ -3467,8 +3467,8 @@ const BuyerStore = (() => {
     const showDiscBadge = config.show_discount_badge !== false;
 
     // Discount badge styling on image
-    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 8;
-    const discBadgeRadius = `${isNaN(rawDiscRad) ? 8 : Math.max(0, Math.min(12, rawDiscRad))}px`;
+    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 4;
+    const discBadgeRadius = `${isNaN(rawDiscRad) ? 4 : Math.max(0, Math.min(12, rawDiscRad))}px`;
     const discBadgeBg = config.discount_badge_bg_color || '#059669';
     const discBadgeText = config.discount_badge_text_color || '#ffffff';
     const discBadgeBorder = config.discount_badge_border_color || discBadgeBg;
@@ -3575,8 +3575,8 @@ const BuyerStore = (() => {
 
     const bgColor = config.bg_color || '#ffffff';
     const borderColor = config.border_color || '#fed7aa';
-    const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 1;
-    const borderWidth = isNaN(rawBw) ? 1 : Math.max(0, Math.min(3, rawBw));
+    const rawBw = config.border_width !== undefined && config.border_width !== null ? parseInt(config.border_width, 10) : 0;
+    const borderWidth = isNaN(rawBw) ? 0 : Math.max(0, Math.min(3, rawBw));
     const cardBorderStyle = borderWidth === 0 ? 'border: none; border-width: 0px;' : `border: ${borderWidth}px solid ${borderColor};`;
     const rawBr = config.border_radius !== undefined && config.border_radius !== null ? parseInt(config.border_radius, 10) : 0;
     const borderRadius = `${isNaN(rawBr) ? 0 : Math.max(0, Math.min(24, rawBr))}px`;
@@ -3590,8 +3590,8 @@ const BuyerStore = (() => {
     const showDiscBadge = config.show_discount_badge !== false;
 
     // Discount badge styling on image
-    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 8;
-    const discBadgeRadius = `${isNaN(rawDiscRad) ? 8 : Math.max(0, Math.min(12, rawDiscRad))}px`;
+    const rawDiscRad = config.discount_badge_radius !== undefined && config.discount_badge_radius !== null ? parseInt(config.discount_badge_radius, 10) : 4;
+    const discBadgeRadius = `${isNaN(rawDiscRad) ? 4 : Math.max(0, Math.min(12, rawDiscRad))}px`;
     const discBadgeBg = config.discount_badge_bg_color || '#059669';
     const discBadgeText = config.discount_badge_text_color || '#ffffff';
     const discBadgeBorder = config.discount_badge_border_color || discBadgeBg;
@@ -3600,8 +3600,8 @@ const BuyerStore = (() => {
     const discPosClass = (rawDiscPos === 'top-left' ? 'top-2 left-2' : rawDiscPos === 'bottom-left' ? 'bottom-2 left-2' : rawDiscPos === 'bottom-right' ? 'bottom-2 right-2' : 'top-2 right-2');
     const strikePriceColor = config.strike_price_color || '#94a3b8';
 
-    const rawBadgeRadius = config.badge_radius !== undefined && config.badge_radius !== null ? parseInt(config.badge_radius, 10) : 6;
-    const badgeRadiusNum = isNaN(rawBadgeRadius) ? 6 : Math.max(0, Math.min(12, rawBadgeRadius));
+    const rawBadgeRadius = config.badge_radius !== undefined && config.badge_radius !== null ? parseInt(config.badge_radius, 10) : 4;
+    const badgeRadiusNum = isNaN(rawBadgeRadius) ? 4 : Math.max(0, Math.min(12, rawBadgeRadius));
     const badgeRadius = `${badgeRadiusNum}px`;
     const badgeTextColor = config.badge_text_color || '#047857';
     const badgeBgColor = config.badge_bg_color || '#ecfdf5';

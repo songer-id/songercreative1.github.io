@@ -485,7 +485,7 @@ const DB = (() => {
     variant_a: {
       bg_color: '#ffffff',
       border_color: '#e2e8f0',
-      border_width: '1px',
+      border_width: '0px',
       border_radius: '0px',
       title_color: '#0f172a',
       price_color: '#059669',
@@ -496,18 +496,18 @@ const DB = (() => {
       strike_price_color: '#94a3b8',
       show_ticket_icon: true,
       show_discount_badge: true,
-      discount_badge_radius: '8px',
+      discount_badge_radius: '4px',
       discount_badge_position: 'top-right',
       discount_badge_bg_color: '#059669',
       discount_badge_text_color: '#ffffff',
       discount_badge_border_color: '#059669',
       show_badge: true,
       show_category_badge: true,
-      badge_radius: '6px',
+      badge_radius: '4px',
       badge_text_color: '#047857',
       badge_bg_color: '#ecfdf5',
       badge_border_color: '#a7f3d0',
-      countdown_radius: '9999px',
+      countdown_radius: '4px',
       countdown_bg_color: '#059669',
       countdown_text_color: '#ffffff',
       countdown_icon_color: '#ffffff',
@@ -517,7 +517,7 @@ const DB = (() => {
     variant_b: {
       bg_color: '#ffffff',
       border_color: '#e9d5ff',
-      border_width: '1px',
+      border_width: '0px',
       border_radius: '0px',
       title_color: '#0f172a',
       price_color: '#7e22ce',
@@ -528,18 +528,18 @@ const DB = (() => {
       strike_price_color: '#94a3b8',
       show_ticket_icon: true,
       show_discount_badge: true,
-      discount_badge_radius: '8px',
+      discount_badge_radius: '4px',
       discount_badge_position: 'top-right',
       discount_badge_bg_color: '#059669',
       discount_badge_text_color: '#ffffff',
       discount_badge_border_color: '#059669',
       show_badge: true,
       show_category_badge: true,
-      badge_radius: '6px',
+      badge_radius: '4px',
       badge_text_color: '#6b21a8',
       badge_bg_color: '#faf5ff',
       badge_border_color: '#e9d5ff',
-      countdown_radius: '9999px',
+      countdown_radius: '4px',
       countdown_bg_color: '#059669',
       countdown_text_color: '#ffffff',
       countdown_icon_color: '#ffffff',
@@ -549,7 +549,7 @@ const DB = (() => {
     variant_c: {
       bg_color: '#ffffff',
       border_color: '#fed7aa',
-      border_width: '1px',
+      border_width: '0px',
       border_radius: '0px',
       title_color: '#0f172a',
       price_color: '#d97706',
@@ -560,14 +560,14 @@ const DB = (() => {
       strike_price_color: '#94a3b8',
       show_ticket_icon: false,
       show_discount_badge: true,
-      discount_badge_radius: '8px',
+      discount_badge_radius: '4px',
       discount_badge_position: 'top-right',
       discount_badge_bg_color: '#059669',
       discount_badge_text_color: '#ffffff',
       discount_badge_border_color: '#059669',
       show_badge: true,
       show_category_badge: true,
-      badge_radius: '6px',
+      badge_radius: '4px',
       badge_text_color: '#047857',
       badge_bg_color: '#ecfdf5',
       badge_border_color: '#a7f3d0',
@@ -579,7 +579,7 @@ const DB = (() => {
       footer_2_text_color: '#ffffff',
       footer_2_icon: 'minus',
       footer_2_text: '',
-      countdown_radius: '9999px',
+      countdown_radius: '4px',
       countdown_bg_color: '#059669',
       countdown_text_color: '#ffffff',
       countdown_icon_color: '#ffffff',
@@ -1978,7 +1978,9 @@ const DB = (() => {
     },
     saveCardModelPreset(variantCode, config) {
       if (!variantCode || !config) return;
-      const key = variantCode === 'A' ? 'variant_a' : (variantCode === 'B' ? 'variant_b' : 'variant_c');
+      const key = (variantCode === 'A' || variantCode === 'variant_a')
+        ? 'variant_a'
+        : ((variantCode === 'B' || variantCode === 'variant_b') ? 'variant_b' : 'variant_c');
       const sets = this.getSettings();
       if (!sets.card_variants_config) sets.card_variants_config = {};
 
@@ -2830,7 +2832,7 @@ const DB = (() => {
           ? productData.countdown_radius
           : ((productData.card_config && productData.card_config.countdown_radius !== undefined && productData.card_config.countdown_radius !== null && String(productData.card_config.countdown_radius).trim() !== '')
               ? productData.card_config.countdown_radius
-              : '6px'),
+              : '4px'),
         is_active: productData.is_active !== false,
         sales_count: parseInt(productData.sales_count) || 0,
         admin_card_preview_metrics: (productData.admin_card_preview_metrics && typeof productData.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(productData.admin_card_preview_metrics)) : null,
@@ -3062,7 +3064,7 @@ const DB = (() => {
           ? productData.countdown_radius
           : ((productData.card_config && productData.card_config.countdown_radius !== undefined && productData.card_config.countdown_radius !== null && String(productData.card_config.countdown_radius).trim() !== '')
               ? productData.card_config.countdown_radius
-              : (products[index].countdown_radius !== undefined ? products[index].countdown_radius : (products[index].card_config && products[index].card_config.countdown_radius !== undefined ? products[index].card_config.countdown_radius : '6px'))),
+              : (products[index].countdown_radius !== undefined ? products[index].countdown_radius : (products[index].card_config && products[index].card_config.countdown_radius !== undefined ? products[index].card_config.countdown_radius : '4px'))),
         is_active: productData.is_active !== undefined ? productData.is_active : products[index].is_active,
         sales_count: (products[index] && products[index].sales_count !== undefined) ? products[index].sales_count : (parseInt(productData.sales_count) || 0),
         admin_card_preview_metrics: productData.admin_card_preview_metrics !== undefined ? ((productData.admin_card_preview_metrics && typeof productData.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(productData.admin_card_preview_metrics)) : null) : (products[index].admin_card_preview_metrics || null),

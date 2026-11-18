@@ -1091,6 +1091,49 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lolos 100% (10/10 test cases) pada test suite Playwright komprehensif (`tests/task210c1.spec.js`) mencakup verifikasi Step 1 bersih, Step 2 Card 6, penambahan/penghapusan baris spesifikasi, drawer preview, penyimpanan DB, edit ulang, dan proteksi kebocoran data lintas Desktop 1366x768 dan Mobile 390x844 (iPhone 12/13/14).
       - Lolos 100% (6/6 test cases) pada regression suite Task 2.10A Tahap 2 (`tests/task210a-tahap2.spec.js`).
 
+  - **Penyesuaian Default Outline dan Radius Kartu Produk Step 1 (Task 2.10C-2)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Memperbaiki nilai default desain kartu produk pada Step 1 untuk seluruh jenis model kartu: Model A (`variant_a`), Model B (`variant_b`), dan Model C (`variant_c`).
+      - Menyesuaikan nilai default bingkai Outline menjadi *Tanpa Garis* (`0px` / `border: none; border-width: 0px;`).
+      - Menyederhanakan pilihan saran dropdown Outline menjadi teks bersih tanpa embel-embel satuan `px`.
+      - Menyesuaikan nilai default Radius Sudut pada Label Diskon, Countdown, dan Label Khusus menjadi `4px`.
+      - Menerapkan perlindungan ketat terhadap konfigurasi toko dan produk kustom tersimpan (*Seller Data Safety*).
+    - **Perubahan Default Outline & Label Saran Dropdown**:
+      - *Default Bingkai*: Mengubah nilai default `border_width` dari `1px` menjadi `0px` pada seluruh model kartu (`DEFAULT_CARD_VARIANTS_CONFIG` di `js/db.js`).
+      - *Render Pratinjau*: Logika live preview pada `updateProductCardLivePreview()` dan render etalase pembeli pada `buyer-store.js` (`renderCardVariantA`, `renderCardVariantB`, `renderCardVariantC`) menerapkan `border: none; border-width: 0px;` ketika nilai lebar garis bernilai `0`.
+      - *Pilihan Saran Bersih*: Menghapus embel-embel satuan `px` dari label saran dropdown Outline pada `CARD_PRESET_DROPDOWN_SPECS['border-width']`. Pilihan yang tersedia:
+        1. `Tanpa Garis` (memetakan ke nilai internal `0` / `0px`)
+        2. `Tipis` (memetakan ke nilai internal `1` / `1px`)
+        3. `Sedang` (memetakan ke nilai internal `2` / `2px`)
+        4. `Tebal` (memetakan ke nilai internal `3` / `3px`)
+      - *Logika Fallback Deterministik*: Jika `border_width` tidak terdefinisi/null/kosong, parser `parseBorderWidth(val, defaultVal = 0)` dan pembaca DOM `getCardConfigFromDOM()` menggunakan fallback default `0`.
+    - **Perubahan Default Radius Sudut (Diskon, Countdown, Label Khusus)**:
+      - Mengubah nilai default ketiga komponen radius berikut menjadi **`4px`** pada seluruh model kartu (Model A, B, dan C):
+        - *Label Diskon*: `discount_badge_radius: '4px'` (sebelumnya `8px`).
+        - *Countdown*: `countdown_radius: '4px'` (sebelumnya `9999px` di seed DB dan `6px` di parser).
+        - *Label Khusus*: `badge_radius: '4px'` (sebelumnya `6px`).
+      - Radius sudut kontainer kartu produk (`border_radius: '0px'`) dipertahankan pada `0px` (sudut tegas) tanpa perubahan.
+      - Logika fallback deterministik disinkronkan di:
+        - `DEFAULT_CARD_VARIANTS_CONFIG` (`js/db.js`)
+        - `CARD_PRESET_DROPDOWN_SPECS` (`badge-radius`, `discount-badge-radius`, `countdown-radius`)
+        - Parser helper: `parseBadgeRadius(val, 4)`, `parseDiscountBadgeRadius(val, 4)`, `parseCountdownRadius(val, 4)`
+        - Pembaca DOM: `getCardConfigFromDOM()`
+        - Pemuatan input: `loadCardConfigInputs()`
+        - Pembatalan konfigurasi: `handleCardCancel()`
+        - Live preview kartu: `updateProductCardLivePreview()`
+        - Persistensi produk: `createProduct` dan `updateProduct` di `js/db.js`
+        - Render etalase pembeli: `buyer-store.js` (`renderCardVariantA`, `renderCardVariantB`, `renderCardVariantC`).
+    - **Perlindungan Data Toko & Seller Safety**:
+      - Nilai default baru hanya berlaku jika seller belum memiliki konfigurasi kustom tersimpan atau secara manual memilih saran default.
+      - Konfigurasi preset default toko tersimpan milik seller (`sets.card_variants_config`) tidak di-overwrite.
+      - Konfigurasi kartu per produk yang telah dikustomisasi seller (`prod.card_config`) tetap dipertahankan 100%.
+      - Tidak ada pemaksaan migrasi sepihak pada data lama toko/produk yang sudah ada.
+      - `DB.saveCardModelPreset()` mendukung penamaan variant fleksibel (`'A'`/`'variant_a'`, `'B'`/`'variant_b'`, `'C'`/`'variant_c'`) sehingga penyimpanan konfigurasi toko seller tersimpan presisi dan aman tanpa merusak model kartu lainnya.
+    - **Verifikasi Pengujian Lintas Viewport**:
+      - Lolos 100% (14/14 test cases PASS, 0 FAIL) pada test suite Playwright komprehensif (`tests/task210c2.spec.js`) mencakup seluruh 13 skenario wajib di viewport Desktop 1366x768 dan Mobile 390x844 (iPhone 12/13/14).
+      - Lolos 100% (10/10 test cases PASS, 0 FAIL) pada regression suite Task 2.10C-1 (`tests/task210c1.spec.js` - Spesifikasi & SKU Step 2 aman).
+      - Lolos 100% (6/6 test cases PASS, 0 FAIL) pada regression suite Task 2.10A Tahap 2 (`tests/task210a-tahap2.spec.js` - Simulasi Promo & PDP aman).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

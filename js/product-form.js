@@ -3090,7 +3090,7 @@ const ProductForm = (() => {
         ? prod.countdown_radius
         : ((prod.card_config && prod.card_config.countdown_radius !== undefined && prod.card_config.countdown_radius !== null && String(prod.card_config.countdown_radius).trim() !== '')
           ? prod.card_config.countdown_radius
-          : '6px'),
+          : '4px'),
       image_url: imgs.length > 0 ? imgs[0] : null,
       images: imgs,
       image_aspect_ratio: prod.image_aspect_ratio || (prod.card_variant === 'C' ? '4:3' : (prod.card_variant === 'B' ? '3:4' : '1:1')),
@@ -5243,7 +5243,7 @@ const ProductForm = (() => {
         text: '#6b21a8',
         bg: '#faf5ff',
         border: '#e9d5ff',
-        radius: '6px',
+        radius: '4px',
         style: 'bg'
       };
     }
@@ -5254,19 +5254,19 @@ const ProductForm = (() => {
       text: primary,
       bg: subtleBg,
       border: borderCol,
-      radius: '6px',
+      radius: '4px',
       style: 'bg'
     };
   }
 
-  function parseBadgeRadius(val, defaultVal = 6) {
+  function parseBadgeRadius(val, defaultVal = 4) {
     if (val === undefined || val === null || val === '') return defaultVal;
     const num = parseInt(val, 10);
     if (isNaN(num)) return defaultVal;
     return Math.max(0, Math.min(12, num));
   }
 
-  function parseBorderWidth(val, defaultVal = 1) {
+  function parseBorderWidth(val, defaultVal = 0) {
     if (val === undefined || val === null || val === '') return defaultVal;
     const num = parseInt(val, 10);
     if (isNaN(num)) return defaultVal;
@@ -5280,14 +5280,14 @@ const ProductForm = (() => {
     return Math.max(0, Math.min(24, num));
   }
 
-  function parseDiscountBadgeRadius(val, defaultVal = 8) {
+  function parseDiscountBadgeRadius(val, defaultVal = 4) {
     if (val === undefined || val === null || val === '') return defaultVal;
     const num = parseInt(val, 10);
     if (isNaN(num)) return defaultVal;
     return Math.max(0, Math.min(12, num));
   }
 
-  function parseCountdownRadius(val, defaultVal = 6) {
+  function parseCountdownRadius(val, defaultVal = 4) {
     if (val === undefined || val === null || val === '') return defaultVal;
     if (typeof val === 'string' && val.includes('9999')) return 12; // sanitize legacy pill
     const num = parseInt(val, 10);
@@ -5296,7 +5296,7 @@ const ProductForm = (() => {
   }
 
   function getBorderWidthLabel(num) {
-    if (num === 0) return 'None';
+    if (num === 0) return 'Tanpa Garis';
     if (num === 1) return 'Tipis';
     if (num === 2) return 'Sedang';
     if (num === 3) return 'Tebal';
@@ -5314,12 +5314,12 @@ const ProductForm = (() => {
       chevronId: 'icon-border-width-chevron',
       menuId: 'menu-border-width',
       parser: parseBorderWidth,
-      defaultVal: 1,
+      defaultVal: 0,
       presets: [
-        { value: 0, label: 'None (0 px)' },
-        { value: 1, label: 'Tipis (1 px)' },
-        { value: 2, label: 'Sedang (2 px)' },
-        { value: 3, label: 'Tebal (3 px)' }
+        { value: 0, label: 'Tanpa Garis' },
+        { value: 1, label: 'Tipis' },
+        { value: 2, label: 'Sedang' },
+        { value: 3, label: 'Tebal' }
       ]
     },
     'border-radius': {
@@ -5351,7 +5351,7 @@ const ProductForm = (() => {
       chevronId: 'icon-badge-radius-chevron',
       menuId: 'menu-badge-radius',
       parser: parseBadgeRadius,
-      defaultVal: 6,
+      defaultVal: 4,
       presets: [
         { value: 0, label: '0 px' },
         { value: 4, label: '4 px' },
@@ -5370,7 +5370,7 @@ const ProductForm = (() => {
       chevronId: 'icon-discount-badge-radius-chevron',
       menuId: 'menu-discount-badge-radius',
       parser: parseDiscountBadgeRadius,
-      defaultVal: 8,
+      defaultVal: 4,
       presets: [
         { value: 0, label: '0 px' },
         { value: 4, label: '4 px' },
@@ -5389,7 +5389,7 @@ const ProductForm = (() => {
       chevronId: 'icon-countdown-radius-chevron',
       menuId: 'menu-countdown-radius',
       parser: parseCountdownRadius,
-      defaultVal: 6,
+      defaultVal: 4,
       presets: [
         { value: 0, label: '0 px' },
         { value: 4, label: '4 px' },
@@ -5980,8 +5980,8 @@ const ProductForm = (() => {
 
     const defThemeColor = getPrimaryThemeColor();
 
-    const rawBw = getVal('cfg-border-width', 'cfg-border-width-mob', '1');
-    const bwVal = parseBorderWidth(rawBw, 1);
+    const rawBw = getVal('cfg-border-width', 'cfg-border-width-mob', '0');
+    const bwVal = parseBorderWidth(rawBw, 0);
     const rawBr = getVal('cfg-border-radius', 'cfg-border-radius-mob', '0');
     const brVal = parseBorderRadius(rawBr, 0);
 
@@ -5999,7 +5999,7 @@ const ProductForm = (() => {
       show_strikethrough_price: getChk('cfg-show-strike', 'cfg-show-strike-mob'),
       strike_price_color: getVal('cfg-strike-color', 'cfg-strike-color-mob', '#94a3b8'),
       show_discount_badge: getChk('cfg-show-discount-badge', 'cfg-show-discount-badge-mob'),
-      discount_badge_radius: `${parseDiscountBadgeRadius(getVal('cfg-discount-badge-radius', 'cfg-discount-badge-radius-mob', '8'), 8)}px`,
+      discount_badge_radius: `${parseDiscountBadgeRadius(getVal('cfg-discount-badge-radius', 'cfg-discount-badge-radius-mob', '4'), 4)}px`,
       discount_badge_position: getVal('cfg-discount-badge-position', 'cfg-discount-badge-position-mob', 'top-right'),
       discount_badge_text_color: getVal('cfg-discount-badge-text-color', 'cfg-discount-badge-text-color-mob', '#ffffff'),
       discount_badge_bg_color: getVal('cfg-discount-badge-bg-color', 'cfg-discount-badge-bg-color-mob', defThemeColor),
@@ -6008,12 +6008,12 @@ const ProductForm = (() => {
       show_badge: showBadgeVal,
       show_category_badge: showBadgeVal,
       badge_style: getVal('cfg-badge-style', 'cfg-badge-style-mob', 'bg'),
-      badge_radius: `${parseBadgeRadius(getVal('cfg-badge-radius', 'cfg-badge-radius-mob', '6'), 6)}px`,
+      badge_radius: `${parseBadgeRadius(getVal('cfg-badge-radius', 'cfg-badge-radius-mob', '4'), 4)}px`,
       badge_text_color: getVal('cfg-badge-text-color', 'cfg-badge-text-color-mob', getThemeDefaultBadgeColors(primaryState.card_variant || 'A').text),
       badge_bg_color: getVal('cfg-badge-bg-color', 'cfg-badge-bg-color-mob', getThemeDefaultBadgeColors(primaryState.card_variant || 'A').bg),
       badge_border_color: getVal('cfg-badge-border-color', 'cfg-badge-border-color-mob', getThemeDefaultBadgeColors(primaryState.card_variant || 'A').border),
       enable_countdown: getChk('cfg-enable-countdown', 'cfg-enable-countdown-mob'),
-      countdown_radius: `${parseCountdownRadius(getVal('cfg-countdown-radius', 'cfg-countdown-radius-mob', '6'), 6)}px`,
+      countdown_radius: `${parseCountdownRadius(getVal('cfg-countdown-radius', 'cfg-countdown-radius-mob', '4'), 4)}px`,
       countdown_bg_color: getVal('cfg-countdown-bg-color', 'cfg-countdown-bg-color-mob', defThemeColor),
       countdown_text_color: getVal('cfg-countdown-text-color', 'cfg-countdown-text-color-mob', '#ffffff'),
       countdown_icon_color: getVal('cfg-countdown-icon-color', 'cfg-countdown-icon-color-mob', '#ffffff'),
@@ -6062,7 +6062,7 @@ const ProductForm = (() => {
       }
     };
 
-    const bwNum = parseBorderWidth(cfg.border_width, 1);
+    const bwNum = parseBorderWidth(cfg.border_width, 0);
     syncLegacyTrack('border-width', bwNum);
     setVal('cfg-border-width', bwNum);
     updateBorderWidthPresetButtons(bwNum);
@@ -6096,7 +6096,7 @@ const ProductForm = (() => {
     setVal('cfg-strike-hex', strikeCol);
 
     setChk('cfg-show-discount-badge', cfg.show_discount_badge !== false);
-    const discRadNum = parseDiscountBadgeRadius(cfg.discount_badge_radius, 8);
+    const discRadNum = parseDiscountBadgeRadius(cfg.discount_badge_radius, 4);
     syncLegacyTrack('discount-badge-radius', discRadNum);
     setVal('cfg-discount-badge-radius', discRadNum);
     updateDiscountBadgeRadiusPresetButtons(discRadNum);
@@ -6121,7 +6121,7 @@ const ProductForm = (() => {
     const bStyle = cfg.badge_style || 'bg';
     setBadgeStyleMode(bStyle);
 
-    const bRadiusNum = parseBadgeRadius(cfg.badge_radius, 6);
+    const bRadiusNum = parseBadgeRadius(cfg.badge_radius, 4);
     syncLegacyTrack('badge-radius', bRadiusNum);
     setVal('cfg-badge-radius', bRadiusNum);
     updateBadgeRadiusPresetButtons(bRadiusNum);
@@ -6142,7 +6142,7 @@ const ProductForm = (() => {
     const rawCdRad = (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '')
       ? primaryState.countdown_radius
       : cfg.countdown_radius;
-    const cdRadNum = parseCountdownRadius(rawCdRad, 6);
+    const cdRadNum = parseCountdownRadius(rawCdRad, 4);
     syncLegacyTrack('countdown-radius', cdRadNum);
     setVal('cfg-countdown-radius', cdRadNum);
     updateCountdownRadiusPresetButtons(cdRadNum);
@@ -6516,8 +6516,8 @@ const ProductForm = (() => {
       // Pulihkan input countdown di DOM
       const rawCdRadCancel = (primaryState.countdown_radius !== undefined && primaryState.countdown_radius !== null && primaryState.countdown_radius !== '')
         ? primaryState.countdown_radius
-        : (primaryState.card_config?.countdown_radius !== undefined ? primaryState.card_config.countdown_radius : 6);
-      const cRadius = parseCountdownRadius(rawCdRadCancel, 6);
+        : (primaryState.card_config?.countdown_radius !== undefined ? primaryState.card_config.countdown_radius : 4);
+      const cRadius = parseCountdownRadius(rawCdRadCancel, 4);
       const cBg = primaryState.countdown_bg_color || getThemeBodyColor();
       const cTxt = primaryState.countdown_text_color || '#ffffff';
       const cIco = primaryState.countdown_icon_color || '#ffffff';
@@ -12122,7 +12122,7 @@ const ProductForm = (() => {
     const defaultTitleColor = modelDefault.title_color || '#0f172a';
     const defaultPriceColor = modelDefault.price_color || defCardThemeColor;
     const defaultBtnColor = modelDefault.btn_color || defCardThemeColor;
-    const defaultBorderWidth = parseBorderWidth(modelDefault.border_width, 1);
+    const defaultBorderWidth = parseBorderWidth(modelDefault.border_width, 0);
     const defaultBorderRadius = parseBorderRadius(modelDefault.border_radius, 0);
 
     const isCustomMode = primaryState.use_default_card_design === false;
@@ -12306,7 +12306,7 @@ const ProductForm = (() => {
 
     // Discount Badge Custom Styles (pada foto produk)
     const rawDiscRadius = getLiveDomVal('cfg-discount-badge-radius', 'cfg-discount-badge-radius-mob', primaryState.card_config?.discount_badge_radius);
-    const discBadgeRadius = `${parseDiscountBadgeRadius(rawDiscRadius, 8)}px`;
+    const discBadgeRadius = `${parseDiscountBadgeRadius(rawDiscRadius, 4)}px`;
     const discBadgePos = getLiveDomVal('cfg-discount-badge-position', 'cfg-discount-badge-position-mob', primaryState.card_config?.discount_badge_position) || 'top-right';
     const discBadgePosClass = getDiscountBadgePositionClass(discBadgePos);
     const discBadgeTextColor = document.getElementById('cfg-discount-badge-text-color')?.value || primaryState.card_config?.discount_badge_text_color || '#ffffff';
@@ -12320,7 +12320,7 @@ const ProductForm = (() => {
     const badgeStyleMode = rawBadgeStyle || (primaryState.card_config?.badge_style || defBadge.style || 'bg');
 
     const rawBadgeRadius = getLiveDomVal('cfg-badge-radius', 'cfg-badge-radius-mob', primaryState.card_config?.badge_radius);
-    const badgeRadiusNum = parseBadgeRadius(rawBadgeRadius, 6);
+    const badgeRadiusNum = parseBadgeRadius(rawBadgeRadius, 4);
     const badgeRadius = `${badgeRadiusNum}px`;
 
     const rawBadgeText = document.getElementById('cfg-badge-text-color')?.value;
@@ -12354,7 +12354,7 @@ const ProductForm = (() => {
       ? primaryState.countdown_radius
       : primaryState.card_config?.countdown_radius;
     const rawCdRadius = getLiveDomVal('cfg-countdown-radius', 'cfg-countdown-radius-mob', rawCdFallback);
-    const countdownRadius = `${parseCountdownRadius(rawCdRadius, 6)}px`;
+    const countdownRadius = `${parseCountdownRadius(rawCdRadius, 4)}px`;
     const countdownBgColor = document.getElementById('cfg-countdown-bg-color')?.value || document.getElementById('cfg-countdown-bg-color-mob')?.value || primaryState.countdown_bg_color || defCardThemeColor;
     const countdownTextColor = document.getElementById('cfg-countdown-text-color')?.value || document.getElementById('cfg-countdown-text-color-mob')?.value || primaryState.countdown_text_color || '#ffffff';
     const countdownIconColor = document.getElementById('cfg-countdown-icon-color')?.value || document.getElementById('cfg-countdown-icon-color-mob')?.value || primaryState.countdown_icon_color || '#ffffff';
