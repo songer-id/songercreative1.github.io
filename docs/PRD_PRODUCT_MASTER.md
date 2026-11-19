@@ -1247,6 +1247,26 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Terverifikasi 100% PASS melalui test suite terdedikasi (`scratch/test_task210c5d_modal_text.js` - 37/37 pass, `scratch/test_task210c5c_simulate_discount.js` - 42/42 pass, dan `scratch/test_task210c5b_min_order.js` - 17/17 pass) baik di desktop maupun mobile viewport.
 
+  - **Pemisahan Card Step 1 Menjadi Dua Card Terpisah (Task 2.10C-6B)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Memisahkan formulir Step 1 dari 1 card tunggal monolitik menjadi 2 card terpisah dengan gaya visual konsisten (`.step1-section-card bg-white rounded-lg p-3.5 sm:p-6 space-y-5 sm:space-y-6`).
+      - Menata pengelompokan input secara modular antara Informasi Produk dan Informasi Kartu Produk etalase.
+    - **Struktur Pembagian Card**:
+      - **Card 1 — Informasi Produk (`#card-step1-product-info`)**:
+        1. *Jenis Produk* (`#section-step1-input1-type`)
+        2. *Tampilkan di Etalase Toko* (`#section-step1-input2-etalase`)
+        3. *Model Kartu Produk \** (`#section-step1-input3-cardmodel`)
+        4. *Foto Produk \** (`#section-step1-input4-photo`)
+        5. *Nama Produk \** (`#section-step1-input5-name`)
+      - **Card 2 — Informasi Kartu Produk (`#card-step1-card-info`)**:
+        1. *Label Khusus* (`#section-step1-input6-labels`)
+        2. *Footer Kartu* (`#section-step1-input7-footers`, khusus Model C)
+        - *Teks Informasi*: `"Buka Tab Desain Kartu pada Preview Kartu Produk, Untuk Mengubah Gaya/Desain Kartu Produk."` di bagian bawah Card 2 dengan pemisah border halus.
+    - **Sinkronisasi Gating Bertahap (Progressive Gating)**:
+      - Diatur via `updateStep1SequentialGatingDOM()`: Card 2 tersembunyi (`hidden`) ketika Jenis Produk belum dipilih, atau ketika Etalase Toko aktif namun Model Kartu belum ditentukan. Card 2 otomatis terbuka saat syarat gating terpenuhi.
+    - **Verifikasi Fungsionalitas**:
+      - Terverifikasi 100% PASS (31/31 skenario) via test suite Playwright (`scratch/test_task210c6b_step1_cards.js`) mencakup struktur DOM hierarkis, sibling ordering, gating dinamis, interaktivitas toggle label & footer accordion, serta responsivitas desktop/mobile (375x812).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

@@ -3465,14 +3465,14 @@ const ProductForm = (() => {
           <div id="wizard-form-col" class="w-full ${isLivePreviewOpen && primaryState.is_active ? 'lg:pr-[320px] xl:pr-[340px]' : ''} ${currentStep === 2 ? 'space-y-0' : 'space-y-4 sm:space-y-6'} transition-all duration-300">
 
             <!-- ============================================== -->
-            <!-- STEP 1 PANE: INFORMASI PRODUK -->
+            <!-- STEP 1 PANE: DUA KARTU UTAMA -->
             <!-- ============================================== -->
             <div id="step-pane-1" class="space-y-4 sm:space-y-6 ${currentStep === 1 ? 'block' : 'hidden'}">
               ${currentStep === 1 ? renderFormErrorBannerHtml() : ''}
 
-              <!-- 1 KARTU UTAMA: INFORMASI PRODUK -->
-              <div class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card w-full">
-                <!-- Header Card -->
+              <!-- CARD 1: INFORMASI PRODUK -->
+              <div id="card-step1-product-info" class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card w-full">
+                <!-- Header Card 1 -->
                 <div class="flex items-center justify-between pb-1">
                   <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Informasi Produk</h2>
                 </div>
@@ -3635,10 +3635,21 @@ const ProductForm = (() => {
                       <p id="name-min-length-error" class="hidden text-[11px] font-semibold text-red-600 mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle-fill"></i><span>Nama produk minimal harus 5 karakter.</span></p>
                     </div>
 
-                    <!-- Input 6: Tambahkan Label Khusus -->
-                    <div id="section-step1-input6-labels" class="space-y-4">
-                      <hr class="border-slate-100" />
-                      <div class="pb-2 border-b border-slate-100 flex items-center justify-between gap-3">
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- CARD 2: INFORMASI KARTU PRODUK -->
+              <div id="card-step1-card-info" class="bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-6 space-y-5 sm:space-y-6 step1-section-card w-full ${(!primaryState.product_type || (primaryState.is_active && !primaryState.card_variant)) ? 'hidden' : 'block'}">
+                <!-- Header Card 2 -->
+                <div class="flex items-center justify-between pb-1">
+                  <h2 class="text-base sm:text-lg font-bold" style="color: var(--color-primary) !important;">Informasi Kartu Produk</h2>
+                </div>
+
+                <!-- Input 1 di Card 2: Tambahkan Label Khusus -->
+                <div id="section-step1-input6-labels" class="space-y-4">
+                  <div class="pb-2 border-b border-slate-100 flex items-center justify-between gap-3">
                         <div>
                           <label class="block text-xs font-bold text-slate-800">
                             Tambahkan Label Khusus
@@ -3851,9 +3862,10 @@ const ProductForm = (() => {
                       </div>
                     </div>
 
-                  </div>
-                </div>
-
+                <!-- Teks Informasi Kecil di Card 2 -->
+                <p class="text-xs text-slate-500 pt-3 border-t border-slate-100 leading-relaxed">
+                  Buka Tab Desain Kartu pada Preview Kartu Produk, Untuk Mengubah Gaya/Desain Kartu Produk.
+                </p>
               </div>
 
               <!-- TOMBOL AKSI BAWAH STEP 1 -->
@@ -27387,6 +27399,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       const sec3 = document.getElementById('section-step1-input3-cardmodel');
       const cardModelPlaceholder = document.getElementById('step1-cardmodel-gated-placeholder');
       const cardModelUnlocked = document.getElementById('step1-cardmodel-unlocked-fields');
+      const card2Info = document.getElementById('card-step1-card-info');
       const fabMob = document.getElementById('btn-fab-live-preview');
 
       updateStep1DynamicDescriptions();
@@ -27399,6 +27412,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (!hasType) {
         if (p1Placeholder) p1Placeholder.classList.remove('hidden');
         if (p1Unlocked) p1Unlocked.classList.add('hidden');
+        if (card2Info) card2Info.classList.add('hidden');
         if (fabMob) fabMob.classList.add('hidden');
         setSidebarState(false);
         return;
@@ -27414,6 +27428,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (sec3) sec3.classList.add('hidden');
         if (cardModelPlaceholder) cardModelPlaceholder.classList.add('hidden');
         if (cardModelUnlocked) cardModelUnlocked.classList.remove('hidden');
+        if (card2Info) card2Info.classList.remove('hidden');
 
         // Sembunyikan Input Foto khusus etalase
         const sec4Photo = document.getElementById('section-step1-input4-photo');
@@ -27433,10 +27448,12 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (!hasVariant) {
           if (cardModelPlaceholder) cardModelPlaceholder.classList.remove('hidden');
           if (cardModelUnlocked) cardModelUnlocked.classList.add('hidden');
+          if (card2Info) card2Info.classList.add('hidden');
           setSidebarState(false);
         } else {
           if (cardModelPlaceholder) cardModelPlaceholder.classList.add('hidden');
           if (cardModelUnlocked) cardModelUnlocked.classList.remove('hidden');
+          if (card2Info) card2Info.classList.remove('hidden');
           // Jika Jenis Produk, Etalase ON, dan Model Kartu sudah dipilih -> Otomatis Buka Sidebar Live Preview
           setSidebarState(true);
         }
