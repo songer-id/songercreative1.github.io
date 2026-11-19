@@ -1229,6 +1229,24 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Seluruh 42 skenario pengujian terfokus (harga kosong, promo nonaktif, kedua syarat invalid, promo bulanan saja, promo harian saja, kedua promo aktif, desktop modal/ring, mobile modal/sheet auto-dismiss, Step 1 demonstratif independen, serta sinkronisasi navigasi Step 2 -> Step 1) terverifikasi 100% PASS (`scratch/test_task210c5c_simulate_discount.js`).
 
+  - **Revisi Teks Modal Validasi Uji Coba & Simulasi Diskon (Task 2.10C-5D)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Memperbarui redaksi judul dan struktur layout daftar item pada modal peringatan validasi (`showPreviewTestModeAlert`) yang digunakan bersama oleh fitur Uji Coba (`canActivateTestMode`) dan Simulasi Diskon Step 2 (`canActivateStep2DiscountSimulation`).
+      - Menyederhanakan tampilan modal dengan menghapus label perantara agar daftar kekurangan tampil langsung secara bersih, ringkas, dan fokus.
+    - **Perubahan Redaksi Judul Modal**:
+      - Redaksi judul lama: *"Data Produk Belum Lengkap"*.
+      - Redaksi judul baru: **"Mohon Lengkapi Bagian Berikut Untuk Mengaktifkan Simulasi Diskon"**.
+      - Diterapkan secara seragam pada judul objek kembalian `canActivateTestMode()`, fallback `showPreviewTestModeAlert()`, dan `canActivateStep2DiscountSimulation()`.
+    - **Penyederhanaan Tampilan Daftar Missing Items**:
+      - Label header lama *"Bagian yang belum lengkap:"* dihapus sepenuhnya dari template HTML modal.
+      - Elemen unordered list (`<ul>`) yang memuat missing items kini langsung dirender di dalam kontainer informasi berwarna amber (`bg-amber-50/90 border-amber-200/80 rounded-lg p-2.5 max-h-[140px] overflow-y-auto`).
+    - **Dinamisme Item Validasi**:
+      - Daftar missing items tetap 100% dinamis berdasarkan hasil evaluasi aktual:
+        - *Uji Coba*: Hanya menampilkan bagian yang belum lengkap atau tidak valid (misal: *Harga Jual*, *Stok Produk*, *Minimal Pesanan*, *Maksimal Jumlah Pembelian*). Bagian yang sudah valid tidak pernah dimunculkan.
+        - *Simulasi Diskon*: Hanya menampilkan *Harga Jual* (jika harga kosong/invalid) dan/atau *Promo Bulanan atau Promo Harian* (jika kedua promo nonaktif/invalid).
+    - **Verifikasi Fungsionalitas**:
+      - Terverifikasi 100% PASS melalui test suite terdedikasi (`scratch/test_task210c5d_modal_text.js` - 37/37 pass, `scratch/test_task210c5c_simulate_discount.js` - 42/42 pass, dan `scratch/test_task210c5b_min_order.js` - 17/17 pass) baik di desktop maupun mobile viewport.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

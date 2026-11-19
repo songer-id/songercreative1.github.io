@@ -97,7 +97,7 @@ function assert(desc, condition, details = '') {
     const modalRoot1 = page.locator('#preview-scoped-modal-root');
     assert('1.1 Modal alert Uji Coba tampil di desktop', await modalRoot1.isVisible());
     const modalText1 = await modalRoot1.innerText();
-    assert('1.1 Modal mencantumkan "Data Produk Belum Lengkap" & "Harga Jual"', modalText1.includes('Data Produk Belum Lengkap') && modalText1.includes('Harga Jual'));
+    assert('1.1 Modal mencantumkan judul baru dan tidak memiliki label "Bagian yang belum lengkap:"', modalText1.includes('Mohon Lengkapi Bagian Berikut Untuk Mengaktifkan Simulasi Diskon') && modalText1.includes('Harga Jual') && !modalText1.includes('Bagian yang belum lengkap'));
 
     // Klik OK / Mengerti pada modal alert
     await page.click('#preview-scoped-modal-root .btn-confirm-validation-ok');

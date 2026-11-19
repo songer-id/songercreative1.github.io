@@ -7285,9 +7285,9 @@ const ProductForm = (() => {
     if (missingItems.length > 0) {
       return {
         allowed: false,
-        title: 'Data Produk Belum Lengkap',
+        title: 'Mohon Lengkapi Bagian Berikut Untuk Mengaktifkan Simulasi Diskon',
         missingItems: missingItems,
-        reason: 'Data Produk Belum Lengkap',
+        reason: 'Mohon Lengkapi Bagian Berikut Untuk Mengaktifkan Simulasi Diskon',
         detailMessage: 'Bagian yang belum lengkap: ' + missingItems.join(', '),
         targetEl: topmostEl,
         allTargetEls: resolvedList
@@ -7471,7 +7471,7 @@ const ProductForm = (() => {
     if (roots.length === 0) return;
 
     const isObj = (typeof checkOrMessage === 'object' && checkOrMessage !== null);
-    const title = isObj && checkOrMessage.title ? checkOrMessage.title : 'Data Produk Belum Lengkap';
+    const title = isObj && checkOrMessage.title ? checkOrMessage.title : 'Mohon Lengkapi Bagian Berikut Untuk Mengaktifkan Simulasi Diskon';
     const items = isObj && Array.isArray(checkOrMessage.missingItems) && checkOrMessage.missingItems.length > 0
       ? checkOrMessage.missingItems
       : (isObj && checkOrMessage.reason ? [checkOrMessage.reason] : [String(checkOrMessage || 'Silahkan lengkapi data penjualan wajib.')]);
@@ -7489,8 +7489,7 @@ const ProductForm = (() => {
           </h3>
         </div>
 
-        <div class="text-left bg-amber-50/90 border border-amber-200/80 rounded-lg p-2.5 space-y-1 max-h-[140px] overflow-y-auto" style="max-height: 140px; overflow-y: auto;">
-          <span class="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">Bagian yang belum lengkap:</span>
+        <div class="text-left bg-amber-50/90 border border-amber-200/80 rounded-lg p-2.5 max-h-[140px] overflow-y-auto" style="max-height: 140px; overflow-y: auto;">
           <ul class="text-[10px] text-amber-800 list-disc list-inside space-y-0.5 leading-snug font-medium">
             ${items.map(it => `<li>${escapeHtml(it)}</li>`).join('')}
           </ul>
@@ -9680,7 +9679,7 @@ const ProductForm = (() => {
 
       return {
         allowed: false,
-        title: 'Data Produk Belum Lengkap',
+        title: 'Mohon Lengkapi Bagian Berikut Untuk Mengaktifkan Simulasi Diskon',
         missingItems: missingItems,
         targetEl: topmostEl,
         allTargetEls: invalidTargets.map(t => t.el)
