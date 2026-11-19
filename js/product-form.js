@@ -4270,12 +4270,12 @@ const ProductForm = (() => {
               </div>
 
               <!-- TOMBOL AKSI BAWAH STEP 1 -->
-              <div id="step1-footer-actions" class="step1-footer-actions product-form-footer-actions bg-white rounded-lg border-0 shadow-none p-4 flex items-center justify-between">
-                <button type="button" id="btn-step-1-cancel" class="px-5 py-2.5 border-0 rounded-md text-xs font-semibold hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5" style="background-color: #ffffff; color: var(--color-primary);">
+              <div id="step1-footer-actions" class="step1-footer-actions product-form-footer-actions bg-white rounded-lg border-0 shadow-none p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
+                <button type="button" id="btn-step-1-cancel" class="w-full sm:w-auto justify-center px-5 py-2.5 border-0 rounded-md text-xs font-semibold hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5" style="background-color: #ffffff; color: var(--color-primary);">
                   <i class="bi bi-x-lg"></i>
                   <span>Batal</span>
                 </button>
-                <button type="button" id="btn-step-1-next" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-none flex items-center gap-2 transition cursor-pointer">
+                <button type="button" id="btn-step-1-next" class="w-full sm:w-auto justify-center btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-none flex items-center gap-2 transition cursor-pointer">
                   <span>Lanjutkan</span>
                   <i class="bi bi-arrow-right"></i>
                 </button>
@@ -19733,21 +19733,21 @@ const ProductForm = (() => {
         `}
 
         <!-- TOMBOL AKSI BAWAH STEP 2: KEMBALI, SIMPAN DRAF, SIMPAN PRODUK -->
-        <div id="step2-footer-actions" class="product-form-footer-actions step2-footer-actions bg-white rounded-lg border-0 shadow-none py-2.5 px-3 sm:p-4 flex items-center justify-between flex-wrap gap-2.5 sm:gap-3">
-          <button type="button" id="btn-step-2-prev" class="px-5 py-2.5 border-0 rounded-md text-xs font-semibold hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer" style="background-color: #ffffff; color: var(--color-primary);">
+        <div id="step2-footer-actions" class="product-form-footer-actions step2-footer-actions bg-white rounded-lg border-0 shadow-none py-2.5 px-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
+          <button type="button" id="btn-step-2-prev" class="w-full sm:w-auto justify-center px-5 py-2.5 border-0 rounded-md text-xs font-semibold hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer" style="background-color: #ffffff; color: var(--color-primary);">
             <i class="bi bi-arrow-left"></i>
             <span>${formMode === 'edit' ? 'Batal / Kembali ke Daftar' : 'Kembali'}</span>
           </button>
 
-          <div class="flex items-center gap-3">
+          <div class="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             <!-- Tombol Simpan Draf -->
-            <button type="button" id="btn-save-draft" class="px-5 py-2.5 rounded-md border-0 bg-white hover:bg-slate-50 text-xs font-bold shadow-none transition flex items-center gap-2 cursor-pointer" style="color: var(--color-primary);">
+            <button type="button" id="btn-save-draft" class="w-full sm:w-auto justify-center px-5 py-2.5 rounded-md border-0 bg-white hover:bg-slate-50 text-xs font-bold shadow-none transition flex items-center gap-2 cursor-pointer" style="color: var(--color-primary);">
               <i class="bi bi-file-earmark-text"></i>
               <span>Simpan Draf</span>
             </button>
 
             <!-- Tombol Simpan Produk -->
-            <button type="button" id="btn-submit-product" class="btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-none flex items-center gap-2 transition cursor-pointer">
+            <button type="button" id="btn-submit-product" class="w-full sm:w-auto justify-center btn-primary-brand px-6 py-2.5 rounded-md text-xs font-bold text-white shadow-none flex items-center gap-2 transition cursor-pointer">
               <span id="btn-submit-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <i id="btn-submit-icon" class="bi bi-floppy"></i>
               <span id="btn-submit-text">Simpan Produk</span>

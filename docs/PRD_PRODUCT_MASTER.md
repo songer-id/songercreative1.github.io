@@ -1411,6 +1411,45 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lulus seluruh pengujian regresi: `scratch/test_task210c6e2_footers.js` (70/70 PASS), `scratch/test_task210c6e1_footers.js` (52/52 PASS), `scratch/test_task210c6d_card2_availability.js` (51/51 PASS), dan `scratch/test_task210c6c_rating_sales.js` (56/56 PASS).
       - Total lulus: 259 / 259 skenario pengujian lintas resolusi Desktop (1280x800) dan Mobile (375x812, 390x844).
 
+  - **Penyempurnaan Layout Tombol Aksi Mobile Step 1 dan Step 2 (Task 2.10C-6F-2)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Memperbaiki tata letak tombol aksi pada formulir Tambah/Edit Produk agar pada perangkat mobile (`< 640px`) seluruh tombol tersusun vertikal dalam 1 kolom tunggal, sejajar ke bawah, dengan lebar penuh (`100%`) dan tinggi konsisten (`42px` / `2.625rem`).
+      - Menyempurnakan layout tombol pada Step 1: `#btn-step-1-cancel` (Batal) dan `#btn-step-1-next` (Lanjutkan).
+      - Menyempurnakan layout tombol pada Step 2: `#btn-step-2-prev` (Kembali), `#btn-save-draft` (Simpan Draf), dan `#btn-submit-product` (Simpan Produk).
+      - Menjaga tata letak horizontal pada tablet (`640px` s.d. `< 1024px`) dan desktop (`>= 1024px`) dengan fixed bottom action bar yang telah berjalan stabil.
+    - **Implementasi Mobile Step 1 (`#step1-footer-actions`)**:
+      - Kontainer aksi footer Step 1 disusun vertikal: `flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 p-3.5 sm:p-4`.
+      - Tombol tersusun dari atas ke bawah dalam 1 kolom:
+        1. `#btn-step-1-cancel` (Batal)
+        2. `#btn-step-1-next` (Lanjutkan)
+      - Kedua tombol memiliki lebar penuh `w-full sm:w-auto`, tinggi seragam `42px` (`2.625rem`), sudut melengkung `rounded-md` (`0.375rem`), teks dan ikon rata tengah (`justify-center`).
+    - **Implementasi Mobile Step 2 (`#step2-footer-actions`)**:
+      - Kontainer aksi footer Step 2 disusun vertikal: `flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3`.
+      - Kontainer pembungkus tombol aksi kanan (`#step2-footer-actions > div:last-child`) disusun `flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 w-full sm:w-auto`.
+      - Tombol tersusun rapi dari atas ke bawah dalam 1 kolom:
+        1. `#btn-step-2-prev` (Kembali)
+        2. `#btn-save-draft` (Simpan Draf)
+        3. `#btn-submit-product` (Simpan Produk)
+      - Ketiga tombol berlebar penuh `100%`, tinggi `42px` (`2.625rem`), gap vertikal seragam `10px` (`0.625rem`), dengan penataan teks dan ikon rata tengah.
+      - Menjaga hirarki visual: `#btn-submit-product` tetap sebagai tombol utama (`btn-primary-brand`), sedangkan tombol sekunder (`#btn-step-1-cancel`, `#btn-step-2-prev`, `#btn-save-draft`) mempertahankan border solid warna brand dengan latar belakang putih.
+    - **Preservasi Layout Tablet dan Desktop**:
+      - Tablet (`640px` s.d. `< 1024px`): Mempertahankan tata letak horizontal (`sm:flex-row`, `sm:w-auto`), jarak proporsional, dan bebas horizontal overflow.
+      - Desktop (`>= 1024px`): Mempertahankan bottom action bar fixed (`position: fixed !important; bottom: 0;`), tata letak horizontal, fungsi preview desktop, dan seluruh perilaku yang sudah ada.
+    - **Integritas Fungsional**:
+      - Tidak ada perubahan pada event listener, fungsi navigasi form (`goToStep`, `handleFormCancel`, `handleStep2BackAction`, `handleSaveDraftAction`, `handleProductSubmit`), auto-scroll, validasi form, atau alur simpan produk.
+    - **Verifikasi Fungsionalitas & Pengujian Multi-Viewport**:
+      - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6f2_mobile_buttons.js` - 53/53 skenario lulus, 0 gagal):
+        - Mobile Viewports (375x812 iPhone SE/Mini, 390x844 iPhone 12/13/14, 412x915 Samsung Galaxy): Step 1 & Step 2 terverifikasi 1-kolom penuh, lebar 100%, tinggi 42px, urutan benar, teks/ikon rata tengah, zero overflow.
+        - Tablet Viewport (768x1024 iPad): Step 1 & Step 2 mempertahankan tata letak horizontal dan tombol auto-width.
+        - Desktop Viewports (1280x800, 1440x900): Step 1 & Step 2 mempertahankan fixed bottom bar horizontal dan tata letak asli.
+      - Lulus seluruh pengujian regresi:
+        - `scratch/test_task210c6f1_validation_and_layout.js` (30/30 PASS)
+        - `scratch/test_task210c6e2_footers.js` (70/70 PASS)
+        - `scratch/test_task210c6e1_footers.js` (52/52 PASS)
+        - `scratch/test_task210c6d_card2_availability.js` (51/51 PASS)
+        - `scratch/test_task210c6c_rating_sales.js` (56/56 PASS)
+      - Total akumulasi: 312 / 312 skenario pengujian lulus (100% PASS, 0 FAIL) tanpa regresi.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
