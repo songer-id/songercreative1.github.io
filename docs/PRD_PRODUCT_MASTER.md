@@ -1267,6 +1267,33 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Terverifikasi 100% PASS (31/31 skenario) via test suite Playwright (`scratch/test_task210c6b_step1_cards.js`) mencakup struktur DOM hierarkis, sibling ordering, gating dinamis, interaktivitas toggle label & footer accordion, serta responsivitas desktop/mobile (375x812).
 
+  - **Pemindahan Rating & Teks Terjual ke Card 2 Step 1 (Task 2.10C-6C)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Memindahkan seluruh pengaturan dan kontrol interaktif Rating serta Teks Terjual dari Tab Desain Kartu ke Card 2 Step 1 (**Informasi Kartu Produk** / `#card-step1-card-info`).
+      - Mengeliminasi duplikasi elemen kontrol pada Tab Desain Kartu (baik desktop `#accordion-body-text-info` maupun mobile drawer `#accordion-body-text-info-mob`).
+    - **Susunan Komponen Card 2 Terpadu**:
+      1. *Label Khusus* (`#section-step1-input6-labels`)
+      2. *Footer Kartu* (`#section-step1-input7-footers`, khusus Model C)
+      3. *Rating* (`#section-step1-card-rating`)
+      4. *Teks Terjual* (`#section-step1-card-sales`)
+      - *Keterangan Navigasi Desain*: `"Buka Tab Desain Kartu pada Preview Kartu Produk, Untuk Mengubah Gaya/Desain Kartu Produk."`
+    - **Kontrol Pengaturan & Interaktivitas**:
+      - **Rating**: Toggle switch tampil/sembunyikan (`#cfg-show-rating`), pemilih sumber data Otomatis/Manual (`.btn-rating-src`), input nilai manual (`#cfg-rating-manual-val`, 0.0 - 5.0), dan deskripsi penjelasan dinamis (`#cfg-rating-source-desc`).
+      - **Teks Terjual**: Toggle switch tampil/sembunyikan (`#cfg-show-sales`), pemilih sumber data Otomatis/Manual (`.btn-sales-src`), input jumlah terjual manual (`#cfg-sales-manual-val`), dan deskripsi penjelasan dinamis (`#cfg-sales-source-desc`).
+    - **Aturan Integritas Sumber Data (Tanpa Default Otomatis/Manual)**:
+      - Untuk produk baru, `admin_card_preview_metrics.rating.source` dan `sales.source` bernilai `null` (tidak ada tombol Otomatis maupun Manual yang aktif secara baku).
+      - Jika `source === null`: live preview kartu etalase **TIDAK** menampilkan rating bintang maupun teks terjual (tidak ada fallback paksa ke data toko sebelum seller menentukan pilihannya).
+      - Sumber data Rating dan Teks Terjual bersifat 100% independen (misalnya: Rating Otomatis dan Terjual Manual dapat aktif berdampingan).
+    - **Perlindungan Produk Lama (Backward Compatibility)**:
+      - Produk tersimpan dengan konfigurasi `source: 'auto'` tetap mempertahankan pilihan Otomatis dan merender data toko aktual.
+      - Produk dengan `source: 'manual'` tetap mempertahankan pilihan Manual beserta nilai manualnya (`manual_value`).
+      - Produk legacy tanpa metrik eksplisit dialokasikan default aman `source: null` tanpa dipaksa otomatis.
+    - **Mutual Exclusivity pada Model B (Kartu Minimalis)**:
+      - Menampilkan notice informasi `#cfg-metric-model-b-notice` jika varian kartu adalah Model B.
+      - Memastikan hanya salah satu metrik (Rating ATAU Terjual) yang dapat aktif secara bersamaan pada kartu minimalis.
+    - **Verifikasi Fungsionalitas**:
+      - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6c_rating_sales.js` - 56/56 skenario lulus, 0 gagal), mencakup struktur hierarki DOM, ketiadaan ID duplikat di Tab Desain Kartu, independensi sumber data, toggle switch, validasi input manual realtime, serta responsivitas layar desktop & mobile.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

@@ -427,8 +427,8 @@ const ProductForm = (() => {
       enable_countdown: primaryState.enable_countdown,
       isFooterTouched: Boolean(isFooterTouched),
       admin_card_preview_metrics: primaryState.admin_card_preview_metrics ? JSON.parse(JSON.stringify(primaryState.admin_card_preview_metrics)) : {
-        rating: { source: 'auto', manual_value: null },
-        sales: { source: 'auto', manual_value: null }
+        rating: { source: null, manual_value: null },
+        sales: { source: null, manual_value: null }
       }
     };
     cardDesignSnapshotKey = currentKey;
@@ -1037,10 +1037,11 @@ const ProductForm = (() => {
     specific_options_map: {}, // { [matId]: { main: [optIds], extra_1: [optIds], extra_2: [optIds] } }
     variation_dependencies: null,
     show_badge: true,
+    rating_avg: 5.0,
     sales_count: 0,
     admin_card_preview_metrics: {
-      rating: { source: 'auto', manual_value: null },
-      sales: { source: 'auto', manual_value: null }
+      rating: { source: null, manual_value: null },
+      sales: { source: null, manual_value: null }
     },
     order_category: 'Ctk', // Default operasional internal kasir
     category_id: '',     // Kategori Utama Etalase (default '' wajib dipilih seller!)
@@ -2492,10 +2493,11 @@ const ProductForm = (() => {
       show_shipping_for_non_physical: false,
       has_layer_3: false,
       show_badge: true,
+      rating_avg: 5.0,
       sales_count: 0,
       admin_card_preview_metrics: {
-        rating: { source: 'auto', manual_value: null },
-        sales: { source: 'auto', manual_value: null }
+        rating: { source: null, manual_value: null },
+        sales: { source: null, manual_value: null }
       },
       order_category: 'Ctk',
       category_id: '', // Default '' (kosong, seller wajib memilih sendiri!)
@@ -2968,10 +2970,11 @@ const ProductForm = (() => {
       show_shipping_for_non_physical: prod.show_shipping_for_non_physical || false,
       has_layer_3: false,
       show_badge: prod.card_variant === 'B' ? false : (prod.show_badge !== undefined ? prod.show_badge : true),
+      rating_avg: (prod.rating_avg !== undefined && prod.rating_avg !== null && !isNaN(parseFloat(prod.rating_avg))) ? parseFloat(prod.rating_avg) : 5.0,
       sales_count: (prod.sales_count !== undefined && prod.sales_count !== null && !isNaN(parseInt(prod.sales_count))) ? parseInt(prod.sales_count, 10) : 0,
       admin_card_preview_metrics: (prod.admin_card_preview_metrics && typeof prod.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(prod.admin_card_preview_metrics)) : {
-        rating: { source: 'auto', manual_value: null },
-        sales: { source: 'auto', manual_value: null }
+        rating: { source: null, manual_value: null },
+        sales: { source: null, manual_value: null }
       },
       order_category: prod.order_category || 'Ctk',
       category_id: editCatId,
@@ -3454,6 +3457,16 @@ const ProductForm = (() => {
     const currentSubs = primaryState.category_id ? DB.getSubCategories(primaryState.category_id) : [];
     const customLabelsHistory = (typeof DB !== 'undefined' && DB.getCustomLabelsHistory) ? DB.getCustomLabelsHistory() : ['Best Seller', 'Produk Populer', 'Desain Custom', 'Promo Terbatas', 'Termurah', 'Premium Quality', 'Pengerjaan Cepat', 'Garansi 100%'];
     const footerTextsHistory = (typeof DB !== 'undefined' && DB.getFooterTextsHistory) ? DB.getFooterTextsHistory() : ['Proses Cepat & Garansi Kualitas', 'Siap Kirim Seluruh Indonesia', 'Layanan Pelanggan Ramah', 'Bahan Premium Berkualitas', 'Garansi Uang Kembali Jika Cacat', 'Pengiriman Cepat & Aman'];
+    const metricsCfg = getPreviewMetricsConfig();
+    const ratingSrc = metricsCfg.rating ? metricsCfg.rating.source : null;
+    const ratingVal = metricsCfg.rating ? metricsCfg.rating.manual_value : null;
+    const salesSrc = metricsCfg.sales ? metricsCfg.sales.source : null;
+    const salesVal = metricsCfg.sales ? metricsCfg.sales.manual_value : null;
+    let cfgShowRating = primaryState.card_config ? (primaryState.card_config.show_rating !== false) : true;
+    let cfgShowSales = primaryState.card_config ? ((primaryState.card_config.show_sales !== false) && (primaryState.card_config.show_sales_count !== false)) : true;
+    if (primaryState.card_variant === 'B' && cfgShowRating && cfgShowSales) {
+      cfgShowSales = false;
+    }
 
     container.innerHTML = `
       <div class="w-full max-w-none space-y-0 pb-8 sm:pb-12" id="product-form-wrapper" data-step="${currentStep}">
@@ -3862,6 +3875,141 @@ const ProductForm = (() => {
                       </div>
                     </div>
 
+                <!-- Input 3 di Card 2: Rating Produk -->
+                <div id="section-step1-card-rating" class="space-y-4">
+                  <hr class="border-slate-100" />
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <i class="bi bi-star-fill text-amber-400 text-xs"></i>
+                        <span>Rating Produk</span>
+                      </label>
+                      <p class="text-xs text-slate-500 mt-0.5">Tampilkan bintang dan nilai rating ulasan di kartu produk.</p>
+                    </div>
+                    <!-- Toggle Switch Rating -->
+                    <label class="relative inline-flex items-center select-none shrink-0 cursor-pointer">
+                      <input type="checkbox" id="cfg-show-rating" class="sr-only peer" ${cfgShowRating ? 'checked' : ''}>
+                      <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+                    </label>
+                  </div>
+
+                  <!-- Subpanel Sumber Data Rating -->
+                  <div id="cfg-rating-source-panel" class="${cfgShowRating ? '' : 'hidden'} space-y-3 pt-1">
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-700 mb-1.5">
+                        Sumber Data Rating
+                      </label>
+                      <div class="grid grid-cols-2 gap-2" id="rating-source-selector-group">
+                        <button type="button" class="btn-rating-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${ratingSrc === 'auto' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="auto">
+                          <i class="bi bi-cpu text-xs"></i>
+                          <span>Otomatis</span>
+                        </button>
+                        <button type="button" class="btn-rating-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${ratingSrc === 'manual' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="manual">
+                          <i class="bi bi-pencil-square text-xs"></i>
+                          <span>Manual</span>
+                        </button>
+                      </div>
+                      <p id="cfg-rating-source-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                        ${ratingSrc === 'auto' ? 'Nilai rating otomatis diambil dari ulasan toko nyata.' : (ratingSrc === 'manual' ? 'Nilai rating ditentukan sendiri secara manual oleh seller.' : 'Pilih sumber data untuk menampilkan rating di kartu produk.')}
+                      </p>
+                    </div>
+
+                    <!-- Container Input Manual Rating -->
+                    <div id="cfg-rating-manual-container" class="${ratingSrc === 'manual' ? '' : 'hidden'} space-y-1.5">
+                      <div class="flex items-center justify-between mb-0.5">
+                        <label for="cfg-rating-manual-val" class="block text-[11px] font-semibold text-slate-700">
+                          Rating (0–5) <span class="text-red-500">*</span>
+                        </label>
+                      </div>
+                      <div class="relative flex items-center clean-datalist-wrapper w-full">
+                        <input
+                          type="text"
+                          id="cfg-rating-manual-val"
+                          list="datalist-rating-manual-options"
+                          data-datalist-id="datalist-rating-manual-options"
+                          autocomplete="off"
+                          value="${(ratingVal !== null && ratingVal !== undefined && !isNaN(ratingVal)) ? ratingVal : ''}"
+                          placeholder="Pilih/Input (misal: 4.8)"
+                          class="clean-datalist-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
+                        />
+                      </div>
+                      <p id="cfg-rating-manual-hint" class="${(ratingSrc === 'manual' && (ratingVal === null || ratingVal === undefined || isNaN(ratingVal))) ? '' : 'hidden'} text-[11px] text-amber-600 font-medium mt-1">
+                        Masukkan nilai rating (0–5) untuk pratinjau kartu.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Input 4 di Card 2: Teks Terjual -->
+                <div id="section-step1-card-sales" class="space-y-4">
+                  <hr class="border-slate-100" />
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <i class="bi bi-bag-check text-slate-600 text-xs"></i>
+                        <span>Teks Terjual</span>
+                      </label>
+                      <p class="text-xs text-slate-500 mt-0.5">Tampilkan jumlah transaksi / produk terjual di kartu produk.</p>
+                    </div>
+                    <!-- Toggle Switch Terjual -->
+                    <label class="relative inline-flex items-center select-none shrink-0 cursor-pointer">
+                      <input type="checkbox" id="cfg-show-sales" class="sr-only peer" ${cfgShowSales ? 'checked' : ''}>
+                      <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
+                    </label>
+                  </div>
+
+                  <!-- Subpanel Sumber Data Terjual -->
+                  <div id="cfg-sales-source-panel" class="${cfgShowSales ? '' : 'hidden'} space-y-3 pt-1">
+                    <div>
+                      <label class="block text-[11px] font-semibold text-slate-700 mb-1.5">
+                        Sumber Data Terjual
+                      </label>
+                      <div class="grid grid-cols-2 gap-2" id="sales-source-selector-group">
+                        <button type="button" class="btn-sales-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${salesSrc === 'auto' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="auto">
+                          <i class="bi bi-cpu text-xs"></i>
+                          <span>Otomatis</span>
+                        </button>
+                        <button type="button" class="btn-sales-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${salesSrc === 'manual' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="manual">
+                          <i class="bi bi-pencil-square text-xs"></i>
+                          <span>Manual</span>
+                        </button>
+                      </div>
+                      <p id="cfg-sales-source-desc" class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                        ${salesSrc === 'auto' ? 'Jumlah terjual otomatis dihitung dari total transaksi nyata.' : (salesSrc === 'manual' ? 'Jumlah terjual ditentukan sendiri secara manual oleh seller.' : 'Pilih sumber data untuk menampilkan jumlah terjual di kartu produk.')}
+                      </p>
+                    </div>
+
+                    <!-- Container Input Manual Terjual -->
+                    <div id="cfg-sales-manual-container" class="${salesSrc === 'manual' ? '' : 'hidden'} space-y-1.5">
+                      <div class="flex items-center justify-between mb-0.5">
+                        <label for="cfg-sales-manual-val" class="block text-[11px] font-semibold text-slate-700">
+                          Jumlah Terjual (≥ 0) <span class="text-red-500">*</span>
+                        </label>
+                      </div>
+                      <div class="relative flex items-center clean-datalist-wrapper w-full">
+                        <input
+                          type="text"
+                          id="cfg-sales-manual-val"
+                          list="datalist-sales-manual-options"
+                          data-datalist-id="datalist-sales-manual-options"
+                          autocomplete="off"
+                          value="${(salesVal !== null && salesVal !== undefined && !isNaN(salesVal)) ? salesVal : ''}"
+                          placeholder="Pilih/Input (misal: 100)"
+                          class="clean-datalist-input w-full pl-3 pr-8 py-2 text-xs rounded-md border border-slate-300 focus:border-[var(--color-primary)] outline-none bg-white font-medium"
+                        />
+                      </div>
+                      <p id="cfg-sales-manual-hint" class="${(salesSrc === 'manual' && (salesVal === null || salesVal === undefined || isNaN(salesVal))) ? '' : 'hidden'} text-[11px] text-amber-600 font-medium mt-1">
+                        Masukkan angka terjual (minimal 0) untuk pratinjau kartu.
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Pemberitahuan Khusus Model B (Kartu Minimalis) -->
+                  <p id="cfg-metric-model-b-notice" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-xs font-semibold text-amber-600 pt-1">
+                    Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual.
+                  </p>
+                </div>
+
                 <!-- Teks Informasi Kecil di Card 2 -->
                 <p class="text-xs text-slate-500 pt-3 border-t border-slate-100 leading-relaxed">
                   Buka Tab Desain Kartu pada Preview Kartu Produk, Untuk Mengubah Gaya/Desain Kartu Produk.
@@ -4011,75 +4159,6 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-btn-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
-                    </div>
-                    <div class="pt-2 border-t border-slate-100 divide-y divide-slate-100">
-                      <!-- Rating -->
-                      <div class="py-1">
-                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                          <span class="flex items-center gap-1.5">
-                            <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
-                            <span>Rating</span>
-                          </span>
-                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                            <input type="checkbox" id="cfg-show-rating" class="sr-only peer cfg-eye-toggle" />
-                            <i id="cfg-show-rating-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                            <i id="cfg-show-rating-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                          </span>
-                        </label>
-                        <!-- Subpanel Sumber Rating Desktop -->
-                        <div id="cfg-rating-source-panel" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Sumber Data</label>
-                          </div>
-                          <div class="flex items-center gap-1">
-                            <button type="button" class="btn-rating-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
-                            <button type="button" class="btn-rating-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
-                          </div>
-                          <div id="cfg-rating-manual-container" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
-                            <div class="flex items-center justify-between gap-2">
-                              <label for="cfg-rating-manual-val" class="text-[10px] text-slate-600 font-normal">Rating (0–5)</label>
-                              <div class="relative w-32 clean-datalist-wrapper">
-                                <input type="text" id="cfg-rating-manual-val" list="datalist-rating-manual-options" data-datalist-id="datalist-rating-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              </div>
-                            </div>
-                            <p id="cfg-rating-manual-hint" class="hidden text-[10px] text-amber-600 font-normal">Masukkan nilai rating (0–5) untuk pratinjau.</p>
-                          </div>
-                        </div>
-                      </div>
-                      <!-- Terjual -->
-                      <div class="py-1">
-                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                          <span class="flex items-center gap-1.5">
-                            <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
-                            <span>Terjual</span>
-                          </span>
-                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                            <input type="checkbox" id="cfg-show-sales" class="sr-only peer cfg-eye-toggle" />
-                            <i id="cfg-show-sales-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                            <i id="cfg-show-sales-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                          </span>
-                        </label>
-                        <!-- Subpanel Sumber Terjual Desktop -->
-                        <div id="cfg-sales-source-panel" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider">Sumber Data</label>
-                          </div>
-                          <div class="flex items-center gap-1">
-                            <button type="button" class="btn-sales-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
-                            <button type="button" class="btn-sales-src flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
-                          </div>
-                          <div id="cfg-sales-manual-container" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
-                            <div class="flex items-center justify-between gap-2">
-                              <label for="cfg-sales-manual-val" class="text-[10px] text-slate-600 font-normal">Jumlah Terjual</label>
-                              <div class="relative w-36 clean-datalist-wrapper">
-                                <input type="text" id="cfg-sales-manual-val" list="datalist-sales-manual-options" data-datalist-id="datalist-sales-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              </div>
-                            </div>
-                            <p id="cfg-sales-manual-hint" class="hidden text-[10px] text-amber-600 font-normal">Masukkan angka terjual (≥ 0) untuk pratinjau.</p>
-                          </div>
-                        </div>
-                      </div>
-                      <p id="cfg-metric-model-b-notice" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-[11px] text-slate-500 font-normal px-2 pt-1 pb-0.5">Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual.</p>
                     </div>
                   </div>
                 </div>
@@ -4449,75 +4528,6 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-btn-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
-                    </div>
-                    <div class="pt-2 border-t border-slate-100 divide-y divide-slate-100">
-                      <!-- Rating -->
-                      <div class="py-1">
-                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                          <span class="flex items-center gap-1.5">
-                            <i class="bi bi-star-fill text-amber-400 text-[11px]"></i>
-                            <span>Rating</span>
-                          </span>
-                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                            <input type="checkbox" id="cfg-show-rating-mob" class="sr-only peer cfg-eye-toggle" />
-                            <i id="cfg-show-rating-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                            <i id="cfg-show-rating-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                          </span>
-                        </label>
-                        <!-- Subpanel Sumber Rating Mobile -->
-                        <div id="cfg-rating-source-panel-mob" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Sumber Data</label>
-                          </div>
-                          <div class="flex items-center gap-1">
-                            <button type="button" class="btn-rating-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
-                            <button type="button" class="btn-rating-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
-                          </div>
-                          <div id="cfg-rating-manual-container-mob" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
-                            <div class="flex items-center justify-between gap-2">
-                              <label for="cfg-rating-manual-val-mob" class="card-tool-label text-[11px] leading-4 text-slate-600 font-normal">Rating (0–5)</label>
-                              <div class="relative w-32 clean-datalist-wrapper">
-                                <input type="text" id="cfg-rating-manual-val-mob" list="datalist-rating-manual-options" data-datalist-id="datalist-rating-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              </div>
-                            </div>
-                            <p id="cfg-rating-manual-hint-mob" class="hidden text-[10px] text-amber-600 font-normal">Masukkan nilai rating (0–5) untuk pratinjau.</p>
-                          </div>
-                        </div>
-                      </div>
-                      <!-- Terjual -->
-                      <div class="py-1">
-                        <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
-                          <span class="flex items-center gap-1.5">
-                            <i class="bi bi-bag-check text-slate-400 text-[11px]"></i>
-                            <span>Terjual</span>
-                          </span>
-                          <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                            <input type="checkbox" id="cfg-show-sales-mob" class="sr-only peer cfg-eye-toggle" />
-                            <i id="cfg-show-sales-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                            <i id="cfg-show-sales-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                          </span>
-                        </label>
-                        <!-- Subpanel Sumber Terjual Mobile -->
-                        <div id="cfg-sales-source-panel-mob" class="px-2.5 py-2 bg-slate-50/70 rounded-md mt-1 border border-slate-100 space-y-1.5">
-                          <div class="flex items-center justify-between">
-                            <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500">Sumber Data</label>
-                          </div>
-                          <div class="flex items-center gap-1">
-                            <button type="button" class="btn-sales-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-emerald-500 bg-emerald-50 text-emerald-700 transition cursor-pointer" data-source="auto">Otomatis</button>
-                            <button type="button" class="btn-sales-src-mob flex-1 py-1 text-[10px] font-normal rounded-[6px] border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer" data-source="manual">Manual</button>
-                          </div>
-                          <div id="cfg-sales-manual-container-mob" class="hidden space-y-1 pt-1 border-t border-slate-200/60">
-                            <div class="flex items-center justify-between gap-2">
-                              <label for="cfg-sales-manual-val-mob" class="card-tool-label text-[11px] leading-4 text-slate-600 font-normal">Jumlah Terjual</label>
-                              <div class="relative w-36 clean-datalist-wrapper">
-                                <input type="text" id="cfg-sales-manual-val-mob" list="datalist-sales-manual-options" data-datalist-id="datalist-sales-manual-options" autocomplete="off" placeholder="Pilih/Input" class="clean-datalist-input w-full pl-2.5 pr-8 py-1 text-xs font-mono font-normal border border-slate-200 rounded-[6px] bg-white text-left focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                              </div>
-                            </div>
-                            <p id="cfg-sales-manual-hint-mob" class="hidden text-[10px] text-amber-600 font-normal">Masukkan angka terjual (≥ 0) untuk pratinjau.</p>
-                          </div>
-                        </div>
-                      </div>
-                      <p id="cfg-metric-model-b-notice-mob" class="${primaryState.card_variant === 'B' ? 'block' : 'hidden'} text-[11px] text-slate-500 font-normal px-2 pt-1 pb-0.5">Khusus Kartu Minimalis: pilih salah satu antara Rating atau Terjual.</p>
                     </div>
                   </div>
                 </div>
@@ -5066,57 +5076,60 @@ const ProductForm = (() => {
   function getPreviewMetricsConfig() {
     if (!primaryState.admin_card_preview_metrics || typeof primaryState.admin_card_preview_metrics !== 'object') {
       primaryState.admin_card_preview_metrics = {
-        rating: { source: 'auto', manual_value: null },
-        sales: { source: 'auto', manual_value: null }
+        rating: { source: null, manual_value: null },
+        sales: { source: null, manual_value: null }
       };
     }
     if (!primaryState.admin_card_preview_metrics.rating) {
-      primaryState.admin_card_preview_metrics.rating = { source: 'auto', manual_value: null };
+      primaryState.admin_card_preview_metrics.rating = { source: null, manual_value: null };
     }
     if (!primaryState.admin_card_preview_metrics.sales) {
-      primaryState.admin_card_preview_metrics.sales = { source: 'auto', manual_value: null };
+      primaryState.admin_card_preview_metrics.sales = { source: null, manual_value: null };
     }
     return primaryState.admin_card_preview_metrics;
   }
 
   function setRatingSource(src) {
     const metrics = getPreviewMetricsConfig();
-    metrics.rating.source = (src === 'manual') ? 'manual' : 'auto';
+    metrics.rating.source = (src === 'manual') ? 'manual' : ((src === 'auto') ? 'auto' : null);
     syncMetricSourcesDOM();
     updateProductCardLivePreview();
   }
 
   function setSalesSource(src) {
     const metrics = getPreviewMetricsConfig();
-    metrics.sales.source = (src === 'manual') ? 'manual' : 'auto';
+    metrics.sales.source = (src === 'manual') ? 'manual' : ((src === 'auto') ? 'auto' : null);
     syncMetricSourcesDOM();
     updateProductCardLivePreview();
   }
 
   function syncMetricSourcesDOM() {
     const metrics = getPreviewMetricsConfig();
-    const ratingSrc = metrics.rating.source || 'auto';
-    const ratingVal = metrics.rating.manual_value;
-    const salesSrc = metrics.sales.source || 'auto';
-    const salesVal = metrics.sales.manual_value;
+    const ratingSrc = metrics.rating ? metrics.rating.source : null;
+    const ratingVal = metrics.rating ? metrics.rating.manual_value : null;
+    const salesSrc = metrics.sales ? metrics.sales.source : null;
+    const salesVal = metrics.sales ? metrics.sales.manual_value : null;
 
     // 1. Rating buttons & inputs
     document.querySelectorAll('.btn-rating-src, .btn-rating-src-mob').forEach(btn => {
       const isAuto = btn.dataset.source === 'auto';
       if ((isAuto && ratingSrc === 'auto') || (!isAuto && ratingSrc === 'manual')) {
-        btn.className = btn.className.replace(/border-slate-200 bg-white text-slate-600 hover:bg-slate-50/g, 'border-emerald-500 bg-emerald-50 text-emerald-700');
-        if (!btn.className.includes('border-emerald-500')) {
-          btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
-          btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
-        }
+        btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700', 'ring-1', 'ring-emerald-500');
+        btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-700', 'hover:bg-slate-50');
       } else {
-        btn.className = btn.className.replace(/border-emerald-500 bg-emerald-50 text-emerald-700/g, 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50');
-        if (!btn.className.includes('border-slate-200')) {
-          btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
-          btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
-        }
+        btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700', 'ring-1', 'ring-emerald-500');
+        btn.classList.add('border-slate-200', 'bg-white', 'text-slate-700', 'hover:bg-slate-50');
       }
     });
+
+    const ratingDescEl = document.getElementById('cfg-rating-source-desc');
+    if (ratingDescEl) {
+      ratingDescEl.textContent = ratingSrc === 'auto'
+        ? 'Nilai rating otomatis diambil dari ulasan toko nyata.'
+        : (ratingSrc === 'manual'
+          ? 'Nilai rating ditentukan sendiri secara manual oleh seller.'
+          : 'Pilih sumber data untuk menampilkan rating di kartu produk.');
+    }
 
     ['cfg-rating-manual-container', 'cfg-rating-manual-container-mob'].forEach(id => {
       const el = document.getElementById(id);
@@ -5149,19 +5162,22 @@ const ProductForm = (() => {
     document.querySelectorAll('.btn-sales-src, .btn-sales-src-mob').forEach(btn => {
       const isAuto = btn.dataset.source === 'auto';
       if ((isAuto && salesSrc === 'auto') || (!isAuto && salesSrc === 'manual')) {
-        btn.className = btn.className.replace(/border-slate-200 bg-white text-slate-600 hover:bg-slate-50/g, 'border-emerald-500 bg-emerald-50 text-emerald-700');
-        if (!btn.className.includes('border-emerald-500')) {
-          btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
-          btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
-        }
+        btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700', 'ring-1', 'ring-emerald-500');
+        btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-700', 'hover:bg-slate-50');
       } else {
-        btn.className = btn.className.replace(/border-emerald-500 bg-emerald-50 text-emerald-700/g, 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50');
-        if (!btn.className.includes('border-slate-200')) {
-          btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600', 'hover:bg-slate-50');
-          btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
-        }
+        btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700', 'ring-1', 'ring-emerald-500');
+        btn.classList.add('border-slate-200', 'bg-white', 'text-slate-700', 'hover:bg-slate-50');
       }
     });
+
+    const salesDescEl = document.getElementById('cfg-sales-source-desc');
+    if (salesDescEl) {
+      salesDescEl.textContent = salesSrc === 'auto'
+        ? 'Jumlah terjual otomatis dihitung dari total transaksi nyata.'
+        : (salesSrc === 'manual'
+          ? 'Jumlah terjual ditentukan sendiri secara manual oleh seller.'
+          : 'Pilih sumber data untuk menampilkan jumlah terjual di kartu produk.');
+    }
 
     ['cfg-sales-manual-container', 'cfg-sales-manual-container-mob'].forEach(id => {
       const el = document.getElementById(id);
@@ -6550,6 +6566,7 @@ const ProductForm = (() => {
       if (saveDefToggleMob) saveDefToggleMob.checked = false;
 
       syncEyeToggleIcons();
+      syncMetricSourcesDOM();
       syncCardAccordionDOM();
       saveCardConfigInputs();
       updateProductCardLivePreview();
@@ -12385,10 +12402,10 @@ const ProductForm = (() => {
     // Resolusi Metrik Pratinjau Admin (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
     const metricsConfig = (primaryState.admin_card_preview_metrics && typeof primaryState.admin_card_preview_metrics === 'object')
       ? primaryState.admin_card_preview_metrics
-      : { rating: { source: 'auto', manual_value: null }, sales: { source: 'auto', manual_value: null } };
-    const ratingSource = metricsConfig.rating?.source || 'auto';
+      : { rating: { source: null, manual_value: null }, sales: { source: null, manual_value: null } };
+    const ratingSource = metricsConfig.rating ? metricsConfig.rating.source : null;
     const ratingManualVal = metricsConfig.rating?.manual_value;
-    const salesSource = metricsConfig.sales?.source || 'auto';
+    const salesSource = metricsConfig.sales ? metricsConfig.sales.source : null;
     const salesManualVal = metricsConfig.sales?.manual_value;
 
     // 1. Resolusi Rating Pratinjau
@@ -12404,16 +12421,20 @@ const ProductForm = (() => {
           previewRatingText = '';
           hasPreviewRating = false;
         }
-      } else {
+      } else if (ratingSource === 'auto') {
         // Otomatis: baca data nyata terbaru dari database (jika ada) atau primaryState
-        const realRating = (typeof DB !== 'undefined' && DB.getProductById && currentEditingId)
-          ? DB.getProductById(currentEditingId)?.rating_avg
+        const realRating = (typeof DB !== 'undefined' && DB.getProductById && currentEditingId && DB.getProductById(currentEditingId)?.rating_avg !== undefined && DB.getProductById(currentEditingId)?.rating_avg !== null)
+          ? DB.getProductById(currentEditingId).rating_avg
           : (primaryState.rating_avg ?? 5.0);
         const num = (realRating !== undefined && realRating !== null && !isNaN(parseFloat(realRating)))
           ? parseFloat(realRating)
           : 5.0;
         previewRatingText = num.toFixed(1);
         hasPreviewRating = true;
+      } else {
+        // source === null: JANGAN menampilkan fallback data otomatis pada pratinjau!
+        previewRatingText = '';
+        hasPreviewRating = false;
       }
     }
 
@@ -12435,10 +12456,14 @@ const ProductForm = (() => {
           previewSalesText = '';
           hasPreviewSales = false;
         }
-      } else {
+      } else if (salesSource === 'auto') {
         effSalesNumber = realSalesCount;
         previewSalesText = formatSalesCount(effSalesNumber, false);
         hasPreviewSales = true;
+      } else {
+        // source === null: JANGAN menampilkan fallback data otomatis pada pratinjau!
+        previewSalesText = '';
+        hasPreviewSales = false;
       }
     }
     const salesCount = effSalesNumber;
@@ -38577,7 +38602,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     getIsPreviewTestMode: () => isPreviewTestMode,
     isActualProductPriceValid,
     getActivePromoValidationInfo,
-    canActivateStep2DiscountSimulation
+    canActivateStep2DiscountSimulation,
+    getPreviewMetricsConfig,
+    setRatingSource,
+    setSalesSource
   };
 })();
 
