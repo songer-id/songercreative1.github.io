@@ -1353,6 +1353,35 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6e1_footers.js` - 52/52 skenario lulus, 0 gagal) dan bebas regresi pada test suite Task 6C (`scratch/test_task210c6c_rating_sales.js` - 56/56 PASS) serta Task 6D (`scratch/test_task210c6d_card2_availability.js` - 51/51 PASS).
 
+  - **Penyempurnaan Saran Teks, Validasi Karakter, dan Katalog Ikon Footer (Task 2.10C-6E-2)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyempurnakan Footer Kartu Detail (Model C) dengan menerapkan mutual exclusion pada saran teks Footer 1 dan Footer 2, validasi panjang teks 1–32 grapheme Unicode dengan realtime counter dan informasi batas karakter, perluasan katalog ikon outline dan solid/filled berbasis pustaka Bootstrap Icons yang terverifikasi, otomatisasi status kontrol ikon dan warna sesuai validitas teks, serta kompatibilitas penuh pratinjau kartu dan etalase storefront.
+    - **Mutual Exclusion Saran Footer 1 dan Footer 2**:
+      - Saran teks pada daftar callout popover Footer 1 secara dinamis mengecualikan teks yang sedang digunakan oleh Footer 2.
+      - Saran teks pada daftar callout popover Footer 2 secara dinamis mengecualikan teks yang sedang digunakan oleh Footer 1.
+      - Perbandingan dilakukan secara case-insensitive dan trim whitespace (`normalizeFooterTextForComparison`).
+      - Saat salah satu footer dikosongkan atau diubah teksnya, saran yang sebelumnya dipakai otomatis kembali tersedia pada footer lainnya.
+      - Mekanisme auto-shift Footer 2 -> Footer 1 memperbarui saran secara realtime tanpa menghapus opsi dari riwayat global atau database.
+      - Pembatasan berlaku pada daftar pilihan saran dan tidak membatasi input manual seller yang sah.
+    - **Validasi Minimal & Maksimal Teks**:
+      - Batas panjang: Minimal 1 karakter non-whitespace, Maksimal 32 karakter (grapheme clusters). Input kosong atau hanya whitespace tidak dianggap valid.
+      - Dukungan penuh karakter multi-byte dan emoji Unicode (`Intl.Segmenter` / `truncateTo32Graphemes`).
+      - Menampilkan informasi kecil `Minimal 1 – Maksimal 32 karakter` di dekat input dengan placeholder `Pilih/Input`.
+      - Indikator counter `0/32` diperbarui secara realtime pada setiap pengetikan dan pemotongan teks secara aman jika melebihi 32 grapheme.
+    - **Penambahan Katalog Ikon Outline dan Solid/Filled**:
+      - Mempertahankan seluruh 24 ikon outline yang sudah ada sebelumnya.
+      - Menambahkan ikon outline pelengkap (`heart`, `shield`, `patch-check`, `chat-dots`, `bag-check`) serta variasi solid/filled yang terverifikasi pada pustaka Bootstrap Icons: `star-fill`, `shield-fill-check`, `shield-fill`, `heart-fill`, `truck-front-fill`, `clock-fill`, `lightning-charge-fill`, `check-circle-fill`, `box-seam-fill`, `calendar-fill`, `gift-fill`, `tag-fill`, `geo-alt-fill`, `award-fill`, `patch-check-fill`, `chat-dots-fill`, `bag-check-fill`, `gear-fill`.
+      - Tampilan icon picker dirancang rapi dengan pengelompokan jelas: seksi `Ikon Garis (Outline)` dan `Ikon Penuh (Solid)` dalam grid 6 kolom yang responsif tanpa horizontal overflow pada mobile.
+      - Mendukung rendering seragam pada pratinjau live kartu admin (`#card-live-preview-box`) dan kartu etalase pembeli storefront (`js/buyer-store.js`) melalui helper `renderFooterBadgeIconHtml`.
+    - **Otomatisasi Kontrol Ikon dan Warna**:
+      - Ketika teks footer (Footer 1 atau Footer 2) belum valid atau kosong, tombol ikon dan input warna latar serta teks dinonaktifkan (`disabled`, `opacity-50 cursor-not-allowed bg-slate-100`).
+      - Setelah teks footer valid, kontrol ikon dan warna otomatis aktif dan dapat dikonfigurasi.
+      - Jika teks dikosongkan, kontrol kembali nonaktif namun nilai warna dan ikon yang sudah tersimpan tetap dipertahankan pada state untuk keperluan auto-shift maupun pemulihan data.
+    - **Verifikasi Fungsionalitas**:
+      - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6e2_footers.js` - 70/70 skenario lulus, 0 gagal).
+      - Lulus seluruh pengujian regresi: `scratch/test_task210c6e1_footers.js` (52/52 PASS), `scratch/test_task210c6d_card2_availability.js` (51/51 PASS), dan `scratch/test_task210c6c_rating_sales.js` (56/56 PASS).
+      - Pengujian mencakup viewport Mobile 375x812, Mobile 390x844, Tablet 768x1024, dan Desktop 1280x800 dengan 0 console error dan 0 ID duplikat.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

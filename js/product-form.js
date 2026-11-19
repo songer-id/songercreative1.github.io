@@ -58,29 +58,55 @@ const ProductForm = (() => {
 
   const FOOTER_ICONS_CATALOG = [
     { id: 'none', label: 'Tanpa Ikon', icon: 'ban', category: 'Umum' },
-    { id: 'truck', label: 'Pengiriman Cepat', icon: 'truck', category: 'Logistik' },
-    { id: 'clock', label: 'Jam / Waktu', icon: 'clock', category: 'Waktu' },
-    { id: 'zap', label: 'Kilat / Express', icon: 'zap', category: 'Layanan' },
-    { id: 'shield-check', label: 'Garansi / Keamanan', icon: 'shield-check', category: 'Garansi' },
-    { id: 'minus', label: 'Strip / Garis', icon: 'minus', category: 'Umum' },
-    { id: 'check-circle', label: 'Centang / Selesai', icon: 'check-circle', category: 'Status' },
-    { id: 'package', label: 'Paket / Kemasan', icon: 'package', category: 'Logistik' },
-    { id: 'calendar', label: 'Kalender / Jadwal', icon: 'calendar', category: 'Waktu' },
-    { id: 'layers', label: 'Lapisan / Varian', icon: 'layers', category: 'Produk' },
-    { id: 'settings', label: 'Pengaturan / Kustom', icon: 'settings', category: 'Teknis' },
-    { id: 'wrench', label: 'Alat / Reparasi', icon: 'wrench', category: 'Teknis' },
-    { id: 'palette', label: 'Palet / Desain', icon: 'palette', category: 'Desain' },
-    { id: 'tag', label: 'Label / Tag', icon: 'tag', category: 'Promo' },
-    { id: 'badge-percent', label: 'Diskon / Hemat', icon: 'badge-percent', category: 'Promo' },
-    { id: 'gift', label: 'Hadiah / Bonus', icon: 'gift', category: 'Promo' },
-    { id: 'map-pin', label: 'Lokasi / Toko', icon: 'map-pin', category: 'Lokasi' },
-    { id: 'leaf', label: 'Ramah Lingkungan', icon: 'leaf', category: 'Kualitas' },
-    { id: 'graduation-cap', label: 'Pendidikan / Edukasi', icon: 'graduation-cap', category: 'Layanan' },
-    { id: 'headphones', label: 'Audio / Layanan CS', icon: 'headphones', category: 'Layanan' },
-    { id: 'sparkles', label: 'Kualitas Premium', icon: 'sparkles', category: 'Kualitas' },
-    { id: 'award', label: 'Penghargaan / Terbaik', icon: 'award', category: 'Kualitas' },
-    { id: 'printer', label: 'Percetakan / Cetak', icon: 'printer', category: 'Produksi' },
-    { id: 'star', label: 'Bintang / Unggulan', icon: 'star', category: 'Kualitas' }
+    // Ikon Garis (Outline)
+    { id: 'truck', label: 'Pengiriman Cepat', icon: 'truck', bi: 'truck', category: 'Logistik', style: 'outline' },
+    { id: 'clock', label: 'Jam / Waktu', icon: 'clock', bi: 'clock', category: 'Waktu', style: 'outline' },
+    { id: 'zap', label: 'Kilat / Express', icon: 'zap', bi: 'lightning-charge', category: 'Layanan', style: 'outline' },
+    { id: 'shield-check', label: 'Garansi / Keamanan', icon: 'shield-check', bi: 'shield-check', category: 'Garansi', style: 'outline' },
+    { id: 'minus', label: 'Strip / Garis', icon: 'minus', bi: 'dash-lg', category: 'Umum', style: 'outline' },
+    { id: 'check-circle', label: 'Centang / Selesai', icon: 'check-circle', bi: 'check-circle', category: 'Status', style: 'outline' },
+    { id: 'package', label: 'Paket / Kemasan', icon: 'package', bi: 'box-seam', category: 'Logistik', style: 'outline' },
+    { id: 'calendar', label: 'Kalender / Jadwal', icon: 'calendar', bi: 'calendar', category: 'Waktu', style: 'outline' },
+    { id: 'layers', label: 'Lapisan / Varian', icon: 'layers', bi: 'layers', category: 'Produk', style: 'outline' },
+    { id: 'settings', label: 'Pengaturan / Kustom', icon: 'settings', bi: 'gear', category: 'Teknis', style: 'outline' },
+    { id: 'wrench', label: 'Alat / Reparasi', icon: 'wrench', bi: 'wrench', category: 'Teknis', style: 'outline' },
+    { id: 'palette', label: 'Palet / Desain', icon: 'palette', bi: 'palette', category: 'Desain', style: 'outline' },
+    { id: 'tag', label: 'Label / Tag', icon: 'tag', bi: 'tag', category: 'Promo', style: 'outline' },
+    { id: 'badge-percent', label: 'Diskon / Hemat', icon: 'badge-percent', bi: 'percent', category: 'Promo', style: 'outline' },
+    { id: 'gift', label: 'Hadiah / Bonus', icon: 'gift', bi: 'gift', category: 'Promo', style: 'outline' },
+    { id: 'map-pin', label: 'Lokasi / Toko', icon: 'map-pin', bi: 'geo-alt', category: 'Lokasi', style: 'outline' },
+    { id: 'leaf', label: 'Ramah Lingkungan', icon: 'leaf', bi: 'flower1', category: 'Kualitas', style: 'outline' },
+    { id: 'graduation-cap', label: 'Pendidikan / Edukasi', icon: 'graduation-cap', bi: 'mortarboard', category: 'Layanan', style: 'outline' },
+    { id: 'headphones', label: 'Audio / Layanan CS', icon: 'headphones', bi: 'headset', category: 'Layanan', style: 'outline' },
+    { id: 'sparkles', label: 'Kualitas Premium', icon: 'sparkles', bi: 'stars', category: 'Kualitas', style: 'outline' },
+    { id: 'award', label: 'Penghargaan / Terbaik', icon: 'award', bi: 'award', category: 'Kualitas', style: 'outline' },
+    { id: 'printer', label: 'Percetakan / Cetak', icon: 'printer', bi: 'printer', category: 'Produksi', style: 'outline' },
+    { id: 'star', label: 'Bintang / Unggulan', icon: 'star', bi: 'star', category: 'Kualitas', style: 'outline' },
+    { id: 'heart', label: 'Favorit / Disukai', icon: 'heart', bi: 'heart', category: 'Kualitas', style: 'outline' },
+    { id: 'shield', label: 'Perisai / Aman', icon: 'shield', bi: 'shield', category: 'Garansi', style: 'outline' },
+    { id: 'patch-check', label: 'Sertifikasi / Resmi', icon: 'badge-check', bi: 'patch-check', category: 'Kualitas', style: 'outline' },
+    { id: 'chat-dots', label: 'Chat / Konsultasi', icon: 'message-circle', bi: 'chat-dots', category: 'Layanan', style: 'outline' },
+    { id: 'bag-check', label: 'Belanja Praktis', icon: 'shopping-bag', bi: 'bag-check', category: 'Layanan', style: 'outline' },
+
+    // Ikon Penuh (Solid / Filled)
+    { id: 'star-fill', label: 'Bintang (Solid)', bi: 'star-fill', category: 'Kualitas', style: 'solid' },
+    { id: 'shield-fill-check', label: 'Garansi / Keamanan (Solid)', bi: 'shield-fill-check', category: 'Garansi', style: 'solid' },
+    { id: 'shield-fill', label: 'Perisai (Solid)', bi: 'shield-fill', category: 'Garansi', style: 'solid' },
+    { id: 'heart-fill', label: 'Favorit / Disukai (Solid)', bi: 'heart-fill', category: 'Kualitas', style: 'solid' },
+    { id: 'truck-front-fill', label: 'Pengiriman Cepat (Solid)', bi: 'truck-front-fill', category: 'Logistik', style: 'solid' },
+    { id: 'clock-fill', label: 'Jam / Waktu (Solid)', bi: 'clock-fill', category: 'Waktu', style: 'solid' },
+    { id: 'lightning-charge-fill', label: 'Kilat / Express (Solid)', bi: 'lightning-charge-fill', category: 'Layanan', style: 'solid' },
+    { id: 'check-circle-fill', label: 'Centang / Terverifikasi (Solid)', bi: 'check-circle-fill', category: 'Status', style: 'solid' },
+    { id: 'box-seam-fill', label: 'Paket / Kemasan (Solid)', bi: 'box-seam-fill', category: 'Logistik', style: 'solid' },
+    { id: 'calendar-fill', label: 'Kalender / Jadwal (Solid)', bi: 'calendar-fill', category: 'Waktu', style: 'solid' },
+    { id: 'gift-fill', label: 'Hadiah / Bonus (Solid)', bi: 'gift-fill', category: 'Promo', style: 'solid' },
+    { id: 'tag-fill', label: 'Label / Promo (Solid)', bi: 'tag-fill', category: 'Promo', style: 'solid' },
+    { id: 'geo-alt-fill', label: 'Lokasi / Toko (Solid)', bi: 'geo-alt-fill', category: 'Lokasi', style: 'solid' },
+    { id: 'award-fill', label: 'Penghargaan / Terbaik (Solid)', bi: 'award-fill', category: 'Kualitas', style: 'solid' },
+    { id: 'patch-check-fill', label: 'Sertifikasi / Resmi (Solid)', bi: 'patch-check-fill', category: 'Kualitas', style: 'solid' },
+    { id: 'chat-dots-fill', label: 'Chat / Konsultasi (Solid)', bi: 'chat-dots-fill', category: 'Layanan', style: 'solid' },
+    { id: 'bag-check-fill', label: 'Belanja Praktis (Solid)', bi: 'bag-check-fill', category: 'Layanan', style: 'solid' },
+    { id: 'gear-fill', label: 'Pengaturan / Kustom (Solid)', bi: 'gear-fill', category: 'Teknis', style: 'solid' }
   ];
 
   function getUnicodeLength(str) {
@@ -114,7 +140,54 @@ const ProductForm = (() => {
     none: 'none',
     ban: 'none',
     'tanpa-ikon': 'none',
-    check: 'check-circle'
+    check: 'check-circle',
+    'bi-star': 'star',
+    'bi-star-fill': 'star-fill',
+    'bi-shield': 'shield',
+    'bi-shield-fill': 'shield-fill',
+    'bi-shield-check': 'shield-check',
+    'bi-shield-fill-check': 'shield-fill-check',
+    'shield-fill': 'shield-fill',
+    'bi-heart': 'heart',
+    'bi-heart-fill': 'heart-fill',
+    'bi-truck': 'truck',
+    'bi-truck-front-fill': 'truck-front-fill',
+    'truck-fill': 'truck-front-fill',
+    'truck-front': 'truck',
+    'bi-clock': 'clock',
+    'bi-clock-fill': 'clock-fill',
+    'zap-fill': 'lightning-charge-fill',
+    'lightning': 'zap',
+    'lightning-fill': 'lightning-charge-fill',
+    'bi-lightning-charge': 'zap',
+    'bi-lightning-charge-fill': 'lightning-charge-fill',
+    'bi-check-circle': 'check-circle',
+    'bi-check-circle-fill': 'check-circle-fill',
+    'box': 'package',
+    'box-fill': 'box-seam-fill',
+    'package-fill': 'box-seam-fill',
+    'bi-box-seam': 'package',
+    'bi-box-seam-fill': 'box-seam-fill',
+    'bi-calendar': 'calendar',
+    'bi-calendar-fill': 'calendar-fill',
+    'bi-gift': 'gift',
+    'bi-gift-fill': 'gift-fill',
+    'bi-tag': 'tag',
+    'bi-tag-fill': 'tag-fill',
+    'map-pin-fill': 'geo-alt-fill',
+    'bi-geo-alt': 'map-pin',
+    'bi-geo-alt-fill': 'geo-alt-fill',
+    'bi-award': 'award',
+    'bi-award-fill': 'award-fill',
+    'bi-patch-check': 'patch-check',
+    'bi-patch-check-fill': 'patch-check-fill',
+    'settings-fill': 'gear-fill',
+    'bi-gear': 'settings',
+    'bi-gear-fill': 'gear-fill',
+    'bi-chat-dots': 'chat-dots',
+    'bi-chat-dots-fill': 'chat-dots-fill',
+    'bi-bag-check': 'bag-check',
+    'bi-bag-check-fill': 'bag-check-fill'
   };
 
   function normalizeFooterTextForComparison(rawText) {
@@ -133,9 +206,13 @@ const ProductForm = (() => {
 
   function normalizeFooterIconId(iconId, fallbackId = 'none') {
     if (iconId === null || iconId === undefined) return fallbackId;
-    let cleaned = String(iconId).trim().toLowerCase().replace(/^lucide:/, '').replace(/^bi-/, '');
+    let cleaned = String(iconId).trim().toLowerCase().replace(/^lucide:/, '');
     if (Object.prototype.hasOwnProperty.call(FOOTER_ICON_ALIASES, cleaned)) {
       cleaned = FOOTER_ICON_ALIASES[cleaned];
+    }
+    const noBi = cleaned.replace(/^bi-/, '');
+    if (Object.prototype.hasOwnProperty.call(FOOTER_ICON_ALIASES, noBi)) {
+      cleaned = FOOTER_ICON_ALIASES[noBi];
     }
     return FOOTER_ICONS_CATALOG.some(c => c.id === cleaned) ? cleaned : fallbackId;
   }
@@ -145,22 +222,72 @@ const ProductForm = (() => {
     return normalizeFooterIconId(savedIconId, fallbackSavedIcon);
   }
 
+  function renderFooterBadgeIconHtml(iconId, extraClass = 'w-3.5 h-3.5 shrink-0') {
+    if (!iconId || iconId === 'none' || iconId === 'ban' || iconId === 'tanpa-ikon') return '';
+    const normId = normalizeFooterIconId(iconId, 'none');
+    if (normId === 'none') return '';
+    const item = FOOTER_ICONS_CATALOG.find(c => c.id === normId);
+    if (item) {
+      if (item.bi) {
+        return `<i class="bi bi-${escapeHtml(item.bi)} ${extraClass}"></i>`;
+      }
+      if (item.icon) {
+        return `<i data-lucide="${escapeHtml(item.icon)}" class="${extraClass}"></i>`;
+      }
+    }
+    const clean = String(normId).trim().toLowerCase().replace(/^lucide:/, '');
+    if (clean.includes('-fill') || clean.startsWith('bi-')) {
+      const biName = clean.replace(/^bi-/, '');
+      return `<i class="bi bi-${escapeHtml(biName)} ${extraClass}"></i>`;
+    }
+    return `<i data-lucide="${escapeHtml(clean)}" class="${extraClass}"></i>`;
+  }
+
   function renderFooterIconGridHtml(currentIconId, pickerId, otherActiveIconId = 'none') {
     const normalizedCur = normalizeFooterIconId(currentIconId, pickerId.includes('footer-2') ? 'minus' : 'truck');
     const normalizedOther = normalizeFooterIconId(otherActiveIconId, 'none');
-    return FOOTER_ICONS_CATALOG.map(item => {
+
+    const renderItemBtn = (item) => {
       const isSel = normalizedCur === item.id;
       const isDisabledOther = item.id !== 'none' && normalizedOther !== 'none' && item.id === normalizedOther;
-      const iconInner = item.id === 'none'
-        ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
-        : `<i data-lucide="${item.icon}" class="w-4.5 h-4.5"></i>`;
+      let iconInner = '';
+      if (item.id === 'none') {
+        iconInner = '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>';
+      } else if (item.bi) {
+        iconInner = `<i class="bi bi-${escapeHtml(item.bi)} text-sm leading-none"></i>`;
+      } else if (item.icon) {
+        iconInner = `<i data-lucide="${escapeHtml(item.icon)}" class="w-4 h-4"></i>`;
+      } else {
+        iconInner = `<i class="bi bi-${escapeHtml(item.id)} text-sm leading-none"></i>`;
+      }
+
       const btnTitle = isDisabledOther ? `${item.label} — Digunakan pada footer lainnya.` : item.label;
       return `
         <button type="button" class="btn-footer-icon-item w-8 h-8 rounded-md flex items-center justify-center transition ${isDisabledOther ? 'is-disabled-other bg-slate-100 text-slate-300 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100'} ${isSel && !isDisabledOther ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-600' : (isSel && isDisabledOther ? 'ring-2 ring-red-400 bg-red-50 text-red-400' : (!isDisabledOther ? 'text-slate-600' : ''))}" data-icon-id="${item.id}" data-picker="${pickerId}" title="${escapeHtml(btnTitle)}" aria-disabled="${isDisabledOther ? 'true' : 'false'}" ${isDisabledOther ? 'disabled' : ''} role="menuitem">
           ${iconInner}
         </button>
       `;
-    }).join('');
+    };
+
+    const outlineItems = FOOTER_ICONS_CATALOG.filter(it => it.style !== 'solid');
+    const solidItems = FOOTER_ICONS_CATALOG.filter(it => it.style === 'solid');
+
+    return `
+      <div class="space-y-2">
+        <div>
+          <div class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1 px-1">Ikon Garis (Outline)</div>
+          <div class="grid grid-cols-6 gap-1">
+            ${outlineItems.map(renderItemBtn).join('')}
+          </div>
+        </div>
+        <div class="pt-1 border-t border-slate-100">
+          <div class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1 px-1">Ikon Penuh (Solid)</div>
+          <div class="grid grid-cols-6 gap-1">
+            ${solidItems.map(renderItemBtn).join('')}
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function evaluateFooterValidationState() {
@@ -280,7 +407,7 @@ const ProductForm = (() => {
         if (!el) return;
         el.innerHTML = (!isValid || effIcon === 'none')
           ? '<i class="bi bi-slash-circle text-slate-400 text-xs"></i>'
-          : `<i data-lucide="${escapeHtml(effIcon)}" class="w-3.5 h-3.5"></i>`;
+          : renderFooterBadgeIconHtml(effIcon, 'w-3.5 h-3.5');
       });
 
       let hasDisabledOther = false;
@@ -329,8 +456,52 @@ const ProductForm = (() => {
       }
     };
 
+    const syncStripColorControls = (stripNum, isValid) => {
+      const colorInputIds = stripNum === 1
+        ? [
+            'cfg-footer-bg-color-side', 'cfg-footer-bg-hex-side',
+            'cfg-footer-text-color-side', 'cfg-footer-text-hex-side',
+            'cfg-footer-bg-color', 'cfg-footer-bg-hex',
+            'cfg-footer-text-color', 'cfg-footer-text-hex',
+            'cfg-footer-bg-color-mob', 'cfg-footer-bg-hex-mob',
+            'cfg-footer-text-color-mob', 'cfg-footer-text-hex-mob'
+          ]
+        : [
+            'cfg-footer-2-bg-color-side', 'cfg-footer-2-bg-hex-side',
+            'cfg-footer-2-text-color-side', 'cfg-footer-2-text-hex-side',
+            'cfg-footer-2-bg-color', 'cfg-footer-2-bg-hex',
+            'cfg-footer-2-text-color', 'cfg-footer-2-text-hex',
+            'cfg-footer-2-bg-color-mob', 'cfg-footer-2-bg-hex-mob',
+            'cfg-footer-2-text-color-mob', 'cfg-footer-2-text-hex-mob'
+          ];
+
+      colorInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = !isValid;
+        if (!isValid) {
+          el.classList.add('opacity-50', 'cursor-not-allowed');
+          el.classList.remove('cursor-pointer');
+          if (el.tagName === 'INPUT' && el.type === 'text') {
+            el.classList.add('bg-slate-100');
+          }
+          el.setAttribute('title', `Isi Label Footer ${stripNum} terlebih dahulu untuk mengatur warna`);
+        } else {
+          el.classList.remove('opacity-50', 'cursor-not-allowed');
+          if (el.tagName === 'INPUT' && el.type === 'color') {
+            el.classList.add('cursor-pointer');
+          } else if (el.tagName === 'INPUT' && el.type === 'text') {
+            el.classList.remove('bg-slate-100');
+          }
+          el.removeAttribute('title');
+        }
+      });
+    };
+
     syncStripIconControls(1, state.f1Valid, state.f1EffIcon, state.f2EffIcon);
     syncStripIconControls(2, state.f2Valid, state.f2EffIcon, state.f1EffIcon);
+    syncStripColorControls(1, state.f1Valid);
+    syncStripColorControls(2, state.f2Valid);
 
     const btnAddF2 = document.getElementById('btn-add-card-footer-2');
     if (btnAddF2) {
@@ -1357,6 +1528,32 @@ const ProductForm = (() => {
     return used;
   }
 
+  function isFooter1TextInput(el) {
+    if (!el) return false;
+    return el.id === 'input-card-footer-text-side' || el.id === 'input-card-footer-text' || el.id === 'input-card-footer-text-mob';
+  }
+
+  function isFooter2TextInput(el) {
+    if (!el) return false;
+    return el.id === 'input-card-footer-2-text-side' || el.id === 'input-card-footer-2-text' || el.id === 'input-card-footer-2-text-mob';
+  }
+
+  function isFooterTextInput(el) {
+    return isFooter1TextInput(el) || isFooter2TextInput(el);
+  }
+
+  function getOtherFooterNormalizedText(currentInput) {
+    let otherVal = '';
+    if (isFooter1TextInput(currentInput)) {
+      const f2El = document.getElementById('input-card-footer-2-text-side') || document.getElementById('input-card-footer-2-text') || document.getElementById('input-card-footer-2-text-mob');
+      otherVal = f2El ? f2El.value : (primaryState.card_footer_2_text || '');
+    } else if (isFooter2TextInput(currentInput)) {
+      const f1El = document.getElementById('input-card-footer-text-side') || document.getElementById('input-card-footer-text') || document.getElementById('input-card-footer-text-mob');
+      otherVal = f1El ? f1El.value : (primaryState.card_footer_text || '');
+    }
+    return normalizeFooterTextForComparison(otherVal);
+  }
+
   function isCustomLabelInput(el) {
     if (!el) return false;
     return el.id === 'input-custom-label-1' || el.id === 'input-custom-label-2';
@@ -1637,7 +1834,18 @@ const ProductForm = (() => {
       }
 
       function renderItems(filterText = '', isExplicitOpen = false) {
-        const options = getOptionsForDatalist(datalistId);
+        let options = getOptionsForDatalist(datalistId);
+
+        // Mutual exclusion saran Footer 1 dan Footer 2 (Task 2.10C-6E-2):
+        if (isFooterTextInput(input)) {
+          const otherFooterNorm = getOtherFooterNormalizedText(input);
+          if (otherFooterNorm) {
+            options = options.filter(opt => {
+              const optVal = typeof opt === 'object' && opt !== null ? (opt.value || opt.label || '') : String(opt || '');
+              return normalizeFooterTextForComparison(optVal) !== otherFooterNorm;
+            });
+          }
+        }
         const currentVal = (input.value || '').trim();
         const currentValLower = currentVal.toLowerCase();
 
@@ -3797,8 +4005,9 @@ const ProductForm = (() => {
                             <span id="footer-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
                           </div>
                           <div class="relative w-full clean-datalist-wrapper">
-                            <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pilih/Input" maxlength="32" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                            <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pilih/Input" maxlength="100" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                           </div>
+                          <div class="text-[10px] text-slate-400 font-normal mt-0.5">Minimal 1 – Maksimal 32 karakter</div>
                           <div id="error-card-footer-text-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg">Label Footer 1 wajib diisi.</span></div>
                         </div>
                         <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-1 gap-2">
@@ -3808,16 +4017,16 @@ const ProductForm = (() => {
                             <div class="relative" id="container-footer-icon-picker-side">
                               <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
                                 <span id="preview-footer-icon-side" class="flex items-center justify-center shrink-0">
-                                  ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                                  ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? renderFooterBadgeIconHtml(primaryState.footer_badge_icon, 'w-3.5 h-3.5') : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                                 </span>
                                 <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
                               </button>
-                              <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                              <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-60 max-w-[calc(100vw-2.5rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
                                 <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
                                   <span>Pilih Ikon</span>
-                                  <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                                  <span class="text-[9px] font-normal text-slate-400">${FOOTER_ICONS_CATALOG.length} ikon</span>
                                 </div>
-                                <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-side">
+                                <div class="max-h-56 overflow-y-auto p-0.5" id="grid-footer-icon-picker-side">
                                   ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'), 'footer-1-side', getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'))}
                                 </div>
                                 <div id="notice-footer-icon-picker-side" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
@@ -3827,17 +4036,17 @@ const ProductForm = (() => {
                           <!-- Warna Latar Footer 1 -->
                           <div class="min-w-0">
                             <label for="cfg-footer-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
-                            <div class="flex items-center gap-1.5 min-w-0">
-                              <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
-                              <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || '#059669'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
+                              <input type="text" id="cfg-footer-bg-hex-side" maxlength="7" value="${primaryState.footer_bg_color || '#059669'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                             </div>
                           </div>
                           <!-- Warna Teks Footer 1 -->
                           <div class="min-w-0">
                             <label for="cfg-footer-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
-                            <div class="flex items-center gap-1.5 min-w-0">
-                              <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
-                              <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                            <div class="flex items-center gap-1.5">
+                              <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
+                              <input type="text" id="cfg-footer-text-hex-side" maxlength="7" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                             </div>
                           </div>
                         </div>
@@ -3859,8 +4068,9 @@ const ProductForm = (() => {
                                 </div>
                               </div>
                               <div class="relative w-full clean-datalist-wrapper">
-                                <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pilih/Input" maxlength="32" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                                <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pilih/Input" maxlength="100" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                               </div>
+                              <div class="text-[10px] text-slate-400 font-normal mt-0.5">Minimal 1 – Maksimal 32 karakter</div>
                               <div id="error-card-footer-2-text-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                             </div>
                             <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-1 gap-2">
@@ -3870,16 +4080,16 @@ const ProductForm = (() => {
                                 <div class="relative" id="container-footer-2-icon-picker-side">
                                   <button type="button" id="btn-footer-2-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
                                     <span id="preview-footer-2-icon-side" class="flex items-center justify-center shrink-0">
-                                      ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_2_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                                      ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? renderFooterBadgeIconHtml(primaryState.footer_2_badge_icon, 'w-3.5 h-3.5') : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                                     </span>
                                     <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
                                   </button>
-                                  <div id="menu-footer-2-icon-picker-side" class="hidden absolute left-0 bottom-full mb-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                                  <div id="menu-footer-2-icon-picker-side" class="hidden absolute left-0 bottom-full mb-1 z-30 w-60 max-w-[calc(100vw-2.5rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
                                     <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
                                       <span>Pilih Ikon</span>
-                                      <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
+                                      <span class="text-[9px] font-normal text-slate-400">${FOOTER_ICONS_CATALOG.length} ikon</span>
                                     </div>
-                                    <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-2-icon-picker-side">
+                                    <div class="max-h-56 overflow-y-auto p-0.5" id="grid-footer-2-icon-picker-side">
                                       ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'), 'footer-2-side', getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'))}
                                     </div>
                                     <div id="notice-footer-2-icon-picker-side" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
@@ -3889,17 +4099,17 @@ const ProductForm = (() => {
                               <!-- Warna Latar Footer 2 -->
                               <div class="min-w-0">
                                 <label for="cfg-footer-2-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                  <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || getSecondaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
-                                  <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getSecondaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                                <div class="flex items-center gap-1.5">
+                                  <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || '#2563eb'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
+                                  <input type="text" id="cfg-footer-2-bg-hex-side" maxlength="7" value="${primaryState.footer_2_bg_color || '#2563eb'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                                 </div>
                               </div>
                               <!-- Warna Teks Footer 2 -->
                               <div class="min-w-0">
                                 <label for="cfg-footer-2-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                  <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
-                                  <input type="text" id="cfg-footer-2-text-hex-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                                <div class="flex items-center gap-1.5">
+                                  <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
+                                  <input type="text" id="cfg-footer-2-text-hex-side" maxlength="7" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                                 </div>
                               </div>
                             </div>
@@ -12974,7 +13184,7 @@ const ProductForm = (() => {
               <!-- Footer 1 (Atas): Jaminan Kecepatan / Garansi -->
               ${hasFooter1 ? `
                 <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0 ${hasFooter2 ? 'border-b border-black/10' : ''}" style="background-color: ${effFooterBgColor}; color: ${effFooterTextColor}; ${!hasFooter2 ? 'border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;' : ''}">
-                  ${(hasUserFooter1 && footerIcon && footerIcon !== 'none') ? `<i data-lucide="${escapeHtml(footerIcon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
+                  ${(hasUserFooter1 && footerIcon && footerIcon !== 'none') ? renderFooterBadgeIconHtml(footerIcon, 'w-3.5 h-3.5 shrink-0') : ''}
                   <span class="truncate">${escapeHtml(previewF1Text)}</span>
                 </div>
               ` : ''}
@@ -12988,7 +13198,7 @@ const ProductForm = (() => {
                   </div>
                 ` : `
                   <div class="w-full text-[10px] sm:text-[11px] font-semibold py-1.5 px-3 flex items-center justify-center gap-1.5 tracking-wide shrink-0" style="background-color: ${effFooter2BgColor}; color: ${effFooter2TextColor}; border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;">
-                    ${(hasUserFooter2 && footer2Icon && footer2Icon !== 'none') ? `<i data-lucide="${escapeHtml(footer2Icon)}" class="w-3.5 h-3.5 shrink-0"></i>` : ''}
+                    ${(hasUserFooter2 && footer2Icon && footer2Icon !== 'none') ? renderFooterBadgeIconHtml(footer2Icon, 'w-3.5 h-3.5 shrink-0') : ''}
                     <span class="truncate">${escapeHtml(previewF2Text)}</span>
                   </div>
                 `
@@ -35352,6 +35562,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
       syncFooterControlsUI();
       syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+      updateProductCardLivePreview();
     };
 
     [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(el => {
