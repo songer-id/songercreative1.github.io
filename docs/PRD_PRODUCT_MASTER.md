@@ -1482,6 +1482,38 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lulus seluruh skenario relevan pada regression suite:
         - `scratch/test_task210c6f2_mobile_buttons.js` (53/53 PASS).
         - `scratch/test_task210c6f1_validation_and_layout.js` (29/30 PASS, dengan 1 penyesuaian yang disengaja: penolakan ring pada section parent foto yang telah diperbaiki pada Task 7B).
+  - **Validasi Rating & Teks Terjual Step 1 (Task 2.10C-7C)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyempurnakan tampilan kontrol tombol pilihan sumber data pada Card 2 Step 1 (Rating dan Teks Terjual).
+      - Menerapkan validasi ketat pada alur navigasi Step 1 (`goToStep(2)`) dan penyimpanan produk (`handleProductSubmit()`).
+      - Menerapkan mekanisme auto-scroll dan penargetan ring amber (`focusAndHighlightValidationTarget()`) pada input/kontrol yang tidak valid.
+    - **Penyederhanaan Tampilan Tombol Sumber Data**:
+      - Menghilangkan ikon CPU (`bi-cpu`) pada tombol `Otomatis` dan ikon pensil (`bi-pencil-square`) pada tombol `Manual` pada seksi Rating (`#section-step1-card-rating`) dan Teks Terjual (`#section-step1-card-sales`).
+      - Tombol menampilkan teks bersih murni: `Otomatis` dan `Manual`.
+      - Mempertahankan state pemilihan, styling aktif, dan reaktivitas terhadap preview kartu.
+    - **Aturan Validasi Navigasi Step 1 (`goToStep(2)`) & Submit**:
+      - **Rating**:
+        - Jika Rating OFF (`!isRatingActive`): pemilihan sumber data tidak wajib.
+        - Jika Rating ON (`isRatingActive`): wajib memilih sumber data (`'auto'` atau `'manual'`). Jika belum dipilih, blokir navigasi dengan pesan: *"Rating Kartu aktif: silakan pilih sumber data Otomatis atau Manual."* dan targetkan kontainer tombol `#rating-source-selector-group`.
+        - Jika Manual (`source === 'manual'`): nilai rating wajib diisi dengan angka desimal antara 0 hingga 5 (`0 <= val <= 5`). Jika kosong/tidak valid, blokir navigasi dengan pesan: *"Nilai rating manual harus diisi antara 0.0 sampai 5.0."* dan targetkan input `#cfg-rating-manual-val`.
+      - **Teks Terjual**:
+        - Jika Teks Terjual OFF (`!isSalesActive`): pemilihan sumber data tidak wajib.
+        - Jika Teks Terjual ON (`isSalesActive`): wajib memilih sumber data (`'auto'` atau `'manual'`). Jika belum dipilih, blokir navigasi dengan pesan: *"Teks Terjual aktif: silakan pilih sumber data Otomatis atau Manual."* dan targetkan kontainer tombol `#sales-source-selector-group`.
+        - Jika Manual (`source === 'manual'`): jumlah terjual wajib diisi dengan bilangan bulat $\ge 0$ (tanpa desimal/negatif). Jika kosong/tidak valid, blokir navigasi dengan pesan: *"Jumlah terjual manual harus diisi dengan angka bulat positif (minimal 0)."* dan targetkan input `#cfg-sales-manual-val`.
+      - **Produk Baru**: Default `source: null` tetap dipertahankan tanpa auto-select paksa.
+      - **Model B (Kartu Minimalis)**: Aturan mutual exclusion (hanya 1 metrik yang boleh aktif) tetap terjaga.
+      - **Produk Tersimpan**: Konfigurasi produk lama tidak diubah atau ditimpa.
+    - **Prioritas Auto-Scroll & Highlighting Sesuai Urutan DOM**:
+      - Menggunakan pengurutan `Node.compareDocumentPosition` pada array kesalahan validasi sehingga elemen paling atas di formulir selalu mendapat prioritas fokus dan auto-scroll pertama (Foto/Nama -> Rating -> Terjual).
+      - Pemilihan target ring amber yang tepat dan bersih pada `#rating-source-selector-group` atau `#sales-source-selector-group` saat sumber data belum dipilih, memfokuskan tombol pertama secara mulus.
+    - **Verifikasi Fungsionalitas & Pengujian**:
+      - Seluruh 23 skenario pengujian Playwright pada `scratch/test_task210c7c_rating_sales_validation.js` lulus 100% (23/23 PASS, 0 FAIL):
+        - Penolakan tombol berikon (0 icon present, label teks murni).
+        - Pemblokiran navigasi ke Step 2 saat Rating / Terjual aktif tanpa sumber data.
+        - Penolakan input manual rating di luar rentang 0-5 dan teks kosong.
+        - Penolakan input manual terjual berkoma desimal, bernilai negatif, dan teks kosong.
+        - Kelolosan navigasi ketika Rating/Terjual nonaktif atau valid (otomatis / manual valid).
+        - Pemeliharaan mutual exclusion pada Model B.
 
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:

@@ -4150,12 +4150,10 @@ const ProductForm = (() => {
                         Sumber Data Rating
                       </label>
                       <div class="grid grid-cols-2 gap-2" id="rating-source-selector-group">
-                        <button type="button" class="btn-rating-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${ratingSrc === 'auto' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="auto">
-                          <i class="bi bi-cpu text-xs"></i>
+                        <button type="button" class="btn-rating-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center select-none ${ratingSrc === 'auto' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="auto">
                           <span>Otomatis</span>
                         </button>
-                        <button type="button" class="btn-rating-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${ratingSrc === 'manual' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="manual">
-                          <i class="bi bi-pencil-square text-xs"></i>
+                        <button type="button" class="btn-rating-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center select-none ${ratingSrc === 'manual' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="manual">
                           <span>Manual</span>
                         </button>
                       </div>
@@ -4215,12 +4213,10 @@ const ProductForm = (() => {
                         Sumber Data Terjual
                       </label>
                       <div class="grid grid-cols-2 gap-2" id="sales-source-selector-group">
-                        <button type="button" class="btn-sales-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${salesSrc === 'auto' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="auto">
-                          <i class="bi bi-cpu text-xs"></i>
+                        <button type="button" class="btn-sales-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center select-none ${salesSrc === 'auto' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="auto">
                           <span>Otomatis</span>
                         </button>
-                        <button type="button" class="btn-sales-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center gap-1.5 select-none ${salesSrc === 'manual' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="manual">
-                          <i class="bi bi-pencil-square text-xs"></i>
+                        <button type="button" class="btn-sales-src py-2 px-3 text-xs font-semibold rounded-md border transition cursor-pointer flex items-center justify-center select-none ${salesSrc === 'manual' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" data-source="manual">
                           <span>Manual</span>
                         </button>
                       </div>
@@ -27572,6 +27568,68 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           }
         }
 
+        // 6. Rating Produk (Hanya jika Etalase ON dan toggle Rating aktif - Task 2.10C-7C)
+        const chkRatingEl = document.getElementById('cfg-show-rating');
+        const isRatingActive = chkRatingEl ? chkRatingEl.checked : (primaryState.card_config ? (primaryState.card_config.show_rating !== false) : true);
+
+        const chkSalesEl = document.getElementById('cfg-show-sales');
+        let isSalesActive = chkSalesEl ? chkSalesEl.checked : (primaryState.card_config ? ((primaryState.card_config.show_sales !== false) && (primaryState.card_config.show_sales_count !== false)) : true);
+
+        // Khusus Kartu Minimalis (Model B): Hanya salah satu metrik yang dapat diaktifkan
+        if (primaryState.card_variant === 'B' && isRatingActive && isSalesActive) {
+          isSalesActive = false;
+        }
+
+        if (primaryState.is_active && isRatingActive) {
+          const metricsCfg = getPreviewMetricsConfig();
+          const activeRatingBtn = document.querySelector('#rating-source-selector-group .btn-rating-src.bg-emerald-50, #rating-source-selector-group .btn-rating-src[class*="ring-emerald"]');
+          const ratingSrc = (metricsCfg.rating && metricsCfg.rating.source) ? metricsCfg.rating.source : (activeRatingBtn ? activeRatingBtn.dataset.source : null);
+          const ratingGroupEl = document.getElementById('rating-source-selector-group');
+          const ratingManualInp = document.getElementById('cfg-rating-manual-val');
+
+          if (!ratingSrc || (ratingSrc !== 'auto' && ratingSrc !== 'manual')) {
+            addS1Error('Pilih Sumber Data Rating terlebih dahulu (Otomatis atau Manual).', ratingGroupEl);
+          } else if (ratingSrc === 'manual') {
+            const rawRatingVal = ratingManualInp ? ratingManualInp.value.trim() : (metricsCfg.rating && metricsCfg.rating.manual_value !== null && metricsCfg.rating.manual_value !== undefined ? String(metricsCfg.rating.manual_value).trim() : '');
+            const normRating = rawRatingVal.replace(',', '.');
+            const numRating = Number(normRating);
+            const isRatingValid = rawRatingVal !== '' && !isNaN(numRating) && isFinite(numRating) && numRating >= 0 && numRating <= 5;
+
+            if (!isRatingValid) {
+              if (ratingManualInp) {
+                ratingManualInp.classList.add('border-red-500', 'focus:border-red-500');
+              }
+              addS1Error('Nilai Rating manual wajib diisi antara 0 sampai 5.', ratingManualInp);
+            }
+          }
+        }
+
+        // 7. Teks Terjual (Hanya jika Etalase ON dan toggle Terjual aktif - Task 2.10C-7C)
+        if (primaryState.is_active && isSalesActive) {
+          const metricsCfg = getPreviewMetricsConfig();
+          const activeSalesBtn = document.querySelector('#sales-source-selector-group .btn-sales-src.bg-emerald-50, #sales-source-selector-group .btn-sales-src[class*="ring-emerald"]');
+          const salesSrc = (metricsCfg.sales && metricsCfg.sales.source) ? metricsCfg.sales.source : (activeSalesBtn ? activeSalesBtn.dataset.source : null);
+          const salesGroupEl = document.getElementById('sales-source-selector-group');
+          const salesManualInp = document.getElementById('cfg-sales-manual-val');
+
+          if (!salesSrc || (salesSrc !== 'auto' && salesSrc !== 'manual')) {
+            addS1Error('Pilih Sumber Data Terjual terlebih dahulu (Otomatis atau Manual).', salesGroupEl);
+          } else if (salesSrc === 'manual') {
+            const rawSalesVal = salesManualInp ? salesManualInp.value.trim() : (metricsCfg.sales && metricsCfg.sales.manual_value !== null && metricsCfg.sales.manual_value !== undefined ? String(metricsCfg.sales.manual_value).trim() : '');
+            const cleanSales = rawSalesVal.replace(/[.]/g, '');
+            const isSalesInt = (/^\d+$/.test(rawSalesVal) || /^\d{1,3}(\.\d{3})+$/.test(rawSalesVal));
+            const numSales = Number(cleanSales);
+            const isSalesValid = rawSalesVal !== '' && isSalesInt && !isNaN(numSales) && isFinite(numSales) && Number.isInteger(numSales) && numSales >= 0;
+
+            if (!isSalesValid) {
+              if (salesManualInp) {
+                salesManualInp.classList.add('border-red-500', 'focus:border-red-500');
+              }
+              addS1Error('Jumlah Terjual manual wajib diisi angka bulat minimal 0.', salesManualInp);
+            }
+          }
+        }
+
         if (s1Errors.length > 0) {
           showWizardErrorBanner(s1Errors);
 
@@ -37357,6 +37415,66 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       if (l1Val && l2Val && l1Val.toLowerCase() === l2Val.toLowerCase()) {
         addError('Label tidak boleh sama.', input2);
+      }
+    }
+
+    // Rating & Sales Validation (Task 2.10C-7C)
+    const chkRatingElSubmit = document.getElementById('cfg-show-rating');
+    const isRatingActiveSubmit = chkRatingElSubmit ? chkRatingElSubmit.checked : (primaryState.card_config ? (primaryState.card_config.show_rating !== false) : true);
+
+    const chkSalesElSubmit = document.getElementById('cfg-show-sales');
+    let isSalesActiveSubmit = chkSalesElSubmit ? chkSalesElSubmit.checked : (primaryState.card_config ? ((primaryState.card_config.show_sales !== false) && (primaryState.card_config.show_sales_count !== false)) : true);
+
+    if (primaryState.card_variant === 'B' && isRatingActiveSubmit && isSalesActiveSubmit) {
+      isSalesActiveSubmit = false;
+    }
+
+    if (primaryState.is_active && isRatingActiveSubmit) {
+      const metricsCfg = getPreviewMetricsConfig();
+      const activeRatingBtn = document.querySelector('#rating-source-selector-group .btn-rating-src.bg-emerald-50, #rating-source-selector-group .btn-rating-src[class*="ring-emerald"]');
+      const ratingSrc = (metricsCfg.rating && metricsCfg.rating.source) ? metricsCfg.rating.source : (activeRatingBtn ? activeRatingBtn.dataset.source : null);
+      const ratingGroupEl = document.getElementById('rating-source-selector-group');
+      const ratingManualInp = document.getElementById('cfg-rating-manual-val');
+
+      if (!ratingSrc || (ratingSrc !== 'auto' && ratingSrc !== 'manual')) {
+        addError('Pilih Sumber Data Rating terlebih dahulu (Otomatis atau Manual).', ratingGroupEl);
+      } else if (ratingSrc === 'manual') {
+        const rawRatingVal = ratingManualInp ? ratingManualInp.value.trim() : (metricsCfg.rating && metricsCfg.rating.manual_value !== null && metricsCfg.rating.manual_value !== undefined ? String(metricsCfg.rating.manual_value).trim() : '');
+        const normRating = rawRatingVal.replace(',', '.');
+        const numRating = Number(normRating);
+        const isRatingValid = rawRatingVal !== '' && !isNaN(numRating) && isFinite(numRating) && numRating >= 0 && numRating <= 5;
+
+        if (!isRatingValid) {
+          if (ratingManualInp) {
+            ratingManualInp.classList.add('border-red-500', 'focus:border-red-500');
+          }
+          addError('Nilai Rating manual wajib diisi antara 0 sampai 5.', ratingManualInp);
+        }
+      }
+    }
+
+    if (primaryState.is_active && isSalesActiveSubmit) {
+      const metricsCfg = getPreviewMetricsConfig();
+      const activeSalesBtn = document.querySelector('#sales-source-selector-group .btn-sales-src.bg-emerald-50, #sales-source-selector-group .btn-sales-src[class*="ring-emerald"]');
+      const salesSrc = (metricsCfg.sales && metricsCfg.sales.source) ? metricsCfg.sales.source : (activeSalesBtn ? activeSalesBtn.dataset.source : null);
+      const salesGroupEl = document.getElementById('sales-source-selector-group');
+      const salesManualInp = document.getElementById('cfg-sales-manual-val');
+
+      if (!salesSrc || (salesSrc !== 'auto' && salesSrc !== 'manual')) {
+        addError('Pilih Sumber Data Terjual terlebih dahulu (Otomatis atau Manual).', salesGroupEl);
+      } else if (salesSrc === 'manual') {
+        const rawSalesVal = salesManualInp ? salesManualInp.value.trim() : (metricsCfg.sales && metricsCfg.sales.manual_value !== null && metricsCfg.sales.manual_value !== undefined ? String(metricsCfg.sales.manual_value).trim() : '');
+        const cleanSales = rawSalesVal.replace(/[.]/g, '');
+        const isSalesInt = (/^\d+$/.test(rawSalesVal) || /^\d{1,3}(\.\d{3})+$/.test(rawSalesVal));
+        const numSales = Number(cleanSales);
+        const isSalesValid = rawSalesVal !== '' && isSalesInt && !isNaN(numSales) && isFinite(numSales) && Number.isInteger(numSales) && numSales >= 0;
+
+        if (!isSalesValid) {
+          if (salesManualInp) {
+            salesManualInp.classList.add('border-red-500', 'focus:border-red-500');
+          }
+          addError('Jumlah Terjual manual wajib diisi angka bulat minimal 0.', salesManualInp);
+        }
       }
     }
     if (!primaryState.category_id || String(primaryState.category_id).trim() === '') {
