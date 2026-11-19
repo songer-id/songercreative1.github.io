@@ -1294,6 +1294,34 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6c_rating_sales.js` - 56/56 skenario lulus, 0 gagal), mencakup struktur hierarki DOM, ketiadaan ID duplikat di Tab Desain Kartu, independensi sumber data, toggle switch, validasi input manual realtime, serta responsivitas layar desktop & mobile.
 
+  - **Otomatisasi Ketersediaan Card 2 Berdasarkan Etalase dan Model Kartu (Task 2.10C-6D)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyempurnakan perilaku ketersediaan dan visibilitas komponen Card 2 (**Informasi Kartu Produk** / `#card-step1-card-info`) secara dinamis berdasarkan status *Tampilkan di Etalase Toko* (`#toggle-is-active-form`) dan *Model Kartu Produk* (Model A, B, C).
+    - **Aturan Etalase Toko OFF**:
+      - Card 2 tetap ditampilkan sebagai kartu terpisah apabila tahap pemilihan jenis produk (`product_type`) telah terpenuhi.
+      - Seluruh kontrol di dalam Card 2 disembunyikan secara bersih (`#card2-active-content` diberi class `hidden`) tanpa merusak atau mereset data input.
+      - Menampilkan kotak pesan informasi terkunci ringkas: `"Hanya Tersedia jika Kartu Ditampilkan di Etalase Toko."` (`#card2-etalase-off-notice`).
+      - Saat Etalase diaktifkan kembali (ON), Card 2 otomatis kembali menampilkan komponen sesuai Model Kartu aktif dengan seluruh nilai input, pilihan sumber data, dan konfigurasi tersimpan tetap utuh.
+    - **Aturan Ketersediaan Berdasarkan Model Kartu (Etalase ON)**:
+      - **Model A (Kartu Klasik)**:
+        - *Label Khusus*: Tersedia (`#label-custom-controls` tampil).
+        - *Footer Kartu*: Tidak tersedia (`#section-step1-input7-footers` tersembunyi).
+        - *Rating & Terjual*: Tersedia secara independen.
+      - **Model B (Kartu Minimalis)**:
+        - *Label Khusus*: Tidak tersedia. Kontrol input dan toggle disembunyikan, digantikan pesan ringkas: `"Label Khusus Tidak Tersedia Untuk Kartu Produk Versi Kartu Minimalis."` (`#label-custom-model-b-notice`).
+        - *Footer Kartu*: Tidak tersedia (`#section-step1-input7-footers` tersembunyi).
+        - *Rating & Terjual*: Tersedia dengan aturan *mutual exclusivity* (pilihan salah satu) dan peringatan `#cfg-metric-model-b-notice`.
+      - **Model C (Kartu Detail)**:
+        - *Label Khusus*: Tersedia.
+        - *Footer Kartu*: Tersedia lengkap (Strip 1 dan Strip 2 beserta pemilihan ikon dan palet warna).
+        - *Rating & Terjual*: Tersedia secara independen.
+    - **Perlindungan Data Mutlak (Data Integrity Protection)**:
+      - Pergantian model (misalnya Model C -> Model B -> Model C) tidak menghapus `custom_labels`, `card_footer_text`, `card_footer_2_text`, konfigurasi ikon, warna footer, maupun `admin_card_preview_metrics`.
+      - Saat seller kembali ke model yang mendukung (misal kembali ke C atau A), seluruh data dan nilai input lama langsung muncul kembali utuh di formulir dan pratinjau kartu.
+      - Mempertahankan integritas produk tersimpan saat dibuka kembali melalui `loadProductForEdit()`.
+    - **Verifikasi Fungsionalitas**:
+      - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6d_card2_availability.js` - 51/51 skenario lulus, 0 gagal) dan bebas regresi pada test suite Task 6C (`scratch/test_task210c6c_rating_sales.js` - 56/56 lulus), mencakup pengujian peralihan Etalase ON/OFF, pergantian model A/B/C, retensi data input, mutual exclusivity Model B, pembaruan realtime pratinjau kartu, serta responsivitas layar desktop & mobile (375x812).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
