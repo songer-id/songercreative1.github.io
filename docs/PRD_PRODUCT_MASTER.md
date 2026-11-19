@@ -1382,6 +1382,35 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - Lulus seluruh pengujian regresi: `scratch/test_task210c6e1_footers.js` (52/52 PASS), `scratch/test_task210c6d_card2_availability.js` (51/51 PASS), dan `scratch/test_task210c6c_rating_sales.js` (56/56 PASS).
       - Pengujian mencakup viewport Mobile 375x812, Mobile 390x844, Tablet 768x1024, dan Desktop 1280x800 dengan 0 console error dan 0 ID duplikat.
 
+  - **Penyempurnaan Auto-Scroll Validasi Step 1 dan Layout Label Khusus (Task 2.10C-6F-1)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menghilangkan garis horizontal yang tidak diperlukan di bawah keterangan Label Khusus pada Card 2 (Informasi Kartu Produk) dengan mempertahankan teks keterangan resmi serta batas pemisah komponen lain.
+      - Menyempurnakan mekanisme auto-scroll dan penyorotan validasi saat seller menekan tombol "Lanjutkan" pada Step 1 ketika terdapat informasi wajib yang belum lengkap atau belum valid, dengan memanfaatkan infrastruktur `focusAndHighlightValidationTarget`.
+    - **Perbaikan Layout Label Khusus**:
+      - Menghapus kelas `border-b border-slate-100` dan `pb-2` pada kontainer toggle dan keterangan Label Khusus (`#label-custom-controls > div`).
+      - Memperbarui teks keterangan menjadi: `"Label Khusus untuk menampilkan informasi khusus pada kartu etalase (misal: Free Ongkir, Best Seller, Siap 1 Jam)."`
+      - Mempertahankan garis pemisah komponen lain (`<hr class="border-slate-100" />` pada Footer Kartu, Rating, dan Teks Terjual).
+      - Mempertahankan seluruh struktur Card 2, toggle Label Khusus, input label, aturan ketersediaan Model A, B, C, serta preview label.
+    - **Penyempurnaan Mekanisme Auto-Scroll Validasi Step 1**:
+      - Validasi komprehensif saat menekan tombol Lanjutkan (`#btn-step-1-next` / `goToStep(2)`):
+        1. Jenis Produk (Fisik / Non Fisik).
+        2. Model Kartu Produk (wajib jika Etalase ON).
+        3. Foto Produk minimal 1 foto sebagai cover (wajib jika Etalase ON).
+        4. Nama Produk minimal 5 karakter (wajib baik Etalase ON maupun OFF).
+        5. Label Khusus (Label 1 wajib diisi dan Label 2 tidak boleh sama jika toggle Label Khusus aktif pada Model Non-B saat Etalase ON).
+      - Seluruh elemen yang tidak valid dikumpulkan dan diurutkan berdasarkan posisi dokumen visual aktual dari atas ke bawah (`compareDocumentPosition`).
+      - Seller langsung difokuskan pada elemen tidak valid pertama yang paling atas.
+      - Memanfaatkan `focusAndHighlightValidationTarget(firstInvalidEl)`:
+        - Menghitung offset scroll terhadap `admin-main-viewport` dengan memperhitungkan jarak pandang nyaman (*top clearance* 20px).
+        - Menutup drawer atau sheet penghalang di mobile (`mobile-preview-sheet`, `closeProductSpecDrawer`) sebelum scroll dijalankan.
+        - Membuka kontainer tertutup (`hidden`, `details`, atau accordion) sebelum fokus diarahkan.
+        - Memberikan highlight ring amber (`ring-2 ring-amber-400 transition-all`) selama 3 detik.
+        - Mengarahkan fokus (`.focus({ preventScroll: true })`) ke input atau tombol interaktif yang terlihat (`input`, `select`, `textarea`, `#btn-slot-add-photo`, radio) tanpa lonjakan layar.
+    - **Verifikasi Fungsionalitas**:
+      - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6f1_validation_and_layout.js` - 30/30 skenario lulus, 0 gagal).
+      - Lulus seluruh pengujian regresi: `scratch/test_task210c6e2_footers.js` (70/70 PASS), `scratch/test_task210c6e1_footers.js` (52/52 PASS), `scratch/test_task210c6d_card2_availability.js` (51/51 PASS), dan `scratch/test_task210c6c_rating_sales.js` (56/56 PASS).
+      - Total lulus: 259 / 259 skenario pengujian lintas resolusi Desktop (1280x800) dan Mobile (375x812, 390x844).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

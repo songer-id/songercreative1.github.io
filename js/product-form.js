@@ -3899,12 +3899,12 @@ const ProductForm = (() => {
 
                   <!-- Kontrol Label Khusus (Hanya untuk Model A & C) -->
                   <div id="label-custom-controls" class="${primaryState.card_variant === 'B' ? 'hidden' : 'space-y-4'}">
-                    <div class="pb-2 border-b border-slate-100 flex items-center justify-between gap-3">
+                    <div class="flex items-center justify-between gap-3">
                       <div>
                         <label class="block text-xs font-bold text-slate-800">
                           Tambahkan Label Khusus
                         </label>
-                        <p class="text-xs text-slate-500 mt-0.5">Label promosi khusus di kartu etalase (misal: Free Ongkir, Best Seller, Siap 1 Jam).</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Label Khusus untuk menampilkan informasi khusus pada kartu etalase (misal: Free Ongkir, Best Seller, Siap 1 Jam).</p>
                       </div>
                       <!-- TOGGLE SWITCH ON/OFF -->
                       <label class="relative inline-flex items-center select-none shrink-0 cursor-pointer">
@@ -7068,13 +7068,37 @@ const ProductForm = (() => {
       (typeof el.closest === 'function' && el.closest('#step-pane-1')) ||
       el.id === 'input-prod-name' ||
       el.id === 'select-prod-category' ||
-      el.id === 'section-step1-basic'
+      el.id === 'section-step1-basic' ||
+      (el.id && el.id.startsWith('section-step1-')) ||
+      (el.id && el.id.startsWith('card-step1-'))
     );
     if (isInsideStep1 && currentStep !== 1) {
       if (typeof goToStep === 'function') goToStep(1);
     }
 
-    // 3. Open any closed accordions, cards, or collapsible sections containing target
+    const isInsideStep2 = Boolean(
+      (typeof el.closest === 'function' && el.closest('#step-pane-2')) ||
+      (el.id && el.id.startsWith('card-step2-')) ||
+      (el.id && el.id.startsWith('section-step2-'))
+    );
+    if (isInsideStep2 && currentStep !== 2) {
+      if (typeof goToStep === 'function') goToStep(2);
+    }
+
+    // Tutup mobile preview sheet / drawer jika sedang terbuka agar tidak menghalangi form
+    const mobSheet = document.getElementById('mobile-preview-sheet');
+    const isMobileSheetOpen = mobSheet && !mobSheet.classList.contains('translate-y-full');
+    if (isMobileSheetOpen) {
+      const closeFn = (typeof closeMobilePreview === 'function' ? closeMobilePreview : (typeof ProductForm !== 'undefined' && typeof ProductForm.closeMobilePreview === 'function' ? ProductForm.closeMobilePreview : null));
+      if (typeof closeFn === 'function') {
+        closeFn();
+      }
+    }
+    if (typeof closeProductSpecDrawer === 'function') {
+      try { closeProductSpecDrawer(); } catch (_) { }
+    }
+
+    // 3. Buka accordion atau kontainer tertutup jika elemen target berada di dalamnya
     if (typeof cardAccordionState !== 'undefined' && typeof syncCardAccordionDOM === 'function') {
       const accordionBody = (typeof el.closest === 'function') ? el.closest('[id^="accordion-body-"]') : null;
       if (accordionBody && accordionBody.id) {
@@ -7086,19 +7110,19 @@ const ProductForm = (() => {
       }
     }
 
-    // Expand details or hidden parent panels (excluding step panes)
+    // Buka parent panel atau details tertutup (kecuali step-pane)
     let parent = el.parentElement;
     while (parent && parent !== document.body) {
       if (parent.tagName === 'DETAILS' && !parent.open) {
         parent.open = true;
       }
-      if (parent.classList && parent.classList.contains('hidden') && parent.id && parent.id !== 'step-pane-1' && parent.id !== 'step-pane-2') {
+      if (parent.classList && parent.classList.contains('hidden') && parent.id !== 'step-pane-1' && parent.id !== 'step-pane-2') {
         parent.classList.remove('hidden');
       }
       parent = parent.parentElement;
     }
 
-    // 4. Wait for layout settling using rAF check
+    // 4. Tunggu layout stabil sebelum melakukan smooth scroll dan highlight
     let attempts = 0;
     const maxAttempts = 12;
     function executeScrollAndHighlight() {
@@ -7122,14 +7146,14 @@ const ProductForm = (() => {
         const vpRect = vp.getBoundingClientRect();
         const elRect = activeEl.getBoundingClientRect();
 
-        // Calculate sticky header/subnav offset
+        // Hitung offset sticky header/subnav
         const subnavEl = document.getElementById('step2-subnav-fixed') || document.getElementById('step2-subnav');
-        const subnavHeight = (subnavEl && subnavEl.offsetHeight > 0) ? subnavEl.offsetHeight : (currentStep === 2 ? 44 : 0);
+        const subnavHeight = (subnavEl && subnavEl.offsetHeight > 0 && currentStep === 2) ? subnavEl.offsetHeight : 0;
 
-        // Top clearance: sticky subnav height + 20px comfortable reading margin
+        // Top clearance: sticky subnav height + 20px reading margin
         const topClearance = subnavHeight + 20;
 
-        // Current scroll position + distance of element top from viewport top - clearance
+        // Posisi scroll target
         const targetScrollTop = vp.scrollTop + (elRect.top - vpRect.top) - topClearance;
 
         if (typeof vp.scrollTo === 'function') {
@@ -7144,32 +7168,69 @@ const ProductForm = (() => {
         activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
 
-      // 5. Highlight target input cleanly
+      // 5. Berikan highlight ring amber selama 3 detik
       const highlightBox = (typeof activeEl.closest === 'function')
         ? (activeEl.closest('.variation-option-row, tr, .step2-section-card, .form-group') || activeEl)
         : activeEl;
 
       if (activeEl.classList) {
         activeEl.classList.add('ring-2', 'ring-amber-400', 'transition-all');
+        if (activeEl.tagName === 'DIV' && !activeEl.className.includes('rounded')) {
+          activeEl.classList.add('rounded-lg');
+          activeEl.dataset.tempRounded = 'true';
+        }
       }
       if (highlightBox && highlightBox !== activeEl && highlightBox.classList) {
         highlightBox.classList.add('ring-2', 'ring-amber-400', 'transition-all');
       }
 
+      // Khusus seksi foto produk, tambahkan highlight juga pada kontainer galeri foto
+      const photoGrid = (activeEl.id === 'section-step1-input4-photo') ? activeEl.querySelector('#gallery-slots-container') : null;
+      if (photoGrid && photoGrid.classList) {
+        photoGrid.classList.add('ring-2', 'ring-amber-400', 'transition-all', 'rounded-lg');
+      }
+
       setTimeout(() => {
-        if (activeEl.classList) activeEl.classList.remove('ring-2', 'ring-amber-400');
-        if (highlightBox && highlightBox.classList) highlightBox.classList.remove('ring-2', 'ring-amber-400');
+        if (activeEl.classList) {
+          activeEl.classList.remove('ring-2', 'ring-amber-400');
+          if (activeEl.dataset.tempRounded) {
+            activeEl.classList.remove('rounded-lg');
+            delete activeEl.dataset.tempRounded;
+          }
+        }
+        if (highlightBox && highlightBox !== activeEl && highlightBox.classList) {
+          highlightBox.classList.remove('ring-2', 'ring-amber-400');
+        }
+        if (photoGrid && photoGrid.classList) {
+          photoGrid.classList.remove('ring-2', 'ring-amber-400', 'rounded-lg');
+        }
       }, 3000);
 
-      // 6. Focus input without secondary scroll jump
-      if (typeof activeEl.focus === 'function' && activeEl.tagName !== 'DIV' && activeEl.tagName !== 'TR' && activeEl.tagName !== 'TABLE') {
-        try {
-          activeEl.focus({ preventScroll: true });
-        } catch (err) { }
+      // 6. Arahkan fokus ke input terkait apabila elemen mendukung fokus
+      let focusCandidate = null;
+      if (typeof activeEl.focus === 'function' && activeEl.tagName !== 'TR' && activeEl.tagName !== 'TABLE' && !activeEl.classList.contains('hidden') && (activeEl.tagName !== 'DIV' || activeEl.hasAttribute('tabindex') || activeEl.id === 'btn-slot-add-photo')) {
+        focusCandidate = activeEl;
+      } else if (typeof activeEl.querySelector === 'function') {
+        focusCandidate = activeEl.querySelector('#btn-slot-add-photo, button:not([disabled]):not(.hidden), input:not([type="hidden"]):not([type="file"]):not(.hidden), select:not(.hidden), textarea:not(.hidden), input:not([type="hidden"]):not(.hidden)');
+      }
+
+      if (focusCandidate) {
+        if (focusCandidate.tagName === 'DIV' && !focusCandidate.hasAttribute('tabindex')) {
+          focusCandidate.tabIndex = 0;
+        }
+        if (typeof focusCandidate.focus === 'function') {
+          try {
+            focusCandidate.focus({ preventScroll: true });
+          } catch (err) { }
+        }
       }
     }
 
-    requestAnimationFrame(executeScrollAndHighlight);
+    if (isMobileSheetOpen) {
+      setTimeout(executeScrollAndHighlight, 320);
+    } else {
+      requestAnimationFrame(executeScrollAndHighlight);
+    }
   }
 
   function canActivateTestMode() {
@@ -14857,7 +14918,7 @@ const ProductForm = (() => {
       const isFirstSlot = images.length === 0;
 
       html += `
-        <div id="btn-slot-add-photo" data-action="add-photo" style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-lg border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-1.5 sm:p-2.5 select-none shadow-2xs overflow-hidden shrink-0" title="Unggah foto produk baru (${images.length}/10)">
+        <div id="btn-slot-add-photo" tabindex="0" role="button" data-action="add-photo" style="aspect-ratio: ${aspectRatioStyle}; width: 100%;" class="gallery-thumb-slot relative ${aspectClass} rounded-lg border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/30 bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group text-center p-1.5 sm:p-2.5 select-none shadow-2xs overflow-hidden shrink-0" title="Unggah foto produk baru (${images.length}/10)">
           <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white group-hover:bg-emerald-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-700 shadow-xs mb-1 transition-transform group-hover:scale-105 shrink-0">
             <i data-lucide="camera" class="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5"></i>
           </div>
@@ -27466,35 +27527,47 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     if (step > currentStep) {
       if (typeof syncStateFromDOM === 'function') syncStateFromDOM();
 
-      // Validasi Step 1 jika ingin maju dari Step 1 ke Step 2
+      // Validasi Step 1 jika ingin maju dari Step 1 ke Step 2 (Task 2.10C-6F-1)
       if (currentStep === 1) {
         const s1Errors = [];
-        let firstInvalidEl = null;
+        const invalidEntries = [];
 
         function addS1Error(msg, el) {
           s1Errors.push(msg);
-          if (!firstInvalidEl && el) firstInvalidEl = el;
+          if (el) invalidEntries.push({ msg, el });
         }
 
+        // 1. Jenis Produk (Fisik atau Non Fisik)
         if (!primaryState.product_type || (primaryState.product_type !== 'physical' && primaryState.product_type !== 'non_physical')) {
-          addS1Error('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).', document.getElementById('section-step1-input1-type') || document.getElementById('product-type-selector-group'));
+          const elProdType = document.getElementById('product-type-selector-group') || document.getElementById('section-step1-input1-type');
+          addS1Error('Pilih Jenis Produk / Layanan terlebih dahulu (Fisik atau Non Fisik).', elProdType);
         }
+
+        // 2. Model Kartu Produk (Hanya jika Etalase ON)
         if (primaryState.is_active && !primaryState.card_variant) {
-          addS1Error('Pilih Jenis Model Kartu Produk terlebih dahulu.', document.getElementById('section-step1-input3-cardmodel') || document.querySelector('input[name="card_variant_radio"]')?.closest('label'));
+          const elCardModel = document.getElementById('card-model-selector-group') || document.getElementById('section-step1-input3-cardmodel');
+          addS1Error('Pilih Jenis Model Kartu Produk terlebih dahulu.', elCardModel);
         }
+
+        // 3. Foto Produk (Minimal 1 Foto sebagai cover jika Etalase ON)
         if (primaryState.is_active && (!primaryState.images || primaryState.images.length === 0) && !primaryState.image_url) {
-          addS1Error('Foto produk wajib diunggah minimal 1 foto sebagai cover.', document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('input-prod-image'));
+          const elPhoto = document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('gallery-slots-container');
+          addS1Error('Foto produk wajib diunggah minimal 1 foto sebagai cover.', elPhoto);
         }
+
+        // 4. Nama Produk (Minimal 5 karakter, berlaku baik Etalase ON maupun OFF)
         if (!primaryState.name || primaryState.name.trim().length < 5) {
-          addS1Error('Nama Produk wajib diisi minimal 5 karakter.', document.getElementById('input-prod-name'));
           const s1NameInput = document.getElementById('input-prod-name');
           const s1MinLenErr = document.getElementById('name-min-length-error');
           if (s1MinLenErr) s1MinLenErr.classList.remove('hidden');
           if (s1NameInput) {
             s1NameInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
           }
+          addS1Error('Nama Produk wajib diisi minimal 5 karakter.', s1NameInput);
         }
-        if (primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
+
+        // 5. Label Khusus (Hanya jika Etalase ON, Model bukan B, dan toggle Tambahkan Label Khusus aktif)
+        if (primaryState.is_active && primaryState.card_variant !== 'B' && primaryState.show_badge === true) {
           const input1 = document.getElementById('input-custom-label-1');
           const input2 = document.getElementById('input-custom-label-2');
           const wrapper2 = document.getElementById('wrapper-custom-label-2');
@@ -27514,11 +27587,20 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         if (s1Errors.length > 0) {
           showWizardErrorBanner(s1Errors);
+
+          // Urutkan elemen invalid berdasarkan urutan posisi DOM dari atas ke bawah
+          invalidEntries.sort((a, b) => {
+            if (!a.el || !b.el) return 0;
+            if (a.el === b.el) return 0;
+            const pos = a.el.compareDocumentPosition(b.el);
+            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+            if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+            return 0;
+          });
+
+          const firstInvalidEl = invalidEntries[0]?.el;
           if (firstInvalidEl) {
-            firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (typeof firstInvalidEl.focus === 'function' && firstInvalidEl.tagName !== 'DIV') {
-              firstInvalidEl.focus();
-            }
+            focusAndHighlightValidationTarget(firstInvalidEl);
           }
           return;
         }
