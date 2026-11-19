@@ -1559,6 +1559,33 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
         - `scratch/test_task210c6d_card2_availability.js` (51/51 PASS).
         - `scratch/test_task210c6f2_mobile_buttons.js` (53/53 PASS).
 
+  - **Final Regression Alignment & Documentation Closure (Task 2.10C-7E)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyelaraskan seluruh test suite Task 2.10C dengan aturan bisnis terbaru yang telah stabil pada Task 6C sampai 7D.
+      - Memperbaiki assertion usang pada `scratch/test_task210c6f1_validation_and_layout.js` (Assertion D.2 dan H.1).
+      - Menyelaraskan dan menutup checklist dokumentasi PRD (`docs/PRD_MASTER.md` dan `docs/PRD_PRODUCT_MASTER.md`).
+      - Memverifikasi eksekusi penuh seluruh 9 test suite Playwright tanpa kegagalan (100% PASS).
+    - **Penyelarasan Assertion Task 6F-1**:
+      - **Assertion D.2 (Highlight Foto Produk)**:
+        - Diperbarui mengikuti spesifikasi Task 7B: highlight `ring-amber-400` hanya diberikan kepada tombol upload foto (`#btn-slot-add-photo`).
+        - Memastikan parent section (`#section-step1-input4-photo`) dan grid galeri (`#gallery-slots-container`) TIDAK ikut menerima ring amber.
+        - Memverifikasi tidak terjadi highlight ganda (persis 1 elemen aktif menerima highlight).
+        - Mempertahankan verifikasi scroll dan auto-fokus ke tombol tambah foto.
+      - **Assertion H.1 (Seluruh Data Valid Menuju Step 2)**:
+        - Diperbarui mengikuti aturan Task 7D: karena Model C memiliki Label Khusus Default ON, fixture dilengkapi dengan Label 1 valid (`'Poster Custom'`).
+        - Memastikan prasyarat jenis produk fisik, nama produk ($\ge 5$ karakter), foto produk, serta kepatuhan status rating dan terjual (Task 7C) terpenuhi sebelum navigasi ke Step 2.
+        - Navigasi berhasil menuju Step 2 (`curStep === 2 && isStep2Visible`).
+    - **Hasil Pengujian Regresi Final (9 Test Suites / 419 Assertion Lulus 100%)**:
+      - `scratch/test_task210c7d_default_on_eye_removal.js` (26/26 PASS, 0 FAIL)
+      - `scratch/test_task210c7c_rating_sales_validation.js` (23/23 PASS, 0 FAIL)
+      - `scratch/test_task210c7b_visual_photo.js` (55/55 PASS, 0 FAIL)
+      - `scratch/test_task210c6f2_mobile_buttons.js` (53/53 PASS, 0 FAIL)
+      - `scratch/test_task210c6f1_validation_and_layout.js` (33/33 PASS, 0 FAIL)
+      - `scratch/test_task210c6e2_footers.js` (70/70 PASS, 0 FAIL)
+      - `scratch/test_task210c6e1_footers.js` (52/52 PASS, 0 FAIL)
+      - `scratch/test_task210c6d_card2_availability.js` (51/51 PASS, 0 FAIL)
+      - `scratch/test_task210c6c_rating_sales.js` (56/56 PASS, 0 FAIL)
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

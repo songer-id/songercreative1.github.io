@@ -1564,6 +1564,14 @@ Menambahkan antarmuka formulir pengaturan terstruktur:
           * Membersihkan listener klik `.btn-preset-label-step1` dan menyederhanakan `updateQuickLabelChipsLockState()` menjadi no-op function yang aman.
           * Menghapus selektor `.btn-preset-label-step1` dan `.btn-preset-label` pada `css/admin.css`.
         - *Status Verifikasi*: `node --check js/product-form.js`, `git diff --check`, `verify_mobile_drawer_13a.js`, `verify_13b.js`, dan `verify_mobile_drawer_recovery_13b_r2.js` lulus 100% PASS.
+  - [x] **Penyempurnaan Terpadu Informasi Kartu Produk Step 1, Ketersediaan Etalase & Live Preview (Task 2.10C-6C s.d. 7E)**:
+    - Pemisahan Card 1 (Informasi Dasar) dan Card 2 (Informasi Kartu Produk) mandiri pada Step 1 dengan progressive gating saat etalase aktif atau nonaktif.
+    - Pemindahan kontrol metrik Rating Toko dan Teks Terjual ke Card 2 Step 1 dengan independensi sumber data (Otomatis vs Manual), validasi bertingkat, dan aturan mutual exclusivity pada Model B (Kartu Minimalis).
+    - Otomatisasi Footer Kartu Detail (Model C): pratinjau live dua strip contoh permanen, input manual tanpa default contoh, pergeseran otomatis Footer 2 -> 1 saat F1 dikosongkan, mutual exclusion saran teks, dan katalog ikon outline/solid.
+    - Default ON Label Khusus untuk produk baru Model A & C dengan pelacakan interaksi manual seller (`custom_labels_manually_toggled`) dan proteksi penonaktifan Model B.
+    - Pembersihan kontrol sakelar/mata duplikat dari Tab Desain Kartu (Desktop & Mobile) dan penegasan rendering harga coret promo murni berbasis kondisi diskon (`origStrikePrice > 0`).
+    - Penyelarasan tata letak tombol aksi vertikal full-width pada mobile untuk Step 1 dan Step 2.
+    - Penyelarasan pengujian regresi Playwright 100% PASS pada seluruh 9 test suite (Task 6C, 6D, 6E-1, 6E-2, 6F-1, 6F-2, 7B, 7C, 7D, 7E). Dokumentasi detail dipelihara di `docs/PRD_PRODUCT_MASTER.md`.
   - [ ] Upgrade `js/product-form.js`: Input 4 tipe produk dan konfigurasi DP.
   - [ ] Upgrade `js/category-manager.js`: Input komisi affiliate per-kategori.
   - [ ] Pembuatan tampilan dan logika **Riwayat Mutasi Stok** (`#view-stock-mutation`) di `admin.html` dan `admin-app.js`.
