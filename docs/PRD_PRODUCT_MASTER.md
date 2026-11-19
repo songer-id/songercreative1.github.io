@@ -1515,6 +1515,50 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
         - Kelolosan navigasi ketika Rating/Terjual nonaktif atau valid (otomatis / manual valid).
         - Pemeliharaan mutual exclusion pada Model B.
 
+  - **Default ON Label Khusus & Pembersihan Kontrol Ikon Mata Duplikat (Task 2.10C-7D)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Mengatur perilaku default aktif (Default ON) pada toggle Label Khusus (`#toggle-enable-custom-labels`) untuk produk baru ketika seller memilih Model Kartu A (Kartu Klasik) atau Model Kartu C (Kartu Detail).
+      - Mempertahankan ketidaktersediaan Label Khusus pada Model B (Kartu Minimalis) dengan kontrol disembunyikan dan pesan informatif tetap tampil tanpa merusak data yang telah diinput seller.
+      - Menerapkan pelacakan interaksi manual seller (`primaryState.custom_labels_manually_toggled`) sehingga keputusan seller untuk mematikan atau menyalakan fitur selalu dihormati saat berpindah antar-model kartu.
+      - Memastikan kompatibilitas penuh dengan produk lama (resolusi prioritas `has_custom_labels`, `custom_labels`, dan `show_badge`).
+      - Menghapus kontrol ikon mata sakelar duplikat pada Tab Desain Kartu (Desktop `#cfg-show-badge`, `#cfg-show-strike` dan Mobile `#cfg-show-badge-mob`, `#cfg-show-strike-mob`) serta mengganti headernya dengan header label statis non-interaktif tanpa tombol mata.
+      - Menjadikan Harga Coret tampil murni berdasarkan ada-tidaknya diskon aktif / simulasi diskon (`origStrikePrice > 0`), menghilangkan redundansi kontrol mata dan memastikan kustomisasi warna harga coret selalu tersedia.
+      - Menghilangkan referensi elemen mati (`#cfg-show-badge-blok-a`) dan memisahkan perubahan status metrik Rating/Terjual di Step 1 agar tidak lagi memicu kustomisasi desain visual (`markCardDesignAsCustom()`).
+    - **Aturan Default ON & Interaksi Manual Seller**:
+      - **Produk Baru**: Saat form dibuka, `card_variant: ''` dan `custom_labels_manually_toggled: false`.
+      - **Pemilihan Model A atau C**: Otomatis menyetel `#toggle-enable-custom-labels` menjadi checked (`ON`), membuka container input `#container-custom-labels-inputs`, dan mengaktifkan subpanel styling badge di Tab Desain jika `custom_labels_manually_toggled === false`.
+      - **Pemilihan Model B**: Toggle dinonaktifkan (`OFF`), container input disembunyikan, subpanel styling disembunyikan, dan pesan keterangan `#label-custom-model-b-notice` ditampilkan. Data label yang sudah diisi seller tetap utuh tersimpan di `primaryState.custom_labels`.
+      - **Perpindahan Antar-Model**:
+        - Jika seller mematikan toggle manual di Model A (`custom_labels_manually_toggled = true`), beralih ke Model C tetap mempertahankan status `OFF`.
+        - Jika seller menyalakan toggle manual di Model A, beralih ke Model C tetap mempertahankan status `ON`.
+        - Jika dari Model B beralih ke Model A tanpa pernah mematikan manual sebelumnya, Model A otomatis kembali `ON`.
+        - Input teks yang diisi seller di Model A ("Promo") tetap utuh saat beralih ke Model B lalu kembali ke Model A.
+      - **Preset/Quick Label Chips**: Saat seller mengklik chip label cepat ketika Label Khusus dalam kondisi OFF, otomatis menyalakan `#toggle-enable-custom-labels`, menyetel `custom_labels_manually_toggled = true`, membuka container input, mengisi slot pertama, dan memperbarui live preview serta subpanel styling.
+    - **Kompatibilitas Produk Lama**:
+      - `loadProductForEdit()` mengevaluasi secara berjenjang:
+        `const resolvedHasLabels = prod.has_custom_labels !== undefined ? Boolean(prod.has_custom_labels) : (Array.isArray(prod.custom_labels) && prod.custom_labels.length > 0 ? true : (prod.show_badge !== undefined ? Boolean(prod.show_badge) : false));`
+      - Mengatur `has_custom_labels: resolvedHasLabels`, `show_badge: (prod.card_variant === 'B' ? false : resolvedHasLabels)`, dan `custom_labels_manually_toggled: true`.
+      - Nilai styling lama (`badge_style`, `badge_radius`, warna background/border/teks) tetap terbaca dan terisi utuh di form tanpa tertimpa.
+      - State penyimpanan draf (`loadDraftFromStorage`) menyertakan persistensi `custom_labels_manually_toggled`.
+    - **Pembersihan Kontrol Duplikat & Penyesuaian Tab Desain**:
+      - Header Label Khusus dan Harga Coret di Tab Desain Desktop dan Mobile Drawer digantikan dengan elemen informatif non-interaktif tanpa tombol mata sakelar.
+      - Visibilitas subpanel styling Label Khusus (`#cfg-badge-panel-desk` dan `#cfg-badge-panel-mob`) diatur secara otomatis mengikuti status aktif Step 1 (`card_variant !== 'B' && show_badge !== false && has_custom_labels !== false`).
+      - Panel warna Harga Coret (`#cfg-strike-panel-desk` dan `#cfg-strike-panel-mob`) selalu dapat diakses untuk kustomisasi, dengan petunjuk resmi: *"Tampil saat promo aktif atau Simulasi Diskon dinyalakan."*
+      - Pada `updateProductCardLivePreview()`, Harga Coret ditampilkan ketika `origStrikePrice > 0`, tanpa dicegah oleh properti lama `show_strikethrough_price: false`.
+    - **Verifikasi Fungsionalitas & Pengujian**:
+      - Seluruh 26 skenario pengujian Playwright pada `scratch/test_task210c7d_default_on_eye_removal.js` lulus 100% (26/26 PASS, 0 FAIL):
+        - Default ON pada produk baru Model A dan C, penonaktifan pada Model B.
+        - Preservasi interaksi manual seller dan data teks saat perpindahan varian.
+        - Kompatibilitas backwards produk lama dan persistensi draf/database.
+        - Penghapusan tuntas kontrol sakelar/mata duplikat dari DOM dan pembersihan header.
+        - Ketepatan perilaku Harga Coret (promo aktif, tanpa promo, simulasi diskon, override legacy false flag).
+        - Sinkronisasi realtime toggle Step 1 ke live preview kartu dan panel styling desktop/mobile.
+      - Pengujian regresi lulus 100%:
+        - `scratch/test_task210c7c_rating_sales_validation.js` (23/23 PASS).
+        - `scratch/test_task210c7b_visual_photo.js` (55/55 PASS).
+        - `scratch/test_task210c6d_card2_availability.js` (51/51 PASS).
+        - `scratch/test_task210c6f2_mobile_buttons.js` (53/53 PASS).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

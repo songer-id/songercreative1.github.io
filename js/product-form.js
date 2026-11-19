@@ -1297,6 +1297,7 @@ const ProductForm = (() => {
     promo_start_date: null,
     promo_end_date: null,
     has_custom_labels: false,
+    custom_labels_manually_toggled: false,
     custom_labels: [],
     custom_dimension_suggestions: [],
     shipping_config: (function () {
@@ -2783,6 +2784,7 @@ const ProductForm = (() => {
       promo_start_date: null,
       promo_end_date: null,
       has_custom_labels: false,
+      custom_labels_manually_toggled: false,
       custom_labels: [],
       custom_dimension_suggestions: [],
       shipping_config: (function () {
@@ -3172,6 +3174,18 @@ const ProductForm = (() => {
       }
     }
 
+    const resolvedHasLabels = prod.has_custom_labels !== undefined
+      ? Boolean(prod.has_custom_labels)
+      : (
+          Array.isArray(prod.custom_labels) && prod.custom_labels.length > 0
+            ? true
+            : (
+                prod.show_badge !== undefined
+                  ? Boolean(prod.show_badge)
+                  : false
+              )
+        );
+
     primaryState = {
       name: prod.name,
       condition: prod.condition || 'new',
@@ -3191,7 +3205,7 @@ const ProductForm = (() => {
       has_shipping: prod.has_shipping !== undefined ? Boolean(prod.has_shipping) : ((prod.product_type || 'physical') !== 'non_physical'),
       show_shipping_for_non_physical: prod.show_shipping_for_non_physical || false,
       has_layer_3: false,
-      show_badge: prod.card_variant === 'B' ? false : (prod.show_badge !== undefined ? prod.show_badge : true),
+      show_badge: prod.card_variant === 'B' ? false : resolvedHasLabels,
       rating_avg: (prod.rating_avg !== undefined && prod.rating_avg !== null && !isNaN(parseFloat(prod.rating_avg))) ? parseFloat(prod.rating_avg) : 5.0,
       sales_count: (prod.sales_count !== undefined && prod.sales_count !== null && !isNaN(parseInt(prod.sales_count))) ? parseInt(prod.sales_count, 10) : 0,
       admin_card_preview_metrics: (prod.admin_card_preview_metrics && typeof prod.admin_card_preview_metrics === 'object') ? JSON.parse(JSON.stringify(prod.admin_card_preview_metrics)) : {
@@ -3259,7 +3273,8 @@ const ProductForm = (() => {
       monthly_promo_label: (prod.monthly_promo_label !== undefined && prod.monthly_promo_label !== null) ? prod.monthly_promo_label : ((prod.promo_label !== undefined && prod.promo_label !== null) ? prod.promo_label : ''),
       promo_start_date: prod.promo_start_date || null,
       promo_end_date: prod.promo_end_date || null,
-      has_custom_labels: prod.has_custom_labels !== undefined ? Boolean(prod.has_custom_labels) : (Array.isArray(prod.custom_labels) && prod.custom_labels.length > 0),
+      has_custom_labels: resolvedHasLabels,
+      custom_labels_manually_toggled: true,
       custom_labels: Array.isArray(prod.custom_labels) ? [...prod.custom_labels].filter(Boolean) : (typeof prod.custom_labels === 'string' && prod.custom_labels.trim() ? prod.custom_labels.split(',').map(s => s.trim()).filter(Boolean) : []),
       custom_specs: Array.isArray(prod.custom_specs) ? JSON.parse(JSON.stringify(prod.custom_specs)) : [],
       custom_dimension_suggestions: Array.isArray(prod.custom_dimension_suggestions) ? prod.custom_dimension_suggestions.slice(0, 6) : [],
@@ -3544,6 +3559,11 @@ const ProductForm = (() => {
         primaryState.sub_category_determined = Boolean(p.sub_category_id);
       } else {
         primaryState.sub_category_determined = false;
+      }
+      if (p.custom_labels_manually_toggled !== undefined) {
+        primaryState.custom_labels_manually_toggled = Boolean(p.custom_labels_manually_toggled);
+      } else {
+        primaryState.custom_labels_manually_toggled = Boolean(p.has_custom_labels !== undefined || (Array.isArray(p.custom_labels) && p.custom_labels.length > 0));
       }
       if (p.has_custom_labels !== undefined) {
         primaryState.has_custom_labels = Boolean(p.has_custom_labels);
@@ -3908,12 +3928,12 @@ const ProductForm = (() => {
                       </div>
                       <!-- TOGGLE SWITCH ON/OFF -->
                       <label class="relative inline-flex items-center select-none shrink-0 cursor-pointer">
-                        <input type="checkbox" id="toggle-enable-custom-labels" class="sr-only peer" ${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && (primaryState.has_custom_labels !== false)) ? 'checked' : ''}>
+                        <input type="checkbox" id="toggle-enable-custom-labels" class="sr-only peer" ${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && (primaryState.has_custom_labels === true || (primaryState.custom_labels_manually_toggled === false && (primaryState.card_variant === 'A' || primaryState.card_variant === 'C')))) ? 'checked' : ''}>
                         <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]"></div>
                       </label>
                     </div>
 
-                      <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && (primaryState.has_custom_labels !== false)) ? 'space-y-4' : 'hidden'}">
+                      <div id="container-custom-labels-inputs" class="${(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && (primaryState.has_custom_labels === true || (primaryState.custom_labels_manually_toggled === false && (primaryState.card_variant === 'A' || primaryState.card_variant === 'C')))) ? 'space-y-4' : 'hidden'}">
                         <div id="grid-custom-labels-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div id="wrapper-custom-label-1" class="relative">
                             <div class="flex items-center justify-between mb-1">
@@ -4422,17 +4442,12 @@ const ProductForm = (() => {
                   <div id="accordion-body-promo" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-promo">
                     <!-- 1. Harga Coret -->
                     <div class="space-y-2 pb-2.5 border-b border-slate-100">
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                      <div class="flex items-center justify-between py-1.5 px-2 rounded-md select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-tag text-slate-400 text-[11px]"></i>
                           <span>Harga Coret</span>
                         </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-strike" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-strike-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-strike-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      </div>
                       <!-- Panel Custom Harga Coret (Tampil jika Harga Coret TRUE) -->
                       <div id="cfg-strike-panel-desk" class="px-2 pt-1 pb-1 space-y-1.5">
                         <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Harga Coret</label>
@@ -4577,17 +4592,12 @@ const ProductForm = (() => {
 
                     <!-- 5. Label Khusus (Hanya Model A & C, disembunyikan jika Model B) -->
                     <div id="cfg-badge-container-desk" class="${primaryState.card_variant === 'B' ? 'hidden' : ''}">
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                      <div class="flex items-center justify-between py-1.5 px-2 rounded-md select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
                           <span>Label Khusus</span>
                         </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-badge" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-badge-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-badge-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      </div>
                       <!-- Panel Custom Label Khusus (Tampil jika Label Khusus TRUE) -->
                       <div id="cfg-badge-panel-desk" class="px-2 pt-1 pb-1 space-y-3">
                         <!-- Pilihan Gaya Label: Latar vs Garis Tepi (Segmented Control) -->
@@ -4791,17 +4801,12 @@ const ProductForm = (() => {
                   <div id="accordion-body-promo-mob" class="hidden p-3 border-t border-slate-100 space-y-3" role="region" aria-labelledby="btn-accordion-promo-mob">
                     <!-- 1. Harga Coret Mobile -->
                     <div class="space-y-2 pb-2.5 border-b border-slate-100">
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                      <div class="flex items-center justify-between py-1.5 px-2 rounded-md select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-tag text-slate-400 text-[11px]"></i>
                           <span>Harga Coret</span>
                         </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-strike-mob" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-strike-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-strike-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      </div>
                       <!-- Panel Custom Harga Coret Mobile (Tampil jika Harga Coret TRUE) -->
                       <div id="cfg-strike-panel-mob" class="px-2 pt-1 pb-1 space-y-1.5">
                         <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Warna Harga Coret</label>
@@ -4946,17 +4951,12 @@ const ProductForm = (() => {
 
                     <!-- 5. Label Khusus Mobile (Hanya Model A & C, disembunyikan jika Model B) -->
                     <div id="cfg-badge-container-mob" class="${primaryState.card_variant === 'B' ? 'hidden' : ''}">
-                      <label class="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer transition select-none text-xs text-slate-700 font-normal">
+                      <div class="flex items-center justify-between py-1.5 px-2 rounded-md select-none text-xs text-slate-700 font-normal">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-bookmark-star text-slate-400 text-[11px]"></i>
                           <span>Label Khusus</span>
                         </span>
-                        <span class="inline-flex items-center justify-center w-6 h-6 text-slate-500">
-                          <input type="checkbox" id="cfg-show-badge-mob" class="sr-only peer cfg-eye-toggle" />
-                          <i id="cfg-show-badge-mob-icon-on" class="bi bi-eye text-emerald-600 text-base hidden peer-checked:inline-block"></i>
-                          <i id="cfg-show-badge-mob-icon-off" class="bi bi-eye-slash text-slate-400 text-base inline-block peer-checked:hidden"></i>
-                        </span>
-                      </label>
+                      </div>
                       <!-- Panel Custom Label Khusus Mobile (Tampil jika Label Khusus TRUE) -->
                       <div id="cfg-badge-panel-mob" class="px-2 pt-1 pb-1 space-y-3">
                         <!-- Pilihan Gaya Label Mobile: Latar vs Garis Tepi (Segmented Control) -->
@@ -5291,12 +5291,8 @@ const ProductForm = (() => {
 
   function syncEyeToggleIcons() {
     const toggleIds = [
-      'cfg-show-rating',
-      'cfg-show-sales',
-      'cfg-show-strike',
       'cfg-show-discount-badge',
       'cfg-show-ticket-icon',
-      'cfg-show-badge',
       'cfg-enable-countdown'
     ];
 
@@ -6143,18 +6139,11 @@ const ProductForm = (() => {
   }
 
   function syncFeatureSubpanels() {
-    // 1. Strike price subpanel
-    const showStrike = Boolean(document.getElementById('cfg-show-strike')?.checked || document.getElementById('cfg-show-strike-mob')?.checked);
+    // 1. Strike price subpanel (selalu tersedia untuk kustomisasi warna harga coret)
     const strikeDesk = document.getElementById('cfg-strike-panel-desk');
     const strikeMob = document.getElementById('cfg-strike-panel-mob');
-    if (strikeDesk) {
-      if (showStrike) strikeDesk.classList.remove('hidden');
-      else strikeDesk.classList.add('hidden');
-    }
-    if (strikeMob) {
-      if (showStrike) strikeMob.classList.remove('hidden');
-      else strikeMob.classList.add('hidden');
-    }
+    if (strikeDesk) strikeDesk.classList.remove('hidden');
+    if (strikeMob) strikeMob.classList.remove('hidden');
 
     // 2. Discount badge subpanel
     const showDisc = Boolean(document.getElementById('cfg-show-discount-badge')?.checked || document.getElementById('cfg-show-discount-badge-mob')?.checked);
@@ -6182,54 +6171,38 @@ const ProductForm = (() => {
       else cdMob.classList.add('hidden');
     }
 
-    // 4. Special badge subpanel
-    const showBadge = Boolean(document.getElementById('cfg-show-badge')?.checked || document.getElementById('cfg-show-badge-mob')?.checked);
+    // 4. Special badge subpanel (mengikuti status Step 1: Model A & C, dan fitur ON)
+    const isBadgeActive = Boolean(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && primaryState.has_custom_labels !== false);
     const badgeDesk = document.getElementById('cfg-badge-panel-desk');
     const badgeMob = document.getElementById('cfg-badge-panel-mob');
     if (badgeDesk) {
-      if (showBadge) badgeDesk.classList.remove('hidden');
+      if (isBadgeActive) badgeDesk.classList.remove('hidden');
       else badgeDesk.classList.add('hidden');
     }
     if (badgeMob) {
-      if (showBadge) badgeMob.classList.remove('hidden');
+      if (isBadgeActive) badgeMob.classList.remove('hidden');
       else badgeMob.classList.add('hidden');
     }
 
-    // 5. Rating source subpanel (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
-    const showRating = Boolean(document.getElementById('cfg-show-rating')?.checked || document.getElementById('cfg-show-rating-mob')?.checked);
+    // 5. Rating source subpanel (Card 2 Step 1)
+    const showRating = Boolean(document.getElementById('cfg-show-rating')?.checked);
     const ratingDesk = document.getElementById('cfg-rating-source-panel');
-    const ratingMob = document.getElementById('cfg-rating-source-panel-mob');
     if (ratingDesk) {
       if (showRating) ratingDesk.classList.remove('hidden');
       else ratingDesk.classList.add('hidden');
     }
-    if (ratingMob) {
-      if (showRating) ratingMob.classList.remove('hidden');
-      else ratingMob.classList.add('hidden');
-    }
 
-    // 6. Sales source subpanel (Task SC-ADMIN-CARD-METRIC-SOURCES-10)
-    const showSales = Boolean(document.getElementById('cfg-show-sales')?.checked || document.getElementById('cfg-show-sales-mob')?.checked);
+    // 6. Sales source subpanel (Card 2 Step 1)
+    const showSales = Boolean(document.getElementById('cfg-show-sales')?.checked);
     const salesDesk = document.getElementById('cfg-sales-source-panel');
-    const salesMob = document.getElementById('cfg-sales-source-panel-mob');
     if (salesDesk) {
       if (showSales) salesDesk.classList.remove('hidden');
       else salesDesk.classList.add('hidden');
     }
-    if (salesMob) {
-      if (showSales) salesMob.classList.remove('hidden');
-      else salesMob.classList.add('hidden');
-    }
   }
 
   function getCardConfigFromDOM() {
-    const badgeMain = document.getElementById('cfg-show-badge');
-    const badgeMob = document.getElementById('cfg-show-badge-mob');
-    const badgeBlokA = document.getElementById('cfg-show-badge-blok-a');
-    let showBadgeVal = true;
-    if (badgeMain) showBadgeVal = badgeMain.checked;
-    else if (badgeMob) showBadgeVal = badgeMob.checked;
-    else if (badgeBlokA) showBadgeVal = badgeBlokA.checked;
+    const showBadgeVal = Boolean(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && primaryState.has_custom_labels !== false);
 
     const isMobOpen = typeof isMobilePreviewSheetOpen === 'function' ? isMobilePreviewSheetOpen() : false;
     const getVal = (id1, id2, fallback) => {
@@ -6269,10 +6242,10 @@ const ProductForm = (() => {
       title_color: getVal('cfg-title-color', 'cfg-title-color-mob', '#0f172a'),
       price_color: getVal('cfg-price-color', 'cfg-price-color-mob', defThemeColor),
       btn_color: getVal('cfg-btn-color', 'cfg-btn-color-mob', defThemeColor),
-      show_rating: getChk('cfg-show-rating', 'cfg-show-rating-mob'),
-      show_sales: getChk('cfg-show-sales', 'cfg-show-sales-mob'),
-      show_sales_count: getChk('cfg-show-sales', 'cfg-show-sales-mob'),
-      show_strikethrough_price: getChk('cfg-show-strike', 'cfg-show-strike-mob'),
+      show_rating: Boolean(document.getElementById('cfg-show-rating')?.checked),
+      show_sales: Boolean(document.getElementById('cfg-show-sales')?.checked),
+      show_sales_count: Boolean(document.getElementById('cfg-show-sales')?.checked),
+      show_strikethrough_price: true,
       strike_price_color: getVal('cfg-strike-color', 'cfg-strike-color-mob', '#94a3b8'),
       show_discount_badge: getChk('cfg-show-discount-badge', 'cfg-show-discount-badge-mob'),
       discount_badge_radius: `${parseDiscountBadgeRadius(getVal('cfg-discount-badge-radius', 'cfg-discount-badge-radius-mob', '4'), 4)}px`,
@@ -6366,7 +6339,6 @@ const ProductForm = (() => {
     }
     setChk('cfg-show-rating', showRatingVal);
     setChk('cfg-show-sales', showSalesVal);
-    setChk('cfg-show-strike', cfg.show_strikethrough_price !== false);
     const strikeCol = cfg.strike_price_color || '#94a3b8';
     setVal('cfg-strike-color', strikeCol);
     setVal('cfg-strike-hex', strikeCol);
@@ -6388,9 +6360,6 @@ const ProductForm = (() => {
     setVal('cfg-discount-badge-border-hex', cfg.discount_badge_border_color || defThemeColor);
 
     setChk('cfg-show-ticket-icon', cfg.show_ticket_icon !== false);
-    const showBadgeVal = cfg.show_badge !== false && cfg.show_category_badge !== false;
-    setChk('cfg-show-badge', showBadgeVal);
-    setChk('cfg-show-badge-blok-a', showBadgeVal);
 
     // Badge styling tokens (Dynamic Theme Default)
     const defBadgeColors = getThemeDefaultBadgeColors(variantCode);
@@ -12562,9 +12531,7 @@ const ProductForm = (() => {
     }
 
     // 6. Config Styling & Display Toggles (Perbaiki Bug Kartu Live Preview Berwarna Hitam)
-    const showBadgeInput = document.getElementById('cfg-show-badge');
-    const showBadgeBlokAInput = document.getElementById('cfg-show-badge-blok-a');
-    const showBadgeChecked = showBadgeInput ? showBadgeInput.checked : (showBadgeBlokAInput ? showBadgeBlokAInput.checked : true);
+    const showBadgeChecked = Boolean(primaryState.card_variant !== 'B' && primaryState.show_badge !== false && primaryState.has_custom_labels !== false);
 
     const vCode = primaryState.card_variant || 'A';
     const vKey = vCode === 'A' ? 'variant_a' : (vCode === 'B' ? 'variant_b' : 'variant_c');
@@ -12686,7 +12653,7 @@ const ProductForm = (() => {
       show_rating: showRatingChecked,
       show_sales: showSalesChecked,
       show_sales_count: showSalesChecked,
-      show_strike: getLiveChk('cfg-show-strike', 'cfg-show-strike-mob', primaryState.card_config ? primaryState.card_config.show_strikethrough_price !== false : true),
+      show_strike: true,
       show_discount_badge: getLiveChk('cfg-show-discount-badge', 'cfg-show-discount-badge-mob', primaryState.card_config ? primaryState.card_config.show_discount_badge !== false : true),
       show_ticket_icon: getLiveChk('cfg-show-ticket-icon', 'cfg-show-ticket-icon-mob', primaryState.card_config ? primaryState.card_config.show_ticket_icon !== false : true),
       show_badge: showBadgeChecked
@@ -12861,7 +12828,7 @@ const ProductForm = (() => {
     // 1. Strike Price Hint
     const strikeHintDesk = document.getElementById('cfg-strike-promo-hint');
     const strikeHintMob = document.getElementById('cfg-strike-promo-hint-mob');
-    const showStrikeHint = Boolean(cfg.show_strike && !effHasDiscount);
+    const showStrikeHint = !effHasDiscount;
     [strikeHintDesk, strikeHintMob].forEach(el => {
       if (el) {
         el.textContent = 'Tampil saat promo aktif atau Simulasi Diskon dinyalakan.';
@@ -13106,7 +13073,7 @@ const ProductForm = (() => {
       const isNarrowPriceRow = Boolean(
         effHasDiscount &&
         cfg.show_ticket_icon &&
-        (effFinalPrice >= 1000000 || (cfg.show_strike && origStrikePrice >= 1000000))
+        (effFinalPrice >= 1000000 || (origStrikePrice >= 1000000))
       );
 
       let selectedMetricHtml = '';
@@ -13147,7 +13114,7 @@ const ProductForm = (() => {
               </div>
             ` : `
               <div class="pt-1 flex flex-col justify-end mt-auto space-y-0.5">
-                ${cfg.show_strike ? `
+                ${origStrikePrice > 0 ? `
                   <span class="text-[10px] line-through font-normal leading-none" style="color: ${strikePriceColor};">
                     ${formatIDR(origStrikePrice)}
                   </span>
@@ -13198,7 +13165,7 @@ const ProductForm = (() => {
             <!-- Baris Harga -->
             <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
               <div class="flex flex-col justify-end min-w-0">
-                ${(cfg.show_strike && origStrikePrice > 0) ? `
+                ${origStrikePrice > 0 ? `
                   <span class="text-[10px] sm:text-[11px] line-through font-normal leading-none mb-1" style="color: ${strikePriceColor};">
                     ${formatIDR(origStrikePrice)}
                   </span>
@@ -13286,7 +13253,7 @@ const ProductForm = (() => {
             <!-- Baris Harga: Harga Coret di Atas, Harga Final + Ikon Tiket Cek di Bawah (Hanya jika Diskon Aktif) -->
             <div class="pt-2 border-t border-slate-100 flex items-end justify-between gap-1.5 mt-auto">
               <div class="flex flex-col justify-end min-w-0">
-                ${(cfg.show_strike && origStrikePrice > 0) ? `
+                ${origStrikePrice > 0 ? `
                   <span class="text-[10px] sm:text-[11px] line-through font-normal leading-none mb-1" style="color: ${strikePriceColor};">
                     ${formatIDR(origStrikePrice)}
                   </span>
@@ -27720,6 +27687,16 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         }
         if (badgeContainerDesk) badgeContainerDesk.classList.add('hidden');
         if (badgeContainerMob) badgeContainerMob.classList.add('hidden');
+        primaryState.show_badge = false;
+        if (toggle) {
+          toggle.checked = false;
+        }
+        if (container) {
+          container.classList.add('hidden');
+        }
+        if (typeof syncFeatureSubpanels === 'function') {
+          syncFeatureSubpanels();
+        }
       } else {
         if (lblCustomNoticeB) {
           lblCustomNoticeB.classList.add('hidden');
@@ -27740,13 +27717,29 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         if (inp2 && primaryState.custom_labels && primaryState.custom_labels[1]) {
           if (!inp2.value) inp2.value = primaryState.custom_labels[1];
         }
+
+        // Aturan Task 7D:
+        // Jika belum ada tindakan manual seller pada produk baru, terapkan default ON untuk Model A & C
+        if (primaryState.custom_labels_manually_toggled === false) {
+          primaryState.has_custom_labels = true;
+          primaryState.show_badge = true;
+        }
+
+        const isEffectiveOn = Boolean(primaryState.has_custom_labels && primaryState.show_badge);
         if (toggle) {
-          toggle.checked = primaryState.show_badge !== false;
+          toggle.checked = isEffectiveOn;
         }
         if (container) {
-          if (primaryState.show_badge !== false) container.classList.remove('hidden');
+          if (isEffectiveOn) container.classList.remove('hidden');
           else container.classList.add('hidden');
         }
+
+        if (typeof syncFeatureSubpanels === 'function') {
+          syncFeatureSubpanels();
+        }
+      }
+      if (typeof updateProductCardLivePreview === 'function') {
+        updateProductCardLivePreview();
       }
     }
 
@@ -33866,8 +33859,9 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
       if (toggle) {
         primaryState.show_badge = toggle.checked;
+        primaryState.has_custom_labels = toggle.checked;
       }
-      const isEnabled = primaryState.show_badge !== false;
+      const isEnabled = Boolean(primaryState.has_custom_labels && primaryState.show_badge);
       if (container) {
         if (isEnabled) container.classList.remove('hidden');
         else container.classList.add('hidden');
@@ -34001,10 +33995,14 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           syncCustomLabelsUIForVariant('B');
           return;
         }
+        primaryState.custom_labels_manually_toggled = true;
         primaryState.show_badge = toggleLabels.checked;
         primaryState.has_custom_labels = toggleLabels.checked;
         updateCustomLabelsLockState();
         updateQuickLabelChipsLockState();
+        if (typeof syncFeatureSubpanels === 'function') {
+          syncFeatureSubpanels();
+        }
         saveDraftToStorage();
         updateProductCardLivePreview();
       });
@@ -34495,8 +34493,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const salesEl = document.getElementById('cfg-show-sales');
         if (ratingEl?.checked && salesEl?.checked) {
           salesEl.checked = false;
-          const salesElMob = document.getElementById('cfg-show-sales-mob');
-          if (salesElMob) salesElMob.checked = false;
         }
       }
 
@@ -35051,31 +35047,39 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobHex) mobHex.addEventListener('input', e => syncAllDiscColors(e.target.value));
     });
 
+    // Rating & Sales Step 1 change listeners (Do NOT call markCardDesignAsCustom)
+    const ratingToggle = document.getElementById('cfg-show-rating');
+    if (ratingToggle) {
+      ratingToggle.addEventListener('change', (e) => {
+        if (primaryState.card_variant === 'B' && e.target.checked) {
+          const salesEl = document.getElementById('cfg-show-sales');
+          if (salesEl) salesEl.checked = false;
+        }
+        syncFeatureSubpanels();
+        updateProductCardLivePreview();
+      });
+    }
+
+    const salesToggle = document.getElementById('cfg-show-sales');
+    if (salesToggle) {
+      salesToggle.addEventListener('change', (e) => {
+        if (primaryState.card_variant === 'B' && e.target.checked) {
+          const ratingEl = document.getElementById('cfg-show-rating');
+          if (ratingEl) ratingEl.checked = false;
+        }
+        syncFeatureSubpanels();
+        updateProductCardLivePreview();
+      });
+    }
+
     // Feature Toggles (Desktop & Mobile Sync)
-    ['show-rating', 'show-sales', 'show-strike', 'show-discount-badge', 'show-ticket-icon', 'show-badge'].forEach(feat => {
+    ['show-discount-badge', 'show-ticket-icon'].forEach(feat => {
       const el = document.getElementById(`cfg-${feat}`);
       const elMob = document.getElementById(`cfg-${feat}-mob`);
 
       if (el) {
         el.addEventListener('change', (e) => {
           if (elMob) elMob.checked = e.target.checked;
-          if (primaryState.card_variant === 'B') {
-            if (feat === 'show-rating' && e.target.checked) {
-              const salesEl = document.getElementById('cfg-show-sales');
-              const salesElMob = document.getElementById('cfg-show-sales-mob');
-              if (salesEl) salesEl.checked = false;
-              if (salesElMob) salesElMob.checked = false;
-            } else if (feat === 'show-sales' && e.target.checked) {
-              const ratingEl = document.getElementById('cfg-show-rating');
-              const ratingElMob = document.getElementById('cfg-show-rating-mob');
-              if (ratingEl) ratingEl.checked = false;
-              if (ratingElMob) ratingElMob.checked = false;
-            }
-          }
-          if (feat === 'show-badge') {
-            const bA = document.getElementById('cfg-show-badge-blok-a');
-            if (bA) bA.checked = e.target.checked;
-          }
           markCardDesignAsCustom();
         });
       }
@@ -35083,38 +35087,10 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (elMob) {
         elMob.addEventListener('change', (e) => {
           if (el) el.checked = e.target.checked;
-          if (primaryState.card_variant === 'B') {
-            if (feat === 'show-rating' && e.target.checked) {
-              const salesEl = document.getElementById('cfg-show-sales');
-              const salesElMob = document.getElementById('cfg-show-sales-mob');
-              if (salesEl) salesEl.checked = false;
-              if (salesElMob) salesElMob.checked = false;
-            } else if (feat === 'show-sales' && e.target.checked) {
-              const ratingEl = document.getElementById('cfg-show-rating');
-              const ratingElMob = document.getElementById('cfg-show-rating-mob');
-              if (ratingEl) ratingEl.checked = false;
-              if (ratingElMob) ratingElMob.checked = false;
-            }
-          }
-          if (feat === 'show-badge') {
-            const bA = document.getElementById('cfg-show-badge-blok-a');
-            if (bA) bA.checked = e.target.checked;
-          }
           markCardDesignAsCustom();
         });
       }
     });
-
-    const badgeBlokA = document.getElementById('cfg-show-badge-blok-a');
-    if (badgeBlokA) {
-      badgeBlokA.addEventListener('change', e => {
-        const bMain = document.getElementById('cfg-show-badge');
-        const bMob = document.getElementById('cfg-show-badge-mob');
-        if (bMain) bMain.checked = e.target.checked;
-        if (bMob) bMob.checked = e.target.checked;
-        markCardDesignAsCustom();
-      });
-    }
 
     // Simulation Discount Eye Button Toggle (Desktop & Mobile Sync)
     ['btn-simulate-discount-preview', 'btn-simulate-discount-preview-mob'].forEach(btnId => {
@@ -35264,6 +35240,24 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         const labelText = btn.getAttribute('data-label');
         if (!labelText) return;
 
+        // Auto-enable custom labels toggle if OFF
+        const toggleLabels = document.getElementById('toggle-enable-custom-labels');
+        const containerInputs = document.getElementById('container-custom-labels-inputs');
+        if (toggleLabels && !toggleLabels.checked) {
+          toggleLabels.checked = true;
+          primaryState.custom_labels_manually_toggled = true;
+          primaryState.has_custom_labels = true;
+          primaryState.show_badge = true;
+          if (containerInputs) {
+            containerInputs.classList.remove('hidden');
+          }
+          syncFeatureSubpanels();
+        } else {
+          primaryState.custom_labels_manually_toggled = true;
+          primaryState.has_custom_labels = true;
+          primaryState.show_badge = true;
+        }
+
         const inp1 = document.getElementById('input-custom-label-1');
         const inp2 = document.getElementById('input-custom-label-2');
         if (inp1 && !inp1.value.trim()) {
@@ -35273,14 +35267,6 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
         } else if (inp1) {
           inp1.value = labelText;
         }
-
-        const bA = document.getElementById('cfg-show-badge-blok-a');
-        const bMain = document.getElementById('cfg-show-badge');
-        const bMob = document.getElementById('cfg-show-badge-mob');
-        if (bA) bA.checked = true;
-        if (bMain) bMain.checked = true;
-        if (bMob) bMob.checked = true;
-        primaryState.show_badge = true;
 
         if (typeof updateCustomLabelsLockState === 'function') {
           updateCustomLabelsLockState();
