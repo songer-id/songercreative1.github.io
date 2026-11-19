@@ -1322,6 +1322,37 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
     - **Verifikasi Fungsionalitas**:
       - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6d_card2_availability.js` - 51/51 skenario lulus, 0 gagal) dan bebas regresi pada test suite Task 6C (`scratch/test_task210c6c_rating_sales.js` - 56/56 lulus), mencakup pengujian peralihan Etalase ON/OFF, pergantian model A/B/C, retensi data input, mutual exclusivity Model B, pembaruan realtime pratinjau kartu, serta responsivitas layar desktop & mobile (375x812).
 
+  - **Otomatisasi Preview Dua Footer dan Penyempurnaan Struktur Input Footer Kartu Detail (Task 2.10C-6E-1)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Menyempurnakan Footer Kartu pada Model C (Kartu Detail), menghilangkan tampilan accordion yang tidak konsisten dengan gaya Card 2 lainnya, mengotomatisasi pratinjau dua footer secara realtime, serta menerapkan aturan penambahan dan pemindahan otomatis antarfooter.
+    - **Otomatisasi Preview Dua Footer pada Model C**:
+      - Pada Pratinjau Kartu Produk Model C (`#card-live-preview-box`), Footer 1 dan Footer 2 selalu terlihat tanpa menunggu seller mengisi formulir.
+      - *Footer 1 kosong*: Pratinjau otomatis menampilkan teks contoh fallback `"Tersedia berbagai Variasi"` dengan warna tema toko.
+      - *Footer 2 kosong*: Pratinjau otomatis menampilkan teks contoh fallback `"Pengiriman Cepat & Aman"` dengan warna tema sekunder toko (atau countdown diskon jika promo aktif).
+      - *Seller mengisi teks*: Pratinjau otomatis beralih menampilkan teks dan ikon aktual secara realtime.
+      - *Perlindungan Data*: Teks contoh semata-mata di-render oleh fungsi preview (`updateProductCardLivePreview`) dan **DILARANG KERAS** mengisi otomatis elemen input `#input-card-footer-text-side` / `#input-card-footer-2-text-side`, tersimpan ke `primaryState`, maupun masuk ke database draf/produk. Input tetap kosong secara default bagi produk baru.
+    - **Struktur Antarmuka Flat & Non-Accordion pada Card 2**:
+      - Menghapus pembungkus accordion lama (`#accordion-group-footer`, `#btn-accordion-footer`, `#accordion-body-footer`).
+      - Footer Kartu menjadi seksi langsung di dalam Card 2 Step 1 (`#section-step1-input7-footers`), dengan header ringkas, subteks informasi, input Label Footer 1, dan slot Label Footer 2.
+      - Placeholder input Footer 1 dan Footer 2 distandarisasi menjadi: `"Pilih/Input"`.
+      - Tombol `+ Tambah Label Footer` (`#btn-add-card-footer-2`) ditampilkan saat Footer 2 belum aktif. Tombol dalam kondisi *disabled* apabila Footer 1 masih kosong/belum valid, dan menjadi aktif setelah Footer 1 valid.
+      - Slot Footer 2 (`#container-card-footer-2`) dilengkapi tombol hapus (`#btn-remove-card-footer-2`) untuk mengosongkan dan menonaktifkan slot Footer 2 sewaktu-waktu.
+    - **Otomatisasi Pemindahan Footer (Footer 2 -> Footer 1)**:
+      - Jika Footer 1 dikosongkan sementara Footer 2 telah terisi valid:
+        1. Teks Footer 2 otomatis dipindahkan menjadi teks Footer 1.
+        2. Ikon Footer 2 otomatis dipindahkan menjadi ikon Footer 1.
+        3. Warna latar Footer 2 otomatis dipindahkan menjadi warna latar Footer 1.
+        4. Warna teks Footer 2 otomatis dipindahkan menjadi warna teks Footer 1.
+        5. Konfigurasi Footer 2 dikosongkan dan slot Footer 2 kembali tidak aktif (container disembunyikan dan tombol tambah dimunculkan kembali).
+        6. Seluruh perubahan disinkronkan ke DOM, `primaryState`, dan live preview tanpa memicu loop event berulang (dilindungi flag `isShiftingFooters`).
+      - Jika Footer 1 dikosongkan saat Footer 2 juga kosong: Footer 1 tetap kosong, slot Footer 2 kembali tidak aktif, dan tombol `+ Tambah Label Footer` kembali dinonaktifkan (disabled).
+    - **Perlindungan Data Produk Lama & Kompatibilitas**:
+      - Membaca dan memuat seluruh data footer produk lama secara utuh pada mode edit (`loadProductForEdit()`). Jika produk lama memiliki Footer 2, slot Footer 2 otomatis terbuka aktif.
+      - Peralihan Etalase OFF/ON tetap mempertahankan seluruh teks, ikon, dan warna footer yang telah dikonfigurasi.
+      - Tidak mengubah batas karakter (32 karakter) maupun sumber saran riwayat teks (katalog saran dan mutual exclusion saran akan dikerjakan pada Task 6E-2).
+    - **Verifikasi Fungsionalitas**:
+      - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c6e1_footers.js` - 52/52 skenario lulus, 0 gagal) dan bebas regresi pada test suite Task 6C (`scratch/test_task210c6c_rating_sales.js` - 56/56 PASS) serta Task 6D (`scratch/test_task210c6d_card2_availability.js` - 51/51 PASS).
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).

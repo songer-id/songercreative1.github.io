@@ -332,6 +332,20 @@ const ProductForm = (() => {
     syncStripIconControls(1, state.f1Valid, state.f1EffIcon, state.f2EffIcon);
     syncStripIconControls(2, state.f2Valid, state.f2EffIcon, state.f1EffIcon);
 
+    const btnAddF2 = document.getElementById('btn-add-card-footer-2');
+    if (btnAddF2) {
+      btnAddF2.disabled = !state.f1Valid;
+      if (!state.f1Valid) {
+        btnAddF2.classList.add('opacity-50', 'cursor-not-allowed');
+        btnAddF2.classList.remove('hover:border-[var(--color-primary)]', 'hover:text-[var(--color-primary)]', 'hover:bg-emerald-50/30', 'cursor-pointer');
+        btnAddF2.setAttribute('title', 'Isi Label Footer 1 terlebih dahulu untuk menambahkan Footer 2');
+      } else {
+        btnAddF2.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnAddF2.classList.add('hover:border-[var(--color-primary)]', 'hover:text-[var(--color-primary)]', 'hover:bg-emerald-50/30', 'cursor-pointer');
+        btnAddF2.setAttribute('title', 'Tambah Label Footer 2');
+      }
+    }
+
     if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
       window.lucide.createIcons();
     }
@@ -3766,83 +3780,86 @@ const ProductForm = (() => {
                     <!-- Input 7: Pengaturan Label Footer (Khusus Model C) -->
                     <div id="section-step1-input7-footers" class="${primaryState.card_variant === 'C' ? 'space-y-4' : 'hidden'}">
                       <hr class="border-slate-100" />
-                      <div id="accordion-group-footer" class="border border-slate-200 rounded-lg overflow-hidden bg-white">
-                        <button type="button" id="btn-accordion-footer" aria-expanded="${Boolean(cardAccordionState.footer)}" aria-controls="accordion-body-footer" class="card-accordion-trigger w-full flex items-center justify-between px-3 py-2.5 bg-slate-50/70 hover:bg-slate-100/80 transition cursor-pointer text-left select-none" data-group="footer">
-                          <span class="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
-                            <i class="bi bi-layers text-emerald-600"></i>
-                            <span>Footer Kartu</span>
-                            <span class="text-[9px] font-normal px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-mono ml-1">Detail</span>
-                          </span>
-                          <i id="accordion-icon-footer" class="bi bi-chevron-down text-slate-400 text-xs transition-transform duration-200 ${cardAccordionState.footer ? 'rotate-180' : ''}"></i>
-                        </button>
-                        <div id="accordion-body-footer" class="${cardAccordionState.footer ? '' : 'hidden'} p-3 border-t border-slate-100 space-y-2.5" role="region" aria-labelledby="btn-accordion-footer">
-                          <!-- Strip 1 -->
-                          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                            <div class="text-[10px] font-normal text-slate-700 flex items-center gap-1">
-                              <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 1 (Atas)
-                            </div>
-                            <div>
-                              <div class="flex items-center justify-between mb-0.5">
-                                <label for="input-card-footer-text-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Label Footer 1 *</label>
-                                <span id="footer-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
-                              </div>
-                              <div class="relative w-full clean-datalist-wrapper">
-                                <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Tersedia berbagai Variasi" maxlength="32" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
-                              </div>
-                              <div id="error-card-footer-text-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg">Label Footer 1 wajib diisi.</span></div>
-                            </div>
-                            <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-1 gap-2">
-                              <!-- Ikon Footer 1 -->
-                              <div>
-                                <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
-                                <div class="relative" id="container-footer-icon-picker-side">
-                                  <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
-                                    <span id="preview-footer-icon-side" class="flex items-center justify-center shrink-0">
-                                      ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
-                                    </span>
-                                    <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
-                                  </button>
-                                  <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
-                                    <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
-                                      <span>Pilih Ikon</span>
-                                      <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
-                                    </div>
-                                    <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-side">
-                                      ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'), 'footer-1-side', getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'))}
-                                    </div>
-                                    <div id="notice-footer-icon-picker-side" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
-                                  </div>
+                      <div>
+                        <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          <i class="bi bi-layers text-emerald-600"></i>
+                          <span>Footer Kartu</span>
+                          <span class="text-[9px] font-normal px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-mono ml-1">Detail</span>
+                        </label>
+                        <p class="text-xs text-slate-500 mt-0.5">Informasi layanan atau keunggulan toko di bagian bawah kartu etalase.</p>
+                      </div>
+
+                      <!-- Label Footer 1 -->
+                      <div id="container-card-footer-1" class="space-y-2">
+                        <div>
+                          <div class="flex items-center justify-between mb-0.5">
+                            <label for="input-card-footer-text-side" class="block text-[11px] font-semibold text-slate-700">Label Footer 1 *</label>
+                            <span id="footer-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_text)}/32</span>
+                          </div>
+                          <div class="relative w-full clean-datalist-wrapper">
+                            <input type="text" id="input-card-footer-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pilih/Input" maxlength="32" value="${escapeHtml(primaryState.card_footer_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                          </div>
+                          <div id="error-card-footer-text-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg">Label Footer 1 wajib diisi.</span></div>
+                        </div>
+                        <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-1 gap-2">
+                          <!-- Ikon Footer 1 -->
+                          <div>
+                            <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
+                            <div class="relative" id="container-footer-icon-picker-side">
+                              <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
+                                <span id="preview-footer-icon-side" class="flex items-center justify-center shrink-0">
+                                  ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? `<i data-lucide="${escapeHtml(primaryState.footer_badge_icon)}" class="w-3.5 h-3.5"></i>` : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
+                                </span>
+                                <i class="bi bi-chevron-down text-[10px] text-slate-400 shrink-0 ml-0.5"></i>
+                              </button>
+                              <div id="menu-footer-icon-picker-side" class="hidden absolute left-0 top-full mt-1 z-30 w-56 max-w-[calc(100vw-3rem)] p-2 bg-white rounded-lg shadow-xl border border-slate-200" role="menu">
+                                <div class="text-[10px] font-normal text-slate-500 mb-1.5 px-0.5 flex items-center justify-between">
+                                  <span>Pilih Ikon</span>
+                                  <span class="text-[9px] font-normal text-slate-400">24 ikon</span>
                                 </div>
-                              </div>
-                              <div class="min-w-0">
-                                <label for="cfg-footer-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                  <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
-                                  <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                                <div class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto p-0.5" id="grid-footer-icon-picker-side">
+                                  ${renderFooterIconGridHtml(getEffectiveFooterIconId(primaryState.card_footer_text, primaryState.footer_badge_icon, 'truck'), 'footer-1-side', getEffectiveFooterIconId(primaryState.card_footer_2_text, primaryState.footer_2_badge_icon, 'minus'))}
                                 </div>
-                              </div>
-                              <div class="min-w-0">
-                                <label for="cfg-footer-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                  <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
-                                  <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
-                                </div>
+                                <div id="notice-footer-icon-picker-side" class="hidden text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-1 mt-1.5 font-normal">Digunakan pada footer lainnya.</div>
                               </div>
                             </div>
                           </div>
-
-                          <!-- Strip 2 -->
-                          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                            <div class="text-[10px] font-normal text-slate-700 flex items-center gap-1">
-                              <i data-lucide="panel-bottom" class="w-3 h-3 text-[var(--color-primary)]"></i> Strip 2 (Bawah, Opsional)
+                          <!-- Warna Latar Footer 1 -->
+                          <div class="min-w-0">
+                            <label for="cfg-footer-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <div class="flex items-center gap-1.5 min-w-0">
+                              <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                              <input type="text" id="cfg-footer-bg-hex-side" value="${primaryState.footer_bg_color || getPrimaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                             </div>
+                          </div>
+                          <!-- Warna Teks Footer 1 -->
+                          <div class="min-w-0">
+                            <label for="cfg-footer-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <div class="flex items-center gap-1.5 min-w-0">
+                              <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-6 h-6 rounded cursor-pointer border-0 p-0 shrink-0" />
+                              <input type="text" id="cfg-footer-text-hex-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Label Footer 2 (Tampil saat aktif) -->
+                      ${(() => {
+                        const isFooter2Active = Boolean(primaryState.card_footer_2_text && primaryState.card_footer_2_text.trim());
+                        return `
+                          <div id="container-card-footer-2" class="${isFooter2Active ? 'space-y-2 pt-2 border-t border-slate-100' : 'hidden'}">
                             <div>
                               <div class="flex items-center justify-between mb-0.5">
-                                <label for="input-card-footer-2-text-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider">Label Footer 2 (Opsional)</label>
-                                <span id="footer-2-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_2_text)}/32</span>
+                                <label for="input-card-footer-2-text-side" class="block text-[11px] font-semibold text-slate-700">Label Footer 2 (Opsional)</label>
+                                <div class="flex items-center gap-2">
+                                  <span id="footer-2-text-char-count-side" class="text-[9px] font-mono text-slate-400 font-normal">${getUnicodeLength(primaryState.card_footer_2_text)}/32</span>
+                                  <button type="button" id="btn-remove-card-footer-2" class="text-slate-400 hover:text-red-500 p-0.5 rounded transition cursor-pointer" title="Hapus Label Footer 2">
+                                    <i class="bi bi-trash3 text-xs"></i>
+                                  </button>
+                                </div>
                               </div>
                               <div class="relative w-full clean-datalist-wrapper">
-                                <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pengiriman Cepat" maxlength="32" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
+                                <input type="text" id="input-card-footer-2-text-side" list="footer-texts-history-list" data-datalist-id="footer-texts-history-list" autocomplete="off" placeholder="Pilih/Input" maxlength="32" value="${escapeHtml(primaryState.card_footer_2_text || '')}" class="clean-datalist-input w-full px-2.5 pr-8 py-1.5 text-xs rounded-md border border-slate-200 focus:border-[var(--color-primary)] outline-none bg-white font-normal" />
                               </div>
                               <div id="error-card-footer-2-text-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                             </div>
@@ -3869,6 +3886,7 @@ const ProductForm = (() => {
                                   </div>
                                 </div>
                               </div>
+                              <!-- Warna Latar Footer 2 -->
                               <div class="min-w-0">
                                 <label for="cfg-footer-2-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
                                 <div class="flex items-center gap-1.5 min-w-0">
@@ -3876,6 +3894,7 @@ const ProductForm = (() => {
                                   <input type="text" id="cfg-footer-2-bg-hex-side" value="${primaryState.footer_2_bg_color || getSecondaryThemeColor()}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
                                 </div>
                               </div>
+                              <!-- Warna Teks Footer 2 -->
                               <div class="min-w-0">
                                 <label for="cfg-footer-2-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
                                 <div class="flex items-center gap-1.5 min-w-0">
@@ -3886,8 +3905,16 @@ const ProductForm = (() => {
                             </div>
                             <div id="error-card-footer-2-icon-side" class="hidden text-[10px] text-red-600 font-normal mt-1 flex items-center gap-1"><i class="bi bi-exclamation-circle text-[10px]"></i><span class="error-msg"></span></div>
                           </div>
-                        </div>
-                      </div>
+
+                          <!-- Tombol Tambah Label Footer -->
+                          <div id="wrapper-btn-add-card-footer-2" class="${isFooter2Active ? 'hidden' : ''}">
+                            <button type="button" id="btn-add-card-footer-2" class="w-full py-2 px-3 border border-dashed border-slate-300 hover:border-[var(--color-primary)] text-slate-600 hover:text-[var(--color-primary)] rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer select-none bg-slate-50/50 hover:bg-emerald-50/30">
+                              <i class="bi bi-plus-lg text-xs"></i>
+                              <span>Tambah Label Footer</span>
+                            </button>
+                          </div>
+                        `;
+                      })()}
                     </div>
 
                 <!-- Input 3 di Card 2: Rating Produk -->
@@ -12748,61 +12775,45 @@ const ProductForm = (() => {
     const rawFooter2Text = (footer2TextInput ? footer2TextInput.value : (primaryState.card_footer_2_text || '')).trim();
     const footer2Icon = getEffectiveFooterIconId(rawFooter2Text, primaryState.footer_2_badge_icon, 'minus');
 
-    // Evaluasi Footer Model C (Task 2.9B):
-    // Demonstrasi dua footer contoh aktif HANYA saat Tambah Produk baru (formMode === 'create'),
-    // di Step 1 Model C, sebelum seller pertama kali membuka tab Desain Kartu (!hasEnteredCardDesignTab).
-    const isStep1CardPreview = (currentStep === 1 && variant === 'C');
+    // Evaluasi Footer Model C (Task 2.10C-6E-1):
+    // Pada Model C, Footer 1 dan Footer 2 harus selalu terlihat pada preview.
+    // Jika input seller kosong, tampilkan teks contoh khusus preview tanpa mencemari state/input/database.
     const hasUserFooter1 = Boolean(rawFooterText);
     const hasUserFooter2 = Boolean(rawFooter2Text);
 
-    const isSampleDemoActive = Boolean(
-      isStep1CardPreview &&
-      formMode === 'create' &&
-      !hasEnteredCardDesignTab
-    );
+    const sampleF1Text = 'Tersedia berbagai Variasi';
+    const sampleF2Text = 'Pengiriman Cepat & Aman';
 
-    // Resolusi Teks & Warna Efektif Footer
-    let previewF1Text = '';
-    let previewF2Text = '';
-    let effFooterBgColor = footerBgColor;
-    let effFooterTextColor = footerTextColor;
-    let effFooter2BgColor = footer2BgColor;
-    let effFooter2TextColor = footer2TextColor;
+    const previewF1Text = hasUserFooter1 ? rawFooterText : sampleF1Text;
+    const previewF2Text = hasUserFooter2 ? rawFooter2Text : sampleF2Text;
 
-    if (isSampleDemoActive) {
-      previewF1Text = 'Tersedia berbagai Variasi';
-      previewF2Text = 'Pengiriman Cepat & Aman';
+    const primaryThemeCol = getPrimaryThemeColor();
+    const secondaryThemeCol = getSecondaryThemeColor();
 
-      // Warna demonstrasi dua footer (Task 2.9B):
-      // Footer 1 = Warna tema utama toko
-      // Footer 2 = Warna tema sekunder toko
-      const primaryThemeCol = getPrimaryThemeColor();
-      const secondaryThemeCol = getSecondaryThemeColor();
-      effFooterBgColor = primaryThemeCol;
-      effFooter2BgColor = secondaryThemeCol;
+    let effFooterBgColor = hasUserFooter1
+      ? footerBgColor
+      : (primaryState.footer_bg_color || primaryThemeCol);
+    let effFooterTextColor = hasUserFooter1
+      ? footerTextColor
+      : (primaryState.footer_text_color || getContrastColor(effFooterBgColor));
 
-      // Jika warna tema utama dan sekunder sama, gunakan turunan warna dinamis
+    let effFooter2BgColor = hasUserFooter2
+      ? footer2BgColor
+      : (primaryState.footer_2_bg_color || secondaryThemeCol);
+
+    if (!hasUserFooter2) {
       const c1Rgb = parseColorToRgb(effFooterBgColor);
       const c2Rgb = parseColorToRgb(effFooter2BgColor);
       if (c1Rgb && c2Rgb && c1Rgb.r === c2Rgb.r && c1Rgb.g === c2Rgb.g && c1Rgb.b === c2Rgb.b) {
         effFooter2BgColor = getDistinctSecondaryDemoColor(effFooterBgColor);
       }
-
-      effFooterTextColor = getContrastColor(effFooterBgColor);
-      effFooter2TextColor = getContrastColor(effFooter2BgColor);
-    } else {
-      // Pasca masuk ke Desain Kartu atau pada Mode Edit Produk Lama:
-      // Tampilkan hanya footer yang benar-benar dikonfigurasi/diisi seller
-      previewF1Text = hasUserFooter1 ? rawFooterText : '';
-      previewF2Text = hasUserFooter2 ? rawFooter2Text : '';
-      effFooterBgColor = footerBgColor;
-      effFooterTextColor = footerTextColor;
-      effFooter2BgColor = footer2BgColor;
-      effFooter2TextColor = footer2TextColor;
     }
+    let effFooter2TextColor = hasUserFooter2
+      ? footer2TextColor
+      : (primaryState.footer_2_text_color || getContrastColor(effFooter2BgColor));
 
-    const hasFooter1 = Boolean(previewF1Text);
-    const hasFooter2 = isCountdownActive || Boolean(previewF2Text);
+    const hasFooter1 = true;
+    const hasFooter2 = true;
 
     // Ambil maksimal 2 label kustom dari input DOM atau state
     const label1Input = document.getElementById('input-custom-label-1');
@@ -34092,6 +34103,21 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
           s1FooterSec.classList.remove('space-y-4');
         }
       }
+      if (variantCode === 'C') {
+        const isF2Active = Boolean(primaryState.card_footer_2_text && primaryState.card_footer_2_text.trim());
+        const containerF2 = document.getElementById('container-card-footer-2');
+        const wrapperAddF2 = document.getElementById('wrapper-btn-add-card-footer-2');
+        if (containerF2 && wrapperAddF2) {
+          if (isF2Active) {
+            containerF2.classList.remove('hidden');
+            wrapperAddF2.classList.add('hidden');
+          } else {
+            containerF2.classList.add('hidden');
+            wrapperAddF2.classList.remove('hidden');
+          }
+        }
+        syncFooterControlsUI();
+      }
       if (variantCode === 'C' && s1FooterSec && typeof bindCleanDatalistPopovers === 'function') {
         bindCleanDatalistPopovers(s1FooterSec);
       }
@@ -34957,9 +34983,110 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       [cfgF1Text, cfgF1TextHex, cfgF1TextSide, cfgF1TextHexSide, cfgF1TextMob, cfgF1TextHexMob].forEach(x => { if (x) x.value = val; });
       primaryState.footer_text_color = val;
     };
+    let isShiftingFooters = false;
+
     const syncF1Str = (val) => {
+      if (isShiftingFooters) return;
       hasEnteredCardDesignTab = true;
       const cleanVal = truncateTo32Graphemes(val);
+
+      if (!cleanVal.trim()) {
+        const currentF2 = (primaryState.card_footer_2_text || (inpF2TextSide ? inpF2TextSide.value : '')).trim();
+        if (currentF2) {
+          // Otomatisasi Pemindahan Footer (Task 2.10C-6E-1 Section 4.C):
+          // Footer 1 dikosongkan sementara Footer 2 sudah terisi valid -> pindahkan seluruh konfigurasi Footer 2 ke Footer 1!
+          isShiftingFooters = true;
+          try {
+            const shiftText = currentF2;
+            const shiftIcon = primaryState.footer_2_badge_icon || 'minus';
+            const shiftBg = primaryState.footer_2_bg_color || (cfgF2BgSide ? cfgF2BgSide.value : getSecondaryThemeColor());
+            const shiftTextCol = primaryState.footer_2_text_color || (cfgF2TextSide ? cfgF2TextSide.value : '#ffffff');
+
+            // 1. Pindahkan ke Footer 1
+            primaryState.card_footer_text = shiftText;
+            primaryState.footer_badge_icon = shiftIcon;
+            primaryState.footer_bg_color = shiftBg;
+            primaryState.footer_text_color = shiftTextCol;
+            if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
+            primaryState.custom_footer_1.text = shiftText;
+            primaryState.custom_footer_1.icon = shiftIcon;
+            primaryState.custom_footer_1.bg_color = shiftBg;
+            primaryState.custom_footer_1.text_color = shiftTextCol;
+
+            [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(x => {
+              if (x) {
+                x.value = shiftText;
+                if (typeof x._syncDatalistControls === 'function') x._syncDatalistControls();
+              }
+            });
+            [cfgF1Bg, cfgF1BgHex, cfgF1BgSide, cfgF1BgHexSide, cfgF1BgMob, cfgF1BgHexMob].forEach(x => { if (x) x.value = shiftBg; });
+            [cfgF1Text, cfgF1TextHex, cfgF1TextSide, cfgF1TextHexSide, cfgF1TextMob, cfgF1TextHexMob].forEach(x => { if (x) x.value = shiftTextCol; });
+
+            // 2. Kosongkan konfigurasi Footer 2
+            primaryState.card_footer_2_text = '';
+            primaryState.footer_2_badge_icon = 'minus';
+            primaryState.footer_2_bg_color = getSecondaryThemeColor();
+            primaryState.footer_2_text_color = '#ffffff';
+            if (!primaryState.custom_footer_2) primaryState.custom_footer_2 = {};
+            primaryState.custom_footer_2.text = '';
+            primaryState.custom_footer_2.icon = 'minus';
+            primaryState.custom_footer_2.bg_color = getSecondaryThemeColor();
+            primaryState.custom_footer_2.text_color = '#ffffff';
+
+            [inpF2Text, inpF2TextSide, inpF2TextMob].forEach(x => {
+              if (x) {
+                x.value = '';
+                if (typeof x._syncDatalistControls === 'function') x._syncDatalistControls();
+              }
+            });
+            [cfgF2Bg, cfgF2BgHex, cfgF2BgSide, cfgF2BgHexSide, cfgF2BgMob, cfgF2BgHexMob].forEach(x => { if (x) x.value = getSecondaryThemeColor(); });
+            [cfgF2Text, cfgF2TextHex, cfgF2TextSide, cfgF2TextHexSide, cfgF2TextMob, cfgF2TextHexMob].forEach(x => { if (x) x.value = '#ffffff'; });
+
+            // Sembunyikan container Footer 2 dan tampilkan kembali tombol tambah
+            const containerF2 = document.getElementById('container-card-footer-2');
+            const wrapperAddF2 = document.getElementById('wrapper-btn-add-card-footer-2');
+            if (containerF2) containerF2.classList.add('hidden');
+            if (wrapperAddF2) wrapperAddF2.classList.remove('hidden');
+
+            isFooterTouched = true;
+            updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
+            updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
+            updateFooterCharCounter(inpF2TextSide, document.getElementById('footer-2-text-char-count-side'));
+            updateFooterCharCounter(inpF2TextMob, document.getElementById('footer-2-text-char-count-mob'));
+            syncFooterControlsUI();
+            syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+            updateProductCardLivePreview();
+            return;
+          } finally {
+            isShiftingFooters = false;
+          }
+        } else {
+          // Footer 1 kosong dan Footer 2 juga kosong: biarkan Footer 1 kosong, kembalikan Footer 2 tidak aktif
+          primaryState.card_footer_text = '';
+          if (!primaryState.custom_footer_1) primaryState.custom_footer_1 = {};
+          primaryState.custom_footer_1.text = '';
+          [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(x => {
+            if (x) {
+              if (x.value !== '') x.value = '';
+              if (typeof x._syncDatalistControls === 'function') x._syncDatalistControls();
+            }
+          });
+          const containerF2 = document.getElementById('container-card-footer-2');
+          const wrapperAddF2 = document.getElementById('wrapper-btn-add-card-footer-2');
+          if (containerF2) containerF2.classList.add('hidden');
+          if (wrapperAddF2) wrapperAddF2.classList.remove('hidden');
+
+          isFooterTouched = true;
+          updateFooterCharCounter(inpF1TextSide, document.getElementById('footer-text-char-count-side'));
+          updateFooterCharCounter(inpF1TextMob, document.getElementById('footer-text-char-count-mob'));
+          syncFooterControlsUI();
+          syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+          updateProductCardLivePreview();
+          return;
+        }
+      }
+
+      // Normal path saat cleanVal terisi
       [inpF1Text, inpF1TextSide, inpF1TextMob].forEach(x => {
         if (x && x.value !== cleanVal) x.value = cleanVal;
         if (x && typeof x._syncDatalistControls === 'function') x._syncDatalistControls();
@@ -35082,6 +35209,53 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     setupFooterIconToggle('btn-footer-icon-picker-mob', 'menu-footer-icon-picker-mob');
     setupFooterIconToggle('btn-footer-2-icon-picker-side', 'menu-footer-2-icon-picker-side');
     setupFooterIconToggle('btn-footer-2-icon-picker-mob', 'menu-footer-2-icon-picker-mob');
+
+    // Tombol Tambah & Hapus Footer 2 (Task 2.10C-6E-1)
+    const btnAddCardFooter2 = document.getElementById('btn-add-card-footer-2');
+    if (btnAddCardFooter2) {
+      btnAddCardFooter2.addEventListener('click', () => {
+        const fState = evaluateFooterValidationState();
+        if (!fState.f1Valid) {
+          applyFooterErrorBox(['error-card-footer-text-side'], ['input-card-footer-text-side'], 'Label Footer 1 wajib diisi terlebih dahulu.');
+          document.getElementById('input-card-footer-text-side')?.focus();
+          return;
+        }
+        const containerF2 = document.getElementById('container-card-footer-2');
+        const wrapperAddF2 = document.getElementById('wrapper-btn-add-card-footer-2');
+        if (containerF2) {
+          containerF2.classList.remove('hidden');
+          containerF2.classList.add('space-y-2');
+        }
+        if (wrapperAddF2) wrapperAddF2.classList.add('hidden');
+        const inpF2 = document.getElementById('input-card-footer-2-text-side');
+        if (inpF2) {
+          inpF2.focus();
+        }
+        syncFooterControlsUI();
+        syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+        updateProductCardLivePreview();
+      });
+    }
+
+    const btnRemoveCardFooter2 = document.getElementById('btn-remove-card-footer-2');
+    if (btnRemoveCardFooter2) {
+      btnRemoveCardFooter2.addEventListener('click', () => {
+        syncF2Str('');
+        syncF2Bg(getSecondaryThemeColor());
+        syncF2TextCol('#ffffff');
+        primaryState.footer_2_badge_icon = 'minus';
+        if (primaryState.custom_footer_2) {
+          primaryState.custom_footer_2.icon = 'minus';
+        }
+        const containerF2 = document.getElementById('container-card-footer-2');
+        const wrapperAddF2 = document.getElementById('wrapper-btn-add-card-footer-2');
+        if (containerF2) containerF2.classList.add('hidden');
+        if (wrapperAddF2) wrapperAddF2.classList.remove('hidden');
+        syncFooterControlsUI();
+        syncFooterInlineValidation({ showRequired: false, showLength: true, showSimilarity: true });
+        updateProductCardLivePreview();
+      });
+    }
 
     // Click icon items
     document.querySelectorAll('.btn-footer-icon-item').forEach(btn => {
