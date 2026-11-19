@@ -1449,6 +1449,39 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
         - `scratch/test_task210c6d_card2_availability.js` (51/51 PASS)
         - `scratch/test_task210c6c_rating_sales.js` (56/56 PASS)
       - Total akumulasi: 312 / 312 skenario pengujian lulus (100% PASS, 0 FAIL) tanpa regresi.
+  - **Perbaikan Visual Footer, Responsivitas Mobile, Brand Color, dan Highlight Foto Produk (Task 2.10C-7B)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Melakukan pembersihan visual pada Header Footer Kartu (Card 2 Step 1).
+      - Menyeragamkan tinggi kontrol Footer Kartu (Ikon, Warna Latar, Warna Teks) menjadi `28px` (`h-7`) pada perangkat mobile dan desktop dengan `box-sizing: border-box`.
+      - Mengintegrasikan teks petunjuk Card 2 ke variabel warna brand dinamis (`var(--color-primary)`).
+      - Memperbaiki target highlight validasi Foto Produk agar terfokus secara spesifik pada slot/kotak upload foto (`#btn-slot-add-photo`), meniadakan highlight ganda pada parent section (`#section-step1-input4-photo`).
+    - **Penyempurnaan Header Footer Kartu**:
+      - Menghilangkan ikon dekoratif (`bi-layers` / `bi-card-text`) dan badge status `Detail` pada header `#section-step1-input7-footers`.
+      - Judul header distandarisasi menjadi teks bersih: `Footer Kartu`.
+      - Mempertahankan ikon pilihan seller pada Footer 1 dan Footer 2, struktur input, logika mutual exclusion, dan penyimpanan data footer.
+    - **Penyempurnaan Kontrol Footer pada Mobile (Keseragaman Ukuran & Responsivitas)**:
+      - Menyeragamkan tinggi ketiga kontrol footer (Tombol Pemilih Ikon, Color Swatch, dan Input HEX) menjadi tepat `28px` (`h-7`) menggunakan `box-sizing: border-box` dan `min-w-0`.
+      - Di `css/admin.css`, mengecualikan `.footer-hex-input` dari aturan umum input mobile 38px, dan menetapkan ukuran khusus `height: 28px !important; min-height: 28px !important; font-size: 11px !important;`.
+      - Label field dirapikan dengan tipografi standar: `text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5`.
+      - Teruji responsif dan bebas overflow pada resolusi mobile 375px, 390px, dan 412px, dengan lebar input HEX memadai (> 50px) sehingga nilai HEX tidak terpotong.
+    - **Teks Petunjuk Menggunakan Warna Brand Dinamis**:
+      - Mengubah styling paragraf petunjuk `#card2-design-tab-hint` ("Buka Tab Desain Kartu pada Preview Kartu Produk, Untuk Mengubah Gaya/Desain Kartu Produk.") menggunakan `style="color: var(--color-primary) !important;"`.
+      - Warna otomatis menyesuaikan tema brand toko tanpa hardcoding kode warna HEX/RGB.
+    - **Perbaikan Highlight Validasi Foto Produk**:
+      - Memperbaiki penargetan elemen validasi foto pada `goToStep(2)` dan `handleProductSubmit()` dengan memprioritaskan `#btn-slot-add-photo` (atau `#gallery-slots-container`) daripada parent section `#section-step1-input4-photo`.
+      - Menyempurnakan fungsi `focusAndHighlightValidationTarget()`:
+        - Membersihkan highlight ring amber sebelumnya (`.ring-amber-400`) sebelum menerapkan highlight baru.
+        - Membatasi pemberian ring highlight tepat ke 1 elemen target (`activeEl`), menghapus mekanisme highlight ganda pada parent dan child sekaligus.
+        - Mempertahankan animasi, durasi 3 detik, auto-scroll dengan 20px reading clearance di bawah sticky header, penutupan mobile sheet sebelum scroll, dan fokus input dengan `preventScroll: true`.
+    - **Verifikasi Fungsionalitas & Pengujian Multi-Viewport**:
+      - Terverifikasi 100% PASS melalui test suite Playwright (`scratch/test_task210c7b_visual_photo.js` - 55/55 skenario lulus, 0 gagal):
+        - Header Footer & Ikon Seller: Judul tepat, tanpa ikon dekoratif, tanpa badge detail, ikon seller tetap tampil & berfungsi.
+        - Dynamic Brand Theme: Teruji inherit dan reaktif terhadap perubahan tema `:root`.
+        - Mobile Viewports (375px, 390px, 412px): Tinggi kontrol seragam 28px, border-box, zero overflow, lebar hex memadai.
+        - Validasi Highlight Foto: Tepat 1 ring amber pada `#btn-slot-add-photo`, zero ring pada `#section-step1-input4-photo`, pembersihan ring saat re-trigger, dan timeout 3 detik.
+      - Lulus seluruh skenario relevan pada regression suite:
+        - `scratch/test_task210c6f2_mobile_buttons.js` (53/53 PASS).
+        - `scratch/test_task210c6f1_validation_and_layout.js` (29/30 PASS, dengan 1 penyesuaian yang disengaja: penolakan ring pada section parent foto yang telah diperbaiki pada Task 7B).
 
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:

@@ -3989,10 +3989,8 @@ const ProductForm = (() => {
                     <div id="section-step1-input7-footers" class="${primaryState.card_variant === 'C' ? 'space-y-4' : 'hidden'}">
                       <hr class="border-slate-100" />
                       <div>
-                        <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                          <i class="bi bi-layers text-emerald-600"></i>
-                          <span>Footer Kartu</span>
-                          <span class="text-[9px] font-normal px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-mono ml-1">Detail</span>
+                        <label class="block text-xs font-bold text-slate-800">
+                          Footer Kartu
                         </label>
                         <p class="text-xs text-slate-500 mt-0.5">Informasi layanan atau keunggulan toko di bagian bawah kartu etalase.</p>
                       </div>
@@ -4013,9 +4011,9 @@ const ProductForm = (() => {
                         <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-1 gap-2">
                           <!-- Ikon Footer 1 -->
                           <div>
-                            <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
+                            <label class="block text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
                             <div class="relative" id="container-footer-icon-picker-side">
-                              <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 1">
+                              <button type="button" id="btn-footer-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 min-w-[56px] px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none box-border" title="Pilih Ikon Footer 1">
                                 <span id="preview-footer-icon-side" class="flex items-center justify-center shrink-0">
                                   ${(primaryState.footer_badge_icon && primaryState.footer_badge_icon !== 'none') ? renderFooterBadgeIconHtml(primaryState.footer_badge_icon, 'w-3.5 h-3.5') : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                                 </span>
@@ -4035,18 +4033,18 @@ const ProductForm = (() => {
                           </div>
                           <!-- Warna Latar Footer 1 -->
                           <div class="min-w-0">
-                            <label for="cfg-footer-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                            <label for="cfg-footer-bg-hex-side" class="block text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
                             <div class="flex items-center gap-1.5">
-                              <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || '#059669'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
-                              <input type="text" id="cfg-footer-bg-hex-side" maxlength="7" value="${primaryState.footer_bg_color || '#059669'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                              <input type="color" id="cfg-footer-bg-color-side" value="${primaryState.footer_bg_color || '#059669'}" class="w-7 h-7 min-w-[28px] p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white box-border" />
+                              <input type="text" id="cfg-footer-bg-hex-side" maxlength="7" value="${primaryState.footer_bg_color || '#059669'}" class="footer-hex-input h-7 w-full min-w-0 px-1.5 text-[11px] font-mono font-medium border border-slate-200 rounded-md bg-white focus:border-[var(--color-primary)] outline-none box-border" />
                             </div>
                           </div>
                           <!-- Warna Teks Footer 1 -->
                           <div class="min-w-0">
-                            <label for="cfg-footer-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                            <label for="cfg-footer-text-hex-side" class="block text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
                             <div class="flex items-center gap-1.5">
-                              <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
-                              <input type="text" id="cfg-footer-text-hex-side" maxlength="7" value="${primaryState.footer_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                              <input type="color" id="cfg-footer-text-color-side" value="${primaryState.footer_text_color || '#ffffff'}" class="w-7 h-7 min-w-[28px] p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white box-border" />
+                              <input type="text" id="cfg-footer-text-hex-side" maxlength="7" value="${primaryState.footer_text_color || '#ffffff'}" class="footer-hex-input h-7 w-full min-w-0 px-1.5 text-[11px] font-mono font-medium border border-slate-200 rounded-md bg-white focus:border-[var(--color-primary)] outline-none box-border" />
                             </div>
                           </div>
                         </div>
@@ -4076,9 +4074,9 @@ const ProductForm = (() => {
                             <div class="grid grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] max-[350px]:grid-cols-1 gap-2">
                               <!-- Ikon Footer 2 -->
                               <div>
-                                <label class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
+                                <label class="block text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">Ikon</label>
                                 <div class="relative" id="container-footer-2-icon-picker-side">
-                                  <button type="button" id="btn-footer-2-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none" title="Pilih Ikon Footer 2">
+                                  <button type="button" id="btn-footer-2-icon-picker-side" aria-haspopup="true" aria-expanded="false" class="w-14 h-7 min-w-[56px] px-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between text-xs font-normal text-slate-700 transition cursor-pointer select-none box-border" title="Pilih Ikon Footer 2">
                                     <span id="preview-footer-2-icon-side" class="flex items-center justify-center shrink-0">
                                       ${(primaryState.footer_2_badge_icon && primaryState.footer_2_badge_icon !== 'none') ? renderFooterBadgeIconHtml(primaryState.footer_2_badge_icon, 'w-3.5 h-3.5') : `<i class="bi bi-slash-circle text-slate-400 text-xs"></i>`}
                                     </span>
@@ -4098,18 +4096,18 @@ const ProductForm = (() => {
                               </div>
                               <!-- Warna Latar Footer 2 -->
                               <div class="min-w-0">
-                                <label for="cfg-footer-2-bg-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
+                                <label for="cfg-footer-2-bg-hex-side" class="block text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">Warna Latar</label>
                                 <div class="flex items-center gap-1.5">
-                                  <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || '#2563eb'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
-                                  <input type="text" id="cfg-footer-2-bg-hex-side" maxlength="7" value="${primaryState.footer_2_bg_color || '#2563eb'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                                  <input type="color" id="cfg-footer-2-bg-color-side" value="${primaryState.footer_2_bg_color || '#2563eb'}" class="w-7 h-7 min-w-[28px] p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white box-border" />
+                                  <input type="text" id="cfg-footer-2-bg-hex-side" maxlength="7" value="${primaryState.footer_2_bg_color || '#2563eb'}" class="footer-hex-input h-7 w-full min-w-0 px-1.5 text-[11px] font-mono font-medium border border-slate-200 rounded-md bg-white focus:border-[var(--color-primary)] outline-none box-border" />
                                 </div>
                               </div>
                               <!-- Warna Teks Footer 2 -->
                               <div class="min-w-0">
-                                <label for="cfg-footer-2-text-hex-side" class="block text-[9px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
+                                <label for="cfg-footer-2-text-hex-side" class="block text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">Warna Teks</label>
                                 <div class="flex items-center gap-1.5">
-                                  <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-7 h-7 p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white" />
-                                  <input type="text" id="cfg-footer-2-text-hex-side" maxlength="7" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-full min-w-0 px-1.5 py-0.5 text-[10px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                                  <input type="color" id="cfg-footer-2-text-color-side" value="${primaryState.footer_2_text_color || '#ffffff'}" class="w-7 h-7 min-w-[28px] p-0.5 rounded border border-slate-200 cursor-pointer shrink-0 bg-white box-border" />
+                                  <input type="text" id="cfg-footer-2-text-hex-side" maxlength="7" value="${primaryState.footer_2_text_color || '#ffffff'}" class="footer-hex-input h-7 w-full min-w-0 px-1.5 text-[11px] font-mono font-medium border border-slate-200 rounded-md bg-white focus:border-[var(--color-primary)] outline-none box-border" />
                                 </div>
                               </div>
                             </div>
@@ -4263,7 +4261,7 @@ const ProductForm = (() => {
                 </div>
 
                 <!-- Teks Informasi Kecil di Card 2 -->
-                <p class="text-xs text-slate-500 pt-3 border-t border-slate-100 leading-relaxed">
+                <p id="card2-design-tab-hint" class="text-xs font-medium pt-3 border-t border-slate-100 leading-relaxed" style="color: var(--color-primary) !important;">
                   Buka Tab Desain Kartu pada Preview Kartu Produk, Untuk Mengubah Gaya/Desain Kartu Produk.
                 </p>
                 </div>
@@ -7168,10 +7166,14 @@ const ProductForm = (() => {
         activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
 
-      // 5. Berikan highlight ring amber selama 3 detik
-      const highlightBox = (typeof activeEl.closest === 'function')
-        ? (activeEl.closest('.variation-option-row, tr, .step2-section-card, .form-group') || activeEl)
-        : activeEl;
+      // 5. Bersihkan highlight sebelumnya dan berikan ring amber selama 3 detik pada target elemen
+      document.querySelectorAll('.ring-amber-400').forEach(el => {
+        el.classList.remove('ring-2', 'ring-amber-400', 'transition-all');
+        if (el.dataset.tempRounded) {
+          el.classList.remove('rounded-lg');
+          delete el.dataset.tempRounded;
+        }
+      });
 
       if (activeEl.classList) {
         activeEl.classList.add('ring-2', 'ring-amber-400', 'transition-all');
@@ -7180,29 +7182,14 @@ const ProductForm = (() => {
           activeEl.dataset.tempRounded = 'true';
         }
       }
-      if (highlightBox && highlightBox !== activeEl && highlightBox.classList) {
-        highlightBox.classList.add('ring-2', 'ring-amber-400', 'transition-all');
-      }
-
-      // Khusus seksi foto produk, tambahkan highlight juga pada kontainer galeri foto
-      const photoGrid = (activeEl.id === 'section-step1-input4-photo') ? activeEl.querySelector('#gallery-slots-container') : null;
-      if (photoGrid && photoGrid.classList) {
-        photoGrid.classList.add('ring-2', 'ring-amber-400', 'transition-all', 'rounded-lg');
-      }
 
       setTimeout(() => {
-        if (activeEl.classList) {
+        if (activeEl && activeEl.classList) {
           activeEl.classList.remove('ring-2', 'ring-amber-400');
           if (activeEl.dataset.tempRounded) {
             activeEl.classList.remove('rounded-lg');
             delete activeEl.dataset.tempRounded;
           }
-        }
-        if (highlightBox && highlightBox !== activeEl && highlightBox.classList) {
-          highlightBox.classList.remove('ring-2', 'ring-amber-400');
-        }
-        if (photoGrid && photoGrid.classList) {
-          photoGrid.classList.remove('ring-2', 'ring-amber-400', 'rounded-lg');
         }
       }, 3000);
 
@@ -27551,7 +27538,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
 
         // 3. Foto Produk (Minimal 1 Foto sebagai cover jika Etalase ON)
         if (primaryState.is_active && (!primaryState.images || primaryState.images.length === 0) && !primaryState.image_url) {
-          const elPhoto = document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('gallery-slots-container');
+          const elPhoto = document.getElementById('btn-slot-add-photo') || document.getElementById('gallery-slots-container') || document.getElementById('section-step1-input4-photo');
           addS1Error('Foto produk wajib diunggah minimal 1 foto sebagai cover.', elPhoto);
         }
 
@@ -37345,7 +37332,7 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
     }
     if (!primaryState.images || primaryState.images.length === 0) {
       if (!primaryState.image_url) {
-        addError('Foto produk wajib diunggah minimal 1 gambar sebagai cover.', document.getElementById('section-step1-input4-photo') || document.getElementById('btn-slot-add-photo') || document.getElementById('input-prod-image'));
+        addError('Foto produk wajib diunggah minimal 1 gambar sebagai cover.', document.getElementById('btn-slot-add-photo') || document.getElementById('gallery-slots-container') || document.getElementById('section-step1-input4-photo') || document.getElementById('input-prod-image'));
       }
     }
     if (!primaryState.name || primaryState.name.trim().length < 5) {
