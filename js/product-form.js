@@ -837,6 +837,21 @@ const ProductForm = (() => {
     return '#' + ((1 << 24) + (newR << 16) + (newG << 8) + newB).toString(16).slice(1);
   }
 
+  function isValidHexColor(str) {
+    if (!str || typeof str !== 'string') return false;
+    return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(str.trim());
+  }
+
+  function sanitizeHexColor(str, fallback = '#64748b') {
+    if (!isValidHexColor(str)) return fallback;
+    const trimmed = str.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) return trimmed.toLowerCase();
+    if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+      return ('#' + trimmed[1] + trimmed[1] + trimmed[2] + trimmed[2] + trimmed[3] + trimmed[3]).toLowerCase();
+    }
+    return fallback;
+  }
+
 
   // Helper parsing & formatting masa garansi (Angka manual + Satuan Hari/Bulan/Tahun)
   function parseWarrantyPeriod(rawPeriod) {
@@ -4419,11 +4434,18 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-price-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
-                      <div class="col-span-2">
+                      <div>
                         <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Tombol Beli</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-btn-color" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-btn-text" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-normal text-slate-500 uppercase tracking-wider mb-0.5">Teks Terjual</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-sales-color" value="#64748b" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-sales-hex" value="#64748b" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                     </div>
@@ -4778,11 +4800,18 @@ const ProductForm = (() => {
                           <input type="text" id="cfg-price-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
-                      <div class="col-span-2">
+                      <div>
                         <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Tombol Beli</label>
                         <div class="flex items-center gap-1.5">
                           <input type="color" id="cfg-btn-color-mob" value="${getPrimaryThemeColor()}" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
                           <input type="text" id="cfg-btn-text-mob" value="${getPrimaryThemeColor()}" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block card-tool-label text-[11px] leading-4 font-normal text-slate-500 mb-0.5">Teks Terjual</label>
+                        <div class="flex items-center gap-1.5">
+                          <input type="color" id="cfg-sales-color-mob" value="#64748b" class="w-7 h-7 rounded cursor-pointer border-0 p-0" />
+                          <input type="text" id="cfg-sales-hex-mob" value="#64748b" class="w-full px-1.5 py-1 text-[11px] font-mono font-normal border border-slate-200 rounded bg-white" />
                         </div>
                       </div>
                     </div>
@@ -6245,6 +6274,7 @@ const ProductForm = (() => {
       show_rating: Boolean(document.getElementById('cfg-show-rating')?.checked),
       show_sales: Boolean(document.getElementById('cfg-show-sales')?.checked),
       show_sales_count: Boolean(document.getElementById('cfg-show-sales')?.checked),
+      sales_text_color: sanitizeHexColor(getVal('cfg-sales-color', 'cfg-sales-color-mob', '#64748b'), '#64748b'),
       show_strikethrough_price: true,
       strike_price_color: getVal('cfg-strike-color', 'cfg-strike-color-mob', '#94a3b8'),
       show_discount_badge: getChk('cfg-show-discount-badge', 'cfg-show-discount-badge-mob'),
@@ -6342,6 +6372,9 @@ const ProductForm = (() => {
     const strikeCol = cfg.strike_price_color || '#94a3b8';
     setVal('cfg-strike-color', strikeCol);
     setVal('cfg-strike-hex', strikeCol);
+    const salesCol = sanitizeHexColor(cfg.sales_text_color || defaultCfg.sales_text_color || '#64748b', '#64748b');
+    setVal('cfg-sales-color', salesCol);
+    setVal('cfg-sales-hex', salesCol);
 
     setChk('cfg-show-discount-badge', cfg.show_discount_badge !== false);
     const discRadNum = parseDiscountBadgeRadius(cfg.discount_badge_radius, 4);
@@ -12735,6 +12768,23 @@ const ProductForm = (() => {
     // Strike Price Styling
     const strikePriceColor = document.getElementById('cfg-strike-color')?.value || primaryState.card_config?.strike_price_color || '#94a3b8';
 
+    // Sales Text Color Styling
+    const defaultSalesTextColor = modelDefault.sales_text_color || '#64748b';
+    const rawSalesTextColor = getLiveDomVal('cfg-sales-color', 'cfg-sales-color-mob', primaryState.card_config?.sales_text_color);
+    const rawSalesTextHex = getLiveDomVal('cfg-sales-hex', 'cfg-sales-hex-mob', null);
+    let salesTextColor = defaultSalesTextColor;
+    if (isCustomMode) {
+      if (rawSalesTextHex && isValidHexColor(rawSalesTextHex)) {
+        salesTextColor = sanitizeHexColor(rawSalesTextHex, defaultSalesTextColor);
+      } else if (rawSalesTextColor && isValidHexColor(rawSalesTextColor)) {
+        salesTextColor = sanitizeHexColor(rawSalesTextColor, defaultSalesTextColor);
+      } else if (primaryState.card_config?.sales_text_color && isValidHexColor(primaryState.card_config.sales_text_color)) {
+        salesTextColor = sanitizeHexColor(primaryState.card_config.sales_text_color, defaultSalesTextColor);
+      }
+    } else {
+      salesTextColor = defaultSalesTextColor;
+    }
+
     // Discount Badge Custom Styles (pada foto produk)
     const rawDiscRadius = getLiveDomVal('cfg-discount-badge-radius', 'cfg-discount-badge-radius-mob', primaryState.card_config?.discount_badge_radius);
     const discBadgeRadius = `${parseDiscountBadgeRadius(rawDiscRadius, 4)}px`;
@@ -13080,7 +13130,7 @@ const ProductForm = (() => {
       if (!isExtremePrice) {
         if (cfg.show_sales && hasPreviewSales) {
           selectedMetricHtml = `
-            <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap text-right shrink-0">
+            <span class="text-[10px] sm:text-[11px] font-medium whitespace-nowrap text-right shrink-0" style="color: ${salesTextColor};">
               ${formatSalesCount(effSalesNumber, isNarrowPriceRow)}
             </span>
           `;
@@ -13181,7 +13231,7 @@ const ProductForm = (() => {
               </div>
               ${(cfg.show_sales && hasPreviewSales) ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                  <span class="text-[10px] sm:text-[11px] font-medium whitespace-nowrap" style="color: ${salesTextColor};">
                     ${previewSalesText}
                   </span>
                 </div>
@@ -13269,7 +13319,7 @@ const ProductForm = (() => {
               </div>
               ${(cfg.show_sales && hasPreviewSales) ? `
                 <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                  <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                  <span class="text-[10px] sm:text-[11px] font-medium whitespace-nowrap" style="color: ${salesTextColor};">
                     ${previewSalesText}
                   </span>
                 </div>
@@ -34960,6 +35010,75 @@ Hadirkan solusi terbaik untuk kebutuhan Anda dengan ${name}. Dikerjakan dengan t
       if (mobColor) mobColor.addEventListener('input', e => syncAllStrikeColors(e.target.value));
       if (mobHex) mobHex.addEventListener('input', e => syncAllStrikeColors(e.target.value));
     });
+
+    // Sales Text Color Listeners (Desktop & Mobile Sync)
+    const deskSalesColor = document.getElementById('cfg-sales-color');
+    const deskSalesHex = document.getElementById('cfg-sales-hex');
+    const mobSalesColor = document.getElementById('cfg-sales-color-mob');
+    const mobSalesHex = document.getElementById('cfg-sales-hex-mob');
+
+    const syncSalesColorVal = (newVal, source) => {
+      if (source === 'color') {
+        const sanitized = sanitizeHexColor(newVal, '#64748b');
+        if (deskSalesColor) deskSalesColor.value = sanitized;
+        if (deskSalesHex) deskSalesHex.value = sanitized;
+        if (mobSalesColor) mobSalesColor.value = sanitized;
+        if (mobSalesHex) mobSalesHex.value = sanitized;
+        markCardDesignAsCustom();
+        updateProductCardLivePreview();
+      } else if (source === 'hex') {
+        if (isValidHexColor(newVal)) {
+          const sanitized = sanitizeHexColor(newVal, '#64748b');
+          if (deskSalesColor) deskSalesColor.value = sanitized;
+          if (mobSalesColor) mobSalesColor.value = sanitized;
+          markCardDesignAsCustom();
+          updateProductCardLivePreview();
+        }
+        if (deskSalesHex && deskSalesHex !== document.activeElement) deskSalesHex.value = newVal;
+        if (mobSalesHex && mobSalesHex !== document.activeElement) mobSalesHex.value = newVal;
+      }
+    };
+
+    if (deskSalesColor) {
+      deskSalesColor.addEventListener('input', e => syncSalesColorVal(e.target.value, 'color'));
+    }
+    if (mobSalesColor) {
+      mobSalesColor.addEventListener('input', e => syncSalesColorVal(e.target.value, 'color'));
+    }
+    if (deskSalesHex) {
+      deskSalesHex.addEventListener('input', e => syncSalesColorVal(e.target.value, 'hex'));
+      deskSalesHex.addEventListener('blur', e => {
+        if (!isValidHexColor(e.target.value)) {
+          const curCol = deskSalesColor?.value || '#64748b';
+          e.target.value = curCol;
+          if (mobSalesHex) mobSalesHex.value = curCol;
+        } else {
+          const sanitized = sanitizeHexColor(e.target.value, '#64748b');
+          e.target.value = sanitized;
+          if (mobSalesHex) mobSalesHex.value = sanitized;
+          if (deskSalesColor) deskSalesColor.value = sanitized;
+          if (mobSalesColor) mobSalesColor.value = sanitized;
+          updateProductCardLivePreview();
+        }
+      });
+    }
+    if (mobSalesHex) {
+      mobSalesHex.addEventListener('input', e => syncSalesColorVal(e.target.value, 'hex'));
+      mobSalesHex.addEventListener('blur', e => {
+        if (!isValidHexColor(e.target.value)) {
+          const curCol = mobSalesColor?.value || '#64748b';
+          e.target.value = curCol;
+          if (deskSalesHex) deskSalesHex.value = curCol;
+        } else {
+          const sanitized = sanitizeHexColor(e.target.value, '#64748b');
+          e.target.value = sanitized;
+          if (deskSalesHex) deskSalesHex.value = sanitized;
+          if (deskSalesColor) deskSalesColor.value = sanitized;
+          if (mobSalesColor) mobSalesColor.value = sanitized;
+          updateProductCardLivePreview();
+        }
+      });
+    }
 
     // Discount Badge Position Custom Dropdowns (Desktop & Mobile)
     ['', '-mob'].forEach(suffix => {

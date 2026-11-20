@@ -3338,6 +3338,7 @@ const BuyerStore = (() => {
     const countdownIconColor = prod.countdown_icon_color || config.countdown_icon_color || countdownTextColor;
     const countdownBorder = prod.countdown_border_color || config.countdown_border_color || '#059669';
     const countdownStyle = `background-color: ${countdownBg}; color: ${countdownTextColor}; border: 1px solid ${countdownBorder}; border-radius: ${countdownRadius};`;
+    const salesTextColor = config.sales_text_color || '#64748b';
 
     const hasActiveDiscount = Boolean(effDiscount && effDiscount.has_discount);
     const effFinalPrice = hasActiveDiscount ? effDiscount.discounted_price : minPrice;
@@ -3406,10 +3407,10 @@ const BuyerStore = (() => {
             </div>
             ${showSales ? `
               <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap hidden sm:inline">
+                <span class="text-[10px] sm:text-[11px] font-medium whitespace-nowrap hidden sm:inline" style="color: ${salesTextColor};">
                   ${formatSalesCount(prod.sales_count, false)}
                 </span>
-                <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap inline sm:hidden">
+                <span class="text-[10px] sm:text-[11px] font-medium whitespace-nowrap inline sm:hidden" style="color: ${salesTextColor};">
                   ${formatSalesCount(prod.sales_count, isNarrowPriceRow)}
                 </span>
               </div>
@@ -3499,7 +3500,7 @@ const BuyerStore = (() => {
         `;
       } else if (showSales) {
         selectedMetricHtml = `
-          <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap text-right shrink-0">
+          <span class="text-[10px] sm:text-[11px] font-medium whitespace-nowrap text-right shrink-0" style="color: ${salesTextColor};">
             ${formatSalesCount(prod.sales_count, isNarrowPriceRow)}
           </span>
         `;
@@ -3754,7 +3755,7 @@ const BuyerStore = (() => {
             </div>
             ${showSales ? `
               <div class="ml-auto shrink-0 text-right leading-none pb-0.5">
-                <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                <span class="text-[10px] sm:text-[11px] font-medium whitespace-nowrap" style="color: ${salesTextColor};">
                   ${formatSalesCount(prod.sales_count, false)}
                 </span>
               </div>

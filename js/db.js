@@ -492,6 +492,7 @@ const DB = (() => {
       btn_color: '#059669',
       show_rating: true,
       show_sales_count: true,
+      sales_text_color: '#64748b',
       show_strikethrough_price: true,
       strike_price_color: '#94a3b8',
       show_ticket_icon: true,
@@ -524,6 +525,7 @@ const DB = (() => {
       btn_color: '#7e22ce',
       show_rating: true,
       show_sales_count: true,
+      sales_text_color: '#64748b',
       show_strikethrough_price: true,
       strike_price_color: '#94a3b8',
       show_ticket_icon: true,
@@ -556,6 +558,7 @@ const DB = (() => {
       btn_color: '#d97706',
       show_rating: true,
       show_sales_count: true,
+      sales_text_color: '#64748b',
       show_strikethrough_price: true,
       strike_price_color: '#94a3b8',
       show_ticket_icon: false,
@@ -760,6 +763,7 @@ const DB = (() => {
       card_btn_bg_color: '#33b589',
       show_rating: true,
       show_sales_count: true,
+      sales_text_color: '#64748b',
       show_strikethrough_price: true,
       show_category_badge: true
     },
@@ -1871,6 +1875,9 @@ const DB = (() => {
           Object.keys(DEFAULT_CARD_VARIANTS_CONFIG).forEach(k => {
             if (!sets.card_variants_config[k]) {
               sets.card_variants_config[k] = { ...DEFAULT_CARD_VARIANTS_CONFIG[k] };
+              changed = true;
+            } else if (!sets.card_variants_config[k].sales_text_color) {
+              sets.card_variants_config[k].sales_text_color = DEFAULT_CARD_VARIANTS_CONFIG[k].sales_text_color || '#64748b';
               changed = true;
             }
           });

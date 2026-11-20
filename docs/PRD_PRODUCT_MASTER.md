@@ -1586,6 +1586,22 @@ Struktur variasi pada Songer Creative mengadopsi sistem hirarki 4 tingkat + 1 se
       - `scratch/test_task210c6d_card2_availability.js` (51/51 PASS, 0 FAIL)
       - `scratch/test_task210c6c_rating_sales.js` (56/56 PASS, 0 FAIL)
 
+  - **Pemulihan Kontrol Warna Teks Terjual pada Tab Desain Kartu (Task 2.10C-7F-B)**:
+    - **Tujuan & Ruang Lingkup**:
+      - Memulihkan kontrol styling warna visual untuk "Teks Terjual" pada Tab Desain Kartu (**Preview Kartu Produk → Tab Desain → Teks & Informasi**) baik pada sidebar Desktop (`#cfg-sales-color`, `#cfg-sales-hex`) maupun Mobile Drawer (`#cfg-sales-color-mob`, `#cfg-sales-hex-mob`).
+      - Menegaskan prinsip *Separation of Concerns*: Logika bisnis (toggle on/off `#cfg-show-sales`, pilihan sumber data Otomatis/Manual, serta input nilai manual) tetap berada secara eksklusif di Step 1 Card 2 (`#card-step1-card-info`); styling warna visual berada di Tab Desain Kartu tanpa memulihkan kontrol visibilitas duplikat (ikon mata atau checkbox toggle).
+      - Menghubungkan kontrol warna Teks Terjual ke Live Preview Model A, Model B, dan Model C secara dinamis (menggantikan class Tailwind hardcoded `text-slate-500` dengan inline style `style="color: ${salesTextColor};"`).
+      - Sinkronisasi rendering etalase toko pembeli (`buyer-store.js`) agar membaca properti `config.sales_text_color || '#64748b'`.
+    - **Spesifikasi & Konfigurasi Teknis**:
+      - Properti kanonikal state: `sales_text_color` di dalam `primaryState.card_config` serta tenant settings `DB.DEFAULT_CARD_VARIANTS_CONFIG` untuk `variant_a`, `variant_b`, dan `variant_c`.
+      - Nilai warna default: `#64748b` (Slate-500) dengan fallback sanitasi HEX yang aman (`isValidHexColor` dan `sanitizeHexColor`).
+      - Sinkronisasi dua arah real-time antara Desktop dan Mobile Drawer serta antara Color Picker (`input[type="color"]`) dan Text HEX (`input[type="text"]`).
+      - Penolakan format HEX tidak valid secara defensif: input teks yang tidak valid (bukan 6-digit hex) diabaikan saat pengetikan dan otomatis dikembalikan (*revert*) ke nilai HEX valid sebelumnya saat event `blur`.
+      - Preservasi data & kompatibilitas mundur: Produk lama tanpa atribut `sales_text_color` otomatis menggunakan fallback default `#64748b`. Berpindah model kartu (A -> B -> C -> A) atau mematikan dan menghidupkan kembali toggle Teks Terjual di Step 1 Card 2 tetap mempertahankan konfigurasi warna custom seller.
+    - **Hasil Pengujian Playwright Task 7F-B**:
+      - Test Suite: `scratch/test_task210c7fB_sales_design_color.js` (17 skenario / 19 assertion, 100% PASS, 0 FAIL).
+      - Pengujian Regresi: Seluruh 9 test suite terdahulu (Task 6C, 7C, 7D, 6E-1, 6E-2, 6F-1, 6F-2, 7B) tetap 100% PASS tanpa regresi.
+
 ### 7.2. Sistem Desain, Radius & Variabel Warna
 - **Radius Border Tegas**:
   - Seluruh kartu seksi Step 2: `border-radius: 0.5rem !important;` (`rounded-lg` / 8px).
